@@ -10,6 +10,10 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/dynamiccost.h>
 
+#include "graph_helpers.h"
+
+namespace mm {
+
 using namespace valhalla;
 
 
@@ -375,44 +379,34 @@ void set_origin(baldr::GraphReader& reader,
                 sif::cost_ptr_t costing,
                 std::shared_ptr<const sif::EdgeLabel> edgelabel)
 {
+  const baldr::GraphTile* tile = nullptr;
+
   for (const auto& edge : destinations[origin_idx].edges()) {
     assert(edge.id.Is_Valid());
     if (!edge.id.Is_Valid()) continue;
 
     if (edge.dist == 0.f) {
-      const baldr::GraphTile* tile = nullptr;
-      const auto opp_edge = reader.GetOpposingEdge(edge.id, tile);
-      if (!opp_edge) continue;
-      assert(tile);
+      const auto nodeid = helpers::edge_startnodeid(reader, edge.id, tile);
+      if (!nodeid.Is_Valid()) continue;
 
 #if 1  // TODO perhaps we shouldn't check start node
-      if (opp_edge->leaves_tile()) {
-        tile = reader.GetGraphTile(opp_edge->endnode());
-        if (!tile) continue;
-      }
-      const auto nodeinfo = tile->node(opp_edge->endnode());
-      assert(nodeinfo);
+      const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
+      if (!nodeinfo) continue;
       if (costing && !costing->Allowed(nodeinfo)) continue;
 #endif
 
-      labelset.put(opp_edge->endnode(), travelmode, edgelabel);
+      labelset.put(nodeid, travelmode, edgelabel);
     } else if (edge.dist == 1.f) {
-      auto tile = reader.GetGraphTile(edge.id);
-      if (!tile) continue;
-      const auto directededge = tile->directededge(edge.id);
-      assert(directededge);
+      const auto nodeid = helpers::edge_endnodeid(reader, edge.id, tile);
+      if (!nodeid.Is_Valid()) continue;
 
 #if 1  // TODO perhaps we shouldn't check start node
-      if (directededge->leaves_tile()) {
-        tile = reader.GetGraphTile(directededge->endnode());
-        if (!tile) continue;
-      }
-      const auto nodeinfo = tile->node(directededge->endnode());
-      assert(nodeinfo);
+      const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
+      if (!nodeinfo) continue;
       if (costing && !costing->Allowed(nodeinfo)) continue;
 #endif
 
-      labelset.put(directededge->endnode(), travelmode, edgelabel);
+      labelset.put(nodeid, travelmode, edgelabel);
     } else {
       assert(0.f < edge.dist && edge.dist < 1.f);
       // Will decide whether to filter out this edge later
@@ -427,21 +421,23 @@ void set_destinations(baldr::GraphReader& reader,
                       std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& node_dests,
                       std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& edge_dests)
 {
+  const baldr::GraphTile* tile = nullptr;
+
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges()) {
       assert(edge.id.Is_Valid());
       if (!edge.id.Is_Valid()) continue;
 
       if (edge.dist == 0.f) {
-        auto opp_edge = reader.GetOpposingEdge(edge.id);
-        if (!opp_edge) continue;
-        node_dests[opp_edge->endnode()].insert(dest);
+        const auto nodeid = helpers::edge_startnodeid(reader, edge.id, tile);
+        if (!nodeid.Is_Valid()) continue;
+        node_dests[nodeid].insert(dest);
+
       } else if (edge.dist == 1.f) {
-        auto tile = reader.GetGraphTile(edge.id);
-        if (!tile) continue;
-        auto directededge = tile->directededge(edge.id);
-        assert(directededge);
-        node_dests[directededge->endnode()].insert(dest);
+        const auto nodeid = helpers::edge_endnodeid(reader, edge.id, tile);
+        if (!nodeid.Is_Valid()) continue;
+        node_dests[nodeid].insert(dest);
+
       } else {
         edge_dests[edge.id].insert(dest);
       }
@@ -476,6 +472,8 @@ find_shortest_path(baldr::GraphReader& reader,
 
   auto edgefilter = costing? costing->GetFilter() : nullptr;
 
+  const baldr::GraphTile* tile = nullptr;
+
   while (!labelset.empty()) {
     const auto label_idx = labelset.pop();
     // NOTE this refernce is possible to be invalid when you add
@@ -508,11 +506,8 @@ find_shortest_path(baldr::GraphReader& reader,
       }
 
       // Expand current node
-      const auto tile = reader.GetGraphTile(nodeid);
-      if (!tile) continue;
-
-      const auto nodeinfo = tile->node(nodeid);
-      assert(nodeinfo);
+      const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
+      if (!nodeinfo) continue;
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
@@ -571,11 +566,8 @@ find_shortest_path(baldr::GraphReader& reader,
       // at the same edge to the queue
       if (dest == origin_idx) {
         for (const auto& origin_edge : destinations[origin_idx].edges()) {
-          const auto tile = reader.GetGraphTile(origin_edge.id);
-          if (!tile) continue;
-
-          const auto directededge = tile->directededge(origin_edge.id);
-          assert(directededge);
+          const auto directededge = helpers::edge_directededge(reader, origin_edge.id, tile);
+          if (!directededge) continue;
 
           if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter)) continue;
 
@@ -667,3 +659,5 @@ class RoutePathIterator:
   const LabelSet* labelset_;
   uint32_t label_idx_;
 };
+
+}

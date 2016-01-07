@@ -16,29 +16,55 @@ using namespace valhalla::baldr;
 
 inline const DirectedEdge*
 edge_directededge(GraphReader& graphreader,
-                  const GraphId edgeid,
+                  const GraphId& edgeid,
                   // A reference to a pointer to a const tile
                   const GraphTile*& tile)
 {
-  if (!tile || tile->id() != edgeid.Tile_Base()) {
+  if (tile && tile->id().tileid() == edgeid.tileid()) {
+    return tile->directededge(edgeid);
+  } else {
     tile = graphreader.GetGraphTile(edgeid);
+    return tile? tile->directededge(edgeid) : nullptr;
   }
-  return tile? tile->directededge(edgeid) : nullptr;
 }
 
 
 inline const DirectedEdge*
 edge_directededge(GraphReader& graphreader,
-                  const GraphId edgeid)
+                  const GraphId& edgeid)
 {
   const GraphTile* NO_TILE = nullptr;
   return edge_directededge(graphreader, edgeid, NO_TILE);
 }
 
 
+inline const NodeInfo*
+edge_nodeinfo(GraphReader& graphreader,
+              const GraphId& nodeid,
+              // A reference to a pointer to a const tile
+              const GraphTile*& tile)
+{
+  if (tile && tile->id().tileid() == nodeid.tileid()) {
+    return tile->node(nodeid);
+  } else {
+    tile = graphreader.GetGraphTile(nodeid);
+    return tile? tile->node(nodeid) : nullptr;
+  }
+}
+
+
+inline const NodeInfo*
+edge_nodeinfo(GraphReader& graphreader,
+              const GraphId& nodeid)
+{
+  const GraphTile* NO_TILE = nullptr;
+  return edge_nodeinfo(graphreader, nodeid, NO_TILE);
+}
+
+
 inline GraphId
 edge_endnodeid(GraphReader& graphreader,
-               const GraphId edgeid,
+               const GraphId& edgeid,
                const GraphTile*& tile)
 {
   const auto directededge = edge_directededge(graphreader, edgeid, tile);
@@ -48,7 +74,7 @@ edge_endnodeid(GraphReader& graphreader,
 
 inline GraphId
 edge_endnodeid(GraphReader& graphreader,
-               const GraphId edgeid)
+               const GraphId& edgeid)
 {
   const GraphTile* NO_TILE = nullptr;
   return edge_endnodeid(graphreader, edgeid, NO_TILE);
@@ -57,7 +83,7 @@ edge_endnodeid(GraphReader& graphreader,
 
 inline GraphId
 edge_startnodeid(GraphReader& graphreader,
-                 const GraphId edgeid,
+                 const GraphId& edgeid,
                  const GraphTile*& tile)
 {
   const auto directededge = graphreader.GetOpposingEdge(edgeid, tile);
@@ -67,7 +93,7 @@ edge_startnodeid(GraphReader& graphreader,
 
 inline GraphId
 edge_startnodeid(GraphReader& graphreader,
-                 const GraphId edgeid)
+                 const GraphId& edgeid)
 {
   const auto directededge = graphreader.GetOpposingEdge(edgeid);
   return directededge? directededge->endnode() : GraphId();
@@ -76,7 +102,7 @@ edge_startnodeid(GraphReader& graphreader,
 
 inline std::unique_ptr<const EdgeInfo>
 edge_edgeinfo(GraphReader& graphreader,
-              const GraphId edgeid,
+              const GraphId& edgeid,
               const GraphTile*& tile)
 {
   const auto directededge = edge_directededge(graphreader, edgeid, tile);
@@ -86,7 +112,7 @@ edge_edgeinfo(GraphReader& graphreader,
 
 inline std::unique_ptr<const EdgeInfo>
 edge_edgeinfo(GraphReader& graphreader,
-              const GraphId edgeid)
+              const GraphId& edgeid)
 {
   const GraphTile* NO_TILE = nullptr;
   return edge_edgeinfo(graphreader, edgeid, NO_TILE);

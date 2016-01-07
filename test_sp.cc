@@ -1,8 +1,10 @@
 #include "sp.h"
 
+using namespace valhalla;
+
 constexpr uint32_t kInvalidKey = std::numeric_limits<uint16_t>::max();
 
-using AdjacencyList = BucketQueue<uint32_t, kInvalidKey>;
+using AdjacencyList = mm::BucketQueue<uint32_t, kInvalidKey>;
 
 
 void Add(AdjacencyList &adjlist, const std::vector<float>& costs)
@@ -162,7 +164,7 @@ void Benchmark()
 
 void TestRoutePathIterator()
 {
-  LabelSet labelset(100);
+  mm::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
@@ -178,7 +180,7 @@ void TestRoutePathIterator()
   labelset.put(5, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, travelmode, nullptr);
   labelset.put(6, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, travelmode, nullptr);
 
-  RoutePathIterator the_end(&labelset, kInvalidLabelIndex),
+  mm::RoutePathIterator the_end(&labelset, mm::kInvalidLabelIndex),
       it0(&labelset, 0),
       it1(&labelset, 1),
       it2(&labelset, 2),
@@ -195,7 +197,7 @@ void TestRoutePathIterator()
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing");
   }
 
-  if (it0->predecessor != kInvalidLabelIndex) {
+  if (it0->predecessor != mm::kInvalidLabelIndex) {
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer");
   }
 
