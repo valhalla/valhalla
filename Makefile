@@ -68,3 +68,8 @@ test_queue: test_queue.cc queue.h
 
 test_viterbi_search: test_viterbi_search.cc viterbi_search.h queue.h
 	$(CC) $(FLAGS_TEST) $< -o $@
+
+
+.PHONY: clean
+clean:
+	rm -f attacher edge_search psqlmatcher service simple_matcher stat test_grid_range_query test_queue test_sp test_viterbi_search
