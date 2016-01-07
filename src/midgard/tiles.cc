@@ -4,36 +4,39 @@
 
 namespace {
 
-  //this is slightly modified to include ALL pixels that are intersected by the FLOATING POINT line
-  //the original implementation simply uses integers the block commented incrementing below
-  void bresenham_line(float x0, float y0, float x1, float y1, const std::function<void (int32_t, int32_t)>& set_pixel) {
-    //mark this pixel
-    set_pixel(x0, y0);
+  //this is modified to include all pixels that are intersected by the floating point line
+  //at each step it decides to either move in the x or y direction based on which pixels midpoint
+  //forms a smaller triangle with the line. to avoid edge cases we allow set_pixel to make the
+  //the loop bail if we leave the valid drawing region
+  void bresenham_line(float x0, float y0, float x1, float y1, const std::function<bool (int32_t, int32_t)>& set_pixel) {
+    //this one for sure
+    auto outside = set_pixel(x0, y0);
     //early termination is likely for our use case
     if(static_cast<int>(x0) == static_cast<int>(x1) && static_cast<int>(y0) == static_cast<int>(y1))
       return;
-    //compute the steps in the proper direction
-    float dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-    float dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    auto err = dx + dy;
+    //deltas, steps in the proper direction and triangle area constant
+    float dx = x1 - x0, sx = x0 < x1 ? 1 : -1;
+    float dy = y1 - y0, sy = y0 < y1 ? 1 : -1;
+    float c = x1*y0 - y1*x0;
     //keep going until we make it to the ending pixel
     while(static_cast<int>(x0) != static_cast<int>(x1) || static_cast<int>(y0) != static_cast<int>(y1)) {
-      auto e2 = err * 2;
-      //what will the error look like if we move in either direction
-      auto ex = dx - e2;
-      auto ey = e2 - dy;
+      float tx = std::abs(dy*(static_cast<int>(x0 + sx) + .5f) - dx*(static_cast<int>(y0) + .5f) + c);
+      float ty = std::abs(dy*(static_cast<int>(x0) + .5f) - dx*(static_cast<int>(y0 + sy) + .5f) + c);
       //less error moving in the x
-      if(ex < ey) { err += dy;  x0 += sx; }
+      if(tx < ty) { x0 += sx; }
       //less error moving in the y
-      else if(ey < ex) { err += dx; y0 += sy; }
+      else if(ty < tx) { y0 += sy; }
       //equal error for both so move diagonally
-      else { err += dy + dx; x0 += sx; y0 += sy; }
+      else { x0 += sx; y0 += sy; }
       //mark this pixel
-      set_pixel(x0, y0);
+      auto o = set_pixel(x0, y0);
+      if(outside == false && o == true)
+        return;
+      outside = o;
     }
   }
 
-  void bresenham_circle(int32_t x0, int32_t y0, int32_t r, const std::function<void (int32_t, int32_t)>& set_pixel) {
+  void bresenham_circle(int32_t x0, int32_t y0, int32_t r, const std::function<bool (int32_t, int32_t)>& set_pixel) {
     int32_t f = 1 - r;
     int32_t ddF_x = 0;
     int32_t ddF_y = -2 * r;
@@ -407,7 +410,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
     //cant mark ones that are outside the valid range of tiles
     if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
-      return;
+      return true;
     //find the tile
     int32_t tile_column = x / nsubdivisions_;
     int32_t tile_row = y / nsubdivisions_;
@@ -415,6 +418,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     //find the subdivision
     unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
     intersection[tile].insert(subdivision);
+    return false;
   };
 
   //for each segment
@@ -460,7 +464,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
     //cant mark ones that are outside the valid range of tiles
     if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
-      return;
+      return true;
     //find the tile
     int32_t tile_column = x / nsubdivisions_;
     int32_t tile_row = y / nsubdivisions_;
@@ -468,6 +472,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     //find the subdivision
     unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
     intersection[tile].insert(subdivision);
+    return false;
   };
 
   //TODO: convert center point and radius to subdivision coordinates/units

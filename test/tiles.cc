@@ -182,7 +182,10 @@ void test_intersect_linestring() {
   t = Tiles<Point2>(AABB2<Point2>{0,0,6,6}, 6, 6);
   assert_answer(t, { {0.5,0.5}, {5.5,4.5} }, intersect_t{{0,{0,1,7,8,14,15,21,22,28,29}}});
   assert_answer(t, { {5.5,4.5}, {0.5,0.5} }, intersect_t{{0,{0,1,7,8,14,15,21,22,28,29}}});
-  //assert_answer(t, { {5.5,0.5}, {0.5,2.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
+  assert_answer(t, { {5.5,0.5}, {0.5,2.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
+  assert_answer(t, { {0.5,2.5}, {5.5,0.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
+  assert_answer(t, { {-1,-2}, {4,8} }, intersect_t{{0,{0,6,13,19,26,32}}});
+  //assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,13,19,26,32}}});
 }
 /*
 void test_intersect_circle() {
