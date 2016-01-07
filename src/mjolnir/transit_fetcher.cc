@@ -228,7 +228,7 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
   for(const auto& route_pt : response.get_child("routes")) {
     auto* route = tile.add_routes();
     set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
-    std::string vehicle_type = route_pt.second.get<std::string>("tags.vehicle_type", "");
+    std::string vehicle_type = route_pt.second.get<std::string>("vehicle_type", "null");
     Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
     if (vehicle_type == "tram")
       type = Transit_VehicleType::Transit_VehicleType_kTram;
