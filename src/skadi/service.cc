@@ -125,9 +125,10 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class skadi_worker_t {
     public:
-    skadi_worker_t(const boost::property_tree::ptree& config):
+    skadi_worker_t (const boost::property_tree::ptree& config):
       sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
-      max_shape(config.get<size_t>("service_limits.skadi.max_shape")), min_resample(config.get<float>("service_limits.skadi.min_resample")) {
+      max_shape(config.get<size_t>("service_limits.skadi.max_shape")), min_resample(config.get<float>("service_limits.skadi.min_resample")),
+      long_request(config.get<float>("skadi.logging.long_request")){
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
@@ -158,19 +159,24 @@ namespace {
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+        valhalla::midgard::logging::Log("501::" + response.body, "[ANALYTICS]");
         return result;
       }
       catch(const std::exception& e) {
-        LOG_INFO(std::string("Bad Request: ") + e.what());
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+        valhalla::midgard::logging::Log("400::" + response.body, "[ANALYTICS]");
         return result;
       }
     }
 
-    void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+    void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+      //get time for start of request
+      auto time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      request.put("start_time",msecs);
       //get some parameters
       range = request.get<bool>("range", false);
       auto input_shape = request.get_child_optional("shape");
@@ -263,7 +269,7 @@ namespace {
       std::stringstream ss;
       //log request if greater then X (ms)
       write_json(ss, request);
-      if ((elapsed_time / heights.size()) > config.get<float>("skadi.logging.long_request")) {
+      if ((elapsed_time / heights.size()) > long_request) {
         warn_counter++;
         LOG_WARN("height request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("height request exceeded threshold::"+ ss.str());
@@ -291,13 +297,13 @@ namespace {
       encoded_polyline.reset();
     }
     protected:
-      boost::property_tree::ptree config;
       std::list<PointLL> shape;
       boost::optional<std::string> encoded_polyline;
       bool range;
       skadi::sample sample;
       size_t max_shape;
       float min_resample;
+      float long_request;
   };
 }
 

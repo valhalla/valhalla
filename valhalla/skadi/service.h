@@ -7,7 +7,6 @@ namespace valhalla {
   namespace skadi {
 
     void run_service(const boost::property_tree::ptree& config);
-
   }
 }
 
