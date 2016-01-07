@@ -27,6 +27,12 @@ constexpr float kInterpolationDistance = 10.f;  // meters
 }
 
 
+namespace mm {
+
+
+using ptree = boost::property_tree::ptree;
+
+
 class Measurement {
  public:
   Measurement(const PointLL& lnglat)
@@ -176,7 +182,7 @@ class MapMatching: public ViterbiSearch<State>
   MapMatching(float sigma_z,
               float beta,
               baldr::GraphReader& graphreader,
-              sif::cost_ptr_t* mode_costing,
+              const sif::cost_ptr_t* mode_costing,
               const sif::TravelMode mode,
               float breakage_distance = kBreakageDistance,
               float max_route_distance_factor = kMaxRouteDistanceFactor)
@@ -202,14 +208,14 @@ class MapMatching: public ViterbiSearch<State>
   }
 
   MapMatching(baldr::GraphReader& graphreader,
-              sif::cost_ptr_t* mode_costing,
+              const sif::cost_ptr_t* mode_costing,
               const sif::TravelMode mode,
-              const boost::property_tree::ptree& pt)
-      : MapMatching(pt.get<float>("sigma_z"),
-                    pt.get<float>("beta"),
+              const ptree& config)
+      : MapMatching(config.get<float>("sigma_z"),
+                    config.get<float>("beta"),
                     graphreader, mode_costing, mode,
-                    pt.get<float>("breakage_distance"),
-                    pt.get<float>("max_route_distance_factor")) {}
+                    config.get<float>("breakage_distance"),
+                    config.get<float>("max_route_distance_factor")) {}
 
   virtual ~MapMatching()
   { Clear(); }
@@ -269,7 +275,7 @@ class MapMatching: public ViterbiSearch<State>
   float inv_beta_;  // equals to 1.f / beta_
   std::vector<Measurement> measurements_;
   baldr::GraphReader& graphreader_;
-  sif::cost_ptr_t* mode_costing_;
+  const sif::cost_ptr_t* mode_costing_;
   const TravelMode mode_;
   std::vector<std::vector<const State*>> states_;
 
@@ -753,160 +759,303 @@ inline float local_tile_size(const GraphReader& graphreader)
 }
 
 
+namespace {
+constexpr size_t kModeCostingCount = 8;
+}
+
+
 // A facade that connects everything
 class MapMatcher final
 {
-public:
-  MapMatcher(const boost::property_tree::ptree&);
+ public:
+  MapMatcher(const ptree&,
+             baldr::GraphReader&,
+             CandidateGridQuery&,
+             const sif::cost_ptr_t*,
+             sif::TravelMode);
+
+  ~MapMatcher();
 
   baldr::GraphReader& graphreader();
-
-  MapMatching& mapmatching();
 
   CandidateQuery& rangequery();
 
   sif::TravelMode travelmode() const;
 
-  sif::TravelMode travelmode_by_name(const std::string&);
+  const ptree config() const;
 
-  MapMatcher& set_travelmode(std::string&);
+  ptree config();
 
-  MapMatcher& set_travelmode(sif::TravelMode);
+  MapMatching& mapmatching();
 
-  float interpolation_distance() const;
+  std::vector<MatchResult>
+  OfflineMatch(const std::vector<Measurement>&);
 
-  MapMatcher& set_interpolation_distance(float);
-
-  float default_search_radius() const;
-
-  MapMatcher& set_default_search_radius(float);
-
-  std::vector<MatchResult> Match(const std::vector<Measurement>& measurements);
-
-private:
-  typedef sif::cost_ptr_t (*factory_function_t)(const boost::property_tree::ptree& config);
+ private:
+  ptree config_;
 
   baldr::GraphReader graphreader_;
 
-  sif::cost_ptr_t mode_costing_[8];
+  CandidateGridQuery rangequery_;
 
-  std::string mode_name_[8];
+  const sif::cost_ptr_t* mode_costing_;
 
   sif::TravelMode travelmode_;
 
-  float interpolation_distance_;
-
-  float default_search_radius_;
-
   MapMatching mapmatching_;
-
-  CandidateGridQuery rangequery_;
-
-  size_t register_costing(const std::string&, factory_function_t, const boost::property_tree::ptree&);
-
-  sif::cost_ptr_t* init_costings(const boost::property_tree::ptree&);
 };
 
 
-MapMatcher::MapMatcher(const boost::property_tree::ptree& config)
-    : graphreader_(config.get_child("mjolnir.hierarchy")),
-      mode_costing_(),
-      mode_name_(),
-      travelmode_(mm::kUniversalTravelMode),
-      interpolation_distance_(0.f),
-      default_search_radius_(0.f),
-      mapmatching_(graphreader_, mode_costing_, travelmode_, config.get_child("mm")),
-      rangequery_(graphreader_,
-                  local_tile_size(graphreader_)/config.get<size_t>("grid.size"),
-                  local_tile_size(graphreader_)/config.get<size_t>("grid.size"))
-{
-  init_costings(config);
-}
+MapMatcher::MapMatcher(const ptree& config,
+                       baldr::GraphReader& graphreader,
+                       CandidateGridQuery& rangequery,
+                       const sif::cost_ptr_t* mode_costing,
+                       sif::TravelMode travelmode)
+    : config_(config),
+      graphreader_(graphreader),
+      rangequery_(rangequery),
+      mode_costing_(mode_costing),
+      travelmode_(travelmode),
+      mapmatching_(graphreader_, mode_costing_, travelmode_, config_) {}
 
 
-baldr::GraphReader& MapMatcher::graphreader()
+MapMatcher::~MapMatcher() {}
+
+
+baldr::GraphReader&
+MapMatcher::graphreader()
 { return graphreader_; }
 
 
-MapMatching& MapMatcher::mapmatching()
-{ return mapmatching_; }
-
-
-CandidateQuery& MapMatcher::rangequery()
+CandidateQuery&
+MapMatcher::rangequery()
 { return rangequery_; }
 
 
-sif::TravelMode MapMatcher::travelmode() const
+sif::TravelMode
+MapMatcher::travelmode() const
 { return travelmode_; }
 
 
-MapMatcher& MapMatcher::set_travelmode(std::string& name)
+const ptree
+MapMatcher::config() const
+{ return config_; }
+
+
+ptree
+MapMatcher::config()
+{ return config_; }
+
+
+MapMatching&
+MapMatcher::mapmatching()
+{ return mapmatching_; }
+
+
+inline std::vector<MatchResult>
+MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
-  travelmode_ = travelmode_by_name(name);
-  return *this;
+  float search_radius = std::min(config_.get<float>("search_radius"),
+                                 config_.get<float>("max_search_radius"));
+  float interpolation_distance = config_.get<float>("interpolation_distance");
+  return mm::OfflineMatch(mapmatching_, rangequery_, measurements,
+                          search_radius * search_radius,
+                          interpolation_distance);
 }
 
 
-MapMatcher& MapMatcher::set_travelmode(sif::TravelMode travelmode)
+class MapMatcherFactory final
 {
-  travelmode_ = travelmode;
-  return *this;
+public:
+  MapMatcherFactory(const ptree&);
+
+  ~MapMatcherFactory();
+
+  baldr::GraphReader& graphreader();
+
+  CandidateQuery& rangequery();
+
+  sif::TravelMode NameToTravelMode(const std::string&);
+
+  const std::string& TravelModeToName(sif::TravelMode);
+
+  MapMatcher* Create(sif::TravelMode);
+
+  MapMatcher* Create(const std::string&);
+
+  MapMatcher* Create(const ptree&);
+
+  MapMatcher* Create(const std::string&, const ptree&);
+
+  MapMatcher* Create(sif::TravelMode, const ptree&);
+
+  ptree
+  MergeConfig(const std::string&, const ptree&);
+
+  ptree&
+  MergeConfig(const std::string&, ptree&);
+
+  void ClearCacheIfPossible();
+
+  void ClearCache();
+
+private:
+  typedef sif::cost_ptr_t (*factory_function_t)(const ptree&);
+
+  ptree config_;
+
+  baldr::GraphReader graphreader_;
+
+  sif::cost_ptr_t mode_costing_[kModeCostingCount];
+
+  std::string mode_name_[kModeCostingCount];
+
+  CandidateGridQuery rangequery_;
+
+  float max_grid_cache_size_;
+
+  size_t register_costing(const std::string&, factory_function_t, const ptree&);
+
+  sif::cost_ptr_t* init_costings(const ptree&);
+};
+
+
+MapMatcherFactory::MapMatcherFactory(const ptree& root)
+    : config_(root.get_child("mm")),
+      graphreader_(root.get_child("mjolnir.hierarchy")),
+      mode_costing_({nullptr}),
+      mode_name_(),
+      rangequery_(graphreader_,
+                  local_tile_size(graphreader_)/root.get<size_t>("grid.size"),
+                  local_tile_size(graphreader_)/root.get<size_t>("grid.size")),
+      max_grid_cache_size_(root.get<float>("grid.cache_size"))
+{
+  for (size_t idx = 0; idx < kModeCostingCount; idx++) {
+    assert(!mode_costing_[idx]);
+    assert(mode_name_[idx].empty());
+  }
+  init_costings(root);
 }
 
 
-float MapMatcher::interpolation_distance() const
-{ return interpolation_distance_; }
-
-
-MapMatcher& MapMatcher::set_interpolation_distance(float distance)
-{
-  interpolation_distance_ = distance;
-  return *this;
-}
-
-
-float MapMatcher::default_search_radius() const
-{ return default_search_radius_; }
-
-
-MapMatcher& MapMatcher::set_default_search_radius(float search_radius)
-{
-  default_search_radius_ = search_radius;
-  return *this;
-}
-
-
-std::vector<MatchResult>
-MapMatcher::Match(const std::vector<Measurement>& measurements)
-{
-  return OfflineMatch(mapmatching_, rangequery_, measurements,
-                      default_search_radius_ * default_search_radius_,
-                      interpolation_distance_);
-}
+MapMatcherFactory::~MapMatcherFactory() {}
 
 
 sif::TravelMode
-MapMatcher::travelmode_by_name(const std::string& name)
+MapMatcherFactory::NameToTravelMode(const std::string& name)
 {
-  for (size_t idx = 0,
-            count = sizeof(mode_costing_)/sizeof(mode_costing_[0]);
-       idx < count; idx++) {
+  for (size_t idx = 0; idx < kModeCostingCount; idx++) {
     if (!name.empty() && mode_name_[idx] == name) {
       return static_cast<sif::TravelMode>(idx);
     }
   }
-  throw std::invalid_argument("Invalid costing name");
+  throw std::invalid_argument("Invalid costing name: " + name);
+}
+
+
+const std::string&
+MapMatcherFactory::TravelModeToName(sif::TravelMode travelmode)
+{
+  const auto index = static_cast<size_t>(travelmode);
+  if (index < kModeCostingCount) {
+    if (!mode_name_[index].empty()) {
+      return mode_name_[index];
+    }
+  }
+  throw std::invalid_argument("Invalid travelmode code " + std::to_string(index));
+}
+
+
+inline MapMatcher*
+MapMatcherFactory::Create(sif::TravelMode travelmode)
+{ return Create(travelmode, ptree()); }
+
+
+inline MapMatcher*
+MapMatcherFactory::Create(const std::string& name)
+{ return Create(NameToTravelMode(name), ptree()); }
+
+
+inline MapMatcher*
+MapMatcherFactory::Create(const ptree& preferences)
+{
+  const auto& name = preferences.get<std::string>("mode", config_.get<std::string>("mode"));
+  auto travelmode = NameToTravelMode(name);
+  const auto& config = MergeConfig(name, preferences);
+  return Create(travelmode, preferences);
+}
+
+
+inline MapMatcher*
+MapMatcherFactory::Create(const std::string& name, const ptree& preferences)
+{ return Create(NameToTravelMode(name), preferences); }
+
+
+inline MapMatcher*
+MapMatcherFactory::Create(sif::TravelMode travelmode, const ptree& preferences)
+{
+  const auto& config = MergeConfig(TravelModeToName(travelmode), preferences);
+  // TODO investigate exception safety
+  return new MapMatcher(config, graphreader_, rangequery_, mode_costing_, travelmode);
+}
+
+
+ptree
+MapMatcherFactory::MergeConfig(const std::string& name, const ptree& preferences)
+{
+  // Copy the default child config
+  auto config = config_.get_child("default");
+
+  // The mode-specific config overwrites defaults
+  const auto mode_config = config_.get_child_optional(name);
+  if (mode_config) {
+    for (const auto& child : *mode_config) {
+      config.put_child(child.first, child.second);
+    }
+  }
+
+  // Preferences overwrites defaults
+  for (const auto& child : preferences) {
+    config.put_child(child.first, child.second);
+  }
+
+  // Give it back
+  return config;
+}
+
+
+ptree&
+MapMatcherFactory::MergeConfig(const std::string& name, ptree& preferences)
+{
+  const auto mode_config = config_.get_child_optional(name);
+  if (mode_config) {
+    for (const auto& child : *mode_config) {
+      auto pchild = preferences.get_child_optional(child.first);
+      if (!pchild) {
+        preferences.put_child(child.first, child.second);
+      }
+    }
+  }
+
+  for (const auto& child : config_.get_child("default")) {
+    auto pchild = preferences.get_child_optional(child.first);
+    if (!pchild) {
+      preferences.put_child(child.first, child.second);
+    }
+  }
+
+  return preferences;
 }
 
 
 size_t
-MapMatcher::register_costing(const std::string& mode_name,
-                             factory_function_t factory,
-                             const boost::property_tree::ptree& config)
+MapMatcherFactory::register_costing(const std::string& mode_name,
+                                    factory_function_t factory,
+                                    const ptree& config)
 {
   auto costing = factory(config);
   auto index = static_cast<size_t>(costing->travelmode());
-  if (!(index < sizeof(mode_costing_)/sizeof(mode_costing_[0]))) {
+  if (!(index < kModeCostingCount)) {
     throw std::out_of_range("Configuration error: out of bounds");
   }
   if (mode_costing_[index]) {
@@ -919,12 +1068,34 @@ MapMatcher::register_costing(const std::string& mode_name,
 
 
 sif::cost_ptr_t*
-MapMatcher::init_costings(const boost::property_tree::ptree& config)
+MapMatcherFactory::init_costings(const ptree& root)
 {
-  register_costing("auto", sif::CreateAutoCost, config.get_child("costing_options.auto"));
-  register_costing("bicycle", sif::CreateBicycleCost, config.get_child("costing_options.bicycle"));
-  register_costing("pedestrian", sif::CreatePedestrianCost, config.get_child("costing_options.pedestrian"));
-  register_costing("multimodal", mm::CreateUniversalCost, config.get_child("costing_options.multimodal"));
+  register_costing("auto", sif::CreateAutoCost, root.get_child("costing_options.auto"));
+  register_costing("bicycle", sif::CreateBicycleCost, root.get_child("costing_options.bicycle"));
+  register_costing("pedestrian", sif::CreatePedestrianCost, root.get_child("costing_options.pedestrian"));
+  register_costing("multimodal", mm::CreateUniversalCost, root.get_child("costing_options.multimodal"));
 
   return mode_costing_;
+}
+
+
+void MapMatcherFactory::ClearCacheIfPossible()
+{
+  if(graphreader_.OverCommitted()) {
+    graphreader_.Clear();
+  }
+
+  if (rangequery_.size() > max_grid_cache_size_) {
+    rangequery_.Clear();
+  }
+}
+
+
+void MapMatcherFactory::ClearCache()
+{
+  graphreader_.Clear();
+  rangequery_.Clear();
+}
+
+
 }
