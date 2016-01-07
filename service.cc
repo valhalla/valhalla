@@ -504,83 +504,61 @@ worker_t::result_t jsonify_error(const std::string& message,
 }
 
 
-boost::property_tree::ptree&
-update_mm_config(boost::property_tree::ptree& config,
-                 const http_request_t& request)
+template <typename T>
+std::vector<T>
+ptree_array_to_vector(const boost::property_tree::ptree& ptree)
 {
-  const auto& query = request.query;
-  const auto& customizables = config.get_child("customizable");
-  for (const auto& item : customizables) {
-    const auto& name = item.second.get_value<std::string>();
-    const auto it = query.find(name);
-    const auto& values = it->second;
-    if (it != query.end() && !values.empty()) {
-      if (name == "mode") {
-        if (!values.back().empty()) {
-          config.put<std::string>("mode", values.back());
-        }
-      } else if (name == "route" || name == "geometry") {
-        if (values.back() == "false") {
-          config.put<bool>(it->first, false);
-        } else {
-          config.put<bool>(it->first, true);
-        }
-      } else {
-        if (!values.back().empty()) {
-          try {
-            // Possibly throw std::invalid_argument or std::out_of_range
-            config.put<float>(it->first, std::stof(values.back()));
-          } catch (const std::invalid_argument& ex) {
-            throw std::invalid_argument("Invalid argument: unable to parse " + it->first + " to float");
-          } catch (const std::out_of_range& ex) {
-            throw std::out_of_range("Invalid argument: " + it->first + " is out of float range");
-          }
-        }
-      }
-    }
+  std::vector<T> result;
+  for (const auto& item : ptree) {
+    result.push_back(item.second.get_value<T>());
   }
-  return config;
+  return result;
 }
 
 
 //TODO: throw this in the header to make it testable?
 class mm_worker_t {
  public:
-  mm_worker_t(const boost::property_tree::ptree& config):
-      config(config),
-      reader(config.get_child("mjolnir.hierarchy")),
-      grid(reader,
-           local_tile_size(reader)/config.get<size_t>("grid.size"),
-           local_tile_size(reader)/config.get<size_t>("grid.size")),
-      mode_costing(),
-      factory_(),
-      max_grid_cache_size_(config.get<size_t>("grid.cache_size")) {
+  mm_worker_t(const boost::property_tree::ptree& config)
+      : config_(config),
+        matcher_factory_(config_),
+        customizable_(ptree_array_to_vector<std::string>(config_.get_child("mm.customizable"))) {}
 
-    // Register edge/node costing methods
-    factory_.Register("auto", sif::CreateAutoCost);
-    factory_.Register("bicycle", sif::CreateBicycleCost);
-    factory_.Register("pedestrian", sif::CreatePedestrianCost);
-    factory_.Register("multimodal", mm::CreateUniversalCost);
-  }
-
-  sif::TravelMode init_and_find_costing(const std::string& mode_name)
+  boost::property_tree::ptree&
+  read_preferences_from_request(const http_request_t& request,
+                                boost::property_tree::ptree& preferences)
   {
-    sif::TravelMode travelmode;
-    bool found = false;
-
-    for (const auto& name : {"auto", "bicycle", "pedestrian", "multimodal"}) {
-      const auto costing = factory_.Create(name, config.get_child(std::string("costing_options.") + name));
-      mode_costing[static_cast<size_t>(costing->travelmode())] = costing;
-      if (name == mode_name) {
-        found = true;
-        travelmode = costing->travelmode();
+    const auto& query = request.query;
+    for (const auto& name : customizable_) {
+      const auto it = query.find(name);
+      const auto& values = it->second;
+      if (it != query.end() && !values.empty()) {
+        if (name == "mode") {
+          if (!values.back().empty()) {
+            preferences.put<std::string>("mode", values.back());
+          }
+        } else if (name == "route" || name == "geometry") {
+          if (values.back() == "false") {
+            preferences.put<bool>(it->first, false);
+          } else {
+            preferences.put<bool>(it->first, true);
+          }
+        } else {
+          if (!values.back().empty()) {
+            try {
+              // Possibly throw std::invalid_argument or std::out_of_range
+              preferences.put<float>(it->first, std::stof(values.back()));
+            } catch (const std::invalid_argument& ex) {
+              throw std::invalid_argument("Invalid argument: unable to parse " + it->first + " to float");
+            } catch (const std::out_of_range& ex) {
+              throw std::out_of_range("Invalid argument: " + it->first + " is out of float range");
+            }
+          }
+        }
       }
     }
-    if (!found) {
-      throw std::runtime_error("Invalid mode " + mode_name);
-    }
 
-    return travelmode;
+    return preferences;
   }
 
   worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
@@ -608,78 +586,44 @@ class mm_worker_t {
         return jsonify_error(ex.what(), info);
       }
 
-      // Get a copy of the default config
-      auto mm_config = config.get_child("mm");
-
-      // Get mode name
-      std::string mode_name;
-      {
-        const auto it = request.query.find("mode");
-        if (it != request.query.end()) {
-          if (!it->second.empty()) {
-            mode_name = it->second.back();
-          }
-        }
-        if (mode_name.empty()) {
-          mode_name = mm_config.get<std::string>("mode");
-        }
-      }
-
-      // Mode-specific config overwrites defaults
-      {
-        const auto mode_config = mm_config.get_child_optional(mode_name);
-        if (mode_config) {
-          for (const auto& child : *mode_config) {
-            mm_config.put_child(child.first, child.second);
-          }
-        }
-      }
-
-      // Params in the request overwrite defaults
+      // Read preferences
+      boost::property_tree::ptree preferences;
       try {
-        update_mm_config(mm_config, request);
+        read_preferences_from_request(request, preferences);
+      } catch (const std::invalid_argument& ex) {
+        return jsonify_error(ex.what(), info);
       } catch (const std::out_of_range& ex) {
         return jsonify_error(ex.what(), info);
+      }
+
+      // Create a matcher
+      MapMatcher* matcher;
+      try {
+        matcher = matcher_factory_.Create(preferences);
       } catch (const std::invalid_argument& ex) {
         return jsonify_error(ex.what(), info);
       }
 
-      float max_allowed_search_radius = mm_config.get<float>("max_search_radius"),
-                        search_radius = mm_config.get<float>("search_radius");
-      if (max_allowed_search_radius < search_radius) {
-        std::string message = "Got search radius "
-                              + std::to_string(search_radius)
-                              + ", but we expect it not to exceed "
-                              + std::to_string(max_allowed_search_radius);
-        return jsonify_error(message, info);
-      }
-
-      sif::TravelMode travelmode;
-      try {
-        travelmode = init_and_find_costing(mode_name);
-      } catch (const std::runtime_error& ex) {
-        return jsonify_error(ex.what(), info);
-      }
-
       // Match
-      MapMatching mm(reader, mode_costing, travelmode, mm_config);
-      auto match_results = OfflineMatch(mm, grid, measurements, search_radius * search_radius);
-      assert(match_results.size() == measurements.size());
+      const auto& results = matcher->OfflineMatch(measurements);
 
       // Serialize results
+      matcher->config();
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
-      bool route = mm_config.get<bool>("route"),
-        geometry = mm_config.get<bool>("geometry");
+      bool route = matcher->config().get<bool>("route"),
+        geometry = matcher->config().get<bool>("geometry");
       if (geometry) {
         if (route) {
-          serialize_geometry_route(match_results, mm, writer);
+          serialize_geometry_route(results, matcher->mapmatching(), writer);
         } else {
-          serialize_geometry_matched_points(match_results, writer);
+          serialize_geometry_matched_points(results, writer);
         }
       } else {
-        serialize_results_as_feature(match_results, mm, writer, route);
+        serialize_results_as_feature(results, matcher->mapmatching(), writer, route);
       }
+
+      delete matcher;
 
       worker_t::result_t result{false};
       http_response_t response(200, http_status_code(200), sb.GetString(), headers_t{CORS, JS_MIME});
@@ -692,22 +636,13 @@ class mm_worker_t {
     }
   }
 
-  void cleanup() {
-    if(reader.OverCommitted()) {
-      reader.Clear();
-    }
-    if (grid.size() > max_grid_cache_size_) {
-      grid.Clear();
-    }
-  }
+  void cleanup()
+  { matcher_factory_.ClearCacheIfPossible(); }
 
  protected:
-  boost::property_tree::ptree config;
-  baldr::GraphReader reader;
-  CandidateGridQuery grid;
-  sif::cost_ptr_t mode_costing[32];
-  sif::CostFactory<sif::DynamicCost> factory_;
-  size_t max_grid_cache_size_;
+  const boost::property_tree::ptree config_;
+  mm::MapMatcherFactory matcher_factory_;
+  std::vector<std::string> customizable_;
 };
 
 
