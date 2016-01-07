@@ -1,13 +1,12 @@
 CC=g++
 
 LIB_PATH=/usr/local/lib
-FLAGS_TEST=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall # -g -pg
+FLAGS_TEST=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall
 ifdef DEBUG
-	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall
+	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall -g
 else
-	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -O3 -DNDEBUG -Wall
+	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall -O3 -DNDEBUG
 endif
-
 LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
 
 
@@ -56,7 +55,7 @@ simple_matcher: simple_matcher.cc map_matching.h edge_search.h viterbi_search.h 
 
 
 test_sp: test_sp.cc sp.h
-	$(CC) $(FLAGS_TEST) $< -o $@ -lvalhalla_midgard -lvalhalla_baldr
+	$(CC) $(FLAGS_TEST) $< -o $@ -lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
 
 
 test_grid_range_query: test_grid_range_query.cc grid_range_query.h
