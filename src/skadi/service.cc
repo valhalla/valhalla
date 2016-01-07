@@ -255,6 +255,21 @@ namespace {
       else
         json->emplace("shape", serialize_shape(shape));
 
+      //get processing time for locate
+      auto time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      auto elapsed_time = (msecs - request.get<size_t>("start_time"));
+      auto warn_counter = 0;
+      std::stringstream ss;
+      //log request if greater then X (ms)
+      write_json(ss, request);
+      if ((elapsed_time / heights.size()) > config.get<float>("skadi.logging.long_request")) {
+        warn_counter++;
+        LOG_WARN("height request elapsed time (ms)::"+ std::to_string(elapsed_time));
+        LOG_WARN("height request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("long_height_request_count::" + std::to_string(warn_counter), "[ANALYTICS]");
+      }
+
       //jsonp callback if need be
       std::ostringstream stream;
       auto jsonp = request.get_optional<std::string>("jsonp");
@@ -276,6 +291,7 @@ namespace {
       encoded_polyline.reset();
     }
     protected:
+      boost::property_tree::ptree config;
       std::list<PointLL> shape;
       boost::optional<std::string> encoded_polyline;
       bool range;
