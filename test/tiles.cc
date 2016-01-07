@@ -122,14 +122,14 @@ void TileList() {
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
 void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
   auto answer = g.Intersect(l);
-  std::cout << "answer" << std::endl;
+  /*std::cout << "answer" << std::endl;
   for(auto x : answer) {
     std::cout << std::endl << x.first << ":";
     for(auto y : x.second) {
       std::cout << y << ",";
     }
     std::cout << std::endl;
-  }
+  }*/
   //wrong number of tiles
   if(answer.size() != expected.size())
     throw std::logic_error("Expected " + std::to_string(expected.size()) + " intersected tiles but got " + std::to_string(answer.size()));
@@ -185,7 +185,9 @@ void test_intersect_linestring() {
   assert_answer(t, { {5.5,0.5}, {0.5,2.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
   assert_answer(t, { {0.5,2.5}, {5.5,0.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
   assert_answer(t, { {-1,-2}, {4,8} }, intersect_t{{0,{0,6,13,19,26,32}}});
-  //assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,13,19,26,32}}});
+  assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,13,19,26,32}}});
+  assert_answer(t, { {1,2}, {2,4} }, intersect_t{{0,{13,19,26}}});
+  assert_answer(t, { {2,4}, {1,2} }, intersect_t{{0,{13,19,26}}});
 }
 /*
 void test_intersect_circle() {
