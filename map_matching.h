@@ -941,6 +941,16 @@ MapMatcherFactory::MapMatcherFactory(const ptree& root)
 MapMatcherFactory::~MapMatcherFactory() {}
 
 
+baldr::GraphReader&
+MapMatcherFactory::graphreader()
+{ return graphreader_; }
+
+
+CandidateQuery&
+MapMatcherFactory::rangequery()
+{ return rangequery_; }
+
+
 sif::TravelMode
 MapMatcherFactory::NameToTravelMode(const std::string& name)
 {
