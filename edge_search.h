@@ -41,13 +41,13 @@ class CandidateQuery
   QueryBulk(const std::vector<PointLL>& points, float radius, EdgeFilter filter = nullptr);
 
  protected:
-  template <typename iterator_t> std::vector<Candidate>
-  Filter(const PointLL& location,
-         float sq_search_radius,
-         iterator_t edge_begin,
-         iterator_t edge_end,
-         EdgeFilter filter,
-         bool directed) const;
+  template <typename edgeid_iterator_t> std::vector<Candidate>
+  WithinSquaredDistance(const PointLL& location,
+                        float sq_search_radius,
+                        edgeid_iterator_t edgeid_begin,
+                        edgeid_iterator_t edgeid_end,
+                        EdgeFilter filter,
+                        bool directed) const;
 
   GraphReader& reader_;
 };
@@ -69,10 +69,11 @@ CandidateQuery::Query(const PointLL& location,
   if (tile && tile->header()->directededgecount() > 0) {
     // TODO it doesn't work since it is not the right to increase
     // graphids :(
-    const auto begin = boost::counting_iterator<uint64_t>(tile->id()),
-                 end = boost::counting_iterator<uint64_t>(static_cast<uint64_t>(tile->id())
-                                                          + tile->header()->directededgecount());
-    return Filter(location, sq_search_radius, begin, end, filter, true);
+    const auto edgeid_begin = boost::counting_iterator<uint64_t>(tile->id()),
+                 edgeid_end = boost::counting_iterator<uint64_t>(static_cast<uint64_t>(tile->id())
+                                                                 + tile->header()->directededgecount());
+    return WithinSquaredDistance(location, sq_search_radius,
+                                 edgeid_begin, edgeid_end, filter, true);
   }
   return {};
 }
@@ -92,20 +93,20 @@ CandidateQuery::QueryBulk(const std::vector<PointLL>& locations,
 }
 
 
-template <typename iterator_t>
+template <typename edgeid_iterator_t>
 std::vector<Candidate>
-CandidateQuery::Filter(const PointLL& location,
-                       float sq_search_radius,
-                       iterator_t begin,
-                       iterator_t end,
-                       EdgeFilter filter,
-                       bool directed) const
+CandidateQuery::WithinSquaredDistance(const PointLL& location,
+                                      float sq_search_radius,
+                                      edgeid_iterator_t edgeid_begin,
+                                      edgeid_iterator_t edgeid_end,
+                                      EdgeFilter filter,
+                                      bool directed) const
 {
   std::vector<Candidate> candidates;
   std::unordered_set<GraphId> visited_nodes, visited_edges;
   DistanceApproximator approximator(location);
 
-  for (auto it = begin; it != end; it++) {
+  for (auto it = edgeid_begin; it != edgeid_end; it++) {
     // Do a explict cast here as the iterator is probably of type
     // uint64_t
     const auto edgeid = static_cast<GraphId>(*it);
@@ -344,8 +345,9 @@ class CandidateGridQuery: public CandidateQuery
   Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) const override
   {
     const auto& range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
-    const auto& edges = RangeQuery(range);
-    return Filter(location, sq_search_radius, edges.begin(), edges.end(), filter, false);
+    const auto& edgeids = RangeQuery(range);
+    return WithinSquaredDistance(location, sq_search_radius,
+                                 edgeids.begin(), edgeids.end(), filter, false);
   }
 
   std::unordered_map<GraphId, GridRangeQuery<GraphId> >::size_type
