@@ -713,7 +713,8 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class tyr_worker_t {
    public:
-    tyr_worker_t(const boost::property_tree::ptree& config):config(config) {
+    tyr_worker_t(const boost::property_tree::ptree& config):config(config),
+      long_request(config.get<float>("tyr.logging.long_request")){
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -792,7 +793,7 @@ namespace {
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
-        if ((elapsed_time / trip_directions_length) > config.get<float>("tyr.logging.long_request")) {
+        if ((elapsed_time / trip_directions_length) > long_request) {
           warn_counter++;
           LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
           LOG_WARN("route request exceeded threshold::"+ ss.str());
@@ -817,6 +818,7 @@ namespace {
     }
    protected:
     boost::property_tree::ptree config;
+    float long_request;
   };
 }
 
