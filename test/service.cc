@@ -142,9 +142,9 @@ namespace {
       [&request](const void* data, size_t size) {
         auto response = http_response_t::from_string(static_cast<const char*>(data), size);
         if(response.code != responses[request - requests.cbegin() - 1].first)
-          throw std::runtime_error("Expected Response Code: '" + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code) + ", "+ response.body);
+          throw std::runtime_error("Expected Response Code: '" + std::to_string(responses[request - requests.cbegin() - 1].first) +" , Actual Response Code: " + std::to_string(response.code) + "," + response.body);
         if(response.body != responses[request - requests.cbegin() - 1].second)
-          throw std::runtime_error("Expected Response: '" + responses[request - requests.cbegin() - 1].second +", Actual Response: " + std::to_string(responses[request - requests.cbegin() - 1].first) + ", " + response.body);
+          throw std::runtime_error("Expected Response: '" + responses[request - requests.cbegin() - 1].second +" , Actual Response: " + std::to_string(responses[request - requests.cbegin() - 1].first) + "," + response.body);
 
         return request != requests.cend();
       }, 1
