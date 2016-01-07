@@ -1,14 +1,5 @@
 {
   "mm": {
-    "sigma_z": 4.07,
-    "beta": 3,
-    "max_route_distance_factor": 3,
-    "breakage_distance": 2000,
-    "interpolation_distance": 10,
-    "search_radius": 40,
-    "max_search_radius": 200,
-    "geometry": false,
-    "route": false,
     "mode": "multimodal",
     "customizable": [
       "mode",
@@ -16,6 +7,21 @@
       "geometry",
       "search_radius"
     ],
+    "default": {
+      "sigma_z": 4.07,
+      "beta": 3,
+      "max_route_distance_factor": 3,
+      "breakage_distance": 2000,
+      "interpolation_distance": 10,
+      "search_radius": 40,
+      "max_search_radius": 200,
+      "geometry": false,
+      "route": false
+    },
+    "auto": {},
+    "pedestrian": {},
+    "bicycle": {},
+    "multimodal": {},
     "logging": {
       "type": "std_out",
       "color": true
