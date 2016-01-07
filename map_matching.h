@@ -16,20 +16,9 @@
 #include "graph_helpers.h"
 #include "geometry_helpers.h"
 
-using namespace valhalla;
-using namespace mm;
-
-
-namespace {
-constexpr float kBreakageDistance = 2000.f;  // meters
-constexpr float kMaxRouteDistanceFactor = 3.f;
-constexpr float kInterpolationDistance = 10.f;  // meters
-}
-
-
 namespace mm {
 
-
+using namespace valhalla;
 using ptree = boost::property_tree::ptree;
 
 
@@ -179,22 +168,22 @@ class MapMatching: public ViterbiSearch<State>
 {
  public:
   // TODO move params down
-  MapMatching(float sigma_z,
-              float beta,
-              baldr::GraphReader& graphreader,
+  MapMatching(baldr::GraphReader& graphreader,
               const sif::cost_ptr_t* mode_costing,
               const sif::TravelMode mode,
-              float breakage_distance = kBreakageDistance,
-              float max_route_distance_factor = kMaxRouteDistanceFactor)
-      : sigma_z_(sigma_z),
+              float sigma_z,
+              float beta,
+              float breakage_distance,
+              float max_route_distance_factor)
+      : graphreader_(graphreader),
+        mode_costing_(mode_costing),
+        mode_(mode),
+        measurements_(),
+        states_(),
+        sigma_z_(sigma_z),
         inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f)),
         beta_(beta),
         inv_beta_(1.f / beta_),
-        measurements_(),
-        graphreader_(graphreader),
-        mode_costing_(mode_costing),
-        mode_(mode),
-        states_(),
         breakage_distance_(breakage_distance),
         max_route_distance_factor_(max_route_distance_factor)
   {
@@ -211,9 +200,9 @@ class MapMatching: public ViterbiSearch<State>
               const sif::cost_ptr_t* mode_costing,
               const sif::TravelMode mode,
               const ptree& config)
-      : MapMatching(config.get<float>("sigma_z"),
+      : MapMatching(graphreader, mode_costing, mode,
+                    config.get<float>("sigma_z"),
                     config.get<float>("beta"),
-                    graphreader, mode_costing, mode,
                     config.get<float>("breakage_distance"),
                     config.get<float>("max_route_distance_factor")) {}
 
@@ -249,15 +238,15 @@ class MapMatching: public ViterbiSearch<State>
     return time;
   }
 
-  const std::vector<const State*>&
-  states(Time time) const
-  { return states_[time]; }
+  baldr::GraphReader& graphreader() const
+  { return graphreader_; }
 
   sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(mode_)]; }
 
-  baldr::GraphReader& graphreader() const
-  { return graphreader_; }
+  const std::vector<const State*>&
+  states(Time time) const
+  { return states_[time]; }
 
   const Measurement& measurement(Time time) const
   { return measurements_[time]; }
@@ -267,20 +256,6 @@ class MapMatching: public ViterbiSearch<State>
 
   std::vector<Measurement>::size_type size() const
   { return measurements_.size(); }
-
- private:
-  float sigma_z_;
-  double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)
-  float beta_;
-  float inv_beta_;  // equals to 1.f / beta_
-  std::vector<Measurement> measurements_;
-  baldr::GraphReader& graphreader_;
-  const sif::cost_ptr_t* mode_costing_;
-  const TravelMode mode_;
-  std::vector<std::vector<const State*>> states_;
-
-  float breakage_distance_;
-  float max_route_distance_factor_;
 
  protected:
   virtual float MaxRouteDistance(const State& left, const State& right) const
@@ -320,6 +295,28 @@ class MapMatching: public ViterbiSearch<State>
 
   double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
   { return prev_costsofar + transition_cost + emission_cost; }
+
+ private:
+
+  baldr::GraphReader& graphreader_;
+
+  const sif::cost_ptr_t* mode_costing_;
+
+  const TravelMode mode_;
+
+  std::vector<Measurement> measurements_;
+
+  std::vector<std::vector<const State*>> states_;
+
+  float sigma_z_;
+  double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)
+
+  float beta_;
+  float inv_beta_;  // equals to 1.f / beta_
+
+  float breakage_distance_;
+
+  float max_route_distance_factor_;
 };
 
 
@@ -552,7 +549,7 @@ OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
              float max_sq_search_radius,
-             float interpolation_distance = kInterpolationDistance)
+             float interpolation_distance)
 {
   mm.Clear();
 
