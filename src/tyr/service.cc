@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
@@ -252,6 +253,7 @@ namespace {
     {
         "trip":
     {
+        "route_name": "work route",
         "status": 0,
         "locations": [
            {
@@ -332,6 +334,8 @@ namespace {
       auto route_summary = json::map({});
       route_summary->emplace("time", time);
       route_summary->emplace("length", json::fp_t{length, 3});
+      midgard::logging::Log("trip_time (s)::" + std::to_string(time), "[ANALYTICS]");
+      midgard::logging::Log("trip_length (m)::" + std::to_string(length), "[ANALYTICS]");
       return route_summary;
     }
 
@@ -676,7 +680,8 @@ namespace {
       return legs;
     }
 
-    void serialize(const valhalla::odin::DirectionsOptions& directions_options,
+    void serialize(std::string route_name,
+                   const valhalla::odin::DirectionsOptions& directions_options,
                    const std::list<valhalla::odin::TripDirections>& directions_legs,
                    std::ostringstream& stream) {
 
@@ -685,6 +690,7 @@ namespace {
       ({
         {"trip", json::map
           ({
+              {"route_name", std::string(route_name)},
               {"locations", locations(directions_legs)},
               {"summary", summary(directions_legs)},
               {"legs", legs(directions_legs)},
@@ -728,12 +734,18 @@ namespace {
           return result;
         }
 
+        auto name = request.get_optional<std::string>("route_name");
+        std:string route_name = "";
+        if (name)
+          route_name = *name;
 
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
         auto options = request.get_child_optional("directions_options");
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
+
+        midgard::logging::Log("language::" + directions_options.language(), "[ANALYTICS]");
 
         //get the legs
         std::list<odin::TripDirections> legs;
@@ -762,14 +774,36 @@ namespace {
         if(request.get_optional<std::string>("osrm"))
           osrm_serializers::serialize(directions_options, legs, json_stream);
         else
-          valhalla_serializers::serialize(directions_options, legs, json_stream);
+          valhalla_serializers::serialize(route_name, directions_options, legs, json_stream);
         if(jsonp)
           json_stream << ')';
+
+        //get processing time for locate
+        auto time = std::chrono::high_resolution_clock::now();
+        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+        auto elapsed_time = (msecs - request.get<size_t>("start_time"));
+        auto warn_counter = 0;
+
+        std::stringstream ss;
+        //log request if greater then X (ms)
+        write_json(ss, request);
+        auto trip_directions_length = 0;
+
+        for(const auto& leg : legs) {
+          trip_directions_length += leg.summary().length();
+        }
+        if ((elapsed_time / trip_directions_length) > config.get<float>("tyr.logging.long_request")) {
+          warn_counter++;
+          LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("route request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("long_route_request_count::" + std::to_string(warn_counter), "[ANALYTICS]");
+        }
 
         worker_t::result_t result{false};
         http_response_t response(200, "OK", json_stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+
         return result;
       }
       catch(const std::exception& e) {
