@@ -232,7 +232,7 @@ namespace {
             {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
           })
         },
-        {"route_name", route_name(legs)}, //TODO: list of all of the streets or just the via points?
+        {"id", route_name(legs)}, //TODO: list of all of the streets or just the via points?
         {"via_indices", via_indices(legs)}, //maneuver index
         {"found_alternative", static_cast<bool>(false)}, //no alt route support
         {"route_summary", route_summary(legs)}, //start/end name, total time/distance
@@ -253,7 +253,6 @@ namespace {
     {
         "trip":
     {
-        "route_name": "work route",
         "status": 0,
         "locations": [
            {
@@ -317,7 +316,8 @@ namespace {
     }
     ],
     "status_message": "Found route between points"
-    }
+    },
+    "id": "work route"
     }
     */
     using namespace std;
@@ -681,7 +681,7 @@ namespace {
       return legs;
     }
 
-    void serialize(std::string route_name,
+    void serialize(const boost::optional<std::string>& id,
                    const valhalla::odin::DirectionsOptions& directions_options,
                    const std::list<valhalla::odin::TripDirections>& directions_legs,
                    std::ostringstream& stream) {
@@ -691,16 +691,17 @@ namespace {
       ({
         {"trip", json::map
           ({
-              {"route_name", std::string(route_name)},
-              {"locations", locations(directions_legs)},
-              {"summary", summary(directions_legs)},
-              {"legs", legs(directions_legs)},
-              {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-              {"status", static_cast<uint64_t>(0)}, //0 success
-              {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
+            {"locations", locations(directions_legs)},
+            {"summary", summary(directions_legs)},
+            {"legs", legs(directions_legs)},
+            {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+            {"status", static_cast<uint64_t>(0)}, //0 success
+            {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
           })
         }
       });
+      if (id)
+        json->emplace("id", *id);
 
       //serialize it
       stream << *json;
@@ -736,11 +737,6 @@ namespace {
           return result;
         }
 
-        auto name = request.get_optional<std::string>("route_name");
-        std:string route_name = "";
-        if (name)
-          route_name = *name;
-
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
         auto options = request.get_child_optional("directions_options");
@@ -775,8 +771,9 @@ namespace {
         //serialize them
         if(request.get_optional<std::string>("osrm"))
           osrm_serializers::serialize(directions_options, legs, json_stream);
-        else
-          valhalla_serializers::serialize(route_name, directions_options, legs, json_stream);
+        else {
+          valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
+        }
         if(jsonp)
           json_stream << ')';
 
@@ -785,13 +782,13 @@ namespace {
         auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
         auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
 
-        std::stringstream ss;
         //log request if greater then X (ms)
         auto trip_directions_length = 0;
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
         if ((elapsed_time / trip_directions_length) > long_request) {
+          std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
           LOG_WARN("route request exceeded threshold::"+ ss.str());
