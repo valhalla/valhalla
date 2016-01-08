@@ -650,7 +650,8 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
 }
 
 // Get the access restriction given its directed edge index
-std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx) const {
+std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx,
+                                                                const uint32_t access) const {
 
   std::vector<AccessRestriction> restrictions;
   uint32_t count = header_->access_restriction_count();
@@ -687,9 +688,10 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
     mid--;
   }
 
-  // Add restrictions
   while (access_restrictions_[mid].edgeindex() == idx && mid < count) {
-    restrictions.emplace_back(access_restrictions_[mid]);
+    // Add restrictions for only the access that we are interested in
+    if (access_restrictions_[mid].modes() & access)
+      restrictions.emplace_back(access_restrictions_[mid]);
     mid++;
   }
 
