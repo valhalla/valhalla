@@ -334,8 +334,8 @@ namespace {
       auto route_summary = json::map({});
       route_summary->emplace("time", time);
       route_summary->emplace("length", json::fp_t{length, 3});
-      midgard::logging::Log("trip_time (s)::" + std::to_string(time), "[ANALYTICS]");
-      midgard::logging::Log("trip_length (m)::" + std::to_string(length), "[ANALYTICS]");
+      midgard::logging::Log("trip_time (s)::" + std::to_string(time), " [ANALYTICS] ");
+      midgard::logging::Log("trip_length (m)::" + std::to_string(length), " [ANALYTICS] ");
       return route_summary;
     }
 
@@ -575,7 +575,7 @@ namespace {
 
             if (transit_route.has_onestop_id()) {
               json_transit_route->emplace("onestop_id", transit_route.onestop_id());
-              valhalla::midgard::logging::Log("transit_route_one_stop_id::" + transit_route.onestop_id(), "[ANALYTICS]");
+              valhalla::midgard::logging::Log("transit_route_one_stop_id::" + transit_route.onestop_id(), " [ANALYTICS] ");
             }
             if (transit_route.has_short_name()) {
               json_transit_route->emplace("short_name", transit_route.short_name());
@@ -623,7 +623,7 @@ namespace {
                 // onestop_id
                 if (transit_stop.has_onestop_id()) {
                     json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
-                    valhalla::midgard::logging::Log("transit_one_stop_id::" + transit_stop.onestop_id(), "[ANALYTICS]");
+                    valhalla::midgard::logging::Log("transit_one_stop_id::" + transit_stop.onestop_id(), " [ANALYTICS] ");
                 }
 
                 // name
@@ -747,7 +747,7 @@ namespace {
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-        midgard::logging::Log("language::" + directions_options.language(), "[ANALYTICS]");
+        midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
 
         //get the legs
         std::list<odin::TripDirections> legs;
@@ -783,22 +783,19 @@ namespace {
         //get processing time for locate
         auto time = std::chrono::high_resolution_clock::now();
         auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-        auto elapsed_time = (msecs - request.get<size_t>("start_time"));
-        auto warn_counter = 0;
+        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
 
         std::stringstream ss;
         //log request if greater then X (ms)
-        write_json(ss, request);
         auto trip_directions_length = 0;
-
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
         if ((elapsed_time / trip_directions_length) > long_request) {
-          warn_counter++;
+          boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
           LOG_WARN("route request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("long_route_request_count::" + std::to_string(warn_counter), "[ANALYTICS]");
+          midgard::logging::Log("long_route_requestt", " [ANALYTICS] ");
         }
 
         worker_t::result_t result{false};
