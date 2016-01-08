@@ -400,7 +400,7 @@ void AddShortcutEdges(
       // Add any access restriction records. TODO - make sure we don't contract
       // across edges with different restrictions.
       if (newedge.access_restriction()) {
-        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id());
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
           tilebuilder.AddAccessRestriction(
               AccessRestriction(tilebuilder.directededges().size(),
@@ -582,7 +582,7 @@ void FormTilesInNewLevel(
           // the list of access restrictions in the new tile. Update the
           // edge index in the restriction to be the current directed edge Id
           if (directededge->access_restriction()) {
-            auto restrictions = tile->GetAccessRestrictions(oldedgeid.id());
+            auto restrictions = tile->GetAccessRestrictions(oldedgeid.id(), kAllAccess);
             for (const auto& res : restrictions) {
               tilebuilder.AddAccessRestriction(
                   AccessRestriction(tilebuilder.directededges().size(),

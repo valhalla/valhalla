@@ -271,7 +271,7 @@ void validate(const boost::property_tree::ptree& pt,
           // Validate access restrictions. TODO - should check modes as well
           uint32_t ar_modes = de->access_restriction();
           if (ar_modes) {
-            auto res = tile->GetAccessRestrictions(idx);
+            auto res = tile->GetAccessRestrictions(idx, kAllAccess);
             if (res.size() == 0) {
               LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
                         std::to_string(tile_id.level()));
