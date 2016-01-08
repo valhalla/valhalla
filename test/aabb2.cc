@@ -184,6 +184,34 @@ void TestIntersectsCircle() {
   check(box.Intersects({-2,    2},    1.413), false);
 }
 
+void TestIntersect() {
+  AABB2<Point2> box(-1, -1, 1, 1);
+  Point2 a, b;
+  if(!box.Intersect((a={0,0}), (b={1,1})) || a != Point2{0,0} || b != Point2{1,1})
+    throw std::logic_error("Wrong intersection");
+  if(!box.Intersect((a={-2,0}), (b={2,0})) || a != Point2{-1,0} || b != Point2{1,0})
+    throw std::logic_error("Wrong intersection");
+  if(!box.Intersect((a={-2,-2}), (b={2,2})) || a != Point2{-1,-1} || b != Point2{1,1})
+    throw std::logic_error("Wrong intersection");
+  if(!box.Intersect((a={-2,-2}), (b={0,0})) || a != Point2{-1,-1} || b != Point2{0,0})
+    throw std::logic_error("Wrong intersection");
+  if(!box.Intersect((a={0,0}), (b={2,2})) || a != Point2{0,0} || b != Point2{1,1})
+    throw std::logic_error("Wrong intersection");
+  if(!box.Intersect((a={-1,1}), (b={1,-1})) || a != Point2{-1,1} || b != Point2{1,-1})
+    throw std::logic_error("Wrong intersection");
+  if(!box.Intersect((a={0,2}), (b={2,0})) || a != Point2{1,1} || b != Point2{1,1})
+    throw std::logic_error("Wrong intersection");
+
+  if(box.Intersect((a={-2,-2}), (b={-1,-1.001})))
+    throw std::logic_error("Wrong intersection");
+  if(box.Intersect((a={0,2.1}), (b={2.1,0})))
+    throw std::logic_error("Wrong intersection");
+  if(box.Intersect((a={0,1.1}), (b={1,1.1})))
+    throw std::logic_error("Wrong intersection");
+  if(box.Intersect((a={1.1,0}), (b={1,1.1})))
+    throw std::logic_error("Wrong intersection");
+}
+
 }
 
 int main() {
@@ -223,6 +251,8 @@ int main() {
   suite.test(TEST_CASE(TestVector));
 
   suite.test(TEST_CASE(TestIntersectsCircle));
+
+  suite.test(TEST_CASE(TestIntersect));
 
   return suite.tear_down();
 }

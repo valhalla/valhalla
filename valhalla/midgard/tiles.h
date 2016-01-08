@@ -36,7 +36,7 @@ class Tiles {
    * @param   bounds    Bounding box
    * @param   tilesize  Tile size
    */
-  Tiles(const AABB2<coord_t>& bounds, const float tilesize);
+  Tiles(const AABB2<coord_t>& bounds, const float tilesize, const unsigned short subdivisions = 1);
 
   /**
    * Get the tile size.
@@ -234,6 +234,22 @@ class Tiles {
    */
   void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const;
 
+  /**
+   * Intersect the linestring with the tiles to see which tiles and sub cells it intersects
+   * @param line_string  the linestring to be tested against the cells
+   * @return             the map of each tile intersected to a list of its intersected sub cell indices
+   */
+  template <class container_t>
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& linestring) const;
+
+  /**
+   * Intersect a circle with the tiles to see which tiles and sub cells it intersects
+   * @param center  the center of the circle
+   * @param radius  the radius of the circle
+   * @return        the map of each tile intersected to a list of its intersected sub cell indices
+   */
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const coord_t& center, const float radius) const;
+
  protected:
   // Bounding box of the tiling system.
   AABB2<coord_t> tilebounds_;
@@ -246,6 +262,11 @@ class Tiles {
 
   // Number of longitude (x or longitude).
   int32_t ncolumns_;
+
+  // Number of subdivisions within a single tile
+  unsigned short nsubdivisions_;
+
+  float subdivision_size_;
 
   // Tile list - populated by the TileList method.
   std::vector<int32_t> tilelist_;

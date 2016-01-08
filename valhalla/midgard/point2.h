@@ -150,6 +150,14 @@ class Point2 : public std::pair<float, float>{
    */
   virtual bool WithinConvexPolygon(const std::vector<Point2>& poly) const;
 
+  /**
+   * Handy for templated functions that use both Point2 or PointLL to know whether or not
+   * the classes coordinate system is spherical or in the plane
+   *
+   * @return true if the system is spherical false if not
+   */
+  static bool IsSpherical();
+
  protected:
 };
 

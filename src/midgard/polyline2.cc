@@ -84,8 +84,7 @@ Polyline2<coord_t> Polyline2<coord_t>::GeneralizedPolyline(const float t) {
 // Clip this polyline to the specified bounding box.
 template <class coord_t>
 uint32_t Polyline2<coord_t>::Clip(const AABB2<coord_t>& box) {
-  Clipper2<coord_t> clipper;
-  return clipper.Clip(box, pts_, false);
+  return box.Clip(pts_, false);
 }
 
 // Gets a polyline clipped to the supplied bounding box. This polyline
@@ -93,9 +92,8 @@ uint32_t Polyline2<coord_t>::Clip(const AABB2<coord_t>& box) {
 template <class coord_t>
 Polyline2<coord_t> Polyline2<coord_t>::ClippedPolyline(const AABB2<coord_t>& box) {
   // Copy the polyline points to a temporary vector
-  Clipper2<coord_t> clipper;
   std::vector<coord_t> pts = pts_;
-  clipper.Clip(box, pts, false);
+  box.Clip(pts, false);
   return Polyline2(pts);
 }
 

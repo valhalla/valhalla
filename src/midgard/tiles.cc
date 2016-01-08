@@ -1,5 +1,75 @@
 #include "midgard/tiles.h"
 #include <cmath>
+#include <functional>
+
+namespace {
+
+  //this is modified to include all pixels that are intersected by the floating point line
+  //at each step it decides to either move in the x or y direction based on which pixels midpoint
+  //forms a smaller triangle with the line. to avoid edge cases we allow set_pixel to make the
+  //the loop bail if we leave the valid drawing region
+  void bresenham_line(float x0, float y0, float x1, float y1, const std::function<bool (int32_t, int32_t)>& set_pixel) {
+    //this one for sure
+    auto outside = set_pixel(x0, y0);
+    //early termination is likely for our use case
+    if(static_cast<int>(x0) == static_cast<int>(x1) && static_cast<int>(y0) == static_cast<int>(y1))
+      return;
+    //deltas, steps in the proper direction and triangle area constant
+    float dx = x1 - x0, sx = x0 < x1 ? 1 : -1;
+    float dy = y1 - y0, sy = y0 < y1 ? 1 : -1;
+    float c = x1*y0 - y1*x0;
+    //keep going until we make it to the ending pixel
+    while(static_cast<int>(x0) != static_cast<int>(x1) || static_cast<int>(y0) != static_cast<int>(y1)) {
+      float tx = std::abs(dy*(static_cast<int>(x0 + sx) + .5f) - dx*(static_cast<int>(y0) + .5f) + c);
+      float ty = std::abs(dy*(static_cast<int>(x0) + .5f) - dx*(static_cast<int>(y0 + sy) + .5f) + c);
+      //less error moving in the x
+      if(tx < ty) { x0 += sx; }
+      //less error moving in the y
+      else if(ty < tx) { y0 += sy; }
+      //equal error for both so move diagonally
+      else { x0 += sx; y0 += sy; }
+      //mark this pixel
+      auto o = set_pixel(x0, y0);
+      if(outside == false && o == true)
+        return;
+      outside = o;
+    }
+  }
+
+  void bresenham_circle(int32_t x0, int32_t y0, int32_t r, const std::function<bool (int32_t, int32_t)>& set_pixel) {
+    int32_t f = 1 - r;
+    int32_t ddF_x = 0;
+    int32_t ddF_y = -2 * r;
+    int32_t x = 0;
+    int32_t y = r;
+
+    set_pixel(x0, y0 + r);
+    set_pixel(x0, y0 - r);
+    set_pixel(x0 + r, y0);
+    set_pixel(x0 - r, y0);
+
+    while(x < y) {
+      if(f >= 0) {
+        y--;
+        ddF_y += 2;
+        f += ddF_y;
+      }
+      x++;
+      ddF_x += 2;
+      f += ddF_x + 1;
+
+      set_pixel(x0 + x, y0 + y);
+      set_pixel(x0 - x, y0 + y);
+      set_pixel(x0 + x, y0 - y);
+      set_pixel(x0 - x, y0 - y);
+      set_pixel(x0 + y, y0 + x);
+      set_pixel(x0 - y, y0 + x);
+      set_pixel(x0 + y, y0 - x);
+      set_pixel(x0 - y, y0 - x);
+    }
+  }
+
+}
 
 namespace valhalla {
 namespace midgard {
@@ -8,13 +78,13 @@ namespace midgard {
 // Sets class data members and computes the number of rows and columns
 // based on the bounding box and tile size.
 template <class coord_t>
-Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize) {
+Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize, unsigned short subdivisions):
+  tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions){
   tilebounds_ = bounds;
   tilesize_ = tilesize;
-  ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) /
-                                        tilesize_));
-  nrows_    = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) /
-                                        tilesize_));
+  subdivision_size_ = tilesize_ / nsubdivisions_;
+  ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) / tilesize_));
+  nrows_    = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) / tilesize_));
 }
 
 // Get the tile size. Tiles are square.
@@ -331,9 +401,96 @@ void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t,
   }
 }
 
+template <class coord_t>
+template <class container_t>
+std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const container_t& linestring) const {
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
+
+  //what to do when we want to mark a subdivision as containing a segment of this linestring
+  const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
+    //cant mark ones that are outside the valid range of tiles
+    if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
+      return true;
+    //find the tile
+    int32_t tile_column = x / nsubdivisions_;
+    int32_t tile_row = y / nsubdivisions_;
+    int32_t tile = tile_row * ncolumns_ + tile_column;
+    //find the subdivision
+    unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
+    intersection[tile].insert(subdivision);
+    return false;
+  };
+
+  //for each segment
+  auto ui = linestring.cbegin(), vi = linestring.cbegin();
+  while(vi != linestring.cend()) {
+    //figure out what the segment is
+    auto u = *ui;
+    auto v = u;
+    std::advance(vi, 1);
+    if(vi != linestring.cend())
+      v = *vi;
+    else if(linestring.size() > 1)
+      return intersection;
+    ui = vi;
+
+    //TODO: if coord_t is spherical and the segment uv is sufficiently long
+    //then the geodesic along it cannot be approximated with linear constructs
+    //instead we need to resample uv at a sufficiently small interval so as to
+    //approximate the arc with piecewise linear segments. to do this we'd call
+    //resample to turn uv into a list of coordinates and loop over them below
+    //alternatively we could figure out how to intersect a geodesic with our
+    //planar grid but that seems harder still
+
+    //figure out global subdivision start and end points
+    auto x0 = (u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
+    auto y0 = (u.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
+    auto x1 = (v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
+    auto y1 = (v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
+
+    //pretend the subdivisions are pixels and we are doing line rasterization
+    bresenham_line(x0, y0, x1, y1, set_pixel);
+  }
+
+  //give them back
+  return intersection;
+}
+
+template <class coord_t>
+std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const coord_t& center, const float radius) const {
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
+
+  //what to do when we want to mark a subdivision as containing a segment of this linestring
+  const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
+    //cant mark ones that are outside the valid range of tiles
+    if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
+      return true;
+    //find the tile
+    int32_t tile_column = x / nsubdivisions_;
+    int32_t tile_row = y / nsubdivisions_;
+    int32_t tile = tile_row * ncolumns_ + tile_column;
+    //find the subdivision
+    unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
+    intersection[tile].insert(subdivision);
+    return false;
+  };
+
+  //TODO: convert center point and radius to subdivision coordinates/units
+
+  //TODO: call bresenham circle algorithm then flood fill the circle
+
+  //give them back
+  return intersection;
+}
+
 // Explicit instantiation
 template class Tiles<Point2>;
 template class Tiles<PointLL>;
+
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<Point2>::Intersect(const std::list<Point2>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<PointLL>::Intersect(const std::list<PointLL>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<Point2>::Intersect(const std::vector<Point2>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<PointLL>::Intersect(const std::vector<PointLL>&) const;
 
 }
 }

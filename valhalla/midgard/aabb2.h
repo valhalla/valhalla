@@ -10,6 +10,10 @@ namespace midgard {
 /**
  * Axis Aligned Bounding Box (2 dimensional). This is a template class that
  * works with Point2 (Euclidean x,y) or PointLL (latitude,longitude).
+ *
+ *
+ * TODO: merge clipper2 class into this one, its basically a thin scaffold around
+ * this class anyway and has some useful intersection stuff
  */
 template <class coord_t>
 class AABB2 {
@@ -153,6 +157,28 @@ class AABB2 {
   bool Intersects(const coord_t& center, const float radius) const;
 
   /**
+   * Clips the input set of vertices to the specified boundary.  Uses a
+   * method where the shape is clipped against each edge in succession.
+   * @param    pts      In/Out. List of points in the polyline/polygon.
+   *                    After clipping this list is clipped to the boundary.
+   * @param    closed   Is the shape closed?
+   * @return   Returns the number of vertices in the clipped shape. May have
+   *           0 vertices if none of the input polyline intersects or lies
+   *           within the boundary.
+   */
+  uint32_t Clip(std::vector<coord_t>& pts, const bool closed) const;
+
+  /**
+   * Intersects the segment formed by u,v with the bounding box
+   *
+   * @param  u  the first point in the segment
+   * @param  v  the second point in the segment
+   * @return Returns true if the segment actually intersected the bounding box
+   *         and moves u and v to actually reflect the intersection points
+   */
+  bool Intersect(coord_t& u, coord_t& v) const;
+
+  /**
    * Gets the width of the bounding box.
    * @return  Returns the width of this bounding box.
    */
@@ -172,12 +198,56 @@ class AABB2 {
   void Expand(const AABB2& r2);
 
  protected:
+  // Edge to clip against
+  enum ClipEdge { kLeft, kRight, kBottom, kTop };
+
   // Minimum and maximum x,y values (lower left and upper right corners)
   // of a rectangle / bounding box.
   x_t minx_;
   y_t miny_;
   x_t maxx_;
   y_t maxy_;
+
+  /**
+   * Clips the polyline/polygon against a single edge.
+   * @param  edge    Edge to clip against.
+   * @param  closed  True if the vertices form a polygon.
+   * @param  vin     List of input vertices.
+   * @param  vout    Output vertices.
+   * @return  Returns the number of vertices after clipping. The list
+   *          of vertices is in vout.
+   */
+  uint32_t ClipAgainstEdge(const ClipEdge edge, const bool closed,
+            const std::vector<coord_t>& vin, std::vector<coord_t>& vout) const;
+
+  /**
+   * Finds the intersection of the segment from insidept to outsidept with the
+   * specified boundary edge.  Finds the intersection using the parametric
+   * line equation.
+   * @param  edge  Edge to intersect.
+   * @param  insidept  Vertex inside with respect to the edge.
+   * @param  outsidept Vertex outside with respect to the edge.
+   * @return  Returns the intersection of the segment with the edge.
+   */
+  coord_t ClipIntersection(const ClipEdge edge, const coord_t& insidept,
+                          const coord_t& outsidept) const;
+
+  /**
+   * Tests if the vertex is inside the rectangular boundary with respect to
+   * the specified edge.
+   * @param   edge   Edge to test.
+   * @param   v      Vertex to test.
+   * @return  Returns true if the point is inside with respect to the edge,
+   *          false if it is outside.
+   */
+  bool Inside(const ClipEdge edge, const coord_t& v) const;
+
+  /**
+   * Adds a vertex to the output vector if not equal to the prior.
+   * @param  pt    Vertex to add.
+   * @param  vout  Vertex list.
+   */
+  void Add(const coord_t& pt, std::vector<coord_t>& vout) const;
 };
 
 }

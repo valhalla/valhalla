@@ -137,6 +137,14 @@ class PointLL : public Point2 {
    * @return  Returns true if the point is within the polygon, false if not.
    */
   virtual bool WithinConvexPolygon(const std::vector<PointLL>& poly) const;
+
+  /**
+   * Handy for templated functions that use both Point2 or PointLL to know whether or not
+   * the classes coordinate system is spherical or in the plane
+   *
+   * @return true if the system is spherical false if not
+   */
+  static bool IsSpherical();
 };
 
 }
