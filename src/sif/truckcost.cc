@@ -102,13 +102,13 @@ class TruckCost : public DynamicCost {
    * @param  edge     Pointer to a directed edge.
    * @param  pred     Predecessor edge information.
    * @param  tile     current tile
-   * @param  graphid  graphid that we care about
+   * @param  edgeid   edgeid that we care about
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& graphid) const;
+                       const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -120,7 +120,7 @@ class TruckCost : public DynamicCost {
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
    * @param  tile           current tile
-   * @param  graphid        graphid that we care about
+   * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -128,7 +128,7 @@ class TruckCost : public DynamicCost {
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& graphid) const;
+                 const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -290,7 +290,7 @@ bool TruckCost::AllowMultiPass() const {
 bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& graphid) const {
+                       const baldr::GraphId& edgeid) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) ||
@@ -302,7 +302,7 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
 
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(graphid.id(), kTruckAccess);
+        tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
 
     for (const auto& restriction : restrictions ) {
       // TODO:  Need to handle restictions that take place only at certain
@@ -348,7 +348,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& graphid) const {
+               const baldr::GraphId& edgeid) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) ||
@@ -359,7 +359,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   const std::vector<baldr::AccessRestriction>& restrictions =
-      tile->GetAccessRestrictions(graphid, kTruckAccess);
+      tile->GetAccessRestrictions(edgeid, kTruckAccess);
 
   for (const auto& restriction : restrictions ) {
     // TODO:  Need to handle restictions that take place only at certain

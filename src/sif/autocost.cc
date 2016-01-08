@@ -86,13 +86,13 @@ class AutoCost : public DynamicCost {
    * @param  edge     Pointer to a directed edge.
    * @param  pred     Predecessor edge information.
    * @param  tile     current tile
-   * @param  graphid  graphid that we care about
+   * @param  edgeid   edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& graphid) const;
+                       const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -104,7 +104,7 @@ class AutoCost : public DynamicCost {
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
    * @param  tile           current tile
-   * @param  graphid        graphid that we care about
+   * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -112,7 +112,7 @@ class AutoCost : public DynamicCost {
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& graphid) const;
+                 const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -278,7 +278,7 @@ bool AutoCost::AllowMultiPass() const {
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& graphid) const {
+                       const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -299,7 +299,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& graphid) const {
+               const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -551,13 +551,13 @@ class BusCost : public AutoCost {
    * @param  edge     Pointer to a directed edge.
    * @param  pred     Predecessor edge information.
    * @param  tile     current tile
-   * @param  graphid  graphid that we care about
+   * @param  edgeid   edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& graphid) const;
+                       const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -568,14 +568,14 @@ class BusCost : public AutoCost {
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
    * @param  tile           current tile
-   * @param  graphid        graphid that we care about
+   * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& graphid) const;
+                 const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -609,7 +609,7 @@ BusCost::~BusCost() {
 bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
-                      const baldr::GraphId& graphid) const {
+                      const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -629,7 +629,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& graphid) const {
+               const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
