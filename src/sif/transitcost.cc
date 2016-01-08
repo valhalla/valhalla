@@ -1,5 +1,6 @@
 #include "sif/transitcost.h"
 
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
 
@@ -12,15 +13,24 @@ namespace sif {
 namespace {
 constexpr uint32_t kUnitSize = 1;
 
-// Default neither favors nor avoids buses vs rail/subway
-constexpr bool  kDefaultAllowBus    = true;
-constexpr bool  kDefaultAllowRail   = true;
 constexpr float kDefaultBusFactor   = 1.0f;
 constexpr float kDefaultBusPenalty  = 0.0f;
 constexpr float kDefaultRailFactor  = 1.0f;
 constexpr float kDefaultRailPenalty = 0.0f;
 constexpr float kDefaultTransferCost = 60.0f;
-constexpr float kDefaultTransferPenalty = 600.0f;  // 5 minute default
+constexpr float kDefaultTransferPenalty = 300.0f;  // 5 minute default
+
+// User propensity to use buses. Range of values from 0 (avoid buses) to
+// 1 (totally comfortable riding on buses).
+constexpr float kDefaultUseBusFactor = 0.3f;
+
+// User propensity to use rail. Range of values from 0 (avoid rail) to
+// 1 (totally comfortable riding on rail).
+constexpr float kDefaultUseRailFactor = 0.5f;
+
+// User propensity to use/allow transfers. Range of values from 0
+// (avoid transfers) to 1 (totally comfortable with transfers).
+constexpr float kDefaultUseTransfersFactor = 1.0f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 }
@@ -45,28 +55,36 @@ class TransitCost : public DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
+   * @param  edge     Pointer to a directed edge.
+   * @param  pred     Predecessor edge information.
+   * @param  tile     current tile
+   * @param  edgeid   edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const;
+                       const EdgeLabel& pred,
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
    * (from destination towards origin). Both opposing edges are
    * provided.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
-   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  opp_edge       Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
+   * @param  tile           current tile
+   * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const baldr::GraphTile*& tile,
+                 const baldr::GraphId& edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -120,6 +138,12 @@ class TransitCost : public DynamicCost {
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
 
   /**
+   * Returns the default transfer cost between 2 transit lines.
+   * @return  Returns the transfer cost and time (seconds).
+   */
+  virtual Cost DefaultTransferCost() const;
+
+  /**
    * Get the cost factor for A* heuristics. This factor is multiplied
    * with the distance to the destination to produce an estimate of the
    * minimum cost to the destination. The A* heuristic must underestimate the
@@ -148,13 +172,25 @@ class TransitCost : public DynamicCost {
   }
 
  protected:
-  bool allow_bus_;
-  bool allow_rail_;
+
+  // A measure of willingness to ride on buses or rail. Ranges from 0-1 with
+  // 0 being not willing at all and 1 being totally comfortable with taking
+  // this transportation. These factors determine how much rail or buses are
+  // preferred over each other (if at all).
+  float use_bus_;
+  float use_rail_;
   float bus_factor_;
-  float bus_penalty_;
   float rail_factor_;
+
+  float bus_penalty_;
   float rail_penalty_;
-  float transfer_cost_;     // Transfer cost when no transfer record exists
+
+  // A measure of willingness to make transfers. Ranges from 0-1 with
+  // 0 being not willing at all and 1 being totally comfortable.
+  float use_transfers_;
+  float transfer_factor_;
+
+  float transfer_cost_;     // Transfer cost
   float transfer_penalty_;  // Transfer penalty
 };
 
@@ -162,12 +198,40 @@ class TransitCost : public DynamicCost {
 // not present, set the default.
 TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
-  allow_bus_    = pt.get<bool>("allow_bus",  kDefaultAllowBus);
-  allow_rail_   = pt.get<bool>("allow_rail", kDefaultAllowRail);
-  bus_factor_   = pt.get<float>("bus_factor", kDefaultBusFactor);
-  bus_penalty_  = pt.get<float>("bus_penalty", kDefaultBusPenalty);
-  rail_factor_  = pt.get<float>("rail_factor", kDefaultRailFactor);
-  rail_penalty_ = pt.get<float>("rail_penalty", kDefaultRailPenalty);
+
+  // Willingness to use buses. Make sure this is within range [0, 1].
+  use_bus_ = pt.get<float>("use_bus", kDefaultUseBusFactor);
+  if (use_bus_ < 0.0f || use_bus_ > 1.0f) {
+    LOG_WARN("Outside valid use_bus factor range " +
+              std::to_string(use_bus_) + ": using default");
+  }
+
+  // Willingness to use rail. Make sure this is within range [0, 1].
+  use_rail_ = pt.get<float>("use_rail", kDefaultUseRailFactor);
+  if (use_rail_ < 0.0f || use_rail_ > 1.0f) {
+    LOG_WARN("Outside valid use_rail factor range " +
+              std::to_string(use_rail_) + ": using default");
+  }
+
+  // Willingness to make transfers. Make sure this is within range [0, 1].
+  use_transfers_ = pt.get<float>("use_transfers", kDefaultUseTransfersFactor);
+  if (use_transfers_ < 0.0f || use_transfers_ > 1.0f) {
+    LOG_WARN("Outside valid use_transfers factor range " +
+              std::to_string(use_transfers_) + ": using default");
+  }
+
+  // Set the factors. The factors above 0.5 start to reduce the weight
+  // for this mode while factors below 0.5 start to increase the weight for
+  // this mode.
+  bus_factor_ = (use_bus_ >= 0.5f) ?
+                 1.0f - (use_bus_ - 0.5f) :
+                 1.0f + (0.5f - use_bus_) * 5.0f;
+
+  rail_factor_ = (use_rail_ >= 0.5f) ?
+                 1.0f - (use_rail_ - 0.5f) :
+                 1.0f + (0.5f - use_rail_) * 5.0f;
+
+  transfer_factor_ = use_transfers_;
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
 }
@@ -178,11 +242,15 @@ TransitCost::~TransitCost() {
 
 // Check if access is allowed on the specified edge.
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
-                          const EdgeLabel& pred) const {
+                          const EdgeLabel& pred,
+                          const baldr::GraphTile*& tile,
+                          const baldr::GraphId& edgeid) const {
+  // TODO - obtain and check the access restrictions.
+
   if (edge->use() == Use::kBus) {
-    return allow_bus_;
+    return (use_bus_ > 0.0f) ? true : false;
   } else if (edge->use() == Use::kRail) {
-    return allow_rail_;
+    return (use_rail_ > 0.0f) ? true : false;
   }
   return true;
 }
@@ -192,7 +260,11 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
 bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge) const {
+               const baldr::DirectedEdge* opp_pred_edge,
+               const baldr::GraphTile*& tile,
+               const baldr::GraphId& edgeid) const {
+  // TODO - obtain and check the access restrictions.
+
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
@@ -225,9 +297,9 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;
   if (edge->use() == Use::kBus) {
-    weight = bus_factor_;
+    weight *= bus_factor_;
   } else if (edge->use() == Use::kRail) {
-    weight = rail_factor_;
+    weight *= rail_factor_;
   }
   return { elapsedtime * weight, elapsedtime };
 }
@@ -240,9 +312,9 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
     if (edge->use() == Use::kBus) {
-      return { bus_penalty_, 0.0f };
+      return { (0.5f + bus_factor_), 0.0f };
     } else if (edge->use() == Use::kRail) {
-      return { rail_penalty_, 0.0f };
+      return { (0.5f + rail_factor_), 0.0f };
     }
   }
   return { 0.0f, 0.0f };
@@ -252,19 +324,24 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   if (transfer == nullptr) {
     // No transfer record exists - use defaults
-    return { transfer_cost_ +  transfer_penalty_, transfer_cost_  };
+    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
   }
   switch (transfer->type()) {
   case TransferType::kRecommended:
-    return { 15.0f + transfer_penalty_, 15.0f };
+    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
   case TransferType::kTimed:
-    return { 15.0f + transfer_penalty_, 15.0f };
+    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
   case TransferType::kMinTime:
-    return { static_cast<float>(transfer->mintime() + transfer_penalty_),
+    return { static_cast<float>(transfer->mintime() + (transfer_penalty_ * transfer_factor_)),
              static_cast<float>(transfer->mintime()) };
   case TransferType::kNotPossible:
     return kImpossibleCost;
   }
+}
+
+// Returns the default transfer cost between 2 transit lines.
+Cost TransitCost::DefaultTransferCost() const {
+  return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
