@@ -158,6 +158,7 @@ namespace {
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("transit", sif::CreateTransitCost);
+      factory.Register("truck", sif::CreateTruckCost);
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {

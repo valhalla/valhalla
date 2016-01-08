@@ -198,7 +198,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         // Skip any superseded edges that match the shortcut mask. Also skip
         // if no access is allowed to this edge (based on costing method)
         if ((shortcuts & directededge->superseded()) ||
-            !costing->Allowed(directededge, pred)) {
+            !costing->Allowed(directededge, pred, tile, edgeid)) {
           continue;
         }
 
@@ -348,7 +348,8 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         // not_thru edges
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
         if (directededge->not_thru() ||
-            !costing->AllowedReverse(directededge, pred2, opp_edge, opp_pred_edge)) {
+            !costing->AllowedReverse(directededge, pred2, opp_edge,
+                                     opp_pred_edge, tile, edgeid)) {
           continue;
         }
 

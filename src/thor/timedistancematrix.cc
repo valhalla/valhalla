@@ -123,7 +123,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       }
 
       // Skip if no access is allowed to this edge (based on costing method)
-      if (!costing->Allowed(directededge, pred)) {
+      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
         continue;
       }
 
@@ -275,7 +275,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // Get opposing edge and check if allowed.
       const DirectedEdge* opp_edge = graphreader.GetOpposingEdge(edgeid);
       if (opp_edge == nullptr ||
-         !costing->AllowedReverse(directededge, pred, opp_edge, opp_pred_edge)) {
+         !costing->AllowedReverse(directededge, pred, opp_edge, opp_pred_edge,
+                                  tile, edgeid)) {
         continue;
       }
 

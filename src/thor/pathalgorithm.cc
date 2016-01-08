@@ -218,7 +218,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
       // Skip any superseded edges that match the shortcut mask. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((shortcuts & directededge->superseded()) ||
-          !costing->Allowed(directededge, pred)) {
+          !costing->Allowed(directededge, pred, tile, edgeid)) {
         continue;
       }
 

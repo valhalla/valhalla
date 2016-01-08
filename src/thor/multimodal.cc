@@ -152,8 +152,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     }
 
     // Set a default transfer at a stop (if not same trip Id and block Id)
-    // TODO - support in transit costing method
-    Cost transfer_cost = { 300.0f, 60.0f };
+    Cost transfer_cost = tc->DefaultTransferCost();
 
     // Get any transfer times and penalties if this is a transit stop (and
     // transit has been taken at some point on the path) and mode is pedestrian
@@ -268,7 +267,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
         if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(
-                directededge, pred)) {
+                directededge, pred, tile, edgeid)) {
           continue;
         }
 
@@ -431,9 +430,10 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
+
       // Skip transition edges or if not allowed for htis mode
       if (directededge->trans_up() || directededge->trans_down() ||
-          !costing->Allowed(directededge, pred)) {
+          !costing->Allowed(directededge, pred, tile, edgeid)) {
         continue;
       }
 
