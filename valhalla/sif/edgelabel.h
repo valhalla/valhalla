@@ -285,6 +285,21 @@ class EdgeLabel {
    */
   bool operator < (const EdgeLabel& other) const;
 
+  /**
+   * Get the turn cost. This is used in the bidirectional A* reverse
+   * path search to allow the recovery of the true elapsed time along the
+   * path. This is needed since the turn cost is applied at a different node
+   * than the forward search.
+   * @return  Returns the true turn cost (without penalties) in seconds.
+   */
+  uint32_t turn_cost() const;
+
+  /**
+   * Set the turn cost.
+   * @param  tc  True turn cost in seconds.
+   */
+  void set_turn_cost(uint32_t tc);
+
  private:
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
@@ -349,6 +364,9 @@ class EdgeLabel {
 
   // Block Id
   uint32_t blockid_;
+
+  // Turn cost (used in bidirectional reverse path search).
+  uint32_t turn_cost_;
 };
 
 }
