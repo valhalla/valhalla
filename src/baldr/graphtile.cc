@@ -690,7 +690,7 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
 
   while (access_restrictions_[mid].edgeindex() == idx && mid < count) {
     // Add restrictions for only the access that we are interested in
-    if (access_restrictions_[mid].modes() & (1 << access))
+    if (access_restrictions_[mid].modes() & access)
       restrictions.emplace_back(access_restrictions_[mid]);
     mid++;
   }
