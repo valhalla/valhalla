@@ -1,0 +1,156 @@
+{
+  "en-US": {
+    "instructions": {
+      "start": {
+        "0": "Head %{cardinal_direction}.",
+        "1": "Head %{cardinal_direction} on %{street_names}.",
+        "2": "Head %{cardinal_direction} on %{begin_street_names}. Continue on %{street_names}.",
+        "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      },
+      "start_verbal": {
+        "0": "Head %{cardinal_direction} for %{length}.",
+        "1": "Head %{cardinal_direction} on %{street_names} for %{length}.",
+        "2": "Head %{cardinal_direction} on %{begin_street_names}.",
+        "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      },
+      "destination": {
+        "0": "You have arrived at your destination.",
+        "1": "You have arrived at %{location}.",
+        "2": "Your destination is on the %{relative_direction}.",
+        "3": "%{location} is on the %{relative_direction}.",
+        "relative_directions": ["left", "right"]
+      },
+      "destination_verbal_alert": {
+        "0": "You will arrive at your destination.",
+        "1": "You will arrive at %{location}.",
+        "2": "Your destination will be on the %{relative_direction}.",
+        "3": "%{location} will be on the %{relative_direction}",
+        "relative_directions": ["left", "right"]
+      },
+      "destination_verbal": {
+        "0": "You have arrived at your destination.",
+        "1": "You have arrived at %{location}.",
+        "2": "Your destination is on the %{relative_direction}.",
+        "3": "%{location} is on the %{relative_direction}.",
+        "relative_directions": ["left", "right"]
+      },
+      "becomes": {
+        "0": "%{prev_street_names} becomes %{street_names}."
+      },
+      "becomes_verbal": {
+        "0": "%{prev_street_names} becomes %{street_names}."
+      },
+      "continue": {
+        "0": "Continue.",
+        "1": "Continue on %{street_names}."
+      },
+      "continue_verbal_alert": {
+        "0": "Continue.",
+        "1": "Continue on %{street_names}."
+      },
+      "continue_verbal": {
+        "0": "Continue for %{length}.",
+        "1": "Continue on %{street_names} for %{length}."
+      },
+      "bear": {
+        "0": "Bear %{relative_direction}.",
+        "1": "Bear %{relative_direction} onto %{street_names}.",
+        "2": "Bear %{relative_direction} onto %{begin_street_names}. Continue on %{street_names}.",
+        "3": "Bear %{relative_direction} to stay on %{street_names}.",
+        "relative_directions": ["left", "right"]
+      },
+      "bear_verbal_alert": {
+        "0": "Bear %{relative_direction}.",
+        "1": "Bear %{relative_direction} onto %{street_names}.",
+        "2": "Bear %{relative_direction} onto %{begin_street_names}.",
+        "3": "Bear %{relative_direction} to stay on %{street_names}.",
+        "relative_directions": ["left", "right"]
+      },
+      "bear_verbal": {
+        "0": "Bear %{relative_direction}.",
+        "1": "Bear %{relative_direction} onto %{begin_street_names}.",
+        "3": "Bear %{relative_direction} to stay on %{street_names}.",
+        "relative_directions": ["left", "right"]
+      },
+      "turn": null,
+      "turn_verbal_alert": null,
+      "turn_verbal": null,
+      "uturn": {
+        "0": "Make a %{relative_direction} U-turn.",
+        "1": "Make a %{relative_direction} U-turn onto %{street_names}.",
+        "2": "Make a %{relative_direction} U-turn to stay on %{street_names}.",
+        "3": "Make a %{relative_direction} U-turn at %{cross_street_names}.",
+        "4": "Make a %{relative_direction} U-turn at %{cross_street_names} onto %{street_names}.",
+        "5": "Make a %{relative_direction} U-turn at %{cross_street_names} to stay on %{street_names}.",
+        "relative_directions": ["left", "right"]
+      },
+      "uturn_verbal_alert": {
+        "0": "Make a %{relative_direction} U-turn.",
+        "1": "Make a %{relative_direction} U-turn onto %{street_names}.",
+        "2": "Make a %{relative_direction} U-turn to stay on %{street_names}.",
+        "3": "Make a %{relative_direction} U-turn at %{cross_street_names}.",
+        "relative_directions": ["left", "right"]
+      },
+      "uturn_verbal": {
+        "0": "Make a %{relative_direction} U-turn.",
+        "1": "Make a %{relative_direction} U-turn onto %{street_names}.",
+        "2": "Make a %{relative_direction} U-turn to stay on %{street_names}.",
+        "3": "Make a %{relative_direction} U-turn at %{cross_street_names}.",
+        "4": "Make a %{relative_direction} U-turn at %{cross_street_names} onto %{street_names}.",
+        "5": "Make a %{relative_direction} U-turn at %{cross_street_names} to stay on %{street_names}.",
+        "relative_directions": ["left", "right"]
+      },
+      "ramp_straight": null,
+      "ramp_straight_verbal_alert": null,
+      "ramp_straight_verbal": null,
+      "ramp": null,
+      "ramp_verbal_alert": null,
+      "ramp_verbal": null,
+      "exit": null,
+      "exit_verbal_alert": null,
+      "exit_verbal": null,
+      "keep": null,
+      "keep_verbal_alert": null,
+      "keep_verbal": null,
+      "keep_to_stay_on": null,
+      "keep_to_stay_on_verbal_alert": null,
+      "keep_to_stay_on_verbal": null,
+      "merge": null,
+      "merge_verbal_alert": null,
+      "merge_verbal": null,
+      "enter_roundabout": null,
+      "enter_roundabout_verbal_alert": null,
+      "enter_roundabout_verbal": null,
+      "exit_roundabout": null,
+      "exit_roundabout_verbal": null,
+      "enter_ferry": null,
+      "enter_ferry_verbal_alert": null,
+      "enter_ferry_verbal": null,
+      "exit_ferry": null,
+      "exit_ferry_verbal_alert": null,
+      "exit_ferry_verbal": null,
+      "transit_connection_start": null,
+      "transit_connection_start_verbal": null,
+      "transit_connection_transfer": null,
+      "transit_connection_transfer_verbal": null,
+      "transit_connection_destination": null,
+      "transit_connection_destination_verbal": null,
+      "depart": null,
+      "depart_verbal": null,
+      "arrive": null,
+      "arrive_verbal": null,
+      "transit": null,
+      "transit_verbal": null,
+      "post_transition_transit_verbal": null,
+      "transit_remain_on": null,
+      "transit_remain_on_verbal": null,
+      "transit_transfer": null,
+      "transit_transfer_verbal": null,
+      "post_transit_connection_destination": null,
+      "post_transit_connection_destination_verbal": null,
+      "post_transition_metric_verbal": null,
+      "post_transition_us_customary_verbal": null
+    }
+  }
+}
+
