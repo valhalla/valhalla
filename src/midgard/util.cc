@@ -318,6 +318,7 @@ bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord
   auto ab_xd = a.first - b.first;
   auto ab_yd = a.second - b.second;
   auto d_cross = uv_xd*ab_yd - ab_xd*uv_yd;
+  //parallel or very close to it
   if(std::abs(d_cross) < 1e-5)
     return false;
   auto uv_cross = u.first*v.second - u.second*v.first;
