@@ -41,7 +41,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       predecessor_(predecessor) ,
       tripid_(0),
       prior_stopid_(0),
-      blockid_(0) {
+      blockid_(0),
+      turn_cost_(0) {
 }
 
 // Constructor with values - used in bidirectional A*
@@ -73,7 +74,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       predecessor_(predecessor) ,
       tripid_(0),
       prior_stopid_(0),
-      blockid_(0) {
+      blockid_(0),
+      turn_cost_(0)  {
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -106,7 +108,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
       predecessor_(predecessor) ,
       tripid_(tripid),
       prior_stopid_(prior_stopid),
-      blockid_(blockid) {
+      blockid_(blockid),
+      turn_cost_(0)  {
 }
 
 // Update predecessor and cost values in the label.
@@ -258,6 +261,16 @@ uint32_t EdgeLabel::prior_stopid() const {
 // Return the transit block Id of the prior trip.
 uint32_t EdgeLabel::blockid() const {
   return blockid_;
+}
+
+// Get the turn cost.
+uint32_t EdgeLabel::turn_cost() const {
+  return turn_cost_;
+}
+
+// Set the turn cost.
+void EdgeLabel::set_turn_cost(uint32_t tc) {
+  turn_cost_ = tc;
 }
 
 // Operator for sorting.
