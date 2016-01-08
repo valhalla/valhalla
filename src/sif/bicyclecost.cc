@@ -171,32 +171,36 @@ class BicycleCost : public DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
-   * @param  restrictions  Restrictions at this directed edge.
+   * @param  edge     Pointer to a directed edge.
+   * @param  pred     Predecessor edge information.
+   * @param  tile     current tile
+   * @param  graphid  graphid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const std::vector<baldr::AccessRestriction>& restrictions) const;
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& graphid) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
    * (from destination towards origin). Both opposing edges are
    * provided.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
-   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  opp_edge       Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
-   * @param  restrictions  Restrictions at this directed edge.
+   * @param  tile           current tile
+   * @param  graphid        graphid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge,
-                 const std::vector<baldr::AccessRestriction>& restrictions) const;
+                 const baldr::GraphTile*& tile,
+                 const baldr::GraphId& graphid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -476,7 +480,10 @@ BicycleCost::~BicycleCost() {
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
-                          const std::vector<baldr::AccessRestriction>& restrictions) const {
+                          const baldr::GraphTile*& tile,
+                          const baldr::GraphId& graphid) const {
+  // TODO - obtain and check the access restrictions.
+
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Disallow Uturns. Do not allow entering
   // not-thru edges except near the destination. Skip impassable edges.
@@ -497,7 +504,10 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge,
-               const std::vector<baldr::AccessRestriction>& restrictions) const {
+               const baldr::GraphTile*& tile,
+               const baldr::GraphId& graphid) const {
+  // TODO - obtain and check the access restrictions.
+
   // Check access, U-turn, and simple turn restriction.
   // Check if edge is not-thru (no need to check distance from destination
   // since the search is heading out of any not_thru regions)

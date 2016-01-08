@@ -63,32 +63,36 @@ class PedestrianCost : public DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
-   * @param  restrictions  Restrictions at this directed edge.
+   * @param  edge     Pointer to a directed edge.
+   * @param  pred     Predecessor edge information.
+   * @param  tile     current tile
+   * @param  graphid  graphid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const std::vector<baldr::AccessRestriction>& restrictions) const;
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& graphid) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
    * (from destination towards origin). Both opposing edges are
    * provided.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
-   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  opp_edge       Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
-   * @param  restrictions  Restrictions at this directed edge.
+   * @param  tile           current tile
+   * @param  graphid        graphid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge,
-                 const std::vector<baldr::AccessRestriction>& restrictions) const;
+                 const baldr::GraphTile*& tile,
+                 const baldr::GraphId& graphid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -234,7 +238,10 @@ void PedestrianCost::UseMaxModeDistance() {
 // where max. walking distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
-                             const std::vector<baldr::AccessRestriction>& restrictions) const {
+                             const baldr::GraphTile*& tile,
+                             const baldr::GraphId& graphid) const {
+  // TODO - obtain and check the access restrictions.
+
   // Disallow if no pedestrian access, surface marked as impassible,
   // edge is not-thru and we are far from destination, or if max
   // walking distance is exceeded.
@@ -264,7 +271,10 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge,
-               const std::vector<baldr::AccessRestriction>& restrictions) const {
+               const baldr::GraphTile*& tile,
+               const baldr::GraphId& graphid) const {
+  // TODO - obtain and check the access restrictions.
+
   // Disallow if no pedestrian access, surface marked as impassible, Uturn,
   // or edge is not-thru (no need to check distance from destination since
   // the search is heading out of any not_thru regions). Do not check max
