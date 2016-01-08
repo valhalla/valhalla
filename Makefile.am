@@ -114,8 +114,6 @@ test_locales_SOURCES = test/locales.cc test/test.cc
 test_locales_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_locales_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 
-
-
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
 SH_LOG_COMPILER = sh
