@@ -186,7 +186,7 @@ namespace {
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix = request.get_optional<std::string>("matrix_type");
         if (matrix) {
-          valhalla::midgard::logging::Log("matrix_type::" + *matrix, "[ANALYTICS]");
+          valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
             return get_matrix(matrix_iter->second, costing, request, info);
@@ -449,7 +449,7 @@ namespace {
     void GetPath(thor::PathAlgorithm* path_algorithm,
                  baldr::PathLocation& origin, baldr::PathLocation& destination,
                  std::vector<thor::PathInfo>& path_edges) {
-      midgard::logging::Log("#_passes::1", "[ANALYTICS]");
+      midgard::logging::Log("#_passes::1", " [ANALYTICS] ");
       // Find the path.
       path_edges = path_algorithm->GetBestPath(origin, destination, reader,
                                                mode_costing, mode);
@@ -461,7 +461,7 @@ namespace {
           // 2nd pass
           path_algorithm->Clear();
           cost->RelaxHierarchyLimits(16.0f);
-          midgard::logging::Log("#_passes::2", "[ANALYTICS]");
+          midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
           path_edges = path_algorithm->GetBestPath(origin, destination,
                                     reader, mode_costing, mode);
 
@@ -469,7 +469,7 @@ namespace {
           if (path_edges.size() == 0) {
             path_algorithm->Clear();
             cost->DisableHighwayTransitions();
-            midgard::logging::Log("#_passes::3", "[ANALYTICS]");
+            midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
             path_edges = path_algorithm->GetBestPath(origin, destination,
                                      reader, mode_costing, mode);
           }
@@ -506,16 +506,15 @@ namespace {
       //get processing time for locate
       auto time = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      auto elapsed_time = (msecs - request.get<size_t>("start_time"));
-      auto warn_counter = 0;
+      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+
       std::stringstream ss;
       //log request if greater then X (ms)
-      write_json(ss, request);
       if ((elapsed_time / correlated.size()) > long_request) {
-        warn_counter++;
+        boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_matrix_request_count::" + std::to_string(warn_counter), "[ANALYTICS]");
+        midgard::logging::Log("long_matrix_request", " [ANALYTICS] ");
       }
 
       //jsonp callback if need be
