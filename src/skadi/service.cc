@@ -159,7 +159,7 @@ namespace {
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("501::" + response.body, "[ANALYTICS]");
+        valhalla::midgard::logging::Log("501::" + response.body, " [ANALYTICS] ");
         return result;
       }
       catch(const std::exception& e) {
@@ -167,7 +167,7 @@ namespace {
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("400::" + response.body, "[ANALYTICS]");
+        valhalla::midgard::logging::Log("400::" + response.body, " [ANALYTICS] ");
         return result;
       }
     }
@@ -238,6 +238,7 @@ namespace {
     worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
+      valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
       auto json = json::map({});
 
       //get the distances between the postings
@@ -261,19 +262,18 @@ namespace {
       else
         json->emplace("shape", serialize_shape(shape));
 
-      //get processing time for locate
+      //get processing time for elevation
       auto time = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      auto elapsed_time = (msecs - request.get<size_t>("start_time"));
-      auto warn_counter = 0;
+      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
       std::stringstream ss;
+
       //log request if greater then X (ms)
-      write_json(ss, request);
-      if ((elapsed_time / heights.size()) > long_request) {
-        warn_counter++;
+      if ((elapsed_time / shape.size()) > long_request) {
+        boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("height request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("height request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_height_request_count::" + std::to_string(warn_counter), "[ANALYTICS]");
+        midgard::logging::Log("long_height_request", " [ANALYTICS] ");
       }
 
       //jsonp callback if need be
