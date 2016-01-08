@@ -66,7 +66,7 @@ namespace {
       if (path_distance > matrix_max_distance)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance), "[ANALYTICS]");
+      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance), " [ANALYTICS] ");
     }
   }
 }
