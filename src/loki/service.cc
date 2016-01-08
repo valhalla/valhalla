@@ -189,7 +189,7 @@ namespace valhalla {
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("400::" + response.body, " [ANALYTICS] ");
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
       }
     }

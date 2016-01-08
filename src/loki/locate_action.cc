@@ -140,9 +140,9 @@ namespace valhalla {
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
       auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
 
-      std::stringstream ss;
       //log request if greater then X (ms)
       if ((elapsed_time / locations.size()) > long_request) {
+        std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("locate request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("locate request exceeded threshold::"+ ss.str());
