@@ -181,7 +181,7 @@ namespace valhalla {
         http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("501::" + response.body, "[ANALYTICS]");
+        valhalla::midgard::logging::Log("501::" + response.body, " [ANALYTICS] ");
         return result;
       }
       catch(const std::exception& e) {
@@ -189,7 +189,7 @@ namespace valhalla {
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("400::" + response.body, "[ANALYTICS]");
+        valhalla::midgard::logging::Log("400::" + response.body, " [ANALYTICS] ");
         return result;
       }
     }
@@ -214,12 +214,12 @@ namespace valhalla {
       if(locations.size() < (action == LOCATE ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
 
-      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), "[ANALYTICS]");
+      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
 
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
       if (costing)
-      valhalla::midgard::logging::Log("costing_type::" + *costing, "[ANALYTICS]");
+      valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
 
       if(!costing) {
         //locate doesnt require a filter
