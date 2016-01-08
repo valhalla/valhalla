@@ -198,15 +198,10 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
           continue;
         }
 
-        // Get the access restrictions given its directed edge index
-        std::vector<AccessRestriction> restrictions;
-        if (directededge->access_restriction())
-          restrictions = tile->GetAccessRestrictions(edgeid.id());
-
         // Skip any superseded edges that match the shortcut mask. Also skip
         // if no access is allowed to this edge (based on costing method)
         if ((shortcuts & directededge->superseded()) ||
-            !costing->Allowed(directededge, pred, restrictions)) {
+            !costing->Allowed(directededge, pred, tile, edgeid)) {
           continue;
         }
 
@@ -352,16 +347,12 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
         GraphId oppedge = GetOpposingEdgeId(directededge, t2);
 
-        // Get the access restrictions given its directed edge index
-        std::vector<AccessRestriction> restrictions;
-        if (directededge->access_restriction())
-          restrictions = tile->GetAccessRestrictions(edgeid.id());
-
         // Get opposing directed edge and check if allowed. Do not enter
         // not_thru edges
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
         if (directededge->not_thru() ||
-            !costing->AllowedReverse(directededge, pred2, opp_edge, opp_pred_edge, restrictions)) {
+            !costing->AllowedReverse(directededge, pred2, opp_edge,
+                                     opp_pred_edge, tile, edgeid)) {
           continue;
         }
 

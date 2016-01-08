@@ -215,15 +215,10 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
         continue;
       }
 
-      // Get the access restrictions given its directed edge index
-      std::vector<AccessRestriction> restrictions;
-      if (directededge->access_restriction())
-        restrictions = tile->GetAccessRestrictions(edgeid.id());
-
       // Skip any superseded edges that match the shortcut mask. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((shortcuts & directededge->superseded()) ||
-          !costing->Allowed(directededge, pred, restrictions)) {
+          !costing->Allowed(directededge, pred, tile, edgeid)) {
         continue;
       }
 

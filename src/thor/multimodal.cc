@@ -263,16 +263,11 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           mode_change = true;
         }
 
-        // Get the access restrictions given its directed edge index
-        std::vector<AccessRestriction> restrictions;
-        if (directededge->access_restriction())
-          restrictions = tile->GetAccessRestrictions(edgeid.id());
-
         // Regular edge - use the appropriate costing and check if access
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
         if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(
-                directededge, pred, restrictions)) {
+                directededge, pred, tile, edgeid)) {
           continue;
         }
 
@@ -436,14 +431,9 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
 
-      // Get the access restrictions given its directed edge index
-      std::vector<AccessRestriction> restrictions;
-      if (directededge->access_restriction())
-        restrictions = tile->GetAccessRestrictions(edgeid.id());
-
       // Skip transition edges or if not allowed for htis mode
       if (directededge->trans_up() || directededge->trans_down() ||
-          !costing->Allowed(directededge, pred, restrictions)) {
+          !costing->Allowed(directededge, pred, tile, edgeid)) {
         continue;
       }
 
