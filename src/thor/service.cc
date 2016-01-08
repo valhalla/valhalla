@@ -95,12 +95,15 @@ namespace {
   //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
   //   ]
   // }
-  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
-    return json::map({
+  json::MapPtr serialize_one_to_many(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+     auto json = json::map({
       {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size(), distance_scale)})},
       {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
+    if (id)
+      json->emplace("id", *id);
+    return json;
   }
 
   //Returns a column vector of computed time and distance from each location to the last (destination) location provided.
@@ -114,15 +117,18 @@ namespace {
   //     [{origin3,dest0,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+  json::MapPtr serialize_many_to_one(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr column_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i)
       column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, i, i + 1, distance_scale));
-    return json::map({
+    auto json = json::map({
       {"many_to_one", column_matrix},
       {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
+    if (id)
+      json->emplace("id", *id);
+    return json;
   }
 
   //Returns a square matrix of computed time and distance from each location to every other location.
@@ -136,15 +142,18 @@ namespace {
   //     [{origin3,dest0,x,x},{origin3,dest1,x,x},{origin3,dest2,x,x},{origin3,dest3,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+  json::MapPtr serialize_many_to_many(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr square_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i)
       square_matrix->emplace_back(serialize_row(correlated, tds, i, 0, correlated.size() * i, correlated.size() * (i + 1), distance_scale));
-    return json::map({
+    auto json = json::map({
       {"many_to_many", square_matrix},
       {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
+    if (id)
+      json->emplace("id", *id);
+    return json;
   }
 
   //TODO: throw this in the header to make it testable?
@@ -178,6 +187,7 @@ namespace {
           http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
+          valhalla::midgard::logging::Log("500::" + response.to_string(), " [ANALYTICS] ");
           return result;
         }
 
@@ -203,7 +213,7 @@ namespace {
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        LOG_ERROR("400::" + response.to_string());
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
       }
     }
@@ -493,13 +503,13 @@ namespace {
       thor::TimeDistanceMatrix tdmatrix;
       switch ( matrix_type) {
        case MATRIX_TYPE::ONE_TO_MANY:
-         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
+         json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
          break;
        case MATRIX_TYPE::MANY_TO_ONE:
-         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
+         json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
          break;
        case MATRIX_TYPE::MANY_TO_MANY:
-         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
+         json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
          break;
       }
 
@@ -508,9 +518,9 @@ namespace {
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
       auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
 
-      std::stringstream ss;
       //log request if greater then X (ms)
       if ((elapsed_time / correlated.size()) > long_request) {
+        std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("matrix request exceeded threshold::"+ ss.str());
@@ -558,7 +568,7 @@ namespace {
     }
 
     std::string init_request(const boost::property_tree::ptree& request) {
-      auto route_name = request.get_optional<std::string>("route_name");
+      auto id = request.get_optional<std::string>("id");
 
       //we require locations
       auto request_locations = request.get_child_optional("locations");
