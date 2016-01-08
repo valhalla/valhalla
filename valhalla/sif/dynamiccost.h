@@ -5,6 +5,9 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transittransfer.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
+
 #include <memory>
 
 #include <valhalla/sif/hierarchylimits.h>
@@ -75,28 +78,36 @@ class DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
+   * @param  edge     Pointer to a directed edge.
+   * @param  pred     Predecessor edge information.
+   * @param  tile     current tile
+   * @param  edgeid   edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const = 0;
+                       const EdgeLabel& pred,
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& edgeid) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
    * (from destination towards origin). Both opposing edges are
    * provided.
-   * @param  edge  Pointer to a directed edge.
-   * @param  pred  Predecessor edge information.
-   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  opp_edge       Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
+   * @param  tile           current tile
+   * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const = 0;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const baldr::GraphTile*& tile,
+                 const baldr::GraphId& edgeid) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -166,6 +177,12 @@ class DynamicCost {
    * @return  Returns the transfer cost and time (seconds).
    */
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
+
+  /**
+   * Returns the default transfer cost between 2 transit lines.
+   * @return  Returns the transfer cost and time (seconds).
+   */
+  virtual Cost DefaultTransferCost() const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
