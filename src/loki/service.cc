@@ -132,6 +132,8 @@ namespace valhalla {
       factory.Register("bus", sif::CreateBusCost);
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
+      factory.Register("truck", sif::CreateTruckCost);
+
     }
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
