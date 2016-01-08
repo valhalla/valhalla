@@ -61,7 +61,7 @@ namespace {
     return array;
   }
 
-  json::MapPtr serialize(std::string id, const PathLocation& location, GraphReader& reader, bool verbose) {
+  json::MapPtr serialize(const boost::optional<std::string>& id, const PathLocation& location, GraphReader& reader, bool verbose) {
     //serialze all the edges
     auto m = json::map
     ({
@@ -95,13 +95,13 @@ namespace {
       m->emplace("node", static_cast<nullptr_t>(nullptr));
     if(verbose)
       m->emplace("node_id", node.json());
-    if (id!="")
-      m->emplace("id", id);
+    /*if (id)
+      m->emplace("id", *id);*/
 
     return m;
   }
 
-  json::MapPtr serialize(std::string id, const PointLL& ll, const std::string& reason, bool verbose) {
+  json::MapPtr serialize(const boost::optional<std::string>& id, const PointLL& ll, const std::string& reason, bool verbose) {
     auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
       {"node", static_cast<std::nullptr_t>(nullptr)},
@@ -110,8 +110,8 @@ namespace {
     });
     if(verbose)
       m->emplace("reason", reason);
-    if(id!="")
-      m->emplace("id", id);
+    /*if(id)
+      m->emplace("id", *id);*/
 
     return m;
   }
@@ -124,18 +124,14 @@ namespace valhalla {
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       auto verbose = request.get<bool>("verbose", false);
-      auto hasId = request.get_optional<std::string>("id");
-      std::string id = "";
-      if (hasId)
-        id = *hasId;
 
       for(const auto& location : locations) {
         try {
           auto correlated = loki::Search(location, reader, costing_filter);
-          json->emplace_back(serialize(id, correlated, reader, verbose));
+          json->emplace_back(serialize(request.get_optional<std::string>("id"), correlated, reader, verbose));
         }
         catch(const std::exception& e) {
-          json->emplace_back(serialize(id, location.latlng_, e.what(), verbose));
+          json->emplace_back(serialize(request.get_optional<std::string>("id"), location.latlng_, e.what(), verbose));
         }
       }
 
