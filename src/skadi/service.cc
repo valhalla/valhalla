@@ -239,6 +239,7 @@ namespace {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
+      boost::optional<std::string> id = request.get_optional<std::string>("id");
       auto json = json::map({});
 
       //get the distances between the postings
@@ -255,12 +256,13 @@ namespace {
           {"height", serialize_height(heights, sample.get_no_data_value())}
         });
       }
-
       //send back the shape as well
       if(encoded_polyline)
         json->emplace("encoded_polyline", *encoded_polyline);
       else
         json->emplace("shape", serialize_shape(shape));
+      if (id)
+        json->emplace("id", *id);
 
       //get processing time for elevation
       auto time = std::chrono::high_resolution_clock::now();
