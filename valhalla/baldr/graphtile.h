@@ -237,9 +237,12 @@ class GraphTile {
    * Convenience method to get the access restrictions for an edge given the
    * edge Id.
    * @param   edgeid  Directed edge Id.
+   * @param   access  Access.  Used to obtain the restrictions for the access
+   *                   that we are interested in (see graphconstants.h)
    * @return  Returns a list (vector) of AccessRestrictions.
    */
-  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid,
+                                                       const uint32_t access) const;
 
   /**
    * Get an iteratable list of GraphIds given a cell in the tile
