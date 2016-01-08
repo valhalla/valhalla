@@ -35,6 +35,7 @@ pbfgraphbuilder
 pbfadminbuilder
 connectivitymap
 transit_fetcher
+transit_stop_query
 *.o
 .deps/
 .dirstamp
