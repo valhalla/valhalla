@@ -32,7 +32,7 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt);
  * @return the map of locale to ptree of parse narrative json/yml
  */
 using locales_singleton_t = std::unordered_map<std::string, boost::property_tree::ptree>;
-const locales_singleton_t& get_narratives(const std::string& locales_directory = "");
+const locales_singleton_t& get_locales(const std::string& locales_directory = "");
 
 }
 }

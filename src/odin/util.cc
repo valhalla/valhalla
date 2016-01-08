@@ -88,7 +88,7 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   return directions_options;
 }
 
-const locales_singleton_t& get_narrative_locales(const std::string& locales_directory) {
+const locales_singleton_t& get_locales(const std::string& locales_directory) {
   //thread safe static initializer for singleton
   static locales_singleton_t locales(load_narrative_locals(locales_directory));
   return locales;
