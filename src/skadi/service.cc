@@ -167,7 +167,7 @@ namespace {
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("400::" + response.body, " [ANALYTICS] ");
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
       }
     }
@@ -268,10 +268,10 @@ namespace {
       auto time = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
       auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-      std::stringstream ss;
 
       //log request if greater then X (ms)
       if ((elapsed_time / shape.size()) > long_request) {
+        std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("height request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("height request exceeded threshold::"+ ss.str());
