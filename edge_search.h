@@ -106,26 +106,28 @@ CandidateQuery::WithinSquaredDistance(const PointLL& location,
   std::vector<Candidate> candidates;
   std::unordered_set<GraphId> visited_nodes, visited_edges;
   DistanceApproximator approximator(location);
+  const baldr::GraphTile* tile = nullptr;
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     // Do a explict cast here as the iterator is probably of type
     // uint64_t
     const auto edgeid = static_cast<GraphId>(*it);
+    if (!edgeid.Is_Valid()) continue;
 
     // Skip if it's visited
     if (directed) {
       if (!visited_edges.insert(edgeid).second) continue;
     }
 
-    const auto tile = reader_.GetGraphTile(edgeid);
-    if (!tile) continue;
-
-    const auto edge = tile->directededge(edgeid);
-    const auto opp_edge = reader_.GetOpposingEdge(edgeid);
-    const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
+    const auto opp_edgeid = helpers::edge_opp_edgeid(reader_, edgeid, tile);
+    if (!opp_edgeid.Is_Valid()) continue;
+    const auto opp_edge = tile->directededge(opp_edgeid);
+    assert(opp_edge);
+    // Make sure it's the last one since we need the tile of this edge
+    const auto edge = helpers::edge_directededge(reader_, edgeid, tile);
+    if (!edge) continue;
 
     if (directed) {
-      visited_edges.insert(edgeid);
       visited_edges.insert(opp_edgeid);
     }
 
@@ -183,7 +185,7 @@ CandidateQuery::WithinSquaredDistance(const PointLL& location,
       }
     }
 
-    if (!correlated.edges().empty()) {
+    if (correlated.IsCorrelated()) {
       // Add back if it is an edge correlated or it's a node correlated
       // but it's not added yet
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
