@@ -20,20 +20,24 @@ class UniversalCost : public sif::DynamicCost {
       : DynamicCost(pt, kUniversalTravelMode) {}
 
   bool Allowed(const baldr::DirectedEdge* edge,
-               const sif::EdgeLabel& pred) const
+               const sif::EdgeLabel& pred,
+               const baldr::GraphTile*& tile,
+               const baldr::GraphId& edgeid) const
   { return true; }
 
   bool AllowedReverse(const baldr::DirectedEdge* edge,
                       const sif::EdgeLabel& pred,
                       const baldr::DirectedEdge* opp_edge,
-                      const baldr::DirectedEdge* opp_pred_edge) const
+                      const baldr::DirectedEdge* opp_pred_edge,
+                      const baldr::GraphTile*& tile,
+                      const baldr::GraphId& edgeid) const
   { return true; }
 
   bool Allowed(const baldr::NodeInfo* node) const
   { return true; }
 
   sif::Cost EdgeCost(const baldr::DirectedEdge* edge,
-                const uint32_t density) const
+                     const uint32_t density) const
   {
     float length = edge->length();
     return { length, length };

@@ -401,7 +401,8 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const baldr::GraphId& edgeid,
               sif::cost_ptr_t costing,
               std::shared_ptr<const sif::EdgeLabel> pred_edgelabel,
-              sif::EdgeFilter edgefilter)
+              sif::EdgeFilter edgefilter,
+              const baldr::GraphTile* tile)
 {
   if (costing) {
     if (pred_edgelabel) {
@@ -410,7 +411,7 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
 
       // TODO let sif do this?
       return edgeid == pred_edgelabel->edgeid()
-          || costing->Allowed(edge, *pred_edgelabel);
+          || costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
     } else {
       if (edgefilter) {
         return !edgefilter(edge);
@@ -643,7 +644,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // level
         if (nodeid.level() != other_edge->endnode().level()) continue;
 
-        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter)) continue;
+        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
 
         // Turn cost
         float turn_cost = 0.f;
@@ -709,7 +710,7 @@ find_shortest_path(baldr::GraphReader& reader,
           const auto directededge = helpers::edge_directededge(reader, origin_edge.id, tile);
           if (!directededge) continue;
 
-          if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter)) continue;
+          if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter, tile)) continue;
 
           // U-turn cost
           float turn_cost = 0.f;
