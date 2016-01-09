@@ -175,10 +175,22 @@ void TestRoutePathIterator()
   labelset.put(0, travelmode, nullptr);
   labelset.put(1, travelmode, nullptr);
   labelset.put(2, travelmode, nullptr);
-  labelset.put(3, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, travelmode, nullptr);
-  labelset.put(4, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, travelmode, nullptr);
-  labelset.put(5, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, travelmode, nullptr);
-  labelset.put(6, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, travelmode, nullptr);
+  labelset.put(3, baldr::GraphId(),
+               0.f, 1.f,
+               0.f, 0.f,
+               1, nullptr, travelmode, nullptr);
+  labelset.put(4, baldr::GraphId(),
+               0.f, 1.f,
+               0.f, 0.f,
+               1, nullptr, travelmode, nullptr);
+  labelset.put(5, baldr::GraphId(),
+               0.f, 1.f,
+               0.f, 0.f,
+               3, nullptr, travelmode, nullptr);
+  labelset.put(6, baldr::GraphId(),
+               0.f, 1.f,
+               0.f, 0.f,
+               3, nullptr, travelmode, nullptr);
 
   mm::RoutePathIterator the_end(&labelset, mm::kInvalidLabelIndex),
       it0(&labelset, 0),

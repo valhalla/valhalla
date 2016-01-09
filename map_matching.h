@@ -95,21 +95,11 @@ class State
     }
   }
 
-  float route_distance(const State& state) const
+  const Label* last_label(const State& state) const
   {
     const auto it = label_idx_.find(state.id());
     if (it != label_idx_.end()) {
-      return labelset_->label(it->second).cost;
-    }
-    return -1.f;
-  }
-
-  std::shared_ptr<const sif::EdgeLabel>
-  route_end_label(const State& state) const
-  {
-    const auto it = label_idx_.find(state.id());
-    if (it != label_idx_.end()) {
-      return labelset_->label(it->second).edgelabel;
+      return &labelset_->label(it->second);
     }
     return nullptr;
   }
@@ -289,11 +279,12 @@ class MapMatching: public ViterbiSearch<State>
   {
     if (!left.routed()) {
       std::shared_ptr<const sif::EdgeLabel> edgelabel;
-      auto prev_stateid = predecessor(left.id());
+      const auto prev_stateid = predecessor(left.id());
       if (prev_stateid != kInvalidStateId) {
         const auto& prev_state = state(prev_stateid);
         assert(prev_state.routed());
-        edgelabel = prev_state.route_end_label(left);
+        const auto label = prev_state.last_label(left);
+        edgelabel = label? label->edgelabel : nullptr;
       } else {
         edgelabel = nullptr;
       }
@@ -303,10 +294,10 @@ class MapMatching: public ViterbiSearch<State>
     }
     assert(left.routed());
 
-    auto route_distance = left.route_distance(right);
-    if (route_distance >= 0.f) {
-      auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
-      return std::abs(route_distance - mmt_distance) * inv_beta_;
+    const auto label = left.last_label(right);
+    if (label) {
+      const auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
+      return (label->turn_cost + std::abs(label->cost - mmt_distance)) * inv_beta_;
     }
 
     assert(IsInvalidCost(-1.f));
