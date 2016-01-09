@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -446,13 +447,77 @@ void set_destinations(baldr::GraphReader& reader,
 }
 
 
+inline uint16_t
+get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
+                              const baldr::GraphTile* tile,
+                              const sif::EdgeLabel& edgelabel,
+                              const baldr::NodeInfo& nodeinfo)
+{
+  const auto idx = edgelabel.opp_local_idx();
+  if (idx < 8) {
+    return nodeinfo.heading(idx);
+  } else {
+    const auto directededge = helpers::edge_directededge(graphreader, edgelabel.edgeid(), tile);
+    const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+    const auto& shape = edgeinfo->shape();
+    if (shape.size() >= 2) {
+      float heading;
+      if (directededge->forward()) {
+        heading = shape.back().Heading(shape.rbegin()[1]);
+      } else {
+        heading = shape.front().Heading(shape[1]);
+      }
+      return static_cast<uint16_t>(std::max(0.f, std::min(359.f, heading)));
+    } else {
+      return 0;
+    }
+  }
+}
+
+
+inline uint16_t
+get_outbound_edge_heading(const baldr::GraphTile* tile,
+                          const baldr::DirectedEdge* outbound_edge,
+                          const baldr::NodeInfo& nodeinfo)
+{
+  const auto idx = outbound_edge->localedgeidx();
+  if (idx < 8) {
+    return nodeinfo.heading(idx);
+  } else {
+    const auto edgeinfo = tile->edgeinfo(outbound_edge->edgeinfo_offset());
+    const auto& shape = edgeinfo->shape();
+    if (shape.size() >= 2) {
+      float heading;
+      if (outbound_edge->forward()) {
+        heading = shape.front().Heading(shape[1]);
+      } else {
+        heading = shape.back().Heading(shape.rbegin()[1]);
+      }
+      return static_cast<uint16_t>(std::max(0.f, std::min(359.f, heading)));
+    } else {
+      return 0;
+    }
+  }
+}
+
+
+inline uint8_t
+get_turn_degree(uint16_t left, uint16_t right)
+{
+  const auto turn = std::abs(left - right);
+  assert(0 <= turn && turn < 360);
+  return turn > 180? 360 - turn : turn;
+}
+
+
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    LabelSet& labelset,
                    sif::cost_ptr_t costing = nullptr,
-                   std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr)
+                   std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr,
+                   const float turn_cost_table[181] = nullptr)
 {
   // Destinations at nodes
   std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> node_dests;
@@ -507,13 +572,17 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Expand current node
       const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
-      if (!nodeinfo) continue;
+      if (!nodeinfo || !nodeinfo->edge_count()) continue;
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       assert(other_edge);
+
+      const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
+                                   get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
+      assert(0 <= inbound_heading && inbound_heading < 360);
 
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
         // Disable shortcut TODO perhaps we should use
@@ -523,6 +592,16 @@ find_shortest_path(baldr::GraphReader& reader,
 
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter)) continue;
 
+        // Turn cost
+        float turn_cost = 0.f;
+        if (pred_edgelabel && turn_cost_table) {
+          const auto other_heading = get_outbound_edge_heading(tile, other_edge, *nodeinfo);
+          assert(0 <= other_heading && other_heading < 360);
+          const auto turn_degree = get_turn_degree(inbound_heading, other_heading);
+          assert(0 <= turn_degree && turn_degree <= 180);
+          turn_cost = turn_cost_table[turn_degree];
+        }
+
         // If destinations found along the edge, add segments to each
         // destination to the queue
         const auto it = edge_dests.find(other_edgeid);
@@ -530,14 +609,14 @@ find_shortest_path(baldr::GraphReader& reader,
           for (const auto dest : it->second) {
             for (const auto& edge : destinations[dest].edges()) {
               if (edge.id == other_edgeid) {
-                auto cost = label_cost + other_edge->length() * edge.dist;
+                const float cost = label_cost + other_edge->length() * edge.dist + turn_cost;
                 labelset.put(dest, other_edgeid, 0.f, edge.dist, cost, label_idx, other_edge, travelmode, nullptr);
               }
             }
           }
         }
 
-        const float cost = label_cost + other_edge->length();
+        const float cost = label_cost + other_edge->length() + turn_cost;
         labelset.put(other_edge->endnode(), other_edgeid, 0.f, 1.f, cost, label_idx, other_edge, travelmode, nullptr);
       }
     } else {
@@ -571,18 +650,26 @@ find_shortest_path(baldr::GraphReader& reader,
 
           if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter)) continue;
 
+          // U-turn cost
+          float turn_cost = 0.f;
+          if (pred_edgelabel && turn_cost_table
+              && pred_edgelabel->edgeid() != origin_edge.id
+              && pred_edgelabel->opp_local_idx() == directededge->localedgeidx()) {
+            turn_cost = turn_cost_table[0];
+          }
+
           // All destinations on this origin edge
           for (const auto other_dest : edge_dests[origin_edge.id]) {
             // All edges of this destination
             for (const auto& other_edge : destinations[other_dest].edges()) {
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
-                const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist);
+                const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist) + turn_cost;
                 labelset.put(other_dest, origin_edge.id, origin_edge.dist, other_edge.dist, cost, label_idx, directededge, travelmode, nullptr);
               }
             }
           }
 
-          const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist);
+          const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist) + turn_cost;
           labelset.put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f, cost, label_idx, directededge, travelmode, nullptr);
         }
       }

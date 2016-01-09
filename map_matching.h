@@ -63,7 +63,8 @@ class State
              GraphReader& graphreader,
              float max_route_distance,
              sif::cost_ptr_t costing,
-             std::shared_ptr<const sif::EdgeLabel> edgelabel) const
+             std::shared_ptr<const sif::EdgeLabel> edgelabel,
+             const float turn_cost_table[181]) const
   {
     // TODO disable routing to interpolated states
 
@@ -78,7 +79,9 @@ class State
     // Route
     labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
     // TODO pass labelset_ as shared_ptr
-    const auto& results = find_shortest_path(graphreader, locations, 0, *labelset_, costing, edgelabel);
+    const auto& results = find_shortest_path(
+        graphreader, locations, 0, *labelset_, costing,
+        edgelabel, turn_cost_table);
 
     // Cache results
     label_idx_.clear();
@@ -174,7 +177,8 @@ class MapMatching: public ViterbiSearch<State>
               float sigma_z,
               float beta,
               float breakage_distance,
-              float max_route_distance_factor)
+              float max_route_distance_factor,
+              float turn_penalty_factor)
       : graphreader_(graphreader),
         mode_costing_(mode_costing),
         mode_(mode),
@@ -185,7 +189,9 @@ class MapMatching: public ViterbiSearch<State>
         beta_(beta),
         inv_beta_(1.f / beta_),
         breakage_distance_(breakage_distance),
-        max_route_distance_factor_(max_route_distance_factor)
+        max_route_distance_factor_(max_route_distance_factor),
+        turn_penalty_factor_(turn_penalty_factor),
+        turn_cost_table_{0.f}
   {
     if (sigma_z_ <= 0.f) {
       throw std::invalid_argument("Expect sigma_z to be positive");
@@ -193,6 +199,20 @@ class MapMatching: public ViterbiSearch<State>
 
     if (beta_ <= 0.f) {
       throw std::invalid_argument("Expect beta to be positive");
+    }
+
+#ifndef NDEBUG
+    for (size_t i = 0; i <= 180; ++i) {
+      assert(!turn_cost_table_[i]);
+    }
+#endif
+
+    if (0.f < turn_penalty_factor_) {
+      for (int i = 0; i <= 180; ++i) {
+        turn_cost_table_[i] = turn_penalty_factor_ * std::exp(-i/45.f);
+      }
+    } else if (turn_penalty_factor_ < 0.f) {
+      throw std::invalid_argument("Expect turn penalty factor to be nonnegative");
     }
   }
 
@@ -204,7 +224,8 @@ class MapMatching: public ViterbiSearch<State>
                     config.get<float>("sigma_z"),
                     config.get<float>("beta"),
                     config.get<float>("breakage_distance"),
-                    config.get<float>("max_route_distance_factor")) {}
+                    config.get<float>("max_route_distance_factor"),
+                    config.get<float>("turn_penalty_factor")) {}
 
   virtual ~MapMatching()
   { Clear(); }
@@ -276,7 +297,9 @@ class MapMatching: public ViterbiSearch<State>
       } else {
         edgelabel = nullptr;
       }
-      left.route(unreached_states_[right.time()], graphreader_, MaxRouteDistance(left, right), costing(), edgelabel);
+      left.route(unreached_states_[right.time()], graphreader_,
+                 MaxRouteDistance(left, right),
+                 costing(), edgelabel, turn_cost_table_);
     }
     assert(left.routed());
 
@@ -317,6 +340,11 @@ class MapMatching: public ViterbiSearch<State>
   float breakage_distance_;
 
   float max_route_distance_factor_;
+
+  float turn_penalty_factor_;
+
+  // Cost for each degree in [0, 180]
+  float turn_cost_table_[181];
 };
 
 

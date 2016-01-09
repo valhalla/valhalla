@@ -16,7 +16,8 @@
       "search_radius": 40,
       "max_search_radius": 200,
       "geometry": false,
-      "route": false
+      "route": false,
+      "turn_penalty_factor": 0
     },
     "auto": {},
     "pedestrian": {},
