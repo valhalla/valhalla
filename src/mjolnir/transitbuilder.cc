@@ -41,13 +41,12 @@ struct Departure {
   uint32_t route;
   uint32_t blockid;
   uint32_t shapeid;
-  uint32_t dep_time;
-  uint32_t arr_time;
   uint32_t end_day;
-  uint32_t dow;
-  uint32_t wheelchair_accessible;
-  std::string headsign;
-  std::string short_name;
+  uint32_t headsign_offset;
+  uint32_t dep_time;
+  uint16_t elapsed_time;
+  uint8_t  dow;
+  bool wheelchair_accessible;
 };
 
 // Unique route and stop
@@ -99,10 +98,11 @@ struct builder_stats {
 };
 
 // Get scheduled departures for a stop
-std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& transit,
-                          const uint32_t tile_date,
-                          std::unordered_map<GraphId, bool>& stop_access,
-                          const GraphId& tile_id) {
+std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
+               GraphTileBuilder& tilebuilder,
+		       const Transit& transit,
+               std::unordered_map<GraphId, bool>& stop_access,
+               const GraphId& tile_id) {
   // Check if there are no schedule stop pairs in this tile
   std::unordered_multimap<GraphId, Departure> departures;
   if (transit.stop_pairs_size() == 0) {
@@ -113,6 +113,8 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
     }
     return departures;
   }
+
+  uint32_t tile_date = tilebuilder.header()->date_created();
 
   // Iterate through the stop pairs in this tile and form Valhalla departure
   // records
@@ -130,10 +132,17 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
     dep.shapeid = 0;
     dep.blockid = sp.block_id();
     dep.dep_time = sp.origin_departure_time();
-    dep.arr_time = sp.destination_arrival_time();
+    dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
+    dep.headsign_offset = tilebuilder.AddName(sp.trip_headsign());
+
+    // Set bikes_allowed on the stops
+    // TODO - should this be |= ???
+    bool bikes_allowed = sp.bikes_allowed();
+    stop_access[dep.orig_pbf_graphid] = bikes_allowed;
+    stop_access[dep.dest_pbf_graphid] = bikes_allowed;
 
     // Compute days of week mask
-    uint32_t dow_mask = kDOWNone;
+    uint8_t dow_mask = kDOWNone;
     for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
       bool dow = sp.service_days_of_week(x);
       if (dow) {
@@ -177,11 +186,6 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
     }
 
     dep.end_day = (DateTime::days_from_pivot_date(end_date) - DateTime::days_from_pivot_date(start_date));
-    dep.headsign = sp.trip_headsign();
-
-    bool bikes_allowed = sp.bikes_allowed();
-    stop_access[dep.orig_pbf_graphid] = bikes_allowed;
-    stop_access[dep.dest_pbf_graphid] = bikes_allowed;
 
     //if subtractions are between start and end date then turn off bit.
     for (const auto& x : sp.service_except_dates()) {
@@ -907,7 +911,7 @@ void build(const std::string& transit_dir,
     // Process schedule stop pairs (departures)
     std::unordered_map<GraphId, bool> stop_access;
     std::unordered_multimap<GraphId, Departure> departures =
-                ProcessStopPairs(transit, tilebuilder.header()->date_created(),
+                ProcessStopPairs(tilebuilder, transit,
                                  stop_access, tile_id);
 
     // Form departures and egress/station/platform hierarchy
@@ -950,15 +954,13 @@ void build(const std::string& transit_dir,
         }
 
         // Form transit departures
-        uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
-        uint32_t elapsed_time = dep.arr_time - dep.dep_time;
         TransitDeparture td(lineid, dep.trip, dep.route,
-                    dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
-                    dep.end_day, dep.dow, dep.days);
+                    dep.blockid, dep.headsign_offset, dep.dep_time,
+                    dep.elapsed_time, dep.end_day, dep.dow, dep.days);
 
-        LOG_DEBUG("Add departure: " + std::to_string(lineid) +
+/*        LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                      " dep time = " + std::to_string(td.departure_time()) +
-                     " arr time = " + std::to_string(dep.arr_time));
+                     " arr time = " + std::to_string(dep.arr_time));*/
 
         tilebuilder.AddTransitDeparture(std::move(td));
       }
