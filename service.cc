@@ -257,8 +257,12 @@ void serialize_labels(const State& state,
         writer.String("edgeid");
         serialize_graphid(label->edgeid, writer);
 
+        const auto label = state.last_label(*next_state);
         writer.String("route_distance");
-        writer.Double(state.route_distance(*next_state));
+        writer.Double(label->cost);
+
+        writer.String("route_turn_cost");
+        writer.Double(label->turn_cost);
 
         writer.String("route");
         writer.StartArray();
@@ -289,6 +293,9 @@ void serialize_labels(const State& state,
 
           writer.String("cost");
           writer.Double(label->cost);
+
+          writer.String("turn_cost");
+          writer.Double(label->turn_cost);
 
           writer.EndObject();
         }
