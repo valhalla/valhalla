@@ -516,12 +516,12 @@ worker_t::result_t jsonify_error(const std::string& message,
 
 
 template <typename T>
-std::vector<T>
-ptree_array_to_vector(const boost::property_tree::ptree& ptree)
+inline std::unordered_set<T>
+ptree_array_to_unordered_set(const boost::property_tree::ptree& ptree)
 {
-  std::vector<T> result;
+  std::unordered_set<T> result;
   for (const auto& item : ptree) {
-    result.push_back(item.second.get_value<T>());
+    result.insert(item.second.get_value<T>());
   }
   return result;
 }
@@ -533,36 +533,45 @@ class mm_worker_t {
   mm_worker_t(const boost::property_tree::ptree& config)
       : config_(config),
         matcher_factory_(config_),
-        customizable_(ptree_array_to_vector<std::string>(config_.get_child("mm.customizable"))) {}
+        customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("mm.customizable"))) {}
 
   boost::property_tree::ptree&
   read_preferences_from_request(const http_request_t& request,
                                 boost::property_tree::ptree& preferences)
   {
+    if (customizable_.empty()) {
+      return preferences;
+    }
     const auto& query = request.query;
-    for (const auto& name : customizable_) {
-      const auto it = query.find(name);
-      const auto& values = it->second;
-      if (it != query.end() && !values.empty()) {
+    for (const auto& pair : query) {
+      const auto& name = pair.first;
+      const auto& values = pair.second;
+      if (customizable_.find(name) != customizable_.end()
+          && !values.empty()) {
+        // String
         if (name == "mode") {
           if (!values.back().empty()) {
             preferences.put<std::string>("mode", values.back());
           }
-        } else if (name == "route" || name == "geometry") {
+        }
+        // Boolean
+        else if (name == "route" || name == "geometry") {
           if (values.back() == "false") {
-            preferences.put<bool>(it->first, false);
+            preferences.put<bool>(name, false);
           } else {
-            preferences.put<bool>(it->first, true);
+            preferences.put<bool>(name, true);
           }
-        } else {
+        }
+        // Float
+        else {
           if (!values.back().empty()) {
             try {
               // Possibly throw std::invalid_argument or std::out_of_range
-              preferences.put<float>(it->first, std::stof(values.back()));
+              preferences.put<float>(name, std::stof(values.back()));
             } catch (const std::invalid_argument& ex) {
-              throw std::invalid_argument("Invalid argument: unable to parse " + it->first + " to float");
+              throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float");
             } catch (const std::out_of_range& ex) {
-              throw std::out_of_range("Invalid argument: " + it->first + " is out of float range");
+              throw std::out_of_range("Invalid argument: " + name + " is out of float range");
             }
           }
         }
@@ -619,7 +628,6 @@ class mm_worker_t {
       const auto& results = matcher->OfflineMatch(measurements);
 
       // Serialize results
-      matcher->config();
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
       bool route = matcher->config().get<bool>("route"),
@@ -653,7 +661,7 @@ class mm_worker_t {
  protected:
   const boost::property_tree::ptree config_;
   MapMatcherFactory matcher_factory_;
-  std::vector<std::string> customizable_;
+  std::unordered_set<std::string> customizable_;
 };
 
 
