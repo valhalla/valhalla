@@ -810,9 +810,9 @@ class MapMatcher final
  private:
   ptree config_;
 
-  baldr::GraphReader graphreader_;
+  baldr::GraphReader& graphreader_;
 
-  CandidateGridQuery rangequery_;
+  CandidateGridQuery& rangequery_;
 
   const sif::cost_ptr_t* mode_costing_;
 
