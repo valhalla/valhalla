@@ -31,6 +31,94 @@ using namespace mm;
 #define VERBOSE
 
 
+namespace {
+
+constexpr size_t kHttpStatusCodeSize = 600;
+const char* kHttpStatusCodes[kHttpStatusCodeSize];
+
+
+inline const std::string
+http_status_code(unsigned code)
+{
+  return code < kHttpStatusCodeSize? kHttpStatusCodes[code] : "";
+}
+
+
+// Credits: http://werkzeug.pocoo.org/
+void init_http_status_codes()
+{
+  // 1xx
+  kHttpStatusCodes[100] = "Continue";
+  kHttpStatusCodes[101] = "Switching Protocols";
+  kHttpStatusCodes[102] = "Processing";
+
+  // 2xx
+  kHttpStatusCodes[200] = "OK";
+  kHttpStatusCodes[201] = "Created";
+  kHttpStatusCodes[202] = "Accepted";
+  kHttpStatusCodes[203] = "Non Authoritative Information";
+  kHttpStatusCodes[204] = "No Content";
+  kHttpStatusCodes[205] = "Reset Content";
+  kHttpStatusCodes[206] = "Partial Content";
+  kHttpStatusCodes[207] = "Multi Status";
+  kHttpStatusCodes[226] = "IM Used";  // see RFC 322
+
+  // 3xx
+  kHttpStatusCodes[300] = "Multiple Choices";
+  kHttpStatusCodes[301] = "Moved Permanently";
+  kHttpStatusCodes[302] = "Found";
+  kHttpStatusCodes[303] = "See Other";
+  kHttpStatusCodes[304] = "Not Modified";
+  kHttpStatusCodes[305] = "Use Proxy";
+  kHttpStatusCodes[307] = "Temporary Redirect";
+
+  // 4xx
+  kHttpStatusCodes[400] = "Bad Request";
+  kHttpStatusCodes[401] = "Unauthorized";
+  kHttpStatusCodes[402] = "Payment Required";  // unuse
+  kHttpStatusCodes[403] = "Forbidden";
+  kHttpStatusCodes[404] = "Not Found";
+  kHttpStatusCodes[405] = "Method Not Allowed";
+  kHttpStatusCodes[406] = "Not Acceptable";
+  kHttpStatusCodes[407] = "Proxy Authentication Required";
+  kHttpStatusCodes[408] = "Request Timeout";
+  kHttpStatusCodes[409] = "Conflict";
+  kHttpStatusCodes[410] = "Gone";
+  kHttpStatusCodes[411] = "Length Required";
+  kHttpStatusCodes[412] = "Precondition Failed";
+  kHttpStatusCodes[413] = "Request Entity Too Large";
+  kHttpStatusCodes[414] = "Request URI Too Long";
+  kHttpStatusCodes[415] = "Unsupported Media Type";
+  kHttpStatusCodes[416] = "Requested Range Not Satisfiable";
+  kHttpStatusCodes[417] = "Expectation Failed";
+  kHttpStatusCodes[418] = "I\'m a teapot";  // see RFC 232
+  kHttpStatusCodes[422] = "Unprocessable Entity";
+  kHttpStatusCodes[423] = "Locked";
+  kHttpStatusCodes[424] = "Failed Dependency";
+  kHttpStatusCodes[426] = "Upgrade Required";
+  kHttpStatusCodes[428] = "Precondition Required";  // see RFC 658
+  kHttpStatusCodes[429] = "Too Many Requests";
+  kHttpStatusCodes[431] = "Request Header Fields Too Large";
+  kHttpStatusCodes[449] = "Retry With";  // proprietary MS extensio
+
+  // 5xx
+  kHttpStatusCodes[500] = "Internal Server Error";
+  kHttpStatusCodes[501] = "Not Implemented";
+  kHttpStatusCodes[502] = "Bad Gateway";
+  kHttpStatusCodes[503] = "Service Unavailable";
+  kHttpStatusCodes[504] = "Gateway Timeout";
+  kHttpStatusCodes[505] = "HTTP Version Not Supported";
+  kHttpStatusCodes[507] = "Insufficient Storage";
+  kHttpStatusCodes[510] = "Not Extended";
+}
+
+
+const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+}
+
+
 class SequenceParseError: public std::runtime_error {
   // Need its constructor
   using std::runtime_error::runtime_error;
@@ -404,94 +492,6 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
 
   writer.EndObject();
 }
-
-
-namespace {
-
-constexpr size_t kHttpStatusCodeSize = 600;
-const char* kHttpStatusCodes[kHttpStatusCodeSize];
-
-
-inline const std::string
-http_status_code(unsigned code)
-{
-  return code < kHttpStatusCodeSize? kHttpStatusCodes[code] : "";
-}
-
-
-// Credits: http://werkzeug.pocoo.org/
-void init_http_status_codes()
-{
-  // 1xx
-  kHttpStatusCodes[100] = "Continue";
-  kHttpStatusCodes[101] = "Switching Protocols";
-  kHttpStatusCodes[102] = "Processing";
-
-  // 2xx
-  kHttpStatusCodes[200] = "OK";
-  kHttpStatusCodes[201] = "Created";
-  kHttpStatusCodes[202] = "Accepted";
-  kHttpStatusCodes[203] = "Non Authoritative Information";
-  kHttpStatusCodes[204] = "No Content";
-  kHttpStatusCodes[205] = "Reset Content";
-  kHttpStatusCodes[206] = "Partial Content";
-  kHttpStatusCodes[207] = "Multi Status";
-  kHttpStatusCodes[226] = "IM Used";  // see RFC 322
-
-  // 3xx
-  kHttpStatusCodes[300] = "Multiple Choices";
-  kHttpStatusCodes[301] = "Moved Permanently";
-  kHttpStatusCodes[302] = "Found";
-  kHttpStatusCodes[303] = "See Other";
-  kHttpStatusCodes[304] = "Not Modified";
-  kHttpStatusCodes[305] = "Use Proxy";
-  kHttpStatusCodes[307] = "Temporary Redirect";
-
-  // 4xx
-  kHttpStatusCodes[400] = "Bad Request";
-  kHttpStatusCodes[401] = "Unauthorized";
-  kHttpStatusCodes[402] = "Payment Required";  // unuse
-  kHttpStatusCodes[403] = "Forbidden";
-  kHttpStatusCodes[404] = "Not Found";
-  kHttpStatusCodes[405] = "Method Not Allowed";
-  kHttpStatusCodes[406] = "Not Acceptable";
-  kHttpStatusCodes[407] = "Proxy Authentication Required";
-  kHttpStatusCodes[408] = "Request Timeout";
-  kHttpStatusCodes[409] = "Conflict";
-  kHttpStatusCodes[410] = "Gone";
-  kHttpStatusCodes[411] = "Length Required";
-  kHttpStatusCodes[412] = "Precondition Failed";
-  kHttpStatusCodes[413] = "Request Entity Too Large";
-  kHttpStatusCodes[414] = "Request URI Too Long";
-  kHttpStatusCodes[415] = "Unsupported Media Type";
-  kHttpStatusCodes[416] = "Requested Range Not Satisfiable";
-  kHttpStatusCodes[417] = "Expectation Failed";
-  kHttpStatusCodes[418] = "I\'m a teapot";  // see RFC 232
-  kHttpStatusCodes[422] = "Unprocessable Entity";
-  kHttpStatusCodes[423] = "Locked";
-  kHttpStatusCodes[424] = "Failed Dependency";
-  kHttpStatusCodes[426] = "Upgrade Required";
-  kHttpStatusCodes[428] = "Precondition Required";  // see RFC 658
-  kHttpStatusCodes[429] = "Too Many Requests";
-  kHttpStatusCodes[431] = "Request Header Fields Too Large";
-  kHttpStatusCodes[449] = "Retry With";  // proprietary MS extensio
-
-  // 5xx
-  kHttpStatusCodes[500] = "Internal Server Error";
-  kHttpStatusCodes[501] = "Not Implemented";
-  kHttpStatusCodes[502] = "Bad Gateway";
-  kHttpStatusCodes[503] = "Service Unavailable";
-  kHttpStatusCodes[504] = "Gateway Timeout";
-  kHttpStatusCodes[505] = "HTTP Version Not Supported";
-  kHttpStatusCodes[507] = "Insufficient Storage";
-  kHttpStatusCodes[510] = "Not Extended";
-}
-}
-
-
-const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
 
 worker_t::result_t jsonify_error(const std::string& message,
