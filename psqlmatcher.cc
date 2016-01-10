@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
   boost::property_tree::read_json(config_file_path, config);
 
   mm::MapMatcherFactory matcher_factory_(config);
-  auto matcher = matcher_factory_.Create(config.get<std::string>("mode"));
+  auto matcher = matcher_factory_.Create(config.get<std::string>("mm.mode"));
 
   ////////////////////////
   // Prepare sqlite3 database for writing results
