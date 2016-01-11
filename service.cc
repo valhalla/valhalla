@@ -180,16 +180,17 @@ read_geojson_geometry(const Value& geometry)
 }
 
 
-// Strictly speak a GeoJSON feature must have "id" and "properties",
-// but in our case they are optional
-
-// {"type": "Feature", "geometry": GEOMETRY, "properties": {"times": [], "radius": []}}
 inline bool
 is_geojson_feature(const Value& object)
 {
+  // Strictly speak a GeoJSON feature must have "id" and "properties",
+  // but in our case they are optional. A full example is as folllows:
+  // {"id": 1, "type": "Feature", "geometry": GEOMETRY, "properties": {"times": [], "radius": []}}
+
+  // We follow Postel's Law: be liberal in what you accept
   return object.IsObject()
-      && object.HasMember("type")
-      && std::string(object["type"].GetString()) == "Feature"
+      // && object.HasMember("type")
+      // && std::string(object["type"].GetString()) == "Feature"
       && object.HasMember("geometry");
 }
 
