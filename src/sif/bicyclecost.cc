@@ -345,7 +345,7 @@ class BicycleCost : public DynamicCost {
         else if (b == BicycleType::kCross)
           return edge->surface() > Surface::kGravel;
         else if (b == BicycleType::kMountain)
-          return edge->surface() >= Surface::kPath;
+          return edge->surface() > Surface::kPath;
       }
       return true;
     };
