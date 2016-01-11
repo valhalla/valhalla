@@ -903,11 +903,6 @@ inline float local_tile_size(const GraphReader& graphreader)
 }
 
 
-namespace {
-constexpr size_t kModeCostingCount = 8;
-}
-
-
 // A facade that connects everything
 class MapMatcher final
 {
@@ -1008,6 +1003,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 }
 
 
+namespace {
+constexpr size_t kModeCostingCount = 8;
+}
+
+
 class MapMatcherFactory final
 {
 public:
@@ -1067,17 +1067,20 @@ private:
 MapMatcherFactory::MapMatcherFactory(const ptree& root)
     : config_(root.get_child("mm")),
       graphreader_(root.get_child("mjolnir.hierarchy")),
-      mode_costing_({nullptr}),
+      mode_costing_{nullptr},
       mode_name_(),
       rangequery_(graphreader_,
                   local_tile_size(graphreader_)/root.get<size_t>("grid.size"),
                   local_tile_size(graphreader_)/root.get<size_t>("grid.size")),
       max_grid_cache_size_(root.get<float>("grid.cache_size"))
 {
+#ifndef NDEBUG
   for (size_t idx = 0; idx < kModeCostingCount; idx++) {
     assert(!mode_costing_[idx]);
     assert(mode_name_[idx].empty());
   }
+#endif
+
   init_costings(root);
 }
 

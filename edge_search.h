@@ -212,7 +212,7 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>& grid)
   auto edgeid = tile.header()->graphid();
   auto directededge = tile.directededge(0);
   for (size_t idx = 0; idx < edgecount; edgeid++, directededge++, idx++) {
-    auto offset = directededge->edgeinfo_offset();
+    const auto offset = directededge->edgeinfo_offset();
     if (visited.insert(offset).second) {
       const auto edgeinfo = tile.edgeinfo(offset);
       const auto& shape = edgeinfo->shape();

@@ -158,11 +158,12 @@ struct Label
         const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
         std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
-      : Label(baldr::GraphId(), the_dest, the_edgeid,
+      : Label({}, the_dest, the_edgeid,
               the_source, the_target,
               the_cost, the_turn_cost,
               the_predecessor,
-              the_edge, the_travelmode, the_edgelabel) {}
+              the_edge, the_travelmode, the_edgelabel)
+  { assert(!nodeid.Is_Valid()); }
 
   Label(const baldr::GraphId& the_nodeid,
         uint16_t the_dest,
@@ -248,7 +249,7 @@ class LabelSet
   bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
            std::shared_ptr<const sif::EdgeLabel> edgelabel)
   {
-    return put(nodeid, baldr::GraphId(),
+    return put(nodeid, {},         // nodeid, (invalid) edgeid
                0.f, 0.f,           // source, target
                0.f, 0.f,           // cost, turn cost
                kInvalidLabelIndex, // predecessor
@@ -301,7 +302,7 @@ class LabelSet
   bool put(uint16_t dest, sif::TravelMode travelmode,
            std::shared_ptr<const sif::EdgeLabel> edgelabel)
   {
-    return put(dest, baldr::GraphId(),
+    return put(dest, {},           // dest, (invalid) edgeid
                0.f, 0.f,           // source, target
                0.f, 0.f,           // cost, turn_cost
                kInvalidLabelIndex, // predecessor
@@ -399,9 +400,9 @@ class LabelSet
 inline bool
 IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const baldr::GraphId& edgeid,
-              sif::cost_ptr_t costing,
-              std::shared_ptr<const sif::EdgeLabel> pred_edgelabel,
-              sif::EdgeFilter edgefilter,
+              const sif::cost_ptr_t costing,
+              const std::shared_ptr<const sif::EdgeLabel> pred_edgelabel,
+              const sif::EdgeFilter edgefilter,
               const baldr::GraphTile* tile)
 {
   if (costing) {
@@ -588,7 +589,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
   std::unordered_map<uint16_t, uint32_t> results;
 
-  auto edgefilter = costing? costing->GetFilter() : nullptr;
+  const auto edgefilter = costing? costing->GetFilter() : nullptr;
 
   const baldr::GraphTile* tile = nullptr;
 
@@ -624,20 +625,19 @@ find_shortest_path(baldr::GraphReader& reader,
         break;
       }
 
-      // Expand current node
       const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
-      if (!nodeinfo || !nodeinfo->edge_count()) continue;
+      if (!nodeinfo || nodeinfo->edge_count() <= 0) continue;
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
-
-      baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
-      auto other_edge = tile->directededge(nodeinfo->edge_index());
-      assert(other_edge);
 
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
                                    get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
       assert(0 <= inbound_heading && inbound_heading < 360);
 
+      // Expand current node
+      baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
+      auto other_edge = tile->directededge(nodeinfo->edge_index());
+      assert(other_edge);
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
         // Disable shortcut TODO perhaps we should use
         // other_edge->is_shortcut()? but it failed to guarantee same
@@ -754,7 +754,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
 
 class RoutePathIterator:
-    public std::iterator<std::forward_iterator_tag, const Label>
+      public std::iterator<std::forward_iterator_tag, const Label>
 {
  public:
   RoutePathIterator(const LabelSet* labelset,
