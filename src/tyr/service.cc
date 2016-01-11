@@ -782,7 +782,7 @@ namespace {
         auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
 
         //log request if greater then X (ms)
-        auto trip_directions_length = 0;
+        auto trip_directions_length = 0.f;
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
