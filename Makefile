@@ -19,7 +19,7 @@ commands: simple_matcher edge_search service psqlmatcher attacher stat
 
 
 .PHONY: tests
-tests: test_queue test_viterbi_search test_grid_range_query test_sp
+tests: test_queue test_viterbi_search test_grid_range_query test_sp test_geometry_helpers test_map_matching
 
 
 .PHONY: run_tests
@@ -28,6 +28,8 @@ run_tests: tests
 	./test_viterbi_search
 	./test_grid_range_query
 	./test_sp
+	./test_geometry_helpers
+	./test_map_matching mm.json
 
 
 stat: stat.cc
@@ -68,6 +70,14 @@ test_queue: test_queue.cc queue.h
 
 test_viterbi_search: test_viterbi_search.cc viterbi_search.h queue.h
 	$(CC) $(FLAGS_TEST) $< -o $@
+
+
+test_geometry_helpers: test_geometry_helpers.cc geometry_helpers.h
+	$(CC) $(FLAGS_TEST) $< -o $@ $(LIBS)
+
+
+test_map_matching: test_map_matching.cc map_matching.h
+	$(CC) $(FLAGS_TEST) $< -o $@ $(LIBS)
 
 
 .PHONY: clean
