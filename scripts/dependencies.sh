@@ -24,7 +24,7 @@ else
 fi
 
 #clone
-for dep in midgard baldr skadi sif mjolnir loki odin thor; do
+for dep in midgard baldr skadi sif mjolnir loki odin thor tyr; do
 	rm -rf $dep
 	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git $dep
 done
@@ -41,7 +41,7 @@ done
 wait
 
 #build sync
-for dep in skadi mjolnir loki odin thor; do
+for dep in skadi mjolnir loki odin thor tyr; do
         pushd $dep
         ./autogen.sh
         ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
