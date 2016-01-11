@@ -8,6 +8,16 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
+#config files for tools, you can put a commit hash here if you are ahead of master
+CONF=master
+conf:
+	-wget -q -O conf-$(CONF).zip https://github.com/valhalla/conf/archive/$(CONF).zip
+	-unzip conf-$(CONF).zip
+	-rm -rf conf-$(CONF).zip conf
+	-mv conf-$(CONF) conf
+clean-conf:
+	-rm -rf conf
+
 # conditional test coverage
 if ENABLE_COVERAGE
 .PHONY: clean-coverage
@@ -32,8 +42,13 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-conf
+else
+clean-local: clean-conf
 endif
+
+#everyone needs a conf
+src/skadi/*.cc: conf
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_skadi.la
@@ -49,16 +64,13 @@ libvalhalla_skadi_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFL
 libvalhalla_skadi_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = skadi_service skadi_benchmark skadi_simple_service
+bin_PROGRAMS = skadi_service skadi_simple_service
 skadi_simple_service_SOURCES = src/skadi/simple_service.cc
 skadi_simple_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 skadi_simple_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
 skadi_service_SOURCES = src/skadi/skadi_service.cc
 skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 skadi_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
-skadi_benchmark_SOURCES = src/skadi/benchmark.cc
-skadi_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-skadi_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
 
 #data for tests
 test/data/N40W077.hgt:
