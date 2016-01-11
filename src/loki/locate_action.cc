@@ -1,6 +1,5 @@
 #include "loki/service.h"
 #include "loki/search.h"
-
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/logging.h>
@@ -62,9 +61,10 @@ namespace {
     return array;
   }
 
-  json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool verbose) {
+  json::MapPtr serialize(const boost::optional<std::string>& id, const PathLocation& location, GraphReader& reader, bool verbose) {
     //serialze all the edges
-    auto m = json::map({
+    auto m = json::map
+    ({
       {"edges", serialize_edges(location, reader, verbose)},
       {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
       {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
@@ -95,11 +95,13 @@ namespace {
       m->emplace("node", static_cast<nullptr_t>(nullptr));
     if(verbose)
       m->emplace("node_id", node.json());
+    /*if (id)
+      m->emplace("id", *id);*/
 
     return m;
   }
 
-  json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbose) {
+  json::MapPtr serialize(const boost::optional<std::string>& id, const PointLL& ll, const std::string& reason, bool verbose) {
     auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
       {"node", static_cast<std::nullptr_t>(nullptr)},
@@ -108,6 +110,9 @@ namespace {
     });
     if(verbose)
       m->emplace("reason", reason);
+    /*if(id)
+      m->emplace("id", *id);*/
+
     return m;
   }
 }
@@ -119,18 +124,33 @@ namespace valhalla {
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       auto verbose = request.get<bool>("verbose", false);
+
       for(const auto& location : locations) {
         try {
           auto correlated = loki::Search(location, reader, costing_filter);
-          json->emplace_back(serialize(correlated, reader, verbose));
+          json->emplace_back(serialize(request.get_optional<std::string>("id"), correlated, reader, verbose));
         }
         catch(const std::exception& e) {
-          json->emplace_back(serialize(location.latlng_, e.what(), verbose));
+          json->emplace_back(serialize(request.get_optional<std::string>("id"), location.latlng_, e.what(), verbose));
         }
       }
 
-      //jsonp callback if need be
+      //get processing time for locate
+      auto time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+
+      //log request if greater then X (ms)
+      if ((elapsed_time / locations.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("locate request elapsed time (ms)::"+ std::to_string(elapsed_time));
+        LOG_WARN("locate request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("long_locate_request", " [ANALYTICS] ");
+      }
+
       std::ostringstream stream;
+      //jsonp callback if need be
       auto jsonp = request.get_optional<std::string>("jsonp");
       if(jsonp)
         stream << *jsonp << '(';

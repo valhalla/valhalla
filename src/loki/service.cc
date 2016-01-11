@@ -99,7 +99,8 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")) {
+    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
+        long_request(config.get<float>("loki.logging.long_request")){
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
@@ -182,18 +183,24 @@ namespace valhalla {
         http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+        valhalla::midgard::logging::Log("501::" + response.body, " [ANALYTICS] ");
         return result;
       }
       catch(const std::exception& e) {
-        LOG_INFO(std::string("Bad Request: ") + e.what());
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
       }
     }
-    void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+      //get time for start of request
+      auto time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      request.put("start_time",msecs);
+
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -208,10 +215,14 @@ namespace valhalla {
       }
       if(locations.size() < (action == LOCATE ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
-      LOG_INFO("location_count::" + std::to_string(request_locations->size()));
+
+      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
 
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
+      if (costing)
+      valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
+
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {
