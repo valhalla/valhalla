@@ -8,6 +8,8 @@
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/pointll.h>
 
 
 namespace {
@@ -141,10 +143,10 @@ ExpandMeters(const midgard::AABB2<midgard::PointLL>& bbox, float meters)
     throw std::runtime_error("Expect non-negative meters");
   }
 
-  PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
-                TranslateLatitudeInMeters(bbox.minpt(), -meters));
-  PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
-                TranslateLatitudeInMeters(bbox.maxpt(), meters));
+  midgard::PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
+                         TranslateLatitudeInMeters(bbox.minpt(), -meters));
+  midgard::PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
+                         TranslateLatitudeInMeters(bbox.maxpt(), meters));
   return {minpt, maxpt};
 }
 
@@ -156,10 +158,10 @@ ExpandMeters(const midgard::PointLL& pt, float meters)
     throw std::runtime_error("Expect non-negative meters");
   }
 
-  PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
-                TranslateLatitudeInMeters(pt, -meters));
-  PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
-                TranslateLatitudeInMeters(pt, meters));
+  midgard::PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
+                         TranslateLatitudeInMeters(pt, -meters));
+  midgard::PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
+                         TranslateLatitudeInMeters(pt, meters));
   return {minpt, maxpt};
 }
 
@@ -169,7 +171,7 @@ template <typename coord_t>
 std::tuple<coord_t, float, typename std::vector<coord_t>::size_type, float>
 Project(const coord_t& p,
         const typename std::vector<coord_t>& shape,
-        const DistanceApproximator& approximator,
+        const midgard::DistanceApproximator& approximator,
         float snap_distance = 0.f)
 {
   if (shape.empty()) {
