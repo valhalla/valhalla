@@ -39,7 +39,7 @@ namespace {
       if (max_distance < 0)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-      LOG_INFO("location_distance::" + std::to_string(path_distance));
+      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance), " [ANALYTICS] ");
     }
   }
 }
@@ -96,6 +96,7 @@ namespace valhalla {
       //let tyr know if its valhalla or osrm format
       if(action == loki_worker_t::VIAROUTE)
         request.put("osrm", "compatibility");
+
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);
 

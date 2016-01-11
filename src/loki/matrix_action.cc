@@ -1,3 +1,4 @@
+#include <functional>
 #include <unordered_map>
 #include <boost/property_tree/info_parser.hpp>
 
@@ -65,7 +66,7 @@ namespace {
       if (path_distance > matrix_max_distance)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-      LOG_INFO("location_distance::" + std::to_string(path_distance));
+      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance), " [ANALYTICS] ");
     }
   }
 }
