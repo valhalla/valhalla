@@ -183,12 +183,19 @@ namespace {
         try {
           boost::property_tree::read_info(stream, request);
         }
+        catch(const std::exception& e) {
+          worker_t::result_t result{false};
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
+          return result;
+        }
         catch(...) {
           worker_t::result_t result{false};
           http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
-          valhalla::midgard::logging::Log("500::" + response.to_string(), " [ANALYTICS] ");
           return result;
         }
 
