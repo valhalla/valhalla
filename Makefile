@@ -80,6 +80,10 @@ test_map_matching: test_map_matching.cc map_matching.h
 	$(CC) $(FLAGS_TEST) $< -o $@ $(LIBS)
 
 
+mm.json: mm.partial.json conf/valhalla.json
+	jq -s '.[1].mjolnir.hierarchy = .[0].mjolnir.hierarchy | .[1].costing_options = .[0].costing_options | .[1]' conf/valhalla.json mm.partial.json > mm.json
+
+
 .PHONY: clean
 clean:
 	rm -f attacher edge_search psqlmatcher service simple_matcher stat test_grid_range_query test_queue test_sp test_viterbi_search

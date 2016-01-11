@@ -1,0 +1,52 @@
+{
+    "mm": {
+        "mode": "multimodal",
+
+        "customizable": ["mode", "route", "geometry", "search_radius"],
+
+        "default": {
+            "sigma_z": 4.07,
+            "beta": 3,
+            "max_route_distance_factor": 3,
+            "breakage_distance": 2000,
+            "interpolation_distance": 10,
+            "search_radius": 40,
+            "max_search_radius": 200,
+            "geometry": false,
+            "route": false,
+            "turn_penalty_factor": 0
+        },
+
+        "auto": {
+            "turn_penalty_factor": 50
+        },
+
+        "pedestrian": {
+            "turn_penalty_factor": 20
+        },
+
+        "bicycle": {
+            "turn_penalty_factor": 40
+        },
+
+        "multimodal": {
+            "turn_penalty_factor": 35
+        },
+
+        "logging": {
+            "type": "std_out",
+            "color": true
+        },
+
+        "service": {
+            "proxy": "ipc:///tmp/mm",
+            "listen": "tcp://*:8001",
+            "loopback": "ipc:///tmp/mm_loopback"
+        }
+    },
+
+    "grid": {
+        "size": 500,
+        "cache_size": 64
+    }
+}
