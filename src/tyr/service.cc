@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
@@ -231,7 +232,7 @@ namespace {
             {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
           })
         },
-        {"route_name", route_name(legs)}, //TODO: list of all of the streets or just the via points?
+        {"id", route_name(legs)}, //TODO: list of all of the streets or just the via points?
         {"via_indices", via_indices(legs)}, //maneuver index
         {"found_alternative", static_cast<bool>(false)}, //no alt route support
         {"route_summary", route_summary(legs)}, //start/end name, total time/distance
@@ -315,7 +316,8 @@ namespace {
     }
     ],
     "status_message": "Found route between points"
-    }
+    },
+    "id": "work route"
     }
     */
     using namespace std;
@@ -332,6 +334,8 @@ namespace {
       auto route_summary = json::map({});
       route_summary->emplace("time", time);
       route_summary->emplace("length", json::fp_t{length, 3});
+      midgard::logging::Log("trip_time (s)::" + std::to_string(time), " [ANALYTICS] ");
+      midgard::logging::Log("trip_length (m)::" + std::to_string(length), " [ANALYTICS] ");
       return route_summary;
     }
 
@@ -571,6 +575,7 @@ namespace {
 
             if (transit_route.has_onestop_id()) {
               json_transit_route->emplace("onestop_id", transit_route.onestop_id());
+              valhalla::midgard::logging::Log("transit_route_one_stop_id::" + transit_route.onestop_id(), " [ANALYTICS] ");
             }
             if (transit_route.has_short_name()) {
               json_transit_route->emplace("short_name", transit_route.short_name());
@@ -602,7 +607,6 @@ namespace {
 
             // Add transit stops
             if (transit_route.transit_stops().size() > 0) {
-
               auto json_transit_stops = json::array({});
               for (const auto& transit_stop : transit_route.transit_stops()) {
                 auto json_transit_stop = json::map({});
@@ -619,6 +623,7 @@ namespace {
                 // onestop_id
                 if (transit_stop.has_onestop_id()) {
                     json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
+                    valhalla::midgard::logging::Log("transit_one_stop_id::" + transit_stop.onestop_id(), " [ANALYTICS] ");
                 }
 
                 // name
@@ -678,7 +683,8 @@ namespace {
       return legs;
     }
 
-    void serialize(const valhalla::odin::DirectionsOptions& directions_options,
+    void serialize(const boost::optional<std::string>& id,
+                   const valhalla::odin::DirectionsOptions& directions_options,
                    const std::list<valhalla::odin::TripDirections>& directions_legs,
                    std::ostringstream& stream) {
 
@@ -687,15 +693,17 @@ namespace {
       ({
         {"trip", json::map
           ({
-              {"locations", locations(directions_legs)},
-              {"summary", summary(directions_legs)},
-              {"legs", legs(directions_legs)},
-              {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-              {"status", static_cast<uint64_t>(0)}, //0 success
-              {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
+            {"locations", locations(directions_legs)},
+            {"summary", summary(directions_legs)},
+            {"legs", legs(directions_legs)},
+            {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+            {"status", static_cast<uint64_t>(0)}, //0 success
+            {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
           })
         }
       });
+      if (id)
+        json->emplace("id", *id);
 
       //serialize it
       stream << *json;
@@ -709,7 +717,8 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class tyr_worker_t {
    public:
-    tyr_worker_t(const boost::property_tree::ptree& config):config(config) {
+    tyr_worker_t(const boost::property_tree::ptree& config):config(config),
+      long_request(config.get<float>("tyr.logging.long_request")){
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -730,12 +739,13 @@ namespace {
           return result;
         }
 
-
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
         auto options = request.get_child_optional("directions_options");
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
+
+        midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
 
         //get the legs
         std::list<odin::TripDirections> legs;
@@ -761,15 +771,35 @@ namespace {
         //serialize them
         if(request.get_optional<std::string>("osrm"))
           osrm_serializers::serialize(directions_options, legs, json_stream);
-        else
-          valhalla_serializers::serialize(directions_options, legs, json_stream);
+        else {
+          valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
+        }
         if(jsonp)
           json_stream << ')';
+
+        //get processing time for locate
+        auto time = std::chrono::high_resolution_clock::now();
+        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+
+        //log request if greater then X (ms)
+        auto trip_directions_length = 0;
+        for(const auto& leg : legs) {
+          trip_directions_length += leg.summary().length();
+        }
+        if ((elapsed_time / trip_directions_length) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request, false);
+          LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("route request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("long_route_requestt", " [ANALYTICS] ");
+        }
 
         worker_t::result_t result{false};
         http_response_t response(200, "OK", json_stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+
         return result;
       }
       catch(const std::exception& e) {
@@ -783,6 +813,7 @@ namespace {
     }
    protected:
     boost::property_tree::ptree config;
+    float long_request;
   };
 }
 
