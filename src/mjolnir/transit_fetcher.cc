@@ -303,7 +303,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
       dangles = true;
 
     //um yeah this goes nowhere
-    if(origin->first == destination ->first){
+    if(origin->first == destination->first){
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
