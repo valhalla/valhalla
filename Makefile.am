@@ -2,11 +2,22 @@ ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
 AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
-VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ @VALHALLA_BALDR_LDFLAGS@ @VALHALLA_BALDR_LIB@ @VALHALLA_SIF_LDFLAGS@ @VALHALLA_SIF_LIB@ @VALHALLA_MJOLNIR_LDFLAGS@ @VALHALLA_MJOLNIR_LIB@
-VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@ @VALHALLA_BALDR_CPPFLAGS@ @VALHALLA_SIF_CPPFLAGS@ @VALHALLA_MJOLNIR_CPPFLAGS@
+VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ @VALHALLA_BALDR_LDFLAGS@ @VALHALLA_BALDR_LIB@ @VALHALLA_SIF_LDFLAGS@ @VALHALLA_SIF_LIB@
+VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@ @VALHALLA_BALDR_CPPFLAGS@ @VALHALLA_SIF_CPPFLAGS@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
+
+#config files for tools, you can put a commit hash here if you are ahead of master
+CONF=master
+conf:
+	-wget -q -O conf-$(CONF).zip https://github.com/valhalla/conf/archive/$(CONF).zip
+	-unzip conf-$(CONF).zip
+	-rm -rf conf-$(CONF).zip conf
+	-mv conf-$(CONF) conf
+clean-conf:
+	-rm -rf conf
+
 
 # conditional test coverage
 if ENABLE_COVERAGE
@@ -32,8 +43,13 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-conf
+else
+clean-local: clean-conf
 endif
+
+#everyone needs a conf
+src/loki/*.cc: conf
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_loki.la
@@ -50,10 +66,7 @@ libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLA
 libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = loki_benchmark loki_service
-loki_benchmark_SOURCES = src/loki/benchmark.cc
-loki_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-loki_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
+bin_PROGRAMS = loki_service
 loki_service_SOURCES = src/loki/loki_service.cc
 loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 loki_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la

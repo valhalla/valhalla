@@ -1,35 +1,29 @@
 #include "test.h"
 #include "loki/search.h"
 
-#include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <unordered_set>
-#include <algorithm>
 
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/vector2.h>
-#include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
+
+using namespace valhalla::midgard;
+using namespace valhalla::baldr;
+
+/*#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/directededgebuilder.h>*/
 
 namespace {
 
-std::pair<GraphId, PointLL>
-    b({}, {}),
-    a({}, {}),
-    c({}, {}),
-    d({}, {});
-
 boost::property_tree::ptree conf;
+std::pair<GraphId, PointLL> b({}, {}), a({}, {}), c({}, {}), d({}, {});
 
-void make_tile() {
-  using namespace valhalla::mjolnir;
-  using namespace valhalla::baldr;
-
+void configure() {
   //make the config file
   std::stringstream json; json << "{ \
     \"tile_dir\": \"test/tiles\", \
@@ -40,6 +34,36 @@ void make_tile() {
     ] \
   }";
   boost::property_tree::json_parser::read_json(json, conf);
+
+  //basic tile information
+  TileHierarchy h(conf);
+  GraphId tile_id = h.GetGraphId({.125,.125}, 2);
+
+  // this is what it looks like
+  //    b
+  //    |\
+  //  1 | \ 0
+  //    |  \
+  //  2 |   \ 7
+  //    |    \
+  //    a-3-8-d
+  //    |    /
+  //  4 |   / 9
+  //    |  /
+  //  5 | / 6
+  //    |/
+  //    c
+  b.first = {tile_id.tileid(), tile_id.level(), 0}; b.second = {.01, .2};
+  a.first = {tile_id.tileid(), tile_id.level(), 1}; a.second = {.01, .1};
+  c.first = {tile_id.tileid(), tile_id.level(), 2}; c.second = {.01, .01};
+  d.first = {tile_id.tileid(), tile_id.level(), 3}; d.second = {.2, .1};
+}
+
+
+/*
+void make_tile() {
+  using namespace valhalla::mjolnir;
+  using namespace valhalla::baldr;
 
   //basic tile information
   TileHierarchy h(conf);
@@ -72,26 +96,20 @@ void make_tile() {
     return edge_builder;
   };
 
-  /* this is what it looks like
-    b
-    |\
-  1 | \ 0
-    |  \
-  2 |   \ 7
-    |    \
-    a-3-8-d
-    |    /
-  4 |   / 9
-    |  /
-  5 | / 6
-    |/
-    c
-  */
-
-  b.first = {tile_id.tileid(), tile_id.level(), 0}; b.second = {.01, .2};
-  a.first = {tile_id.tileid(), tile_id.level(), 1}; a.second = {.01, .1};
-  c.first = {tile_id.tileid(), tile_id.level(), 2}; c.second = {.01, .01};
-  d.first = {tile_id.tileid(), tile_id.level(), 3}; d.second = {.2, .1};
+  // this is what it looks like
+  //    b
+  //    |\
+  //  1 | \ 0
+  //    |  \
+  //  2 |   \ 7
+  //    |    \
+  //    a-3-8-d
+  //    |    /
+  //  4 |   / 9
+  //    |  /
+  //  5 | / 6
+  //    |/
+  //    c
 
   //NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so on
 
@@ -128,9 +146,21 @@ void make_tile() {
   //write the tile
   tile.StoreTileData();
 }
-
+*/
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
   const std::vector<PathLocation::PathEdge>& expected_edges, const valhalla::loki::SearchStrategy& strategy){
+
+  //make the config file
+  std::stringstream json; json << "{ \
+    \"tile_dir\": \"test/tiles\", \
+    \"levels\": [ \
+      {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
+      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
+      {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
+    ] \
+  }";
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(json, conf);
 
   valhalla::baldr::GraphReader reader(conf);
   valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PassThroughFilter, strategy);
@@ -238,7 +268,10 @@ void TestEdgeSearch() {
 int main() {
   test::suite suite("search");
 
-  suite.test(TEST_CASE(make_tile));
+  //TODO: move to mjolnir?
+  //suite.test(TEST_CASE(make_tile));
+
+  suite.test(TEST_CASE(configure));
 
   suite.test(TEST_CASE(TestNodeSearch));
 

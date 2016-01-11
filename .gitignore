@@ -35,6 +35,7 @@ loki_service
 .dirstamp
 *.lo
 .libs/
+conf/
 libvalhalla_loki.la
 
 # tests
@@ -42,7 +43,6 @@ test-suite.log
 test-driver
 test/*.log
 test/*.trs
-test/tiles
 test/search
 test/service
 
