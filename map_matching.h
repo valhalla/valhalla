@@ -655,10 +655,6 @@ struct EdgeSegment
         source(the_source),
         target(the_target)
   {
-    if (!edgeid.Is_Valid()) {
-      throw std::invalid_argument("Invalid edgeid");
-    }
-
     if (!(0.f <= source && source <= target && target <= 1.f)) {
       throw std::invalid_argument("Expect 0.f <= source <= source <= 1.f, but you got source = "
                                   + std::to_string(source)
@@ -706,61 +702,193 @@ struct EdgeSegment
 };
 
 
-void MergeRoute(std::vector<EdgeSegment>& route,
-                const std::vector<EdgeSegment>& segments)
+template <typename segment_iterator_t>
+std::string
+RouteToString(baldr::GraphReader& graphreader,
+              segment_iterator_t segment_begin,
+              segment_iterator_t segment_end,
+              const baldr::GraphTile*& tile)
 {
-  for (auto segment = segments.rbegin(); segment != segments.rend(); segment++) {
+  // The string will look like: [dummy] [source/startnodeid edgeid target/endnodeid] ...
+  std::ostringstream route;
+
+  for (auto segment = segment_begin; segment != segment_end; segment++) {
     if (segment->edgeid.Is_Valid()) {
-      if (!route.empty()) {
-        auto& last_segment = route.back();
-        if (last_segment.edgeid == segment->edgeid) {
+      route << "[";
 
-          // Segments must be successive i.e. segments[i-1].target == segments[i].source where i > 0
-          if (last_segment.target != segment->source && segment != segments.rbegin()) {
-            LOG_ERROR("Found a disconnected route in which segment "
-                      + std::to_string(segment - segments.rbegin()) + " ends at "
-                      + std::to_string(last_segment.target)
-                      + " but the next segment starts at "
-                      + std::to_string(segment->source));
-          }
+      if (segment->source == 0.f) {
+        route << helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+      } else {
+        route << segment->source;
+      }
 
-          last_segment.target = std::max(last_segment.target, segment->target);
-        } else {
-          route.push_back(*segment);
+      route << " " << segment->edgeid << " ";
+
+      if (segment->target == 1.f) {
+        route << helpers::edge_endnodeid(graphreader, segment->edgeid, tile);
+      } else {
+        route << segment->target;
+      }
+
+      route << "]";
+    } else {
+      route << "[dummy]";
+    }
+    route << " ";
+  }
+
+  auto route_str = route.str();
+  if (!route_str.empty()) {
+    route_str.pop_back();
+  }
+  return route_str;
+}
+
+
+// Validate a route. It check if all edge segments of the route are
+// valid and successive, and no loop
+template <typename segment_iterator_t>
+bool ValidateRoute(baldr::GraphReader& graphreader,
+                   segment_iterator_t segment_begin,
+                   segment_iterator_t segment_end,
+                   const baldr::GraphTile*& tile)
+{
+  if (segment_begin == segment_end) {
+    return true;
+  }
+
+  // The first segment must be dummy
+  if (!(!segment_begin->edgeid.Is_Valid()
+        && segment_begin->source == 0.f
+        && segment_begin->target == 0.f)) {
+    LOG_ERROR("Found the first segment's edgeid is not dummpy");
+    LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
+    return false;
+  }
+
+  for (auto segment = std::next(segment_begin);  // Skip the first dummy segment
+       segment != segment_end; segment++) {
+    // The rest of segments must have valid edgeid
+    if (!segment->edgeid.Is_Valid()) {
+      LOG_ERROR("Found invalid edgeid at segment " + std::to_string(segment - segment_begin));
+      LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
+      return false;
+    }
+
+    // Skip the first non-dummy segment
+    const auto prev_segment = std::prev(segment);
+    if (prev_segment == segment_begin) {
+      continue;
+    }
+
+    // Successive segments must be adjacent and no loop absolutely!
+    if (prev_segment->edgeid == segment->edgeid) {
+      if (prev_segment->target != segment->source) {
+        LOG_ERROR("Found disconnected segments at " + std::to_string(segment - segment_begin));
+        LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
+
+        // A temporary fix here: this exception is due to a few of
+        // loops in the graph. The error message below is one example
+        // of the fail case: the edge 2/698780/4075 is a loop since it
+        // ends and starts at the same node 2/698780/1433:
+
+        // [ERROR] Found disconnected segments at 2
+        // [ERROR] [dummy] [0.816102 2/698780/4075 2/698780/1433] [2/698780/1433 2/698780/4075 0.460951]
+
+        // We should remove this block of code when this issue is
+        // solved from upstream
+        const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile);
+        const auto startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        if (endnodeid == startnodeid) {
+          LOG_ERROR("This is a loop. Let it go");
+          return true;
         }
+        // End of the fix
+
+        return false;
+      }
+    } else {
+      const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile),
+               startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+      if (!(prev_segment->target == 1.f
+            && segment->source == 0.f
+            && endnodeid == startnodeid)) {
+        LOG_ERROR("Found disconnected segments at " + std::to_string(segment - segment_begin));
+        LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+
+template <typename segment_iterator_t>
+void MergeRoute(std::vector<EdgeSegment>& route,
+                segment_iterator_t segment_begin,
+                segment_iterator_t segment_end)
+{
+  if (segment_begin == segment_end) {
+    return;
+  }
+
+  for (auto segment = std::next(segment_begin);  // Skip the first dummy segment
+       segment != segment_end; segment++) {
+    if (!segment->edgeid.Is_Valid()) {
+      throw std::runtime_error("Still found an invalid edgeid in route segments");
+    }
+    if(!route.empty()) {
+      auto& last_segment = route.back();
+      if (last_segment.edgeid == segment->edgeid) {
+        if (last_segment.target != segment->source
+            && segment != std::next(segment_begin)) {
+          // TODO should throw runtime error. See the temporary fix
+          LOG_ERROR("Still found a disconnected route in which segment "
+                    + std::to_string(segment - segment_begin) + " ends at "
+                    + std::to_string(last_segment.target)
+                    + " but the next segment starts at "
+                    + std::to_string(segment->source));
+        }
+        // and here we should extend last_segment.target =
+        // segment->target since last_segment.target <=
+        // segment->target but see the temporary fix
+        last_segment.target = std::max(last_segment.target, segment->target);
       } else {
         route.push_back(*segment);
       }
+    } else {
+      route.push_back(*segment);
     }
   }
 }
 
 
-template <typename iterator_t>
+template <typename match_iterator_t>
 std::vector<EdgeSegment>
-ConstructRoute(iterator_t begin, iterator_t end)
+ConstructRoute(GraphReader& graphreader, match_iterator_t begin, match_iterator_t end)
 {
   std::vector<EdgeSegment> route;
-  iterator_t previous_match = end;
+  match_iterator_t previous_match = end;
+  const baldr::GraphTile* tile = nullptr;
 
   for (auto match = begin; match != end; match++) {
-    if (!match->state()) {
-      continue;
-    }
-    if (previous_match != end) {
-      std::vector<EdgeSegment> segments;
-      auto previous_state = previous_match->state(),
-            current_state = match->state();
-      for (auto label = previous_state->RouteBegin(*current_state),
-                  end = previous_state->RouteEnd(); label != end; label++) {
-        if (label->edgeid.Is_Valid()) {
-          assert(label->source <= label->target);
-          segments.emplace_back(label->edgeid, label->source, label->target);
+    if (match->state()) {
+      if (previous_match != end) {
+        std::vector<EdgeSegment> segments;
+        for (auto segment = previous_match->state()->RouteBegin(*match->state()),
+                      end = previous_match->state()->RouteEnd();
+             segment != end; segment++) {
+          segments.emplace_back(segment->edgeid, segment->source, segment->target);
+        }
+        if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
+          MergeRoute(route, segments.rbegin(), segments.rend());
+        } else {
+          throw std::runtime_error("Found invalid route");
         }
       }
-      MergeRoute(route, segments);
+      previous_match = match;
     }
-    previous_match = match;
   }
 
   return route;

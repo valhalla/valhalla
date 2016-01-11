@@ -431,8 +431,8 @@ int main(int argc, char *argv[])
   boost::property_tree::ptree config;
   boost::property_tree::read_json(config_file_path, config);
 
-  mm::MapMatcherFactory matcher_factory_(config);
-  auto matcher = matcher_factory_.Create(config.get<std::string>("mm.mode"));
+  mm::MapMatcherFactory matcher_factory(config);
+  auto matcher = matcher_factory.Create(config.get<std::string>("mm.mode"));
 
   ////////////////////////
   // Prepare sqlite3 database for writing results
@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
       return 2;
     }
   }
-  const auto& tile_hierarchy = matcher_factory_.graphreader().GetTileHierarchy();
+  const auto& tile_hierarchy = matcher_factory.graphreader().GetTileHierarchy();
   const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   auto tileids = collect_local_tileids(tile_hierarchy, accomplished_tileids);
   auto total_tiles = tileids.size() + accomplished_tileids.size();
@@ -518,7 +518,7 @@ int main(int argc, char *argv[])
       assert(match_results.size() == sequence.size());
 
       results.emplace(sid, match_results);
-      routes.emplace(sid, mm::ConstructRoute(match_results.begin(), match_results.end()));
+      routes.emplace(sid, mm::ConstructRoute(matcher_factory.graphreader(), match_results.begin(), match_results.end()));
 
       measurement_count += sequence.size();
     }
@@ -541,10 +541,10 @@ int main(int argc, char *argv[])
              + std::to_string(accomplished_tileids.size()) + "/" + std::to_string(total_tiles)
              + " tiles");
 
-    matcher_factory_.ClearCacheIfPossible();
+    matcher_factory.ClearCacheIfPossible();
   }
 
-  matcher_factory_.ClearCache();
+  matcher_factory.ClearCache();
   PQfinish(conn);
   sqlite3_close(db_handle);
 

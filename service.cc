@@ -289,7 +289,7 @@ void serialize_geometry_route(const std::vector<MatchResult>& results,
 
   writer.String("coordinates");
   writer.StartArray();
-  const auto& route = ConstructRoute(results.cbegin(), results.cend());
+  const auto& route = ConstructRoute(mm.graphreader(), results.cbegin(), results.cend());
   bool open = false;
   for (auto segment = route.cbegin(), prev_segment = route.cend();
        segment != route.cend(); segment++) {
