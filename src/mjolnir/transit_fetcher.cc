@@ -302,6 +302,12 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     else
       dangles = true;
 
+    //um yeah this goes nowhere
+    if(origin->first == destination ->first){
+      tile.mutable_stop_pairs()->RemoveLast();
+      continue;
+    }
+
     //route
     auto route_id = pair_pt.second.get<std::string>("route_onestop_id");
     auto route = routes.find(route_id);
