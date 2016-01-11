@@ -26,12 +26,12 @@ AC_DEFUN([CHECK_VALHALLA_TYR],
 
 	AC_REQUIRE([AC_PROG_CC])
 
-        AC_CACHE_CHECK(whether the valhalla::tyr library is available, ax_cv_valhalla_thor,
+        AC_CACHE_CHECK(whether the valhalla::tyr library is available, ax_cv_valhalla_tyr,
         	[AC_LANG_PUSH([C++])
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/tyr/adjacencylist.h>]],
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/tyr/service.h>]],
 			[[using namespace valhalla::tyr;
-			AdjacencyList a(1.f, 5.f, 7.f);]])],
-			ax_cv_valhalla_tyr=yes, ax_cv_valhalla_thor=no)
+			return run_service == nullptr;]])],
+			ax_cv_valhalla_tyr=yes, ax_cv_valhalla_tyr=no)
 		AC_LANG_POP([C++])
 	])
 
@@ -41,7 +41,7 @@ AC_DEFUN([CHECK_VALHALLA_TYR],
 		AC_MSG_ERROR(Could not find valhalla_tyr!)
 	fi
 
-	AC_CHECK_LIB(valhalla_tyr, exit, [VALHALLA_TYR_LIB="-lvalhalla_thor"; AC_SUBST(VALHALLA_TYR_LIB) link_thor="yes"; break], [link_thor="no"])
+	AC_CHECK_LIB(valhalla_tyr, exit, [VALHALLA_TYR_LIB="-lvalhalla_tyr"; AC_SUBST(VALHALLA_TYR_LIB) link_tyr="yes"; break], [link_tyr="no"])
 
 	if test "x$link_tyr" = "xyes"; then
 		AC_SUBST(VALHALLA_TYR_CPPFLAGS)
