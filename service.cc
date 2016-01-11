@@ -223,8 +223,8 @@ std::vector<Measurement> read_geojson(const Value& object)
 }
 
 
-template <typename T>
-void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
+template <typename buffer_t>
+void serialize_coordinate(const midgard::PointLL& coord, Writer<buffer_t>& writer)
 {
   writer.StartArray();
   // TODO lower precision
@@ -234,8 +234,8 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 }
 
 
-template <typename T>
-void serialize_graphid(const baldr::GraphId& graphid, Writer<T>& writer)
+template <typename buffer_t>
+void serialize_graphid(const baldr::GraphId& graphid, Writer<buffer_t>& writer)
 {
   if (graphid.Is_Valid()) {
     writer.StartObject();
@@ -256,9 +256,9 @@ void serialize_graphid(const baldr::GraphId& graphid, Writer<T>& writer)
 }
 
 
-template <typename T>
+template <typename buffer_t>
 void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
-                                       Writer<T>& writer)
+                                       Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -276,10 +276,10 @@ void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
 }
 
 
-template <typename T>
+template <typename buffer_t>
 void serialize_geometry_route(const std::vector<MatchResult>& results,
                               const MapMatching& mm,
-                              Writer<T>& writer)
+                              Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -325,10 +325,10 @@ void serialize_geometry_route(const std::vector<MatchResult>& results,
 }
 
 
-template <typename T>
+template <typename buffer_t>
 void serialize_routes(const State& state,
                       const MapMatching& mm,
-                      Writer<T>& writer)
+                      Writer<buffer_t>& writer)
 {
   if (!state.routed()) {
     writer.Null();
@@ -392,10 +392,10 @@ void serialize_routes(const State& state,
 }
 
 
-template <typename T>
+template <typename buffer_t>
 void serialize_state(const State& state,
                      const MapMatching& mm,
-                     Writer<T>& writer)
+                     Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -418,10 +418,10 @@ void serialize_state(const State& state,
 }
 
 
-template <typename T>
+template <typename buffer_t>
 void serialize_properties(const std::vector<MatchResult>& results,
                           const MapMatching& mm,
-                          Writer<T>& writer)
+                          Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -465,10 +465,10 @@ void serialize_properties(const std::vector<MatchResult>& results,
 }
 
 
-template <typename T>
+template <typename buffer_t>
 void serialize_results_as_feature(const std::vector<MatchResult>& results,
                                   const MapMatching& mm,
-                                  Writer<T>& writer, bool route = false)
+                                  Writer<buffer_t>& writer, bool route = false)
 {
   writer.StartObject();
 
@@ -489,8 +489,8 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
 }
 
 
-template <typename T>
-void serialize_config(MapMatcher* matcher, Writer<T>& writer)
+template <typename buffer_t>
+void serialize_config(MapMatcher* matcher, Writer<buffer_t>& writer)
 {
   // Property tree -> string
   std::stringstream ss;
@@ -506,12 +506,12 @@ void serialize_config(MapMatcher* matcher, Writer<T>& writer)
 }
 
 
-template <typename T>
-void serialize_response(T& sb,
+template <typename buffer_t>
+void serialize_response(buffer_t& sb,
                         const std::vector<MatchResult>& results,
                         MapMatcher* matcher)
 {
-  Writer<T> writer(sb);
+  Writer<buffer_t> writer(sb);
   bool route = matcher->config().get<bool>("route"),
     geometry = matcher->config().get<bool>("geometry");
   writer.StartObject();
