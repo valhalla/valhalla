@@ -159,7 +159,6 @@ namespace {
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("501::" + response.body, " [ANALYTICS] ");
         return result;
       }
       catch(const std::exception& e) {
