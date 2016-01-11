@@ -232,7 +232,7 @@ namespace {
             {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
           })
         },
-        {"id", route_name(legs)}, //TODO: list of all of the streets or just the via points?
+        {"route_name", route_name(legs)}, //TODO: list of all of the streets or just the via points?
         {"via_indices", via_indices(legs)}, //maneuver index
         {"found_alternative", static_cast<bool>(false)}, //no alt route support
         {"route_summary", route_summary(legs)}, //start/end name, total time/distance
@@ -771,9 +771,8 @@ namespace {
         //serialize them
         if(request.get_optional<std::string>("osrm"))
           osrm_serializers::serialize(directions_options, legs, json_stream);
-        else {
+        else
           valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
-        }
         if(jsonp)
           json_stream << ')';
 
@@ -792,7 +791,7 @@ namespace {
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
           LOG_WARN("route request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("long_route_requestt", " [ANALYTICS] ");
+          midgard::logging::Log("long_route_request", " [ANALYTICS] ");
         }
 
         worker_t::result_t result{false};
