@@ -326,13 +326,12 @@ void serialize_geometry_route(const std::vector<MatchResult>& results,
 
 
 template <typename T>
-void serialize_labels(const State& state,
+void serialize_routes(const State& state,
                       const MapMatching& mm,
                       Writer<T>& writer)
 {
   if (!state.routed()) {
-    writer.StartArray();
-    writer.EndArray();
+    writer.Null();
     return;
   }
 
@@ -375,7 +374,7 @@ void serialize_labels(const State& state,
           writer.String("target");
           writer.Double(label->target);
 
-          writer.String("cost");
+          writer.String("route_distance");
           writer.Double(label->cost);
 
           writer.String("turn_cost");
@@ -412,8 +411,8 @@ void serialize_state(const State& state,
   writer.String("coordinate");
   serialize_coordinate(state.candidate().vertex(), writer);
 
-  writer.String("labels");
-  serialize_labels(state, mm, writer);
+  writer.String("routes");
+  serialize_routes(state, mm, writer);
 
   writer.EndObject();
 }
