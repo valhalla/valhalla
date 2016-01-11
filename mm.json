@@ -14,15 +14,25 @@
       "breakage_distance": 2000,
       "interpolation_distance": 10,
       "search_radius": 40,
-      "max_search_radius": 200,
+      "max_search_radius": 100,
       "geometry": false,
       "route": false,
       "turn_penalty_factor": 0
     },
-    "auto": {},
-    "pedestrian": {},
-    "bicycle": {},
-    "multimodal": {},
+    "auto": {
+      "turn_penalty_factor": 200,
+      "search_radius": 50
+    },
+    "pedestrian": {
+      "turn_penalty_factor": 100,
+      "search_radius": 25
+    },
+    "bicycle": {
+      "turn_penalty_factor": 140
+    },
+    "multimodal": {
+      "turn_penalty_factor": 70
+    },
     "logging": {
       "type": "std_out",
       "color": true
@@ -74,6 +84,23 @@
     },
     "auto_shorter": {},
     "bus": {},
+    "truck": {
+      "height": 4.11,
+      "width": 2.6,
+      "length": 21.64,
+      "weight": 21.77,
+      "axle_load": 9.07,
+      "hazmat": false,
+      "low_class_penalty": 30,
+      "maneuver_penalty": 5,
+      "destination_only_penalty": 600,
+      "alley_penalty": 5,
+      "gate_cost": 30,
+      "toll_booth_cost": 15,
+      "toll_booth_penalty": 0,
+      "country_crossing_cost": 600,
+      "country_crossing_penalty": 0
+    },
     "pedestrian": {
       "walking_speed": 5.1,
       "walkway_factor": 0.9,
@@ -92,6 +119,12 @@
       "use_roads": 0.5
     },
     "multimodal": {},
-    "transit": {}
+    "transit": {
+      "use_bus": 0.3,
+      "use_rail": 0.5,
+      "use_transfers": 1,
+      "transfer_cost": 60,
+      "transfer_penalty": 300
+    }
   }
 }

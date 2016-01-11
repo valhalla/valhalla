@@ -11,26 +11,28 @@
             "breakage_distance": 2000,
             "interpolation_distance": 10,
             "search_radius": 40,
-            "max_search_radius": 200,
+            "max_search_radius": 100,
             "geometry": false,
             "route": false,
             "turn_penalty_factor": 0
         },
 
         "auto": {
-            "turn_penalty_factor": 50
+            "turn_penalty_factor": 200,
+            "search_radius": 50
         },
 
         "pedestrian": {
-            "turn_penalty_factor": 20
+            "turn_penalty_factor": 100,
+            "search_radius": 25
         },
 
         "bicycle": {
-            "turn_penalty_factor": 40
+            "turn_penalty_factor": 140
         },
 
         "multimodal": {
-            "turn_penalty_factor": 35
+            "turn_penalty_factor": 70
         },
 
         "logging": {
