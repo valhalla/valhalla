@@ -237,18 +237,22 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 template <typename T>
 void serialize_graphid(const baldr::GraphId& graphid, Writer<T>& writer)
 {
-  writer.StartObject();
+  if (graphid.Is_Valid()) {
+    writer.StartObject();
 
-  writer.String("id");
-  writer.Uint(graphid.id());
+    writer.String("id");
+    writer.Uint(graphid.id());
 
-  writer.String("level");
-  writer.Uint(graphid.level());
+    writer.String("level");
+    writer.Uint(graphid.level());
 
-  writer.String("tileid");
-  writer.Uint(graphid.tileid());
+    writer.String("tileid");
+    writer.Uint(graphid.tileid());
 
-  writer.EndObject();
+    writer.EndObject();
+  } else {
+    writer.Null();
+  }
 }
 
 
@@ -360,18 +364,10 @@ void serialize_labels(const State& state,
           writer.StartObject();
 
           writer.String("edgeid");
-          if (label->edgeid.Is_Valid()) {
-            serialize_graphid(label->edgeid, writer);
-          } else {
-            writer.Null();
-          }
+          serialize_graphid(label->edgeid, writer);
 
           writer.String("nodeid");
-          if (label->nodeid.Is_Valid()) {
-            serialize_graphid(label->nodeid, writer);
-          } else {
-            writer.Null();
-          }
+          serialize_graphid(label->nodeid, writer);
 
           writer.String("source");
           writer.Double(label->source);
