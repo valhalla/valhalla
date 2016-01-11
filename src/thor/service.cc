@@ -196,6 +196,7 @@ namespace {
           http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
+          valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
           return result;
         }
 
