@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
@@ -94,12 +95,15 @@ namespace {
   //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
   //   ]
   // }
-  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
-    return json::map({
+  json::MapPtr serialize_one_to_many(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+     auto json = json::map({
       {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size(), distance_scale)})},
       {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
+    if (id)
+      json->emplace("id", *id);
+    return json;
   }
 
   //Returns a column vector of computed time and distance from each location to the last (destination) location provided.
@@ -113,15 +117,18 @@ namespace {
   //     [{origin3,dest0,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+  json::MapPtr serialize_many_to_one(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr column_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i)
       column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, i, i + 1, distance_scale));
-    return json::map({
+    auto json = json::map({
       {"many_to_one", column_matrix},
       {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
+    if (id)
+      json->emplace("id", *id);
+    return json;
   }
 
   //Returns a square matrix of computed time and distance from each location to every other location.
@@ -135,22 +142,26 @@ namespace {
   //     [{origin3,dest0,x,x},{origin3,dest1,x,x},{origin3,dest2,x,x},{origin3,dest3,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+  json::MapPtr serialize_many_to_many(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr square_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i)
       square_matrix->emplace_back(serialize_row(correlated, tds, i, 0, correlated.size() * i, correlated.size() * (i + 1), distance_scale));
-    return json::map({
+    auto json = json::map({
       {"many_to_many", square_matrix},
       {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
+    if (id)
+      json->emplace("id", *id);
+    return json;
   }
 
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
     thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), reader(config.get_child("mjolnir.hierarchy")) {
+      config(config), reader(config.get_child("mjolnir.hierarchy")),
+      long_request(config.get<float>("thor.logging.long_request")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -177,6 +188,7 @@ namespace {
           http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
+          valhalla::midgard::logging::Log("500::" + response.to_string(), " [ANALYTICS] ");
           return result;
         }
 
@@ -185,6 +197,7 @@ namespace {
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix = request.get_optional<std::string>("matrix_type");
         if (matrix) {
+          valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
             return get_matrix(matrix_iter->second, costing, request, info);
@@ -194,13 +207,14 @@ namespace {
           }
         }
         return get_trip_path(costing, request_str, date_time_type);
-
       }
+
       catch(const std::exception& e) {
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
       }
     }
@@ -446,6 +460,7 @@ namespace {
     void GetPath(thor::PathAlgorithm* path_algorithm,
                  baldr::PathLocation& origin, baldr::PathLocation& destination,
                  std::vector<thor::PathInfo>& path_edges) {
+      midgard::logging::Log("#_passes::1", " [ANALYTICS] ");
       // Find the path.
       path_edges = path_algorithm->GetBestPath(origin, destination, reader,
                                                mode_costing, mode);
@@ -457,6 +472,7 @@ namespace {
           // 2nd pass
           path_algorithm->Clear();
           cost->RelaxHierarchyLimits(16.0f);
+          midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
           path_edges = path_algorithm->GetBestPath(origin, destination,
                                     reader, mode_costing, mode);
 
@@ -464,6 +480,7 @@ namespace {
           if (path_edges.size() == 0) {
             path_algorithm->Clear();
             cost->DisableHighwayTransitions();
+            midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
             path_edges = path_algorithm->GetBestPath(origin, destination,
                                      reader, mode_costing, mode);
           }
@@ -487,14 +504,28 @@ namespace {
       thor::TimeDistanceMatrix tdmatrix;
       switch ( matrix_type) {
        case MATRIX_TYPE::ONE_TO_MANY:
-         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
+         json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
          break;
        case MATRIX_TYPE::MANY_TO_ONE:
-         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
+         json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
          break;
        case MATRIX_TYPE::MANY_TO_MANY:
-         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
+         json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
          break;
+      }
+
+      //get processing time for locate
+      auto time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+
+      //log request if greater then X (ms)
+      if ((elapsed_time / correlated.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
+        LOG_WARN("matrix request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("long_matrix_request", " [ANALYTICS] ");
       }
 
       //jsonp callback if need be
@@ -538,6 +569,8 @@ namespace {
     }
 
     std::string init_request(const boost::property_tree::ptree& request) {
+      auto id = request.get_optional<std::string>("id");
+
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -624,6 +657,7 @@ namespace {
     thor::PathAlgorithm astar;
     thor::BidirectionalAStar bidir_astar;
     thor::MultiModalPathAlgorithm multi_modal_astar;
+    float long_request;
   };
 }
 

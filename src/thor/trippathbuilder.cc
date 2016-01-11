@@ -1,3 +1,5 @@
+#include <string>
+#include <cstdint>
 #include <ostream>
 #include <iostream>
 #include <algorithm>
@@ -120,9 +122,11 @@ void AssignAdmins(TripPath& trip_path,
     trip_admin->set_country_text(admin_info.country_text());
     trip_admin->set_state_code(admin_info.state_iso());
     trip_admin->set_state_text(admin_info.state_text());
-  }
-}
 
+    valhalla::midgard::logging::Log("admin_state_iso::" + admin_info.state_iso(), " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("admin_country_iso::" + admin_info.country_iso(), " [ANALYTICS] ");
+  }
+ }
 }
 
 namespace valhalla {
