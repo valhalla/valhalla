@@ -489,20 +489,80 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
 }
 
 
+template <typename T>
+void serialize_config(MapMatcher* matcher, Writer<T>& writer)
+{
+  // Property tree -> string
+  std::stringstream ss;
+  boost::property_tree::json_parser::write_json(ss, matcher->config());
+  const auto& str = ss.str();
+
+  // String -> JSON document
+  Document document;
+  document.Parse(str.c_str());
+
+  // JSON document -> writer stream
+  document.Accept(writer);
+}
+
+
+template <typename T>
+void serialize_response(T& sb,
+                        const std::vector<MatchResult>& results,
+                        MapMatcher* matcher)
+{
+  Writer<T> writer(sb);
+  bool route = matcher->config().get<bool>("route"),
+    geometry = matcher->config().get<bool>("geometry");
+  writer.StartObject();
+
+  writer.String("status");
+  writer.Uint(200);
+
+  writer.String("message");
+  // Need the reference otherwise the c string will be invalidated?
+  // TODO possible to make a c string version of http_status_code?
+  const auto& status = http_status_code(200);
+  writer.String(status.c_str());
+
+  writer.String("data");
+  if (geometry) {
+    if (route) {
+      serialize_geometry_route(results, matcher->mapmatching(), writer);
+    } else {
+      serialize_geometry_matched_points(results, writer);
+    }
+  } else {
+    serialize_results_as_feature(results, matcher->mapmatching(), writer, route);
+  }
+
+#ifdef VERBOSE
+  writer.String("config");
+  serialize_config(matcher, writer);
+#endif
+
+  writer.EndObject();
+}
+
+
 worker_t::result_t jsonify_error(const std::string& message,
                                  http_request_t::info_t& info,
                                  unsigned status_code = 400)
 {
   worker_t::result_t result{false};
-  // {status: 400, message: "blah"}
   StringBuffer sb;
   Writer<StringBuffer> writer(sb);
+
   writer.StartObject();
+
   writer.String("status");
   writer.Uint(status_code);
+
   writer.String("message");
   writer.String(message.c_str());
+
   writer.EndObject();
+
   http_response_t response(status_code, http_status_code(status_code), sb.GetString(), {JSON_MIME, CORS});
   response.from_info(info);
   result.messages.emplace_back(response.to_string());
@@ -624,18 +684,7 @@ class mm_worker_t {
 
       // Serialize results
       StringBuffer sb;
-      Writer<StringBuffer> writer(sb);
-      bool route = matcher->config().get<bool>("route"),
-        geometry = matcher->config().get<bool>("geometry");
-      if (geometry) {
-        if (route) {
-          serialize_geometry_route(results, matcher->mapmatching(), writer);
-        } else {
-          serialize_geometry_matched_points(results, writer);
-        }
-      } else {
-        serialize_results_as_feature(results, matcher->mapmatching(), writer, route);
-      }
+      serialize_response(sb, results, matcher);
 
       delete matcher;
 
