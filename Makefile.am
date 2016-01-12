@@ -51,7 +51,7 @@ endif
 src/*.cc: conf
 
 #distributed executables
-bin_PROGRAMS = loki_benchmark skadi_benchmark skadi_simple_service path_test adjacency_list_benchmark city_test time_distance_test
+bin_PROGRAMS = loki_benchmark skadi_benchmark skadi_simple_service tyr_simple_service path_test adjacency_list_benchmark city_test time_distance_test
 loki_benchmark_SOURCES = src/loki_benchmark.cc
 loki_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 loki_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
@@ -61,6 +61,9 @@ skadi_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS
 skadi_simple_service_SOURCES = src/skadi_simple_service.cc
 skadi_simple_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 skadi_simple_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+tyr_simple_service_SOURCES = src/tyr_simple_service.cc
+tyr_simple_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+tyr_simple_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 path_test_SOURCES =  src/path_test.cc
 path_test_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 path_test_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
