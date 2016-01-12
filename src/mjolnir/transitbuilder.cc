@@ -122,6 +122,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     // We do not know in this step if the end node is in a valid (non-empty)
     // Valhalla tile. So just add the stop pair and we will address this later
 
+    if (sp.origin_onestop_id() == sp.destination_onestop_id())
+         continue;
+
     // Use transit PBF graph Ids internally until adding to the graph tiles
     // TODO - wheelchair accessible, shape information
     Departure dep;
@@ -179,13 +182,16 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
     dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
 
-    // So this thing never happens
+    // if this is a service addition for one day, delete the dow_mask.
+    if (sp.service_start_date() == sp.service_end_date())
+      dep.dow = kDOWNone;
+
     if (dep.days == 0 && !sp.service_added_dates_size()) {
-      LOG_WARN("Feed rejected!  End date:" + std::to_string(DateTime::days_from_pivot_date(end_date)));
+      LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) + " End date: " + to_iso_extended_string(end_date));
       continue;
     }
 
-    dep.end_day = (DateTime::days_from_pivot_date(end_date) - DateTime::days_from_pivot_date(start_date));
+    dep.end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
 
     //if subtractions are between start and end date then turn off bit.
     for (const auto& x : sp.service_except_dates()) {
