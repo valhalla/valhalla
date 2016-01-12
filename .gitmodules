@@ -1,3 +1,0 @@
-[submodule "conf"]
-	path = conf
-	url = https://github.com/valhalla/conf.git
