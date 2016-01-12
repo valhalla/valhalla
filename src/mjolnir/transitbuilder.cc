@@ -136,7 +136,6 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     dep.blockid = sp.block_id();
     dep.dep_time = sp.origin_departure_time();
     dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
-    dep.headsign_offset = tilebuilder.AddName(sp.trip_headsign());
 
     // Set bikes_allowed on the stops
     // TODO - should this be |= ???
@@ -192,6 +191,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
       continue;
     }
 
+    dep.headsign_offset = tilebuilder.AddName(sp.trip_headsign());
     dep.end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
 
     //if subtractions are between start and end date then turn off bit.
