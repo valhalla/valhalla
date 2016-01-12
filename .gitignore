@@ -28,9 +28,6 @@ m4/lt~obsolete.m4
 libtool
 
 # built objects
-pathtest
-citytest
-timedistance_test
 thor_service
 *.o
 .deps/
