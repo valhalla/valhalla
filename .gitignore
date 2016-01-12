@@ -30,7 +30,6 @@ py-compile
 
 # built objects
 tyr_service
-tyr_simple_service
 *.o
 .deps/
 .dirstamp
