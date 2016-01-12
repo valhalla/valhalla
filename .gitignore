@@ -35,7 +35,6 @@ loki_service
 .dirstamp
 *.lo
 .libs/
-conf/
 libvalhalla_loki.la
 
 # tests
