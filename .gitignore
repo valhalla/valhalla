@@ -31,12 +31,16 @@ libtool
 skadi_benchmark
 skadi_simple_service
 loki_benchmark
+path_test
+city_test
+time_distance_test
+adjacency_list_benchmark
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
-conf
+conf/
 
 # tests
 test-suite.log
