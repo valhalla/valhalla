@@ -29,6 +29,7 @@ libtool
 
 # built objects
 skadi_benchmark
+skadi_simple_service
 loki_benchmark
 *.o
 .deps/
