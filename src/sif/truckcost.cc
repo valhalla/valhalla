@@ -358,41 +358,43 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  const std::vector<baldr::AccessRestriction>& restrictions =
-      tile->GetAccessRestrictions(edgeid, kTruckAccess);
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+          tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
 
-  for (const auto& restriction : restrictions ) {
-    // TODO:  Need to handle restictions that take place only at certain
-    // times.  Currently, we only support kAllDaysOfWeek;
-    if (restriction.modes() & kTruckAccess) {
+    for (const auto& restriction : restrictions ) {
+      // TODO:  Need to handle restictions that take place only at certain
+      // times.  Currently, we only support kAllDaysOfWeek;
+      if (restriction.modes() & kTruckAccess) {
 
-      switch (restriction.type()) {
-        case AccessType::kHazmat:
-          if (hazmat_ != restriction.value())
-            return false;
-          break;
-        case AccessType::kMaxAxleLoad:
-          if (axle_load_ > static_cast<float>(restriction.value()*0.01))
-            return false;
-          break;
-        case AccessType::kMaxHeight:
-          if (height_ > static_cast<float>(restriction.value()*0.01))
-            return false;
-          break;
-        case AccessType::kMaxLength:
-          if (length_ > static_cast<float>(restriction.value()*0.01))
-            return false;
-          break;
-        case AccessType::kMaxWeight:
-          if (weight_ > static_cast<float>(restriction.value()*0.01))
-            return false;
-          break;
-        case AccessType::kMaxWidth:
-          if (width_ > static_cast<float>(restriction.value()*0.01))
-            return false;
-          break;
-        default:
-          break;
+        switch (restriction.type()) {
+          case AccessType::kHazmat:
+            if (hazmat_ != restriction.value())
+              return false;
+            break;
+          case AccessType::kMaxAxleLoad:
+            if (axle_load_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxHeight:
+            if (height_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxLength:
+            if (length_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxWeight:
+            if (weight_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxWidth:
+            if (width_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          default:
+            break;
+        }
       }
     }
   }
