@@ -186,6 +186,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     if (sp.service_start_date() == sp.service_end_date())
       dep.dow = kDOWNone;
 
+    // if dep.days == 0 then feed either starts after the end_date or tile_header_date > end_date
     if (dep.days == 0 && !sp.service_added_dates_size()) {
       LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) + " End date: " + to_iso_extended_string(end_date));
       continue;
