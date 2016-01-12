@@ -8,16 +8,6 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
-#config files for tools, you can put a commit hash here if you are ahead of master
-CONF=master
-conf:
-	-wget -q -O conf-$(CONF).zip https://github.com/valhalla/conf/archive/$(CONF).zip
-	-unzip conf-$(CONF).zip
-	-rm -rf conf-$(CONF).zip conf
-	-mv conf-$(CONF) conf
-clean-conf:
-	-rm -rf conf
-
 # conditional test coverage
 if ENABLE_COVERAGE
 .PHONY: clean-coverage
@@ -42,13 +32,8 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno clean-conf
-else
-clean-local: clean-conf
+clean-local: clean-coverage clean-gcno
 endif
-
-#everyone needs a conf
-src/skadi/*.cc: conf
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_skadi.la

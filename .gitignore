@@ -36,7 +36,6 @@ skadi_benchmark
 .dirstamp
 *.lo
 .libs/
-conf/
 libvalhalla_skadi.la
 
 # tests
