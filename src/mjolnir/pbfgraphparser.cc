@@ -585,6 +585,8 @@ struct graph_callback : public OSMPBF::Callback {
         default:
           switch (w.use()) {
           case Use::kFootway:
+            w.set_surface(Surface::kCompacted);
+            break;
           case Use::kTrack:
             w.set_surface(Surface::kPath);
             break;
