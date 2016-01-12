@@ -29,7 +29,6 @@ libtool
 
 # built objects
 skadi_service
-skadi_simple_service
 *.o
 .deps/
 .dirstamp
