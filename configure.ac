@@ -26,14 +26,12 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
 CHECK_VALHALLA_SIF
-CHECK_VALHALLA_MJOLNIR
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building loki. Please install libboost-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
-AX_BOOST_FILESYSTEM
 
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.3.1])

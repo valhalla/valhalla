@@ -28,7 +28,6 @@ m4/lt~obsolete.m4
 libtool
 
 # built objects
-loki_benchmark
 loki_service
 *.o
 .deps/
@@ -42,7 +41,6 @@ test-suite.log
 test-driver
 test/*.log
 test/*.trs
-test/tiles
 test/search
 test/service
 
