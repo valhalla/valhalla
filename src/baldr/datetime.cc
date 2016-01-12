@@ -79,6 +79,11 @@ uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::
                           const uint32_t tile_date, const uint32_t dow_mask) {
 
   boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
+
+  // if our start date is more than 60 days out, reject.
+  if (start_date > (tile_header_date + boost::gregorian::days(59)))
+    return 0;
+
   if (start_date <= tile_header_date && tile_header_date <= end_date)
     start_date = tile_header_date;
   else if (tile_header_date > end_date) //reject.
@@ -86,11 +91,18 @@ uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::
 
   // only support 60 days out.  (59 days and include the end_date = 60)
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
+
   if (enddate <= end_date)
     end_date = enddate;
 
-  boost::gregorian::day_iterator itr(start_date);
-  uint32_t x = 0;
+  uint32_t days = 0;
+  //if our start date is in the future then we must start at that date.
+  if (start_date > tile_header_date)
+    days = days_from_pivot_date(start_date) - tile_date;
+
+  boost::gregorian::day_iterator itr(tile_header_date + boost::gregorian::days(days));
+
+  uint32_t x = days;
   uint64_t bit_set = 0;
 
   //TODO: we dont have to loop over all days, we could take the week mask, shift it by the start date
