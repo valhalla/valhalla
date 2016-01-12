@@ -205,6 +205,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
       // Skip transition edges for now. Should not see any shortcuts since we
@@ -244,7 +245,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // same trip Id or (valid) block Id.
           if (mode_change || tripid != pred.tripid() ||
              (blockid != 0 && blockid != pred.blockid())) {
-            newcost += transfer_cost;
+
+            Cost c = transfer_cost;
+            if (!mode_change) {
+              c.cost *= tc->TransferCostFactor();
+            }
+            newcost += c;
           }
 
           // Change mode and costing to transit. Add edge cost.
