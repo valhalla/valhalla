@@ -130,10 +130,12 @@ class BidirectionalAStar : public PathAlgorithm {
     * @param  idx        Index into the edge status list.
     * @param  predindex  Index of the predecessor edge.
     * @param  newcost    Cost of the new path.
+    * @param  tc         Turn cost for this transition.
     */
    void CheckIfLowerCostPathReverse(const uint32_t idx,
                              const uint32_t predindex,
-                             const sif::Cost& newcost);
+                             const sif::Cost& newcost,
+                             const sif::Cost& tc);
 
    /**
     * Handle transition edges. Will add any that are allowed to the
