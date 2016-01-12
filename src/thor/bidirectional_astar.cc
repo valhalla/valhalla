@@ -419,7 +419,7 @@ void BidirectionalAStar::HandleTransitionEdgeReverse(const uint32_t level,
   // Allow the transition edge. Add it to the adjacency list and edge labels
   // using the predecessor information. Transition edges have no length.
   AddToAdjacencyListReverse(edgeid, pred.sortcost());
-  edgelabels_reverse_.emplace_back(predindex, edgeid,
+  edgelabels_reverse_.emplace_back(predindex, edgeid, pred.opp_edgeid(),
                 edge, pred.cost(), pred.sortcost(), dist,
                 pred.restrictions(), pred.opp_local_idx(), mode_);
 }
