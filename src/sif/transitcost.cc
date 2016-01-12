@@ -30,7 +30,7 @@ constexpr float kDefaultUseRailFactor = 0.5f;
 
 // User propensity to use/allow transfers. Range of values from 0
 // (avoid transfers) to 1 (totally comfortable with transfers).
-constexpr float kDefaultUseTransfersFactor = 1.0f;
+constexpr float kDefaultUseTransfersFactor = 0.5f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 }
@@ -138,6 +138,12 @@ class TransitCost : public DynamicCost {
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
 
   /**
+   * Returns the default transfer factor between 2 transit lines.
+   * @return  Returns the transfer factor.
+   */
+  virtual float TransferCostFactor() const;
+
+  /**
    * Returns the default transfer cost between 2 transit lines.
    * @return  Returns the transfer cost and time (seconds).
    */
@@ -231,7 +237,10 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
                  1.0f - (use_rail_ - 0.5f) :
                  1.0f + (0.5f - use_rail_) * 5.0f;
 
-  transfer_factor_ = use_transfers_;
+  transfer_factor_ = (use_transfers_ >= 0.5f) ?
+                     1.0f - (use_transfers_ - 0.5f) :
+                     1.0f + (0.5f - use_transfers_) * 3.0f;
+
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
 }
@@ -337,6 +346,11 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   case TransferType::kNotPossible:
     return kImpossibleCost;
   }
+}
+
+// Returns the default transfer factor between 2 transit lines.
+float TransitCost::TransferCostFactor() const {
+  return (transfer_factor_ * 3.0f);
 }
 
 // Returns the default transfer cost between 2 transit lines.
