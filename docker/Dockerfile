@@ -47,9 +47,7 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/midgard
 
 RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/baldr.git && \
     cd baldr && \
-    ./autogen.sh && ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE && \
-    make valhalla/baldr/date_time_zonespec.h && \
-    make && make install && \
+    ./scripts/install.sh \
     rm -rf /source/baldr
 
 
@@ -80,7 +78,7 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjso
     rm -rf /source/rapidjson
 
 
-RUN git clone --depth=1 --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
+RUN git clone --depth=1 --branch=development --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
     cd map_matching_plus && \
-    make service && sudo install service /usr/local/bin/mm_service && \
+    ./scripts/install.sh && \
     rm -rf /source/map_matching_service
