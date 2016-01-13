@@ -15,7 +15,7 @@ all: commands tests
 
 
 .PHONY: commands
-commands: simple_matcher edge_search service psqlmatcher attacher stat
+commands: simple_matcher candidate_search service psqlmatcher attacher stat
 
 
 .PHONY: tests
@@ -44,15 +44,15 @@ psqlmatcher: psqlmatcher.cc simple_matcher
 	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lpqxx -lpq -lgeos -lsqlite3
 
 
-service: service.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h universal_cost.h sp.h
+service: service.cc map_matching.h candidate_search.h viterbi_search.h queue.h candidate.h universal_cost.h sp.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lprime_server -lpthread
 
 
-edge_search: edge_search.cc edge_search.h candidate.h grid_range_query.h
+candidate_search: candidate_search.cc candidate_search.h candidate.h grid_range_query.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS)
 
 
-simple_matcher: simple_matcher.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h universal_cost.h sp.h
+simple_matcher: simple_matcher.cc map_matching.h candidate_search.h viterbi_search.h queue.h candidate.h universal_cost.h sp.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS)
 
 
@@ -86,4 +86,4 @@ mmp.json: mmp.partial.json conf/valhalla.json
 
 .PHONY: clean
 clean:
-	rm -f attacher edge_search psqlmatcher service simple_matcher stat test_grid_range_query test_queue test_sp test_viterbi_search
+	rm -f attacher candidate_search psqlmatcher service simple_matcher stat test_grid_range_query test_queue test_sp test_viterbi_search

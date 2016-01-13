@@ -42,7 +42,7 @@ lib_LTLIBRARIES = libmmp.la
 libmmpinclude_HEADERS = \
 	include/mmp/candidate.h \
 	include/mmp/universal_cost.h \
-	include/mmp/edge_search.h \
+	include/mmp/candidate_search.h \
 	include/mmp/geometry_helpers.h \
 	include/mmp/graph_helpers.h \
 	include/mmp/grid_range_query.h \
@@ -57,7 +57,7 @@ libmmp_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libmmp_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = mmp_service mmp_psqlmatcher mmp_stat mmp_edge_search simple_matcher
+bin_PROGRAMS = mmp_service mmp_psqlmatcher mmp_stat mmp_candidate_search simple_matcher
 
 mmp_service_SOURCES = src/mmp_service.cc
 mmp_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
@@ -71,9 +71,9 @@ mmp_stat_SOURCES = src/mmp_stat.cc
 mmp_stat_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 mmp_stat_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz -lsqlite3
 
-mmp_edge_search_SOURCES = src/mmp_edge_search.cc
-mmp_edge_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-mmp_edge_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
+mmp_candidate_search_SOURCES = src/mmp_candidate_search.cc
+mmp_candidate_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+mmp_candidate_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
 
 simple_matcher_SOURCES = src/simple_matcher.cc
 simple_matcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@

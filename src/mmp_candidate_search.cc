@@ -4,14 +4,14 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/baldr/location.h>
 
-#include "mmp/edge_search.h"
+#include "mmp/candidate_search.h"
 
 using namespace valhalla;
 
 int main(int argc, char *argv[])
 {
   if (argc < 4) {
-    std::cout << "usage: test_edge_search LON LAT RADIUS" << std::endl;
+    std::cout << "usage: candidate_search LON LAT RADIUS" << std::endl;
     return 1;
   }
   float lon =  std::atof(argv[1]),
