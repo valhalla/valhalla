@@ -903,9 +903,7 @@ void build(const std::string& transit_dir,
              std::to_string(transit.stops_size()) + " stops and " +
              std::to_string(connection_edges.size()) + " connection edges");
 
-    // Get all scheduled departures from the stops within this tile. Record
-    // unique trips, routes, TODO
-    std::unordered_set<uint32_t> trip_keys;
+    // Get all scheduled departures from the stops within this tile.
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
     std::vector<TransitDeparture> transit_departures;
@@ -940,7 +938,6 @@ void build(const std::string& transit_dir,
       auto range = departures.equal_range(stop_pbf_graphid);
       for(auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
-        trip_keys.insert(dep.trip);
 
         // Identify unique route and arrival stop pairs - associate to a
         // unique line Id stored in the directed edge.
