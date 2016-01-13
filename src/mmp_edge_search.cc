@@ -4,7 +4,7 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/baldr/location.h>
 
-#include "edge_search.h"
+#include "mmp/edge_search.h"
 
 using namespace valhalla;
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   std::cout << "Number of directed edges: ";
   std::cout << tile->header()->directededgecount() << std::endl;
 
-  mm::CandidateQuery cq(graphreader);
+  mmp::CandidateQuery cq(graphreader);
   for (int i=0; i < 10; i++) {
     auto candidates = cq.Query(location, radius * radius, costing->GetFilter());
   }
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
   float cell_width = 0.25/1000,
        cell_height = 0.25/1000;
-  mm::CandidateGridQuery cgq(graphreader, cell_width, cell_height);
+  mmp::CandidateGridQuery cgq(graphreader, cell_width, cell_height);
   std::cout << "Fast query result:" << std::endl;
   float sq_search_radius = radius * radius;
   auto filter = costing->GetFilter();

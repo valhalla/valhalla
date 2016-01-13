@@ -8,8 +8,8 @@
 
 #include <valhalla/sif/costconstants.h>
 
-#include "costings.h"
-#include "map_matching.h"
+#include "mmp/costings.h"
+#include "mmp/map_matching.h"
 
 using namespace valhalla;
 
@@ -24,7 +24,7 @@ void TestMapMatcherFactory(const ptree& root)
     auto config = root;
     config.put<std::string>("mm.auto.hello", "world");
     config.put<std::string>("mm.default.hello", "default world");
-    mm::MapMatcherFactory factory(config);
+    mmp::MapMatcherFactory factory(config);
     auto matcher = factory.Create("auto");
     assert(matcher->travelmode() == sif::TravelMode::kDrive);
     assert(matcher->config().get<std::string>("hello") == "world");
@@ -35,7 +35,7 @@ void TestMapMatcherFactory(const ptree& root)
   {
     auto config = root;
     config.put<std::string>("mm.default.hello", "default world");
-    mm::MapMatcherFactory factory(config);
+    mmp::MapMatcherFactory factory(config);
     auto matcher = factory.Create("bicycle");
     assert(matcher->travelmode() == sif::TravelMode::kBicycle);
     assert(matcher->config().get<std::string>("hello") == "default world");
@@ -45,7 +45,7 @@ void TestMapMatcherFactory(const ptree& root)
   // Test configuration priority
   {
     auto config = root;
-    mm::MapMatcherFactory factory(config);
+    mmp::MapMatcherFactory factory(config);
     ptree preferences;
     preferences.put<std::string>("hello", "preferred world");
     config.put<std::string>("mm.auto.hello", "world");
@@ -58,18 +58,18 @@ void TestMapMatcherFactory(const ptree& root)
 
   // Test configuration priority
   {
-    mm::MapMatcherFactory factory(root);
+    mmp::MapMatcherFactory factory(root);
     ptree preferences;
     preferences.put<std::string>("hello", "preferred world");
     auto matcher = factory.Create("multimodal", preferences);
-    assert(matcher->travelmode() == mm::kUniversalTravelMode);
+    assert(matcher->travelmode() == mmp::kUniversalTravelMode);
     assert(matcher->config().get<std::string>("hello") == "preferred world");
     delete matcher;
   }
 
   // Test default mode
   {
-    mm::MapMatcherFactory factory(root);
+    mmp::MapMatcherFactory factory(root);
     ptree preferences;
     auto matcher = factory.Create(preferences);
     assert(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("mm.mode")));
@@ -78,7 +78,7 @@ void TestMapMatcherFactory(const ptree& root)
 
   // Test preferred mode
   {
-    mm::MapMatcherFactory factory(root);
+    mmp::MapMatcherFactory factory(root);
     ptree preferences;
     preferences.put<std::string>("mode", "pedestrian");
     auto matcher = factory.Create(preferences);
@@ -93,23 +93,23 @@ void TestMapMatcherFactory(const ptree& root)
 
   // Transport names
   {
-    mm::MapMatcherFactory factory(root);
+    mmp::MapMatcherFactory factory(root);
 
     assert(factory.NameToTravelMode("auto") == sif::TravelMode::kDrive);
     assert(factory.NameToTravelMode("bicycle") == sif::TravelMode::kBicycle);
     assert(factory.NameToTravelMode("pedestrian") == sif::TravelMode::kPedestrian);
-    assert(factory.NameToTravelMode("multimodal") == mm::kUniversalTravelMode);
+    assert(factory.NameToTravelMode("multimodal") == mmp::kUniversalTravelMode);
 
     assert(factory.TravelModeToName(sif::TravelMode::kDrive) == "auto");
     assert(factory.TravelModeToName(sif::TravelMode::kBicycle) == "bicycle");
     assert(factory.TravelModeToName(sif::TravelMode::kPedestrian) == "pedestrian");
-    assert(factory.TravelModeToName(mm::kUniversalTravelMode) == "multimodal");
+    assert(factory.TravelModeToName(mmp::kUniversalTravelMode) == "multimodal");
   }
 
   // Invalid transport mode name
   {
-    mm::MapMatcherFactory factory(root);
-    mm::MapMatcher* matcher = nullptr;
+    mmp::MapMatcherFactory factory(root);
+    mmp::MapMatcher* matcher = nullptr;
     bool happen = false;
 
     try {
@@ -147,7 +147,7 @@ void TestMapMatcher(const ptree& root)
 {
   // Nothing special to test for the moment
 
-  mm::MapMatcherFactory factory(root);
+  mmp::MapMatcherFactory factory(root);
   auto auto_matcher = factory.Create("auto");
   auto pedestrian_matcher = factory.Create("pedestrian");
 

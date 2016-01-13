@@ -12,7 +12,8 @@
 #include <valhalla/midgard/pointll.h>
 
 
-namespace {
+namespace
+{
 
 inline float
 normalize(float num, float den)
@@ -24,8 +25,10 @@ normalize(float num, float den)
 }
 
 
-namespace mm {
-namespace helpers {
+namespace mmp
+{
+namespace helpers
+{
 
 using namespace valhalla;
 

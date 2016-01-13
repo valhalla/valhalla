@@ -9,14 +9,15 @@
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 
-#include "costings.h"
-#include "viterbi_search.h"
-#include "edge_search.h"
-#include "sp.h"
-#include "graph_helpers.h"
-#include "geometry_helpers.h"
+#include <mmp/costings.h>
+#include <mmp/viterbi_search.h>
+#include <mmp/edge_search.h>
+#include <mmp/sp.h>
+#include <mmp/graph_helpers.h>
+#include <mmp/geometry_helpers.h>
 
-namespace mm {
+namespace mmp
+{
 
 using namespace valhalla;
 using ptree = boost::property_tree::ptree;
@@ -997,9 +998,9 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
   float search_radius = std::min(config_.get<float>("search_radius"),
                                  config_.get<float>("max_search_radius"));
   float interpolation_distance = config_.get<float>("interpolation_distance");
-  return mm::OfflineMatch(mapmatching_, rangequery_, measurements,
-                          search_radius * search_radius,
-                          interpolation_distance);
+  return mmp::OfflineMatch(mapmatching_, rangequery_, measurements,
+                           search_radius * search_radius,
+                           interpolation_distance);
 }
 
 

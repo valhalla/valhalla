@@ -10,7 +10,8 @@
 using namespace valhalla;
 
 
-namespace mm {
+namespace mmp
+{
 
 constexpr sif::TravelMode kUniversalTravelMode = static_cast<sif::TravelMode>(4);
 

@@ -29,11 +29,12 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphid.h>
 
-#include "costings.h"
-#include "map_matching.h"
-
 using namespace valhalla;
-using namespace mm;
+
+#include "mmp/costings.h"
+#include "mmp/map_matching.h"
+
+using namespace mmp;
 
 
 namespace {
@@ -431,7 +432,7 @@ int main(int argc, char *argv[])
   boost::property_tree::ptree config;
   boost::property_tree::read_json(config_file_path, config);
 
-  mm::MapMatcherFactory matcher_factory(config);
+  MapMatcherFactory matcher_factory(config);
   auto matcher = matcher_factory.Create(config.get<std::string>("mm.mode"));
 
   ////////////////////////
@@ -518,7 +519,7 @@ int main(int argc, char *argv[])
       assert(match_results.size() == sequence.size());
 
       results.emplace(sid, match_results);
-      routes.emplace(sid, mm::ConstructRoute(matcher_factory.graphreader(), match_results.begin(), match_results.end()));
+      routes.emplace(sid, ConstructRoute(matcher_factory.graphreader(), match_results.begin(), match_results.end()));
 
       measurement_count += sequence.size();
     }

@@ -19,19 +19,20 @@
 #include "rapidjson/stringbuffer.h"
 #include <rapidjson/error/en.h>
 
-#include "costings.h"
-#include "map_matching.h"
+#include "mmp/costings.h"
+#include "mmp/map_matching.h"
 
 using namespace prime_server;
 using namespace valhalla;
 using namespace rapidjson;
-using namespace mm;
+using namespace mmp;
 
 
 #define VERBOSE
 
 
-namespace {
+namespace
+{
 
 constexpr size_t kHttpStatusCodeSize = 600;
 const char* kHttpStatusCodes[kHttpStatusCodeSize];
@@ -116,7 +117,6 @@ void init_http_status_codes()
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
 const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-}
 
 
 class SequenceParseError: public std::runtime_error {
@@ -709,6 +709,11 @@ class mm_worker_t {
   std::unordered_set<std::string> customizable_;
 };
 
+}
+
+
+namespace mmp
+{
 
 void run_service(const boost::property_tree::ptree& config)
 {
@@ -743,18 +748,4 @@ void run_service(const boost::property_tree::ptree& config)
   //TODO should we listen for SIGINT and terminate gracefully/exit(0)?
 }
 
-
-int main(int argc, char *argv[])
-{
-  if (argc < 2) {
-    std::cerr << "usage: service CONFIG" << std::endl;
-    return 1;
-  }
-
-  std::string filename(argv[1]);
-  boost::property_tree::ptree config;
-  boost::property_tree::read_json(filename, config);
-  run_service(config);
-
-  return 0;
 }

@@ -8,8 +8,10 @@
 #include <valhalla/baldr/graphtile.h>
 
 
-namespace mm {
-namespace helpers {
+namespace mmp
+{
+namespace helpers
+{
 
 using namespace valhalla::baldr;
 

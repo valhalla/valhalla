@@ -1,10 +1,10 @@
-#include "sp.h"
+#include "mmp/sp.h"
 
 using namespace valhalla;
 
 constexpr uint32_t kInvalidKey = std::numeric_limits<uint16_t>::max();
 
-using AdjacencyList = mm::BucketQueue<uint32_t, kInvalidKey>;
+using AdjacencyList = mmp::BucketQueue<uint32_t, kInvalidKey>;
 
 
 void Add(AdjacencyList &adjlist, const std::vector<float>& costs)
@@ -164,7 +164,7 @@ void Benchmark()
 
 void TestRoutePathIterator()
 {
-  mm::LabelSet labelset(100);
+  mmp::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
@@ -192,7 +192,7 @@ void TestRoutePathIterator()
                0.f, 0.f,
                3, nullptr, travelmode, nullptr);
 
-  mm::RoutePathIterator the_end(&labelset, mm::kInvalidLabelIndex),
+  mmp::RoutePathIterator the_end(&labelset, mmp::kInvalidLabelIndex),
       it0(&labelset, 0),
       it1(&labelset, 1),
       it2(&labelset, 2),
@@ -209,7 +209,7 @@ void TestRoutePathIterator()
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing");
   }
 
-  if (it0->predecessor != mm::kInvalidLabelIndex) {
+  if (it0->predecessor != mmp::kInvalidLabelIndex) {
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer");
   }
 

@@ -16,7 +16,7 @@
 
 using namespace valhalla;
 
-#include "map_matching.h"
+#include "mmp/map_matching.h"
 
 
 // Element (edge/node) id -> count
@@ -107,13 +107,13 @@ bool aggregate_scores(sqlite3* db_handle, ScoreMap& score_map)
     ret = sqlite3_step(stmt);
     if (SQLITE_ROW == ret) {
       baldr::GraphId graphid(static_cast<uint64_t>(sqlite3_column_int64(stmt, 2)));
-      auto graphtype = static_cast<mm::GraphType>(sqlite3_column_int(stmt, 3));
+      auto graphtype = static_cast<mmp::GraphType>(sqlite3_column_int(stmt, 3));
       if (graphid.Is_Valid()) {
         uint16_t* count = nullptr;
 
-        if (graphtype == mm::GraphType::kEdge) {
+        if (graphtype == mmp::GraphType::kEdge) {
           count = &(score_map[graphid.tileid()].first[graphid.id()]);
-        } else if (graphtype == mm::GraphType::kNode) {
+        } else if (graphtype == mmp::GraphType::kNode) {
           count = &(score_map[graphid.tileid()].second[graphid.id()]);
         }
 

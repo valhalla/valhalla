@@ -3,7 +3,8 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/pathlocation.h>
 
-namespace mm {
+namespace mmp
+{
 
 using namespace valhalla;
 

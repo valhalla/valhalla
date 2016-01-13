@@ -11,9 +11,10 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include "graph_helpers.h"
+#include <mmp/graph_helpers.h>
 
-namespace mm {
+namespace mmp
+{
 
 using namespace valhalla;
 

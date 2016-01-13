@@ -6,9 +6,9 @@
 
 #include <valhalla/midgard/point2.h>
 
-#include "geometry_helpers.h"
+#include "mmp/geometry_helpers.h"
 
-using namespace mm::helpers;
+using namespace mmp::helpers;
 
 
 template <typename T>

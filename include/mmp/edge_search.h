@@ -15,13 +15,14 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include "candidate.h"
-#include "grid_range_query.h"
-#include "graph_helpers.h"
-#include "geometry_helpers.h"
+#include <mmp/candidate.h>
+#include <mmp/grid_range_query.h>
+#include <mmp/graph_helpers.h>
+#include <mmp/geometry_helpers.h>
 
 
-namespace mm {
+namespace mmp
+{
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

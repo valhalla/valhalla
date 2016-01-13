@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "grid_range_query.h"
+#include "mmp/grid_range_query.h"
 
 
 void TestGridTools()
