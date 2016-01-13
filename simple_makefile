@@ -29,7 +29,7 @@ run_tests: tests
 	./test_grid_range_query
 	./test_sp
 	./test_geometry_helpers
-	./test_map_matching mm.json
+	./test_map_matching mmp.json
 
 
 stat: stat.cc
@@ -80,8 +80,8 @@ test_map_matching: test_map_matching.cc map_matching.h
 	$(CC) $(FLAGS_TEST) $< -o $@ $(LIBS)
 
 
-mm.json: mm.partial.json conf/valhalla.json
-	jq -s '.[1].mjolnir.hierarchy = .[0].mjolnir.hierarchy | .[1].costing_options = .[0].costing_options | .[1]' conf/valhalla.json mm.partial.json > mm.json
+mmp.json: mmp.partial.json conf/valhalla.json
+	jq -s '.[1].mjolnir.hierarchy = .[0].mjolnir.hierarchy | .[1].costing_options = .[0].costing_options | .[1]' conf/valhalla.json mmp.partial.json > mmp.json
 
 
 .PHONY: clean

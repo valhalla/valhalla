@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
      radius = std::atof(argv[3]);
 
   boost::property_tree::ptree config;
-  boost::property_tree::read_json("mm.json", config);
+  boost::property_tree::read_json("mmp.json", config);
   valhalla::baldr::GraphReader graphreader(config.get_child("mjolnir.hierarchy"));
   auto costing = sif::CreatePedestrianCost(config.get_child("costing_options.pedestrian"));
   PointLL location(lon, lat);
