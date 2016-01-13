@@ -9,7 +9,7 @@
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 
-#include <mmp/costings.h>
+#include <mmp/universal_cost.h>
 #include <mmp/viterbi_search.h>
 #include <mmp/edge_search.h>
 #include <mmp/sp.h>

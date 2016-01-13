@@ -31,7 +31,7 @@
 
 using namespace valhalla;
 
-#include "mmp/costings.h"
+#include "mmp/universal_cost.h"
 #include "mmp/map_matching.h"
 
 using namespace mmp;

@@ -1,7 +1,7 @@
 // -*- mode: c++ -*-
 
-#ifndef MM_COSTINGS_H_
-#define MM_COSTINGS_H_
+#ifndef MMP_UNIVERSAL_COST_H__
+#define MMP_UNIVERSAL_COST_H__
 
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/midgard/constants.h>
@@ -63,4 +63,4 @@ sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config)
 }
 
 
-#endif // MM_COSTINGS_H_
+#endif // MMP_UNIVERSAL_COST_H__

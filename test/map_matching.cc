@@ -8,7 +8,7 @@
 
 #include <valhalla/sif/costconstants.h>
 
-#include "mmp/costings.h"
+#include "mmp/universal_cost.h"
 #include "mmp/map_matching.h"
 
 using namespace valhalla;

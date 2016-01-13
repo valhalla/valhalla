@@ -41,7 +41,7 @@ libmmpincludedir=$(includedir)/mmp
 lib_LTLIBRARIES = libmmp.la
 libmmpinclude_HEADERS = \
 	include/mmp/candidate.h \
-	include/mmp/costings.h \
+	include/mmp/universal_cost.h \
 	include/mmp/edge_search.h \
 	include/mmp/geometry_helpers.h \
 	include/mmp/graph_helpers.h \
