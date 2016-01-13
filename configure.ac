@@ -34,6 +34,19 @@ AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 
+AX_LIB_SQLITE3(3.0.0)
+
+if test "x$SQLITE3_VERSION" = "x"; then
+  AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])
+fi
+
+# Check for Geos library
+AX_LIB_GEOS(3.0.0)
+if test "x$GEOS_VERSION" = "x"
+then
+  AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.]);
+fi
+
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.3.1])
 
