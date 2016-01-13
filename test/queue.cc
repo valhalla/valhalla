@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "mmp/queue.h"
+#include "mmp/priority_queue.h"
 
 
 class Label: public LabelInterface<uint32_t>

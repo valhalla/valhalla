@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cassert>
 
-#include <mmp/queue.h>
+#include <mmp/priority_queue.h>
 
 
 using Time = uint32_t;

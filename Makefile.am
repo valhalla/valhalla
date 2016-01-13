@@ -47,7 +47,7 @@ libmmpinclude_HEADERS = \
 	include/mmp/graph_helpers.h \
 	include/mmp/grid_range_query.h \
 	include/mmp/map_matching.h \
-	include/mmp/queue.h \
+	include/mmp/priority_queue.h \
 	include/mmp/service.h \
 	include/mmp/sp.h \
 	include/mmp/viterbi_search.h
