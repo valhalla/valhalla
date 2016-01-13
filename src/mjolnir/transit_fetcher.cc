@@ -506,6 +506,12 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     if(dangles)
       dangling.emplace_back(current);
 
+    //check for empty stop pairs and routes.
+    if(tile.stop_pairs_size() == 0 || tile.routes_size() == 0) {
+      LOG_WARN(transit_tile.string() + " had no data and will not be stored");
+      continue;
+    }
+
     //write pbf to file
     if (!boost::filesystem::exists(transit_tile.parent_path()))
       boost::filesystem::create_directories(transit_tile.parent_path());
