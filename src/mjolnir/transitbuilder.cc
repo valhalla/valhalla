@@ -122,9 +122,6 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     // We do not know in this step if the end node is in a valid (non-empty)
     // Valhalla tile. So just add the stop pair and we will address this later
 
-    if (sp.origin_onestop_id() == sp.destination_onestop_id())
-         continue;
-
     // Use transit PBF graph Ids internally until adding to the graph tiles
     // TODO - wheelchair accessible, shape information
     Departure dep;
