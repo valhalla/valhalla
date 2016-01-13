@@ -903,8 +903,7 @@ void build(const std::string& transit_dir,
              std::to_string(transit.stops_size()) + " stops and " +
              std::to_string(connection_edges.size()) + " connection edges");
 
-    // Get all scheduled departures from the stops within this tile. Record
-    // unique trips, routes
+    // Get all scheduled departures from the stops within this tile.
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
     std::vector<TransitDeparture> transit_departures;
