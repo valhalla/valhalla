@@ -40,16 +40,17 @@ libmmpincludedir=$(includedir)/mmp
 # libmmp compilation etc
 lib_LTLIBRARIES = libmmp.la
 libmmpinclude_HEADERS = \
-	include/mmp/sp.h \
-	include/mmp/map_matching.h \
-	include/mmp/edge_search.h \
 	include/mmp/candidate.h \
 	include/mmp/costings.h \
+	include/mmp/edge_search.h \
 	include/mmp/geometry_helpers.h \
 	include/mmp/graph_helpers.h \
 	include/mmp/grid_range_query.h \
-	include/mmp/viterbi_search.h \
-	include/mmp/service.h
+	include/mmp/map_matching.h \
+	include/mmp/queue.h \
+	include/mmp/service.h \
+	include/mmp/sp.h \
+	include/mmp/viterbi_search.h
 libmmp_la_SOURCES = \
 	src/service.cc
 libmmp_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
