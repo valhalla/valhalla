@@ -128,9 +128,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     dep.orig_pbf_graphid = GraphId(sp.origin_graphid());
     dep.dest_pbf_graphid = GraphId(sp.destination_graphid());
     dep.route = sp.route_index();
-    dep.trip = sp.trip_key();
+    dep.trip = sp.trip_id();
     dep.shapeid = 0;
-    dep.blockid = sp.block_id();
+    dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
     dep.dep_time = sp.origin_departure_time();
     dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
 

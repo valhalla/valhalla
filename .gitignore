@@ -41,6 +41,7 @@ transit_stop_query
 .dirstamp
 *.lo
 .libs/
+conf/
 libvalhalla_mjolnir.la
 *.bin
 
