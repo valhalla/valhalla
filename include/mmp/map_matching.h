@@ -12,7 +12,7 @@
 #include <mmp/universal_cost.h>
 #include <mmp/viterbi_search.h>
 #include <mmp/candidate_search.h>
-#include <mmp/sp.h>
+#include <mmp/routing.h>
 #include <mmp/graph_helpers.h>
 #include <mmp/geometry_helpers.h>
 

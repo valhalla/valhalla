@@ -19,7 +19,7 @@ commands: simple_matcher candidate_search service psqlmatcher attacher stat
 
 
 .PHONY: tests
-tests: test_priority_queue test_viterbi_search test_grid_range_query test_sp test_geometry_helpers test_map_matching
+tests: test_priority_queue test_viterbi_search test_grid_range_query test_routing test_geometry_helpers test_map_matching
 
 
 .PHONY: run_tests
@@ -27,7 +27,7 @@ run_tests: tests
 	./test_priority_queue
 	./test_viterbi_search
 	./test_grid_range_query
-	./test_sp
+	./test_routing
 	./test_geometry_helpers
 	./test_map_matching mmp.json
 
@@ -44,7 +44,7 @@ psqlmatcher: psqlmatcher.cc simple_matcher
 	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lpqxx -lpq -lgeos -lsqlite3
 
 
-service: service.cc map_matching.h candidate_search.h viterbi_search.h priority_queue.h candidate.h universal_cost.h sp.h
+service: service.cc map_matching.h candidate_search.h viterbi_search.h priority_queue.h candidate.h universal_cost.h routing.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lprime_server -lpthread
 
 
@@ -52,11 +52,11 @@ candidate_search: candidate_search.cc candidate_search.h candidate.h grid_range_
 	$(CC) $(FLAGS) $< -o $@ $(LIBS)
 
 
-simple_matcher: simple_matcher.cc map_matching.h candidate_search.h viterbi_search.h priority_queue.h candidate.h universal_cost.h sp.h
+simple_matcher: simple_matcher.cc map_matching.h candidate_search.h viterbi_search.h priority_queue.h candidate.h universal_cost.h routing.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS)
 
 
-test_sp: test_sp.cc sp.h
+test_routing: test_routing.cc routing.h
 	$(CC) $(FLAGS_TEST) $< -o $@ -lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
 
 
@@ -86,4 +86,4 @@ mmp.json: mmp.partial.json conf/valhalla.json
 
 .PHONY: clean
 clean:
-	rm -f attacher candidate_search psqlmatcher service simple_matcher stat test_grid_range_query test_priority_queue test_sp test_viterbi_search
+	rm -f attacher candidate_search psqlmatcher service simple_matcher stat test_grid_range_query test_priority_queue test_routing test_viterbi_search

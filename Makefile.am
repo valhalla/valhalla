@@ -49,7 +49,7 @@ libmmpinclude_HEADERS = \
 	include/mmp/map_matching.h \
 	include/mmp/priority_queue.h \
 	include/mmp/service.h \
-	include/mmp/sp.h \
+	include/mmp/routing.h \
 	include/mmp/viterbi_search.h
 libmmp_la_SOURCES = \
 	src/service.cc
