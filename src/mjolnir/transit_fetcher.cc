@@ -397,6 +397,23 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
   return dangles;
 }
 
+void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile) {
+  //check for empty stop pairs and routes.
+  if(tile.stop_pairs_size() == 0 || tile.routes_size() == 0) {
+    LOG_WARN(transit_tile.string() + " had no data and will not be stored");
+    return;
+  }
+
+  //write pbf to file
+  if (!boost::filesystem::exists(transit_tile.parent_path()))
+    boost::filesystem::create_directories(transit_tile.parent_path());
+  std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
+  if(!tile.SerializeToOstream(&stream))
+    LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " + std::to_string(tile.ByteSize()));
+  LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
+    std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
+}
+
 void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, unique_transit_t& uniques, std::promise<std::list<GraphId> >& promise) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   const auto& tiles = hierarchy.levels().rbegin()->second.tiles;
@@ -490,6 +507,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
         response = curler(*request, "schedule_stop_pairs");
         //copy pairs in, noting if any dont have stops
         dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
+        //TODO: if stop pairs is large save to a path with an incremented extension
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       } while(request && (request = *request + api_key));
@@ -499,20 +517,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     if(dangles)
       dangling.emplace_back(current);
 
-    //check for empty stop pairs and routes.
-    if(tile.stop_pairs_size() == 0 || tile.routes_size() == 0) {
-      LOG_WARN(transit_tile.string() + " had no data and will not be stored");
-      continue;
-    }
-
-    //write pbf to file
-    if (!boost::filesystem::exists(transit_tile.parent_path()))
-      boost::filesystem::create_directories(transit_tile.parent_path());
-    std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
-    if(!tile.SerializeToOstream(&stream))
-      LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " + std::to_string(tile.ByteSize()));
-    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
-      std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
+    //save the tile
+    //TODO: add incremented extension
+    write_pbf(tile, transit_tile);
   }
 
   //give back the work for later
