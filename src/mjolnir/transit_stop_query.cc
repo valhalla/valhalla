@@ -88,7 +88,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid) {
 
       LOG_INFO("LineID: " + std::to_string(sp.line_id()) +
                " Route: " + std::to_string(sp.route_index()) +
-               " Trip: " + std::to_string(sp.trip_key()) +
+               " Trip: " + std::to_string(sp.trip_id()) +
                " Dep Time: " + ss.str());
     }
   }
@@ -106,7 +106,7 @@ void GetNextDeparture(const TileHierarchy hierarchy,
     for (uint32_t i = 0; i < transit.stop_pairs_size(); i++) {
 
       const Transit_StopPair& sp = transit.stop_pairs(i);
-      if (sp.trip_key() == tripid && orig_graphid == GraphId(sp.origin_graphid())) {
+      if (sp.trip_id() == tripid && orig_graphid == GraphId(sp.origin_graphid())) {
 
          int total_seconds = sp.origin_departure_time();
          int seconds = total_seconds % 60;
@@ -189,7 +189,7 @@ void LogSchedule(const TileHierarchy hierarchy, const std::string transit_dir,
     if (orig_graphid == originid) {
 
       //do we have the correct trip?
-      if (sp.trip_key() == tripid) {
+      if (sp.trip_id() == tripid) {
 
         int total_seconds = sp.origin_departure_time();
         int seconds = total_seconds % 60;

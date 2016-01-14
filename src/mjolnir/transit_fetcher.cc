@@ -360,15 +360,12 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     }
     uniques.lock.lock();
     inserted = uniques.trips.insert({trip, uniques.trips.size()});
-    pair->set_trip_key(inserted.first->second);
+    pair->set_trip_id(inserted.first->second);
     uniques.lock.unlock();
 
     //block id
     std::string block_id = pair_pt.second.get<std::string>("block_id", "null");
-    if(block_id == "null") {
-      pair->set_block_id(0);
-    }
-    else {
+    if(block_id != "null") {
       uniques.lock.lock();
       inserted = uniques.block_ids.insert({block_id, uniques.block_ids.size()});
       pair->set_block_id(inserted.first->second);
@@ -376,10 +373,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     }
 
     pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
-    uint32_t timezone = DateTime::get_tz_db().to_index(pair_pt.second.get<std::string>("origin_timezone", ""));
-    if (timezone == 0)
-      LOG_WARN("Timezone not found for stop_pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
-    pair->set_origin_timezone(timezone);
 
     set_no_null(std::string, pair_pt.second, "trip_headsign", "null", pair->set_trip_headsign);
     pair->set_bikes_allowed(pair_pt.second.get<bool>("bikes_allowed", false));
@@ -516,7 +509,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     if (!boost::filesystem::exists(transit_tile.parent_path()))
       boost::filesystem::create_directories(transit_tile.parent_path());
     std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
-    tile.SerializeToOstream(&stream);
+    if(!tile.SerializeToOstream(&stream))
+      LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " + std::to_string(tile.ByteSize()));
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
       std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
   }
@@ -574,7 +568,8 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   lock.unlock();
   google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
   google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
-  cs.SetTotalBytesLimit(buffer.size() * 2, buffer.size() * 2);
+  auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+  cs.SetTotalBytesLimit(limit, limit);
   Transit transit;
   if(!transit.ParseFromCodedStream(&cs))
     throw std::runtime_error("Couldn't load " + file_name);
@@ -718,7 +713,8 @@ int main(int argc, char** argv) {
   curl_global_init(CURL_GLOBAL_DEFAULT);
 
   //go get information about what transit tiles we should be fetching
-  auto transit_tiles = which_tiles(pt);
+  //auto transit_tiles = which_tiles(pt);
+  std::priority_queue<weighted_tile_t> transit_tiles; transit_tiles.push({GraphId(752104, 2, 0), 0});
 
   //spawn threads to download all the tiles returning a list of
   //tiles that ended up having dangling stop pairs
