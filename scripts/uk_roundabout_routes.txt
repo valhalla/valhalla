@@ -1,4 +1,0 @@
--j '{"locations":[{"lat":51.595188,"lon":-0.272851,"street":"Beverley Drive"},{"lat":51.594540,"lon":-0.274397,"street":"North Way"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
--j '{"locations":[{"lat":51.595200,"lon":-0.272648,"street":"Beverley Drive"},{"lat":51.594971,"lon":-0.276499,"street":"Beverley Drive"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
--j '{"locations":[{"lat":51.595219,"lon":-0.272405,"street":"Beverley Drive"},{"lat":51.595612,"lon":-0.274883,"street":"Brinkburn Gardens"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
--j '{"locations":[{"lat":51.595230,"lon":-0.272191,"street":"Beverley Drive"},{"lat":51.595951,"lon":-0.273401,"street":"Holyrood Gardens"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
