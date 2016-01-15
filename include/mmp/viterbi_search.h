@@ -10,6 +10,8 @@
 #include <mmp/priority_queue.h>
 
 
+namespace mmp {
+
 using Time = uint32_t;
 using StateId = uint32_t;
 
@@ -699,6 +701,9 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
   assert(searched_time < winner_.size());
 
   return searched_time;
+}
+
+
 }
 
 
