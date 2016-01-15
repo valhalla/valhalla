@@ -196,12 +196,30 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   return opp_index;
 }
 
+using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kCellCount> >;
+void merge(const tweeners_t& in, tweeners_t& out) {
+  for(const auto& t : in) {
+    //shove it in
+    auto inserted = out.insert(t);
+    //had this tile already
+    if(!inserted.second) {
+      //so have to merge
+      for(size_t c = 0; c < kCellCount; ++c) {
+        auto& cell = inserted.first->second[c];
+        cell.insert(cell.cend(), t.second[c].cbegin(), t.second[c].cend());
+      }
+    }
+  }
+}
+
 void validate(const boost::property_tree::ptree& pt,
-              std::queue<GraphId>& tilequeue, std::mutex& lock,
-              std::promise<validator_stats>& result) {
+              std::deque<GraphId>& tilequeue, std::mutex& lock,
+              std::promise<std::pair<validator_stats, tweeners_t> >& result) {
 
     // Our local class for gathering the stats
     validator_stats vStats;
+    // Our local copy of edges binned to tiles that they pass through (dont start or end in)
+    tweeners_t tweeners;
     // Local Graphreader
     GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
     // Get some things we need throughout
@@ -221,7 +239,7 @@ void validate(const boost::property_tree::ptree& pt,
       }
       // Get the next tile Id
       GraphId tile_id = tilequeue.front();
-      tilequeue.pop();
+      tilequeue.pop_front();
       lock.unlock();
 
       // Point tiles to the set we need for current level
@@ -236,7 +254,7 @@ void validate(const boost::property_tree::ptree& pt,
 
       // Bin the edges keeping a list of ones that need to go to other tiles
       if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
-        auto unbinned = tilebuilder.Bin();
+        tilebuilder.Bin(tweeners);
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;
@@ -385,7 +403,25 @@ void validate(const boost::property_tree::ptree& pt,
     }
 
     // Fill promise with statistics
-    result.set_value(vStats);
+    result.set_value(std::make_pair(std::move(vStats), std::move(tweeners)));
+  }
+
+  //crack open tiles and bin edges that pass through them but dont end or begin in them
+  void bin_tweeners(const boost::property_tree::ptree& pt, tweeners_t::iterator& twitr, const tweeners_t::iterator& end, std::mutex& lock) {
+    //go while we have tiles
+    while (true) {
+      lock.lock();
+      if(twitr == end) {
+        lock.unlock();
+        break;
+      }
+      //grab this tile and its extra bin edges
+      const auto& tile_bin = *twitr;
+      ++twitr;
+      lock.unlock();
+      //TODO: add the extra edges to its bin
+      //TODO: add another graphtilebuilder::append_bins(tile_bin) that writes the tile again with just the extra bin info
+    }
   }
 }
 
@@ -400,16 +436,8 @@ namespace mjolnir {
     if (hierarchy.levels().size() < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
-    // Setup threads
-    std::vector<std::shared_ptr<std::thread> > threads(
-        std::max(static_cast<unsigned int>(1),
-                 pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
-
-    // Setup promises
-    std::list<std::promise<validator_stats> > results;
-
     // Create a randomized queue of tiles to work from
-    std::deque<GraphId> tempqueue;
+    std::deque<GraphId> tilequeue;
     for (auto tier : hierarchy.levels()) {
       auto level = tier.second.level;
       auto tiles = tier.second.tiles;
@@ -417,15 +445,22 @@ namespace mjolnir {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
         if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
-          tempqueue.push_back(tile_id);
+          tilequeue.push_back(tile_id);
         }
       }
     }
-    std::random_shuffle(tempqueue.begin(), tempqueue.end());
-    std::queue<GraphId> tilequeue(tempqueue);
+    std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
+
+    // Setup threads
+    std::vector<std::shared_ptr<std::thread> > threads(
+        std::max(static_cast<unsigned int>(1),
+                 pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
+
+    // Setup promises
+    std::list<std::promise<std::pair<validator_stats, tweeners_t> > > results;
 
     LOG_INFO("Validating signs and connectivity");
     // Spawn the threads
@@ -438,14 +473,27 @@ namespace mjolnir {
     for (auto& thread : threads) {
       thread->join();
     }
-    // Get the returned data from the promise
+    // Get the promise form the future
     validator_stats stats;
+    tweeners_t tweeners;
     for (auto& result : results) {
-      auto data = result.get_future().get();
-      stats.add(data);
+      auto pair = result.get_future().get();
+      //keep track of stats
+      stats.add(pair.first);
+      //keep track of tweeners
+      merge(pair.second, tweeners);
     }
-    // Add up total dupcount_ and find densities
     LOG_INFO("Finished");
+
+    //run a pass to add the edges that binned to tweener tiles
+    auto twitr_start = tweeners.begin();
+    auto twitr_end = tweeners.end();
+    for (auto& thread : threads)
+      thread.reset(new std::thread(bin_tweeners, std::cref(pt), std::ref(twitr_start), std::cref(twitr_end), std::ref(lock)));
+    for (auto& thread : threads)
+      thread->join();
+
+    // Add up total dupcount_ and find densities
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
       std::vector<uint32_t> dups = stats.get_dups(level);

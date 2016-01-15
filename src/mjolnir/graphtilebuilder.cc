@@ -686,8 +686,8 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 }
 
 // Bin the edges in this tile and return which ones shape leaves
-std::list<GraphId> GraphTileBuilder::Bin() {
-  std::list<GraphId> strays;
+void GraphTileBuilder::Bin(std::unordered_map<GraphId, std::array<std::vector<GraphId>, kCellCount> >& tweeners) {
+  auto tiles = hierarchy_.levels().rbegin()->second.tiles;
   write_bins_ = true;
 
   //each edge please
@@ -698,31 +698,40 @@ std::list<GraphId> GraphTileBuilder::Bin() {
       continue;
 
     //already binned this
-    auto id = ids.find(edge->edgeinfo_offset());
-    if(id != ids.cend())
+    auto id = ids.insert(edge->edgeinfo_offset());
+    if(!id.second)
       continue;
 
-    //TODO: compare the end and begin node tiles, if it ends in another tile
-    //let the left most, lower most tile win so that we dont have dups
+    //to avoid dups and minimize having to leave the tile for shape we:
+    //always write a given edge to the tile it originates in
+    //never write a given edge to the tile it terminates in
+    //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
 
-    //crack open that shape
-    ids.emplace(edge->edgeinfo_offset());
+    //intersect the shape
     auto info = edgeinfo(edge->edgeinfo_offset());
     const auto& shape = info->shape();
-    /*bool uncontained;
-    auto intersected_bins = binner_.intersect(shape, uncontained);
+    auto intersection = tiles.Intersect(shape);
+
+    //bin some in, save some for later, ignore some
     GraphId edge_id(header_->graphid().tileid(), header_->graphid().level(), edge - directededges_);
-
-    //was it outside this tile
-    if(uncontained)
-      strays.emplace_back(edge_id);
-
-    //add keep the bin information
-    for(const auto& bin : intersected_bins)
-      bins_[bin].push_back(edge_id);*/
+    for(const auto& i : intersection) {
+      //never write to terminating tile
+      bool terminating = i.first == edge->endnode().tileid();
+      //always write the originating tile
+      bool originating = i.first == edge_id.tileid();
+      //write intermediate if originating is smaller than terminating
+      bool intermediate = i.first < edge->endnode().tileid();
+      if(!terminating) {
+        //which set of bins
+        auto& bins = originating ? bins_ : tweeners.insert({edge_id, {}}).first->second;
+        //keep the edge id
+        for(auto cell : i.second)
+          bins[cell].push_back(edge_id);
+      }
+    }
   }
 
-  //TODO: worry about edges in the builder?
+  //TODO: worry about edges in the builder? probably not would signal mis-use
 
   //throw the binned edge offsets back into the header
   uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
@@ -732,8 +741,47 @@ std::list<GraphId> GraphTileBuilder::Bin() {
   //since previously we shouldnt have had anything in the bins we dont have to subtract previous bins
   header_->set_edgeinfo_offset(header_->edgeinfo_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
   header_->set_textlist_offset(header_->textlist_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
+}
 
-  return strays;
+void GraphTileBuilder::Bin(const TileHierarchy& hierarchy, const GraphId& tile_id, const std::array<std::vector<GraphId>, kCellCount>& more_bins) {
+  //load the tile
+  GraphTile t(hierarchy, tile_id);
+
+  //read bins and append
+  std::array<std::vector<GraphId>, kCellCount> bins;
+  for(size_t i = 0; i < kCellCount; ++i) {
+    auto cell = t.GetCell(i % kGridDim, i / kGridDim);
+    bins[i].assign(cell.begin(), cell.end());
+    bins[i].insert(bins[i].end(), more_bins[i].cbegin(), more_bins[i].cend());
+  }
+  //update header bin indices
+  uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins[0].size()) };
+  for(size_t i = 1 ; i < kCellCount; ++i)
+    offsets[i] = static_cast<uint32_t>(bins[i].size()) + offsets[i - 1];
+  GraphTileHeader header = *t.header();
+  header.set_edge_cell_offsets(offsets);
+  //rewrite the tile
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(tile_id, hierarchy);
+  if(!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  //open it
+  if(file.is_open()) {
+    //new header
+    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+    //a bunch of stuff between header and bins
+    auto size = reinterpret_cast<const char*>(t.GetCell(0, 0).begin()) - reinterpret_cast<const char*>(t.node(0));
+    file.write(reinterpret_cast<const char*>(t.node(0)), size);
+    //the updated bins
+    for(const auto& bin : bins)
+      file.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
+    //the rest of the stuff after bins
+    const auto* begin = reinterpret_cast<const char*>(t.GetCell(kGridDim - 1, kGridDim - 1).end());
+    const auto* end = reinterpret_cast<const char*>(t.header() + t.size());
+    file.write(begin, end - begin);
+  }//failed
+  else
+    throw std::runtime_error("Failed to open file " + filename.string());
 }
 
 }

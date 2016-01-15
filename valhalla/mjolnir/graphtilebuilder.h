@@ -282,11 +282,22 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void AddTileCreationDate(const uint32_t tile_creation_date);
 
+  //TODO: move this logic into validator and then pass the bins for this tile to the method below
+  //heck maybe we move it all into validator
   /**
-   * Bins the non shortcut non transition edges into the header
-   * @return returns edges that bin into other tiles
+   * Bins the non shortcut non transition edges and stores their info in the header
+   * @param tweeners  the portions of the edges that intersect tiles that are not this one
+   *                  and not the tile that the edge ends in, hence tweeners
    */
-  std::list<GraphId> Bin();
+  void Bin(std::unordered_map<GraphId, std::array<std::vector<GraphId>, kCellCount> >& tweeners);
+
+  /**
+   * Adds to the bins the tile already has, only modifies the header to reflect the new counts
+   * and the bins themselves, everything else is copied directly without ever looking at it
+   * @param hierarchy  to figure out where to load the tile from
+   * @param more_bins  the extra bin data to append to the tile
+   */
+  static void Bin(const TileHierarchy& hierarchy, const GraphId& tile_id, const std::array<std::vector<GraphId>, kCellCount>& more_bins);
 
  protected:
 
