@@ -251,12 +251,11 @@ namespace valhalla {
         //get processing time for loki
         auto end_time = std::chrono::high_resolution_clock::now();
         auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
-        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-
+        auto elapsed_time = static_cast<float>(msecs - request_pt.get<size_t>("start_time"));
         //log request if greater than X (ms)
         if ((elapsed_time / locations.size()) > long_request) {
           std::stringstream ss;
-          boost::property_tree::json_parser::write_json(ss, request, false);
+          boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("loki request elapsed time (ms)::"+ std::to_string(elapsed_time));
           LOG_WARN("loki request exceeded threshold::"+ ss.str());
           midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
@@ -270,17 +269,6 @@ namespace valhalla {
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
-        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-        if ((elapsed_time / locations.size()) > long_request) {
-          std::stringstream ss;
-          boost::property_tree::json_parser::write_json(ss, request, false);
-          LOG_WARN("loki request elapsed time (ms)::"+ std::to_string(elapsed_time));
-          LOG_WARN("loki request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
-        }
         return result;
       }
     }
