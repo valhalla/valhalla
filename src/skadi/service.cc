@@ -173,8 +173,8 @@ namespace {
 
     void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       //get time for start of request
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      auto start_time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
       request.put("start_time",msecs);
       //get some parameters
       range = request.get<bool>("range", false);
@@ -263,18 +263,17 @@ namespace {
       if (id)
         json->emplace("id", *id);
 
-      //get processing time for elevation
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      //get processing time for skadi
+      auto end_time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
       auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-
       //log request if greater then X (ms)
       if ((elapsed_time / shape.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("height request elapsed time (ms)::"+ std::to_string(elapsed_time));
-        LOG_WARN("height request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_height_request", " [ANALYTICS] ");
+        LOG_WARN("skadi request elapsed time (ms)::"+ std::to_string(elapsed_time));
+        LOG_WARN("skadi request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("skadi_long_request", " [ANALYTICS] ");
       }
 
       //jsonp callback if need be
