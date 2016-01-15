@@ -213,7 +213,7 @@ namespace valhalla {
       }
     }
 
-    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+    void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
