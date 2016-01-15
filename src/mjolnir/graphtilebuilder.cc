@@ -41,7 +41,6 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     textlistbuilder_.emplace_back("");
     text_offset_map_.emplace("", 0);
     text_list_offset_ = 1;
-    write_bins_ = false;
     return;
   }
 
@@ -106,12 +105,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     text_offsets.insert(admins_[i].state_offset());
   }
 
-  //get the edge cells
-  write_bins_ = true;
-  for(size_t i = 0; i < kCellCount; ++i) {
-    auto cell = GetCell(i % kGridDim, i / kGridDim);
-    bins_[i].assign(cell.begin(), cell.end());
-  }
+  // Edge bins are gotten by parent
 
   // Create an ordered set of edge info offsets
   std::set<uint32_t> edge_info_offsets;
@@ -241,9 +235,6 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
                admins_builder_.size() * sizeof(Admin));
 
-    // Write the edge cells
-    SerializeEdgeCellsToOstream(file);
-
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
@@ -320,12 +311,8 @@ void GraphTileBuilder::Update(
         header_->admincount() * sizeof(Admin));
 
     // Write the edge cells
-    if(write_bins_)
-      SerializeEdgeCellsToOstream(file);
-    else {
-      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
-        sizeof(GraphId) * header_->cell_offset(kGridDim - 1, kGridDim - 1).second);
-    }
+    file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
+      sizeof(GraphId) * header_->cell_offset(kGridDim - 1, kGridDim - 1).second);
 
     // Write the existing edgeinfo
     file.write(edgeinfo_, edgeinfo_size_);
@@ -399,12 +386,8 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
                hdr.admincount() * sizeof(Admin));
 
     // Write the edge cells
-    if(write_bins_)
-      SerializeEdgeCellsToOstream(file);
-    else {
-      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
-        sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
-    }
+    file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
+      sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
 
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
@@ -595,13 +578,6 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
   }
 }
 
-// Write all edge cells to specified stream
-void GraphTileBuilder::SerializeEdgeCellsToOstream(std::ostream& out) const {
-  for (const auto& bin : bins_) {
-    out.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
-  }
-}
-
 // Serialize the edge info list
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) const {
   for (const auto& edgeinfo : edgeinfo_list_) {
@@ -685,72 +661,11 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
   header_builder_.set_date_created(tile_creation_date);
 }
 
-// Bin the edges in this tile and return which ones shape leaves
-void GraphTileBuilder::Bin(std::unordered_map<GraphId, std::array<std::vector<GraphId>, kCellCount> >& tweeners) {
-  auto tiles = hierarchy_.levels().rbegin()->second.tiles;
-  write_bins_ = true;
-
-  //each edge please
-  std::unordered_set<uint64_t> ids(header_->directededgecount() / 2);
-  for(const DirectedEdge* edge = directededges_; edge < directededges_ + header_->directededgecount(); ++edge) {
-    //dont bin these
-    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
-      continue;
-
-    //already binned this
-    auto id = ids.insert(edge->edgeinfo_offset());
-    if(!id.second)
-      continue;
-
-    //to avoid dups and minimize having to leave the tile for shape we:
-    //always write a given edge to the tile it originates in
-    //never write a given edge to the tile it terminates in
-    //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
-
-    //intersect the shape
-    auto info = edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = info->shape();
-    auto intersection = tiles.Intersect(shape);
-
-    //bin some in, save some for later, ignore some
-    GraphId edge_id(header_->graphid().tileid(), header_->graphid().level(), edge - directededges_);
-    for(const auto& i : intersection) {
-      //never write to terminating tile
-      bool terminating = i.first == edge->endnode().tileid();
-      //always write the originating tile
-      bool originating = i.first == edge_id.tileid();
-      //write intermediate if originating is smaller than terminating
-      bool intermediate = i.first < edge->endnode().tileid();
-      if(!terminating) {
-        //which set of bins
-        auto& bins = originating ? bins_ : tweeners.insert({edge_id, {}}).first->second;
-        //keep the edge id
-        for(auto cell : i.second)
-          bins[cell].push_back(edge_id);
-      }
-    }
-  }
-
-  //TODO: worry about edges in the builder? probably not would signal mis-use
-
-  //throw the binned edge offsets back into the header
-  uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
-  for(size_t i = 1 ; i < kCellCount; ++i)
-    offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
-  header_->set_edge_cell_offsets(offsets);
-  //since previously we shouldnt have had anything in the bins we dont have to subtract previous bins
-  header_->set_edgeinfo_offset(header_->edgeinfo_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
-  header_->set_textlist_offset(header_->textlist_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
-}
-
-void GraphTileBuilder::Bin(const TileHierarchy& hierarchy, const GraphId& tile_id, const std::array<std::vector<GraphId>, kCellCount>& more_bins) {
-  //load the tile
-  GraphTile t(hierarchy, tile_id);
-
+void GraphTileBuilder::StoreBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kCellCount>& more_bins) {
   //read bins and append
-  std::array<std::vector<GraphId>, kCellCount> bins;
+  std::vector<GraphId> bins[kCellCount];
   for(size_t i = 0; i < kCellCount; ++i) {
-    auto cell = t.GetCell(i % kGridDim, i / kGridDim);
+    auto cell = tile->GetCell(i % kGridDim, i / kGridDim);
     bins[i].assign(cell.begin(), cell.end());
     bins[i].insert(bins[i].end(), more_bins[i].cbegin(), more_bins[i].cend());
   }
@@ -758,10 +673,10 @@ void GraphTileBuilder::Bin(const TileHierarchy& hierarchy, const GraphId& tile_i
   uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins[0].size()) };
   for(size_t i = 1 ; i < kCellCount; ++i)
     offsets[i] = static_cast<uint32_t>(bins[i].size()) + offsets[i - 1];
-  GraphTileHeader header = *t.header();
+  GraphTileHeader header = *tile->header();
   header.set_edge_cell_offsets(offsets);
   //rewrite the tile
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(tile_id, hierarchy);
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
   if(!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -770,14 +685,14 @@ void GraphTileBuilder::Bin(const TileHierarchy& hierarchy, const GraphId& tile_i
     //new header
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     //a bunch of stuff between header and bins
-    auto size = reinterpret_cast<const char*>(t.GetCell(0, 0).begin()) - reinterpret_cast<const char*>(t.node(0));
-    file.write(reinterpret_cast<const char*>(t.node(0)), size);
+    auto size = reinterpret_cast<const char*>(tile->GetCell(0, 0).begin()) - reinterpret_cast<const char*>(tile->node(0));
+    file.write(reinterpret_cast<const char*>(tile->node(0)), size);
     //the updated bins
     for(const auto& bin : bins)
       file.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
     //the rest of the stuff after bins
-    const auto* begin = reinterpret_cast<const char*>(t.GetCell(kGridDim - 1, kGridDim - 1).end());
-    const auto* end = reinterpret_cast<const char*>(t.header() + t.size());
+    const auto* begin = reinterpret_cast<const char*>(tile->GetCell(kGridDim - 1, kGridDim - 1).end());
+    const auto* end = reinterpret_cast<const char*>(tile->header()) + tile->size();
     file.write(begin, end - begin);
   }//failed
   else

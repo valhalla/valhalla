@@ -185,9 +185,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       }
       if (n == 0) {
         if (sc) {
-          LOG_WARN("   No Shortcut edges found from end node");
+          LOG_WARN("No Shortcut edges found from end node");
         } else {
-          LOG_WARN("   No regular edges found from end node");
+          LOG_WARN("No regular edges found from end node");
         }
       }
     }
@@ -196,20 +196,60 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   return opp_index;
 }
 
+//return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kCellCount> >;
-void merge(const tweeners_t& in, tweeners_t& out) {
-  for(const auto& t : in) {
-    //shove it in
-    auto inserted = out.insert(t);
-    //had this tile already
-    if(!inserted.second) {
-      //so have to merge
-      for(size_t c = 0; c < kCellCount; ++c) {
-        auto& cell = inserted.first->second[c];
-        cell.insert(cell.cend(), t.second[c].cbegin(), t.second[c].cend());
+std::array<std::vector<GraphId>, kCellCount> bin_edges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
+  std::array<std::vector<GraphId>, kCellCount> bins;
+  //only do most detailed level
+  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
+    return bins;
+  auto tiles = hierarchy.levels().rbegin()->second.tiles;
+  LOG_INFO("binning: " + std::to_string(tile->header()->graphid().tileid()));
+
+  //each edge please
+  std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
+  const auto* start_edge = tile->directededge(0);
+  for(const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount(); ++edge) {
+    //dont bin these
+    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
+      continue;
+
+    //already binned this
+    auto id = ids.insert(edge->edgeinfo_offset());
+    if(!id.second)
+      continue;
+
+    //to avoid dups and minimize having to leave the tile for shape we:
+    //always write a given edge to the tile it originates in
+    //never write a given edge to the tile it terminates in
+    //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
+
+    //intersect the shape
+    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    const auto& shape = info->shape();
+    auto intersection = tiles.Intersect(shape);
+
+    //bin some in, save some for later, ignore some
+    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(), edge - start_edge);
+    for(const auto& i : intersection) {
+      //never write to terminating tile
+      bool terminating = i.first == edge->endnode().tileid();
+      //always write the originating tile
+      bool originating = i.first == edge_id.tileid();
+      //write intermediate if originating is smaller than terminating
+      bool intermediate = i.first < edge->endnode().tileid();
+      if(!terminating) {
+        //which set of bins
+        auto& out_bins = originating ? bins : tweeners.insert({GraphId(i.first, edge_id.level(), 0), {}}).first->second;
+        //keep the edge id
+        for(auto cell : i.second)
+          out_bins[cell].push_back(edge_id);
       }
     }
   }
+
+  //give back this tiles bins
+  return bins;
 }
 
 void validate(const boost::property_tree::ptree& pt,
@@ -223,9 +263,9 @@ void validate(const boost::property_tree::ptree& pt,
     // Local Graphreader
     GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
     // Get some things we need throughout
-    const auto& tile_hierarchy = graph_reader.GetTileHierarchy();
+    const auto& hierarchy = graph_reader.GetTileHierarchy();
     std::vector<Tiles<PointLL> > levels;
-    for (const auto& level : tile_hierarchy.levels()) {
+    for (const auto& level : hierarchy.levels()) {
       levels.push_back(level.second.tiles);
     }
     Tiles<PointLL> *tiles;
@@ -250,11 +290,7 @@ void validate(const boost::property_tree::ptree& pt,
       uint32_t dupcount = 0;
 
       // Get the tile
-      GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
-
-      // Bin the edges keeping a list of ones that need to go to other tiles
-      if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
-        tilebuilder.Bin(tweeners);
+      GraphTileBuilder tilebuilder(hierarchy, tile_id, false);
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;
@@ -270,6 +306,7 @@ void validate(const boost::property_tree::ptree& pt,
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node = tile_id;
       for (uint32_t i = 0; i < nodecount; i++, node++) {
+        // The node we will modify
         NodeInfo nodeinfo = tilebuilder.node(i);
         auto ni = tile->node(i);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
@@ -302,6 +339,7 @@ void validate(const boost::property_tree::ptree& pt,
             }
           }
 
+          // The edge we will modify
           DirectedEdge& directededge = tilebuilder.directededge(
                     nodeinfo.edge_index() + j);
 
@@ -389,9 +427,16 @@ void validate(const boost::property_tree::ptree& pt,
       vStats.add_tile_area(tileid, area);
       vStats.add_tile_geom(tileid, tiles->TileBounds(tileid));
 
+      // Bin the edges
+      auto bins = bin_edges(hierarchy, tile, tweeners);
+
       // Write the new tile
       lock.lock();
       tilebuilder.Update(nodes, directededges);
+
+      // Write the bins to it
+      if(bins.size())
+        GraphTileBuilder::StoreBins(hierarchy, tile, bins);
 
       // Check if we need to clear the tile cache
       if (graph_reader.OverCommitted())
@@ -406,21 +451,42 @@ void validate(const boost::property_tree::ptree& pt,
     result.set_value(std::make_pair(std::move(vStats), std::move(tweeners)));
   }
 
+  //take tweeners from different tiles' perspectives and merge into a single tweener
+  //per tile that needs to update its bins
+  void merge(const tweeners_t& in, tweeners_t& out) {
+    for(const auto& t : in) {
+      //shove it in
+      auto inserted = out.insert(t);
+      //had this tile already
+      if(!inserted.second) {
+        //so have to merge
+        for(size_t c = 0; c < kCellCount; ++c) {
+          auto& cell = inserted.first->second[c];
+          cell.insert(cell.cend(), t.second[c].cbegin(), t.second[c].cend());
+        }
+      }
+    }
+  }
+
   //crack open tiles and bin edges that pass through them but dont end or begin in them
-  void bin_tweeners(const boost::property_tree::ptree& pt, tweeners_t::iterator& twitr, const tweeners_t::iterator& end, std::mutex& lock) {
-    //go while we have tiles
-    while (true) {
+  void bin_tweeners(const TileHierarchy& hierarchy, tweeners_t::iterator& start, const tweeners_t::iterator& end, std::mutex& lock) {
+    //go while we have tiles to update
+    while(true) {
       lock.lock();
-      if(twitr == end) {
+      if(start == end) {
         lock.unlock();
         break;
       }
       //grab this tile and its extra bin edges
-      const auto& tile_bin = *twitr;
-      ++twitr;
+      const auto& tile_bin = *start;
+      ++start;
       lock.unlock();
-      //TODO: add the extra edges to its bin
-      //TODO: add another graphtilebuilder::append_bins(tile_bin) that writes the tile again with just the extra bin info
+      //keep the extra binned edges
+      GraphTile tile(hierarchy, tile_bin.first);
+      if(tile.size() != 0)
+        GraphTileBuilder::StoreBins(hierarchy, &tile, tile_bin.second);
+      else
+        LOG_ERROR("Cannot add bins to nonexistent tile: " + std::to_string(tile_bin.first.tileid()))
     }
   }
 }
@@ -486,12 +552,14 @@ namespace mjolnir {
     LOG_INFO("Finished");
 
     //run a pass to add the edges that binned to tweener tiles
-    auto twitr_start = tweeners.begin();
-    auto twitr_end = tweeners.end();
+    LOG_INFO("Binning inter-tile edges");
+    auto start = tweeners.begin();
+    auto end = tweeners.end();
     for (auto& thread : threads)
-      thread.reset(new std::thread(bin_tweeners, std::cref(pt), std::ref(twitr_start), std::cref(twitr_end), std::ref(lock)));
+      thread.reset(new std::thread(bin_tweeners, std::cref(hierarchy), std::ref(start), std::cref(end), std::ref(lock)));
     for (auto& thread : threads)
       thread->join();
+    LOG_INFO("Finished");
 
     // Add up total dupcount_ and find densities
     for (uint8_t level = 0; level <= 2; level++) {
