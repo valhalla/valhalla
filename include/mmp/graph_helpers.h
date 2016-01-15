@@ -1,26 +1,23 @@
 // -*- mode: c++ -*-
-#ifndef MM_GRAPH_HELPERS_H_
-#define MM_GRAPH_HELPERS_H_
-
+#ifndef MMP_GRAPH_HELPERS_H_
+#define MMP_GRAPH_HELPERS_H_
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphtile.h>
 
 
-namespace mmp
-{
-namespace helpers
-{
+namespace mmp {
+namespace helpers {
 
-using namespace valhalla::baldr;
+using namespace valhalla;
 
 
-inline const DirectedEdge*
-edge_directededge(GraphReader& graphreader,
-                  const GraphId& edgeid,
+inline const baldr::DirectedEdge*
+edge_directededge(baldr::GraphReader& graphreader,
+                  const baldr::GraphId& edgeid,
                   // A reference to a pointer to a const tile
-                  const GraphTile*& tile)
+                  const baldr::GraphTile*& tile)
 {
   if (tile && tile->id().tileid() == edgeid.tileid()) {
     return tile->directededge(edgeid);
@@ -31,20 +28,20 @@ edge_directededge(GraphReader& graphreader,
 }
 
 
-inline const DirectedEdge*
-edge_directededge(GraphReader& graphreader,
-                  const GraphId& edgeid)
+inline const baldr::DirectedEdge*
+edge_directededge(baldr::GraphReader& graphreader,
+                  const baldr::GraphId& edgeid)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_directededge(graphreader, edgeid, NO_TILE);
 }
 
 
-inline GraphId
-edge_opp_edgeid(GraphReader& graphreader,
-                const DirectedEdge* directededge,
+inline baldr::GraphId
+edge_opp_edgeid(baldr::GraphReader& graphreader,
+                const baldr::DirectedEdge* directededge,
                 // A reference to a pointer to a const tile
-                const GraphTile*& tile)
+                const baldr::GraphTile*& tile)
 {
   if (directededge) {
     auto nodeid = directededge->endnode();
@@ -60,40 +57,40 @@ edge_opp_edgeid(GraphReader& graphreader,
 }
 
 
-inline GraphId
-edge_opp_edgeid(GraphReader& graphreader,
-                const DirectedEdge* directededge)
+inline baldr::GraphId
+edge_opp_edgeid(baldr::GraphReader& graphreader,
+                const baldr::DirectedEdge* directededge)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_opp_edgeid(graphreader, directededge, NO_TILE);
 }
 
 
-inline GraphId
-edge_opp_edgeid(GraphReader& graphreader,
-                const GraphId& edgeid,
+inline baldr::GraphId
+edge_opp_edgeid(baldr::GraphReader& graphreader,
+                const baldr::GraphId& edgeid,
                 // A reference to a pointer to a const tile
-                const GraphTile*& tile)
+                const baldr::GraphTile*& tile)
 {
   const auto directededge = edge_directededge(graphreader, edgeid, tile);
   return edge_opp_edgeid(graphreader, directededge, tile);
 }
 
 
-inline GraphId
-edge_opp_edgeid(GraphReader& graphreader,
-                const GraphId& edgeid)
+inline baldr::GraphId
+edge_opp_edgeid(baldr::GraphReader& graphreader,
+                const baldr::GraphId& edgeid)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_opp_edgeid(graphreader, edgeid, NO_TILE);
 }
 
 
-inline const NodeInfo*
-edge_nodeinfo(GraphReader& graphreader,
-              const GraphId& nodeid,
+inline const baldr::NodeInfo*
+edge_nodeinfo(baldr::GraphReader& graphreader,
+              const baldr::GraphId& nodeid,
               // A reference to a pointer to a const tile
-              const GraphTile*& tile)
+              const baldr::GraphTile*& tile)
 {
   if (tile && tile->id().tileid() == nodeid.tileid()) {
     return tile->node(nodeid);
@@ -104,19 +101,19 @@ edge_nodeinfo(GraphReader& graphreader,
 }
 
 
-inline const NodeInfo*
-edge_nodeinfo(GraphReader& graphreader,
-              const GraphId& nodeid)
+inline const baldr::NodeInfo*
+edge_nodeinfo(baldr::GraphReader& graphreader,
+              const baldr::GraphId& nodeid)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_nodeinfo(graphreader, nodeid, NO_TILE);
 }
 
 
-inline GraphId
-edge_endnodeid(GraphReader& graphreader,
-               const GraphId& edgeid,
-               const GraphTile*& tile)
+inline baldr::GraphId
+edge_endnodeid(baldr::GraphReader& graphreader,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile*& tile)
 {
   const auto directededge = edge_directededge(graphreader, edgeid, tile);
   if (directededge) {
@@ -127,19 +124,19 @@ edge_endnodeid(GraphReader& graphreader,
 }
 
 
-inline GraphId
-edge_endnodeid(GraphReader& graphreader,
-               const GraphId& edgeid)
+inline baldr::GraphId
+edge_endnodeid(baldr::GraphReader& graphreader,
+               const baldr::GraphId& edgeid)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_endnodeid(graphreader, edgeid, NO_TILE);
 }
 
 
-inline GraphId
-edge_startnodeid(GraphReader& graphreader,
-                 const GraphId& edgeid,
-                 const GraphTile*& tile)
+inline baldr::GraphId
+edge_startnodeid(baldr::GraphReader& graphreader,
+                 const baldr::GraphId& edgeid,
+                 const baldr::GraphTile*& tile)
 {
   const auto opp_edgeid = edge_opp_edgeid(graphreader, edgeid, tile);
   if (opp_edgeid.Is_Valid()) {
@@ -152,35 +149,36 @@ edge_startnodeid(GraphReader& graphreader,
 }
 
 
-inline GraphId
-edge_startnodeid(GraphReader& graphreader,
-                 const GraphId& edgeid)
+inline baldr::GraphId
+edge_startnodeid(baldr::GraphReader& graphreader,
+                 const baldr::GraphId& edgeid)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_startnodeid(graphreader, edgeid, NO_TILE);
 }
 
 
-inline std::unique_ptr<const EdgeInfo>
-edge_edgeinfo(GraphReader& graphreader,
-              const GraphId& edgeid,
-              const GraphTile*& tile)
+inline std::unique_ptr<const baldr::EdgeInfo>
+edge_edgeinfo(baldr::GraphReader& graphreader,
+              const baldr::GraphId& edgeid,
+              const baldr::GraphTile*& tile)
 {
   const auto directededge = edge_directededge(graphreader, edgeid, tile);
   return directededge? tile->edgeinfo(directededge->edgeinfo_offset()) : nullptr;
 }
 
 
-inline std::unique_ptr<const EdgeInfo>
-edge_edgeinfo(GraphReader& graphreader,
-              const GraphId& edgeid)
+inline std::unique_ptr<const baldr::EdgeInfo>
+edge_edgeinfo(baldr::GraphReader& graphreader,
+              const baldr::GraphId& edgeid)
 {
-  const GraphTile* NO_TILE = nullptr;
+  const baldr::GraphTile* NO_TILE = nullptr;
   return edge_edgeinfo(graphreader, edgeid, NO_TILE);
 }
 
+
 }
 }
 
 
-#endif // MM_GRAPH_HELPERS_H_
+#endif // MMP_GRAPH_HELPERS_H_

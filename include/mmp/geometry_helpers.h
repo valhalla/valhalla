@@ -1,7 +1,6 @@
 // -*- mode: c++ -*-
-
-#ifndef MM_GEOMETRY_HELPERS_H_
-#define MM_GEOMETRY_HELPERS_H_
+#ifndef MMP_GEOMETRY_HELPERS_H_
+#define MMP_GEOMETRY_HELPERS_H_
 
 #include <algorithm>
 #include <cassert>
@@ -12,8 +11,7 @@
 #include <valhalla/midgard/pointll.h>
 
 
-namespace
-{
+namespace {
 
 inline float
 normalize(float num, float den)
@@ -25,10 +23,8 @@ normalize(float num, float den)
 }
 
 
-namespace mmp
-{
-namespace helpers
-{
+namespace mmp {
+namespace helpers {
 
 using namespace valhalla;
 
@@ -260,4 +256,4 @@ Project(const coord_t& p,
 }
 
 
-#endif // MM_GEOMETRY_HELPERS_H_
+#endif // MMP_GEOMETRY_HELPERS_H_

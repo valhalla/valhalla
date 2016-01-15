@@ -5,8 +5,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-namespace mmp
-{
+
+namespace mmp {
 
 void run_service(const boost::property_tree::ptree& config);
 

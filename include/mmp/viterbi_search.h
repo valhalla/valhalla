@@ -1,4 +1,6 @@
 // -*- mode: c++ -*-
+#ifndef MMP_VITERBI_SEARCH_H_
+#define MMP_VITERBI_SEARCH_H_
 
 #include <vector>
 #include <unordered_map>
@@ -698,3 +700,6 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
 
   return searched_time;
 }
+
+
+#endif // MMP_VITERBI_SEARCH_H_

@@ -1,10 +1,12 @@
 /* -*- mode: c++ -*- */
+#ifndef MMP_CANDIDATE_H_
+#define MMP_CANDIDATE_H_
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/pathlocation.h>
 
-namespace mmp
-{
+
+namespace mmp {
 
 using namespace valhalla;
 
@@ -35,3 +37,5 @@ class Candidate: public baldr::PathLocation
 };
 
 }
+
+#endif // MMP_CANDIDATE_H_

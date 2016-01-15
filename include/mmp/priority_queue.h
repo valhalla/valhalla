@@ -1,4 +1,6 @@
 // -*- mode: c++ -*-
+#ifndef MMP_PRIORITY_QUEUE_H_
+#define MMP_PRIORITY_QUEUE_H_
 
 #include <unordered_map>
 
@@ -90,3 +92,6 @@ class SPQueue
   Heap heap_;
   std::unordered_map<typename T::id_type, typename Heap::handle_type> handlers_;
 };
+
+
+#endif // MMP_PRIORITY_QUEUE_H_

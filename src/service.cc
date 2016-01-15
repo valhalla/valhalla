@@ -24,9 +24,7 @@
 
 using namespace prime_server;
 using namespace valhalla;
-using namespace rapidjson;
 using namespace mmp;
-
 
 #define VERBOSE
 
@@ -125,7 +123,7 @@ class SequenceParseError: public std::runtime_error {
 };
 
 
-void jsonify(Document& document, const char* text)
+void jsonify(rapidjson::Document& document, const char* text)
 {
   document.Parse(text);
 
@@ -137,14 +135,14 @@ void jsonify(Document& document, const char* text)
 
 
 inline bool
-is_geojson_geometry(const Value& geometry)
+is_geojson_geometry(const rapidjson::Value& geometry)
 {
   return geometry.IsObject() && geometry.HasMember("coordinates");
 }
 
 
 std::vector<Measurement>
-read_geojson_geometry(const Value& geometry)
+read_geojson_geometry(const rapidjson::Value& geometry)
 {
   if (!is_geojson_geometry(geometry)) {
     throw SequenceParseError("Invalid GeoJSON geometry");
@@ -161,7 +159,7 @@ read_geojson_geometry(const Value& geometry)
   }
 
   std::vector<Measurement> measurements;
-  for (SizeType i = 0; i < coordinates.Size(); i++) {
+  for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
     const auto& coordinate = coordinates[i];
     if (!coordinate.IsArray()
         || coordinate.Size() != 2
@@ -181,7 +179,7 @@ read_geojson_geometry(const Value& geometry)
 
 
 inline bool
-is_geojson_feature(const Value& object)
+is_geojson_feature(const rapidjson::Value& object)
 {
   // Strictly speak a GeoJSON feature must have "id" and "properties",
   // but in our case they are optional. A full example is as folllows:
@@ -196,7 +194,7 @@ is_geojson_feature(const Value& object)
 
 
 std::vector<Measurement>
-read_geojson_feature(const Value& feature)
+read_geojson_feature(const rapidjson::Value& feature)
 {
   if (!is_geojson_feature(feature)) {
     throw SequenceParseError("Invalid GeoJSON feature");
@@ -212,7 +210,7 @@ read_geojson_feature(const Value& feature)
 }
 
 
-std::vector<Measurement> read_geojson(const Value& object)
+std::vector<Measurement> read_geojson(const rapidjson::Value& object)
 {
   if (is_geojson_feature(object)) {
     return read_geojson_feature(object);
@@ -225,7 +223,8 @@ std::vector<Measurement> read_geojson(const Value& object)
 
 
 template <typename buffer_t>
-void serialize_coordinate(const midgard::PointLL& coord, Writer<buffer_t>& writer)
+void serialize_coordinate(const midgard::PointLL& coord,
+                          rapidjson::Writer<buffer_t>& writer)
 {
   writer.StartArray();
   // TODO lower precision
@@ -236,7 +235,8 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<buffer_t>& write
 
 
 template <typename buffer_t>
-void serialize_graphid(const baldr::GraphId& graphid, Writer<buffer_t>& writer)
+void serialize_graphid(const baldr::GraphId& graphid,
+                       rapidjson::Writer<buffer_t>& writer)
 {
   if (graphid.Is_Valid()) {
     writer.StartObject();
@@ -259,7 +259,7 @@ void serialize_graphid(const baldr::GraphId& graphid, Writer<buffer_t>& writer)
 
 template <typename buffer_t>
 void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
-                                       Writer<buffer_t>& writer)
+                                       rapidjson::Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -280,7 +280,7 @@ void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
 template <typename buffer_t>
 void serialize_geometry_route(const std::vector<MatchResult>& results,
                               const MapMatching& mm,
-                              Writer<buffer_t>& writer)
+                              rapidjson::Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -329,7 +329,7 @@ void serialize_geometry_route(const std::vector<MatchResult>& results,
 template <typename buffer_t>
 void serialize_routes(const State& state,
                       const MapMatching& mm,
-                      Writer<buffer_t>& writer)
+                      rapidjson::Writer<buffer_t>& writer)
 {
   if (!state.routed()) {
     writer.Null();
@@ -396,7 +396,7 @@ void serialize_routes(const State& state,
 template <typename buffer_t>
 void serialize_state(const State& state,
                      const MapMatching& mm,
-                     Writer<buffer_t>& writer)
+                     rapidjson::Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -422,7 +422,7 @@ void serialize_state(const State& state,
 template <typename buffer_t>
 void serialize_properties(const std::vector<MatchResult>& results,
                           const MapMatching& mm,
-                          Writer<buffer_t>& writer)
+                          rapidjson::Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -469,7 +469,8 @@ void serialize_properties(const std::vector<MatchResult>& results,
 template <typename buffer_t>
 void serialize_results_as_feature(const std::vector<MatchResult>& results,
                                   const MapMatching& mm,
-                                  Writer<buffer_t>& writer, bool route = false)
+                                  rapidjson::Writer<buffer_t>& writer,
+                                  bool route = false)
 {
   writer.StartObject();
 
@@ -491,7 +492,8 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
 
 
 template <typename buffer_t>
-void serialize_config(MapMatcher* matcher, Writer<buffer_t>& writer)
+void serialize_config(MapMatcher* matcher,
+                      rapidjson::Writer<buffer_t>& writer)
 {
   // Property tree -> string
   std::stringstream ss;
@@ -499,7 +501,7 @@ void serialize_config(MapMatcher* matcher, Writer<buffer_t>& writer)
   const auto& str = ss.str();
 
   // String -> JSON document
-  Document document;
+  rapidjson::Document document;
   document.Parse(str.c_str());
 
   // JSON document -> writer stream
@@ -512,7 +514,7 @@ void serialize_response(buffer_t& sb,
                         const std::vector<MatchResult>& results,
                         MapMatcher* matcher)
 {
-  Writer<buffer_t> writer(sb);
+  rapidjson::Writer<buffer_t> writer(sb);
   bool route = matcher->config().get<bool>("route"),
     geometry = matcher->config().get<bool>("geometry");
   writer.StartObject();
@@ -551,8 +553,8 @@ worker_t::result_t jsonify_error(const std::string& message,
                                  unsigned status_code = 400)
 {
   worker_t::result_t result{false};
-  StringBuffer sb;
-  Writer<StringBuffer> writer(sb);
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
 
   writer.StartObject();
 
@@ -567,6 +569,7 @@ worker_t::result_t jsonify_error(const std::string& message,
   http_response_t response(status_code, http_status_code(status_code), sb.GetString(), {JSON_MIME, CORS});
   response.from_info(info);
   result.messages.emplace_back(response.to_string());
+
   return result;
 }
 
@@ -652,7 +655,7 @@ class mm_worker_t {
 
     if (request.method == method_t::POST) {
       std::vector<Measurement> measurements;
-      Document json;
+      rapidjson::Document json;
 
       // Parse sequence
       try {
@@ -684,7 +687,7 @@ class mm_worker_t {
       const auto& results = matcher->OfflineMatch(measurements);
 
       // Serialize results
-      StringBuffer sb;
+      rapidjson::StringBuffer sb;
       serialize_response(sb, results, matcher);
 
       delete matcher;
@@ -708,6 +711,7 @@ class mm_worker_t {
   MapMatcherFactory matcher_factory_;
   std::unordered_set<std::string> customizable_;
 };
+
 
 }
 

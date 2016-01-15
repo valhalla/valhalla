@@ -1,4 +1,6 @@
 // -*- mode: c++ -*-
+#ifndef MMP_GRID_RANGE_QUERY_H_
+#define MMP_GRID_RANGE_QUERY_H_
 
 #include <algorithm>
 #include <tuple>
@@ -12,6 +14,9 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/linesegment2.h>
+
+
+namespace mmp {
 
 using Point = valhalla::midgard::PointLL;
 using LineSegment = valhalla::midgard::LineSegment2<Point>;
@@ -267,3 +272,9 @@ class GridRangeQuery
   int num_cols_;
   std::vector<std::vector<key_t> > items_;
 };
+
+
+}
+
+
+#endif // MMP_GRID_RANGE_QUERY_H_

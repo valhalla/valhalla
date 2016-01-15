@@ -52,7 +52,10 @@ libmmpinclude_HEADERS = \
 	include/mmp/routing.h \
 	include/mmp/viterbi_search.h
 libmmp_la_SOURCES = \
+	src/universal_cost.cc \
 	src/routing.cc \
+	src/candidate_search.cc \
+	src/map_matching.cc \
 	src/service.cc
 libmmp_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libmmp_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)

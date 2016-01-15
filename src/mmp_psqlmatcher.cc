@@ -150,7 +150,7 @@ collect_local_tileids(const baldr::TileHierarchy& tile_hierarchy,
 
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
-    GraphId graphid(id, local_level, 0);
+    baldr::GraphId graphid(id, local_level, 0);
     if (baldr::GraphReader::DoesTileExist(tile_hierarchy, graphid)
         && excluded_tileids.find(id) == excluded_tileids.end()) {
       queue.push_back(graphid.tileid());
