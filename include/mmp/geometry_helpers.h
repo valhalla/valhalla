@@ -118,6 +118,15 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
 }
 
 
+inline uint8_t
+get_turn_degree180(uint16_t left, uint16_t right)
+{
+  const auto turn = std::abs(left - right);
+  assert(0 <= turn && turn < 360);
+  return turn > 180? 360 - turn : turn;
+}
+
+
 inline float
 TranslateLatitudeInMeters(float lat, float meters)
 {

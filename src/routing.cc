@@ -9,6 +9,7 @@
 #include <valhalla/sif/costconstants.h>
 
 #include "mmp/graph_helpers.h"
+#include "mmp/geometry_helpers.h"
 #include "mmp/routing.h"
 
 using namespace valhalla;
@@ -317,15 +318,6 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
 }
 
 
-inline uint8_t
-get_turn_degree(uint16_t left, uint16_t right)
-{
-  const auto turn = std::abs(left - right);
-  assert(0 <= turn && turn < 360);
-  return turn > 180? 360 - turn : turn;
-}
-
-
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
@@ -413,7 +405,7 @@ find_shortest_path(baldr::GraphReader& reader,
         if (pred_edgelabel && turn_cost_table) {
           const auto other_heading = get_outbound_edge_heading(tile, other_edge, *nodeinfo);
           assert(0 <= other_heading && other_heading < 360);
-          const auto turn_degree = get_turn_degree(inbound_heading, other_heading);
+          const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
           assert(0 <= turn_degree && turn_degree <= 180);
           turn_cost = label_turn_cost + turn_cost_table[turn_degree];
         }
