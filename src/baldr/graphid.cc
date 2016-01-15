@@ -72,7 +72,7 @@ json::Value GraphId::json() const {
       {"tile_id", static_cast<uint64_t>(fields.tileid)},
       {"id", static_cast<uint64_t>(fields.id)},
     });
-  return static_cast<nullptr_t>(nullptr);
+  return static_cast<std::nullptr_t>(nullptr);
 }
 
 // Post increments the id.
