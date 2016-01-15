@@ -188,6 +188,18 @@ void test_intersect_linestring() {
   assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,13,19,26,32}}});
   assert_answer(t, { {1,2}, {2,4} }, intersect_t{{0,{13,19,26}}});
   assert_answer(t, { {2,4}, {1,2} }, intersect_t{{0,{13,19,26}}});
+
+  //some real locations on earth (without polar coordinates accounted for)
+  Tiles<PointLL> ll(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
+  std::vector<PointLL> shape{
+    {9.54516602, 47.2520561},{9.5452137, 47.2520599},{9.54528141, 47.2520409},{9.54550934, 47.2519455},
+    {9.54575539, 47.2518578},{9.54644299, 47.2516022},{9.54788971, 47.2510605},{9.5492754, 47.250515},
+    {9.5499754, 47.250248},{9.55031681, 47.2501144},{9.55046177, 47.250042},{9.55054665, 47.2500114},
+    {9.55060577, 47.2500076}};
+  auto intersection = ll.Intersect(shape);
+  for(const auto& i : intersection)
+    if(i.first != 791318 && i.first != 789877 && i.first != 789878)
+      throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
 }
 /*
 void test_intersect_circle() {
