@@ -728,6 +728,11 @@ namespace {
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         boost::property_tree::ptree request;
+
+        //get time for start of request
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
+        request.put("tyr_start_time", msecs);
         try{
           boost::property_tree::read_info(stream, request);
         }
@@ -776,12 +781,12 @@ namespace {
         if(jsonp)
           json_stream << ')';
 
-        //get processing time for locate
-        auto time = std::chrono::high_resolution_clock::now();
-        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+        //get processing time for tyr
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
+        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("tyr_start_time"));
 
-        //log request if greater then X (ms)
+        //log request if greater than X (ms)
         auto trip_directions_length = 0.f;
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
@@ -791,7 +796,7 @@ namespace {
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
           LOG_WARN("route request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("long_route_request", " [ANALYTICS] ");
+          midgard::logging::Log("tyr_long_request", " [ANALYTICS] ");
         }
 
         worker_t::result_t result{false};
