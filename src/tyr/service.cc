@@ -783,8 +783,8 @@ namespace {
 
         //get processing time for tyr
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
-        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("tyr_start_time"));
+        auto end_time_msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
+        auto elapsed_time = static_cast<float>(end_time_msecs - request.get<size_t>("tyr_start_time"));
 
         //log request if greater than X (ms)
         auto trip_directions_length = 0.f;
