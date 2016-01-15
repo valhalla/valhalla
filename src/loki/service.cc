@@ -136,69 +136,12 @@ namespace valhalla {
       factory.Register("truck", sif::CreateTruckCost);
 
     }
-    worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
-      auto& info = *static_cast<http_request_t::info_t*>(request_info);
-      LOG_INFO("Got Loki Request " + std::to_string(info.id));
 
-      try{
-        //request parsing
-        auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
-
-        //block all but get and post
-        if(request.method != method_t::POST && request.method != method_t::GET) {
-          worker_t::result_t result{false};
-          http_response_t response(405, "Method Not Allowed", "Try a POST or GET request instead", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
-
-        //is the request path action in the action set?
-        auto action = PATH_TO_ACTION.find(request.path);
-        if (action == PATH_TO_ACTION.cend()) {
-            worker_t::result_t result{false};
-            http_response_t response(404, "Action Not Found", "Try any of: " + action_str, headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
-        }
-
-        //parse the query's json
-        auto request_pt = from_request(action->second, request);
-        init_request(action->second, request_pt);
-        switch (action->second) {
-          case ROUTE:
-          case VIAROUTE:
-            return route(action->second, request_pt, info);
-          case LOCATE:
-            return locate(request_pt, info);
-          case ONE_TO_MANY:
-          case MANY_TO_ONE:
-          case MANY_TO_MANY:
-            return matrix(action->second, request_pt, info);
-        }
-
-        //apparently you wanted something that we figured we'd support but havent written yet
-        worker_t::result_t result{false};
-        http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-        return result;
-      }
-      catch(const std::exception& e) {
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return result;
-      }
-    }
     void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       //get time for start of request
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      request.put("start_time",msecs);
+      auto start_time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
+      request.put("start_time", msecs);
 
       //we require locations
       auto request_locations = request.get_child_optional("locations");
@@ -255,6 +198,91 @@ namespace valhalla {
       }// No options to override so use the config options verbatim
       else
         costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
+    }
+
+    worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      LOG_INFO("Got Loki Request " + std::to_string(info.id));
+
+      try{
+        //request parsing
+        auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+
+        //block all but get and post
+        if(request.method != method_t::POST && request.method != method_t::GET) {
+          worker_t::result_t result{false};
+          http_response_t response(405, "Method Not Allowed", "Try a POST or GET request instead", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
+        //is the request path action in the action set?
+        auto action = PATH_TO_ACTION.find(request.path);
+        if (action == PATH_TO_ACTION.cend()) {
+            worker_t::result_t result{false};
+            http_response_t response(404, "Action Not Found", "Try any of: " + action_str, headers_t{CORS});
+            response.from_info(info);
+            result.messages.emplace_back(response.to_string());
+            return result;
+        }
+
+        //parse the query's json
+        auto request_pt = from_request(action->second, request);
+        init_request(action->second, request_pt);
+        switch (action->second) {
+          case ROUTE:
+          case VIAROUTE:
+            return route(action->second, request_pt, info);
+          case LOCATE:
+            return locate(request_pt, info);
+          case ONE_TO_MANY:
+          case MANY_TO_ONE:
+          case MANY_TO_MANY:
+            return matrix(action->second, request_pt, info);
+        }
+
+        //apparently you wanted something that we figured we'd support but havent written yet
+        worker_t::result_t result{false};
+        http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
+        response.from_info(info);
+        result.messages.emplace_back(response.to_string());
+
+        //get processing time for loki
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
+        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+
+        //log request if greater than X (ms)
+        if ((elapsed_time / locations.size()) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request, false);
+          LOG_WARN("loki request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("loki request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
+        }
+
+        return result;
+      }
+      catch(const std::exception& e) {
+        worker_t::result_t result{false};
+        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
+        response.from_info(info);
+        result.messages.emplace_back(response.to_string());
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
+        auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+        if ((elapsed_time / locations.size()) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request, false);
+          LOG_WARN("loki request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("loki request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
+        }
+        return result;
+      }
     }
 
     void loki_worker_t::cleanup() {
