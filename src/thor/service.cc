@@ -172,6 +172,76 @@ namespace {
       factory.Register("truck", sif::CreateTruckCost);
     }
 
+    std::string init_request(const boost::property_tree::ptree& request) {
+      //get time for start of request
+      auto start_time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
+      request.put("thor_start_time",msecs);
+
+      auto id = request.get_optional<std::string>("id");
+
+      //we require locations
+      auto request_locations = request.get_child_optional("locations");
+      if(!request_locations)
+        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+      for(const auto& location : *request_locations) {
+        try{
+          locations.push_back(baldr::Location::FromPtree(location.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse location");
+        }
+      }
+      if(locations.size() < 2)
+        throw std::runtime_error("Insufficient number of locations provided");
+
+      //type - 0: current, 1: depart, 2: arrive
+      auto date_time_type = request.get_optional<int>("date_time.type");
+      auto date_time_value = request.get_optional<std::string>("date_time.value");
+
+      if (date_time_type == 0) //current.
+        locations.front().date_time_ = "current";
+      else if (date_time_type == 1) //depart at
+        locations.front().date_time_ = date_time_value;
+      else if (date_time_type == 2) //arrive)
+        locations.back().date_time_ = date_time_value;
+
+      //we require correlated locations
+      size_t i = 0;
+      do {
+        auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+        if(!path_location)
+          break;
+        try {
+          correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse correlated location");
+        }
+      }while(++i);
+
+      // Parse out the type of route - this provides the costing method to use
+      auto costing = request.get_optional<std::string>("costing");
+      if(!costing)
+        throw std::runtime_error("No edge/node costing provided");
+
+      // Set travel mode and construct costing
+      if (*costing == "multimodal") {
+        // For multi-modal we construct costing for all modes and set the
+        // initial mode to pedestrian. (TODO - allow other initial modes)
+        mode_costing[0] = get_costing(request, "auto");
+        mode_costing[1] = get_costing(request, "pedestrian");
+        mode_costing[2] = get_costing(request, "bicycle");
+        mode_costing[3] = get_costing(request, "transit");
+        mode = valhalla::sif::TravelMode::kPedestrian;
+      } else {
+        valhalla::sif::cost_ptr_t cost = get_costing(request, *costing);
+        mode = cost->travelmode();
+        mode_costing[static_cast<uint32_t>(mode)] = cost;
+      }
+      return *costing;
+    }
+
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
@@ -522,12 +592,12 @@ namespace {
          break;
       }
 
-      //get processing time for locate
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
+      //get processing time for matrix
+      auto end_time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
+      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("thor_start_time"));
 
-      //log request if greater then X (ms)
+      //log request if greater than X (ms)
       if ((elapsed_time / correlated.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
@@ -574,73 +644,6 @@ namespace {
       }
       // No options to override so use the config options verbatim
       return factory.Create(costing, *config_costing);
-    }
-
-    std::string init_request(const boost::property_tree::ptree& request) {
-      auto id = request.get_optional<std::string>("id");
-
-      //we require locations
-      auto request_locations = request.get_child_optional("locations");
-      if(!request_locations)
-        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse location");
-        }
-      }
-      if(locations.size() < 2)
-        throw std::runtime_error("Insufficient number of locations provided");
-
-      //type - 0: current, 1: depart, 2: arrive
-      auto date_time_type = request.get_optional<int>("date_time.type");
-      auto date_time_value = request.get_optional<std::string>("date_time.value");
-
-      if (date_time_type == 0) //current.
-        locations.front().date_time_ = "current";
-      else if (date_time_type == 1) //depart at
-        locations.front().date_time_ = date_time_value;
-      else if (date_time_type == 2) //arrive)
-        locations.back().date_time_ = date_time_value;
-
-      //we require correlated locations
-      size_t i = 0;
-      do {
-        auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-        if(!path_location)
-          break;
-        try {
-          correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse correlated location");
-        }
-      }while(++i);
-
-
-
-      // Parse out the type of route - this provides the costing method to use
-      auto costing = request.get_optional<std::string>("costing");
-      if(!costing)
-        throw std::runtime_error("No edge/node costing provided");
-
-      // Set travel mode and construct costing
-      if (*costing == "multimodal") {
-        // For multi-modal we construct costing for all modes and set the
-        // initial mode to pedestrian. (TODO - allow other initial modes)
-        mode_costing[0] = get_costing(request, "auto");
-        mode_costing[1] = get_costing(request, "pedestrian");
-        mode_costing[2] = get_costing(request, "bicycle");
-        mode_costing[3] = get_costing(request, "transit");
-        mode = valhalla::sif::TravelMode::kPedestrian;
-      } else {
-        valhalla::sif::cost_ptr_t cost = get_costing(request, *costing);
-        mode = cost->travelmode();
-        mode_costing[static_cast<uint32_t>(mode)] = cost;
-      }
-      return *costing;
     }
 
     void cleanup() {
