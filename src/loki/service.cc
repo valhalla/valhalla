@@ -137,64 +137,6 @@ namespace valhalla {
 
     }
 
-    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-      //we require locations
-      auto request_locations = request.get_child_optional("locations");
-      if(!request_locations)
-        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse location");
-        }
-      }
-      if(locations.size() < (action == LOCATE ? 1 : 2))
-        throw std::runtime_error("Insufficient number of locations provided");
-
-      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
-
-      //using the costing we can determine what type of edge filtering to use
-      auto costing = request.get_optional<std::string>("costing");
-      if (costing)
-      valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
-
-      if(!costing) {
-        //locate doesnt require a filter
-        if(action == LOCATE) {
-          costing_filter = loki::PassThroughFilter;
-          return;
-        }//but everything else does
-        else
-          throw std::runtime_error("No edge/node costing provided");
-      }
-
-      // TODO - have a way of specifying mode at the location
-      if(*costing == "multimodal")
-        *costing = "pedestrian";
-
-      // Get the costing options. Get the base options from the config and the
-      // options for the specified costing method
-      std::string method_options = "costing_options." + *costing;
-      auto config_costing = config.get_child_optional(method_options);
-      if(!config_costing)
-        throw std::runtime_error("No costing method found for '" + *costing + "'");
-      auto request_costing = request.get_child_optional(method_options);
-      if(request_costing) {
-        // If the request has any options for this costing type, merge the 2
-        // costing options - override any config options that are in the request.
-        // and add any request options not in the config.
-        // TODO: suboptions are probably getting smashed when we do this, preserve them
-        boost::property_tree::ptree overridden = *config_costing;
-        for(const auto& r : *request_costing)
-          overridden.put_child(r.first, r.second);
-        costing_filter = factory.Create(*costing, overridden)->GetFilter();
-      }// No options to override so use the config options verbatim
-      else
-        costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
-    }
-
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       //get time for start of request
       auto start_time = std::chrono::high_resolution_clock::now();
@@ -269,6 +211,64 @@ namespace valhalla {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
       }
+    }
+
+    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+      //we require locations
+      auto request_locations = request.get_child_optional("locations");
+      if(!request_locations)
+        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+      for(const auto& location : *request_locations) {
+        try{
+          locations.push_back(baldr::Location::FromPtree(location.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse location");
+        }
+      }
+      if(locations.size() < (action == LOCATE ? 1 : 2))
+        throw std::runtime_error("Insufficient number of locations provided");
+
+      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+
+      //using the costing we can determine what type of edge filtering to use
+      auto costing = request.get_optional<std::string>("costing");
+      if (costing)
+      valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
+
+      if(!costing) {
+        //locate doesnt require a filter
+        if(action == LOCATE) {
+          costing_filter = loki::PassThroughFilter;
+          return;
+        }//but everything else does
+        else
+          throw std::runtime_error("No edge/node costing provided");
+      }
+
+      // TODO - have a way of specifying mode at the location
+      if(*costing == "multimodal")
+        *costing = "pedestrian";
+
+      // Get the costing options. Get the base options from the config and the
+      // options for the specified costing method
+      std::string method_options = "costing_options." + *costing;
+      auto config_costing = config.get_child_optional(method_options);
+      if(!config_costing)
+        throw std::runtime_error("No costing method found for '" + *costing + "'");
+      auto request_costing = request.get_child_optional(method_options);
+      if(request_costing) {
+        // If the request has any options for this costing type, merge the 2
+        // costing options - override any config options that are in the request.
+        // and add any request options not in the config.
+        // TODO: suboptions are probably getting smashed when we do this, preserve them
+        boost::property_tree::ptree overridden = *config_costing;
+        for(const auto& r : *request_costing)
+          overridden.put_child(r.first, r.second);
+        costing_filter = factory.Create(*costing, overridden)->GetFilter();
+      }// No options to override so use the config options verbatim
+      else
+        costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
     }
 
     void loki_worker_t::cleanup() {
