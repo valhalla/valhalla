@@ -172,11 +172,11 @@ namespace {
       factory.Register("truck", sif::CreateTruckCost);
     }
 
-    std::string init_request(const boost::property_tree::ptree& request) {
+    std::string init_request(boost::property_tree::ptree& request) {
       //get time for start of request
       auto start_time = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
-      request.put("thor_start_time",msecs);
+      request.put("thor_start_time", msecs);
 
       auto id = request.get_optional<std::string>("id");
 
@@ -603,7 +603,7 @@ namespace {
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_matrix_request", " [ANALYTICS] ");
+        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
       }
 
       //jsonp callback if need be
