@@ -51,7 +51,8 @@ class State
   const Candidate& candidate() const
   { return candidate_; }
 
-  bool routed() const;
+  bool routed() const
+  { return labelset_ != nullptr; }
 
   void route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,

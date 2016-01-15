@@ -27,11 +27,6 @@ State::State(const StateId id,
       label_idx_() {}
 
 
-inline bool
-State::routed() const
-{ return labelset_ != nullptr; }
-
-
 void
 State::route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
@@ -173,7 +168,7 @@ MapMatching::~MapMatching()
 { Clear(); }
 
 
-inline void
+void
 MapMatching::Clear()
 {
   measurements_.clear();
