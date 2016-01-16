@@ -140,7 +140,6 @@ namespace valhalla {
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       //get time for start of request
       auto start_time = std::chrono::high_resolution_clock::now();
-      auto start_msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
 
@@ -190,8 +189,7 @@ namespace valhalla {
 
         //get processing time for loki
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto end_msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
-        auto elapsed_time = static_cast<float>(end_msecs - start_msecs);
+        auto elapsed_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch() - start_time.time_since_epoch()).count());
         //log request if greater than X (ms)
         if ((elapsed_time / locations.size()) > long_request) {
           std::stringstream ss;
