@@ -171,11 +171,7 @@ namespace {
       }
     }
 
-    void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-      //get time for start of request
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      request.put("start_time",msecs);
+    void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //get some parameters
       range = request.get<bool>("range", false);
       auto input_shape = request.get_child_optional("shape");
@@ -235,6 +231,8 @@ namespace {
     }
     */
     worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
@@ -263,20 +261,6 @@ namespace {
       if (id)
         json->emplace("id", *id);
 
-      //get processing time for elevation
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-
-      //log request if greater then X (ms)
-      if ((elapsed_time / shape.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("height request elapsed time (ms)::"+ std::to_string(elapsed_time));
-        LOG_WARN("height request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_height_request", " [ANALYTICS] ");
-      }
-
       //jsonp callback if need be
       std::ostringstream stream;
       auto jsonp = request.get_optional<std::string>("jsonp");
@@ -285,6 +269,18 @@ namespace {
       stream << *json;
       if(jsonp)
         stream << ')';
+
+      //get processing time for skadi
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      if ((elapsed_time.count() / shape.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("skadi::request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("skadi_long_request", " [ANALYTICS] ");
+      }
 
       worker_t::result_t result{false};
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
