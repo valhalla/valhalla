@@ -59,13 +59,15 @@ class EdgeLabel {
    *                  if edge is a transition edge. This allows restrictions
    *                  to be carried across different hierarchy levels.
    * @param mode      Mode of travel along this edge.
+   * @param tc        Real transition cost (separated from Cost for the
+   *                  reverse path logic.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& oppedgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
             const uint32_t restrictions, const uint32_t opp_local_idx,
-            const TravelMode mode);
+            const TravelMode mode, const uint32_t tc);
 
   /**
    * Constructor with values.  Used for multi-modal path.
@@ -286,19 +288,19 @@ class EdgeLabel {
   bool operator < (const EdgeLabel& other) const;
 
   /**
-   * Get the turn cost. This is used in the bidirectional A* reverse
-   * path search to allow the recovery of the true elapsed time along the
-   * path. This is needed since the turn cost is applied at a different node
-   * than the forward search.
-   * @return  Returns the true turn cost (without penalties) in seconds.
+   * Get the transition cost in seconds. This is used in the bidirectional A*
+   * reverse path search to allow the recovery of the true elapsed time along
+   * the path. This is needed since the turn cost is applied at a different
+   * node than the forward search.
+   * @return  Returns the true transition cost (without penalties) in seconds.
    */
-  uint32_t turn_cost() const;
+  uint32_t transition_cost() const;
 
   /**
-   * Set the turn cost.
-   * @param  tc  True turn cost in seconds.
+   * Set the transition cost.
+   * @param  tc  True transition cost in seconds.
    */
-  void set_turn_cost(uint32_t tc);
+  void set_transition_cost(uint32_t tc);
 
  private:
   // Graph Id of the edge.
@@ -365,8 +367,9 @@ class EdgeLabel {
   // Block Id
   uint32_t blockid_;
 
-  // Turn cost (used in bidirectional reverse path search).
-  uint32_t turn_cost_;
+  // Real transition cost in seconds (used in bidirectional reverse
+  // path search).
+  uint32_t transition_cost_;
 };
 
 }
