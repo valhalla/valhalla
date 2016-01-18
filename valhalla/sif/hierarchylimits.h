@@ -88,10 +88,22 @@ struct HierarchyLimits {
    * within the specified distance from the destination regardless of
    * count.
    * @param  dist  Distance (meters) from the destination.
+   * @return  Returns true if expansion at this hierarchy level should stop.
    */
   bool StopExpanding(const float dist) const {
     return (dist > expansion_within_dist &&
             up_transition_count > max_up_transitions);
+  }
+
+  /**
+   * Determine if expansion of a hierarchy level should be stopped once
+   * the number of upward transitions has been exceeded. This is used in
+   * the bidirectional method where distance from the destination does not
+   * matter.
+   * @return  Returns true if expansion at this hierarchy level should stop.
+   */
+  bool StopExpanding() const {
+    return up_transition_count > max_up_transitions;
   }
 
   /**
