@@ -273,7 +273,6 @@ namespace {
       //get processing time for skadi
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
-      std::cout << elapsed_time.count() << std::endl;
       //log request if greater than X (ms)
       if ((elapsed_time.count() / shape.size()) > long_request) {
         std::stringstream ss;
