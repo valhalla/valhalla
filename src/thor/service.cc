@@ -229,7 +229,8 @@ namespace {
 
     worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, boost::optional<int> &date_time_type){
       worker_t::result_t result{true};
-
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       // Forward the original request
       result.messages.emplace_back(std::move(request_str));
 
@@ -433,6 +434,16 @@ namespace {
             path_algorithm->Clear();
         }
       }
+      //get processing time for thor
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      if ((elapsed_time.count() / correlated.size()) > long_request) {
+        std::stringstream ss;
+        LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::route request exceeded threshold::"+ request_str);
+        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+      }
       return result;
     }
 
@@ -497,6 +508,8 @@ namespace {
     }
 
     worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
       auto units = request.get<std::string>("units", "km");
@@ -522,20 +535,6 @@ namespace {
          break;
       }
 
-      //get processing time for locate
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-
-      //log request if greater then X (ms)
-      if ((elapsed_time / correlated.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
-        LOG_WARN("matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_matrix_request", " [ANALYTICS] ");
-      }
-
       //jsonp callback if need be
       std::ostringstream stream;
       auto jsonp = request.get_optional<std::string>("jsonp");
@@ -544,6 +543,18 @@ namespace {
       stream << *json;
       if(jsonp)
         stream << ')';
+
+      //get processing time for thor
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      if ((elapsed_time.count() / correlated.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("thor::matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::matrix request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+      }
 
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
@@ -618,8 +629,6 @@ namespace {
           throw std::runtime_error("Failed to parse correlated location");
         }
       }while(++i);
-
-
 
       // Parse out the type of route - this provides the costing method to use
       auto costing = request.get_optional<std::string>("costing");
