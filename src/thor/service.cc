@@ -589,7 +589,7 @@ namespace {
       return factory.Create(costing, *config_costing);
     }
 
-    std::string init_request(boost::property_tree::ptree& request) {
+    std::string init_request(const boost::property_tree::ptree& request) {
       auto id = request.get_optional<std::string>("id");
 
       //we require locations
