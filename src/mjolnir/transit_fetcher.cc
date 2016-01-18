@@ -779,9 +779,7 @@ int main(int argc, char** argv) {
   curl_global_init(CURL_GLOBAL_DEFAULT);
 
   //go get information about what transit tiles we should be fetching
-    //auto transit_tiles = which_tiles(pt);
-  std::priority_queue<weighted_tile_t> transit_tiles; transit_tiles.push({GraphId(752103, 2, 0), 0});
-  transit_tiles.push({GraphId(752104, 2, 0), 0}); transit_tiles.push({GraphId(752105, 2, 0), 0});
+  auto transit_tiles = which_tiles(pt);
 
   //spawn threads to download all the tiles returning a list of
   //tiles that ended up having dangling stop pairs
