@@ -721,6 +721,8 @@ namespace {
       long_request(config.get<float>("tyr.logging.long_request")){
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Tyr Request " + std::to_string(info.id));
       try{
@@ -729,10 +731,6 @@ namespace {
         std::stringstream stream(request_str);
         boost::property_tree::ptree request;
 
-        //get time for start of request
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count();
-        request.put("tyr_start_time", msecs);
         try{
           boost::property_tree::read_info(stream, request);
         }
@@ -781,21 +779,21 @@ namespace {
         if(jsonp)
           json_stream << ')';
 
-        //get processing time for tyr
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto end_time_msecs = std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch()).count();
-        auto elapsed_time = static_cast<float>(end_time_msecs - request.get<size_t>("tyr_start_time"));
-
         //log request if greater than X (ms)
         auto trip_directions_length = 0.f;
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
-        if ((elapsed_time / trip_directions_length) > long_request) {
+        //get processing time for tyr
+        auto e = std::chrono::system_clock::now();
+        std::chrono::duration<float, std::milli> elapsed_time = e - s;
+        std::cout << elapsed_time.count() << std::endl;
+        //log request if greater than X (ms)
+        if ((elapsed_time.count() / trip_directions_length) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
-          LOG_WARN("route request elapsed time (ms)::"+ std::to_string(elapsed_time));
-          LOG_WARN("route request exceeded threshold::"+ ss.str());
+          LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("tyr::request exceeded threshold::"+ ss.str());
           midgard::logging::Log("tyr_long_request", " [ANALYTICS] ");
         }
 
