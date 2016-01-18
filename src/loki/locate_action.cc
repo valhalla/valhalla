@@ -135,20 +135,6 @@ namespace valhalla {
         }
       }
 
-      //get processing time for locate
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      auto elapsed_time = static_cast<float>(msecs - request.get<size_t>("start_time"));
-
-      //log request if greater then X (ms)
-      if ((elapsed_time / locations.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("locate request elapsed time (ms)::"+ std::to_string(elapsed_time));
-        LOG_WARN("locate request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("long_locate_request", " [ANALYTICS] ");
-      }
-
       std::ostringstream stream;
       //jsonp callback if need be
       auto jsonp = request.get_optional<std::string>("jsonp");

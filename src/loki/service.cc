@@ -136,7 +136,10 @@ namespace valhalla {
       factory.Register("truck", sif::CreateTruckCost);
 
     }
+
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
 
@@ -183,6 +186,19 @@ namespace valhalla {
         http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+
+        //get processing time for loki
+        auto e = std::chrono::system_clock::now();
+        std::chrono::duration<float, std::milli> elapsed_time = e - s;
+        //log request if greater than X (ms)
+        if ((elapsed_time.count() / locations.size()) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request_pt, false);
+          LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("loki::request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
+        }
+
         return result;
       }
       catch(const std::exception& e) {
@@ -194,12 +210,8 @@ namespace valhalla {
         return result;
       }
     }
-    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-      //get time for start of request
-      auto time = std::chrono::high_resolution_clock::now();
-      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
-      request.put("start_time",msecs);
 
+    void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
