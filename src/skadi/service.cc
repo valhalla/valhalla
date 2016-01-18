@@ -171,7 +171,7 @@ namespace {
       }
     }
 
-    void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+    void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //get some parameters
       range = request.get<bool>("range", false);
       auto input_shape = request.get_child_optional("shape");
