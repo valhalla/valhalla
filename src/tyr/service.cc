@@ -787,7 +787,6 @@ namespace {
         //get processing time for tyr
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
-        std::cout << elapsed_time.count() << std::endl;
         //log request if greater than X (ms)
         if ((elapsed_time.count() / trip_directions_length) > long_request) {
           std::stringstream ss;
