@@ -139,7 +139,7 @@ namespace valhalla {
 
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       //get time for start of request
-      auto start_time = std::chrono::high_resolution_clock::now();
+      auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
 
@@ -188,14 +188,15 @@ namespace valhalla {
         result.messages.emplace_back(response.to_string());
 
         //get processing time for loki
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto elapsed_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end_time.time_since_epoch() - start_time.time_since_epoch()).count());
+        auto e = std::chrono::system_clock::now();
+        std::chrono::duration<float, std::milli> elapsed_time = e - s;
+        std::cout << elapsed_time.count() << std::endl;
         //log request if greater than X (ms)
-        if ((elapsed_time / locations.size()) > long_request) {
+        if ((elapsed_time.count() / locations.size()) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request_pt, false);
-          LOG_WARN("loki request elapsed time (ms)::"+ std::to_string(elapsed_time));
-          LOG_WARN("loki request exceeded threshold::"+ ss.str());
+          LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("loki::request exceeded threshold::"+ ss.str());
           midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
         }
 
