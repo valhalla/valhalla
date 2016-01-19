@@ -73,7 +73,6 @@ struct curler_t {
         //it should be 200 OK
         if(http_code == 200) {
           bool threw = false;
-          std::string x = result.str();
           try { read_json(result, pt); } catch (...) { threw = true; }
           //has to parse and have required info
           if(!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no)))
