@@ -435,8 +435,8 @@ void validate(const boost::property_tree::ptree& pt,
       tilebuilder.Update(nodes, directededges);
 
       // Write the bins to it
-      if(bins.size())
-        GraphTileBuilder::StoreBins(hierarchy, tile, bins);
+      /*if(bins.size())
+        GraphTileBuilder::AddBins(hierarchy, tile, bins);*/
 
       // Check if we need to clear the tile cache
       if (graph_reader.OverCommitted())
@@ -482,11 +482,11 @@ void validate(const boost::property_tree::ptree& pt,
       ++start;
       lock.unlock();
       //keep the extra binned edges
-      GraphTile tile(hierarchy, tile_bin.first);
+      /*GraphTile tile(hierarchy, tile_bin.first);
       if(tile.size() != 0)
-        GraphTileBuilder::StoreBins(hierarchy, &tile, tile_bin.second);
+        GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
       else
-        LOG_ERROR("Cannot add bins to nonexistent tile: " + std::to_string(tile_bin.first.tileid()))
+        LOG_ERROR("Cannot add bins to nonexistent tile: " + std::to_string(tile_bin.first.tileid()))*/
     }
   }
 }
@@ -528,7 +528,7 @@ namespace mjolnir {
     // Setup promises
     std::list<std::promise<std::pair<validator_stats, tweeners_t> > > results;
 
-    LOG_INFO("Validating signs and connectivity");
+    LOG_INFO("Validating signs and connectivity and binning edges");
     // Spawn the threads
     for (auto& thread : threads) {
       results.emplace_back();

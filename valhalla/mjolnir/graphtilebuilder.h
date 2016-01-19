@@ -289,7 +289,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param tile       the tile that needs the bins added
    * @param more_bins  the extra bin data to append to the tile
    */
-  static void StoreBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kCellCount>& more_bins);
+  static void AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kCellCount>& more_bins);
 
  protected:
 

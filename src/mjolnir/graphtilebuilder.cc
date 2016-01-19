@@ -661,7 +661,7 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
   header_builder_.set_date_created(tile_creation_date);
 }
 
-void GraphTileBuilder::StoreBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kCellCount>& more_bins) {
+void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kCellCount>& more_bins) {
   //read bins and append
   std::vector<GraphId> bins[kCellCount];
   for(size_t i = 0; i < kCellCount; ++i) {
