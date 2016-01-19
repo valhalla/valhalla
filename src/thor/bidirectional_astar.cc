@@ -133,9 +133,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       }
     }
 
-    // Expand from the search direction with lower cost
-    //if (pred.cost().cost < pred2.cost().cost) {
-    if (pred.sortcost() < pred2.sortcost()) {
+    // Expand from the search direction with lower cost. Using sort_cost seems
+    // to give inconsistent results, so use the true cost.
+    if (pred.cost().cost < pred2.cost().cost) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
