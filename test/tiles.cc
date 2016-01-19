@@ -2,7 +2,6 @@
 #include "valhalla/midgard/tiles.h"
 #include "valhalla/midgard/aabb2.h"
 #include "valhalla/midgard/pointll.h"
-#include <iostream>
 
 using namespace std;
 using namespace valhalla::midgard;
