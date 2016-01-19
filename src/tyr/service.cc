@@ -335,7 +335,7 @@ namespace {
       route_summary->emplace("time", time);
       route_summary->emplace("length", json::fp_t{length, 3});
       midgard::logging::Log("trip_time (s)::" + std::to_string(time), " [ANALYTICS] ");
-      midgard::logging::Log("trip_length (m)::" + std::to_string(length), " [ANALYTICS] ");
+      midgard::logging::Log("trip_length (km)::" + std::to_string(length), " [ANALYTICS] ");
       return route_summary;
     }
 
