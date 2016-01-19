@@ -226,11 +226,19 @@ class GraphTileBuilder : public baldr::GraphTile {
   NodeInfo& node_builder(const size_t idx);
 
   /**
-   * Gets a builder for a directed edge from existing tile data.
+   * Gets a directed edge from existing tile data.
    * @param  idx  Index of the directed edge within the tile.
-   * @return  Returns a reference to the directed edge builder.
+   * @return  Returns a reference to the directed edge.
    */
   DirectedEdge& directededge(const size_t idx);
+
+  /**
+   * Gets a pointer to directed edges within the list being built.
+   * @param  idx  Index of the directed edge within the tile.
+   * @return  Returns a pointer to the directed edge builder (allows
+   *          accessing all directed edges from a node).
+   */
+  const DirectedEdge* directededges(const size_t idx);
 
   /**
    * Get the directed edge builder at the specified index.

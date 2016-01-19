@@ -1224,7 +1224,7 @@ void enhance(const boost::property_tree::ptree& pt,
       }
 
       // Go through directed edges and "enhance" directed edge attributes
-      const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
+      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
