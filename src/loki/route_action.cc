@@ -12,6 +12,7 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
+  constexpr double kKmPerMeter = 0.001;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -39,7 +40,7 @@ namespace {
       if (max_distance < 0)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance), " [ANALYTICS] ");
+      valhalla::midgard::logging::Log("location_distance (km)::" + std::to_string(path_distance * kKmPerMeter), " [ANALYTICS] ");
     }
   }
 }
