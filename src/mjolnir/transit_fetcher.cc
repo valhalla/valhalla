@@ -304,10 +304,10 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
       dangles = true;
 
     //um yeah this goes nowhere
-  /*  if(pair->origin_onestop_id() == pair->destination_onestop_id()){
+    if(pair->origin_onestop_id() == pair->destination_onestop_id()){
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
-    }*/
+    }
 
     //route
     auto route_id = pair_pt.second.get<std::string>("route_onestop_id");
@@ -453,7 +453,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //tiles are wrote out the .pbf.n files
     uint32_t ext = 0;
-    LOG_INFO("Fetching " + transit_tile.string() + '.' + std::to_string(ext));
+    std::string prefix = transit_tile.string();
+    LOG_INFO("Fetching " + transit_tile.string());
 
     //pull out all the STOPS (you see what we did there?)
     std::unordered_map<std::string, uint64_t> stops;
@@ -506,14 +507,6 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       request = response.get_optional<std::string>("meta.next");
     } while(request && (request = *request + api_key));
 
-    if ((tile.stops_size() + tile.routes_size()) >= 500000) {
-      LOG_INFO("Writing " + transit_tile.string() + '.' + std::to_string(ext));
-      write_pbf(tile, transit_tile.string() + '.' + std::to_string(ext));
-      //reset everything
-      tile.Clear();
-      ext++;
-    }
-
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
     for(const auto& stop : stops) {
@@ -525,12 +518,12 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
         //copy pairs in, noting if any dont have stops
         dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
         //if stop pairs is large save to a path with an incremented extension
-        if ((tile.stops_size() + tile.routes_size() + tile.stop_pairs_size()) >= 500000) {
-          LOG_INFO("Writing " + transit_tile.string() + '.' + std::to_string(ext));
-          write_pbf(tile, transit_tile.string() + '.' + std::to_string(ext));
+        if (tile.stop_pairs_size() >= 500000) {
+          LOG_INFO("Writing " + transit_tile.string());
+          write_pbf(tile, transit_tile.string());
           //reset everything
           tile.Clear();
-          ext++;
+          transit_tile = prefix + '.' + std::to_string(ext++);
         }
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
@@ -542,8 +535,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       dangling.emplace_back(current);
 
     //save the last tile
-    if (tile.stops_size() + tile.routes_size() + tile.stop_pairs_size())
-      write_pbf(tile, transit_tile.string() + '.' + std::to_string(ext));
+    if (tile.stop_pairs_size())
+      write_pbf(tile, transit_tile.string());
   }
 
   //give back the work for later
@@ -629,7 +622,6 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
     auto file_name = GraphTile::FileSuffix(id, hierarchy);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     return pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
-
   };
 
   //for each tile
@@ -644,100 +636,74 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
     tiles.pop_front();
     lock.unlock();
 
-    //get the directory for the the file
-    auto file_name = tile_name(current);
-    std::size_t slash_found = file_name.find_last_of("/\\");
-    std::string directory = file_name.substr(0,slash_found);
+    auto prefix = tile_name(current);
+    auto file_name = prefix;
+    int ext = 0;
 
-    boost::filesystem::recursive_directory_iterator transit_file_itr(directory);
-    boost::filesystem::recursive_directory_iterator end_file_itr;
+    do {
 
-    bool hash_done = false;
-    std::unordered_map<std::string, GraphId> needed;
-    size_t found = 0;
+      //open tile make a hash of missing stop to invalid graphid
+      auto tile = read_pbf(file_name, lock);
+      std::unordered_map<std::string, GraphId> needed;
+      for(const auto& stop_pair : tile.stop_pairs()) {
+        if(!stop_pair.has_origin_graphid())
+          needed.emplace(stop_pair.origin_onestop_id(), GraphId{});
+        if(!stop_pair.has_destination_graphid())
+          needed.emplace(stop_pair.destination_onestop_id(), GraphId{});
+      }
 
-    //loop through all the tiles for this GraphID .pbf.n
-    for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
-
-      if(boost::filesystem::is_regular(transit_file_itr->path())) {
-        //fname is out .pbf.n file
-        std::string fname = transit_file_itr->path().string();
-        std::string ext = transit_file_itr->path().extension().string(); //.n
-        std::string tile_file_name = fname.substr(0, fname.size() - ext.size()); // .pbf
-
-        //just a check in case there are other files in the directory.
-        if (tile_file_name.substr(tile_file_name.size()-4) == ".pbf") {
-          if (tile_file_name == file_name) {
-            //have to read .0 files first.
-            if (!hash_done) {
-
-              //open tile make a hash of missing stop to invalid graphid
-              auto tile = read_pbf(tile_file_name + ".0", lock);
-              for(const auto& stop_pair : tile.stop_pairs()) {
-                if(!stop_pair.has_origin_graphid())
-                  needed.emplace(stop_pair.origin_onestop_id(), GraphId{});
-                if(!stop_pair.has_destination_graphid())
-                  needed.emplace(stop_pair.destination_onestop_id(), GraphId{});
-              }
-
-              //do while we have more to find and arent sick of searching
-              std::set<GraphId, dist_sort_t> unchecked(all_tiles.cbegin(), all_tiles.cend(), dist_sort_t(current, grid));
-              while(found < needed.size() && unchecked.size()) {
-                //crack it open to see if it has what we want
-                auto neighbor_id = *unchecked.cbegin();
-                unchecked.erase(unchecked.begin());
-                if(neighbor_id != current) {
-                  auto neighbor_file_name = tile_name(neighbor_id) + ".0"; //all stops are stored in .0 files.
-
-                  auto neighbor = read_pbf(neighbor_file_name, lock);
-                  for(const auto& stop : neighbor.stops()) {
-                    auto stop_itr = needed.find(stop.onestop_id());
-                    if(stop_itr != needed.cend()) {
-                      stop_itr->second.value = stop.graphid();
-                      ++found;
-                    }
-                  }
-                }
-              }
-              hash_done = true;
+      //do while we have more to find and arent sick of searching
+      std::set<GraphId, dist_sort_t> unchecked(all_tiles.cbegin(), all_tiles.cend(), dist_sort_t(current, grid));
+      size_t found = 0;
+      while(found < needed.size() && unchecked.size()) {
+        //crack it open to see if it has what we want
+        auto neighbor_id = *unchecked.cbegin();
+        unchecked.erase(unchecked.begin());
+        if(neighbor_id != current) {
+          auto neighbor_file_name = tile_name(neighbor_id);
+          auto neighbor = read_pbf(neighbor_file_name, lock);
+          for(const auto& stop : neighbor.stops()) {
+            auto stop_itr = needed.find(stop.onestop_id());
+            if(stop_itr != needed.cend()) {
+              stop_itr->second.value = stop.graphid();
+              ++found;
             }
-
-            //crack open the tile with the .n ext
-            auto tile = read_pbf(fname, lock);
-
-            //get the ids fixed up and write pbf to file
-            std::unordered_set<std::string> not_found;
-            for(auto& stop_pair : *tile.mutable_stop_pairs()) {
-              if(!stop_pair.has_origin_graphid()) {
-                auto found = needed.find(stop_pair.origin_onestop_id())->second;
-                if(found.Is_Valid())
-                  stop_pair.set_origin_graphid(found);
-                else if(not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
-                  LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
-                  not_found.emplace(stop_pair.origin_onestop_id());
-                }
-                //else{ TODO: we could delete this stop pair }
-              }
-              if(!stop_pair.has_destination_graphid()) {
-                auto found = needed.find(stop_pair.destination_onestop_id())->second;
-                if(found.Is_Valid())
-                  stop_pair.set_destination_graphid(found);
-                else if(not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
-                  LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());
-                  not_found.emplace(stop_pair.destination_onestop_id());
-                }
-                //else{ TODO: we could delete this stop pair }
-              }
-            }
-            lock.lock();
-            std::fstream stream(fname, std::ios::out | std::ios::trunc | std::ios::binary);
-            tile.SerializeToOstream(&stream);
-            lock.unlock();
-            LOG_INFO(fname + " stitched " + std::to_string(found) + " of " + std::to_string(needed.size()) + " stops");
           }
         }
       }
-    }
+
+      //get the ids fixed up and write pbf to file
+      std::unordered_set<std::string> not_found;
+      for(auto& stop_pair : *tile.mutable_stop_pairs()) {
+        if(!stop_pair.has_origin_graphid()) {
+          auto found = needed.find(stop_pair.origin_onestop_id())->second;
+          if(found.Is_Valid())
+            stop_pair.set_origin_graphid(found);
+          else if(not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
+            LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
+            not_found.emplace(stop_pair.origin_onestop_id());
+          }
+          //else{ TODO: we could delete this stop pair }
+        }
+        if(!stop_pair.has_destination_graphid()) {
+          auto found = needed.find(stop_pair.destination_onestop_id())->second;
+          if(found.Is_Valid())
+            stop_pair.set_destination_graphid(found);
+          else if(not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
+            LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());
+            not_found.emplace(stop_pair.destination_onestop_id());
+          }
+          //else{ TODO: we could delete this stop pair }
+        }
+      }
+      lock.lock();
+      std::fstream stream(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
+      tile.SerializeToOstream(&stream);
+      lock.unlock();
+      LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " + std::to_string(needed.size()) + " stops");
+
+      file_name = prefix + "." + std::to_string(ext++);
+    }while(boost::filesystem::exists(file_name));
   }
 }
 
@@ -780,7 +746,6 @@ int main(int argc, char** argv) {
 
   //go get information about what transit tiles we should be fetching
   auto transit_tiles = which_tiles(pt);
-
   //spawn threads to download all the tiles returning a list of
   //tiles that ended up having dangling stop pairs
   auto dangling_tiles = fetch(pt, transit_tiles);
@@ -792,19 +757,9 @@ int main(int argc, char** argv) {
                                                                    std::to_string(hierarchy.levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
-  for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if(boost::filesystem::is_regular(transit_file_itr->path())) {
-
-      std::string fname = transit_file_itr->path().filename().string();
-      std::string ext = transit_file_itr->path().extension().string();
-      std::string file_name = fname.substr(0, fname.size() - ext.size());
-
-      //just a check in case there are other files in the directory.
-      if (file_name.substr(file_name.size()-4) == ".pbf" &&
-          all_tiles.find(id(pt, transit_file_itr->path().string())) == all_tiles.end())
-        all_tiles.emplace(id(pt, transit_file_itr->path().string()));
-    }
-  }
+  for(; transit_file_itr != end_file_itr; ++transit_file_itr)
+    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf")
+      all_tiles.emplace(id(pt, transit_file_itr->path().string()));
 
   //spawn threads to connect dangling stop pairs to adjacent tiles' stops
   stitch(pt, all_tiles, dangling_tiles);
