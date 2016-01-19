@@ -451,7 +451,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
 
-    //tiles are wrote out the .pbf.n files
+    //tiles are wrote out with .pbf or .pbf.n ext
     uint32_t ext = 0;
     std::string prefix = transit_tile.string();
     LOG_INFO("Fetching " + transit_tile.string());
