@@ -1,6 +1,5 @@
 #include "valhalla/midgard/point2.h"
 
-#include <iostream>
 #include <limits>
 #include <cmath>
 

@@ -2,7 +2,6 @@
 #include "valhalla/midgard/tiles.h"
 #include "valhalla/midgard/aabb2.h"
 #include "valhalla/midgard/pointll.h"
-#include <iostream>
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -122,29 +121,21 @@ void TileList() {
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
 void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
   auto answer = g.Intersect(l);
-  /*std::cout << "answer" << std::endl;
-  for(auto x : answer) {
-    std::cout << std::endl << x.first << ":";
-    for(auto y : x.second) {
-      std::cout << y << ",";
-    }
-    std::cout << std::endl;
-  }*/
   //wrong number of tiles
-  if(answer.size() != expected.size())
-    throw std::logic_error("Expected " + std::to_string(expected.size()) + " intersected tiles but got " + std::to_string(answer.size()));
-  for(const auto& t : expected) {
+  if(answer.size() > expected.size())
+    throw std::logic_error("Expected no more than" + std::to_string(expected.size()) + " intersected tiles but got " + std::to_string(answer.size()));
+  for(const auto& t : answer) {
     //missing tile
-    auto i = answer.find(t.first);
-    if(i == answer.cend())
-      throw std::logic_error("Expected tile " + std::to_string(t.first) + " to be intersected");
+    auto i = expected.find(t.first);
+    if(i == expected.cend())
+      throw std::logic_error("Unexpected intersected tile " + std::to_string(t.first));
     //wrong number of subdivisions
-    if(t.second.size() != i->second.size())
-      throw std::logic_error("In tile " + std::to_string(t.first) + " expected " + std::to_string(t.second.size()) + " intersected subdivisions but got " + std::to_string(i->second.size()));
+    if(t.second.size() > i->second.size())
+      throw std::logic_error("in tile " + std::to_string(t.first) + " expected no more than " + std::to_string(i->second.size()) + " intersected subdivisions but got " + std::to_string(t.second.size()));
     //missing subdivision
     for(const auto& s : t.second)
       if(i->second.find(s) == i->second.cend())
-        throw std::logic_error("In tile " + std::to_string(t.first) + " expected subdivision " + std::to_string(s) + " to be intersected");
+        throw std::logic_error("In tile " + std::to_string(t.first) + " unexpected intersected subdivision " + std::to_string(s));
   }
 }
 
@@ -173,10 +164,22 @@ void test_intersect_linestring() {
   assert_answer(t, { {4.9,5.9}, {4.9,-5.9} }, intersect_t{{3,{4,9,14,19,24}},{7,{4,9,14,19,24}},{11,{4,9,14,19,24}},{15,{4,9,14,19,24}}});
 
   //diagonal
-  assert_answer(t, { {-4.9,-4.9}, {4.9,4.9} }, intersect_t{{0,{0,6,12,18,24}},{5,{0,6,12,18,24}},{10,{0,6,12,18,24}},{15,{0,6,12,18,24}}});
-  assert_answer(t, { {-5.9,-5.9}, {5.9,5.9} }, intersect_t{{0,{0,6,12,18,24}},{5,{0,6,12,18,24}},{10,{0,6,12,18,24}},{15,{0,6,12,18,24}}});
-  assert_answer(t, { {-4.9,4.9}, {4.9,-4.9} }, intersect_t{{12,{20,16,12,8,4}},{9,{20,16,12,8,4}},{6,{20,16,12,8,4}},{3,{20,16,12,8,4}}});
-  assert_answer(t, { {-5.9,5.9}, {5.9,-5.9} }, intersect_t{{12,{20,16,12,8,4}},{9,{20,16,12,8,4}},{6,{20,16,12,8,4}},{3,{20,16,12,8,4}}});
+  assert_answer(t, { {-4.9,-4.9}, {4.9,4.9} }, intersect_t{ {0,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{1,{20}},{4,{4}},
+                                                            {5,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{6,{20}},{9,{4}},
+                                                            {10,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{11,{20}},{14,{4}},
+                                                            {15,{0,1,5,6,7,11,12,13,17,18,19,23,24}} });
+  assert_answer(t, { {-5.9,-5.9}, {5.9,5.9} }, intersect_t{ {0,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{1,{20}},{4,{4}},
+                                                            {5,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{6,{20}},{9,{4}},
+                                                            {10,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{11,{20}},{14,{4}},
+                                                            {15,{0,1,5,6,7,11,12,13,17,18,19,23,24}} });
+  assert_answer(t, { {-4.9,4.9}, {4.9,-4.9} }, intersect_t{ {2,{24}},{3,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{7,{0}},
+                                                            {5,{24}},{6,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{10,{0}},
+                                                            {8,{24}},{9,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{15,{0}},
+                                                            {12,{3,4,9,7,8,13,11,12,17,15,16,21,20}} });
+  assert_answer(t, { {-5.9,5.9}, {5.9,-5.9} }, intersect_t{ {2,{24}},{3,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{7,{0}},
+                                                            {5,{24}},{6,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{10,{0}},
+                                                            {8,{24}},{9,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{15,{0}},
+                                                            {12,{3,4,9,7,8,13,11,12,17,15,16,21,20}} });
 
   //random slopes
   t = Tiles<Point2>(AABB2<Point2>{0,0,6,6}, 6, 6);
@@ -184,10 +187,18 @@ void test_intersect_linestring() {
   assert_answer(t, { {5.5,4.5}, {0.5,0.5} }, intersect_t{{0,{0,1,7,8,14,15,21,22,28,29}}});
   assert_answer(t, { {5.5,0.5}, {0.5,2.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
   assert_answer(t, { {0.5,2.5}, {5.5,0.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
-  assert_answer(t, { {-1,-2}, {4,8} }, intersect_t{{0,{0,6,13,19,26,32}}});
-  assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,13,19,26,32}}});
-  assert_answer(t, { {1,2}, {2,4} }, intersect_t{{0,{13,19,26}}});
-  assert_answer(t, { {2,4}, {1,2} }, intersect_t{{0,{13,19,26}}});
+  assert_answer(t, { {-1,-2}, {4,8} }, intersect_t{{0,{0,6,7,12,13,19,20,25,26,32,33}}});
+  assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,7,12,13,19,20,25,26,32,33}}});
+  assert_answer(t, { {1,2}, {2,4} }, intersect_t{{0,{6,7,12,13,19,20,25,26}}});
+  assert_answer(t, { {2,4}, {1,2} }, intersect_t{{0,{6,7,12,13,19,20,25,26}}});
+
+  //some real locations on earth (without polar coordinates accounted for)
+  Tiles<PointLL> ll(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
+  std::vector<PointLL> shape{{9.5499754, 47.250248},{9.55031681, 47.2501144}};
+  auto intersection = ll.Intersect(shape);
+  for(const auto& i : intersection)
+    if(i.first != 791318)
+      throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
 }
 /*
 void test_intersect_circle() {

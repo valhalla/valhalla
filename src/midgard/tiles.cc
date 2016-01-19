@@ -1,6 +1,7 @@
 #include "midgard/tiles.h"
 #include <cmath>
 #include <functional>
+#include <iostream>
 
 namespace {
 
@@ -10,26 +11,23 @@ namespace {
   //the loop bail if we leave the valid drawing region
   void bresenham_line(float x0, float y0, float x1, float y1, const std::function<bool (int32_t, int32_t)>& set_pixel) {
     //this one for sure
-    auto outside = set_pixel(x0, y0);
+    bool outside = set_pixel(x0, y0);
     //early termination is likely for our use case
-    if(static_cast<int>(x0) == static_cast<int>(x1) && static_cast<int>(y0) == static_cast<int>(y1))
+    if(std::floor(x0) == std::floor(x1) && std::floor(y0) == std::floor(y1))
       return;
-    //deltas, steps in the proper direction and triangle area constant
-    float dx = x1 - x0, sx = x0 < x1 ? 1 : -1;
-    float dy = y1 - y0, sy = y0 < y1 ? 1 : -1;
-    float c = x1*y0 - y1*x0;
+    //steps in the proper direction and constants for shoelace formula
+    float sx = x0 < x1 ? 1 : -1, dx = x1 - x0, x = std::floor(x0) + .5f;
+    float sy = y0 < y1 ? 1 : -1, dy = y1 - y0, y = std::floor(y0) + .5f;
     //keep going until we make it to the ending pixel
-    while(static_cast<int>(x0) != static_cast<int>(x1) || static_cast<int>(y0) != static_cast<int>(y1)) {
-      float tx = std::abs(dy*(static_cast<int>(x0 + sx) + .5f) - dx*(static_cast<int>(y0) + .5f) + c);
-      float ty = std::abs(dy*(static_cast<int>(x0) + .5f) - dx*(static_cast<int>(y0 + sy) + .5f) + c);
+    while(std::floor(x) != std::floor(x1) || std::floor(y) != std::floor(y1)) {
+      float tx = std::abs(dx*(y - y0) - dy*((x + sx) - x0));
+      float ty = std::abs(dx*((y + sy) - y0) - dy*(x - x0));
       //less error moving in the x
-      if(tx < ty) { x0 += sx; }
+      if(tx < ty) { x += sx; }
       //less error moving in the y
-      else if(ty < tx) { y0 += sy; }
-      //equal error for both so move diagonally
-      else { x0 += sx; y0 += sy; }
+      else { y += sy; }
       //mark this pixel
-      auto o = set_pixel(x0, y0);
+      bool o = set_pixel(std::floor(x), std::floor(y));
       if(outside == false && o == true)
         return;
       outside = o;
