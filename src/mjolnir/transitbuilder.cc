@@ -99,115 +99,162 @@ struct builder_stats {
 
 // Get scheduled departures for a stop
 std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
-               GraphTileBuilder& tilebuilder,
-		       const Transit& transit,
-               std::unordered_map<GraphId, bool>& stop_access,
-               const GraphId& tile_id) {
+    GraphTileBuilder& tilebuilder,
+    const TileHierarchy& hierarchy,
+    const Transit& transit,
+    std::unordered_map<GraphId, bool>& stop_access,
+    const std::string& file,
+    const GraphId& tile_id) {
   // Check if there are no schedule stop pairs in this tile
   std::unordered_multimap<GraphId, Departure> departures;
-  if (transit.stop_pairs_size() == 0) {
-    if (transit.stops_size() > 0) {
-      LOG_ERROR("Tile " + std::to_string(tile_id.tileid()) +
-                " has 0 schedule stop pairs but has " +
-                std::to_string(transit.stops_size()) + " stops");
-    }
-    return departures;
-  }
 
-  uint32_t tile_date = tilebuilder.header()->date_created();
+  //for each tile.
+  std::size_t slash_found = file.find_last_of("/\\");
+  std::string directory = file.substr(0,slash_found);
 
-  // Iterate through the stop pairs in this tile and form Valhalla departure
-  // records
-  for (const auto& sp : transit.stop_pairs()) {
-    // We do not know in this step if the end node is in a valid (non-empty)
-    // Valhalla tile. So just add the stop pair and we will address this later
+  boost::filesystem::recursive_directory_iterator transit_file_itr(directory);
+  boost::filesystem::recursive_directory_iterator end_file_itr;
 
-    // Use transit PBF graph Ids internally until adding to the graph tiles
-    // TODO - wheelchair accessible, shape information
-    Departure dep;
-    dep.orig_pbf_graphid = GraphId(sp.origin_graphid());
-    dep.dest_pbf_graphid = GraphId(sp.destination_graphid());
-    dep.route = sp.route_index();
-    dep.trip = sp.trip_id();
-    dep.shapeid = 0;
-    dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
-    dep.dep_time = sp.origin_departure_time();
-    dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
+  for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if(boost::filesystem::is_regular(transit_file_itr->path())) {
+      std::string fname = transit_file_itr->path().string();
+      std::string ext = transit_file_itr->path().extension().string();
+      std::string file_name = fname.substr(0, fname.size() - ext.size());
 
-    // Set bikes_allowed on the stops
-    // TODO - should this be |= ???
-    bool bikes_allowed = sp.bikes_allowed();
-    stop_access[dep.orig_pbf_graphid] = bikes_allowed;
-    stop_access[dep.dest_pbf_graphid] = bikes_allowed;
+      // make sure we are looking at a pbf file
+      if ((ext == ".pbf" && fname == file) ||
+          (file_name.substr(file_name.size()-4) == ".pbf" && file_name == file)) {
 
-    // Compute days of week mask
-    uint8_t dow_mask = kDOWNone;
-    for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
-      bool dow = sp.service_days_of_week(x);
-      if (dow) {
-        switch (x) {
-          case 0:
-            dow_mask |= kMonday;
-            break;
-          case 1:
-            dow_mask |= kTuesday;
-            break;
-          case 2:
-            dow_mask |= kWednesday;
-            break;
-          case 3:
-            dow_mask |= kThursday;
-            break;
-          case 4:
-            dow_mask |= kFriday;
-            break;
-          case 5:
-            dow_mask |= kSaturday;
-            break;
-          case 6:
-            dow_mask |= kSunday;
-            break;
+        Transit spp; {
+
+          // already loaded
+          if (ext == ".pbf")
+            spp = transit;
+          else {
+            std::fstream input(fname, std::ios::in | std::ios::binary);
+            if (!input) {
+              LOG_ERROR("Error opening file:  " + fname);
+              departures.clear();
+              return departures;
+            }
+            std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+            google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+            google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+            cs.SetTotalBytesLimit(buffer.size() * 2, buffer.size() * 2);
+            if (!spp.ParseFromCodedStream(&cs)) {
+              LOG_ERROR("Failed to parse file: " + fname);
+              return departures;
+            }
+          }
+        }
+
+        if (spp.stop_pairs_size() == 0) {
+          if (transit.stops_size() > 0) {
+            LOG_ERROR("Tile " + fname +
+                      " has 0 schedule stop pairs but has " +
+                      std::to_string(transit.stops_size()) + " stops");
+          }
+          departures.clear();
+          return departures;
+        }
+
+        uint32_t tile_date = tilebuilder.header()->date_created();
+
+        // Iterate through the stop pairs in this tile and form Valhalla departure
+        // records
+        for (const auto& sp : spp.stop_pairs()) {
+          // We do not know in this step if the end node is in a valid (non-empty)
+          // Valhalla tile. So just add the stop pair and we will address this later
+
+          // Use transit PBF graph Ids internally until adding to the graph tiles
+          // TODO - wheelchair accessible, shape information
+          Departure dep;
+          dep.orig_pbf_graphid = GraphId(sp.origin_graphid());
+          dep.dest_pbf_graphid = GraphId(sp.destination_graphid());
+          dep.route = sp.route_index();
+          dep.trip = sp.trip_id();
+          dep.shapeid = 0;
+          dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
+          dep.dep_time = sp.origin_departure_time();
+          dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
+
+          // Set bikes_allowed on the stops
+          // TODO - should this be |= ???
+          bool bikes_allowed = sp.bikes_allowed();
+          stop_access[dep.orig_pbf_graphid] = bikes_allowed;
+          stop_access[dep.dest_pbf_graphid] = bikes_allowed;
+
+          // Compute days of week mask
+          uint8_t dow_mask = kDOWNone;
+          for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
+            bool dow = sp.service_days_of_week(x);
+            if (dow) {
+              switch (x) {
+                case 0:
+                  dow_mask |= kMonday;
+                  break;
+                case 1:
+                  dow_mask |= kTuesday;
+                  break;
+                case 2:
+                  dow_mask |= kWednesday;
+                  break;
+                case 3:
+                  dow_mask |= kThursday;
+                  break;
+                case 4:
+                  dow_mask |= kFriday;
+                  break;
+                case 5:
+                  dow_mask |= kSaturday;
+                  break;
+                case 6:
+                  dow_mask |= kSunday;
+                  break;
+              }
+            }
+          }
+          dep.dow = dow_mask;
+
+          // Compute the valid days
+          // set the bits based on the dow.
+          boost::gregorian::date start_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
+          boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
+          dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
+
+          // if this is a service addition for one day, delete the dow_mask.
+          if (sp.service_start_date() == sp.service_end_date())
+            dep.dow = kDOWNone;
+
+          // if dep.days == 0 then feed either starts after the end_date or tile_header_date > end_date
+          if (dep.days == 0 && !sp.service_added_dates_size()) {
+            LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) + " End date: " + to_iso_extended_string(end_date));
+            continue;
+          }
+
+          dep.headsign_offset = tilebuilder.AddName(sp.trip_headsign());
+          dep.end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
+
+          //if subtractions are between start and end date then turn off bit.
+          for (const auto& x : sp.service_except_dates()) {
+            boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
+            dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, d);
+          }
+
+          //if additions are between start and end date then turn on bit.
+          for (const auto& x : sp.service_added_dates()) {
+            boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
+            dep.days = DateTime::add_service_day(dep.days, start_date, end_date, d);
+          }
+
+          // Add to the departures list
+          departures.emplace(dep.orig_pbf_graphid, std::move(dep));
         }
       }
     }
-    dep.dow = dow_mask;
-
-    // Compute the valid days
-    // set the bits based on the dow.
-    boost::gregorian::date start_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
-    boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
-    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
-
-    // if this is a service addition for one day, delete the dow_mask.
-    if (sp.service_start_date() == sp.service_end_date())
-      dep.dow = kDOWNone;
-
-    // if dep.days == 0 then feed either starts after the end_date or tile_header_date > end_date
-    if (dep.days == 0 && !sp.service_added_dates_size()) {
-      LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) + " End date: " + to_iso_extended_string(end_date));
-      continue;
-    }
-
-    dep.headsign_offset = tilebuilder.AddName(sp.trip_headsign());
-    dep.end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
-
-    //if subtractions are between start and end date then turn off bit.
-    for (const auto& x : sp.service_except_dates()) {
-      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-      dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, d);
-    }
-
-    //if additions are between start and end date then turn on bit.
-    for (const auto& x : sp.service_added_dates()) {
-      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-      dep.days = DateTime::add_service_day(dep.days, start_date, end_date, d);
-    }
-
-    // Add to the departures list
-    departures.emplace(dep.orig_pbf_graphid, std::move(dep));
   }
   LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-             std::to_string(departures.size()) + " departures");
+           std::to_string(departures.size()) + " departures");
   return departures;
 }
 
@@ -913,8 +960,9 @@ void build(const std::string& transit_dir,
     // Process schedule stop pairs (departures)
     std::unordered_map<GraphId, bool> stop_access;
     std::unordered_multimap<GraphId, Departure> departures =
-                ProcessStopPairs(tilebuilder, transit,
-                                 stop_access, tile_id);
+                ProcessStopPairs(tilebuilder, hierarchy,
+                                 transit, stop_access,
+                                 file, tile_id);
 
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.stops_size(); i++) {
