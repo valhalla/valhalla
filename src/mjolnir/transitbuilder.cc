@@ -107,14 +107,15 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     const GraphId& tile_id) {
   // Check if there are no schedule stop pairs in this tile
   std::unordered_multimap<GraphId, Departure> departures;
+  uint32_t tile_date = tilebuilder.header()->date_created();
 
-  //for each tile.
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0,slash_found);
 
   boost::filesystem::recursive_directory_iterator transit_file_itr(directory);
   boost::filesystem::recursive_directory_iterator end_file_itr;
 
+  //for each tile.
   for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if(boost::filesystem::is_regular(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
@@ -157,8 +158,6 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           departures.clear();
           return departures;
         }
-
-        uint32_t tile_date = tilebuilder.header()->date_created();
 
         // Iterate through the stop pairs in this tile and form Valhalla departure
         // records
