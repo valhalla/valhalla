@@ -20,6 +20,18 @@ class test_graph_tile_builder : public GraphTileBuilder {
 
 };
 
+TileHierarchy make_hierarchy(const std::string& tile_dir) {
+  boost::property_tree::ptree config;
+  std::stringstream json; json << "{ \"tile_dir\": \"" << tile_dir << "\", \
+    \"levels\": [ \
+      {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
+      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
+      {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
+    ] }";
+  boost::property_tree::json_parser::read_json(json, config);
+  return {config};
+}
+
 
 void TestDuplicateEdgeInfo() {
   edge_tuple a = test_graph_tile_builder::EdgeTuple(0, GraphId(0,2,0), GraphId(0,2,1));
@@ -36,17 +48,8 @@ void TestDuplicateEdgeInfo() {
   if(success.second)
     throw std::runtime_error("Why on earth would it be found but then insert just fine");
 
-  //make the config file
-  boost::property_tree::ptree config;
-  std::stringstream json; json << "{ \"tile_dir\": \"test/tiles\", \
-    \"levels\": [ \
-      {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
-      {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-    ] }";
-  boost::property_tree::json_parser::read_json(json, config);
-
-  test_graph_tile_builder test(TileHierarchy(config), GraphId(0,2,0), false);
+  //load a test builder
+  test_graph_tile_builder test(make_hierarchy("test/tiles"), GraphId(0,2,0), false);
   //add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0,2,0), GraphId(0,2,1), 1234, std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, added);
@@ -58,6 +61,44 @@ void TestDuplicateEdgeInfo() {
     throw std::runtime_error("There should still be exactly one of these in here");
 }
 
+void TestAddBins() {
+  //load a tile
+  GraphTile t(make_hierarchy("test/tiles/no_bin"), GraphId(762161,2,0));
+
+  //alter the config to point to another dir
+  auto h = make_hierarchy("test/tiles/bin");
+
+  //send blank bins
+  std::array<std::vector<GraphId>, kCellCount> bins;
+  GraphTileBuilder::AddBins(h, &t, bins);
+
+  //check the new tile is the same as the old one
+  ifstream o("test/tile/no_bin/2/000/762/161.gph", std::ios::binary);
+  ifstream n("test/tile/bin/2/000/762/161.gph", std::ios::binary);
+  char o_c, n_c;
+  while(o.read(&o_c, 1) && n.read(&n_c, 1) && !o.eof() && !o.fail() && !n.eof() && !n.fail() && o_c == n_c);
+  if(o.eof() != n.eof() || o.fail() != n.fail())
+    throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
+
+  //send real bins, we'll throw one in each bin
+  for(auto& bin : bins)
+    bin.emplace_back(762161,2,0);
+  GraphTileBuilder::AddBins(h, &t, bins);
+
+  //check the new tile isnt broken and is exactly the right size bigger
+  auto increase = bins.size() * sizeof(GraphId);
+  //TODO:
+
+  //append some more
+  for(auto& bin : bins)
+    bin.emplace_back(762161,2,1);
+  GraphTileBuilder::AddBins(h, &t, bins);
+
+  //check that its even bigger and still not messed up
+  increase *= 2;
+  //TODO:
+}
+
 }
 
 int main() {
@@ -65,6 +106,9 @@ int main() {
 
   // Write to file and read into EdgeInfo
   suite.test(TEST_CASE(TestDuplicateEdgeInfo));
+
+  // Add bins to a tile and see if its still ok
+  suite.test(TEST_CASE(TestAddBins));
 
   return suite.tear_down();
 }
