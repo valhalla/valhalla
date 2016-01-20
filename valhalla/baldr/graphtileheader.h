@@ -245,13 +245,6 @@ class GraphTileHeader {
   void set_textlist_offset(const uint32_t offset);
 
   /**
-   * Get the offset to the administrative information.
-   * @return  Returns the number of bytes to offset to the administrative
-   *          information.
-   */
-  uint32_t admininfo_offset() const;
-
-  /**
    * Get the offset to the Complex Restriction list.
    * @return  Returns the number of bytes to offset to the the list of
    *          complex restrictions.
