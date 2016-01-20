@@ -47,31 +47,30 @@ bool ctr_equal(const ctr& a, const ctr& b) {
 }
 
 bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference) {
-
-  if(a.header()->access_restriction_count() == b.header()->access_restriction_count() &&
-     a.header()->admincount() == b.header()->admincount() &&
-     a.header()->complex_restriction_offset() == b.header()->complex_restriction_offset() &&
-     a.header()->date_created() == b.header()->date_created() &&
-     a.header()->density() == b.header()->density() &&
-     a.header()->departurecount() == b.header()->departurecount() &&
-     a.header()->directededgecount() == b.header()->directededgecount() &&
-     a.header()->edgeinfo_offset() == b.header()->edgeinfo_offset() + difference &&
-     a.header()->exit_quality() == b.header()->exit_quality() &&
-     a.header()->graphid() == b.header()->graphid() &&
-     a.header()->name_quality() == b.header()->name_quality() &&
-     a.header()->nodecount() == b.header()->nodecount() &&
-     a.header()->routecount() == b.header()->routecount() &&
-     a.header()->signcount() == b.header()->signcount() &&
-     a.header()->speed_quality() == b.header()->speed_quality() &&
-     a.header()->stopcount() == b.header()->stopcount() &&
-     a.header()->textlist_offset() == b.header()->textlist_offset() + difference &&
-     a.header()->transfercount() == b.header()->transfercount() &&
-     a.header()->version() == a.header()->version()) {
-    for(size_t i = 0; i < a.header()->directededgecount(); ++i) {
+  const auto* ah = a.header(), *bh = b.header();
+  if(ah->access_restriction_count() == bh->access_restriction_count() &&
+     ah->admincount() == bh->admincount() &&
+     ah->complex_restriction_offset() == bh->complex_restriction_offset() &&
+     ah->date_created() == bh->date_created() &&
+     ah->density() == bh->density() &&
+     ah->departurecount() == bh->departurecount() &&
+     ah->directededgecount() == bh->directededgecount() &&
+     ah->edgeinfo_offset() + difference == bh->edgeinfo_offset() &&
+     ah->exit_quality() == bh->exit_quality() &&
+     ah->graphid() == bh->graphid() &&
+     ah->name_quality() == bh->name_quality() &&
+     ah->nodecount() == bh->nodecount() &&
+     ah->routecount() == bh->routecount() &&
+     ah->signcount() == bh->signcount() &&
+     ah->speed_quality() == bh->speed_quality() &&
+     ah->stopcount() == bh->stopcount() &&
+     ah->textlist_offset() + difference== bh->textlist_offset() &&
+     ah->transfercount() == bh->transfercount() &&
+     ah->version() ==  bh->version()) {
+    for(size_t i = 0; i < ah->directededgecount(); ++i) {
       auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
       auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
-      if(a_info->GetNames().size() && b_info->GetNames().size() && a_info->GetNames().front() !=
-          b_info->GetNames().front())
+      if(a_info->GetNames().size() && b_info->GetNames().size() && a_info->GetNames().front() != b_info->GetNames().front())
         return false;
       if(a_info->encoded_shape() != b_info->encoded_shape())
         return false;
