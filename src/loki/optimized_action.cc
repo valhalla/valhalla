@@ -5,7 +5,6 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
 
 #include "loki/service.h"
 #include "loki/search.h"
@@ -14,30 +13,8 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
-namespace std {
-  template <>
-  struct hash<loki_worker_t::ACTION_TYPE>
-  {
-    std::size_t operator()(const loki_worker_t::ACTION_TYPE& a) const {
-      return std::hash<int>()(a);
-    }
-  };
-}
-
 namespace {
-  const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> STRING_TO_ACTION {
-    {"one_to_many", loki_worker_t::ONE_TO_MANY},
-    {"many_to_one", loki_worker_t::MANY_TO_ONE},
-    {"many_to_many", loki_worker_t::MANY_TO_MANY}
-  };
-
-
-  const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
-    {loki_worker_t::ONE_TO_MANY, "one_to_many"},
-    {loki_worker_t::MANY_TO_ONE, "many_to_one"},
-    {loki_worker_t::MANY_TO_MANY, "many_to_many"}
-  };
-
+  constexpr double kKmPerMeter = 0.001;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -74,24 +51,12 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      auto action_str = ACTION_TO_STRING.find(action)->second;
-      //check that location size does not exceed max.
+    worker_t::result_t loki_worker_t::optimized(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      auto action_str = "many_to_many";
+      //check that location size does not exceed max many-to-many.
       check_locations(locations.size(), max_locations.find(action_str)->second);
-
-      //check the distances
-      switch (action) {
-        case ONE_TO_MANY:
-          check_distance(reader,locations,0,0,locations.size(),max_distance.find(action_str)->second);
-          break;
-        case MANY_TO_ONE:
-          check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second);
-          break;
-        case MANY_TO_MANY:
-          for(size_t i = 0; i < locations.size()-1; ++i)
-            check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second);
-          break;
-      }
+      for(size_t i = 0; i < locations.size()-1; ++i)
+        check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second);
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
@@ -99,8 +64,6 @@ namespace valhalla {
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
-      //pass on to thor with type of matrix
-      request.put("matrix_type", action_str);
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);
       worker_t::result_t result{true};
