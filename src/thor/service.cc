@@ -1,19 +1,20 @@
-#include <functional>
-#include <string>
-#include <stdexcept>
-#include <vector>
-#include <unordered_map>
-#include <cstdint>
-#include <sstream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
-
-#include <prime_server/prime_server.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
+#include <prime_server/prime_server.hpp>
+#include <cstdint>
+#include <functional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 using namespace prime_server;
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -28,6 +29,7 @@ using namespace prime_server;
 #include "thor/pathalgorithm.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/timedistancematrix.h"
+#include "thor/optimizer.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -44,7 +46,6 @@ namespace {
     {"many_to_many", MANY_TO_MANY}
   };
   std::size_t tdindex = 0;
-  constexpr double kKmPerMeter = 0.001;
   constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -553,6 +554,60 @@ namespace {
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("thor::matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::matrix request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+      }
+
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+      response.from_info(request_info);
+      worker_t::result_t result{false};
+      result.messages.emplace_back(response.to_string());
+      return result;
+    }
+
+    worker_t::result_t  get_optimzed_path(const std::vector<PathLocation> correlated, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
+
+      // Parse out units; if none specified, use kilometers
+      double distance_scale = kKmPerMeter;
+      auto units = request.get<std::string>("units", "km");
+      if (units == "mi")
+        distance_scale = kMilePerMeter;
+      else {
+        units = "km";
+        distance_scale = kKmPerMeter;
+      }
+
+      TimeDistanceMatrix tdmatrix;
+      std::vector<TimeDistance> td = tdmatrix.ManyToMany(correlated, reader, mode_costing, mode);
+      std::vector<float> time_costs;
+      for(size_t i = 0; i < td.size(); i++) {
+        time_costs.emplace_back(static_cast<float>(td[i].time));
+      }
+
+      Optimizer optimizer;
+      //returns the optimal order of the path_locations
+      auto order = optimizer.Solve(correlated.size(), time_costs);
+
+      //jsonp callback if need be
+      json::MapPtr json;
+      std::ostringstream stream;
+      auto jsonp = request.get_optional<std::string>("jsonp");
+      if(jsonp)
+        stream << *jsonp << '(';
+      stream << *json;
+      if(jsonp)
+        stream << ')';
+
+      //get processing time for thor
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      if ((elapsed_time.count() / correlated.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("thor::optimized route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::optimized route request exceeded threshold::"+ ss.str());
         midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
       }
 
