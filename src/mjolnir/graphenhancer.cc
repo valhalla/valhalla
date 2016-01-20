@@ -475,7 +475,8 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
  *          more dense.
  */
 uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
-                    enhancer_stats& stats, Tiles<PointLL>& tiles, uint8_t local_level) {
+                    enhancer_stats& stats, const Tiles<PointLL>& tiles,
+                    uint8_t local_level) {
   // Radius is in km - turn into meters
   float rm = kDensityRadius * kMetersPerKm;
   float mr2 = rm * rm;
@@ -504,8 +505,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
     const auto end_node   = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
-      float d = approximator.DistanceSquared(node->latlng());
-      if (d < mr2) {
+      if (approximator.DistanceSquared(node->latlng()) < mr2) {
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
