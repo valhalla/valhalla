@@ -475,9 +475,10 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
  *          more dense.
  */
 uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
-                    enhancer_stats& stats, Tiles<PointLL>& tiles, uint8_t local_level) {
+                    enhancer_stats& stats, const Tiles<PointLL>& tiles,
+                    uint8_t local_level) {
   // Radius is in km - turn into meters
-  float rm = kDensityRadius * 1000.0f;
+  float rm = kDensityRadius * kMetersPerKm;
   float mr2 = rm * rm;
 
   // Use distance approximator for all distance checks
@@ -504,8 +505,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
     const auto end_node   = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
-      float d = approximator.DistanceSquared(node->latlng());
-      if (d < mr2) {
+      if (approximator.DistanceSquared(node->latlng()) < mr2) {
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
@@ -814,12 +814,6 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     return 0;
   }
 
-  // No stop impact going from a turn channel. Stop impact will
-  // be set entering a turn channel
-  if (edges[from].use() == Use::kTurnChannel) {
-    return 0;
-  }
-
   // Handle Pencil point u-turn
   if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo,
                          turn_degree)) {
@@ -856,6 +850,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // or if several are high class
 
   // TODO:Increase stop level based on classification of edges
+
+  // Reduce stop impact from a turn channel
+  if (edges[from].use() == Use::kTurnChannel) {
+    stop_impact /= 2;
+  }
 
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
@@ -1041,29 +1040,21 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
-  lock.lock();
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  lock.unlock();
+  const auto& tile_hierarchy = reader.GetTileHierarchy();
+  const auto& local_level = tile_hierarchy.levels().rbegin()->second.level;
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
-
-    // Get the next tile Id from the queue and get writeable
-    // and readable tile
+    // Get the next tile Id from the queue and get writeable and readable
+    // tile. Lock while we access the tile queue and get the tile.
     lock.lock();
     if (tilequeue.empty()) {
       lock.unlock();
       break;
     }
     GraphId tile_id = tilequeue.front();
-    uint32_t id  = tile_id.tileid();
     tilequeue.pop();
-
-    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
-    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
-    std::unordered_map<uint32_t,bool> drive_on_right;
 
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
@@ -1091,6 +1082,9 @@ void enhance(const boost::property_tree::ptree& pt,
     // Get the admin polygons. If only one exists for the tile check if the
     // tile is entirely inside the polygon
     bool tile_within_one_admin = false;
+    uint32_t id  = tile_id.tileid();
+    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
+    std::unordered_map<uint32_t,bool> drive_on_right;
     if (admin_db_handle) {
       admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
                            tilebuilder);
@@ -1101,6 +1095,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     bool tile_within_one_tz = false;
+    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
     if (tz_db_handle) {
       tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id));
       if (tz_polys.size() == 1) {
