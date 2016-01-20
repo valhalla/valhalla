@@ -931,6 +931,10 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
 
+  // if we are continuing on a cycleway, reduce the cost by half
+  if (edges[from].use() == Use::kCycleway && edges[to].use() == Use::kCycleway)
+    stop_impact *= 0.5f;
+
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
 
