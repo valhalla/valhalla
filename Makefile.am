@@ -89,6 +89,12 @@ mmp_attacher_SOURCES = src/mmp_attacher.cc
 mmp_attacher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 mmp_attacher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la -lsqlite3
 
+.PHONY: tools
+tools: mmp_psqlmatcher mmp_stat
+
+.PHONY: mapillary-tools
+mapillary-tools: tools mmp_attacher
+
 # # tests
 # check_PROGRAMS = \
 # 	test/geometry_helpers \
