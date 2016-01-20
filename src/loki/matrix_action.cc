@@ -5,6 +5,7 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
 
 #include "loki/service.h"
 #include "loki/search.h"
@@ -66,7 +67,7 @@ namespace {
       if (path_distance > matrix_max_distance)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance), " [ANALYTICS] ");
+      valhalla::midgard::logging::Log("location_distance (km)::" + std::to_string(path_distance * kKmPerMeter), " [ANALYTICS] ");
     }
   }
 }
