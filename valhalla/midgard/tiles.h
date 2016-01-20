@@ -223,7 +223,7 @@ class Tiles {
    * @param  boundingbox  Bounding box
    * @param  maxTiles  Maximum number of tiles to find.
    */
-  const std::vector<int32_t>& TileList(const AABB2<coord_t>& boundingbox);
+  std::vector<int32_t> TileList(const AABB2<coord_t>& boundingbox) const;
 
   /**
    * Color a "connectivity map" starting with a sparse map of uncolored tiles.
@@ -267,9 +267,6 @@ class Tiles {
   unsigned short nsubdivisions_;
 
   float subdivision_size_;
-
-  // Tile list - populated by the TileList method.
-  std::vector<int32_t> tilelist_;
 };
 
 }
