@@ -283,15 +283,14 @@ bool Tiles<coord_t>::AreNeighbors(const uint32_t id1, const uint32_t id2) const 
 // and recursively checking if tile is inside and checking/adding
 // neighboring tiles
 template <class coord_t>
-const std::vector<int>& Tiles<coord_t>::TileList(
-              const AABB2<coord_t>& boundingbox) {
+std::vector<int> Tiles<coord_t>::TileList(const AABB2<coord_t>& bbox) const {
   // Get tile at the center of the bounding box. Return -1 if the center
   // of the bounding box is not within the tiling system bounding box.
   // TODO - relax this to check edges of the bounding box?
-  tilelist_.clear();
-  int32_t tileid = TileId(boundingbox.Center());
+  std::vector<int32_t> tilelist;
+  int32_t tileid = TileId(bbox.Center());
   if (tileid == -1)
-    return tilelist_;
+    return tilelist;
 
   // List of tiles to check if in view. Use a list: push new entries on the
   // back and pop off the front. The tile search tends to spiral out from
@@ -311,35 +310,35 @@ const std::vector<int>& Tiles<coord_t>::TileList(
     // Get the element off the front of the list and add it to the tile list.
     tileid = checklist.front();
     checklist.pop_front();
-    tilelist_.push_back(tileid);
+    tilelist.push_back(tileid);
 
     // Check neighbors
     int32_t neighbor = LeftNeighbor(tileid);
     if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        boundingbox.Intersects(TileBounds(neighbor))) {
+        bbox.Intersects(TileBounds(neighbor))) {
       checklist.push_back(neighbor);
       visited_tiles.insert(neighbor);
     }
     neighbor = RightNeighbor(tileid);
     if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        boundingbox.Intersects(TileBounds(neighbor))) {
+        bbox.Intersects(TileBounds(neighbor))) {
       checklist.push_back(neighbor);
       visited_tiles.insert(neighbor);
     }
     neighbor = TopNeighbor(tileid);
     if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        boundingbox.Intersects(TileBounds(neighbor))) {
+        bbox.Intersects(TileBounds(neighbor))) {
       checklist.push_back(neighbor);
       visited_tiles.insert(neighbor);
     }
     neighbor = BottomNeighbor(tileid);
     if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        boundingbox.Intersects(TileBounds(neighbor))) {
+        bbox.Intersects(TileBounds(neighbor))) {
       checklist.push_back(neighbor);
       visited_tiles.insert(neighbor);
     }
   }
-  return tilelist_;
+  return tilelist;
 }
 
 // Color a "connectivity map" starting with a sparse map of uncolored tiles.
