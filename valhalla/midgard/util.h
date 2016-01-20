@@ -212,6 +212,7 @@ struct iterable_t {
   iterable_t(T* first, T* end): head(first), tail(end), count(end - first){}
   T* begin() { return head; }
   T* end() { return tail; }
+  T& operator[](size_t index){ return *(head + index); }
   size_t size() const { return count; }
  protected:
   T* head;
