@@ -289,7 +289,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param tile       the tile that needs the bins added
    * @param more_bins  the extra bin data to append to the tile
    */
-  static void AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kCellCount>& more_bins);
+  static void AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
  protected:
 
@@ -313,9 +313,6 @@ class GraphTileBuilder : public baldr::GraphTile {
     return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb):
         std::make_tuple(edgeindex, nodeb, nodea);
   }
-
-  // Write all edge cells to specified stream
-  void SerializeEdgeCellsToOstream(std::ostream& out) const;
 
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out) const;

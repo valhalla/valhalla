@@ -197,9 +197,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 }
 
 //return this tiles' edges' bins and its edges' tweeners' bins
-using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kCellCount> >;
-std::array<std::vector<GraphId>, kCellCount> bin_edges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
-  std::array<std::vector<GraphId>, kCellCount> bins;
+using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
+std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
+  std::array<std::vector<GraphId>, kBinCount> bins;
   //only do most detailed level
   if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
     return bins;
@@ -242,8 +242,8 @@ std::array<std::vector<GraphId>, kCellCount> bin_edges(const TileHierarchy& hier
         //which set of bins
         auto& out_bins = originating ? bins : tweeners.insert({GraphId(i.first, edge_id.level(), 0), {}}).first->second;
         //keep the edge id
-        for(auto cell : i.second)
-          out_bins[cell].push_back(edge_id);
+        for(auto bin : i.second)
+          out_bins[bin].push_back(edge_id);
       }
     }
   }
@@ -460,9 +460,9 @@ void validate(const boost::property_tree::ptree& pt,
       //had this tile already
       if(!inserted.second) {
         //so have to merge
-        for(size_t c = 0; c < kCellCount; ++c) {
-          auto& cell = inserted.first->second[c];
-          cell.insert(cell.cend(), t.second[c].cbegin(), t.second[c].cend());
+        for(size_t c = 0; c < kBinCount; ++c) {
+          auto& bin = inserted.first->second[c];
+          bin.insert(bin.cend(), t.second[c].cbegin(), t.second[c].cend());
         }
       }
     }

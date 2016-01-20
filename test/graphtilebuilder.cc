@@ -3,11 +3,13 @@
 #include "mjolnir/graphtilebuilder.h"
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <string>
 #include <vector>
 using namespace std;
 using namespace valhalla::mjolnir;
+using namespace valhalla::midgard;
 
 namespace {
 
@@ -30,6 +32,53 @@ TileHierarchy make_hierarchy(const std::string& tile_dir) {
     ] }";
   boost::property_tree::json_parser::read_json(json, config);
   return {config};
+}
+
+template <class ctr>
+bool ctr_equal(const ctr& a, const ctr& b) {
+  if(a.size() != b.size())
+    return false;
+  typename ctr::iterator i = a.begin();
+  for(const auto& j : b) {
+    if(*i != j)
+      return false;
+  }
+  return true;
+}
+
+bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference) {
+
+  if(a.header()->access_restriction_count() == b.header()->access_restriction_count() &&
+     a.header()->admincount() == b.header()->admincount() &&
+     a.header()->complex_restriction_offset() == b.header()->complex_restriction_offset() &&
+     a.header()->date_created() == b.header()->date_created() &&
+     a.header()->density() == b.header()->density() &&
+     a.header()->departurecount() == b.header()->departurecount() &&
+     a.header()->directededgecount() == b.header()->directededgecount() &&
+     a.header()->edgeinfo_offset() == b.header()->edgeinfo_offset() + difference &&
+     a.header()->exit_quality() == b.header()->exit_quality() &&
+     a.header()->graphid() == b.header()->graphid() &&
+     a.header()->name_quality() == b.header()->name_quality() &&
+     a.header()->nodecount() == b.header()->nodecount() &&
+     a.header()->routecount() == b.header()->routecount() &&
+     a.header()->signcount() == b.header()->signcount() &&
+     a.header()->speed_quality() == b.header()->speed_quality() &&
+     a.header()->stopcount() == b.header()->stopcount() &&
+     a.header()->textlist_offset() == b.header()->textlist_offset() + difference &&
+     a.header()->transfercount() == b.header()->transfercount() &&
+     a.header()->version() == a.header()->version()) {
+    for(size_t i = 0; i < a.header()->directededgecount(); ++i) {
+      auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
+      auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
+      if(a_info->GetNames().size() && b_info->GetNames().size() && a_info->GetNames().front() !=
+          b_info->GetNames().front())
+        return false;
+      if(a_info->encoded_shape() != b_info->encoded_shape())
+        return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 
@@ -63,13 +112,14 @@ void TestDuplicateEdgeInfo() {
 
 void TestAddBins() {
   //load a tile
-  GraphTile t(make_hierarchy("test/tiles/no_bin"), GraphId(762161,2,0));
+  GraphId id(762161,2,0);
+  GraphTile t(make_hierarchy("test/tiles/no_bin"), id);
 
   //alter the config to point to another dir
   auto h = make_hierarchy("test/tiles/bin");
 
   //send blank bins
-  std::array<std::vector<GraphId>, kCellCount> bins;
+  std::array<std::vector<GraphId>, kBinCount> bins;
   GraphTileBuilder::AddBins(h, &t, bins);
 
   //check the new tile is the same as the old one
@@ -87,7 +137,9 @@ void TestAddBins() {
 
   //check the new tile isnt broken and is exactly the right size bigger
   auto increase = bins.size() * sizeof(GraphId);
-  //TODO:
+  GraphTile nt(h, id);
+  if(!tile_equalish(t, nt, increase))
+    throw std::logic_error("Yeah the new tile should be a bit different");
 
   //append some more
   for(auto& bin : bins)
