@@ -772,6 +772,61 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
 }
 
 /**
+ * Returns true if edge transition is a cycleway u-turn, false otherwise.
+ *
+ * @param  from_index  Index of the 'from' directed edge.
+ * @param  to_index  Index of the 'to' directed edge.
+ * @param  directededge  Directed edge builder.
+ * @param  edges  Directed edges outbound from a node.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
+ * @return true if edge transition is a cycleway u-turn, false otherwise.
+ */
+bool IsCyclewayUturn(uint32_t from_index, uint32_t to_index,
+                        const DirectedEdge& directededge,
+                        const DirectedEdge* edges,
+                        const NodeInfo& node_info,
+                        uint32_t turn_degree) {
+
+  // we only deal with Cycleways
+  if (edges[from_index].use() != Use::kCycleway || edges[to_index].use() != Use::kCycleway)
+    return false;
+
+  // Logic for drive on right
+  if (directededge.drive_on_right()) {
+    // If the turn is a sharp left (179 < turn < 211)
+    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+    // and an intersecting right road exists
+    // and an intersecting left road exists
+    // then it is a cycleway u-turn
+    if ((((turn_degree > 179) && (turn_degree < 211))
+        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
+            && (turn_degree > 179) && (turn_degree < 226)))
+      && directededge.edge_to_right(from_index)
+      && directededge.edge_to_left(from_index)) {
+      return true;
+    }
+  }
+  // Logic for drive on left
+  else {
+    // If the turn is a sharp right (149 < turn < 181)
+    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+    // and an intersecting right road exists
+    // and an intersecting left road exists
+    // then it is a right cyclewayt u-turn
+    if ((((turn_degree > 149) && (turn_degree < 181))
+        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
+            && (turn_degree > 134) && (turn_degree < 181)))
+      && directededge.edge_to_right(from_index)
+      && directededge.edge_to_left(from_index)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Gets the stop likelihoood / impact at an intersection when transitioning
  * from one edge to another. This depends on the difference between the
  * classifications/importance of the from and to edge and the highest
@@ -820,11 +875,20 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     stats.pencilucount++;
     return 7;
   }
+
+  // Handle Cycleway u-turn
+  if (IsCyclewayUturn(from, to, directededge, edges, nodeinfo,
+                      turn_degree)) {
+    return 7;
+  }
+
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
   const DirectedEdge* edge = &edges[0];
-  RoadClass bestrc = RoadClass::kServiceOther;
+  // kUnclassified,  kResidential, and kServiceOther are grouped
+  // together for the stop_impact logic.
+  RoadClass bestrc = RoadClass::kUnclassified;
   for (uint32_t i = 0; i < count; i++, edge++) {
     // Check the road if it is driveable TO the intersection and is neither
     // the "to" nor "from" edge. Treat roundabout edges as two levels
@@ -841,10 +905,19 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     }
   }
 
+  // kUnclassified,  kResidential, and kServiceOther are grouped
+  // together for the stop_impact logic.
+  RoadClass from_rc = edges[from].classification();
+  if (from_rc > RoadClass::kUnclassified)
+    from_rc = RoadClass::kUnclassified;
+
   // Set stop impact to the difference in road class (make it non-negative)
-  int impact = static_cast<int>(edges[from].classification()) -
-          static_cast<int>(bestrc);
+  int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
+
+  // if we are continuing on a cycleway, reduce the cost by half
+  if (edges[from].use() == Use::kCycleway && edges[to].use() == Use::kCycleway)
+    stop_impact *= 0.5f;
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
