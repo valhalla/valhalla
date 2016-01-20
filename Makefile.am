@@ -69,23 +69,23 @@ mmp_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PRO
 
 EXTRA_PROGRAMS = simple_matcher mmp_psqlmatcher mmp_candidate_search mmp_stat mmp_attacher
 
-simple_matcher_SOURCES = src/simple_matcher.cc
+simple_matcher_SOURCES = tools/simple_matcher.cc
 simple_matcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 simple_matcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
 
-mmp_psqlmatcher_SOURCES = src/mmp_psqlmatcher.cc
+mmp_psqlmatcher_SOURCES = tools/mmp_psqlmatcher.cc
 mmp_psqlmatcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 mmp_psqlmatcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz -lsqlite3 -lpq -lgeos libmmp.la
 
-mmp_candidate_search_SOURCES = src/mmp_candidate_search.cc
+mmp_candidate_search_SOURCES = tools/mmp_candidate_search.cc
 mmp_candidate_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 mmp_candidate_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
 
-mmp_stat_SOURCES = src/mmp_stat.cc
+mmp_stat_SOURCES = tools/mmp_stat.cc
 mmp_stat_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 mmp_stat_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz -lsqlite3
 
-mmp_attacher_SOURCES = src/mmp_attacher.cc
+mmp_attacher_SOURCES = tools/mmp_attacher.cc
 mmp_attacher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 mmp_attacher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la -lsqlite3
 
