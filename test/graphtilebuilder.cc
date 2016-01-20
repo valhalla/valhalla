@@ -3,13 +3,11 @@
 #include "mjolnir/graphtilebuilder.h"
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <string>
 #include <vector>
 using namespace std;
 using namespace valhalla::mjolnir;
-using namespace valhalla::midgard;
 
 namespace {
 
@@ -34,19 +32,12 @@ TileHierarchy make_hierarchy(const std::string& tile_dir) {
   return {config};
 }
 
-template <class ctr>
-bool ctr_equal(const ctr& a, const ctr& b) {
-  if(a.size() != b.size())
+bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, const std::array<std::vector<GraphId>, kBinCount>& bins) {
+  //expected size
+  if(a.size() + difference != b.size())
     return false;
-  typename ctr::iterator i = a.begin();
-  for(const auto& j : b) {
-    if(*i != j)
-      return false;
-  }
-  return true;
-}
 
-bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference) {
+  //if the header is as expected
   const auto* ah = a.header(), *bh = b.header();
   if(ah->access_restriction_count() == bh->access_restriction_count() &&
      ah->admincount() == bh->admincount() &&
@@ -67,13 +58,25 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference) {
      ah->textlist_offset() + difference== bh->textlist_offset() &&
      ah->transfercount() == bh->transfercount() &&
      ah->version() ==  bh->version()) {
+    //make sure the edges' shape and names match
     for(size_t i = 0; i < ah->directededgecount(); ++i) {
       auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
       auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
-      if(a_info->GetNames().size() && b_info->GetNames().size() && a_info->GetNames().front() != b_info->GetNames().front())
-        return false;
       if(a_info->encoded_shape() != b_info->encoded_shape())
         return false;
+      if(a_info->GetNames().size() != b_info->GetNames().size())
+        return false;
+      for(size_t j = 0; j < a_info->GetNames().size(); ++j)
+        if(a_info->GetNames()[j] != b_info->GetNames()[j])
+          return false;
+    }
+    //check that the bins contain what was just added to them
+    for(size_t i = 0; i < bins.size(); ++i) {
+      auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
+      for(size_t j = 0; j < bins[i].size(); ++j) {
+        if(bin[j] != bins[i][j])
+          return false;
+      }
     }
     return true;
   }
@@ -122,32 +125,34 @@ void TestAddBins() {
   GraphTileBuilder::AddBins(h, &t, bins);
 
   //check the new tile is the same as the old one
-  ifstream o("test/tile/no_bin/2/000/762/161.gph", std::ios::binary);
-  ifstream n("test/tile/bin/2/000/762/161.gph", std::ios::binary);
-  char o_c, n_c;
-  while(o.read(&o_c, 1) && n.read(&n_c, 1) && !o.eof() && !o.fail() && !n.eof() && !n.fail() && o_c == n_c);
-  if(o.eof() != n.eof() || o.fail() != n.fail())
-    throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
+  {
+    ifstream o("test/tile/no_bin/2/000/762/161.gph", std::ios::binary);
+    ifstream n("test/tile/bin/2/000/762/161.gph", std::ios::binary);
+    char o_c, n_c;
+    while(o.read(&o_c, 1) && n.read(&n_c, 1) && !o.eof() && !o.fail() && !n.eof() && !n.fail() && o_c == n_c);
+    if(o.eof() != n.eof() || o.fail() != n.fail())
+      throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
+  }
 
   //send real bins, we'll throw one in each bin
   for(auto& bin : bins)
     bin.emplace_back(762161,2,0);
   GraphTileBuilder::AddBins(h, &t, bins);
+  auto increase = bins.size() * sizeof(GraphId);
 
   //check the new tile isnt broken and is exactly the right size bigger
-  auto increase = bins.size() * sizeof(GraphId);
-  GraphTile nt(h, id);
-  if(!tile_equalish(t, nt, increase))
-    throw std::logic_error("Yeah the new tile should be a bit different");
+  if(!tile_equalish(t, GraphTile(h, id), increase, bins))
+    throw std::logic_error("New tiles edgeinfo or names arent matching up");
 
   //append some more
   for(auto& bin : bins)
     bin.emplace_back(762161,2,1);
   GraphTileBuilder::AddBins(h, &t, bins);
-
-  //check that its even bigger and still not messed up
   increase *= 2;
-  //TODO:
+
+  //check the new tile isnt broken and is exactly the right size bigger
+  if(!tile_equalish(t, GraphTile(h, id), increase, bins))
+    throw std::logic_error("New tiles edgeinfo or names arent matching up");
 }
 
 }
