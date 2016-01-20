@@ -2,7 +2,9 @@
 #include <chrono>
 #include <random>
 
-#include "viterbi_search.h"
+#include "mmp/viterbi_search.h"
+
+using namespace mmp;
 
 
 using ObjectId = uint32_t;

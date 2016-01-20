@@ -1,6 +1,7 @@
 #include "mmp/routing.h"
 
 using namespace valhalla;
+using namespace mmp;
 
 constexpr uint32_t kInvalidKey = std::numeric_limits<uint16_t>::max();
 

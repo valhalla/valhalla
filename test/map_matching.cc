@@ -167,13 +167,8 @@ int main(int argc, char *argv[])
   return 1;
 #endif
 
-  if (argc < 2) {
-    std::cerr << "usage: test_map_matching config_path" << std::endl;
-    return 2;
-  }
-
   ptree config;
-  boost::property_tree::read_json(argv[1], config);
+  boost::property_tree::read_json("mmp.json", config);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {

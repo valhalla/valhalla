@@ -13,10 +13,11 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/costconstants.h>
+#include <valhalla/sif/edgelabel.h>
+#include <valhalla/sif/dynamiccost.h>
 
 
-namespace mmp
-{
+namespace mmp {
 
 using namespace valhalla;
 

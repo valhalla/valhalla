@@ -95,26 +95,41 @@ tools: mmp_psqlmatcher mmp_stat
 .PHONY: mapillary-tools
 mapillary-tools: tools mmp_attacher
 
-# # tests
-# check_PROGRAMS = \
-# 	test/geometry_helpers \
-# 	test/grid_range_query \
-# 	test/map_matching \
-# 	test/queue \
-# 	test/sp \
-# 	test/viterbi_search
-# test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
-# test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-# test_edgestatus_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
-# test_optimizer_SOURCES = test/optimizer.cc test/test.cc
-# test_optimizer_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-# test_optimizer_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
-# test_adjacencylist_SOURCES = test/adjacencylist.cc test/test.cc
-# test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-# test_adjacencylist_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
+# tests
+check_PROGRAMS = \
+	test/geometry_helpers \
+	test/grid_range_query \
+	test/map_matching \
+	test/queue \
+	test/routing \
+	test/viterbi_search
 
-# TESTS = $(check_PROGRAMS)
-# TEST_EXTENSIONS = .sh
-# SH_LOG_COMPILER = sh
+test_geometry_helpers_SOURCES = test/geometry_helpers.cc
+test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_geometry_helpers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
 
-# test: check
+test_grid_range_query_SOURCES = test/grid_range_query.cc
+test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_grid_range_query_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
+
+test_map_matching_SOURCES = test/map_matching.cc
+test_map_matching_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_map_matching_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
+
+test_queue_SOURCES = test/queue.cc
+test_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+
+test_routing_SOURCES = test/routing.cc
+test_routing_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_routing_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libmmp.la
+
+test_viterbi_search_SOURCES = test/viterbi_search.cc
+test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+
+TESTS = $(check_PROGRAMS)
+TEST_EXTENSIONS = .sh
+SH_LOG_COMPILER = sh
+
+test: check

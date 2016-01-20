@@ -2,6 +2,8 @@
 
 #include "mmp/grid_range_query.h"
 
+using namespace mmp;
+
 
 void TestGridTools()
 {
