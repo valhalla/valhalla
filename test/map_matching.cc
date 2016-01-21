@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 #endif
 
   ptree config;
-  boost::property_tree::read_json("mmp.json", config);
+  boost::property_tree::read_json("conf/mm.json", config);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
