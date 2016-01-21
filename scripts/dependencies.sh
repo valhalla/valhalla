@@ -26,7 +26,7 @@ $DIR/install_service_deps.sh &
 #build sync
 for dep in midgard baldr sif; do
     pushd deps/$dep
-    ./script/install.sh
+    ./scripts/install.sh
     popd
 done
 wait
