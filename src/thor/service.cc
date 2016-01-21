@@ -205,6 +205,7 @@ namespace {
         std::string costing = init_request(request);
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix = request.get_optional<std::string>("matrix_type");
+        auto optimized = request.get_optional<bool>("optimized");
         if (matrix) {
           valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
           auto matrix_iter = MATRIX.find(*matrix);
@@ -214,8 +215,10 @@ namespace {
           else { //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
-        }
-        return get_trip_path(costing, request_str, date_time_type);
+        } else if (optimized)
+          return get_optimized_path(correlated, request, info);
+        else
+         return get_trip_path(costing, request_str, date_time_type);
       }
 
       catch(const std::exception& e) {
@@ -564,7 +567,7 @@ namespace {
       return result;
     }
 
-    worker_t::result_t  get_optimzed_path(const std::vector<PathLocation> correlated, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+    worker_t::result_t  get_optimized_path(const std::vector<PathLocation> correlated, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
 
@@ -581,13 +584,23 @@ namespace {
       TimeDistanceMatrix tdmatrix;
       std::vector<TimeDistance> td = tdmatrix.ManyToMany(correlated, reader, mode_costing, mode);
       std::vector<float> time_costs;
-      for(size_t i = 0; i < td.size(); i++) {
+      for (size_t i = 0; i < td.size(); i++) {
         time_costs.emplace_back(static_cast<float>(td[i].time));
+        LOG_INFO("time_costs vector output from Many to Many:: " + std::to_string(td[i].time));
       }
-
       Optimizer optimizer;
       //returns the optimal order of the path_locations
       auto order = optimizer.Solve(correlated.size(), time_costs);
+
+      std::vector<PathLocation> best_order;
+      for (size_t i = 0; i< order.size(); i++) {
+        LOG_INFO("optimizer return:: " + std::to_string(order[i]));
+
+      //  best_order.emplace_back(correlated[order[i]]);
+      //  LOG_INFO("reordered locations:: " + std::to_string(correlated[order[0]].latlng_.lat()) + ", "+ std::string(correlated[order[0]].latlng_.lng()));
+      // LOG_INFO("reordered locations:: " + std::to_string(correlated[order[i]].latlng_.lat()) + ", "+ std::string(correlated[order[i]].latlng_.lng()));
+      }
+
 
       //jsonp callback if need be
       json::MapPtr json;
