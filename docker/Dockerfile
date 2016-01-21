@@ -12,6 +12,7 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt-get update -y && \
     libboost-thread1.54-dev \
     protobuf-compiler \
     libprotobuf-dev \
+    unzip \
     lua5.2 \
     liblua5.2-dev \
     git \
