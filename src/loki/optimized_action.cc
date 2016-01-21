@@ -64,6 +64,8 @@ namespace valhalla {
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
+      //pass on to thor with type of matrix
+      request.put("optimized", true);
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);
       worker_t::result_t result{true};
