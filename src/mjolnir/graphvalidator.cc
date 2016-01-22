@@ -268,9 +268,15 @@ void validate(const boost::property_tree::ptree& pt,
             }
           }
 
+          //for stats
+          bool hazmat = false, axle_load = false, height = false, length = false,
+               weight = false, width = false;
+
           // Validate access restrictions. TODO - should check modes as well
           uint32_t ar_modes = de->access_restriction();
           if (ar_modes) {
+            //since only truck restrictions exist, we can still get all restrictions
+            //later we may only want to get just the truck ones for stats.
             auto res = tile->GetAccessRestrictions(idx, kAllAccess);
             if (res.size() == 0) {
               LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
@@ -279,6 +285,29 @@ void validate(const boost::property_tree::ptree& pt,
               for (auto r : res) {
                 if (r.edgeindex() != idx) {
                   LOG_ERROR("Access restriction edge index does not match idx");
+                } else {// log stats.  currently only for truck right now
+                  switch (r.type()) {
+                    case AccessType::kHazmat:
+                      hazmat = true;
+                      break;
+                    case AccessType::kMaxAxleLoad:
+                      axle_load = true;
+                      break;
+                    case AccessType::kMaxHeight:
+                      height = true;
+                      break;
+                    case AccessType::kMaxLength:
+                      length = true;
+                      break;
+                    case AccessType::kMaxWeight:
+                      weight = true;
+                      break;
+                    case AccessType::kMaxWidth:
+                      width = true;
+                      break;
+                    default:
+                      break;
+                  }
                 }
               }
             }
@@ -324,10 +353,10 @@ void validate(const boost::property_tree::ptree& pt,
 
           directededges.emplace_back(std::move(directededge));
 
+          auto rclass = directededge.classification();
           // Add statistics
           // Only consider edge if edge is good and it's not a link
           if (validLength && !directededge.link()) {
-            auto rclass = directededge.classification();
             tempLength /= (tileid == directededge.endnode().tileid()) ? 2 : 4;
             //Determine access for directed edge
             auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
@@ -355,6 +384,38 @@ void validate(const boost::property_tree::ptree& pt,
             // Add road lengths to statistics for current country and tile
             vStats.add_country_road(begin_node_iso, rclass, tempLength);
             vStats.add_tile_road(tileid, rclass, tempLength);
+
+            // Add truck route stats.
+            if (directededge.truck_route()) {
+              vStats.add_tile_truck_route(tileid, rclass, tempLength);
+              vStats.add_country_truck_route(begin_node_iso, rclass, tempLength);
+            }
+            // Add hazmat stats.
+            if (hazmat) {
+              vStats.add_tile_hazmat(tileid, rclass, tempLength);
+              vStats.add_country_hazmat(begin_node_iso, rclass, tempLength);
+            }
+          }
+
+          if (axle_load) {
+            vStats.add_tile_axle_load(tileid, rclass);
+            vStats.add_country_axle_load(begin_node_iso, rclass);
+          }
+          if (height) {
+            vStats.add_tile_height(tileid, rclass);
+            vStats.add_country_height(begin_node_iso, rclass);
+          }
+          if (length) {
+            vStats.add_tile_length(tileid, rclass);
+            vStats.add_country_length(begin_node_iso, rclass);
+          }
+          if (weight) {
+            vStats.add_tile_weight(tileid, rclass);
+            vStats.add_country_weight(begin_node_iso, rclass);
+          }
+          if (width) {
+            vStats.add_tile_width(tileid, rclass);
+            vStats.add_country_width(begin_node_iso, rclass);
           }
         }
         // Add the node to the list
