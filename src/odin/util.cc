@@ -17,10 +17,16 @@ namespace {
          locale_file_itr->path().extension() == ".json") {
         //TODO: validate the locale string in some way
         std::string locale = locale_file_itr->path().stem().string();
+#ifdef LOGGING_LEVEL_TRACE
+  LOG_TRACE("LOCALES");
+  LOG_TRACE("-------");
+  LOG_TRACE("- " + locale);
+#endif
         try {
           boost::property_tree::ptree narrative;
           boost::property_tree::read_json(locale_file_itr->path().string(), narrative);
           locales.emplace(std::move(locale), std::move(narrative));
+
         }
         catch(...) {
           LOG_WARN("Failed to parse narrative for locale: " + locale);

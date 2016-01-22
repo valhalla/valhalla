@@ -7,6 +7,7 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/info_parser.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
@@ -121,6 +122,13 @@ namespace valhalla {
       auto downstream_endpoint = config.get<std::string>("tyr.service.proxy") + "_in";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+
+#ifdef LOGGING_LEVEL_TRACE
+  LOG_TRACE("base locales path: " + boost::filesystem::current_path().string());
+  LOG_TRACE("odin.locales_dir: " + config.get<std::string>("odin.locales_dir"));
+#endif
+      // initialize narrative locales
+      get_locales(config.get<std::string>("odin.locales_dir"));
 
       //listen for requests
       zmq::context_t context;
