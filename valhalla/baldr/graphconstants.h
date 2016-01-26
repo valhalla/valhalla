@@ -119,8 +119,7 @@ enum class NodeType : uint8_t {
   kGate = 1,                  // Gate or rising bollard
   kBollard = 2,               // Bollard (fixed obstruction)
   kTollBooth = 3,             // Toll booth / fare collection
-  kRailStop = 4,              // Rail/metro/subway stop
-  kBusStop = 5,               // Bus stop
+  // TODO - for now there is no differentiation between bus and rail stops...
   kMultiUseTransitStop = 6,   // Multi-use transit stop (rail and bus)
   kBikeShare = 7,             // Bike share location
   kParking = 8,               // Parking location
@@ -132,8 +131,6 @@ const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
   {static_cast<uint8_t>(NodeType::kGate), "gate"},
   {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
   {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-  {static_cast<uint8_t>(NodeType::kRailStop), "rail_stop"},
-  {static_cast<uint8_t>(NodeType::kBusStop), "bus_stop"},
   {static_cast<uint8_t>(NodeType::kMultiUseTransitStop), "multi_use_transit_stop"},
   {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
   {static_cast<uint8_t>(NodeType::kParking), "parking"},
