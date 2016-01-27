@@ -384,38 +384,38 @@ void validate(const boost::property_tree::ptree& pt,
             // Add road lengths to statistics for current country and tile
             vStats.add_country_road(begin_node_iso, rclass, tempLength);
             vStats.add_tile_road(tileid, rclass, tempLength);
+          }
 
-            // Add truck route stats.
+          // Add truck stats.
+          if (validLength) {
             if (directededge.truck_route()) {
               vStats.add_tile_truck_route(tileid, rclass, tempLength);
               vStats.add_country_truck_route(begin_node_iso, rclass, tempLength);
             }
-            // Add hazmat stats.
             if (hazmat) {
               vStats.add_tile_hazmat(tileid, rclass, tempLength);
               vStats.add_country_hazmat(begin_node_iso, rclass, tempLength);
             }
-          }
-
-          if (axle_load) {
-            vStats.add_tile_axle_load(tileid, rclass);
-            vStats.add_country_axle_load(begin_node_iso, rclass);
-          }
-          if (height) {
-            vStats.add_tile_height(tileid, rclass);
-            vStats.add_country_height(begin_node_iso, rclass);
-          }
-          if (length) {
-            vStats.add_tile_length(tileid, rclass);
-            vStats.add_country_length(begin_node_iso, rclass);
-          }
-          if (weight) {
-            vStats.add_tile_weight(tileid, rclass);
-            vStats.add_country_weight(begin_node_iso, rclass);
-          }
-          if (width) {
-            vStats.add_tile_width(tileid, rclass);
-            vStats.add_country_width(begin_node_iso, rclass);
+            if (axle_load) {
+              vStats.add_tile_axle_load(tileid, rclass);
+              vStats.add_country_axle_load(begin_node_iso, rclass);
+            }
+            if (height) {
+              vStats.add_tile_height(tileid, rclass);
+              vStats.add_country_height(begin_node_iso, rclass);
+            }
+            if (length) {
+              vStats.add_tile_length(tileid, rclass);
+              vStats.add_country_length(begin_node_iso, rclass);
+            }
+            if (weight) {
+              vStats.add_tile_weight(tileid, rclass);
+              vStats.add_country_weight(begin_node_iso, rclass);
+            }
+            if (width) {
+              vStats.add_tile_width(tileid, rclass);
+              vStats.add_country_width(begin_node_iso, rclass);
+            }
           }
         }
         // Add the node to the list
