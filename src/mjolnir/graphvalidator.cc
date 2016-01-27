@@ -354,40 +354,11 @@ void validate(const boost::property_tree::ptree& pt,
           directededges.emplace_back(std::move(directededge));
 
           auto rclass = directededge.classification();
-          // Add statistics
-          // Only consider edge if edge is good and it's not a link
-          if (validLength && !directededge.link()) {
-            tempLength /= (tileid == directededge.endnode().tileid()) ? 2 : 4;
-            //Determine access for directed edge
-            auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
-            auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
-            // Check if one way
-            if ((!fward || !bward) && (fward || bward)) {
-              vStats.add_tile_one_way(tileid, rclass, tempLength);
-              vStats.add_country_one_way(begin_node_iso, rclass, tempLength);
-            }
-            // Check if this edge is internal
-            if (directededge.internal()) {
-              vStats.add_tile_int_edge(tileid, rclass);
-              vStats.add_country_int_edge(begin_node_iso, rclass);
-            }
-            // Check if edge has maxspeed tag
-            if (directededge.speed_type() == SpeedType::kTagged){
-              vStats.add_tile_speed_info(tileid, rclass, tempLength);
-              vStats.add_country_speed_info(begin_node_iso, rclass, tempLength);
-            }
-            // Check if edge has any names
-            if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
-              vStats.add_tile_named(tileid, rclass, tempLength);
-              vStats.add_country_named(begin_node_iso, rclass, tempLength);
-            }
-            // Add road lengths to statistics for current country and tile
-            vStats.add_country_road(begin_node_iso, rclass, tempLength);
-            vStats.add_tile_road(tileid, rclass, tempLength);
-          }
-
           // Add truck stats.
           if (validLength) {
+
+            tempLength /= (tileid == directededge.endnode().tileid()) ? 2 : 4;
+
             if (directededge.truck_route()) {
               vStats.add_tile_truck_route(tileid, rclass, tempLength);
               vStats.add_country_truck_route(begin_node_iso, rclass, tempLength);
@@ -416,6 +387,37 @@ void validate(const boost::property_tree::ptree& pt,
               vStats.add_tile_width(tileid, rclass);
               vStats.add_country_width(begin_node_iso, rclass);
             }
+          }
+
+          // Add all other statistics
+          // Only consider edge if edge is good and it's not a link
+          if (validLength && !directededge.link()) {
+            //Determine access for directed edge
+            auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
+            auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
+            // Check if one way
+            if ((!fward || !bward) && (fward || bward)) {
+              vStats.add_tile_one_way(tileid, rclass, tempLength);
+              vStats.add_country_one_way(begin_node_iso, rclass, tempLength);
+            }
+            // Check if this edge is internal
+            if (directededge.internal()) {
+              vStats.add_tile_int_edge(tileid, rclass);
+              vStats.add_country_int_edge(begin_node_iso, rclass);
+            }
+            // Check if edge has maxspeed tag
+            if (directededge.speed_type() == SpeedType::kTagged){
+              vStats.add_tile_speed_info(tileid, rclass, tempLength);
+              vStats.add_country_speed_info(begin_node_iso, rclass, tempLength);
+            }
+            // Check if edge has any names
+            if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
+              vStats.add_tile_named(tileid, rclass, tempLength);
+              vStats.add_country_named(begin_node_iso, rclass, tempLength);
+            }
+            // Add road lengths to statistics for current country and tile
+            vStats.add_country_road(begin_node_iso, rclass, tempLength);
+            vStats.add_tile_road(tileid, rclass, tempLength);
           }
         }
         // Add the node to the list
