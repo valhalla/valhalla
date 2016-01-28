@@ -54,6 +54,7 @@ nobase_include_HEADERS = \
 	valhalla/proto/directions_options.pb.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
+	valhalla/odin/narrative_builder_factory.h \
 	valhalla/odin/narrativebuilder.h \
 	valhalla/odin/enhancedtrippath.h \
 	valhalla/odin/maneuver.h \
@@ -69,6 +70,7 @@ libvalhalla_odin_la_SOURCES = \
 	src/proto/directions_options.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
+	src/odin/narrative_builder_factory.cc \
 	src/odin/narrativebuilder.cc \
 	src/odin/enhancedtrippath.cc \
 	src/odin/maneuver.cc \
