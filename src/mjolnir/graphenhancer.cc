@@ -180,14 +180,10 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
       }
     }
 
-    // Modify speed based on surface
+    // Modify speed based on surface.
     if (directededge.surface() >= Surface::kPavedRough) {
       uint32_t speed = directededge.speed();
-      if (speed >= 50) {
-         directededge.set_speed(speed - 10);
-      } else if (speed > 15) {
-        directededge.set_speed(speed - 5);
-      }
+      directededge.set_speed(speed / 2);
     }
   }
 }
