@@ -35,6 +35,7 @@ odin_service
 .deps/
 .dirstamp
 *.lo
+conf/
 .libs/
 libvalhalla_odin.la
 
