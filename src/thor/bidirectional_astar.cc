@@ -93,12 +93,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   SetOrigin(graphreader, origin, costing);
   SetDestination(graphreader, destination, costing);
 
-  // Update hierarchy limits (TODO - is density needed?)
-  if (allow_transitions_) {
-    ModifyHierarchyLimits(astarheuristic_.GetDistance(origin.vertex()), 0);
-    ModifyHierarchyLimitsReverse(astarheuristic_.GetDistance(origin.vertex()), 0);
-  }
-
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
   // prevents one tree from expanding much more quickly (if in a sparser
@@ -181,7 +175,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         if (pred.trans_up()) {
           hierarchy_limits_[level+1].up_transition_count++;
         }
-        if (hierarchy_limits_[level].StopExpanding()) {
+        if (hierarchy_limits_[level].StopExpanding(pred.distance())) {
           continue;
         }
       }
@@ -277,7 +271,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       GraphId oppedge = pred2.opp_edgeid();
       if (oppedge.Is_Valid()) {
         EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
-        if (oppedgestatus.set() != EdgeSet::kUnreached &&
+        if (oppedgestatus.set() == EdgeSet::kPermanent &&
             ((best_connection_.edgeid == pred2.edgeid() &&
               best_connection_.opp_edgeid == oppedge) ||
              (best_connection_.edgeid == oppedge &&
@@ -307,7 +301,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         if (pred2.trans_up()) {
           hierarchy_limits_reverse_[level+1].up_transition_count++;
         }
-        if (hierarchy_limits_reverse_[level].StopExpanding()) {
+        if (hierarchy_limits_reverse_[level].StopExpanding(pred2.distance())) {
           continue;
         }
       }
@@ -573,7 +567,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 // Form the path from the adjacency list.
 std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
               const uint32_t idx2, GraphReader& graphreader) {
-  // Metrics (TODO)
+  // Metrics (TODO - more accurate cost)
+  uint32_t pathcost = edgelabels_[idx1].cost().cost +
+                      edgelabels_reverse_[idx2].cost().cost;
+  LOG_INFO("path_cost::" + std::to_string(pathcost));
   LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
            "," + std::to_string(edgelabels_reverse_.size()));
 
