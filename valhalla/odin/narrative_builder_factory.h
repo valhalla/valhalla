@@ -23,10 +23,9 @@ class NarrativeBuilderFactory {
    * Returns a specific NarrativeBuilder pointer based on the specified
    * language tag.
    *
-   * @param  country_code  the country code that will help determine the type
-   *                       of verbal formatter. (example: US)
-   * @param  state_code  the state code that will help determine the type
-   *                      of verbal formatter. (example: PA)
+   * @param  directions_options  The directions options such as: distance units
+   *                             and the language of the narration.
+   * @param  trip_path  The nodes, edges, and attributes of the route path.
    * @return NarrativeBuilder unique pointer.
    */
   static std::unique_ptr<NarrativeBuilder> Create(
