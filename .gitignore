@@ -36,6 +36,7 @@ path_test
 city_test
 time_distance_test
 adjacency_list_benchmark
+unconnected_ways
 *.o
 .deps/
 .dirstamp
