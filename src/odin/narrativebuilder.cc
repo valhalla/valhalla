@@ -11,10 +11,16 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace {
 // Text instruction initial capacity
 constexpr auto kTextInstructionInitialCapacity = 128;
+
+// Instruction tags
+constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
+constexpr auto kStreetNamesTag = "<STREET_NAMES>";
+constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 }
 
 namespace valhalla {
@@ -582,25 +588,11 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   instruction = start_group.get<std::string>(std::to_string(phrase_id));
   LOG_TRACE("start_group=" + instruction);
 
-  switch (phrase_id) {
-    // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
-    case 1: {
-      instruction = (boost::format("Head %1% on %2%.")
-          % cardinal_direction % street_names).str();
-      break;
-    }
-    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-    case 2: {
-      instruction = (boost::format("Head %1% on %2%. Continue on %3%.")
-          % cardinal_direction % begin_street_names % street_names).str();
-      break;
-    }
-    // 0 "Head <FormCardinalDirection>."
-    default: {
-      instruction = (boost::format("Head %1%.") % cardinal_direction).str();
-      break;
-    }
-  }
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  LOG_TRACE("start_group=" + instruction);
+
   // TODO - side of street
 
   return instruction;
