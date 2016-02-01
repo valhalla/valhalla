@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <string>
 #include <valhalla/midgard/logging.h>
 
 #include "odin/narrativebuilder.h"
@@ -9,6 +10,7 @@
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace {
 // Text instruction initial capacity
@@ -17,6 +19,15 @@ constexpr auto kTextInstructionInitialCapacity = 128;
 
 namespace valhalla {
 namespace odin {
+
+NarrativeBuilder::NarrativeBuilder(
+    const DirectionsOptions& directions_options,
+    const EnhancedTripPath* trip_path,
+    const boost::property_tree::ptree& dictionary)
+    : directions_options_(directions_options),
+      trip_path_(trip_path),
+      dictionary_(dictionary) {
+}
 
 void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
                              const EnhancedTripPath* etp,
@@ -543,9 +554,12 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 // dictionary
 
 std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
-  // 0 "Head <FormCardinalDirection>."
-  // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
-  // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+
+  // Get the start group
+  const auto& start_group = dictionary_.get_child("instructions.start");
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -564,6 +578,9 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   if (!begin_street_names.empty()) {
     phrase_id += 1;
   }
+
+  instruction = start_group.get<std::string>(std::to_string(phrase_id));
+  LOG_TRACE("start_group=" + instruction);
 
   switch (phrase_id) {
     // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
