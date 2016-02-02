@@ -212,6 +212,12 @@ class GraphTileBuilder : public baldr::GraphTile {
                     const std::string& country_iso, const std::string& state_iso);
 
   /**
+   * Gets a reference to the header builder.
+   * @return  Returns a reference to the header builder.
+   */
+  GraphTileHeader& header_builder();
+
+  /**
    * Gets a node from an existing tile.
    * @param  idx  Index of the node within the tile.
    * @return  Returns a reference to the node builder.

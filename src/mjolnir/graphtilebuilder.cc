@@ -31,10 +31,14 @@ namespace mjolnir {
 // StoreTileData.
 GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
                                    const GraphId& graphid, bool deserialize)
-    : GraphTile(hierarchy, graphid), hierarchy_(hierarchy){
+    : GraphTile(hierarchy, graphid),
+      hierarchy_(hierarchy) {
 
-  // Keep the id
-  header_builder_.set_graphid(graphid);
+  // Copy tile header to a builder (if tile exists)
+  if (size_ > 0) {
+    header_builder_ = static_cast<GraphTileHeader&>(*(header_));
+    header_builder_.set_graphid(graphid);
+  }
 
   // Done if not deserializing and creating builders for everything
   if (!deserialize) {
@@ -44,10 +48,6 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     write_bins_ = false;
     return;
   }
-
-  // Copy tile header to a builder
-  GraphTileHeader existinghdr = *(header_);
-  header_builder_ = static_cast<GraphTileHeader&>(existinghdr);
 
   // Unique set of offsets into the text list
   std::set<uint32_t> text_offsets;
@@ -281,7 +281,8 @@ void GraphTileBuilder::Update(
   if (file.is_open()) {
 
     // Write the updated header.
-    file.write(reinterpret_cast<const char*>(header_), sizeof(GraphTileHeader));
+    file.write(reinterpret_cast<const char*>(&header_builder_),
+               sizeof(GraphTileHeader));
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
@@ -415,6 +416,11 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
   } else {
     throw std::runtime_error("Failed to open file " + filename.string());
   }
+}
+
+// Gets a reference to the header builder.
+GraphTileHeader& GraphTileBuilder::header_builder() {
+  return header_builder_;
 }
 
 // Get the current list of node builders.
