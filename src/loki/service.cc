@@ -31,8 +31,7 @@ namespace {
     {"/locate", loki_worker_t::LOCATE},
     {"/one_to_many", loki_worker_t::ONE_TO_MANY},
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
-    {"/many_to_many", loki_worker_t::MANY_TO_MANY},
-    {"/optimized_order_route", loki_worker_t::OPTIMIZED_ORDER}
+    {"/many_to_many", loki_worker_t::MANY_TO_MANY}
   };
 
   constexpr double kKmPerMeter = 0.001;
@@ -181,8 +180,6 @@ namespace valhalla {
           case MANY_TO_ONE:
           case MANY_TO_MANY:
             return matrix(action->second, request_pt, info);
-          case OPTIMIZED_ORDER:
-            return optimized(request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
