@@ -31,6 +31,9 @@ enum class Traversability {
   kBoth = 3         // Edge is traversable in both directions
 };
 
+// Maximum relative density at a node or within a tile
+constexpr uint32_t kMaxDensity = 15;
+
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.

@@ -56,7 +56,7 @@ uint32_t GraphTileHeader::density() const {
 
 // Set the relative road density within this tile.
 void GraphTileHeader::set_density(const uint32_t density) {
-  density_ = density;
+  density_ = (density <= kMaxDensity) ? density : kMaxDensity;
 }
 
 // Get the relative quality of name assignment for this tile.
