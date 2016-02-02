@@ -19,7 +19,8 @@ namespace {
 constexpr float NONE_SNAP = 5.f * 5.f;
 //during edge searching we snap to vertices if you are closer than
 //12.5 meters (40 feet) to a given vertex.
-constexpr float NODE_SNAP = 12.5f * 12.5f;
+//NOTE:DWN changed to 5 meters
+constexpr float NODE_SNAP = 5.f * 5.f;
 //if you arent in this vicinity from an edge then you arent very close to it, helps to not
 //look at the shape of edges (expensive) for edges that are probably very far from your location
 constexpr float EDGE_RADIUS = 250.f * 250.f;
