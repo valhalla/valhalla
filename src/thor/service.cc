@@ -161,7 +161,8 @@ namespace {
    public:
     thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), reader(config.get_child("mjolnir.hierarchy")),
-      long_request(config.get<float>("thor.logging.long_request")){
+      long_request_route(config.get<float>("thor.logging.long_request_route")),
+      long_request_manytomany(config.get<float>("thor.logging.long_request_manytomany")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -438,11 +439,11 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if ((elapsed_time.count() / correlated.size()) > long_request) {
+      if ((elapsed_time.count() / correlated.size()) > long_request_route) {
         std::stringstream ss;
         LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::route request exceeded threshold::"+ request_str);
-        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+        midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
       }
       return result;
     }
@@ -512,6 +513,7 @@ namespace {
       auto s = std::chrono::system_clock::now();
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
+      auto matrix_action_type = request.get_optional<std::string>("matrix_type");
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
@@ -548,12 +550,13 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
+      auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request = long_request_route : long_request = long_request_manytomany;
       if ((elapsed_time.count() / correlated.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+        LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::" + *matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
+        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("thor_long_request_manytomany", " [ANALYTICS] ");
       }
 
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
@@ -674,7 +677,8 @@ namespace {
     thor::PathAlgorithm astar;
     thor::BidirectionalAStar bidir_astar;
     thor::MultiModalPathAlgorithm multi_modal_astar;
-    float long_request;
+    float long_request_route;
+    float long_request_manytomany;
   };
 }
 
