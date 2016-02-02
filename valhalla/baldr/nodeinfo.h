@@ -20,7 +20,6 @@ constexpr uint32_t kMaxAdminsPerTile    = 63;       // Maximum Admins per tile
 constexpr uint32_t kMaxTimeZonesPerTile = 511;      // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex   = 7;        // Max. index of edges on
                                                     // local level
-constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
 
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.f/359.f);
