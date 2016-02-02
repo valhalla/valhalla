@@ -162,7 +162,8 @@ namespace {
    public:
     thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), reader(config.get_child("mjolnir.hierarchy")),
-      long_request(config.get<float>("thor.logging.long_request")){
+      long_request_route(config.get<float>("thor.logging.long_request_route")),
+      long_request_manytomany(config.get<float>("thor.logging.long_request_manytomany")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -216,9 +217,9 @@ namespace {
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         } else if (optimized)
-          return get_optimized_path(correlated, request, info);
+          return get_optimized_path(correlated, costing, request, info);
         else
-         return get_trip_path(costing, request_str, date_time_type);
+          return get_trip_path(costing, request_str, date_time_type);
       }
 
       catch(const std::exception& e) {
@@ -231,7 +232,7 @@ namespace {
       }
     }
 
-    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, boost::optional<int> &date_time_type){
+    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type){
       worker_t::result_t result{true};
       //get time for start of request
       auto s = std::chrono::system_clock::now();
@@ -243,7 +244,7 @@ namespace {
       baldr::GraphId through_edge;
       std::vector<baldr::PathLocation> through_loc;
       std::vector<thor::PathInfo> path_edges;
-      std::string origin_date_time, dest_date_time;
+      std::string origin_date_time;
 
       if (date_time_type && *date_time_type == 2) {
 
@@ -339,115 +340,127 @@ namespace {
         for (const auto msg : messages)
           result.messages.emplace_back(msg);
 
-      } else {
-        baldr::PathLocation& last_break_origin = correlated[0];
-        for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
-          auto origin = *std::prev(path_location);
-          auto destination = *path_location;
-
-          if (date_time_type && (*date_time_type == 0 || *date_time_type == 1) &&
-              !dest_date_time.empty() && origin.stoptype_ == Location::StopType::BREAK)
-            origin.date_time_ = dest_date_time;
-
-          // Through edge is valid if last destination was "through"
-          if (through_edge.Is_Valid()) {
-            UpdateOrigin(origin, prior_is_node, through_edge);
-          } else {
-            last_break_origin = origin;
-          }
-
-          // Get the algorithm type for this location pair
-          thor::PathAlgorithm* path_algorithm;
-
-          if (costing == "multimodal") {
-            path_algorithm = &multi_modal_astar;
-          } else if (costing == "pedestrian" || costing == "bicycle") {
-            // Use bidirectional A* for pedestrian and bicycle if over 10km
-            float dist = origin.latlng_.Distance(destination.latlng_);
-            path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
-          } else {
-            path_algorithm = &astar;
-          }
-
-          // Get best path
-          if (path_edges.size() == 0) {
-            GetPath(path_algorithm, origin, destination, path_edges);
-            if (path_edges.size() == 0) {
-              throw std::runtime_error("No path could be found for input");
-            }
-
-            if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
-                origin.stoptype_ == Location::StopType::BREAK)
-              last_break_origin.date_time_ = origin.date_time_;
-
-          } else {
-            // Get the path in a temporary vector
-            std::vector<thor::PathInfo> temp_path;
-            GetPath(path_algorithm, origin, destination, temp_path);
-            if (temp_path.size() == 0) {
-              throw std::runtime_error("No path could be found for input");
-            }
-
-            if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
-                origin.stoptype_ == Location::StopType::BREAK)
-              last_break_origin.date_time_ = origin.date_time_;
-
-            // Append the temp_path edges to path_edges, adding the elapsed
-            // time from the end of the current path. If continuing along the
-            // same edge, remove the prior so we do not get a duplicate edge.
-            uint32_t t = path_edges.back().elapsed_time;
-            if (temp_path.front().edgeid == path_edges.back().edgeid) {
-              path_edges.pop_back();
-            }
-            for (auto edge : temp_path) {
-              edge.elapsed_time += t;
-              path_edges.emplace_back(edge);
-            }
-          }
-
-          // Build trip path for this leg and add to the result if this
-          // location is a BREAK or if this is the last location
-          if (destination.stoptype_ == Location::StopType::BREAK ||
-              path_location == --correlated.cend()) {
-              // Form output information based on path edges
-              auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                                                            last_break_origin, destination, through_loc);
-
-              if (date_time_type) {
-                origin_date_time = *last_break_origin.date_time_;
-                dest_date_time = *destination.date_time_;
-              }
-
-              // The protobuf path
-              result.messages.emplace_back(trip_path.SerializeAsString());
-
-              // Clear path edges and set through edge to invalid
-              path_edges.clear();
-              through_edge = baldr::GraphId();
-          } else {
-              // This is a through location. Save last edge as the through_edge
-              prior_is_node = destination.IsNode();
-              through_edge = path_edges.back().edgeid;
-
-              // Add to list of through locations for this leg
-              through_loc.emplace_back(destination);
-          }
-
-          // If we have another one coming we need to clear
-          if (--correlated.cend() != path_location)
-            path_algorithm->Clear();
-        }
+      } else { //TODO: make a getPathDepartFrom() to be called by get_trip_path & get_optimized_order
+        return getPathDepartFrom(correlated, costing, date_time_type);
       }
       //get processing time for thor
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if ((elapsed_time.count() / correlated.size()) > long_request) {
-        std::stringstream ss;
+      if ((elapsed_time.count() / correlated.size()) > long_request_route) {
         LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::route request exceeded threshold::"+ request_str);
-        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+        midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
       }
+      return result;
+    }
+
+    worker_t::result_t getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
+      worker_t::result_t result{true};
+      bool prior_is_node = false;
+      std::vector<baldr::PathLocation> through_loc;
+      baldr::GraphId through_edge;
+      std::vector<thor::PathInfo> path_edges;
+      std::string origin_date_time, dest_date_time;
+
+      baldr::PathLocation& last_break_origin = correlated[0];
+      for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
+        auto origin = *std::prev(path_location);
+        auto destination = *path_location;
+
+        if (date_time_type && (*date_time_type == 0 || *date_time_type == 1) &&
+            !dest_date_time.empty() && origin.stoptype_ == Location::StopType::BREAK)
+          origin.date_time_ = dest_date_time;
+
+        // Through edge is valid if last destination was "through"
+        if (through_edge.Is_Valid()) {
+          UpdateOrigin(origin, prior_is_node, through_edge);
+        } else {
+          last_break_origin = origin;
+        }
+
+        // Get the algorithm type for this location pair
+        thor::PathAlgorithm* path_algorithm;
+
+        if (costing == "multimodal") {
+          path_algorithm = &multi_modal_astar;
+        } else if (costing == "pedestrian" || costing == "bicycle") {
+          // Use bidirectional A* for pedestrian and bicycle if over 10km
+          float dist = origin.latlng_.Distance(destination.latlng_);
+          path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
+        } else {
+          path_algorithm = &astar;
+        }
+
+        // Get best path
+        if (path_edges.size() == 0) {
+          GetPath(path_algorithm, origin, destination, path_edges);
+          if (path_edges.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
+
+          if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
+              origin.stoptype_ == Location::StopType::BREAK)
+            last_break_origin.date_time_ = origin.date_time_;
+
+        } else {
+          // Get the path in a temporary vector
+          std::vector<thor::PathInfo> temp_path;
+          GetPath(path_algorithm, origin, destination, temp_path);
+          if (temp_path.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
+
+          if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
+              origin.stoptype_ == Location::StopType::BREAK)
+            last_break_origin.date_time_ = origin.date_time_;
+
+          // Append the temp_path edges to path_edges, adding the elapsed
+          // time from the end of the current path. If continuing along the
+          // same edge, remove the prior so we do not get a duplicate edge.
+          uint32_t t = path_edges.back().elapsed_time;
+          if (temp_path.front().edgeid == path_edges.back().edgeid) {
+            path_edges.pop_back();
+          }
+          for (auto edge : temp_path) {
+            edge.elapsed_time += t;
+            path_edges.emplace_back(edge);
+          }
+        }
+
+        // Build trip path for this leg and add to the result if this
+        // location is a BREAK or if this is the last location
+        if (destination.stoptype_ == Location::StopType::BREAK ||
+            path_location == --correlated.cend()) {
+            // Form output information based on path edges
+            auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
+                                                          last_break_origin, destination, through_loc);
+
+            if (date_time_type) {
+              origin_date_time = *last_break_origin.date_time_;
+              dest_date_time = *destination.date_time_;
+            }
+
+            // The protobuf path
+            result.messages.emplace_back(trip_path.SerializeAsString());
+
+            // Clear path edges and set through edge to invalid
+            path_edges.clear();
+            through_edge = baldr::GraphId();
+        } else {
+            // This is a through location. Save last edge as the through_edge
+            prior_is_node = destination.IsNode();
+            through_edge = path_edges.back().edgeid;
+
+            // Add to list of through locations for this leg
+            through_loc.emplace_back(destination);
+        }
+
+        // If we have another one coming we need to clear
+        if (--correlated.cend() != path_location)
+          path_algorithm->Clear();
+      }
+
       return result;
     }
 
@@ -487,7 +500,6 @@ namespace {
       // Find the path.
       path_edges = path_algorithm->GetBestPath(origin, destination, reader,
                                                mode_costing, mode);
-
       // If path is not found try again with relaxed limits (if allowed)
       if (path_edges.size() == 0) {
         valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
@@ -498,7 +510,6 @@ namespace {
           midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
           path_edges = path_algorithm->GetBestPath(origin, destination,
                                     reader, mode_costing, mode);
-
           // 3rd pass
           if (path_edges.size() == 0) {
             path_algorithm->Clear();
@@ -516,6 +527,7 @@ namespace {
       auto s = std::chrono::system_clock::now();
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
+      std::string matrix_action_type = "";
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
@@ -530,12 +542,15 @@ namespace {
       switch ( matrix_type) {
        case MATRIX_TYPE::ONE_TO_MANY:
          json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
+         matrix_action_type = "one-to-many";
          break;
        case MATRIX_TYPE::MANY_TO_ONE:
          json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
+         matrix_action_type = "many-to-one";
          break;
        case MATRIX_TYPE::MANY_TO_MANY:
          json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
+         matrix_action_type = "many-to-many";
          break;
       }
 
@@ -552,12 +567,17 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
+      auto long_request = 0.f;
+      if (matrix_type!=MATRIX_TYPE::MANY_TO_MANY)
+        long_request = long_request_route;
+      else long_request = long_request_manytomany;
+
       if ((elapsed_time.count() / correlated.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
+        LOG_WARN("thor::" + matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::" + matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
+        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("thor_long_request_manytomany", " [ANALYTICS] ");
       }
 
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
@@ -567,10 +587,11 @@ namespace {
       return result;
     }
 
-    worker_t::result_t  get_optimized_path(const std::vector<PathLocation> correlated, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+    worker_t::result_t  get_optimized_path(const std::vector<PathLocation> correlated, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
 
+      auto date_time_type = request.get_optional<int>("date_time.type");
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
       auto units = request.get<std::string>("units", "km");
@@ -586,49 +607,23 @@ namespace {
       std::vector<float> time_costs;
       for (size_t i = 0; i < td.size(); i++) {
         time_costs.emplace_back(static_cast<float>(td[i].time));
-        LOG_INFO("time_costs vector output from Many to Many:: " + std::to_string(td[i].time));
+        //LOG_INFO("time_costs vector output from Many to Many:: " + std::to_string(td[i].time));
+      }
+      for (size_t i = 0; i < correlated.size(); i++) {
+        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
       }
       Optimizer optimizer;
       //returns the optimal order of the path_locations
       auto order = optimizer.Solve(correlated.size(), time_costs);
-
       std::vector<PathLocation> best_order;
       for (size_t i = 0; i< order.size(); i++) {
         LOG_INFO("optimizer return:: " + std::to_string(order[i]));
-
-      //  best_order.emplace_back(correlated[order[i]]);
-      //  LOG_INFO("reordered locations:: " + std::to_string(correlated[order[0]].latlng_.lat()) + ", "+ std::string(correlated[order[0]].latlng_.lng()));
-      // LOG_INFO("reordered locations:: " + std::to_string(correlated[order[i]].latlng_.lat()) + ", "+ std::string(correlated[order[i]].latlng_.lng()));
+        best_order.emplace_back(correlated[order[i]]);
+        LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
 
+      return getPathDepartFrom(best_order, costing, date_time_type);
 
-      //jsonp callback if need be
-      json::MapPtr json;
-      std::ostringstream stream;
-      auto jsonp = request.get_optional<std::string>("jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      //get processing time for thor
-      auto e = std::chrono::system_clock::now();
-      std::chrono::duration<float, std::milli> elapsed_time = e - s;
-      //log request if greater than X (ms)
-      if ((elapsed_time.count() / correlated.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::optimized route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::optimized route request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("thor_long_request", " [ANALYTICS] ");
-      }
-
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      worker_t::result_t result{false};
-      result.messages.emplace_back(response.to_string());
-      return result;
     }
 
     // Get the costing options. Get the base options from the config and the
@@ -742,7 +737,8 @@ namespace {
     thor::PathAlgorithm astar;
     thor::BidirectionalAStar bidir_astar;
     thor::MultiModalPathAlgorithm multi_modal_astar;
-    float long_request;
+    float long_request_route;
+    float long_request_manytomany;
   };
 }
 
