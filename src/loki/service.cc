@@ -34,7 +34,6 @@ namespace {
     {"/many_to_many", loki_worker_t::MANY_TO_MANY}
   };
 
-  constexpr double kKmPerMeter = 0.001;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
