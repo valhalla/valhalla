@@ -11,6 +11,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace {
@@ -21,6 +22,17 @@ constexpr auto kTextInstructionInitialCapacity = 128;
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
+
+template<typename T>
+std::vector<T> as_vector(boost::property_tree::ptree const& pt,
+                         boost::property_tree::ptree::key_type const& key) {
+  std::vector<T> items;
+  for (const auto& item : pt.get_child(key)) {
+    items.push_back(item.second.get_value<T>());
+  }
+  return items;
+}
+
 }
 
 namespace valhalla {
@@ -564,14 +576,15 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
 
-  // Get the start group
-  const auto& start_group = dictionary_.get_child("instructions.start");
+  // Get the start subset
+  const auto& start_subset = dictionary_.get_child("instructions.start");
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
 
-  std::string cardinal_direction = FormCardinalDirection(
-      maneuver.begin_cardinal_direction());
+  std::string cardinal_direction = as_vector<std::string>(start_subset,
+                                                          "cardinal_directions")
+      .at(maneuver.begin_cardinal_direction());
   std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
                                              true);
   std::string begin_street_names = FormStreetNames(
@@ -585,13 +598,13 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
     phrase_id += 1;
   }
 
-  instruction = start_group.get<std::string>(std::to_string(phrase_id));
-  LOG_TRACE("start_group=" + instruction);
+  instruction = start_subset.get<std::string>(std::to_string(phrase_id));
+  LOG_TRACE("start_subset=" + instruction);
 
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
-  LOG_TRACE("start_group=" + instruction);
+  LOG_TRACE("start_subset=" + instruction);
 
   // TODO - side of street
 
