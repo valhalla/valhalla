@@ -420,6 +420,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       }
     }
 
+    // shape data
     std::string shape_id = pair_pt.second.get<std::string>("route_stop_pattern_onestop_id", "null");
     if(shape_id != "null") {
 
@@ -553,6 +554,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       request = response.get_optional<std::string>("meta.next");
     } while(request && (request = *request + api_key));
 
+    //pull out all the route_stop_patterns or shapes
     std::unordered_map<std::string, size_t> shapes;
     for(const auto& route : routes) {
       request = url((boost::format("/api/v1/route_stop_patterns?total=false&per_page=%1%&traversed_by=%2%")
@@ -560,7 +562,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       do {
         //grab some stuff
         response = curler(*request, "route_stop_patterns");
-        //copy pairs in, noting if any dont have stops
+        //copy shapes in.
         get_stop_patterns(tile, shapes, response);
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
