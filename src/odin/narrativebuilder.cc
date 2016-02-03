@@ -22,6 +22,7 @@ constexpr auto kTextInstructionInitialCapacity = 128;
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
+constexpr auto kLengthTag = "<LENGTH>";
 
 template<typename T>
 std::vector<T> as_vector(boost::property_tree::ptree const& pt,
@@ -582,15 +583,21 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
 
-  std::string cardinal_direction = as_vector<std::string>(start_subset,
-                                                          "cardinal_directions")
+  // Set cardinal_direction value
+  std::string cardinal_direction =
+      as_vector<std::string>(start_subset, "cardinal_directions")
       .at(maneuver.begin_cardinal_direction());
+
+  // Set street_names value
   std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
                                              true);
+
+  // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(
       maneuver, maneuver.begin_street_names());
-  uint8_t phrase_id = 0;
 
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id += 1;
   }
@@ -598,13 +605,13 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
     phrase_id += 1;
   }
 
+  // Set instruction to the determined tagged phrase
   instruction = start_subset.get<std::string>(std::to_string(phrase_id));
-  LOG_TRACE("start_subset=" + instruction);
 
+  // Replace phrase tags with values
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
-  LOG_TRACE("start_subset=" + instruction);
 
   // TODO - side of street
 
@@ -614,51 +621,49 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 std::string NarrativeBuilder::FormVerbalStartInstruction(
     Maneuver& maneuver, DirectionsOptions_Units units,
     uint32_t element_max_count, std::string delim) {
-  // 0 "Head <FormCardinalDirection> for <DISTANCE>."
-  // 1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
-  // 2 "Head <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
+  // "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+
+  // Get the start_verbal subset
+  const auto& start_verbal_subset = dictionary_.get_child("instructions.start_verbal");
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
 
-  std::string cardinal_direction = FormCardinalDirection(
-      maneuver.begin_cardinal_direction());
+  // Set cardinal_direction value
+  std::string cardinal_direction =
+      as_vector<std::string>(start_verbal_subset, "cardinal_directions")
+      .at(maneuver.begin_cardinal_direction());
+
+  // Set street_names value
   std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
                                              true, element_max_count, delim,
                                              maneuver.verbal_formatter());
+
+  // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(
       maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
       maneuver.verbal_formatter());
 
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
-
+  if (!street_names.empty()) {
+    phrase_id += 1;
+  }
   if (!begin_street_names.empty()) {
-    phrase_id = 1;
-  } else if (!street_names.empty()) {
-    phrase_id = 2;
+    phrase_id += 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
-    case 1: {
-      instruction = (boost::format("Head %1% on %2%.")
-          % cardinal_direction % begin_street_names).str();
-      break;
-    }
-    // 2 "Head <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
-    case 2: {
-      instruction = (boost::format("Head %1% on %2% for %3%.")
-          % cardinal_direction % street_names % FormDistance(maneuver, units))
-          .str();
-      break;
-    }
-    // 0 "Head <FormCardinalDirection> for <DISTANCE>."
-    default: {
-      instruction = (boost::format("Head %1% for %2%.") % cardinal_direction
-          % FormDistance(maneuver, units)).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = start_verbal_subset.get<std::string>(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  boost::replace_all(instruction, kLengthTag, FormDistance(maneuver, units));
+
   // TODO - side of street
 
   return instruction;
@@ -3849,7 +3854,7 @@ std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormStreetNames(
     const Maneuver& maneuver, const StreetNames& street_names,
-    bool enhance_blank_street_names, uint32_t max_count, std::string delim,
+    bool enhance_empty_street_names, uint32_t max_count, std::string delim,
     const VerbalTextFormatter* verbal_formatter) {
   std::string street_names_string;
 
@@ -3861,7 +3866,7 @@ std::string NarrativeBuilder::FormStreetNames(
 
   // If empty street names string
   // then determine if walkway or bike path
-  if (enhance_blank_street_names && street_names_string.empty()) {
+  if (enhance_empty_street_names && street_names_string.empty()) {
 
     // If pedestrian travel mode on unnamed footway
     // then set street names string to walkway
