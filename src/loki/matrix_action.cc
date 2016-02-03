@@ -25,7 +25,6 @@ namespace std {
 }
 
 namespace {
-
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> STRING_TO_ACTION {
     {"one_to_many", loki_worker_t::ONE_TO_MANY},
     {"many_to_one", loki_worker_t::MANY_TO_ONE},
@@ -42,6 +41,7 @@ namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+  std::vector<float> max_manytomany_list;
 
   void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
@@ -49,10 +49,11 @@ namespace {
       throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations) + ".");
   }
 
-  void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float matrix_max_distance) {
+  void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float matrix_max_distance, const std::string action_str) {
+    auto max_location_distance = 0.f;
+
     //see if any locations pairs are unreachable or too far apart
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-
     //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
     for(size_t i = start; i < end; ++i) {
       //check connectivity
@@ -63,12 +64,23 @@ namespace {
 
       //check if distance between latlngs exceed max distance limit the chosen matrix type
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
+      if (i==0)
+        max_location_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
+
+      //only want to log the maximum distance between 2 locations for matrix
+      //LOG_INFO("path_distance -> " + std::to_string(path_distance));
+      if (path_distance >= max_location_distance) {
+        if (action_str != "many_to_many" )
+          max_location_distance = path_distance;
+          //LOG_INFO("max_location_distance -> " + std::to_string(max_location_distance));
+        else max_manytomany_list.push_back(path_distance);
+      }
 
       if (path_distance > matrix_max_distance)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
-
-      valhalla::midgard::logging::Log("location_distance (km)::" + std::to_string(path_distance * kKmPerMeter), " [ANALYTICS] ");
-    }
+      }
+    if (action_str != "many_to_many" )
+      valhalla::midgard::logging::Log("max_location_distance (km)::" + std::to_string(max_location_distance * kKmPerMeter), " [ANALYTICS] ");
   }
 }
 
@@ -83,17 +95,28 @@ namespace valhalla {
       //check the distances
       switch (action) {
         case ONE_TO_MANY:
-          check_distance(reader,locations,0,0,locations.size(),max_distance.find(action_str)->second);
+          check_distance(reader,locations,0,0,locations.size(),max_distance.find(action_str)->second, action_str);
           break;
         case MANY_TO_ONE:
-          check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second);
+          check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, action_str);
           break;
         case MANY_TO_MANY:
           for(size_t i = 0; i < locations.size()-1; ++i)
-            check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second);
+            check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, action_str);
+
+          auto max_location_distance = 0.f;
+            for(size_t i = 0; i < max_manytomany_list.size(); ++i) {
+              if (i==0)
+                max_location_distance = max_manytomany_list[0];
+
+              //LOG_INFO("path_distance -> " + std::to_string(max_manytomany_list[i]));
+              if (max_manytomany_list[i] >= max_location_distance)
+                max_location_distance = max_manytomany_list[i];
+                //LOG_INFO("max_location_distance -> " + std::to_string(max_location_distance));
+            }
+            valhalla::midgard::logging::Log("max_location_distance (km)::" + std::to_string(max_location_distance * kKmPerMeter), " [ANALYTICS] ");
           break;
       }
-
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
         auto correlated = loki::Search(locations[i], reader, costing_filter);
