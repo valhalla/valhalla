@@ -550,7 +550,7 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request = long_request_route : long_request = long_request_manytomany;
+      auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request_route : long_request_manytomany;
       if ((elapsed_time.count() / correlated.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
