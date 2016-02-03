@@ -1008,7 +1008,7 @@ void build(const std::string& transit_dir,
       shape_data.ends = distances.size()-1;
       shape_data.shape = trip_shape;
       //shape id --> begin and end indexes in the distance vector and vector of points.
-      shapes.insert({shape.shape_id(), shape_data});
+      shapes[shape.shape_id()] = shape_data;
     }
 
     // Sort the connection edges
