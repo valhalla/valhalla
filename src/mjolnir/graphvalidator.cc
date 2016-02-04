@@ -227,11 +227,6 @@ std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hiera
     if(!id.second)
       continue;
 
-    //to avoid dups and minimize having to leave the tile for shape we:
-    //always write a given edge to the tile it originates in
-    //never write a given edge to the tile it terminates in
-    //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
-
     //intersect the shape
     auto info = tile->edgeinfo(edge->edgeinfo_offset());
     const auto& shape = info->shape();
@@ -240,13 +235,14 @@ std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hiera
     //bin some in, save some for later, ignore some
     GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(), edge - start_edge);
     for(const auto& i : intersection) {
-      //never write to terminating tile
-      bool terminating = i.first == edge->endnode().tileid();
-      //always write the originating tile
+      //to avoid dups and minimize having to leave the tile for shape we:
+      //always write a given edge to the tile it originates in
       bool originating = i.first == edge_id.tileid();
-      //write intermediate if originating is smaller than terminating
+      //never write a given edge to the tile it terminates in
+      bool terminating = i.first == edge->endnode().tileid();
+      //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
       bool intermediate = i.first < edge->endnode().tileid();
-      if(!terminating) {
+      if(originating || (intermediate && !terminating)) {
         //which set of bins
         auto& out_bins = originating ? bins : tweeners.insert({GraphId(i.first, edge_id.level(), 0), {}}).first->second;
         //keep the edge id
