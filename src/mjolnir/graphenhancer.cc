@@ -62,7 +62,10 @@ constexpr uint32_t kMaxNoThruTries = 256;
 constexpr float kMetersOffsetForHeading = 30.0f;
 
 // Radius (km) to use for density
-constexpr float kDensityRadius = 2.5f;
+constexpr float kDensityRadius  = 2.0f;
+constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
+constexpr float kDensityLatDeg  = (kDensityRadius * kMetersPerKm) /
+                                      kMetersPerDegreeLat;
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -156,38 +159,31 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
       return;
     }
 
-    // TODO
-    // Modify speed based on urban/rural region
-    if (directededge.classification() == RoadClass::kMotorway ||
-        directededge.classification() == RoadClass::kTrunk) {
-      // Motorway or trunk - allow higher speed for rural than urban
-    } else {
-      // Modify speed: high density (urban) vs. low density (rural). Assume
-      // the mean density is 8 - anything above that we assume is urban
-      if (density > 8) {
-        if (directededge.classification() == RoadClass::kPrimary) {
-          directededge.set_speed(60);  // 35MPH
-        } else if (directededge.classification() == RoadClass::kSecondary) {
-          directededge.set_speed(50);  // 30 MPH
-        } else if (directededge.classification() == RoadClass::kTertiary) {
-          directededge.set_speed(40);  // 25 MPH
-        } else if (directededge.classification() == RoadClass::kResidential ||
-                   directededge.classification() == RoadClass::kUnclassified) {
-          directededge.set_speed(35);  // 20 MPH
-        } else {
-          directededge.set_speed(25);  // 15 MPH (service/alley)
-        }
+    // Modify speed based on urban/rural region - anything above 8 (TBD) is
+    // assumed to be urban
+    if (density > 8) {
+      if (directededge.classification() == RoadClass::kMotorway) {
+        directededge.set_speed(90);  // 55MPH
+      } else if (directededge.classification() == RoadClass::kTrunk) {
+        directededge.set_speed(75);  // 45MPH
+      } else if (directededge.classification() == RoadClass::kPrimary) {
+        directededge.set_speed(60);  // 35MPH
+      } else if (directededge.classification() == RoadClass::kSecondary) {
+        directededge.set_speed(50);  // 30 MPH
+      } else if (directededge.classification() == RoadClass::kTertiary) {
+        directededge.set_speed(40);  // 25 MPH
+      } else if (directededge.classification() == RoadClass::kResidential ||
+                 directededge.classification() == RoadClass::kUnclassified) {
+        directededge.set_speed(35);  // 20 MPH
+      } else {
+        directededge.set_speed(25);  // 15 MPH (service/alley)
       }
     }
 
-    // Modify speed based on surface
+    // Modify speed based on surface.
     if (directededge.surface() >= Surface::kPavedRough) {
       uint32_t speed = directededge.speed();
-      if (speed >= 50) {
-         directededge.set_speed(speed - 10);
-      } else if (speed > 15) {
-        directededge.set_speed(speed - 5);
-      }
+      directededge.set_speed(speed / 2);
     }
   }
 }
@@ -475,19 +471,19 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
  *          more dense.
  */
 uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
-                    float& maxdensity, Tiles<PointLL>& tiles, uint8_t local_level) {
+                    enhancer_stats& stats, const Tiles<PointLL>& tiles,
+                    uint8_t local_level) {
   // Radius is in km - turn into meters
-  float kr2 = kDensityRadius * kDensityRadius;
-  float mr2 = kr2 * 1000000.0f;
+  float rm = kDensityRadius * kMetersPerKm;
+  float mr2 = rm * rm;
 
+  // Use distance approximator for all distance checks
   DistanceApproximator approximator(ll);
 
   // Get a list of tiles required for a node search within this radius
-  float latdeg = (kDensityRadius / kMetersPerDegreeLat) * 0.5f;
-  float mpd = DistanceApproximator::MetersPerLngDegree(ll.lat());
-  float lngdeg = (kDensityRadius / mpd) * 0.5f;
-  AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
-             Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
+  float lngdeg = (rm / DistanceApproximator::MetersPerLngDegree(ll.lat()));
+  AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg),
+                      Point2(ll.lng() + lngdeg, ll.lat() + kDensityLatDeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
   // For all tiles needed to find nodes within the radius...find nodes within
@@ -505,18 +501,16 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
     const auto end_node   = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
-      float d = approximator.DistanceSquared(node->latlng());
-      if (d < mr2) {
+      if (approximator.DistanceSquared(node->latlng()) < mr2) {
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-          // Exclude non-roads (parking, walkways, etc.)
+          // Exclude non-roads (parking, walkways, ferries, etc.)
           if (directededge->use() == Use::kRoad ||
               directededge->use() == Use::kRamp ||
               directededge->use() == Use::kTurnChannel ||
               directededge->use() == Use::kAlley ||
-              directededge->use() == Use::kEmergencyAccess ||
-              directededge->use() == Use::kCuldesac) {
+              directededge->use() == Use::kEmergencyAccess) {
             roadlengths += directededge->length();
           }
         }
@@ -526,25 +520,17 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
 
   // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
   // (since 2 directed edges per edge)
-  float density = (roadlengths * 0.0005f) / (kPi * kr2);
-  if (density > maxdensity)
-     maxdensity = density;
+  float density = (roadlengths * 0.0005f) / (kPi * kDensityRadius2);
+  if (density > stats.max_density)
+    stats.max_density = density;
 
   // Convert density into a relative value from 0-16.
-  // Median density is ~4 km / km2
-  // Less than 1% have density > 20 km / km2
-  float mid = 6.0;
-  float m2  = 10.0f;
-  float max = 18.0f;  // about 4.5M above this
-  uint32_t relative_density;
-  if (density < mid) {
-    relative_density = static_cast<uint32_t>((density / mid) * 10.0f);
-  } else if (density < m2) {
-    relative_density = static_cast<uint32_t>(((density - mid) / (m2 - mid)) * 3.0f) + 10;
-  } else {
-    relative_density = static_cast<uint32_t>(((density - m2) / (max - mid)) * 3.0f) + 13;
+  uint32_t relative_density = std::round(density * 0.7f);
+  if (relative_density > 15) {
+    relative_density = 15;
   }
-  return (relative_density < 16) ? relative_density : 15;
+  stats.density_counts[relative_density]++;
+  return relative_density;
 }
 
 // Get polygon index.  Used by tz and admin areas
@@ -782,6 +768,61 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
 }
 
 /**
+ * Returns true if edge transition is a cycleway u-turn, false otherwise.
+ *
+ * @param  from_index  Index of the 'from' directed edge.
+ * @param  to_index  Index of the 'to' directed edge.
+ * @param  directededge  Directed edge builder.
+ * @param  edges  Directed edges outbound from a node.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
+ * @return true if edge transition is a cycleway u-turn, false otherwise.
+ */
+bool IsCyclewayUturn(uint32_t from_index, uint32_t to_index,
+                        const DirectedEdge& directededge,
+                        const DirectedEdge* edges,
+                        const NodeInfo& node_info,
+                        uint32_t turn_degree) {
+
+  // we only deal with Cycleways
+  if (edges[from_index].use() != Use::kCycleway || edges[to_index].use() != Use::kCycleway)
+    return false;
+
+  // Logic for drive on right
+  if (directededge.drive_on_right()) {
+    // If the turn is a sharp left (179 < turn < 211)
+    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+    // and an intersecting right road exists
+    // and an intersecting left road exists
+    // then it is a cycleway u-turn
+    if ((((turn_degree > 179) && (turn_degree < 211))
+        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
+            && (turn_degree > 179) && (turn_degree < 226)))
+      && directededge.edge_to_right(from_index)
+      && directededge.edge_to_left(from_index)) {
+      return true;
+    }
+  }
+  // Logic for drive on left
+  else {
+    // If the turn is a sharp right (149 < turn < 181)
+    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+    // and an intersecting right road exists
+    // and an intersecting left road exists
+    // then it is a right cyclewayt u-turn
+    if ((((turn_degree > 149) && (turn_degree < 181))
+        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
+            && (turn_degree > 134) && (turn_degree < 181)))
+      && directededge.edge_to_right(from_index)
+      && directededge.edge_to_left(from_index)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Gets the stop likelihoood / impact at an intersection when transitioning
  * from one edge to another. This depends on the difference between the
  * classifications/importance of the from and to edge and the highest
@@ -824,23 +865,26 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     return 0;
   }
 
-  // No stop impact going from a turn channel. Stop impact will
-  // be set entering a turn channel
-  if (edges[from].use() == Use::kTurnChannel) {
-    return 0;
-  }
-
   // Handle Pencil point u-turn
   if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo,
                          turn_degree)) {
     stats.pencilucount++;
     return 7;
   }
+
+  // Handle Cycleway u-turn
+  if (IsCyclewayUturn(from, to, directededge, edges, nodeinfo,
+                      turn_degree)) {
+    return 7;
+  }
+
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
   const DirectedEdge* edge = &edges[0];
-  RoadClass bestrc = RoadClass::kServiceOther;
+  // kUnclassified,  kResidential, and kServiceOther are grouped
+  // together for the stop_impact logic.
+  RoadClass bestrc = RoadClass::kUnclassified;
   for (uint32_t i = 0; i < count; i++, edge++) {
     // Check the road if it is driveable TO the intersection and is neither
     // the "to" nor "from" edge. Treat roundabout edges as two levels
@@ -857,15 +901,29 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     }
   }
 
+  // kUnclassified,  kResidential, and kServiceOther are grouped
+  // together for the stop_impact logic.
+  RoadClass from_rc = edges[from].classification();
+  if (from_rc > RoadClass::kUnclassified)
+    from_rc = RoadClass::kUnclassified;
+
   // Set stop impact to the difference in road class (make it non-negative)
-  int impact = static_cast<int>(edges[from].classification()) -
-          static_cast<int>(bestrc);
+  int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
+
+  // if we are continuing on a cycleway, reduce the cost by half
+  if (edges[from].use() == Use::kCycleway && edges[to].use() == Use::kCycleway)
+    stop_impact *= 0.5f;
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
 
   // TODO:Increase stop level based on classification of edges
+
+  // Reduce stop impact from a turn channel
+  if (edges[from].use() == Use::kTurnChannel) {
+    stop_impact /= 2;
+  }
 
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
@@ -1051,29 +1109,21 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
-  lock.lock();
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  lock.unlock();
+  const auto& tile_hierarchy = reader.GetTileHierarchy();
+  const auto& local_level = tile_hierarchy.levels().rbegin()->second.level;
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
-
-    // Get the next tile Id from the queue and get writeable
-    // and readable tile
+    // Get the next tile Id from the queue and get writeable and readable
+    // tile. Lock while we access the tile queue and get the tile.
     lock.lock();
     if (tilequeue.empty()) {
       lock.unlock();
       break;
     }
     GraphId tile_id = tilequeue.front();
-    uint32_t id  = tile_id.tileid();
     tilequeue.pop();
-
-    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
-    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
-    std::unordered_map<uint32_t,bool> drive_on_right;
 
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
@@ -1101,6 +1151,9 @@ void enhance(const boost::property_tree::ptree& pt,
     // Get the admin polygons. If only one exists for the tile check if the
     // tile is entirely inside the polygon
     bool tile_within_one_admin = false;
+    uint32_t id  = tile_id.tileid();
+    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
+    std::unordered_map<uint32_t,bool> drive_on_right;
     if (admin_db_handle) {
       admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
                            tilebuilder);
@@ -1111,6 +1164,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     bool tile_within_one_tz = false;
+    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
     if (tz_db_handle) {
       tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id));
       if (tz_polys.size() == 1) {
@@ -1168,7 +1222,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
       // Get relative road density and local density
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(),
-                                    stats.max_density, tiles, local_level);
+                                    stats, tiles, local_level);
+      nodeinfo.set_density(density);
 
       // Set admin index
       uint32_t admin_index = (tile_within_one_admin) ?
@@ -1187,9 +1242,6 @@ void enhance(const boost::property_tree::ptree& pt,
       if (admin_index != 0)
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
       else stats.no_country_found++;
-
-      nodeinfo.set_density(density);
-      stats.density_counts[density]++;
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
       // on the node as well.
@@ -1224,7 +1276,7 @@ void enhance(const boost::property_tree::ptree& pt,
       }
 
       // Go through directed edges and "enhance" directed edge attributes
-      const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
+      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);

@@ -33,6 +33,15 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+struct HGVRestrictionTypes {
+  bool hazmat;
+  bool axle_load;
+  bool height;
+  bool length;
+  bool weight;
+  bool width;
+};
+
 bool ShapesMatch(const std::vector<PointLL>& shape1,
 		         const std::vector<PointLL>& shape2) {
   if (shape1.size() != shape2.size()) {
@@ -252,12 +261,82 @@ std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hiera
   return bins;
 }
 
+void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
+                   const uint32_t tileid, std::string& begin_node_iso,
+                   HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder) {
+  auto rclass = directededge.classification();
+  float edge_length = (tileid == directededge.endnode().tileid()) ?
+        directededge.length() * 0.5f : directededge.length() * 0.25f;
+
+  // Add truck stats.
+  if (directededge.truck_route()) {
+    stats.add_tile_truck_route(tileid, rclass, edge_length);
+    stats.add_country_truck_route(begin_node_iso, rclass, edge_length);
+  }
+  if (hgv.hazmat) {
+    stats.add_tile_hazmat(tileid, rclass, edge_length);
+    stats.add_country_hazmat(begin_node_iso, rclass, edge_length);
+  }
+  if (hgv.axle_load) {
+    stats.add_tile_axle_load(tileid, rclass);
+    stats.add_country_axle_load(begin_node_iso, rclass);
+  }
+  if (hgv.height) {
+    stats.add_tile_height(tileid, rclass);
+    stats.add_country_height(begin_node_iso, rclass);
+  }
+  if (hgv.length) {
+    stats.add_tile_length(tileid, rclass);
+    stats.add_country_length(begin_node_iso, rclass);
+  }
+  if (hgv.weight) {
+    stats.add_tile_weight(tileid, rclass);
+    stats.add_country_weight(begin_node_iso, rclass);
+  }
+  if (hgv.width) {
+    stats.add_tile_width(tileid, rclass);
+    stats.add_country_width(begin_node_iso, rclass);
+  }
+
+  // Add all other statistics
+  // Only consider edge if edge is good and it's not a link
+  if (!directededge.link()) {
+    //Determine access for directed edge
+    auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
+    auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
+    // Check if one way
+    if ((!fward || !bward) && (fward || bward)) {
+      stats.add_tile_one_way(tileid, rclass, edge_length);
+      stats.add_country_one_way(begin_node_iso, rclass, edge_length);
+    }
+    // Check if this edge is internal
+    if (directededge.internal()) {
+      stats.add_tile_int_edge(tileid, rclass);
+      stats.add_country_int_edge(begin_node_iso, rclass);
+    }
+    // Check if edge has maxspeed tag
+    if (directededge.speed_type() == SpeedType::kTagged){
+      stats.add_tile_speed_info(tileid, rclass, edge_length);
+      stats.add_country_speed_info(begin_node_iso, rclass, edge_length);
+    }
+    // Check if edge has any names
+    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
+      stats.add_tile_named(tileid, rclass, edge_length);
+      stats.add_country_named(begin_node_iso, rclass, edge_length);
+    }
+
+    // Add road lengths to statistics for current country and tile
+    stats.add_country_road(begin_node_iso, rclass, edge_length);
+    stats.add_tile_road(tileid, rclass, edge_length);
+  }
+}
+
 void validate(const boost::property_tree::ptree& pt,
               std::deque<GraphId>& tilequeue, std::mutex& lock,
-              std::promise<std::pair<validator_stats, tweeners_t> >& result) {
+              std::promise<std::pair<validator_stats, tweeners_t>>& result) {
 
     // Our local class for gathering the stats
-    validator_stats vStats;
+    validator_stats stats;
     // Our local copy of edges binned to tiles that they pass through (dont start or end in)
     tweeners_t tweeners;
     // Local Graphreader
@@ -323,9 +402,14 @@ void validate(const boost::property_tree::ptree& pt,
             }
           }
 
+          // HGV restriction mask (for stats)
+          HGVRestrictionTypes hgv = {};
+
           // Validate access restrictions. TODO - should check modes as well
           uint32_t ar_modes = de->access_restriction();
           if (ar_modes) {
+            //since only truck restrictions exist, we can still get all restrictions
+            //later we may only want to get just the truck ones for stats.
             auto res = tile->GetAccessRestrictions(idx, kAllAccess);
             if (res.size() == 0) {
               LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
@@ -334,6 +418,29 @@ void validate(const boost::property_tree::ptree& pt,
               for (auto r : res) {
                 if (r.edgeindex() != idx) {
                   LOG_ERROR("Access restriction edge index does not match idx");
+                } else {// log stats.  currently only for truck right now
+                  switch (r.type()) {
+                    case AccessType::kHazmat:
+                      hgv.hazmat = true;
+                      break;
+                    case AccessType::kMaxAxleLoad:
+                      hgv.axle_load = true;
+                      break;
+                    case AccessType::kMaxHeight:
+                      hgv.height = true;
+                      break;
+                    case AccessType::kMaxLength:
+                      hgv.length = true;
+                      break;
+                    case AccessType::kMaxWeight:
+                      hgv.weight = true;
+                      break;
+                    case AccessType::kMaxWidth:
+                      hgv.width = true;
+                      break;
+                    default:
+                      break;
+                  }
                 }
               }
             }
@@ -344,13 +451,13 @@ void validate(const boost::property_tree::ptree& pt,
                     nodeinfo.edge_index() + j);
 
           // Road Length and some variables for statistics
-          float tempLength;
-          bool validLength = false;
+          float edge_length;
+          bool valid_length = false;
           if (!directededge.shortcut() && !directededge.trans_up() &&
               !directededge.trans_down()) {
-            tempLength = directededge.length();
-            roadlength += tempLength;
-            validLength = true;
+            edge_length = directededge.length();
+            roadlength += edge_length;
+            valid_length = true;
           }
 
           // Check if end node is in a different tile
@@ -378,41 +485,16 @@ void validate(const boost::property_tree::ptree& pt,
             directededge.set_ctry_crossing(true);
           }
 
+          // Add the directed edge to the local list
           directededges.emplace_back(std::move(directededge));
 
-          // Add statistics
-          // Only consider edge if edge is good and it's not a link
-          if (validLength && !directededge.link()) {
-            auto rclass = directededge.classification();
-            tempLength /= (tileid == directededge.endnode().tileid()) ? 2 : 4;
-            //Determine access for directed edge
-            auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
-            auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
-            // Check if one way
-            if ((!fward || !bward) && (fward || bward)) {
-              vStats.add_tile_one_way(tileid, rclass, tempLength);
-              vStats.add_country_one_way(begin_node_iso, rclass, tempLength);
-            }
-            // Check if this edge is internal
-            if (directededge.internal()) {
-              vStats.add_tile_int_edge(tileid, rclass);
-              vStats.add_country_int_edge(begin_node_iso, rclass);
-            }
-            // Check if edge has maxspeed tag
-            if (directededge.speed_type() == SpeedType::kTagged){
-              vStats.add_tile_speed_info(tileid, rclass, tempLength);
-              vStats.add_country_speed_info(begin_node_iso, rclass, tempLength);
-            }
-            // Check if edge has any names
-            if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
-              vStats.add_tile_named(tileid, rclass, tempLength);
-              vStats.add_country_named(begin_node_iso, rclass, tempLength);
-            }
-            // Add road lengths to statistics for current country and tile
-            vStats.add_country_road(begin_node_iso, rclass, tempLength);
-            vStats.add_tile_road(tileid, rclass, tempLength);
+          // Statistics
+          if (valid_length) {
+            AddStatistics(stats, directededge, tileid, begin_node_iso,
+                          hgv, tilebuilder);
           }
         }
+
         // Add the node to the list
         nodes.emplace_back(std::move(nodeinfo));
       }
@@ -423,9 +505,20 @@ void validate(const boost::property_tree::ptree& pt,
                    ((bb.maxx() - bb.minx()) *
                        DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
       float density = (roadlength * 0.0005f) / area;
-      vStats.add_density(density, level);
-      vStats.add_tile_area(tileid, area);
-      vStats.add_tile_geom(tileid, tiles->TileBounds(tileid));
+      stats.add_density(density, level);
+      stats.add_tile_area(tileid, area);
+      stats.add_tile_geom(tileid, tiles->TileBounds(tileid));
+
+      // Set the relative road density within this tile.
+      uint32_t relative_density;
+      if (tile_id.level() == 0) {
+        relative_density = static_cast<uint32_t>(density * 100.0f);
+      } else if (tile_id.level() == 1) {
+        relative_density = static_cast<uint32_t>(density * 20.0f);
+      } else {
+        relative_density = static_cast<uint32_t>(density * 2.0f);
+      }
+      tilebuilder.header_builder().set_density(relative_density);
 
       // Bin the edges
       auto bins = bin_edges(hierarchy, tile, tweeners);
@@ -444,11 +537,11 @@ void validate(const boost::property_tree::ptree& pt,
       lock.unlock();
 
       // Add possible duplicates to return class
-      vStats.add_dup(dupcount, level);
+      stats.add_dup(dupcount, level);
     }
 
     // Fill promise with statistics
-    result.set_value(std::make_pair(std::move(vStats), std::move(tweeners)));
+    result.set_value(std::make_pair(std::move(stats), std::move(tweeners)));
   }
 
   //take tweeners from different tiles' perspectives and merge into a single tweener
@@ -488,7 +581,7 @@ void validate(const boost::property_tree::ptree& pt,
       else
         LOG_ERROR("Cannot add bins to nonexistent tile: " + std::to_string(tile_bin.first.tileid()))
     }
-  }
+   }
 }
 
 namespace valhalla {
@@ -515,10 +608,11 @@ namespace mjolnir {
         }
       }
     }
-    std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
+
+    LOG_INFO("Validating signs and connectivity and binning edges");
 
     // Setup threads
     std::vector<std::shared_ptr<std::thread> > threads(
@@ -528,7 +622,6 @@ namespace mjolnir {
     // Setup promises
     std::list<std::promise<std::pair<validator_stats, tweeners_t> > > results;
 
-    LOG_INFO("Validating signs and connectivity and binning edges");
     // Spawn the threads
     for (auto& thread : threads) {
       results.emplace_back();
@@ -536,10 +629,9 @@ namespace mjolnir {
                                    std::ref(lock), std::ref(results.back())));
     }
     // Wait for threads to finish
-    for (auto& thread : threads) {
+    for (auto& thread : threads)
       thread->join();
-    }
-    // Get the promise form the future
+    // Get the promise from the future
     validator_stats stats;
     tweeners_t tweeners;
     for (auto& result : results) {
@@ -549,7 +641,6 @@ namespace mjolnir {
       //keep track of tweeners
       merge(pair.second, tweeners);
     }
-    LOG_INFO("Finished");
 
     //run a pass to add the edges that binned to tweener tiles
     LOG_INFO("Binning inter-tile edges");
@@ -562,6 +653,7 @@ namespace mjolnir {
     LOG_INFO("Finished");
 
     // Add up total dupcount_ and find densities
+    LOG_INFO("Finished");
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
       std::vector<uint32_t> dups = stats.get_dups(level);
