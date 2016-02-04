@@ -36,7 +36,8 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 
   // Copy tile header to a builder (if tile exists)
   if (size_ > 0) {
-    header_builder_ = static_cast<GraphTileHeader&>(*(header_));
+    header_builder_ = *header_;
+  } else {
     header_builder_.set_graphid(graphid);
   }
 
