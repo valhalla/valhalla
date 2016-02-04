@@ -704,8 +704,9 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
     //new header
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     //a bunch of stuff between header and bins
-    auto size = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin()) - reinterpret_cast<const char*>(tile->node(0));
-    file.write(reinterpret_cast<const char*>(tile->node(0)), size);
+    const auto* read_pos = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
+    auto size = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin()) - read_pos;
+    file.write(read_pos, size);
     //the updated bins
     for(const auto& bin : bins)
       file.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
