@@ -44,9 +44,11 @@ struct Departure {
   uint32_t end_day;
   uint32_t headsign_offset;
   uint32_t dep_time;
+  float    orig_dist_traveled;
+  float    dest_dist_traveled;
   uint16_t elapsed_time;
   uint8_t  dow;
-  bool wheelchair_accessible;
+  bool     wheelchair_accessible;
 };
 
 // Unique route and stop
@@ -55,6 +57,15 @@ struct TransitLine {
   uint32_t routeid;
   GraphId  dest_pbf_graphid;  // GraphId (from pbf) of the destination stop
   uint32_t shapeid;
+  float    orig_dist_traveled;
+  float    dest_dist_traveled;
+};
+
+// Shape
+struct Shape {
+  uint32_t begins;
+  uint32_t ends;
+  std::vector<PointLL> shape;
 };
 
 struct StopEdges {
@@ -172,7 +183,14 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           dep.dest_pbf_graphid = GraphId(sp.destination_graphid());
           dep.route = sp.route_index();
           dep.trip = sp.trip_id();
-          dep.shapeid = 0;
+
+          // if we have shape data then set everything else shapeid = 0;
+          if (sp.has_shape_id() && sp.has_destination_dist_traveled() && sp.has_origin_dist_traveled()) {
+            dep.shapeid = sp.shape_id();
+            dep.orig_dist_traveled = sp.origin_dist_traveled();
+            dep.dest_dist_traveled = sp.destination_dist_traveled();
+          } else dep.shapeid = 0;
+
           dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
           dep.dep_time = sp.origin_departure_time();
           dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
@@ -312,76 +330,84 @@ Use GetTransitUse(const uint32_t rt) {
   }
 }
 
-std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, const uint32_t shapeid) {
+std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll,
+                            const float orig_dist_traveled, const float dest_dist_traveled,
+                            const std::vector<PointLL>& trip_shape, const std::vector<float>& distances) {
   std::list<PointLL> shape;
+  if (trip_shape.size() && stop_ll != endstop_ll) {
 
-  /*
-   * TODO: port to use transit land shape.
-   *
-  if (shapeid != 0 && stop_ll != endstop_ll) {
-    // Query the shape from the DB based on the shapeid.
-    std::string sql = "SELECT shape_pt_lon, shape_pt_lat from shapes ";
-    sql += "where shape_key = ";
-    sql += std::to_string(shapeid);
-    sql += " order by shape_pt_sequence;";
+    float distance = 0.0f, d_from_p0_to_x = 0.0f;
 
-    PointLL  ll;
-    std::vector<PointLL> trip_shape;
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-    if (ret == SQLITE_OK) {
-      uint32_t result = sqlite3_step(stmt);
-      while (result == SQLITE_ROW) {
+    // point x - we are trying to find it on the line segment between p0 and p1
+    PointLL x;
+    bool found = false;
 
-        ll.Set(static_cast<float>(sqlite3_column_double(stmt, 0)),
-               static_cast<float>(sqlite3_column_double(stmt, 1)));
+    // find out where orig_dist_traveled should be in the list.
+    auto lower_bound = std::lower_bound(distances.begin(), distances.end(), orig_dist_traveled);
+    // find out where dest_dist_traveled should be in the list.
+    auto upper_bound = std::upper_bound(distances.begin(), distances.end(), dest_dist_traveled);
+    float prev_distance = *(lower_bound);
 
-        trip_shape.push_back(ll);
-        result = sqlite3_step(stmt);
+    // lower_bound returns an iterator pointing to the first element which does not compare less than the dist_traveled;
+    // therefore, we need to back up one if it does not equal the lower_bound value.  For example, we could be starting
+    // at the beginning of the points list
+    if (orig_dist_traveled != (*lower_bound))
+      prev_distance = *(--lower_bound);
+
+    // loop through the points.
+    for (auto itr = lower_bound; itr != upper_bound; ++itr) {
+
+      /*    |
+       *    |
+       *    p0
+       *    | }--d_from_p0_to_x (distance from p0 to x)
+       *    x -- point we are trying to find on the segment (orig_dist_traveled or dest_dist_traveled on this segment)
+       *    |
+       *    |
+       *    |
+       *    |
+       *    p1
+       *    |
+       *    |
+       */
+
+      // index into our vector of points
+      uint32_t index = (itr - distances.begin());
+      PointLL p0 = trip_shape[index];
+      PointLL p1 = trip_shape[index + 1];
+
+      // this is our distance that is beyond x.
+      distance = *(itr+1);
+
+      // find point x using the orig_dist_traveled - this is our first point added to shape
+      if (itr == lower_bound) {
+        // distance from p0 to x using the orig_dist_traveled
+        d_from_p0_to_x = (orig_dist_traveled - prev_distance) / (distance - prev_distance);
+        x = p0 + (p1 - p0) * d_from_p0_to_x;
+        shape.push_back(x);
       }
+
+      // find point x using the dest_dist_traveled - this is our last point added to the shape
+      if ((itr+1) == upper_bound) {
+        // distance from p0 to x using the dest_dist_traveled
+        d_from_p0_to_x = (dest_dist_traveled - prev_distance) / (distance - prev_distance);
+        x = p0 + (p1 - p0) * d_from_p0_to_x;
+        shape.push_back(x);
+        // we are done p1 is too far away
+        break;
+      }
+
+      // add all the midpoints.
+      shape.push_back(p1);
+
+      prev_distance = distance;
     }
-    if (stmt) {
-      sqlite3_finalize(stmt);
-      stmt = 0;
-    }
-
-    auto start = stop_ll.ClosestPoint(trip_shape);
-    auto end = endstop_ll.ClosestPoint(trip_shape);
-
-    auto start_idx = std::get<2>(start);
-    auto end_idx = std::get<2>(end);
-
-    shape.push_back(stop_ll);
-
-    if (start_idx < end_idx) { //forward direction
-
-      if ((trip_shape.at(start_idx)) == stop_ll) // avoid dups
-        start_idx++;
-
-      std::copy(trip_shape.begin()+start_idx, trip_shape.begin()+end_idx, back_inserter(shape));
-
-      if ((trip_shape.at(end_idx)) != endstop_ll)
-        shape.push_back(endstop_ll);
-    }
-    else if (start_idx > end_idx) { //backwards
-
-      if ((trip_shape.at(end_idx)) == stop_ll)
-        end_idx++;
-
-      std::reverse_copy(trip_shape.begin()+end_idx, trip_shape.begin()+start_idx, back_inserter(shape));
-
-      if ((trip_shape.at(start_idx)) != endstop_ll) // avoid dups
-        shape.push_back(endstop_ll);
-    }
-    else
-      shape.push_back(endstop_ll);
+  // else no shape exists.
   } else {
     shape.push_back(stop_ll);
     shape.push_back(endstop_ll);
-  }*/
+  }
 
-  shape.push_back(stop_ll);
-  shape.push_back(endstop_ll);
   return shape;
 }
 
@@ -425,6 +451,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::unordered_map<GraphId, bool>& stop_access,
                 const std::vector<OSMConnectionEdge>& connection_edges,
+                const std::unordered_map<uint32_t, Shape> shape_data,
+                const std::vector<float> distances,
                 const std::vector<uint32_t>& route_types) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -712,7 +740,23 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // route within TripPathBuilder.
       bool added = false;
       std::vector<std::string> names;
-      auto shape = GetShape(stopll, endll, transitedge.shapeid);
+
+      std::vector<PointLL> points;
+      std::vector<float> distance;
+      // get the indexes and vector of points for this shape id
+      const auto& found = shape_data.find(transitedge.shapeid);
+      if (transitedge.shapeid != 0 && found != shape_data.cend()) {
+        const auto& shape_d = found->second;
+        points = shape_d.shape;
+        // copy only the distances that we care about.
+        std::copy(distances.begin()+shape_d.begins,
+                  distances.begin()+shape_d.ends,back_inserter(distance));
+      }
+      else if (transitedge.shapeid != 0)
+        LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
+
+      auto shape = GetShape(stopll, endll, transitedge.orig_dist_traveled,
+                            transitedge.dest_dist_traveled, points, distance);
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
 
@@ -942,11 +986,37 @@ void build(const std::string& transit_dir,
       }       **/
     }
 
+    //Get all the shapes for this tile and calculate the distances
+    std::unordered_map<uint32_t, Shape> shapes;
+    std::vector<float> distances;
+    for (uint32_t i = 0; i < transit.shapes_size(); i++) {
+      const Transit_Shape& shape = transit.shapes(i);
+      const std::vector<PointLL> trip_shape = decode<std::vector<PointLL> >(shape.encoded_shape());
+
+      float distance = 0.0f;
+      Shape shape_data;
+      shape_data.begins = distances.size();
+      //first is always 0.0f.
+      distances.push_back(distance);
+      // loop through the points getting the distances.
+      for (size_t index = 0; index < trip_shape.size() - 1; ++index) {
+        PointLL p0 = trip_shape[index];
+        PointLL p1 = trip_shape[index + 1];
+        distance += p0.Distance(p1);
+        distances.push_back(distance);
+      }
+      shape_data.ends = distances.size()-1;
+      shape_data.shape = trip_shape;
+      //shape id --> begin and end indexes in the distance vector and vector of points.
+      shapes[shape.shape_id()] = shape_data;
+    }
+
     // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.stops_size()) + " stops and " +
+             std::to_string(transit.shapes_size()) + " shapes and " +
              std::to_string(connection_edges.size()) + " connection edges");
 
     // Get all scheduled departures from the stops within this tile.
@@ -996,7 +1066,7 @@ void build(const std::string& transit_dir,
           unique_transit_edges[{dep.route, dep.dest_pbf_graphid}] = unique_lineid;
           unique_lineid++;
           stopedges.lines.emplace_back(TransitLine{lineid, dep.route,
-                      dep.dest_pbf_graphid, dep.shapeid});
+                      dep.dest_pbf_graphid, dep.shapeid, dep.orig_dist_traveled, dep.dest_dist_traveled});
         } else {
           lineid = m->second;
         }
@@ -1029,7 +1099,7 @@ void build(const std::string& transit_dir,
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder, hierarchy, transit_dir, tiles, stop_edge_map,
-               stop_access, connection_edges, route_types);
+               stop_access, connection_edges, shapes, distances, route_types);
 
     // Write the new file
     lock.lock();

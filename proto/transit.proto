@@ -33,8 +33,11 @@ message Transit {
     optional uint32 trip_id = 17;
     optional bool wheelchair_accessible = 18;
     optional uint32 line_id = 19;
+    optional uint32 shape_id = 20;
+    optional float origin_dist_traveled = 21;
+    optional float destination_dist_traveled = 22;
   }
- 
+   
   enum VehicleType {
     kTram = 0;
     kMetro = 1;
@@ -58,8 +61,14 @@ message Transit {
     optional uint32 route_text_color = 9;
     optional VehicleType vehicle_type = 10;     
   }
+  
+  message Shape {
+    optional uint32 shape_id = 1; 
+    optional string encoded_shape = 2;
+  }
  
   repeated Stop stops = 1;
   repeated StopPair stop_pairs = 2;
   repeated Route routes = 3; 
+  repeated Shape shapes = 4; 
 }
