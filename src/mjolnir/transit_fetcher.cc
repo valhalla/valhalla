@@ -279,12 +279,10 @@ void get_stop_patterns(Transit& tile, std::unordered_map<std::string, uint64_t>&
     auto shape_id = shape_pt.second.get<std::string>("onestop_id");
 
     std::vector<PointLL> trip_shape;
-    PointLL  ll;
     for(const auto& geom : shape_pt.second.get_child("geometry.coordinates")) {
       auto lon = geom.second.front().second.get_value<float>();
       auto lat = geom.second.back().second.get_value<float>();
-      ll.Set(lon,lat);
-      trip_shape.push_back(ll);
+      trip_shape.emplace_back(PointLL(lon,lat));
     }
     // encode the points to reduce size
     shape->set_encoded_shape(encode(trip_shape));
