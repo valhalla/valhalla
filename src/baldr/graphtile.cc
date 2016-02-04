@@ -279,7 +279,6 @@ const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
                            std::to_string(header_->graphid().level()) + "," +
                            std::to_string(edge.id())  + " directededgecount= " +
                            std::to_string(header_->directededgecount()));
-  throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 // Get the directed edge at the specified index.
