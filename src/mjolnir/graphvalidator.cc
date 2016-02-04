@@ -213,7 +213,6 @@ std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hiera
   if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
     return bins;
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
-  LOG_INFO("binning: " + std::to_string(tile->header()->graphid().tileid()));
 
   //each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
@@ -604,7 +603,7 @@ namespace mjolnir {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
         if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
-          tilequeue.push_back(tile_id);
+          tilequeue.emplace_back(std::move(tile_id));
         }
       }
     }
