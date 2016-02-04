@@ -1,4 +1,5 @@
 #include "odin/util.h"
+#include "odin/narrative_dictionary.h"
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
 #include <boost/filesystem/operations.hpp>
@@ -23,9 +24,12 @@ namespace {
   LOG_TRACE("- " + locale);
 #endif
         try {
-          boost::property_tree::ptree narrative;
-          boost::property_tree::read_json(locale_file_itr->path().string(), narrative);
-          locales.emplace(std::move(locale), std::move(narrative));
+          boost::property_tree::ptree narrative_pt;
+          boost::property_tree::read_json(locale_file_itr->path().string(), narrative_pt);
+  LOG_TRACE("JSON read");
+          valhalla::odin::NarrativeDictionary narrative_dictionary(narrative_pt);
+  LOG_TRACE("NarrativeDictionary created");
+          locales.emplace(std::move(locale), std::move(narrative_dictionary));
 
         }
         catch(...) {

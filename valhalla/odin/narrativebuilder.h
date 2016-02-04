@@ -6,9 +6,9 @@
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/narrative_dictionary.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
-#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace odin {
@@ -26,7 +26,7 @@ class NarrativeBuilder {
 
   NarrativeBuilder(const DirectionsOptions& directions_options,
                    const EnhancedTripPath* trip_path,
-                   const boost::property_tree::ptree& dictionary);
+                   const NarrativeDictionary& dictionary);
 
   void Build(const DirectionsOptions& directions_options,
              const EnhancedTripPath* etp, std::list<Maneuver>& maneuvers);
@@ -398,7 +398,7 @@ class NarrativeBuilder {
   /////////////////////////////////////////////////////////////////////////////
   const DirectionsOptions& directions_options_;
   const EnhancedTripPath* trip_path_;
-  const boost::property_tree::ptree& dictionary_;
+  const NarrativeDictionary& dictionary_;
 };
 
 }

@@ -4,14 +4,13 @@
 #include <valhalla/midgard/logging.h>
 
 #include "odin/narrativebuilder.h"
+#include "odin/narrative_dictionary.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 #include <valhalla/baldr/verbal_text_formatter.h>
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace {
@@ -24,16 +23,6 @@ constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kLengthTag = "<LENGTH>";
 
-template<typename T>
-std::vector<T> as_vector(boost::property_tree::ptree const& pt,
-                         boost::property_tree::ptree::key_type const& key) {
-  std::vector<T> items;
-  for (const auto& item : pt.get_child(key)) {
-    items.push_back(item.second.get_value<T>());
-  }
-  return items;
-}
-
 }
 
 namespace valhalla {
@@ -42,7 +31,7 @@ namespace odin {
 NarrativeBuilder::NarrativeBuilder(
     const DirectionsOptions& directions_options,
     const EnhancedTripPath* trip_path,
-    const boost::property_tree::ptree& dictionary)
+    const NarrativeDictionary& dictionary)
     : directions_options_(directions_options),
       trip_path_(trip_path),
       dictionary_(dictionary) {
@@ -577,24 +566,26 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
 
-  // Get the start subset
-  const auto& start_subset = dictionary_.get_child("instructions.start");
-
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
 
+  LOG_TRACE("Set cardinal_direction value...");
   // Set cardinal_direction value
-  std::string cardinal_direction =
-      as_vector<std::string>(start_subset, "cardinal_directions")
+  std::string cardinal_direction = dictionary_.start_subset.cardinal_directions
       .at(maneuver.begin_cardinal_direction());
+  LOG_TRACE("cardinal_direction=" + cardinal_direction);
 
+  LOG_TRACE("Set street_names value...")
   // Set street_names value
   std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
                                              true);
+  LOG_TRACE("street_names=" + street_names);
 
+  LOG_TRACE("Set begin_street_names value...");
   // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(
       maneuver, maneuver.begin_street_names());
+  LOG_TRACE("begin_street_names=" + begin_street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -605,13 +596,19 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
     phrase_id += 1;
   }
 
+  LOG_TRACE("Set instruction to the determined tagged phrase...");
   // Set instruction to the determined tagged phrase
-  instruction = start_subset.get<std::string>(std::to_string(phrase_id));
+  instruction = dictionary_.start_subset.phrases.at(std::to_string(phrase_id));
+  LOG_TRACE("instruction=" + instruction);
 
+  LOG_TRACE("Replace phrase tags with values...");
   // Replace phrase tags with values
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  LOG_TRACE("replaced instruction=" + instruction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  LOG_TRACE("replaced instruction=" + instruction);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  LOG_TRACE("replaced instruction=" + instruction);
 
   // TODO - side of street
 
@@ -625,26 +622,28 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
 
-  // Get the start_verbal subset
-  const auto& start_verbal_subset = dictionary_.get_child("instructions.start_verbal");
-
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
 
+  LOG_TRACE("Set cardinal_direction value...");
   // Set cardinal_direction value
-  std::string cardinal_direction =
-      as_vector<std::string>(start_verbal_subset, "cardinal_directions")
-      .at(maneuver.begin_cardinal_direction());
+  std::string cardinal_direction = dictionary_.start_verbal_subset
+      .cardinal_directions.at(maneuver.begin_cardinal_direction());
+  LOG_TRACE("cardinal_direction=" + cardinal_direction);
 
+  LOG_TRACE("Set street_names value...");
   // Set street_names value
   std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
                                              true, element_max_count, delim,
                                              maneuver.verbal_formatter());
+  LOG_TRACE("street_names=" + street_names);
 
+  LOG_TRACE("Set begin_street_names value...");
   // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(
       maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
       maneuver.verbal_formatter());
+  LOG_TRACE("begin_street_names=" + begin_street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -655,14 +654,22 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
     phrase_id += 1;
   }
 
+  LOG_TRACE("Set instruction to the determined tagged phrase...");
   // Set instruction to the determined tagged phrase
-  instruction = start_verbal_subset.get<std::string>(std::to_string(phrase_id));
+  instruction = dictionary_.start_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+  LOG_TRACE("instruction=" + instruction);
 
+  LOG_TRACE("Replace phrase tags with values...");
   // Replace phrase tags with values
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  LOG_TRACE("replaced instruction=" + instruction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  LOG_TRACE("replaced instruction=" + instruction);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  LOG_TRACE("replaced instruction=" + instruction);
   boost::replace_all(instruction, kLengthTag, FormDistance(maneuver, units));
+  LOG_TRACE("replaced instruction=" + instruction);
 
   // TODO - side of street
 

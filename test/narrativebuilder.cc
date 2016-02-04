@@ -6,6 +6,7 @@
 #include "valhalla/odin/signs.h"
 #include "valhalla/odin/util.h"
 #include "valhalla/odin/narrative_builder_factory.h"
+#include "valhalla/odin/narrative_dictionary.h"
 #include "valhalla/odin/narrativebuilder.h"
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/odin/enhancedtrippath.h>
@@ -20,7 +21,7 @@ namespace {
 class NarrativeBuilderTest : public NarrativeBuilder {
  public:
   NarrativeBuilderTest(const DirectionsOptions& directions_options,
-                       const boost::property_tree::ptree& dictionary,
+                       const NarrativeDictionary& dictionary,
                        const EnhancedTripPath* trip_path = nullptr)
       : NarrativeBuilder(directions_options, trip_path, dictionary) {
   }
@@ -48,7 +49,7 @@ class NarrativeBuilderTest : public NarrativeBuilder {
 
 };
 
-const boost::property_tree::ptree& GetLocalesDictionary(
+const NarrativeDictionary& GetNarrativeDictionary(
     const DirectionsOptions& directions_options) {
   // Get the locale dictionary
   const auto phrase_dictionary = get_locales().find(
@@ -1486,7 +1487,7 @@ void TestFormVerbalPostTransitionInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kKilometers);
   directions_options.set_language("en-US");
 
-  const boost::property_tree::ptree& dictionary = GetLocalesDictionary(
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
       directions_options);
 
   NarrativeBuilderTest nbt_km(directions_options, dictionary);
@@ -1928,7 +1929,7 @@ void TestFormRampStraightInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  const boost::property_tree::ptree& dictionary = GetLocalesDictionary(
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
       directions_options);
 
   NarrativeBuilderTest nbt(directions_options, dictionary);
@@ -2003,7 +2004,7 @@ void TestFormRampRightInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  const boost::property_tree::ptree& dictionary = GetLocalesDictionary(
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
       directions_options);
 
   NarrativeBuilderTest nbt(directions_options, dictionary);
@@ -2120,7 +2121,7 @@ void TestFormRampLeftInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  const boost::property_tree::ptree& dictionary = GetLocalesDictionary(
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
       directions_options);
 
   NarrativeBuilderTest nbt(directions_options, dictionary);
@@ -2237,7 +2238,7 @@ void TestFormExitRightInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  const boost::property_tree::ptree& dictionary = GetLocalesDictionary(
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
       directions_options);
 
   NarrativeBuilderTest nbt(directions_options, dictionary);
@@ -2354,7 +2355,7 @@ void TestFormExitLeftInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  const boost::property_tree::ptree& dictionary = GetLocalesDictionary(
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
       directions_options);
 
   NarrativeBuilderTest nbt(directions_options, dictionary);
