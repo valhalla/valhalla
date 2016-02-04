@@ -31,6 +31,9 @@ enum class Traversability {
   kBoth = 3         // Edge is traversable in both directions
 };
 
+// Maximum relative density at a node or within a tile
+constexpr uint32_t kMaxDensity = 15;
+
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.
@@ -119,8 +122,7 @@ enum class NodeType : uint8_t {
   kGate = 1,                  // Gate or rising bollard
   kBollard = 2,               // Bollard (fixed obstruction)
   kTollBooth = 3,             // Toll booth / fare collection
-  kRailStop = 4,              // Rail/metro/subway stop
-  kBusStop = 5,               // Bus stop
+  // TODO - for now there is no differentiation between bus and rail stops...
   kMultiUseTransitStop = 6,   // Multi-use transit stop (rail and bus)
   kBikeShare = 7,             // Bike share location
   kParking = 8,               // Parking location
@@ -132,8 +134,6 @@ const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
   {static_cast<uint8_t>(NodeType::kGate), "gate"},
   {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
   {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-  {static_cast<uint8_t>(NodeType::kRailStop), "rail_stop"},
-  {static_cast<uint8_t>(NodeType::kBusStop), "bus_stop"},
   {static_cast<uint8_t>(NodeType::kMultiUseTransitStop), "multi_use_transit_stop"},
   {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
   {static_cast<uint8_t>(NodeType::kParking), "parking"},

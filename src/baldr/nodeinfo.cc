@@ -236,9 +236,7 @@ void NodeInfo::set_type(const NodeType type) {
 
 // Checks if this node is a transit node.
 bool NodeInfo::is_transit() const {
-  NodeType nt = type();
-  return (nt == NodeType::kRailStop || nt == NodeType::kBusStop ||
-          nt == NodeType::kMultiUseTransitStop);
+  return type() == NodeType::kMultiUseTransitStop;
 }
 
 // Get the number of edges on the local level. We add 1 to allow up to
