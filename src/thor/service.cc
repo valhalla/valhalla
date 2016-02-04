@@ -175,6 +175,8 @@ namespace {
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
       try{
@@ -341,22 +343,24 @@ namespace {
           result.messages.emplace_back(msg);
 
       } else { //TODO: make a getPathDepartFrom() to be called by get_trip_path & get_optimized_order
-        return getPathDepartFrom(correlated, costing, date_time_type);
+        return getPathDepartFrom(correlated, costing, date_time_type, request_str, result);
       }
+
       //get processing time for thor
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
       if ((elapsed_time.count() / correlated.size()) > long_request_route) {
-        LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::route request exceeded threshold::"+ request_str);
+        LOG_WARN("thor::route get_trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::route get_trip_path exceeded threshold::"+ request_str);
         midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
       }
       return result;
     }
 
-    worker_t::result_t getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
-      worker_t::result_t result{true};
+    worker_t::result_t getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       bool prior_is_node = false;
       std::vector<baldr::PathLocation> through_loc;
       baldr::GraphId through_edge;
@@ -460,7 +464,15 @@ namespace {
         if (--correlated.cend() != path_location)
           path_algorithm->Clear();
       }
-
+      //get processing time for thor
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      if ((elapsed_time.count() / correlated.size()) > long_request_route) {
+        LOG_WARN("thor::route getPathDepartFrom elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::route getPathDepartFrom exceeded threshold::"+ request_str);
+        midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
+      }
       return result;
     }
 
@@ -527,7 +539,7 @@ namespace {
       auto s = std::chrono::system_clock::now();
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
-      std::string matrix_action_type = "";
+      auto matrix_action_type = request.get_optional<std::string>("matrix_type");
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
@@ -567,16 +579,12 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      auto long_request = 0.f;
-      if (matrix_type!=MATRIX_TYPE::MANY_TO_MANY)
-        long_request = long_request_route;
-      else long_request = long_request_manytomany;
-
+      auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request_route : long_request_manytomany;
       if ((elapsed_time.count() / correlated.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::" + matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::" + matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
+        LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::" + *matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
         (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("thor_long_request_manytomany", " [ANALYTICS] ");
       }
 
@@ -588,6 +596,7 @@ namespace {
     }
 
     worker_t::result_t  get_optimized_path(const std::vector<PathLocation> correlated, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      worker_t::result_t result{true};
       //get time for start of request
       auto s = std::chrono::system_clock::now();
 
@@ -621,9 +630,10 @@ namespace {
         best_order.emplace_back(correlated[order[i]]);
         LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
+      std::stringstream ss;
+      boost::property_tree::json_parser::write_json(ss, request, false);
 
-      return getPathDepartFrom(best_order, costing, date_time_type);
-
+      return getPathDepartFrom(best_order, costing, date_time_type, ss.str(), result);
     }
 
     // Get the costing options. Get the base options from the config and the
