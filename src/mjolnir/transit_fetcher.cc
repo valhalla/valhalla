@@ -23,6 +23,7 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/midgard/util.h>
 
 #include "proto/transit.pb.h"
 
@@ -272,6 +273,27 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
   }
 }
 
+void get_stop_patterns(Transit& tile, std::unordered_map<std::string, uint64_t>& shapes, const ptree& response) {
+  for(const auto& shape_pt : response.get_child("route_stop_patterns")) {
+    auto* shape = tile.add_shapes();
+    auto shape_id = shape_pt.second.get<std::string>("onestop_id");
+
+    std::vector<PointLL> trip_shape;
+    for(const auto& geom : shape_pt.second.get_child("geometry.coordinates")) {
+      auto lon = geom.second.front().second.get_value<float>();
+      auto lat = geom.second.back().second.get_value<float>();
+      trip_shape.emplace_back(PointLL(lon,lat));
+    }
+    // encode the points to reduce size
+    shape->set_encoded_shape(encode(trip_shape));
+
+    // shapes.size()+1 because we can't have a shape id of 0.
+    // 0 means shape id is not set in the transit builder.
+    shape->set_shape_id(shapes.size()+1);
+    shapes.emplace(shape_id, shape->shape_id());
+  }
+}
+
 struct unique_transit_t {
   std::mutex lock;
   std::unordered_map<std::string, size_t> trips;
@@ -280,8 +302,9 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& response,
-    const std::unordered_map<std::string, uint64_t>& stops, const std::unordered_map<std::string, size_t>& routes) {
+bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unordered_map<std::string, size_t>& shapes,
+                    const ptree& response, const std::unordered_map<std::string, uint64_t>& stops,
+                    const std::unordered_map<std::string, size_t>& routes) {
   bool dangles = false;
   for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
     auto* pair = tile.add_stop_pairs();
@@ -367,7 +390,9 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     std::string block_id = pair_pt.second.get<std::string>("block_id", "null");
     if(block_id != "null") {
       uniques.lock.lock();
-      inserted = uniques.block_ids.insert({block_id, uniques.block_ids.size()});
+      // uniques.block_ids.size()+1 because we can't have a block id of 0.
+      // 0 means block id is not set in the transit builder.
+      inserted = uniques.block_ids.insert({block_id, uniques.block_ids.size()+1});
       pair->set_block_id(inserted.first->second);
       uniques.lock.unlock();
     }
@@ -392,14 +417,34 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
         pair->add_service_added_dates(d.julian_day());
       }
     }
-    //TODO: copy rest of attributes
+
+    // shape data
+    std::string shape_id = pair_pt.second.get<std::string>("route_stop_pattern_onestop_id", "null");
+    if(shape_id != "null") {
+
+      auto shape = shapes.find(shape_id);
+      if(shape != shapes.cend()) {
+        pair->set_shape_id(shape->second);
+        std::string origin_dist_traveled = pair_pt.second.get<std::string>("origin_dist_traveled", "null");
+        if(origin_dist_traveled != "null") {
+          pair->set_origin_dist_traveled(std::stof(origin_dist_traveled));
+        }
+
+        std::string destination_dist_traveled = pair_pt.second.get<std::string>("destination_dist_traveled", "null");
+        if(destination_dist_traveled != "null") {
+          pair->set_destination_dist_traveled(std::stof(destination_dist_traveled));
+        }
+      } else {
+        LOG_WARN("Shape not found for " + shape_id);
+      }
+    }
   }
   return dangles;
 }
 
 void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile) {
   //check for empty stop pairs and routes.
-  if(tile.stop_pairs_size() == 0 && tile.routes_size() == 0) {
+  if(tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
     LOG_WARN(transit_tile.string() + " had no data and will not be stored");
     return;
   }
@@ -411,9 +456,10 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
   if(!tile.SerializeToOstream(&stream))
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " + std::to_string(tile.ByteSize()));
 
-  if (tile.routes_size() && tile.stops_size() && tile.stop_pairs_size()) {
+  if (tile.routes_size() && tile.stops_size() && tile.stop_pairs_size() && tile.shapes_size()) {
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
-             std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
+             std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.shapes_size()) + " shapes " +
+             std::to_string(tile.stop_pairs_size()) + " stop pairs");
   } else {
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
   }
@@ -506,6 +552,21 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       request = response.get_optional<std::string>("meta.next");
     } while(request && (request = *request + api_key));
 
+    //pull out all the route_stop_patterns or shapes
+    std::unordered_map<std::string, size_t> shapes;
+    for(const auto& route : routes) {
+      request = url((boost::format("/api/v1/route_stop_patterns?total=false&per_page=%1%&traversed_by=%2%")
+              % pt.get<std::string>("per_page") % route.first).str(), pt);
+      do {
+        //grab some stuff
+        response = curler(*request, "route_stop_patterns");
+        //copy shapes in.
+        get_stop_patterns(tile, shapes, response);
+        //please sir may i have some more?
+        request = response.get_optional<std::string>("meta.next");
+      } while(request && (request = *request + api_key));
+    }
+
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
     for(const auto& stop : stops) {
@@ -515,7 +576,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
         //grab some stuff
         response = curler(*request, "schedule_stop_pairs");
         //copy pairs in, noting if any dont have stops
-        dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
+        dangles = get_stop_pairs(tile, uniques, shapes, response, stops, routes) || dangles;
         //if stop pairs is large save to a path with an incremented extension
         if (tile.stop_pairs_size() >= 500000) {
           LOG_INFO("Writing " + transit_tile.string());
