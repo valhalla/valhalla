@@ -210,7 +210,7 @@ using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, 
 std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
   std::array<std::vector<GraphId>, kBinCount> bins;
   //only do most detailed level
-  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
+  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first || tile->header()->directededgecount() == 0)
     return bins;
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
 
@@ -569,12 +569,15 @@ void validate(const boost::property_tree::ptree& pt,
       const auto& tile_bin = *start;
       ++start;
       lock.unlock();
-      //keep the extra binned edges
+      //if there is nothing there we need to make something
       GraphTile tile(hierarchy, tile_bin.first);
-      if(tile.size() != 0)
-        GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
-      else
-        LOG_ERROR("Cannot add bins to nonexistent tile: " + std::to_string(tile_bin.first.tileid()))
+      if(tile.size() == 0) {
+        GraphTileBuilder empty(hierarchy, tile_bin.first, false);
+        empty.StoreTileData();
+        tile = GraphTile(hierarchy, tile_bin.first);
+      }
+      //keep the extra binned edges
+      GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
     }
    }
 }

@@ -333,52 +333,6 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
   return modes;
 }
 
-// Walk the shape and look for any empty tiles that the shape intersects
-void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
-                const Tiles<PointLL>& tiling, std::list<PointLL>& shape,
-                DataQuality& stats) {
-  // Walk the shape segments until we are outside
-  uint32_t current_tile = tile1.tileid();
-  auto shape1 = shape.cbegin();
-  auto shape2 = std::next(shape1);
-  while (shape2 != shape.cend()) {
-    uint32_t next_tile = tiling.TileId(shape2->lat(), shape2->lng());
-    if (next_tile != current_tile) {
-      // If a neighbor we can just add this tile
-      if (tiling.AreNeighbors(current_tile, next_tile)) {
-        stats.AddIntersectedTile(GraphId(next_tile, 2, 0));
-      } else {
-        // Not a neighbor - find any intermediate intersecting tiles
-
-        // Get a bounding box or row, col surrounding the 2 tiles
-        auto rc1 = tiling.GetRowColumn(current_tile);
-        auto rc2 = tiling.GetRowColumn(next_tile);
-        for (int32_t row = std::min(rc1.first, rc2.first);
-             row <= std::max(rc1.first, rc2.first); row++) {
-          for (int32_t col = std::min(rc1.second, rc2.second);
-                       col <= std::max(rc1.second, rc2.second); col++) {
-            // Get the tile Id for the row,col. Skip if either of the 2 tiles.
-            int32_t tileid = tiling.TileId(row, col);
-            GraphId id(tileid, 2, 0);
-            if (tileid == current_tile || tileid == next_tile) {
-              continue;
-            }
-
-            // Check if the shape segment intersects the tile
-            if (tiling.TileBounds(tileid).Intersects(*shape1, *shape2)) {
-              stats.AddIntersectedTile(id);
-            }
-          }
-        }
-      }
-    }
-
-    // Increment
-    shape1 = shape2;
-    shape2 = std::next(shape2);
-  }
-}
-
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
@@ -603,13 +557,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             auto inserted = geo_attribute_cache.insert({edge_info_offset,
               std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade, reverse_grade, curvature)});
             found = inserted.first;
-
-            // If the end node is in a different tile and the tile is not
-            // a neighboring tile then check for possible shape intersection with
-            // empty tiles
-            GraphId other_tile = (*nodes[target]).graph_id.Tile_Base();
-            if (tile_id != other_tile && !tiling.AreNeighbors(tile_id, other_tile))
-              CheckForIntersectingTiles(tile_id, other_tile, tiling, shape, stats);
           }//now we have the edge info offset
           else {
             found = geo_attribute_cache.find(edge_info_offset);
@@ -761,17 +708,6 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
       //TODO: throw further up the chain?
     }
   }
-
-  // Add "empty" tiles for any intersected tiles
-  for (auto& empty_tile : stats.intersected_tiles) {
-    if (!GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
-      GraphTileBuilder graphtile(tile_hierarchy, empty_tile, false);
-      LOG_DEBUG("Add empty tile for: " + std::to_string(empty_tile.tileid()));
-      graphtile.StoreTileData();
-    }
-  }
-  LOG_DEBUG("Added " + std::to_string(stats.intersected_tiles.size()) +
-           " empty, intersected tiles");
 }
 
 }
