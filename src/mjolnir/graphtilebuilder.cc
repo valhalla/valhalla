@@ -34,11 +34,11 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     : GraphTile(hierarchy, graphid),
       hierarchy_(hierarchy) {
 
-  // Copy tile header to a builder (if tile exists)
+  // Copy tile header to a builder (if tile exists). Always set the tileid
   if (size_ > 0) {
-    header_builder_ = static_cast<GraphTileHeader&>(*(header_));
-    header_builder_.set_graphid(graphid);
+    header_builder_ = *header_;
   }
+  header_builder_.set_graphid(graphid);
 
   // Done if not deserializing and creating builders for everything
   if (!deserialize) {
