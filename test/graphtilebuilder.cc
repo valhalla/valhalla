@@ -113,46 +113,52 @@ void TestDuplicateEdgeInfo() {
 }
 
 void TestAddBins() {
-  //load a tile
-  GraphId id(762161,2,0);
-  GraphTile t(make_hierarchy("test/tiles/no_bin"), id);
 
-  //alter the config to point to another dir
-  auto h = make_hierarchy("test/tiles/bin");
+  for(const auto& test_tile : std::list<std::pair<std::string, size_t> >{
+      {"609/453.gph", 609453},
+      {"762/161.gph", 762161}}) {
 
-  //send blank bins
-  std::array<std::vector<GraphId>, kBinCount> bins;
-  GraphTileBuilder::AddBins(h, &t, bins);
+    //load a tile
+    GraphId id(test_tile.second,2,0);
+    GraphTile t(make_hierarchy("test/tiles/no_bin"), id);
 
-  //check the new tile is the same as the old one
-  {
-    ifstream o("test/tile/no_bin/2/000/762/161.gph", std::ios::binary);
-    ifstream n("test/tile/bin/2/000/762/161.gph", std::ios::binary);
-    char o_c, n_c;
-    while(o.read(&o_c, 1) && n.read(&n_c, 1) && !o.eof() && !o.fail() && !n.eof() && !n.fail() && o_c == n_c);
-    if(o.eof() != n.eof() || o.fail() != n.fail())
-      throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
+    //alter the config to point to another dir
+    auto h = make_hierarchy("test/tiles/bin");
+
+    //send blank bins
+    std::array<std::vector<GraphId>, kBinCount> bins;
+    GraphTileBuilder::AddBins(h, &t, bins);
+
+    //check the new tile is the same as the old one
+    {
+      ifstream o("test/tile/no_bin/2/000/" + test_tile.first, std::ios::binary);
+      ifstream n("test/tile/bin/2/000/" + test_tile.first, std::ios::binary);
+      char o_c, n_c;
+      while(o.read(&o_c, 1) && n.read(&n_c, 1) && !o.eof() && !o.fail() && !n.eof() && !n.fail() && o_c == n_c);
+      if(o.eof() != n.eof() || o.fail() != n.fail())
+        throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
+    }
+
+    //send real bins, we'll throw one in each bin
+    for(auto& bin : bins)
+      bin.emplace_back(test_tile.second,2,0);
+    GraphTileBuilder::AddBins(h, &t, bins);
+    auto increase = bins.size() * sizeof(GraphId);
+
+    //check the new tile isnt broken and is exactly the right size bigger
+    if(!tile_equalish(t, GraphTile(h, id), increase, bins))
+      throw std::logic_error("New tiles edgeinfo or names arent matching up");
+
+    //append some more
+    for(auto& bin : bins)
+      bin.emplace_back(test_tile.second,2,1);
+    GraphTileBuilder::AddBins(h, &t, bins);
+    increase *= 2;
+
+    //check the new tile isnt broken and is exactly the right size bigger
+    if(!tile_equalish(t, GraphTile(h, id), increase, bins))
+      throw std::logic_error("New tiles edgeinfo or names arent matching up");
   }
-
-  //send real bins, we'll throw one in each bin
-  for(auto& bin : bins)
-    bin.emplace_back(762161,2,0);
-  GraphTileBuilder::AddBins(h, &t, bins);
-  auto increase = bins.size() * sizeof(GraphId);
-
-  //check the new tile isnt broken and is exactly the right size bigger
-  if(!tile_equalish(t, GraphTile(h, id), increase, bins))
-    throw std::logic_error("New tiles edgeinfo or names arent matching up");
-
-  //append some more
-  for(auto& bin : bins)
-    bin.emplace_back(762161,2,1);
-  GraphTileBuilder::AddBins(h, &t, bins);
-  increase *= 2;
-
-  //check the new tile isnt broken and is exactly the right size bigger
-  if(!tile_equalish(t, GraphTile(h, id), increase, bins))
-    throw std::logic_error("New tiles edgeinfo or names arent matching up");
 }
 
 }
