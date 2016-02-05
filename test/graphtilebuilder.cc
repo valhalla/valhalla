@@ -166,7 +166,6 @@ void TestAddBins() {
     GraphTileBuilder::AddBins(h, &t, bins);
     for(auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
-    increase *= 2;
 
     //check the new tile isnt broken and is exactly the right size bigger
     if(!tile_equalish(t, GraphTile(h, id), increase, bins))
