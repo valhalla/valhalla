@@ -29,11 +29,11 @@ to get the service run in Docker.
 
 ## Documentation
 
-3. `TODO` Configuration
-4. `TODO` The Algorithms
-5. `TODO` Extending/Developing
 1. [Service API](https://github.com/mapillary/map_matching_plus/blob/master/docs/service_api.md)
 2. [Library API](https://github.com/mapillary/map_matching_plus/blob/master/docs/library_api.md)
+3. `TODO` [Configuration](https://github.com/mapillary/map_matching_plus/blob/master/docs/configuration.md)
+4. [The Algorithms](https://github.com/mapillary/map_matching_plus/blob/master/docs/algorithms.md)
+5. `TODO` [Extending/Developing](https://github.com/mapillary/map_matching_plus/blob/master/docs/developing.md)
 
 ## License
 
