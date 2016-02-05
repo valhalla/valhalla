@@ -678,23 +678,26 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 }
 
 void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
-  //read bins and append
+  //read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];
+  uint32_t shift = 0;
   for(size_t i = 0; i < kBinCount; ++i) {
     auto bin = tile->GetBin(i % kBinsDim, i / kBinsDim);
     bins[i].assign(bin.begin(), bin.end());
     bins[i].insert(bins[i].end(), more_bins[i].cbegin(), more_bins[i].cend());
+    shift += more_bins[i].size();
   }
+  shift *= sizeof(GraphId);
   //update header bin indices
   uint32_t offsets[kBinCount] = { static_cast<uint32_t>(bins[0].size()) };
   for(size_t i = 1 ; i < kBinCount; ++i)
     offsets[i] = static_cast<uint32_t>(bins[i].size()) + offsets[i - 1];
-  auto added_offset = offsets[kBinCount - 1] * sizeof(GraphId);
+  //update header offsets
+  //NOTE: if format changes to add more things here we need to make a change here as well
   GraphTileHeader header = *tile->header();
   header.set_edge_bin_offsets(offsets);
-  //NOTE: if ever we change whats after the bins we need to update that as well
-  header.set_edgeinfo_offset(header.edgeinfo_offset() + added_offset);
-  header.set_textlist_offset(header.textlist_offset() + added_offset);
+  header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
+  header.set_textlist_offset(header.textlist_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
   if(!boost::filesystem::exists(filename.parent_path()))
