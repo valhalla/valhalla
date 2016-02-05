@@ -881,6 +881,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
+  bool allramps = true;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -898,6 +899,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
       } else if (edge->classification() < bestrc) {
         bestrc = edge->classification();
       }
+    }
+
+    // Check if not a ramp or turn channel
+    if (!edge->link()) {
+      allramps = false;
     }
   }
 
@@ -920,8 +926,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
 
   // TODO:Increase stop level based on classification of edges
 
-  // Reduce stop impact from a turn channel
-  if (edges[from].use() == Use::kTurnChannel) {
+  // Reduce stop impact from a turn channel or when only links
+  // (ramps and turn channels) are involved.
+  if (allramps || edges[from].use() == Use::kTurnChannel) {
     stop_impact /= 2;
   }
 
