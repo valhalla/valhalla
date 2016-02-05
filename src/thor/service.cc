@@ -289,6 +289,66 @@ namespace {
       return getPathDepartFrom(best_order, costing, date_time_type, request_str, result);
     }
 
+    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
+      // Parse out units; if none specified, use kilometers
+      double distance_scale = kKmPerMeter;
+      auto matrix_action_type = request.get_optional<std::string>("matrix_type");
+      auto units = request.get<std::string>("units", "km");
+      if (units == "mi")
+        distance_scale = kMilePerMeter;
+      else {
+        units = "km";
+        distance_scale = kKmPerMeter;
+      }
+
+      //do the real work
+      json::MapPtr json;
+      thor::TimeDistanceMatrix tdmatrix;
+      switch ( matrix_type) {
+       case MATRIX_TYPE::ONE_TO_MANY:
+         json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
+         matrix_action_type = "one-to-many";
+         break;
+       case MATRIX_TYPE::MANY_TO_ONE:
+         json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
+         matrix_action_type = "many-to-one";
+         break;
+       case MATRIX_TYPE::MANY_TO_MANY:
+         json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
+         matrix_action_type = "many-to-many";
+         break;
+      }
+
+      //jsonp callback if need be
+      std::ostringstream stream;
+      auto jsonp = request.get_optional<std::string>("jsonp");
+      if(jsonp)
+        stream << *jsonp << '(';
+      stream << *json;
+      if(jsonp)
+        stream << ')';
+
+      //get processing time for thor
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request_route : long_request_manytomany;
+      if ((elapsed_time.count() / correlated.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::" + *matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
+        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("thor_long_request_manytomany", " [ANALYTICS] ");
+      }
+
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+      response.from_info(request_info);
+      worker_t::result_t result{false};
+      result.messages.emplace_back(response.to_string());
+      return result;
+    }
 
     worker_t::result_t getPathArriveBy(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, worker_t::result_t result) {
       //get time for start of request
@@ -576,67 +636,6 @@ namespace {
           }
         }
       }
-    }
-
-    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-      // Parse out units; if none specified, use kilometers
-      double distance_scale = kKmPerMeter;
-      auto matrix_action_type = request.get_optional<std::string>("matrix_type");
-      auto units = request.get<std::string>("units", "km");
-      if (units == "mi")
-        distance_scale = kMilePerMeter;
-      else {
-        units = "km";
-        distance_scale = kKmPerMeter;
-      }
-
-      //do the real work
-      json::MapPtr json;
-      thor::TimeDistanceMatrix tdmatrix;
-      switch ( matrix_type) {
-       case MATRIX_TYPE::ONE_TO_MANY:
-         json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
-         matrix_action_type = "one-to-many";
-         break;
-       case MATRIX_TYPE::MANY_TO_ONE:
-         json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
-         matrix_action_type = "many-to-one";
-         break;
-       case MATRIX_TYPE::MANY_TO_MANY:
-         json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
-         matrix_action_type = "many-to-many";
-         break;
-      }
-
-      //jsonp callback if need be
-      std::ostringstream stream;
-      auto jsonp = request.get_optional<std::string>("jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      //get processing time for thor
-      auto e = std::chrono::system_clock::now();
-      std::chrono::duration<float, std::milli> elapsed_time = e - s;
-      //log request if greater than X (ms)
-      auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request_route : long_request_manytomany;
-      if ((elapsed_time.count() / correlated.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::" + *matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
-        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("thor_long_request_manytomany", " [ANALYTICS] ");
-      }
-
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      worker_t::result_t result{false};
-      result.messages.emplace_back(response.to_string());
-      return result;
     }
 
     // Get the costing options. Get the base options from the config and the
