@@ -219,7 +219,7 @@ namespace {
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         } else if (optimized)
-          return get_optimized_path(correlated, costing, request, info);
+          return get_optimized_path(correlated, costing, request_str);
         else
           return get_trip_path(costing, request_str, date_time_type);
       }
@@ -342,7 +342,7 @@ namespace {
         for (const auto msg : messages)
           result.messages.emplace_back(msg);
 
-      } else { //TODO: make a getPathDepartFrom() to be called by get_trip_path & get_optimized_order
+      } else {
         return getPathDepartFrom(correlated, costing, date_time_type, request_str, result);
       }
 
@@ -356,6 +356,37 @@ namespace {
         midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
       }
       return result;
+    }
+
+    worker_t::result_t  get_optimized_path(const std::vector<PathLocation> correlated, const std::string &costing, const std::string &request_str) {
+      worker_t::result_t result{true};
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
+
+      // Forward the original request
+      result.messages.emplace_back(std::move(request_str));
+
+      TimeDistanceMatrix tdmatrix;
+      std::vector<TimeDistance> td = tdmatrix.ManyToMany(correlated, reader, mode_costing, mode);
+      std::vector<float> time_costs;
+      for (size_t i = 0; i < td.size(); i++) {
+        time_costs.emplace_back(static_cast<float>(td[i].time));
+        LOG_INFO("time_costs vector output from Many to Many:: " + std::to_string(td[i].time));
+      }
+      for (size_t i = 0; i < correlated.size(); i++) {
+        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
+      }
+      Optimizer optimizer;
+      //returns the optimal order of the path_locations
+      auto order = optimizer.Solve(correlated.size(), time_costs);
+      std::vector<PathLocation> best_order;
+      for (size_t i = 0; i< order.size(); i++) {
+        LOG_INFO("optimizer return:: " + std::to_string(order[i]));
+        best_order.emplace_back(correlated[order[i]]);
+        LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
+      }
+
+      return getPathDepartFrom(best_order, costing, date_time_type, request_str, result);
     }
 
     worker_t::result_t getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
@@ -406,7 +437,6 @@ namespace {
           if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
               origin.stoptype_ == Location::StopType::BREAK)
             last_break_origin.date_time_ = origin.date_time_;
-
         } else {
           // Get the path in a temporary vector
           std::vector<thor::PathInfo> temp_path;
@@ -444,7 +474,6 @@ namespace {
               origin_date_time = *last_break_origin.date_time_;
               dest_date_time = *destination.date_time_;
             }
-
             // The protobuf path
             result.messages.emplace_back(trip_path.SerializeAsString());
 
@@ -595,47 +624,6 @@ namespace {
       return result;
     }
 
-    worker_t::result_t  get_optimized_path(const std::vector<PathLocation> correlated, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
-      worker_t::result_t result{true};
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-
-      auto date_time_type = request.get_optional<int>("date_time.type");
-      // Parse out units; if none specified, use kilometers
-      double distance_scale = kKmPerMeter;
-      auto units = request.get<std::string>("units", "km");
-      if (units == "mi")
-        distance_scale = kMilePerMeter;
-      else {
-        units = "km";
-        distance_scale = kKmPerMeter;
-      }
-
-      TimeDistanceMatrix tdmatrix;
-      std::vector<TimeDistance> td = tdmatrix.ManyToMany(correlated, reader, mode_costing, mode);
-      std::vector<float> time_costs;
-      for (size_t i = 0; i < td.size(); i++) {
-        time_costs.emplace_back(static_cast<float>(td[i].time));
-        //LOG_INFO("time_costs vector output from Many to Many:: " + std::to_string(td[i].time));
-      }
-      for (size_t i = 0; i < correlated.size(); i++) {
-        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
-      }
-      Optimizer optimizer;
-      //returns the optimal order of the path_locations
-      auto order = optimizer.Solve(correlated.size(), time_costs);
-      std::vector<PathLocation> best_order;
-      for (size_t i = 0; i< order.size(); i++) {
-        LOG_INFO("optimizer return:: " + std::to_string(order[i]));
-        best_order.emplace_back(correlated[order[i]]);
-        LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
-      }
-      std::stringstream ss;
-      boost::property_tree::json_parser::write_json(ss, request, false);
-
-      return getPathDepartFrom(best_order, costing, date_time_type, ss.str(), result);
-    }
-
     // Get the costing options. Get the base options from the config and the
     // options for the specified costing method. Merge in any request costing
     // options.
@@ -662,7 +650,15 @@ namespace {
 
     std::string init_request(const boost::property_tree::ptree& request) {
       auto id = request.get_optional<std::string>("id");
-
+      // Parse out units; if none specified, use kilometers
+      double distance_scale = kKmPerMeter;
+      auto units = request.get<std::string>("units", "km");
+      if (units == "mi")
+        distance_scale = kMilePerMeter;
+      else {
+        units = "km";
+        distance_scale = kKmPerMeter;
+      }
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -749,6 +745,8 @@ namespace {
     thor::MultiModalPathAlgorithm multi_modal_astar;
     float long_request_route;
     float long_request_manytomany;
+    double distance_scale;
+    boost::optional<int> date_time_type;
   };
 }
 
