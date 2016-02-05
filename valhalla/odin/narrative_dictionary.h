@@ -26,7 +26,7 @@ struct StartVerbalSubset : StartSubset {
 };
 
 /**
- * TBD
+ * A class that stores the localized narrative instructions.
  */
 class NarrativeDictionary {
  public:
@@ -36,13 +36,34 @@ class NarrativeDictionary {
   StartVerbalSubset start_verbal_subset;
 
  protected:
+
+  /**
+    * Loads this dictionary object with the localized narrative instructions
+    * contained in the specified property tree.
+    *
+    * @param  narrative_pt  The narrative property tree with the localized
+    *                       narrative instructions.
+    */
   void Load(const boost::property_tree::ptree& narrative_pt);
 
   void Load(PhraseSet& phrase_handle, const boost::property_tree::ptree& pt);
 
+  /**
+    * Loads the specified 'start' instruction subset with the localized narrative
+    * instructions contained in the specified property tree.
+    *
+    * @param  start_handle  The 'start' structure to populate.
+    * @param  start_subset_pt  The 'start' property tree.
+    */
   void Load(StartSubset& start_handle,
             const boost::property_tree::ptree& start_subset_pt);
-
+  /**
+    * Loads the specified 'start verbal' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  start_verbal_handle  The 'start verbal' structure to populate.
+    * @param  start_verbal_subset_pt  The 'start verbal' property tree.
+    */
   void Load(StartVerbalSubset& start_verbal_handle,
             const boost::property_tree::ptree& start_verbal_subset_pt);
 
