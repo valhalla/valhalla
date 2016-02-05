@@ -210,7 +210,7 @@ using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, 
 std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
   std::array<std::vector<GraphId>, kBinCount> bins;
   //only do most detailed level
-  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first || tile->header()->directededgecount() == 0)
+  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
     return bins;
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
 
@@ -338,11 +338,6 @@ void validate(const boost::property_tree::ptree& pt,
     GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
-    std::vector<Tiles<PointLL> > levels;
-    for (const auto& level : hierarchy.levels()) {
-      levels.push_back(level.second.tiles);
-    }
-    Tiles<PointLL> *tiles;
 
     // Check for more tiles
     while (true) {
@@ -358,7 +353,7 @@ void validate(const boost::property_tree::ptree& pt,
 
       // Point tiles to the set we need for current level
       size_t level = tile_id.level();
-      tiles = &levels[level];
+      const auto& tiles = hierarchy.levels().find(level)->second.tiles;
       auto tileid = tile_id.tileid();
 
       uint32_t dupcount = 0;
@@ -495,14 +490,14 @@ void validate(const boost::property_tree::ptree& pt,
       }
 
       // Add density to return class. Approximate the tile area square km
-      AABB2<PointLL> bb = tiles->TileBounds(tileid);
+      AABB2<PointLL> bb = tiles.TileBounds(tileid);
       float area = ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
                    ((bb.maxx() - bb.minx()) *
                        DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
       float density = (roadlength * 0.0005f) / area;
       stats.add_density(density, level);
       stats.add_tile_area(tileid, area);
-      stats.add_tile_geom(tileid, tiles->TileBounds(tileid));
+      stats.add_tile_geom(tileid, tiles.TileBounds(tileid));
 
       // Set the relative road density within this tile.
       uint32_t relative_density;
@@ -523,7 +518,7 @@ void validate(const boost::property_tree::ptree& pt,
       tilebuilder.Update(nodes, directededges);
 
       // Write the bins to it
-      if(bins.size())
+      if (tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
         GraphTileBuilder::AddBins(hierarchy, tile, bins);
 
       // Check if we need to clear the tile cache
