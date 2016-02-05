@@ -9,7 +9,8 @@ libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
 #config files for tools, you can put a commit hash here if you are ahead of master
-CONF=master
+#CONF=master
+CONF=g11n
 conf:
 	-wget -q -O conf-$(CONF).zip https://github.com/valhalla/conf/archive/$(CONF).zip
 	-unzip conf-$(CONF).zip
