@@ -70,15 +70,15 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kDestinationLeft: {
         // Set instruction
         maneuver.set_instruction(
-            std::move(FormDestinationInstruction(etp, maneuver)));
+            std::move(FormDestinationInstruction(maneuver)));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertDestinationInstruction(etp, maneuver)));
+            std::move(FormVerbalAlertDestinationInstruction(maneuver)));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalDestinationInstruction(etp, maneuver)));
+            std::move(FormVerbalDestinationInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kBecomes: {
@@ -653,8 +653,7 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormDestinationInstruction(
-    const EnhancedTripPath* etp, Maneuver& maneuver) {
+std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
   // 0 "You have arrived at your destination."
   // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
   // 2 "Your destination is on the <SOS>."
@@ -666,7 +665,7 @@ std::string NarrativeBuilder::FormDestinationInstruction(
 
   // Determine if location (name or street) exists
   std::string location;
-  auto& dest = etp->GetDestination();
+  auto& dest = trip_path_->GetDestination();
   // Check for location name
   if (dest.has_name() && !(dest.name().empty())) {
     phrase_id += 1;
@@ -716,7 +715,7 @@ std::string NarrativeBuilder::FormDestinationInstruction(
 }
 
 std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
-    const EnhancedTripPath* etp, Maneuver& maneuver) {
+    Maneuver& maneuver) {
   // 0 "You will arrive at your destination."
   // 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
   // 2 "Your destination will be on the <SOS>."
@@ -728,7 +727,7 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
 
   // Determine if location (name or street) exists
   std::string location;
-  auto& dest = etp->GetDestination();
+  auto& dest = trip_path_->GetDestination();
   // Check for location name
   if (dest.has_name() && !(dest.name().empty())) {
     phrase_id += 1;
@@ -782,7 +781,7 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
 }
 
 std::string NarrativeBuilder::FormVerbalDestinationInstruction(
-    const EnhancedTripPath* etp, Maneuver& maneuver) {
+    Maneuver& maneuver) {
   // 0 "You have arrived at your destination."
   // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
   // 2 "Your destination is on the <SOS>."
@@ -794,7 +793,7 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(
 
   // Determine if location (name or street) exists
   std::string location;
-  auto& dest = etp->GetDestination();
+  auto& dest = trip_path_->GetDestination();
   // Check for location name
   if (dest.has_name() && !(dest.name().empty())) {
     phrase_id += 1;

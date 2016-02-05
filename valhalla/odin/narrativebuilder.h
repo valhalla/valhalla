@@ -42,14 +42,11 @@ class NarrativeBuilder {
                                          std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormDestinationInstruction(const EnhancedTripPath* etp,
-                                         Maneuver& maneuver);
+  std::string FormDestinationInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalAlertDestinationInstruction(const EnhancedTripPath* etp,
-                                                    Maneuver& maneuver);
+  std::string FormVerbalAlertDestinationInstruction(Maneuver& maneuver);
 
-  std::string FormVerbalDestinationInstruction(const EnhancedTripPath* etp,
-                                               Maneuver& maneuver);
+  std::string FormVerbalDestinationInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormBecomesInstruction(Maneuver& maneuver,
