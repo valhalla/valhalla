@@ -4,6 +4,8 @@
 
         "customizable": ["mode", "route", "geometry", "search_radius"],
 
+        "verbose": false,
+
         "default": {
             "sigma_z": 4.07,
             "beta": 3,

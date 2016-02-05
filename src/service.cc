@@ -26,11 +26,8 @@ using namespace prime_server;
 using namespace valhalla;
 using namespace mmp;
 
-#define VERBOSE
 
-
-namespace
-{
+namespace {
 
 constexpr size_t kHttpStatusCodeSize = 600;
 const char* kHttpStatusCodes[kHttpStatusCodeSize];
@@ -422,7 +419,8 @@ void serialize_state(const State& state,
 template <typename buffer_t>
 void serialize_properties(const std::vector<MatchResult>& results,
                           const MapMatching& mm,
-                          rapidjson::Writer<buffer_t>& writer)
+                          rapidjson::Writer<buffer_t>& writer,
+                          bool verbose)
 {
   writer.StartObject();
 
@@ -433,34 +431,34 @@ void serialize_properties(const std::vector<MatchResult>& results,
   }
   writer.EndArray();
 
-#ifdef VERBOSE
-  writer.String("distances");
-  writer.StartArray();
-  for (const auto& result : results) {
-    writer.Double(result.distance());
-  }
-  writer.EndArray();
-
-  writer.String("graphids");
-  writer.StartArray();
-  for (const auto& result : results) {
-    writer.Uint64(result.graphid().id());
-  }
-  writer.EndArray();
-
-  writer.String("states");
-  writer.StartArray();
-  for (const auto& result : results) {
+  if (verbose) {
+    writer.String("distances");
     writer.StartArray();
-    if (result.state()) {
-      for (const auto state : mm.states(result.state()->time())) {
-        serialize_state(*state, mm, writer);
+    for (const auto& result : results) {
+      writer.Double(result.distance());
+    }
+    writer.EndArray();
+
+    writer.String("graphids");
+    writer.StartArray();
+    for (const auto& result : results) {
+      writer.Uint64(result.graphid().id());
+    }
+    writer.EndArray();
+
+    writer.String("states");
+    writer.StartArray();
+    for (const auto& result : results) {
+      writer.StartArray();
+      if (result.state()) {
+        for (const auto state : mm.states(result.state()->time())) {
+          serialize_state(*state, mm, writer);
+        }
       }
+      writer.EndArray();
     }
     writer.EndArray();
   }
-  writer.EndArray();
-#endif
 
   writer.EndObject();
 }
@@ -470,7 +468,8 @@ template <typename buffer_t>
 void serialize_results_as_feature(const std::vector<MatchResult>& results,
                                   const MapMatching& mm,
                                   rapidjson::Writer<buffer_t>& writer,
-                                  bool route = false)
+                                  bool route,
+                                  bool verbose)
 {
   writer.StartObject();
 
@@ -485,7 +484,7 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
   }
 
   writer.String("properties");
-  serialize_properties(results, mm, writer);
+  serialize_properties(results, mm, writer, verbose);
 
   writer.EndObject();
 }
@@ -512,7 +511,8 @@ void serialize_config(MapMatcher* matcher,
 template <typename buffer_t>
 void serialize_response(buffer_t& sb,
                         const std::vector<MatchResult>& results,
-                        MapMatcher* matcher)
+                        MapMatcher* matcher,
+                        bool verbose)
 {
   rapidjson::Writer<buffer_t> writer(sb);
   bool route = matcher->config().get<bool>("route"),
@@ -536,13 +536,13 @@ void serialize_response(buffer_t& sb,
       serialize_geometry_matched_points(results, writer);
     }
   } else {
-    serialize_results_as_feature(results, matcher->mapmatching(), writer, route);
+    serialize_results_as_feature(results, matcher->mapmatching(), writer, route, verbose);
   }
 
-#ifdef VERBOSE
-  writer.String("config");
-  serialize_config(matcher, writer);
-#endif
+  if (verbose) {
+    writer.String("config");
+    serialize_config(matcher, writer);
+  }
 
   writer.EndObject();
 }
@@ -592,7 +592,8 @@ class mm_worker_t {
   mm_worker_t(const boost::property_tree::ptree& config)
       : config_(config),
         matcher_factory_(config_),
-        customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("mm.customizable"))) {}
+        customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("mm.customizable"))),
+        verbose_(config_.get<bool>("mm.verbose")) {}
 
   boost::property_tree::ptree&
   read_preferences_from_request(const http_request_t& request,
@@ -614,7 +615,7 @@ class mm_worker_t {
           }
         }
         // Boolean
-        else if (name == "route" || name == "geometry") {
+        else if (name == "route" || name == "geometry" || name == "verbose") {
           if (values.back() == "false") {
             preferences.put<bool>(name, false);
           } else {
@@ -688,7 +689,8 @@ class mm_worker_t {
 
       // Serialize results
       rapidjson::StringBuffer sb;
-      serialize_response(sb, results, matcher);
+      bool verbose = preferences.get<bool>("verbose", verbose_);
+      serialize_response(sb, results, matcher, verbose);
 
       delete matcher;
 
@@ -710,14 +712,14 @@ class mm_worker_t {
   const boost::property_tree::ptree config_;
   MapMatcherFactory matcher_factory_;
   std::unordered_set<std::string> customizable_;
+  bool verbose_;
 };
 
 
 }
 
 
-namespace mmp
-{
+namespace mmp {
 
 void run_service(const boost::property_tree::ptree& config)
 {
