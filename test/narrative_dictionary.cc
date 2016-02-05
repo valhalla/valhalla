@@ -60,7 +60,6 @@ void test_en_US_start_verbal_phrases() {
   validate(phrase_2, "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.");
 }
 
-
 }
 
 int main() {
