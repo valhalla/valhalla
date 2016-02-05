@@ -137,7 +137,6 @@ LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
 
     // Set a pointer to the edge bin list
     edge_bins_ = reinterpret_cast<GraphId*>(ptr);
-    ptr += header_->bin_offset(kBinsDim - 1, kBinsDim - 1).second * sizeof(GraphId);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
