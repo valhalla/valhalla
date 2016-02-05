@@ -114,7 +114,8 @@ check_PROGRAMS = \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
-	test/locales
+	test/locales \
+	test/narrative_dictionary
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
@@ -133,6 +134,9 @@ test_signs_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_
 test_locales_SOURCES = test/locales.cc test/test.cc
 test_locales_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_locales_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
+test_narrative_dictionary_SOURCES = test/narrative_dictionary.cc test/test.cc
+test_narrative_dictionary_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_narrative_dictionary_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
