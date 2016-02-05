@@ -10,6 +10,7 @@ namespace thor {
 std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
                                        const std::vector<float>& costs) {
   // Handle trivial cases.
+  count_ = count;
   if (count == 2) {
     return { 0, 1 };
   } else if (count_ == 3) {
@@ -24,7 +25,6 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
   // Populate the initial tour with a random order. The first and last
   // locations must remain fixed as the tour begin and end locations do not
   // change.
-  count_ = count;
   CreateRandomTour();
 
   // Copy current tour to best tour and get the tour cost. Set the initial
