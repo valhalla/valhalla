@@ -242,13 +242,15 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // relations are defined within the PBFParser class
   OSMData osmdata = PBFAdminParser::Parse(pt, input_files);
 
-  std::string dir = pt.get<std::string>("admin.admin_dir");
-  std::string db_name = pt.get<std::string>("admin.db_name");
+  // Bail if bad path
+  auto database = pt.get_optional<std::string>("admin");
+  if(!database || !boost::filesystem::create_directories(boost::filesystem::path(*database).parent_path()) ) {
+    LOG_INFO("Admin directory not found. Admins will not be created.");
+    return;
+  }
 
-  std::string database = dir + "/" +  db_name;
-
-  if (boost::filesystem::exists(database)) {
-    boost::filesystem::remove(database);
+  if (boost::filesystem::exists(*database)) {
+    boost::filesystem::remove(*database);
   }
 
   spatialite_init(0);
@@ -259,9 +261,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   char *err_msg = NULL;
   std::string sql;
 
-  ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+  ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
   if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + database);
+    LOG_ERROR("cannot open " + (*database));
     sqlite3_close(db_handle);
     db_handle = NULL;
     return;
