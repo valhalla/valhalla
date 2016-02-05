@@ -83,7 +83,6 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, cons
   return false;
 }
 
-
 void TestDuplicateEdgeInfo() {
   edge_tuple a = test_graph_tile_builder::EdgeTuple(0, GraphId(0,2,0), GraphId(0,2,1));
   edge_tuple b = test_graph_tile_builder::EdgeTuple(0, GraphId(0,2,0), GraphId(0,2,1));
@@ -114,9 +113,12 @@ void TestDuplicateEdgeInfo() {
 
 void TestAddBins() {
 
-  for(const auto& test_tile : std::list<std::pair<std::string, size_t> >{
-      {"609/453.gph", 609453},
-      {"762/161.gph", 762161}}) {
+  //test a couple of tiles
+  for(const auto& test_tile : std::list<std::pair<std::string, size_t> >
+      {
+        {"609/453.gph", 609453},
+        {"762/161.gph", 762161}
+      }) {
 
     //load a tile
     GraphId id(test_tile.second,2,0);
@@ -139,7 +141,7 @@ void TestAddBins() {
         throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
     }
 
-    //send real bins, we'll throw one in each bin
+    //send fake bins, we'll throw one in each bin
     for(auto& bin : bins)
       bin.emplace_back(test_tile.second,2,0);
     GraphTileBuilder::AddBins(h, &t, bins);
@@ -153,6 +155,17 @@ void TestAddBins() {
     for(auto& bin : bins)
       bin.emplace_back(test_tile.second,2,1);
     GraphTileBuilder::AddBins(h, &t, bins);
+    increase = bins.size() * sizeof(GraphId) * 2;
+
+    //check the new tile isnt broken and is exactly the right size bigger
+    if(!tile_equalish(t, GraphTile(h, id), increase, bins))
+      throw std::logic_error("New tiles edgeinfo or names arent matching up");
+
+    //check that appending works
+    t = GraphTile(make_hierarchy("test/tiles/bin"), id);
+    GraphTileBuilder::AddBins(h, &t, bins);
+    for(auto& bin : bins)
+      bin.insert(bin.end(), bin.begin(), bin.end());
     increase *= 2;
 
     //check the new tile isnt broken and is exactly the right size bigger

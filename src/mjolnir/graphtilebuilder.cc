@@ -692,6 +692,7 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
   auto added_offset = offsets[kBinCount - 1] * sizeof(GraphId);
   GraphTileHeader header = *tile->header();
   header.set_edge_bin_offsets(offsets);
+  //NOTE: if ever we change whats after the bins we need to update that as well
   header.set_edgeinfo_offset(header.edgeinfo_offset() + added_offset);
   header.set_textlist_offset(header.textlist_offset() + added_offset);
   //rewrite the tile
@@ -704,15 +705,15 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
     //new header
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     //a bunch of stuff between header and bins
-    const auto* read_pos = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
-    auto size = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin()) - read_pos;
-    file.write(read_pos, size);
+    const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
+    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
+    file.write(begin, end - begin);
     //the updated bins
     for(const auto& bin : bins)
-      file.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
+      file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
     //the rest of the stuff after bins
-    const auto* begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
-    const auto* end = reinterpret_cast<const char*>(tile->header()) + tile->size();
+    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
+    end = reinterpret_cast<const char*>(tile->header()) + tile->size();
     file.write(begin, end - begin);
   }//failed
   else
