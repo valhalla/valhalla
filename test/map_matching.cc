@@ -1,5 +1,8 @@
 // -*- mode: c++ -*-
 
+#undef NDEBUG
+
+#include <cassert>
 #include <iostream>
 #include <string>
 
@@ -162,11 +165,6 @@ void TestMapMatcher(const ptree& root)
 
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  std::cerr << "debug is off" << std::endl;
-  return 1;
-#endif
-
   ptree config;
   boost::property_tree::read_json("conf/mm.json", config);
 

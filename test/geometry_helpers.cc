@@ -1,5 +1,7 @@
 // -*- mode: c++ -*-
 
+#undef NDEBUG
+
 #include <cmath>
 #include <cassert>
 #include <iostream>
@@ -54,11 +56,6 @@ void TestClipLineString()
 
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  std::cerr << "debug is off" << std::endl;
-  return 1;
-#endif
-
   TestClipLineString();
 
   std::cout << "all tests passed" << std::endl;

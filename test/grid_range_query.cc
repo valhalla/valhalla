@@ -1,3 +1,8 @@
+// -*- mode: c++ -*-
+
+#undef NDEBUG
+
+#include <cassert>
 #include <iostream>
 
 #include "mmp/grid_range_query.h"
@@ -106,11 +111,6 @@ void TestQuery()
 
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  std::cerr << "debug is off" << std::endl;
-  return 1;
-#endif
-
   TestGridTools();
 
   TestAddLineSegment();

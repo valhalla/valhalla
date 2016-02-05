@@ -1,3 +1,8 @@
+// -*- mode: c++ -*-
+
+#undef NDEBUG
+
+#include <cassert>
 #include <iostream>
 
 #include "mmp/priority_queue.h"
@@ -124,11 +129,6 @@ void TestQueue()
 
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  std::cerr << "debug is off" << std::endl;
-  return 1;
-#endif
-
   SimpleTestQueue();
 
   TestQueue();

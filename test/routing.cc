@@ -1,3 +1,10 @@
+// -*- mode: c++ -*-
+
+#undef NDEBUG
+
+#include <cassert>
+#include <iostream>
+
 #include "mmp/routing.h"
 
 using namespace valhalla;
@@ -263,11 +270,6 @@ void TestRoutePathIterator()
 
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  std::cerr << "debug is off" << std::endl;
-  return 1;
-#endif
-
   TestAddRemove();
 
   TestSimulation();

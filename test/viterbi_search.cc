@@ -1,3 +1,8 @@
+// -*- mode: c++ -*-
+
+#undef NDEBUG
+
+#include <cassert>
 #include <iostream>
 #include <chrono>
 #include <random>
@@ -316,11 +321,6 @@ void TestViterbiSearch()
 
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  std::cerr << "debug is off" << std::endl;
-  return 1;
-#endif
-
   TestViterbiSearch();
 
   std::cout << "all tests passed" << std::endl;
