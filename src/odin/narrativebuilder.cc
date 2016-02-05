@@ -52,8 +52,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             std::move(
-                FormVerbalStartInstruction(maneuver,
-                                           directions_options.units())));
+                FormVerbalStartInstruction(maneuver)));
 
         // Set verbal post transition instruction only if there are
         // begin street names
@@ -606,8 +605,7 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(
-    Maneuver& maneuver, DirectionsOptions_Units units,
-    uint32_t element_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
@@ -648,7 +646,7 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
-  boost::replace_all(instruction, kLengthTag, FormDistance(maneuver, units));
+  boost::replace_all(instruction, kLengthTag, FormDistance(maneuver, directions_options_.units()));
 
   // TODO - side of street
 
