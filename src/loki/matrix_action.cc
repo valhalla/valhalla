@@ -41,7 +41,7 @@ namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-  std::vector<float> max_manytomany_list;
+  std::vector<float> max_manytomany_list = {0.f};
 
   void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
@@ -101,6 +101,7 @@ namespace valhalla {
           check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, action_str);
           break;
         case MANY_TO_MANY:
+          max_manytomany_list = {0.f};
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, action_str);
 
