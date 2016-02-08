@@ -4,7 +4,6 @@
     "customizable": [
       "mode",
       "route",
-      "geometry",
       "search_radius"
     ],
     "verbose": false,
@@ -123,7 +122,7 @@
     "transit": {
       "use_bus": 0.3,
       "use_rail": 0.5,
-      "use_transfers": 1,
+      "use_transfers": 0.5,
       "transfer_cost": 60,
       "transfer_penalty": 300
     }
