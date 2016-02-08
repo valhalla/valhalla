@@ -23,11 +23,21 @@ sudo make install
 popd
 
 
-# graph and install rapidjson
-rm -rf rapidjson
-git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git
-pushd rapidjson
-git submodule update --init
+# grab and install rapidjson
+
+## Or you can:
+# rm -rf rapidjson
+# git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git
+
+RAPIDJSON_VERSION=1.0.2
+rm -rf rapidjson.tar.gz
+wget https://github.com/miloyip/rapidjson/archive/v${RAPIDJSON_VERSION}.tar.gz -O rapidjson.tar.gz
+rm -rf rapidjson-${RAPIDJSON_VERSION}
+tar xf rapidjson.tar.gz
+
+pushd rapidjson-${RAPIDJSON_VERSION}
+## Need if you grab by git clone
+# git submodule update --init
 mkdir build && cd build
 cmake ..
 make
