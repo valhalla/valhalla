@@ -58,8 +58,11 @@ void ReclassifyLinks(const std::string& ways_file,
       // an exit ramp crosses onto an entrance back onto the same highway
       // that was exited. But there are cases with internal intersection links
       // that we do need to expand.
-      if (end_node_bundle.link_count > 1 &&
-          end_node_bundle.node.attributes_.shortlink &&
+      // Also expand if only one non-link edge exists and more than 1 link
+      // exists(common case - service road off a ramp)
+      if ( end_node_bundle.link_count > 1 &&
+          (end_node_bundle.node.attributes_.shortlink ||
+           end_node_bundle.non_link_count == 1)   &&
           visitedset.find(end_node_itr.position()) == visitedset.end()) {
        expandset.insert(end_node_itr.position());
       }
