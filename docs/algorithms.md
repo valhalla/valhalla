@@ -2,7 +2,7 @@
 
 MMP uses a Hidden Markov Model (HMM) approach, proposed by
 [Paul Newson and John Krumm in 2009](http://research.microsoft.com/en-us/um/people/jckrumm/Publications%202009/map%20matching%20ACM%20GIS%20camera%20ready.pdf),
-to solve the map matching problem. The map-matching problem was
+to solve the map matching problem. The map-matching problem is
 modelled as follows: given a sequence of GPS measurements
 (observations in terms of HMM), each measurement has to match one of a
 set of potential candidate road segments (hidden states in terms of
@@ -20,9 +20,14 @@ A good explanation about the modelling can be found
 [here](https://www.mapbox.com/blog/map-matching/) and
 [here](https://github.com/bmwcarit/barefoot/blob/master/MANUAL.md#background).
 
+The problem can be formulated as a graph search problem that is
+familiar to programmers. Here we briefly introduce the problem
+formulation and then introduce several solutions, followed by
+improvements and experiments.
+
 ## Graphical Model
 
-Put the example above in the graphical model, it looks like this:
+Put the example above in a graphical model, it looks like this:
 
 ![Model](figures/model.png)
 
@@ -32,10 +37,11 @@ Each measurement has a column of nodes associated. A node (a hidden
 state in terms of HMM) in the graph represents a candidate, namely a
 tuple `(road segment, offset)` that tells a location on a road segment
 on the map. An edge `(u, v)` means that node `u` is able to affect the
-decision about `v` (e.g. from node 1 to node 4, if it needs to walk a
-much longer way than it looks, then node 4 is unlikely to the match to
-the second measurement). As you can see in the graph a measurement can
-be affected only by its previous measurement.
+decision about `v`. Take the edge `(node 9, node 12)` as an example:
+since it takes a much longer way than it looks from node 9 to node 12,
+node 12 is therefore unlikely to be the match to the last
+measurement. As you can see in the graph a measurement can be affected
+only by its previous measurement.
 
 Two probability models are used together to quantify how likely a
 measurement would be to match a node. The emission probability
@@ -71,15 +77,20 @@ def path_prob(path):
 ```
 
 The task is to find the most likely sequence over all possible
-sequences. To simplify the problem, two virtual nodes source node `s`
-and target node `t` and corresponding virtual edges were added to the
-graph with all emission and transition probabilities to 1.0. The task
-becomes: find a path from `s` to `t` that maximizes the path
-probability.
+sequences. For convenience's sake, we added two virtual nodes, the
+source node `s` and the target node `t`, and corresponding virtual
+edges to the graph with all emission and transition probabilities to
+be 1.0. The task hence becomes: find a path from `s` to `t` that
+maximizes the path probability.
 
 ## Solutions
 
 To make the problem clear, a brute-force solution is given first.
+Given a graph represented by a
+[Adjacency List](https://en.wikipedia.org/wiki/Adjacency_list), a
+source node and a target node, the procudure `maximum_path_prob` tries
+hard to list all paths in between and then selects the optimal one
+among them.
 
 ```python
 def maximum_path_prob(adjacency_list, s, t):
@@ -87,7 +98,7 @@ def maximum_path_prob(adjacency_list, s, t):
         for path in all_paths(adjacency_list, s, t),
         key=lambda prob, path: prob)
 
-# Generate all paths from s to t. Can be ignored
+# Generate all paths from s to t recursively. You can safely ignore the implementation
 def all_paths(adjacency_list, s, t):
     if s == t: return [[]]
     paths = []
@@ -116,10 +127,13 @@ def viterbi_search(adjacency_list, s, t):
 
     queue.push(s)
     joint_prob[s] = emission_prob(s)
+    predecessor[s] = None
     while not queue.empty():
+        # Extract node u
         u = queue.pop()
         # Guarantee the optimal solution to u is found
-        assert joint_prob[u] == maximum_path_prob(adjacency_list, s, u)
+        assert joint_prob[u] == maximum_path_prob(adjacency_list, s, u)[0]
+        if u == t: break
         for v in adjacency_list[u]:
             # Relaxation
             new_prob = joint_prob[u] * transition_prob(u, v) * emission_prob(v)
@@ -139,7 +153,7 @@ in the DAG. Both algorithms have to explore all edges to find the
 path. However in the map-matching model exploring an edge is
 expensive. During the exploration of an edge `(u, v)`, it needs to
 find the shortest path between `u` and `v` *in the road network* for
-calculating its transition probability. Assume that given a sequence
+calculating its transition probability. Suppose that, given a sequence
 of `S` measurements and each measurement has average `T` states, the
 Viterbi Algorithm or the topological sort approach will traverse all
 edges i.e. do `S * T * T` times of shortest path calculations. This is
@@ -149,12 +163,13 @@ large average `T`.
 To reduce the number of transition probability calculations, we use
 the
 [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
-to avoid expanding those unlikely nodes as many as possible. Like the
+to avoid extracting those unlikely nodes as many as possible. Like the
 Viterbi Algorithm, the Dijkstra's algorithm solves the problem in a
 Dynamic Programming approach. The advantage of the Dijkstra's
-algorithm is that it expands nodes in a greedy way, i.e. only expands
-the most likely node. With this strategy, when the target is found to
-be optimal, the rest unexpanded nodes will be just thrown away.
+algorithm is that it extracts nodes in a greedy way, i.e. extracts the
+most likely node every time. With this strategy, as soon as the target
+is extracted, the optimal solution is guaranteed to be found and thus
+the rest of nodes can be safely thrown away.
 
 Before applying the Dijkstra's algorithm we should notice that our
 objective is to find the most likely path, whereas the Dijkstra's
@@ -162,15 +177,19 @@ algorithm is designed to solve shortest path problem, i.e. minimizing
 a certain objective. Therefore we need to transform the maximization
 problem to a minimization problem in the following way:
 
-We are maximizing:
+With following prerequisites:
 ```python
-# We have:
-assert 0 <= emission_prob(u) <= 1.0 and 0 <= transition_prob(u, v) <= 1.0
 T = transition_prob
 E = emission_prob
 lg = math.log10
+assert 0 <= E(u) <= 1.0 and 0 <= T(u, v) <= 1.0
+```
 
-# Expanded from path_prob(path)
+We are maximizing `path_prob(path)` among a set of paths. Expanding
+`path_prob(path)` we get:
+
+```python
+# For simplicity we ignored the last node
 product(E(u) * T(u, v) for u,v in path)
 ```
 
@@ -180,6 +199,7 @@ which is equivalent to maximizing:
 lg(product(E(u) * T(u, v) for u,v in path))
 # equivalent to
 sum(lg(E(u)) + lg(T(u, v)) for u,v in path)
+# because lg(a * b) == lg(a) + lg(b)
 ```
 
 which is equivalent to minimizing:
@@ -194,7 +214,7 @@ assert 0 <= -lg(E(u)) and 0 <= -lg(T(u, v))
 ```
 
 After the transformation, the emission probability of a node turns to
-the node cost and the transition probability of an edge turns to the
+the node cost, and the transition probability of an edge turns to the
 edge cost.
 
 ```python
