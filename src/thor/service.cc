@@ -232,7 +232,7 @@ namespace {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       // Forward the original request
-      result.messages.emplace_back(std::move(request_str));
+      result.messages.emplace_back(request_str);
 
       // For each pair of origin/destination
       bool prior_is_node = false;
@@ -439,7 +439,6 @@ namespace {
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
       if ((elapsed_time.count() / correlated.size()) > long_request_route) {
-        std::stringstream ss;
         LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::route request exceeded threshold::"+ request_str);
         midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
