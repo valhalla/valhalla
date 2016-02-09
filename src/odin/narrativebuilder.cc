@@ -654,10 +654,10 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
 }
 
 std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
-  // 0 "You have arrived at your destination."
-  // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-  // 2 "Your destination is on the <SOS>."
-  // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+  // "0": "You have arrived at your destination."
+  // "1": "You have arrived at <DESTINATION>."
+  // "2": "Your destination is on the <RELATIVE_DIRECTION>."
+  // "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
 
   uint8_t phrase_id = 0;
   std::string instruction;
@@ -665,7 +665,7 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
 
   // Determine if location (name or street) exists
   std::string location;
-  auto& dest = trip_path_->GetDestination();
+  const auto& dest = trip_path_->GetDestination();
   // Check for location name
   if (dest.has_name() && !(dest.name().empty())) {
     phrase_id += 1;
@@ -679,8 +679,10 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
 
   // Check for side of street
   std::string sos;
-  if ((maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft)
-      || (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight)) {
+  if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft) {
+    phrase_id += 2;
+    sos = FormTurnTypeInstruction(maneuver.type());
+  } else if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight) {
     phrase_id += 2;
     sos = FormTurnTypeInstruction(maneuver.type());
   }

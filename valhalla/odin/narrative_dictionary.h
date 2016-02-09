@@ -25,6 +25,10 @@ struct StartVerbalSubset : StartSubset {
   std::vector<std::string> us_customary_lengths;
 };
 
+struct DestinationSubset : PhraseSet {
+  std::vector<std::string> relative_directions;
+};
+
 /**
  * A class that stores the localized narrative instructions.
  */
@@ -34,6 +38,10 @@ class NarrativeDictionary {
 
   StartSubset start_subset;
   StartVerbalSubset start_verbal_subset;
+
+  DestinationSubset destination_subset;
+  DestinationSubset destination_verbal_alert_subset;
+  DestinationSubset destination_verbal_subset;
 
  protected:
 
@@ -46,7 +54,14 @@ class NarrativeDictionary {
     */
   void Load(const boost::property_tree::ptree& narrative_pt);
 
-  void Load(PhraseSet& phrase_handle, const boost::property_tree::ptree& pt);
+  /**
+    * Loads the phrases with the localized narrative instructions
+    * contained in the specified property tree.
+    *
+    * @param  phrase_handle  The 'phrase' structure to populate.
+    * @param  phrase_pt  The 'phrase' property tree.
+    */
+  void Load(PhraseSet& phrase_handle, const boost::property_tree::ptree& phrase_pt);
 
   /**
     * Loads the specified 'start' instruction subset with the localized narrative
@@ -66,6 +81,16 @@ class NarrativeDictionary {
     */
   void Load(StartVerbalSubset& start_verbal_handle,
             const boost::property_tree::ptree& start_verbal_subset_pt);
+
+  /**
+    * Loads the specified 'destination' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  destination_handle  The 'destination' structure to populate.
+    * @param  destination_subset_pt  The 'destination' property tree.
+    */
+  void Load(DestinationSubset& destination_handle,
+            const boost::property_tree::ptree& destination_subset_pt);
 
 };
 
