@@ -7,7 +7,6 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
@@ -182,7 +181,7 @@ namespace {
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         try {
-          boost::property_tree::read_info(stream, request);
+          boost::property_tree::read_json(stream, request);
         }
         catch(const std::exception& e) {
           worker_t::result_t result{false};
