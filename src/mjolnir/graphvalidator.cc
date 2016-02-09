@@ -518,8 +518,11 @@ void validate(const boost::property_tree::ptree& pt,
       tilebuilder.Update(nodes, directededges);
 
       // Write the bins to it
-      if (tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
-        GraphTileBuilder::AddBins(hierarchy, tile, bins);
+      if (tile->header()->graphid().level() == hierarchy.levels().rbegin()->first) {
+        // TODO: we could just also make tilebuilder::Update write the bins
+        auto reloaded = GraphTile(hierarchy, tile_id);
+        GraphTileBuilder::AddBins(hierarchy, &reloaded, bins);
+      }
 
       // Check if we need to clear the tile cache
       if (graph_reader.OverCommitted())

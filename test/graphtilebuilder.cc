@@ -37,6 +37,18 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, cons
   if(a.size() + difference != b.size())
     return false;
 
+  //check the first chunk after the header
+  if(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
+      reinterpret_cast<const char*>(b.header()) + sizeof(GraphTileHeader),
+      (reinterpret_cast<const char*>(b.GetBin(0, 0).begin()) - reinterpret_cast<const char*>(b.header())) - sizeof(GraphTileHeader)))
+    return false;
+
+  //check the stuff after the bins
+  if(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
+      reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
+      b.size() - b.header()->edgeinfo_offset()))
+    return false;
+
   //if the header is as expected
   const auto* ah = a.header(), *bh = b.header();
   if(ah->access_restriction_count() == bh->access_restriction_count() &&
