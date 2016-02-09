@@ -7,7 +7,6 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
@@ -732,7 +731,7 @@ namespace {
         boost::property_tree::ptree request;
 
         try{
-          boost::property_tree::read_info(stream, request);
+          boost::property_tree::read_json(stream, request);
         }
         catch(...) {
           worker_t::result_t result{false};
