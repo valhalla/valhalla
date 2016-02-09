@@ -7,7 +7,6 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
@@ -182,7 +181,7 @@ namespace {
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         try {
-          boost::property_tree::read_info(stream, request);
+          boost::property_tree::read_json(stream, request);
         }
         catch(const std::exception& e) {
           worker_t::result_t result{false};
@@ -233,7 +232,7 @@ namespace {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       // Forward the original request
-      result.messages.emplace_back(std::move(request_str));
+      result.messages.emplace_back(request_str);
 
       // For each pair of origin/destination
       bool prior_is_node = false;
@@ -440,7 +439,6 @@ namespace {
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
       if ((elapsed_time.count() / correlated.size()) > long_request_route) {
-        std::stringstream ss;
         LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::route request exceeded threshold::"+ request_str);
         midgard::logging::Log("thor_long_request_route", " [ANALYTICS] ");
