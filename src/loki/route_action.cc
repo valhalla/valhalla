@@ -99,7 +99,7 @@ namespace valhalla {
         request.put("osrm", "compatibility");
 
       std::stringstream stream;
-      boost::property_tree::write_info(stream, request);
+      boost::property_tree::write_json(stream, request);
 
       //ok send on the request with correlated origin and destination filled out
       //using the boost ptree info format
