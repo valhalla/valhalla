@@ -109,7 +109,7 @@ namespace valhalla {
       //pass on to thor with type of matrix
       request.put("matrix_type", action_str);
       std::stringstream stream;
-      boost::property_tree::write_json(stream, request);
+      boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
       return result;
