@@ -306,7 +306,9 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
 
 //explicit instantiations
 template std::vector<PointLL> resample_spherical_polyline<std::vector<PointLL> >(const std::vector<PointLL>&, double, bool);
+template std::vector<Point2> resample_spherical_polyline<std::vector<Point2> >(const std::vector<Point2>&, double, bool);
 template std::list<PointLL> resample_spherical_polyline<std::list<PointLL> >(const std::list<PointLL>&, double, bool);
+template std::list<Point2> resample_spherical_polyline<std::list<Point2> >(const std::list<Point2>&, double, bool);
 
 //Return the intersection of two infinite lines if any
 template <class coord_t>

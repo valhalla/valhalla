@@ -194,7 +194,7 @@ T clamp(T value, T lower, T upper) {
 /**
  * Resample a polyline in spherical coordinates to specified resolution optionally keeping all original points in the line
  * @param polyline     the list/vector of points in the line
- * @param resolution   minimum distance between any point in the resampled line
+ * @param resolution   maximum distance between any two points in the resampled line
  * @param preserve     keep input points in resampled line or not
  */
 template<class container_t>
