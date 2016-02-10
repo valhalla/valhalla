@@ -16,13 +16,6 @@
 namespace {
 // Text instruction initial capacity
 constexpr auto kTextInstructionInitialCapacity = 128;
-
-// Instruction tags
-constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
-constexpr auto kStreetNamesTag = "<STREET_NAMES>";
-constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
-constexpr auto kLengthTag = "<LENGTH>";
-
 }
 
 namespace valhalla {
@@ -664,17 +657,17 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
   instruction.reserve(kTextInstructionInitialCapacity);
 
   // Determine if location (name or street) exists
-  std::string location;
+  std::string destination;
   const auto& dest = trip_path_->GetDestination();
-  // Check for location name
+  // Check for destination name
   if (dest.has_name() && !(dest.name().empty())) {
     phrase_id += 1;
-    location = dest.name();
+    destination = dest.name();
   }
-  // Check for location street
+  // Check for destination street
   else if (dest.has_street() && !(dest.street().empty())) {
     phrase_id += 1;
-    location = dest.street();
+    destination = dest.street();
   }
 
   // Check for side of street
@@ -690,7 +683,7 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
   switch (phrase_id) {
     // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
     case 1: {
-      instruction = (boost::format("You have arrived at %1%.") % location).str();
+      instruction = (boost::format("You have arrived at %1%.") % destination).str();
       break;
     }
     // 2 "Your destination is on the <SOS>."
@@ -702,7 +695,7 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
     // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
     case 3: {
       instruction = (boost::format(
-          "%1% is on the %2%.") % location
+          "%1% is on the %2%.") % destination
           % sos).str();
       break;
     }

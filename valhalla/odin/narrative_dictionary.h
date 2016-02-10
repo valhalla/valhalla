@@ -7,6 +7,34 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+namespace {
+
+// Subset keys
+constexpr auto kStartKey = "instructions.start";
+constexpr auto kStartVerbalKey = "instructions.start_verbal";
+constexpr auto kDestinationKey = "instructions.destination";
+constexpr auto kDestinationVerbalAlertKey = "instructions.destination_verbal_alert";
+constexpr auto kDestinationVerbalKey = "instructions.destination_verbal";
+
+// Variable keys
+constexpr auto kPhrasesKey = "phrases";
+constexpr auto kCardinalDirectionsKey = "cardinal_directions";
+constexpr auto kRelativeDirectionsKey = "relative_directions";
+constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
+constexpr auto kEmptyBeginStreetNameLabelsKey = "empty_begin_street_name_labels";
+constexpr auto kMetricLengthsKey = "metric_lengths";
+constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
+
+// Phrase tags
+constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
+constexpr auto kRelativelDirectionTag = "<RELATIVE_DIRECTION>";
+constexpr auto kStreetNamesTag = "<STREET_NAMES>";
+constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
+constexpr auto kLengthTag = "<LENGTH>";
+constexpr auto kDestinationTag = "<DESTINATION>";
+
+}
+
 namespace valhalla {
 namespace odin {
 
