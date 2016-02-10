@@ -695,65 +695,51 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
     Maneuver& maneuver) {
-  // 0 "You will arrive at your destination."
-  // 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-  // 2 "Your destination will be on the <SOS>."
-  // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>."
+  // "0": "You will arrive at your destination.",
+  // "1": "You will arrive at <DESTINATION>.",
+  // "2": "Your destination will be on the <RELATIVE_DIRECTION>.",
+  // "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
 
   uint8_t phrase_id = 0;
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
 
-  // Determine if location (name or street) exists
-  std::string location;
+  // Determine if destination (name or street) exists
+  std::string destination;
   auto& dest = trip_path_->GetDestination();
-  // Check for location name
+  // Check for destination name
   if (dest.has_name() && !(dest.name().empty())) {
     phrase_id += 1;
-    location = dest.name();
+    destination = dest.name();
   }
-  // Check for location street
+  // Check for destination street
   else if (dest.has_street() && !(dest.street().empty())) {
     phrase_id += 1;
     auto* verbal_formatter = maneuver.verbal_formatter();
     if (verbal_formatter)
-      location = verbal_formatter->Format(dest.street());
+      destination = verbal_formatter->Format(dest.street());
     else
-      location = dest.street();
+      destination = dest.street();
   }
 
-  // Check for side of street
-  std::string sos;
-  if ((maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft)
-      || (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight)) {
+  // Check for side of street relative direction
+  std::string relative_direction;
+  if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft) {
     phrase_id += 2;
-    sos = FormTurnTypeInstruction(maneuver.type());
+    relative_direction = dictionary_.destination_subset.relative_directions.at(0);
+  } else if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight) {
+    phrase_id += 2;
+    relative_direction = dictionary_.destination_subset.relative_directions.at(1);
   }
 
-  switch (phrase_id) {
-    // 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-    case 1: {
-      instruction = (boost::format("You will arrive at %1%.") % location).str();
-      break;
-    }
-    // 2 "Your destination will be on the <SOS>."
-    case 2: {
-      instruction = (boost::format("Your destination will be on the %1%.")
-          % sos).str();
-      break;
-    }
-    // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>."
-    case 3: {
-      instruction = (boost::format(
-          "%1% will be on the %2%.") % location
-          % sos).str();
-      break;
-    }
-    // 0 "You will arrive at your destination."
-    default: {
-      instruction = "You will arrive at your destination.";
-      break;
-    }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.destination_verbal_alert_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  if (phrase_id > 0) {
+    // Replace phrase tags with values
+    boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
+    boost::replace_all(instruction, kDestinationTag, destination);
   }
 
   return instruction;
