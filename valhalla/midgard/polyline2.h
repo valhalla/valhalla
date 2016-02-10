@@ -52,7 +52,8 @@ class Polyline2 {
    * @param   pts  Polyline vertices.
    * @return  Returns the length of the polyline.
    */
-  static float Length(const std::vector<coord_t>& pts);
+  template <class container_t>
+  static float Length(const container_t& pts);
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
