@@ -120,7 +120,7 @@ void TestResample() {
 
     //try it
     auto input_shape = decode<std::vector<PointLL>>(example.second);
-    auto resampled = resample_spherical_polyline(input_shape, example.first);
+    auto resampled = resample_spherical_polyline(input_shape, example.first, false);
 
     //check that nothing is too far apart
     for(auto p = std::next(resampled.cbegin()); p != resampled.cend(); ++p) {
@@ -130,13 +130,25 @@ void TestResample() {
     }
 
     //all the points better be within a meter or so of the original line
-    for(const auto p : resampled) {
+    for(const auto& p : resampled) {
       auto cp = p.ClosestPoint(input_shape);
       auto dist = std::get<1>(cp);
       if(!equal(dist, 0.f, 1.2f)) {
         throw std::runtime_error("Sampled point was not found on original line");
       }
     }
+
+    //all the original points should be in this one
+    resampled = resample_spherical_polyline(input_shape, example.first, true);
+    auto current = resampled.cbegin();
+    for(const auto& p : input_shape) {
+      while(current != resampled.cend() && *current != p)
+        ++current;
+      if(current == resampled.cend())
+        throw std::runtime_error("All original points should be found in resampled polyline");
+    }
+    if(current + 1 != resampled.cend())
+      throw std::runtime_error("Last found point should be last point in resampled polyline");
   }
 }
 
