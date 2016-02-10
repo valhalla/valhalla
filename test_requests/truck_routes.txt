@@ -7,6 +7,7 @@
 -j '{"locations":[{"lat":39.961065698246706,"lon":-75.60988873232417,"type":"break"},{"lat":40.94472012526964,"lon":-78.97159159161674,"type":"break"}],"costing":"truck"}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":39.961065698246706,"lon":-75.60988873232417,"type":"break"},{"lat":40.94472012526964,"lon":-78.97159159161674,"type":"break"}],"costing":"truck","costing_options":{"truck":{"height":"4.2672"}}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":39.961065698246706,"lon":-75.60988873232417,"type":"break"},{"lat":40.94472012526964,"lon":-78.97159159161674,"type":"break"}],"costing":"truck"}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.961065698246706,"lon":-75.60988873232417,"type":"break"},{"lat":40.94472012526964,"lon":-78.97159159161674,"type":"break"}],"costing":"truck","costing_options":{"truck":{"toll_booth_penalty":"600.0"}}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616,"type":"break"}],"costing":"truck"}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616,"type":"break"}],"costing":"truck","costing_options":{"truck":{"height":"3.556"}}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616,"type":"break"}],"costing":"truck","costing_options":{"truck":{"height":"3.3528"}}}' --config ../conf/valhalla.json
