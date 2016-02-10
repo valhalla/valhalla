@@ -192,10 +192,13 @@ T clamp(T value, T lower, T upper) {
 }
 
 /**
- * Resample a polyline in spherical coordinates
+ * Resample a polyline in spherical coordinates to specified resolution optionally keeping all original points in the line
+ * @param polyline     the list/vector of points in the line
+ * @param resolution   minimum distance between any point in the resampled line
+ * @param preserve     keep input points in resampled line or not
  */
 template<class container_t>
-container_t resample_spherical_polyline(const container_t& polyline, double resolution);
+container_t resample_spherical_polyline(const container_t& polyline, double resolution, bool preserve = false);
 
 /**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly
