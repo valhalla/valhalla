@@ -670,40 +670,24 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
     destination = dest.street();
   }
 
-  // Check for side of street
-  std::string sos;
+  // Check for side of street relative direction
+  std::string relative_direction;
   if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft) {
     phrase_id += 2;
-    sos = FormTurnTypeInstruction(maneuver.type());
+    relative_direction = dictionary_.destination_subset.relative_directions.at(0);
   } else if (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight) {
     phrase_id += 2;
-    sos = FormTurnTypeInstruction(maneuver.type());
+    relative_direction = dictionary_.destination_subset.relative_directions.at(1);
   }
 
-  switch (phrase_id) {
-    // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-    case 1: {
-      instruction = (boost::format("You have arrived at %1%.") % destination).str();
-      break;
-    }
-    // 2 "Your destination is on the <SOS>."
-    case 2: {
-      instruction = (boost::format("Your destination is on the %1%.")
-          % sos).str();
-      break;
-    }
-    // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
-    case 3: {
-      instruction = (boost::format(
-          "%1% is on the %2%.") % destination
-          % sos).str();
-      break;
-    }
-    // 0 "You have arrived at your destination."
-    default: {
-      instruction = "You have arrived at your destination.";
-      break;
-    }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.destination_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  if (phrase_id > 0) {
+    // Replace phrase tags with values
+    boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
+    boost::replace_all(instruction, kDestinationTag, destination);
   }
 
   return instruction;

@@ -27,7 +27,7 @@ constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
 
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
-constexpr auto kRelativelDirectionTag = "<RELATIVE_DIRECTION>";
+constexpr auto kRelativeDirectionTag = "<RELATIVE_DIRECTION>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kLengthTag = "<LENGTH>";
