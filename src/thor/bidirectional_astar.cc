@@ -389,7 +389,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         //  check if it is least cost candidate.
         EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
         if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          float c = pred.cost().cost +
+          float c = pred2.cost().cost +
               edgelabels_[oppedgestatus.status.index].cost().cost;
           if (c < best_connection_.cost) {
             best_connection_ = { edgeid, oppedge, c };
