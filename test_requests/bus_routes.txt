@@ -1,0 +1,2 @@
+-j '{"locations":[{"lat":38.8256669,"lon":-77.108051,"type":"break"},{"lat":38.845561,"lon":-77.080335,"type":"break"}],"costing":"bus"}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.865341,"lon":-77.076294,"type":"break"},{"lat":38.845561,"lon":-77.080335,"type":"break"}],"costing":"bus"}' --config ../conf/valhalla.json

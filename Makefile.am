@@ -51,7 +51,7 @@ endif
 src/*.cc: conf
 
 #distributed executables
-bin_PROGRAMS = loki_benchmark skadi_benchmark skadi_simple_service tyr_simple_service path_test adjacency_list_benchmark city_test time_distance_test
+bin_PROGRAMS = loki_benchmark skadi_benchmark skadi_simple_service tyr_simple_service path_test adjacency_list_benchmark city_test time_distance_test unconnected_ways
 loki_benchmark_SOURCES = src/loki_benchmark.cc
 loki_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 loki_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
@@ -76,7 +76,9 @@ city_test_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGR
 time_distance_test_SOURCES = src/time_distance_test.cc
 time_distance_test_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 time_distance_test_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
-
+unconnected_ways_SOURCES = src/unconnected_ways.cc
+unconnected_ways_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+unconnected_ways_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
 
 # tests
 #check_PROGRAMS = test/something
