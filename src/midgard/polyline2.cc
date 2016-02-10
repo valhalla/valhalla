@@ -43,9 +43,9 @@ float Polyline2<coord_t>::Length() const {
 
 // Find the length of the supplied polyline.
 template <class coord_t>
-float Polyline2<coord_t>::Length(const std::vector<coord_t>& pts) const {
+float Polyline2<coord_t>::Length(const std::vector<coord_t>& pts) {
   float length = 0;
-  for (uint32_t i = 0; i < pts_.size() - 1; i++) {
+  for (uint32_t i = 0; i < pts.size() - 1; i++) {
     length += pts[i].Distance(pts[i+1]);
   }
   return length;
