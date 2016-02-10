@@ -406,7 +406,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
   if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
     const GraphTile* other_tile;
     auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
-    return CorrelateNode(reader, location, filter, tile, other_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
+    return CorrelateNode(reader, location, filter, tile, tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
   }//it was the end node
   else if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
     const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
