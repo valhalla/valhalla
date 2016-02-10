@@ -259,15 +259,14 @@ namespace {
 
           // Get the algorithm type for this location pair
           thor::PathAlgorithm* path_algorithm;
-
           if (costing == "multimodal") {
             path_algorithm = &multi_modal_astar;
-          } else if (costing == "pedestrian" || costing == "bicycle") {
-            // Use bidirectional A* for pedestrian and bicycle if over 10km
+          } else if (costing == "bus") {
+            path_algorithm = &astar;
+          } else {
+            // Use bidirectional A* for all other costing type (if over 10km)
             float dist = origin.latlng_.Distance(destination.latlng_);
             path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
-          } else {
-            path_algorithm = &astar;
           }
 
           // Get best path
@@ -354,15 +353,14 @@ namespace {
 
           // Get the algorithm type for this location pair
           thor::PathAlgorithm* path_algorithm;
-
           if (costing == "multimodal") {
             path_algorithm = &multi_modal_astar;
-          } else if (costing == "pedestrian" || costing == "bicycle") {
-            // Use bidirectional A* for pedestrian and bicycle if over 10km
+          } else if (costing == "bus") {
+            path_algorithm = &astar;
+          } else {
+            // Use bidirectional A* for all other costing type (if over 10km)
             float dist = origin.latlng_.Distance(destination.latlng_);
             path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
-          } else {
-            path_algorithm = &astar;
           }
 
           // Get best path
@@ -487,15 +485,17 @@ namespace {
       if (path_edges.size() == 0) {
         valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
         if (cost->AllowMultiPass()) {
-          // 2nd pass
+          // 2nd pass. Less aggressive hierarchy transitioning
           path_algorithm->Clear();
-          cost->RelaxHierarchyLimits(16.0f);
+          bool using_astar = (path_algorithm == &astar);
+          float relax_factor = using_astar ? 16.0f : 8.0f;
+          cost->RelaxHierarchyLimits(relax_factor);
           midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
           path_edges = path_algorithm->GetBestPath(origin, destination,
                                     reader, mode_costing, mode);
 
-          // 3rd pass
-          if (path_edges.size() == 0) {
+          // 3rd pass (only for A*)
+          if (path_edges.size() == 0 && using_astar) {
             path_algorithm->Clear();
             cost->DisableHighwayTransitions();
             midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
