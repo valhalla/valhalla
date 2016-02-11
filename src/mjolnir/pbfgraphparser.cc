@@ -25,7 +25,7 @@ using namespace valhalla::mjolnir;
 namespace {
 
 // Will throw an error if this is exceeded. Then we can increase.
-constexpr uint64_t kMaxOSMNodeId = 4000000000;
+constexpr uint64_t kMaxOSMNodeId = 5000000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
