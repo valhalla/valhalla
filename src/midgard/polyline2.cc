@@ -1,6 +1,7 @@
 #include "valhalla/midgard/polyline2.h"
 
 #include <vector>
+#include <list>
 
 namespace valhalla {
 namespace midgard {
@@ -35,19 +36,22 @@ void Polyline2<coord_t>::Add(const coord_t& p) {
 template <class coord_t>
 float Polyline2<coord_t>::Length() const {
   float length = 0;
-  for (uint32_t i = 0; i < pts_.size() - 1; i++) {
-    length += pts_[i].Distance(pts_[i+1]);
-  }
+  if (pts_.size() < 2)
+    return length;
+  for (auto p = std::next(pts_.cbegin()); p != pts_.cend(); ++p)
+    length += std::prev(p)->Distance(*p);
   return length;
 }
 
 // Find the length of the supplied polyline.
 template <class coord_t>
-float Polyline2<coord_t>::Length(const std::vector<coord_t>& pts) const {
+template <class container_t>
+float Polyline2<coord_t>::Length(const container_t& pts) {
   float length = 0;
-  for (uint32_t i = 0; i < pts_.size() - 1; i++) {
-    length += pts[i].Distance(pts[i+1]);
-  }
+  if (pts.size() < 2)
+    return length;
+  for (auto p = std::next(pts.cbegin()); p != pts.cend(); ++p)
+    length += std::prev(p)->Distance(*p);
   return length;
 }
 
@@ -142,6 +146,11 @@ void Polyline2<coord_t>::DouglasPeucker(const uint32_t i, const uint32_t j,
 // Explicit instantiation
 template class Polyline2<Point2>;
 template class Polyline2<PointLL>;
+
+template float Polyline2<PointLL>::Length(const std::vector<PointLL>&);
+template float Polyline2<Point2>::Length(const std::vector<Point2>&);
+template float Polyline2<PointLL>::Length(const std::list<PointLL>&);
+template float Polyline2<Point2>::Length(const std::list<Point2>&);
 
 }
 }
