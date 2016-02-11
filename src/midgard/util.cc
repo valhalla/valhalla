@@ -249,16 +249,12 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s){
  * We humbly bow to you sir!
  */
 template <class container_t>
-container_t resample_spherical_polyline(const container_t& polyline, double resolution) {
-  //start out with the first point
-  container_t resampled;
+container_t resample_spherical_polyline(const container_t& polyline, double resolution, bool preserve) {
   if(polyline.size() == 0)
-    return resampled;
-  resampled.emplace_back(polyline.front());
-  if(polyline.size() == 1)
-    return resampled;
+    return {};
 
   //for each point
+  container_t resampled = {polyline.front()};
   resolution *= RAD_PER_METER;
   double remaining = resolution;
   PointLL last = resampled.back();
@@ -298,6 +294,8 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
     //we're going to the next point so consume whatever's left
     remaining -= d;
     last = *p;
+    if(preserve)
+      resampled.push_back(last);
   }
 
   //TODO: do we want to let them know remaining?
@@ -307,8 +305,10 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
 }
 
 //explicit instantiations
-template std::vector<PointLL> resample_spherical_polyline<std::vector<PointLL> >(const std::vector<PointLL>&, double);
-template std::list<PointLL> resample_spherical_polyline<std::list<PointLL> >(const std::list<PointLL>&, double);
+template std::vector<PointLL> resample_spherical_polyline<std::vector<PointLL> >(const std::vector<PointLL>&, double, bool);
+template std::vector<Point2> resample_spherical_polyline<std::vector<Point2> >(const std::vector<Point2>&, double, bool);
+template std::list<PointLL> resample_spherical_polyline<std::list<PointLL> >(const std::list<PointLL>&, double, bool);
+template std::list<Point2> resample_spherical_polyline<std::list<Point2> >(const std::list<Point2>&, double, bool);
 
 //Return the intersection of two infinite lines if any
 template <class coord_t>

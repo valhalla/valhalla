@@ -1,4 +1,6 @@
 #include "midgard/tiles.h"
+#include "midgard/polyline2.h"
+#include "midgard/util.h"
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -11,10 +13,7 @@ namespace {
   //the loop bail if we leave the valid drawing region
   void bresenham_line(float x0, float y0, float x1, float y1, const std::function<bool (int32_t, int32_t)>& set_pixel) {
     //this one for sure
-    bool outside = set_pixel(x0, y0);
-    //early termination is likely for our use case
-    if(std::floor(x0) == std::floor(x1) && std::floor(y0) == std::floor(y1))
-      return;
+    bool outside = set_pixel(std::floor(x0), std::floor(y0));
     //steps in the proper direction and constants for shoelace formula
     float sx = x0 < x1 ? 1 : -1, dx = x1 - x0, x = std::floor(x0) + .5f;
     float sy = y0 < y1 ? 1 : -1, dy = y1 - y0, y = std::floor(y0) + .5f;
@@ -418,26 +417,26 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     return false;
   };
 
+  //if coord_t is spherical and the segment uv is sufficiently long then the geodesic along it
+  //cannot be approximated with linear constructs so instead we resample it at a sufficiently
+  //small interval so as to approximate the arc with piecewise linear segments
+  container_t resampled;
+  if(coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > subdivision_size_ * .5f)
+    resampled = resample_spherical_polyline(linestring, subdivision_size_ * .5f, true);
+
   //for each segment
-  auto ui = linestring.cbegin(), vi = linestring.cbegin();
-  while(vi != linestring.cend()) {
+  const auto& line = resampled.size() ? resampled : linestring;
+  auto ui = line.cbegin(), vi = line.cbegin();
+  while(vi != line.cend()) {
     //figure out what the segment is
     auto u = *ui;
     auto v = u;
     std::advance(vi, 1);
-    if(vi != linestring.cend())
+    if(vi != line.cend())
       v = *vi;
-    else if(linestring.size() > 1)
+    else if(line.size() > 1)
       return intersection;
     ui = vi;
-
-    //TODO: if coord_t is spherical and the segment uv is sufficiently long
-    //then the geodesic along it cannot be approximated with linear constructs
-    //instead we need to resample uv at a sufficiently small interval so as to
-    //approximate the arc with piecewise linear segments. to do this we'd call
-    //resample to turn uv into a list of coordinates and loop over them below
-    //alternatively we could figure out how to intersect a geodesic with our
-    //planar grid but that seems harder still
 
     //figure out global subdivision start and end points
     auto x0 = (u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
@@ -445,8 +444,12 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     auto x1 = (v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
     auto y1 = (v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
 
+    //its likely for our use case that its all in one cell
+    if(static_cast<int>(x0) == static_cast<int>(x1) && static_cast<int>(y0) == static_cast<int>(y1))
+      set_pixel(std::floor(x0), std::floor(y0));
     //pretend the subdivisions are pixels and we are doing line rasterization
-    bresenham_line(x0, y0, x1, y1, set_pixel);
+    else
+      bresenham_line(x0, y0, x1, y1, set_pixel);
   }
 
   //give them back
