@@ -70,13 +70,23 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/sif.git
     rm -rf /source/sif
 
 
-RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git && \
-    cd rapidjson && \
-    git submodule update --init && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make && make install && \
-    rm -rf /source/rapidjson
+# Install stable RapidJSON
+ENV RAPIDJSON_VERSION 1.0.2
+RUN wget https://github.com/miloyip/rapidjson/archive/v${RAPIDJSON_VERSION}.tar.gz -O rapidjson.tar.gz && \
+    tar xf rapidjson.tar.gz && \
+    cd rapidjson-${RAPIDJSON_VERSION} && \
+    mkdir -p build && cd build && \
+    cmake .. && make && sudo make install && \
+    rm -rf /source/rapidjson-${RAPID_VERSION} /source/rapidjson.tar.gz
+
+
+# RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git && \
+#     cd rapidjson && \
+#     git submodule update --init && \
+#     mkdir build && cd build && \
+#     cmake .. && \
+#     make && make install && \
+#     rm -rf /source/rapidjson
 
 
 RUN git clone --depth=1 --branch=development --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
