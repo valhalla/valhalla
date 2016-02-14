@@ -5,6 +5,8 @@ of locations (usually noisy e.g. GPS trajectory) to the underlying
 road network. It's built upon the awesome
 [Valhalla](https://github.com/valhalla) tiled data.
 
+![Map](docs/figures/cover.png)
+
 ## Building
 
 `map_matching_plus ` uses
