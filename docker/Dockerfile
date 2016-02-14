@@ -82,4 +82,7 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjso
 RUN git clone --depth=1 --branch=development --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
     cd map_matching_plus && \
     ./scripts/install.sh && \
-    rm -rf /source/map_matching_service
+    rm -rf /source/map_matching_plus
+
+
+RUN ldconfig
