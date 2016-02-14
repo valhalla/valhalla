@@ -43,6 +43,6 @@ The service parameters below are only used in the MMP service:
 
 Parameters                  | Description                                                                                                                        | Default
 ----------------------------|------------------------------------------------------------------------------------------------------------------------------------|-----
-`mode`                      | Specify the default transport mode.                                                                                                   | `multimodal`
-`customizable`              | Specify which parameters are allowed to be customized by URL query parameters.                                                           | `["mode", "route", "search_radius"]`
+`mode`                      | Specify the default transport mode.                                                                                                | `multimodal`
+`customizable`              | Specify which parameters are allowed to be customized by URL query parameters.                                                     | `["mode", "search_radius"]`
 `verbose`                   | Control verbose output for debugging.                                                                                              | `false`
