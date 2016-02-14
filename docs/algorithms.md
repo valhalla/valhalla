@@ -88,7 +88,7 @@ maximizes the path probability.
 To make the problem clear, a brute-force solution is given first.
 Given a graph represented by a
 [Adjacency List](https://en.wikipedia.org/wiki/Adjacency_list), a
-source node and a target node, the procudure `maximum_path_prob` tries
+source node and a target node, the procedure `maximum_path_prob` tries
 hard to list all paths in between and then selects the optimal one
 among them.
 
