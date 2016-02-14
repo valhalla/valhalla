@@ -255,8 +255,8 @@ void serialize_graphid(const baldr::GraphId& graphid,
 
 
 template <typename buffer_t>
-void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
-                                       rapidjson::Writer<buffer_t>& writer)
+void serialize_geometry_matched_coordinates(const std::vector<MatchResult>& results,
+                                            rapidjson::Writer<buffer_t>& writer)
 {
   writer.StartObject();
 
@@ -424,7 +424,7 @@ void serialize_properties(const std::vector<MatchResult>& results,
 {
   writer.StartObject();
 
-  writer.String("matched_points");
+  writer.String("matched_coordinates");
   writer.StartArray();
   for (const auto& result : results) {
     serialize_coordinate(result.lnglat(), writer);
@@ -480,7 +480,7 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
   if (route) {
     serialize_geometry_route(results, mm, writer);
   } else {
-    serialize_geometry_matched_points(results, writer);
+    serialize_geometry_matched_coordinates(results, writer);
   }
 
   writer.String("properties");
@@ -533,7 +533,7 @@ void serialize_response(buffer_t& sb,
     if (route) {
       serialize_geometry_route(results, matcher->mapmatching(), writer);
     } else {
-      serialize_geometry_matched_points(results, writer);
+      serialize_geometry_matched_coordinates(results, writer);
     }
   } else {
     serialize_results_as_feature(results, matcher->mapmatching(), writer, route, verbose);
