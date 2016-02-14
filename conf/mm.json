@@ -3,7 +3,6 @@
     "mode": "multimodal",
     "customizable": [
       "mode",
-      "route",
       "search_radius"
     ],
     "verbose": false,

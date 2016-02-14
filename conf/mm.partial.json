@@ -2,7 +2,7 @@
     "mm": {
         "mode": "multimodal",
 
-        "customizable": ["mode", "route", "search_radius"],
+        "customizable": ["mode", "search_radius"],
 
         "verbose": false,
 
