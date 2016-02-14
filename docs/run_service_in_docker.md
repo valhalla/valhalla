@@ -1,6 +1,7 @@
 # Running MM service in Docker
 
-Before we start, make sure you have `docker`, `git` and `wget` installed.
+Before we start, make sure you have `docker`, `git` and `wget`
+installed.
 
 1. Clone `map_matching_plus`:
    ```sh
@@ -21,8 +22,7 @@ Before we start, make sure you have `docker`, `git` and `wget` installed.
 
 4. Download the OSM of your city to the work directory:
    ```sh
-   wget --directory-prefix "${WORK_DIR}"
-        http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+   wget --directory-prefix "${WORK_DIR}" http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
    ```
 
 5. Clone Valhalla configuration which is needed by the tiles data
@@ -36,11 +36,12 @@ Before we start, make sure you have `docker`, `git` and `wget` installed.
    sudo docker run -it \
         --volume  "${WORK_DIR}":/data \
         --workdir /data \
-        mjnolor --conf conf/valhalla.json *.pbf
+        mapillary/mmp \
+        pbfgraphbuilder --conf conf/valhalla.json berlin-latest.osm.pbf
    ```
 
    This process takes a while, from a few minutes to a few hours,
-   depends on the OSM size.
+   depending on the OSM size.
 
 7. Copy the MM configuration file to the work directory so that the
    service can read it
@@ -56,11 +57,13 @@ Before we start, make sure you have `docker`, `git` and `wget` installed.
         --volume "${WORK_DIR}":/data \
         --publish 8001:8001 \
         mapillary/mmp \
-        mmp_service mm.json
+        mmp_service /data/mm.json
    ```
 
    Now the service is up. It is listening on `localhost:8001` for all
-   coming coordinates in format of GeoJSON.
+   coming coordinates in format of GeoJSON. You may refer to the
+   [service API](https://github.com/mapillary/map_matching_plus/blob/master/docs/service_api.md)
+   documentation for details.
 
 9. If you need a web interface to play with, clone our demos:
    ```sh
@@ -73,7 +76,7 @@ Before we start, make sure you have `docker`, `git` and `wget` installed.
    ```
 
    Zoom to the city you just processed. Hopefully you will see there
-   are a number of Mapillary sequences there ready for you to play
-   with. Before clicking on any of these sequences, you need to click
-   `Go Map Matching`, and then select `localhost` as current
+   are a number of Mapillary sequences ready to play with. Before you
+   are able to click on these sequences, you need to switch to MM by
+   clicking `Go Map Matching`, and then select `localhost` as current
    environment.
