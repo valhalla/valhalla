@@ -637,6 +637,7 @@ namespace mjolnir {
       //keep track of tweeners
       merge(pair.second, tweeners);
     }
+    LOG_INFO("Finished");
 
     //run a pass to add the edges that binned to tweener tiles
     LOG_INFO("Binning inter-tile edges");
