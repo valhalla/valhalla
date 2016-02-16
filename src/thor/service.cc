@@ -1,16 +1,15 @@
-#include <boost/property_tree/info_parser.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
-#include <cstdint>
 #include <functional>
-#include <sstream>
-#include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <stdexcept>
 #include <vector>
+#include <unordered_map>
+#include <cstdint>
+#include <sstream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
+#include <prime_server/prime_server.hpp>
+#include <prime_server/http_protocol.hpp>
 using namespace prime_server;
 
 #include <valhalla/midgard/logging.h>
@@ -185,7 +184,7 @@ namespace {
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         try {
-          boost::property_tree::read_info(stream, request);
+          boost::property_tree::read_json(stream, request);
         }
         catch(const std::exception& e) {
           worker_t::result_t result{false};
@@ -239,7 +238,7 @@ namespace {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       // Forward the original request
-      result.messages.emplace_back(std::move(request_str));
+      result.messages.emplace_back(request_str);
 
       if (date_time_type && *date_time_type == 2) {
         return getPathArriveBy(correlated, costing, request_str, result);
