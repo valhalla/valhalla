@@ -649,7 +649,6 @@ namespace mjolnir {
     LOG_INFO("Finished");
 
     // Add up total dupcount_ and find densities
-    LOG_INFO("Finished");
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
       std::vector<uint32_t> dups = stats.get_dups(level);
