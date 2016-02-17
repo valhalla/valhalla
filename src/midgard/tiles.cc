@@ -1,6 +1,7 @@
 #include "midgard/tiles.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
+#include "midgard/distanceapproximator.h"
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -421,8 +422,9 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
   //cannot be approximated with linear constructs so instead we resample it at a sufficiently
   //small interval so as to approximate the arc with piecewise linear segments
   container_t resampled;
-  if(coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > subdivision_size_ * .5f)
-    resampled = resample_spherical_polyline(linestring, subdivision_size_ * .5f, true);
+  auto max_meters = subdivision_size_ * .25f * DistanceApproximator::MetersPerLngDegree(linestring.front().second);
+  if(coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > max_meters)
+    resampled = resample_spherical_polyline(linestring, max_meters, true);
 
   //for each segment
   const auto& line = resampled.size() ? resampled : linestring;
