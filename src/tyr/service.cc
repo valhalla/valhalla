@@ -333,8 +333,8 @@ namespace {
       auto route_summary = json::map({});
       route_summary->emplace("time", time);
       route_summary->emplace("length", json::fp_t{length, 3});
-      midgard::logging::Log("trip_time (s)::" + std::to_string(time), " [ANALYTICS] ");
-      midgard::logging::Log("trip_length (km)::" + std::to_string(length), " [ANALYTICS] ");
+      midgard::logging::Log("trip_time::" + std::to_string(time) +"s", " [ANALYTICS] ");
+      midgard::logging::Log("trip_length::" + std::to_string(length) + "km", " [ANALYTICS] ");
       return route_summary;
     }
 
@@ -574,7 +574,7 @@ namespace {
 
             if (transit_route.has_onestop_id()) {
               json_transit_route->emplace("onestop_id", transit_route.onestop_id());
-              valhalla::midgard::logging::Log("transit_route_one_stop_id::" + transit_route.onestop_id(), " [ANALYTICS] ");
+              valhalla::midgard::logging::Log("transit_route_one_stop_id::" + std::string(transit_route.onestop_id()), " [ANALYTICS] ");
             }
             if (transit_route.has_short_name()) {
               json_transit_route->emplace("short_name", transit_route.short_name());
@@ -622,7 +622,7 @@ namespace {
                 // onestop_id
                 if (transit_stop.has_onestop_id()) {
                     json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
-                    valhalla::midgard::logging::Log("transit_one_stop_id::" + transit_stop.onestop_id(), " [ANALYTICS] ");
+                    valhalla::midgard::logging::Log("transit_one_stop_id::" + std::string(transit_stop.onestop_id()), " [ANALYTICS] ");
                 }
 
                 // name
