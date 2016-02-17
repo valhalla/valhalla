@@ -97,7 +97,7 @@ namespace valhalla {
         case MANY_TO_MANY:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
-          valhalla::midgard::logging::Log("max_location_distance (km)::" + std::to_string(max_location_distance * kKmPerMeter), " [ANALYTICS] ");
+          valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
           break;
       }
       //correlate the various locations to the underlying graph

@@ -40,7 +40,7 @@ namespace {
       if (max_distance < 0)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-      valhalla::midgard::logging::Log("location_distance (km)::" + std::to_string(path_distance * kKmPerMeter), " [ANALYTICS] ");
+      valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
   }
 }
