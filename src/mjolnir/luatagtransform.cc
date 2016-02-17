@@ -9,6 +9,10 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+const std::string LUA_NODE_PROC = "nodes_proc";
+const std::string LUA_WAY_PROC = "ways_proc";
+const std::string LUA_REL_PROC = "rels_proc";
+
 void CheckLuaFuncExists(lua_State* state, const std::string &func_name) {
 
   lua_getglobal(state, func_name.c_str());
@@ -20,93 +24,6 @@ void CheckLuaFuncExists(lua_State* state, const std::string &func_name) {
   lua_pop(state,1);
 }
 
-}
-
-LuaTagTransform::LuaTagTransform()
-{
-  // Create a new lua state
-  waystate_ = luaL_newstate();
-  nodestate_ = luaL_newstate();
-  relationstate_ = luaL_newstate();
-}
-
-LuaTagTransform::~LuaTagTransform(){
-
-  if (waystate_ != NULL) {
-    lua_close(waystate_);
-  }
-  if (nodestate_ != NULL) {
-    lua_close(nodestate_);
-  }
-  if (relationstate_ != NULL) {
-    lua_close(relationstate_);
-  }
-}
-
-void LuaTagTransform::OpenLib() const {
-
-  luaL_openlibs(waystate_);
-  luaL_openlibs(nodestate_);
-  luaL_openlibs(relationstate_);
-
-  //check if way script and function exists.
-  luaL_dofile(waystate_, luawayscript_.c_str());
-  CheckLuaFuncExists(waystate_, luawayfunc_);
-
-  //check if node script and function exists.
-  luaL_dofile(nodestate_, luanodescript_.c_str());
-  CheckLuaFuncExists(nodestate_, luanodefunc_);
-
-  //check if relation script and function exists.
-  luaL_dofile(relationstate_, luarelationscript_.c_str());
-  CheckLuaFuncExists(relationstate_, luarelationfunc_);
-}
-
-void LuaTagTransform::SetLuaWayFunc(std::string luawayfunc) {
-  luawayfunc_ = luawayfunc;
-}
-
-void LuaTagTransform::SetLuaNodeFunc(std::string luanodefunc) {
-  luanodefunc_ = luanodefunc;
-}
-
-void LuaTagTransform::SetLuaRelationFunc(std::string luarelationfunc) {
-  luarelationfunc_ = luarelationfunc;
-}
-
-std::string LuaTagTransform::GetLuaWayFunc() const {
-  return luawayfunc_;
-}
-
-std::string LuaTagTransform::GetLuaNodeFunc() const {
-  return luanodefunc_;
-}
-
-std::string LuaTagTransform::GetLuaRelationFunc() const {
-  return luarelationfunc_;
-}
-
-void LuaTagTransform::SetLuaWayScript(std::string luawayscript) {
-  luawayscript_ = luawayscript;
-}
-
-void LuaTagTransform::SetLuaNodeScript(std::string luanodescript) {
-  luanodescript_ = luanodescript;
-}
-
-void LuaTagTransform::SetLuaRelationScript(std::string luarelationscript) {
-  luarelationscript_ = luarelationscript;
-}
-
-std::string LuaTagTransform::GetLuaWayScript() const {
-  return luawayscript_;
-}
-
-std::string LuaTagTransform::GetLuaNodeScript() const {
-  return luanodescript_;
-}
-
-namespace{
 void stackdump_g(lua_State* l)
 {
   int i;
@@ -135,57 +52,53 @@ void stackdump_g(lua_State* l)
   }
   printf("\n");  /* end the listing */
 }
+
+}
+
+LuaTagTransform::LuaTagTransform(const std::string& lua)
+{
+  //create a new lua state
+  state_ = luaL_newstate();
+  luaL_openlibs(state_);
+  luaL_dostring(state_, lua.c_str());
+
+  //check that various functions exist
+  CheckLuaFuncExists(state_, LUA_NODE_PROC);
+  CheckLuaFuncExists(state_, LUA_WAY_PROC);
+  CheckLuaFuncExists(state_, LUA_REL_PROC);
+}
+
+LuaTagTransform::~LuaTagTransform(){
+  if (state_ != NULL)
+    lua_close(state_);
 }
 
 Tags LuaTagTransform::Transform(OSMType type, const Tags &maptags) {
 
   //grab the proper function out of the lua code
-  lua_State* state;
-
   Tags result;
-  std::string luafunc;
+  const std::string& lua_func = type == OSMType::kNode ? LUA_NODE_PROC :
+                                (type == OSMType::kWay ? LUA_WAY_PROC : LUA_REL_PROC);
 
   try {
-
-    bool isWay = false;
-
-    switch (type) {
-
-      case OSMType::kNode:
-        lua_getglobal(nodestate_,luanodefunc_.c_str());
-        luafunc = luanodefunc_;
-        state = nodestate_;
-        break;
-      case OSMType::kWay:
-        lua_getglobal(waystate_,luawayfunc_.c_str());
-        luafunc = luawayfunc_;
-        state = waystate_;
-        isWay = true;
-        break;
-      case OSMType::kRelation:
-        lua_getglobal(relationstate_,luarelationfunc_.c_str());
-        luafunc = luarelationfunc_;
-        state = relationstate_;
-        break;
-      default:
-        throw std::runtime_error("Invalid OSM element type!");
-    }
+    //grab the function
+    lua_getglobal(state_, lua_func.c_str());
 
     //set up the lua table (map)
     int count = 0;
-    lua_newtable(state);
+    lua_newtable(state_);
     for (const auto& tag : maptags) {
-      lua_pushstring(state, tag.first.c_str());
-      lua_pushstring(state, tag.second.c_str());
-      lua_rawset(state, -3);
+      lua_pushstring(state_, tag.first.c_str());
+      lua_pushstring(state_, tag.second.c_str());
+      lua_rawset(state_, -3);
       count++;
     }
 
     //tell lua how many items are in the map
-    lua_pushinteger(state, count);
+    lua_pushinteger(state_, count);
 
     //call lua
-    if (lua_pcall(state, 2, isWay ? 4 : 2, 0)) {
+    if (lua_pcall(state_, 2, type == OSMType::kWay ? 4 : 2, 0)) {
       LOG_ERROR("Failed to execute lua function for basic tag processing.");
     }
 
@@ -194,41 +107,41 @@ Tags LuaTagTransform::Transform(OSMType type, const Tags &maptags) {
       return result;*/
 
     //osm2pgsql has extra info for roads and polygons which we dont care about
-    if(isWay) {
-      lua_pop(state,1);
-      lua_pop(state,1);
+    if(type == OSMType::kWay) {
+      lua_pop(state_,1);
+      lua_pop(state_,1);
     }
 
     //pull out the keys and values into a map
-    lua_pushnil(state);
-    while (lua_next(state,-2) != 0) {
-      const char* key = lua_tostring(state,-2);
+    lua_pushnil(state_);
+    while (lua_next(state_,-2) != 0) {
+      const char* key = lua_tostring(state_,-2);
       if (key == nullptr) {
-        LOG_ERROR((boost::format("Invalid key in Lua function: %1%.") % luafunc).str());
+        LOG_ERROR((boost::format("Invalid key in Lua function: %1%.") % lua_func).str());
         break;
       }
-      const char* value = lua_tostring(state,-1);
+      const char* value = lua_tostring(state_,-1);
       if (value == nullptr) {
-        LOG_ERROR((boost::format("Invalid value in Lua function: %1%.") % luafunc).str());
+        LOG_ERROR((boost::format("Invalid value in Lua function: %1%.") % lua_func).str());
         break;
       }
       result[key] = value;
-      lua_pop(state,1);
+      lua_pop(state_,1);
     }
 
     //pull out an int which if its 1 means we dont care about this way/node
-    int filter = lua_tointeger(state, -2);
-    lua_pop(state,2);
+    int filter = lua_tointeger(state_, -2);
+    lua_pop(state_,2);
 
     if (filter)
       result.clear();
   }
   catch(std::exception& e) {
     // ..gets sent back to the main thread
-    LOG_ERROR((boost::format("Exception in Lua function: %1%: %2%") % luafunc % e.what()).str());
+    LOG_ERROR((boost::format("Exception in Lua function: %1%: %2%") % lua_func % e.what()).str());
   }
   catch(...){
-    LOG_ERROR((boost::format("Unknown exception in Lua function: %1%.") % luafunc).str());
+    LOG_ERROR((boost::format("Unknown exception in Lua function: %1%.") % lua_func).str());
   }
 
   return result;
