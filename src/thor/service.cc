@@ -270,7 +270,6 @@ namespace {
       std::vector<float> time_costs;
       for (size_t i = 0; i < td.size(); i++) {
         time_costs.emplace_back(static_cast<float>(td[i].time));
-        LOG_INFO("time_costs vector output from Many to Many:: " + std::to_string(td[i].time));
       }
       for (size_t i = 0; i < correlated.size(); i++) {
         LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
