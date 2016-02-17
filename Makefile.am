@@ -8,17 +8,6 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
-#config files for tools, you can put a commit hash here if you are ahead of master
-#CONF=master
-CONF=g11n
-conf:
-	-wget -q -O conf-$(CONF).zip https://github.com/valhalla/conf/archive/$(CONF).zip
-	-unzip conf-$(CONF).zip
-	-rm -rf conf-$(CONF).zip conf
-	-mv conf-$(CONF) conf
-clean-conf:
-	-rm -rf conf
-
 # conditional test coverage
 if ENABLE_COVERAGE
 .PHONY: clean-coverage
@@ -43,13 +32,8 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno clean-conf
-else
-clean-local: clean-conf
+clean-local: clean-coverage clean-gcno
 endif
-
-#everybody needs confs
-src/odin/*.cc: conf
 
 # proto generation etc
 PROTO_FILES = \
@@ -57,10 +41,14 @@ PROTO_FILES = \
 	proto/tripdirections.proto \
 	proto/directions_options.proto
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
+
+#turn locales json into strings we can load
+valhalla/odin/locales.h:
+	-pushd locales && ./make_locales.sh *.json > ../valhalla/odin/locales.h && popd
+CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) valhalla/odin/locales.h
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_odin.la
@@ -80,7 +68,8 @@ nobase_include_HEADERS = \
 	valhalla/odin/util.h \
 	valhalla/odin/service.h \
 	valhalla/odin/transitrouteinfo.h \
-	valhalla/odin/transitstop.h
+	valhalla/odin/transitstop.h \
+	valhalla/odin/locales.h
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \

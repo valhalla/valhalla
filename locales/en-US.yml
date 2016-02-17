@@ -1,0 +1,275 @@
+en-US:
+  instructions:
+  
+    ###########################################################################
+    start:
+      cardinal_directions: ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      0: "Head %{cardinal_direction}."
+      1: "Head %{cardinal_direction} on %{street_names}."
+      2: "Head %{cardinal_direction} on %{begin_street_names}. Continue on %{street_names}."
+
+    ###########################################################################
+    start_verbal:
+      cardinal_directions: ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      0: "Head %{cardinal_direction} for %{length}."
+      1: "Head %{cardinal_direction} on %{street_names} for %{length}."
+      2: "Head %{cardinal_direction} on %{begin_street_names}."
+
+    ###########################################################################
+    destination:
+      relative_directions: ["left", "right"]
+      0: "You have arrived at your destination."
+      1: "You have arrived at %{location}."
+      2: "Your destination is on the %{relative_direction}."
+      3: "%{location} is on the %{relative_direction}."
+
+    ###########################################################################
+    destination_verbal_alert:
+      relative_directions: ["left", "right"]
+      0: "You will arrive at your destination."
+      1: "You will arrive at %{location}."
+      2: "Your destination will be on the %{relative_direction}."
+      3: "%{location} will be on the %{relative_direction}"
+
+    ###########################################################################
+    destination_verbal:
+      relative_directions: ["left", "right"]
+      0: "You have arrived at your destination."
+      1: "You have arrived at %{location}."
+      2: "Your destination is on the %{relative_direction}."
+      3: "%{location} is on the %{relative_direction}."
+
+    ###########################################################################
+    becomes:
+      0: "%{prev_street_names} becomes %{street_names}."
+
+    ###########################################################################
+    becomes_verbal:
+      0: "%{prev_street_names} becomes %{street_names}."
+
+    ###########################################################################
+    continue:
+      0: "Continue."
+      1: "Continue on %{street_names}."
+
+    ###########################################################################
+    continue_verbal_alert:
+      0: "Continue."
+      1: "Continue on %{street_names}."
+
+    ###########################################################################
+    continue_verbal:
+      0: "Continue for %{length}."
+      1: "Continue on %{street_names} for %{length}."
+
+    ###########################################################################
+    bear:
+      relative_directions: ["left", "right"]
+      0: "Bear %{relative_direction}."
+      1: "Bear %{relative_direction} onto %{street_names}."
+      2: "Bear %{relative_direction} onto %{begin_street_names}. Continue on %{street_names}."
+      3: "Bear %{relative_direction} to stay on %{street_names}."
+
+    ###########################################################################
+    bear_verbal_alert:
+      relative_directions: ["left", "right"]
+      0: "Bear %{relative_direction}."
+      1: "Bear %{relative_direction} onto %{street_names}."
+      2: "Bear %{relative_direction} onto %{begin_street_names}."
+      3: "Bear %{relative_direction} to stay on %{street_names}."
+
+    ###########################################################################
+    bear_verbal:
+      relative_directions: ["left", "right"]
+      0: "Bear %{relative_direction}."
+      1: "Bear %{relative_direction} onto %{street_names}."
+      1: "Bear %{relative_direction} onto %{begin_street_names}."
+      3: "Bear %{relative_direction} to stay on %{street_names}."
+
+    ###########################################################################
+    turn:
+
+    ###########################################################################
+    turn_verbal_alert:
+
+    ###########################################################################
+    turn_verbal:
+
+    ###########################################################################
+    uturn:
+      relative_directions: ["left", "right"]
+      0: "Make a %{relative_direction} U-turn."
+      1: "Make a %{relative_direction} U-turn onto %{street_names}."
+      2: "Make a %{relative_direction} U-turn to stay on %{street_names}."
+      3: "Make a %{relative_direction} U-turn at %{cross_street_names}."
+      4: "Make a %{relative_direction} U-turn at %{cross_street_names} onto %{street_names}."
+      5: "Make a %{relative_direction} U-turn at %{cross_street_names} to stay on %{street_names}."
+
+    ###########################################################################
+    uturn_verbal_alert:
+      relative_directions: ["left", "right"]
+      0: "Make a %{relative_direction} U-turn."
+      1: "Make a %{relative_direction} U-turn onto %{street_names}."
+      2: "Make a %{relative_direction} U-turn to stay on %{street_names}."
+      3: "Make a %{relative_direction} U-turn at %{cross_street_names}."
+
+    ###########################################################################
+    uturn_verbal:
+      relative_directions: ["left", "right"]
+      0: "Make a %{relative_direction} U-turn."
+      1: "Make a %{relative_direction} U-turn onto %{street_names}."
+      2: "Make a %{relative_direction} U-turn to stay on %{street_names}."
+      3: "Make a %{relative_direction} U-turn at %{cross_street_names}."
+      4: "Make a %{relative_direction} U-turn at %{cross_street_names} onto %{street_names}."
+      5: "Make a %{relative_direction} U-turn at %{cross_street_names} to stay on %{street_names}."
+
+    ###########################################################################
+    ramp_straight:
+
+    ###########################################################################
+    ramp_straight_verbal_alert:
+
+    ###########################################################################
+    ramp_straight_verbal:
+
+    ###########################################################################
+    ramp:
+
+    ###########################################################################
+    ramp_verbal_alert:
+
+    ###########################################################################
+    ramp_verbal:
+
+    ###########################################################################
+    exit:
+
+    ###########################################################################
+    exit_verbal_alert:
+
+    ###########################################################################
+    exit_verbal:
+
+    ###########################################################################
+    keep:
+
+    ###########################################################################
+    keep_verbal_alert:
+
+    ###########################################################################
+    keep_verbal:
+
+    ###########################################################################
+    keep_to_stay_on:
+
+    ###########################################################################
+    keep_to_stay_on_verbal_alert:
+
+    ###########################################################################
+    keep_to_stay_on_verbal:
+
+    ###########################################################################
+    merge:
+
+    ###########################################################################
+    merge_verbal_alert:
+
+    ###########################################################################
+    merge_verbal:
+
+    ###########################################################################
+    enter_roundabout:
+
+    ###########################################################################
+    enter_roundabout_verbal_alert:
+
+    ###########################################################################
+    enter_roundabout_verbal:
+
+    ###########################################################################
+    exit_roundabout:
+
+    ###########################################################################
+    exit_roundabout_verbal:
+
+    ###########################################################################
+    enter_ferry:
+
+    ###########################################################################
+    enter_ferry_verbal_alert:
+
+    ###########################################################################
+    enter_ferry_verbal:
+
+    ###########################################################################
+    exit_ferry:
+
+    ###########################################################################
+    exit_ferry_verbal_alert:
+
+    ###########################################################################
+    exit_ferry_verbal:
+
+    ###########################################################################
+    transit_connection_start:
+
+    ###########################################################################
+    transit_connection_start_verbal:
+
+    ###########################################################################
+    transit_connection_transfer:
+
+    ###########################################################################
+    transit_connection_transfer_verbal:
+
+    ###########################################################################
+    transit_connection_destination:
+
+    ###########################################################################
+    transit_connection_destination_verbal:
+
+    ###########################################################################
+    depart:
+
+    ###########################################################################
+    depart_verbal:
+
+    ###########################################################################
+    arrive:
+
+    ###########################################################################
+    arrive_verbal:
+
+    ###########################################################################
+    transit:
+
+    ###########################################################################
+    transit_verbal:
+
+    ###########################################################################
+    post_transition_transit_verbal:
+
+    ###########################################################################
+    transit_remain_on:
+
+    ###########################################################################
+    transit_remain_on_verbal:
+
+    ###########################################################################
+    transit_transfer:
+
+    ###########################################################################
+    transit_transfer_verbal:
+
+    ###########################################################################
+    post_transit_connection_destination:
+
+    ###########################################################################
+    post_transit_connection_destination_verbal:
+
+    ###########################################################################
+    post_transition_metric_verbal:
+
+    ###########################################################################
+    post_transition_us_customary_verbal:
+

@@ -2465,8 +2465,6 @@ void TestFormExitLeftInstruction() {
 int main() {
   test::suite suite("narrativebuilder");
 
-  valhalla::odin::get_locales("./conf/locales");
-
   // FormRampStraightInstruction
   suite.test(TEST_CASE(TestFormRampStraightInstruction));
 

@@ -125,8 +125,6 @@ void test_en_US_destination_verbal_phrases() {
 int main() {
   test::suite suite("narrative_dictionary");
 
-  valhalla::odin::get_locales("./conf/locales");
-
   // test the en-US start phrases
   suite.test(TEST_CASE(test_en_US_start_phrases));
 

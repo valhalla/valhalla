@@ -7,15 +7,11 @@ using namespace valhalla::odin;
 namespace {
 
   void test_init_get() {
-    const auto& init = get_locales("./conf/locales");
+    const auto& init = get_locales();
     if(init.size() < 1)
       throw std::runtime_error("Should be at least one parsable test json file");
     if(init.find("en-US") == init.cend())
       throw std::runtime_error("Should find 'en-US' locales file");
-
-    const auto& get = get_locales();
-    if(&init != &get)
-      throw std::runtime_error("The first singleton should be the same as subsequent singletons");
   }
 
 }
