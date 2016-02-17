@@ -55,7 +55,7 @@ GraphTile::GraphTile()
       access_restrictions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
-      edge_cells_(nullptr),
+      edge_bins_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
@@ -135,9 +135,8 @@ LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
     admins_ = reinterpret_cast<Admin*>(ptr);
     ptr += header_->admincount() * sizeof(Admin);
 
-    // Set a pointer to the edge cell list
-    edge_cells_ = reinterpret_cast<GraphId*>(ptr);
-    ptr += header_->cell_offset(kGridDim - 1, kGridDim - 1).second * sizeof(GraphId);
+    // Set a pointer to the edge bin list
+    edge_bins_ = reinterpret_cast<GraphId*>(ptr);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
@@ -279,7 +278,6 @@ const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
                            std::to_string(header_->graphid().level()) + "," +
                            std::to_string(edge.id())  + " directededgecount= " +
                            std::to_string(header_->directededgecount()));
-  throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 // Get the directed edge at the specified index.
@@ -701,10 +699,10 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
   return restrictions;
 }
 
-// Get the array of graphids for this cell
-midgard::iterable_t<GraphId> GraphTile::GetCell(size_t column, size_t row) const {
-  auto offsets = header_->cell_offset(column, row);
-  return iterable_t<GraphId>{edge_cells_ + offsets.first, edge_cells_ + offsets.second};
+// Get the array of graphids for this bin
+midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
+  auto offsets = header_->bin_offset(column, row);
+  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
 }

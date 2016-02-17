@@ -245,12 +245,12 @@ class GraphTile {
                                                        const uint32_t access) const;
 
   /**
-   * Get an iteratable list of GraphIds given a cell in the tile
-   * @param  column the cell's column
-   * @param  row the cell's row
-   * @return iterable container of graphids contained in the cell
+   * Get an iteratable list of GraphIds given a bin in the tile
+   * @param  column the bin's column
+   * @param  row the bin's row
+   * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetCell(size_t column, size_t row) const;
+  midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
 
  protected:
 
@@ -295,10 +295,6 @@ class GraphTile {
   // indexed directly.
   Admin* admins_;
 
-  // List of edge graph ids. The list is broken up in cells which have
-  // indices in the tile header.
-  GraphId* edge_cells_;
-
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
   char* edgeinfo_;
@@ -313,6 +309,9 @@ class GraphTile {
   // Number of bytes in the text/name list
   std::size_t textlist_size_;
 
+  // List of edge graph ids. The list is broken up in bins which have
+  // indices in the tile header.
+  GraphId* edge_bins_;
 };
 
 }

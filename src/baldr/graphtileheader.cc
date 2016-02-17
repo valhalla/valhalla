@@ -210,16 +210,16 @@ void GraphTileHeader::set_complex_restriction_offset(const uint32_t offset) {
 }
 
 // Sets the edge bin offsets
-void GraphTileHeader::set_edge_cell_offsets(const uint32_t (&offsets)[kCellCount]) {
-  memcpy(cell_offsets_, offsets, sizeof(cell_offsets_));
+void GraphTileHeader::set_edge_bin_offsets(const uint32_t (&offsets)[kBinCount]) {
+  memcpy(bin_offsets_, offsets, sizeof(bin_offsets_));
 }
 
-// Get the offset to the given cell in the 5x5 grid.
-std::pair<uint32_t, uint32_t> GraphTileHeader::cell_offset(size_t column, size_t row) const {
-  auto i = row * kGridDim + column;
-  if(i < kCellCount)
-    return std::make_pair(i == 0 ? 0 : cell_offsets_[i - 1], cell_offsets_[i]);
-  throw std::runtime_error("Cell out of bounds");
+// Get the offset to the given bin in the 5x5 grid.
+std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t column, size_t row) const {
+  auto i = row * kBinsDim + column;
+  if(i < kBinCount)
+    return std::make_pair(i == 0 ? 0 : bin_offsets_[i - 1], bin_offsets_[i]);
+  throw std::runtime_error("Bin out of bounds");
 }
 
 }

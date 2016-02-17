@@ -13,9 +13,9 @@ namespace baldr {
 // character array so the GraphTileHeader size remains fixed).
 constexpr size_t kMaxVersionSize = 16;
 
-// Total number of binned edge cells in the tile
-constexpr size_t kGridDim = 5;
-constexpr size_t kCellCount = kGridDim * kGridDim;
+// Total number of binned edge bins in the tile
+constexpr size_t kBinsDim = 5;
+constexpr size_t kBinCount = kBinsDim * kBinsDim;
 
 /**
  * Summary information about the graph tile. Includes version
@@ -259,19 +259,19 @@ class GraphTileHeader {
   void set_complex_restriction_offset(const uint32_t offset);
 
   /**
-   * Get the offset to the given cell in the 5x5 grid, the cells contain
-   * graphids for all the edges that intersect the cell
+   * Get the offset to the given bin in the 5x5 grid, the bins contain
+   * graphids for all the edges that intersect the bin
    * @param  column of the grid
    * @param  row of the grid
    * @return the begin and end offset in the list of edge ids
    */
-  std::pair<uint32_t, uint32_t> cell_offset(size_t column, size_t row) const;
+  std::pair<uint32_t, uint32_t> bin_offset(size_t column, size_t row) const;
 
   /**
-   * Sets the edge cell offsets
+   * Sets the edge bin offsets
    * @param the offsets
    */
-  void set_edge_cell_offsets(const uint32_t (&offsets)[baldr::kCellCount]);
+  void set_edge_bin_offsets(const uint32_t (&offsets)[baldr::kBinCount]);
 
  protected:
   // GraphId (tileid and level) of this tile
@@ -308,8 +308,8 @@ class GraphTileHeader {
   uint32_t textlist_offset_;            // Offset to text list
   uint32_t complex_restriction_offset_; // Offset to complex restriction list
 
-  // Offsets for each cell of the 5x5 grid (for search/lookup)
-  uint32_t cell_offsets_[kCellCount];
+  // Offsets for each bin of the 5x5 grid (for search/lookup)
+  uint32_t bin_offsets_[kBinCount];
 };
 
 }
