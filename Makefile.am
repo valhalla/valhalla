@@ -37,10 +37,9 @@ endif
 
 #timezone info from boost
 valhalla/baldr/date_time_zonespec.h:
-	-wget -q https://raw.githubusercontent.com/boostorg/date_time/master/data/date_time_zonespec.csv
-	-sed -i -e '1d' date_time_zonespec.csv
-	-xxd -i date_time_zonespec.csv > valhalla/baldr/date_time_zonespec.h
-CLEANFILES = date_time_zonespec.csv valhalla/baldr/date_time_zonespec.h
+	-sed -i -e '1d' date_time/zonespec.csv
+	-xxd -i date_time/zonespec.csv > valhalla/baldr/date_time_zonespec.h
+CLEANFILES = valhalla/baldr/date_time_zonespec.h
 
 
 # libvalhalla-baldr compilation etc

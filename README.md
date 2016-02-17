@@ -63,3 +63,14 @@ And generate an HTML coverage report in the `coverage/` directory:
     make coverage-report
 
 Note also that, because calculating the coverage requires compiler support, you will need to clean any object files from a non-coverage build by running `make clean` before `make coverage-report`.
+
+Timezone specs
+--------------
+
+The csv file containing the zone_specs is used by the boost::local_time::tz_database and is located in the date_time directory.  We will try to periodically update the zonespec.csv file; however, if you find that it is outdated, please download the latest copy in your date_time directory and submit a pull request.  Thank you!     
+
+Download command:
+wget -q https://raw.githubusercontent.com/boostorg/date_time/master/data/date_time_zonespec.csv -O zonespec.csv
+
+More information on the zone_specs can be found here:  https://github.com/boostorg/date_time/tree/master/data
+
