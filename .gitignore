@@ -43,6 +43,8 @@ transit_stop_query
 .libs/
 conf/
 libvalhalla_mjolnir.la
+valhalla/mjolnir/admin_lua_proc.h
+valhalla/mjolnir/graph_lua_proc.h
 *.bin
 
 # tests
