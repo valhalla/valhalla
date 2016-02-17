@@ -334,7 +334,7 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll,
                             const float orig_dist_traveled, const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape, const std::vector<float>& distances) {
   std::list<PointLL> shape;
-  if (trip_shape.size() && stop_ll != endstop_ll) {
+  if (trip_shape.size() && stop_ll != endstop_ll && orig_dist_traveled < dest_dist_traveled) {
 
     float distance = 0.0f, d_from_p0_to_x = 0.0f;
 
