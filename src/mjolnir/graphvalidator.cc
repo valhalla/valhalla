@@ -604,6 +604,7 @@ namespace mjolnir {
         }
       }
     }
+    std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
