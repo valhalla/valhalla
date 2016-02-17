@@ -50,7 +50,6 @@ namespace {
 
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float matrix_max_distance, float& max_location_distance) {
 
-
     //see if any locations pairs are unreachable or too far apart
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
     //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
