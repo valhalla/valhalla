@@ -194,15 +194,66 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       }
       if (n == 0) {
         if (sc) {
-          LOG_WARN("   No Shortcut edges found from end node");
+          LOG_WARN("No Shortcut edges found from end node");
         } else {
-          LOG_WARN("   No regular edges found from end node");
+          LOG_WARN("No regular edges found from end node");
         }
       }
     }
     return kMaxEdgesPerNode;
   }
   return opp_index;
+}
+
+//return this tiles' edges' bins and its edges' tweeners' bins
+using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
+std::array<std::vector<GraphId>, kBinCount> bin_edges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
+  std::array<std::vector<GraphId>, kBinCount> bins;
+  //only do most detailed level
+  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
+    return bins;
+  auto tiles = hierarchy.levels().rbegin()->second.tiles;
+
+  //each edge please
+  std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
+  const auto* start_edge = tile->directededge(0);
+  for(const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount(); ++edge) {
+    //dont bin these
+    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
+      continue;
+
+    //already binned this
+    auto id = ids.insert(edge->edgeinfo_offset());
+    if(!id.second)
+      continue;
+
+    //intersect the shape
+    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    const auto& shape = info->shape();
+    auto intersection = tiles.Intersect(shape);
+
+    //bin some in, save some for later, ignore some
+    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(), edge - start_edge);
+    for(const auto& i : intersection) {
+      //to avoid dups and minimize having to leave the tile for shape we:
+      //always write a given edge to the tile it originates in
+      bool originating = i.first == edge_id.tileid();
+      //never write a given edge to the tile it terminates in
+      bool terminating = i.first == edge->endnode().tileid();
+      //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
+      bool intermediate = i.first < edge->endnode().tileid();
+      if(originating || (intermediate && !terminating)) {
+        //which set of bins
+        auto& out_bins = originating ? bins : tweeners.insert({GraphId(i.first, edge_id.level(), 0), {}}).first->second;
+        //keep the edge id
+        for(auto bin : i.second)
+          out_bins[bin].push_back(edge_id);
+      }
+    }
+  }
+
+  //give back this tiles bins
+  return bins;
 }
 
 void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
@@ -276,20 +327,17 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
 }
 
 void validate(const boost::property_tree::ptree& pt,
-              std::queue<GraphId>& tilequeue, std::mutex& lock,
-              std::promise<validator_stats>& result) {
+              std::deque<GraphId>& tilequeue, std::mutex& lock,
+              std::promise<std::pair<validator_stats, tweeners_t>>& result) {
 
     // Our local class for gathering the stats
     validator_stats stats;
+    // Our local copy of edges binned to tiles that they pass through (dont start or end in)
+    tweeners_t tweeners;
     // Local Graphreader
     GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
     // Get some things we need throughout
-    const auto& tile_hierarchy = graph_reader.GetTileHierarchy();
-    std::vector<Tiles<PointLL> > levels;
-    for (const auto& level : tile_hierarchy.levels()) {
-      levels.push_back(level.second.tiles);
-    }
-    Tiles<PointLL> *tiles;
+    const auto& hierarchy = graph_reader.GetTileHierarchy();
 
     // Check for more tiles
     while (true) {
@@ -300,22 +348,18 @@ void validate(const boost::property_tree::ptree& pt,
       }
       // Get the next tile Id
       GraphId tile_id = tilequeue.front();
-      tilequeue.pop();
+      tilequeue.pop_front();
       lock.unlock();
 
       // Point tiles to the set we need for current level
       size_t level = tile_id.level();
-      tiles = &levels[level];
+      const auto& tiles = hierarchy.levels().find(level)->second.tiles;
       auto tileid = tile_id.tileid();
 
       uint32_t dupcount = 0;
 
       // Get the tile
-      GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
-
-      // Bin the edges keeping a list of ones that need to go to other tiles
-      if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
-        auto unbinned = tilebuilder.Bin();
+      GraphTileBuilder tilebuilder(hierarchy, tile_id, false);
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;
@@ -331,6 +375,7 @@ void validate(const boost::property_tree::ptree& pt,
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node = tile_id;
       for (uint32_t i = 0; i < nodecount; i++, node++) {
+        // The node we will modify
         NodeInfo nodeinfo = tilebuilder.node(i);
         auto ni = tile->node(i);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
@@ -391,6 +436,7 @@ void validate(const boost::property_tree::ptree& pt,
             }
           }
 
+          // The edge we will modify
           DirectedEdge& directededge = tilebuilder.directededge(
                     nodeinfo.edge_index() + j);
 
@@ -444,14 +490,14 @@ void validate(const boost::property_tree::ptree& pt,
       }
 
       // Add density to return class. Approximate the tile area square km
-      AABB2<PointLL> bb = tiles->TileBounds(tileid);
+      AABB2<PointLL> bb = tiles.TileBounds(tileid);
       float area = ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
                    ((bb.maxx() - bb.minx()) *
                        DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
       float density = (roadlength * 0.0005f) / area;
       stats.add_density(density, level);
       stats.add_tile_area(tileid, area);
-      stats.add_tile_geom(tileid, tiles->TileBounds(tileid));
+      stats.add_tile_geom(tileid, tiles.TileBounds(tileid));
 
       // Set the relative road density within this tile.
       uint32_t relative_density;
@@ -464,9 +510,19 @@ void validate(const boost::property_tree::ptree& pt,
       }
       tilebuilder.header_builder().set_density(relative_density);
 
+      // Bin the edges
+      auto bins = bin_edges(hierarchy, tile, tweeners);
+
       // Write the new tile
       lock.lock();
       tilebuilder.Update(nodes, directededges);
+
+      // Write the bins to it
+      if (tile->header()->graphid().level() == hierarchy.levels().rbegin()->first) {
+        // TODO: we could just also make tilebuilder::Update write the bins
+        auto reloaded = GraphTile(hierarchy, tile_id);
+        GraphTileBuilder::AddBins(hierarchy, &reloaded, bins);
+      }
 
       // Check if we need to clear the tile cache
       if (graph_reader.OverCommitted())
@@ -478,8 +534,50 @@ void validate(const boost::property_tree::ptree& pt,
     }
 
     // Fill promise with statistics
-    result.set_value(stats);
+    result.set_value(std::make_pair(std::move(stats), std::move(tweeners)));
   }
+
+  //take tweeners from different tiles' perspectives and merge into a single tweener
+  //per tile that needs to update its bins
+  void merge(const tweeners_t& in, tweeners_t& out) {
+    for(const auto& t : in) {
+      //shove it in
+      auto inserted = out.insert(t);
+      //had this tile already
+      if(!inserted.second) {
+        //so have to merge
+        for(size_t c = 0; c < kBinCount; ++c) {
+          auto& bin = inserted.first->second[c];
+          bin.insert(bin.cend(), t.second[c].cbegin(), t.second[c].cend());
+        }
+      }
+    }
+  }
+
+  //crack open tiles and bin edges that pass through them but dont end or begin in them
+  void bin_tweeners(const TileHierarchy& hierarchy, tweeners_t::iterator& start, const tweeners_t::iterator& end, std::mutex& lock) {
+    //go while we have tiles to update
+    while(true) {
+      lock.lock();
+      if(start == end) {
+        lock.unlock();
+        break;
+      }
+      //grab this tile and its extra bin edges
+      const auto& tile_bin = *start;
+      ++start;
+      lock.unlock();
+      //if there is nothing there we need to make something
+      GraphTile tile(hierarchy, tile_bin.first);
+      if(tile.size() == 0) {
+        GraphTileBuilder empty(hierarchy, tile_bin.first, false);
+        empty.StoreTileData();
+        tile = GraphTile(hierarchy, tile_bin.first);
+      }
+      //keep the extra binned edges
+      GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
+    }
+   }
 }
 
 namespace valhalla {
@@ -493,16 +591,8 @@ namespace mjolnir {
     if (hierarchy.levels().size() < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
-    // Setup threads
-    std::vector<std::shared_ptr<std::thread> > threads(
-        std::max(static_cast<unsigned int>(1),
-                 pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
-
-    // Setup promises
-    std::list<std::promise<validator_stats> > results;
-
     // Create a randomized queue of tiles to work from
-    std::deque<GraphId> tempqueue;
+    std::deque<GraphId> tilequeue;
     for (auto tier : hierarchy.levels()) {
       auto level = tier.second.level;
       auto tiles = tier.second.tiles;
@@ -510,17 +600,25 @@ namespace mjolnir {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
         if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
-          tempqueue.push_back(tile_id);
+          tilequeue.emplace_back(std::move(tile_id));
         }
       }
     }
-    std::random_shuffle(tempqueue.begin(), tempqueue.end());
-    std::queue<GraphId> tilequeue(tempqueue);
+    std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
 
-    LOG_INFO("Validating signs and connectivity");
+    LOG_INFO("Validating signs and connectivity and binning edges");
+
+    // Setup threads
+    std::vector<std::shared_ptr<std::thread> > threads(
+        std::max(static_cast<unsigned int>(1),
+                 pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
+
+    // Setup promises
+    std::list<std::promise<std::pair<validator_stats, tweeners_t> > > results;
+
     // Spawn the threads
     for (auto& thread : threads) {
       results.emplace_back();
@@ -528,17 +626,31 @@ namespace mjolnir {
                                    std::ref(lock), std::ref(results.back())));
     }
     // Wait for threads to finish
-    for (auto& thread : threads) {
+    for (auto& thread : threads)
       thread->join();
-    }
-    // Get the returned data from the promise
+    // Get the promise from the future
     validator_stats stats;
+    tweeners_t tweeners;
     for (auto& result : results) {
-      auto data = result.get_future().get();
-      stats.add(data);
+      auto pair = result.get_future().get();
+      //keep track of stats
+      stats.add(pair.first);
+      //keep track of tweeners
+      merge(pair.second, tweeners);
     }
-    // Add up total dupcount_ and find densities
     LOG_INFO("Finished");
+
+    //run a pass to add the edges that binned to tweener tiles
+    LOG_INFO("Binning inter-tile edges");
+    auto start = tweeners.begin();
+    auto end = tweeners.end();
+    for (auto& thread : threads)
+      thread.reset(new std::thread(bin_tweeners, std::cref(hierarchy), std::ref(start), std::cref(end), std::ref(lock)));
+    for (auto& thread : threads)
+      thread->join();
+    LOG_INFO("Finished");
+
+    // Add up total dupcount_ and find densities
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
       std::vector<uint32_t> dups = stats.get_dups(level);
