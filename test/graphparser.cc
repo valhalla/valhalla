@@ -32,14 +32,6 @@ void write_config(const std::string& filename) {
             {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
             {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
           ] \
-        }, \
-        \"tagtransform\": { \
-          \"node_script\": \"test/lua/vertices.lua\", \
-          \"node_function\": \"nodes_proc\", \
-          \"way_script\": \"test/lua/edges.lua\", \
-          \"way_function\": \"ways_proc\" , \
-          \"relation_script\": \"test/lua/edges.lua\", \
-          \"relation_function\": \"rels_proc\" \
         } \
       } \
     }";
