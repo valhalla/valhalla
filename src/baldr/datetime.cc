@@ -1,19 +1,19 @@
 #include <iostream>
 #include <sstream>
 #include <bitset>
+#include <fstream>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
-
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/date_time_zonespec.h>
-#include <fstream>
+
+#include "date_time_zonespec.h"
 
 using namespace valhalla::baldr;
 

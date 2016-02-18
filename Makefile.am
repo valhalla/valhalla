@@ -36,10 +36,11 @@ clean-local: clean-coverage clean-gcno
 endif
 
 #timezone info from boost
-valhalla/baldr/date_time_zonespec.h:
-	-sed -i -e '1d' date_time/zonespec.csv
-	-xxd -i date_time/zonespec.csv > valhalla/baldr/date_time_zonespec.h
-CLEANFILES = valhalla/baldr/date_time_zonespec.h
+src/baldr/date_time_zonespec.h:
+	-xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c) date_time/zonespec.csv > src/baldr/date_time_zonespec.h
+BUILT_SOURCES = src/baldr/date_time_zonespec.h
+nodist_libvalhalla_mjolnir_la_SOURCES = src/baldr/date_time_zonespec.h
+CLEANFILES = src/baldr/date_time_zonespec.h
 
 
 # libvalhalla-baldr compilation etc
@@ -78,8 +79,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
 	valhalla/baldr/verbal_text_formatter_us_tx.h \
-	valhalla/baldr/verbal_text_formatter_factory.h \
-        valhalla/baldr/date_time_zonespec.h
+	valhalla/baldr/verbal_text_formatter_factory.h 
 libvalhalla_baldr_la_SOURCES = \
         src/baldr/accessrestriction.cc \
         src/baldr/admin.cc \
@@ -112,7 +112,8 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/verbal_text_formatter_us.cc \
 	src/baldr/verbal_text_formatter_us_co.cc \
 	src/baldr/verbal_text_formatter_us_tx.cc \
-	src/baldr/verbal_text_formatter_factory.cc
+	src/baldr/verbal_text_formatter_factory.cc \
+	src/baldr/date_time_zonespec.h
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_DATE_TIME_LIB)
 

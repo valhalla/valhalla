@@ -35,7 +35,7 @@ libtool
 .libs/
 libvalhalla_baldr.la
 date_time_zonespec.csv
-valhalla/baldr/date_time_zonespec.h
+src/baldr/date_time_zonespec.h
 
 # tests
 test-suite.log
