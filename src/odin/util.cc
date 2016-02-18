@@ -1,6 +1,6 @@
 #include "odin/util.h"
 #include "odin/narrative_dictionary.h"
-#include "odin/locales.h"
+#include "locales.h"
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
 #include <boost/filesystem/operations.hpp>

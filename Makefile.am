@@ -36,18 +36,15 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto generation etc
-PROTO_FILES = \
-	proto/trippath.proto \
-	proto/tripdirections.proto \
-	proto/directions_options.proto
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+PROTO_FILES = proto/trippath.proto proto/tripdirections.proto proto/directions_options.proto
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
 #turn locales json into strings we can load
-valhalla/odin/locales.h:
-	-pushd locales && ./make_locales.sh *.json > ../valhalla/odin/locales.h && popd
+src/odin/locales.h:
+	-pushd locales && ./make_locales.sh *.json > ../src/odin/locales.h && popd
+BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
+nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) valhalla/odin/locales.h
 
 # lib valhalla compilation etc
@@ -68,8 +65,7 @@ nobase_include_HEADERS = \
 	valhalla/odin/util.h \
 	valhalla/odin/service.h \
 	valhalla/odin/transitrouteinfo.h \
-	valhalla/odin/transitstop.h \
-	valhalla/odin/locales.h
+	valhalla/odin/transitstop.h
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
@@ -86,7 +82,8 @@ libvalhalla_odin_la_SOURCES = \
 	src/odin/util.cc \
 	src/odin/service.cc \
 	src/odin/transitrouteinfo.cc \
-	src/odin/transitstop.cc
+	src/odin/transitstop.cc \
+	src/odin/locales.h
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
