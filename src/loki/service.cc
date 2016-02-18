@@ -196,7 +196,7 @@ namespace valhalla {
           boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
           LOG_WARN("loki::request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("loki_long_request", " [ANALYTICS] ");
+          midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
 
         return result;
