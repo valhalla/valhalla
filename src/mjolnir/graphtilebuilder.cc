@@ -314,7 +314,7 @@ void GraphTileBuilder::Update(
         header_->admincount() * sizeof(Admin));
 
     // Write the edge bins
-    file.write(static_cast<const char*>(static_cast<const void*>(edge_bins_)),
+    file.write(reinterpret_cast<const char*>(&edge_bins_[0]),
         sizeof(GraphId) * header_->bin_offset(kBinsDim - 1, kBinsDim - 1).second);
 
     // Write the existing edgeinfo
@@ -389,7 +389,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
                hdr.admincount() * sizeof(Admin));
 
     // Write the edge bins
-    file.write(static_cast<const char*>(static_cast<const void*>(edge_bins_)),
+    file.write(reinterpret_cast<const char*>(&edge_bins_[0]),
       sizeof(GraphId) * hdr.bin_offset(kBinsDim - 1, kBinsDim - 1).second);
 
     // Write the existing edgeinfo and textlist

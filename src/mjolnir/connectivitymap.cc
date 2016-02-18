@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::TileHierarchy tile_hierarchy(pt.get_child("mjolnir.hierarchy"));
+  valhalla::baldr::TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   valhalla::baldr::connectivity_map_t connectivity_map(tile_hierarchy);
 
   // Make the vector representation of it

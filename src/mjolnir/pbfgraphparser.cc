@@ -39,7 +39,7 @@ struct graph_callback : public OSMPBF::Callback {
   virtual ~graph_callback() {}
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata) :
-    shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), tile_hierarchy_(pt.get_child("hierarchy")),
+    shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), tile_hierarchy_(pt.get<std::string>("tile_dir")),
     osmdata_(osmdata), lua_(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len)){
 
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;

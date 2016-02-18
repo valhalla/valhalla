@@ -357,7 +357,7 @@ void validate(const boost::property_tree::ptree& pt,
     // Our local copy of edges binned to tiles that they pass through (dont start or end in)
     tweeners_t tweeners;
     // Local Graphreader
-    GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
+    GraphReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
 
@@ -608,7 +608,7 @@ namespace mjolnir {
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
     // Graphreader
-    TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
+    TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
     // Make sure there are at least 2 levels!
     if (hierarchy.levels().size() < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");

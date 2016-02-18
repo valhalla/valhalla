@@ -877,7 +877,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   //TODO: thread this. would need to make sure we dont make shortcuts
   //across tile boundaries so that we are only messing with one tile
   //in one thread at a time
-  hierarchy_info info{0,0,{pt.get_child("mjolnir.hierarchy")}};
+  hierarchy_info info{0,0,{pt.get_child("mjolnir")}};
   const auto& tile_hierarchy = info.graphreader_.GetTileHierarchy();
   if (info.graphreader_.GetTileHierarchy().levels().size() < 2)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");

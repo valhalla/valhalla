@@ -1426,7 +1426,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
 
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tempqueue;
-  boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir.hierarchy");
+  boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
