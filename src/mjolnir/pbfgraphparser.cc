@@ -3,6 +3,7 @@
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
+#include "mjolnir/graph_lua_proc.h"
 
 #include <future>
 #include <utility>
@@ -38,16 +39,8 @@ struct graph_callback : public OSMPBF::Callback {
   virtual ~graph_callback() {}
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata) :
-    shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), tile_hierarchy_(pt.get_child("hierarchy")), osmdata_(osmdata){
-
-    // Initialize Lua based on config
-    lua_.SetLuaNodeScript(pt.get<std::string>("tagtransform.node_script"));
-    lua_.SetLuaNodeFunc(pt.get<std::string>("tagtransform.node_function"));
-    lua_.SetLuaWayScript(pt.get<std::string>("tagtransform.way_script"));
-    lua_.SetLuaWayFunc(pt.get<std::string>("tagtransform.way_function"));
-    lua_.SetLuaRelationScript(pt.get<std::string>("tagtransform.relation_script"));
-    lua_.SetLuaRelationFunc(pt.get<std::string>("tagtransform.relation_function"));
-    lua_.OpenLib();
+    shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), tile_hierarchy_(pt.get_child("hierarchy")),
+    osmdata_(osmdata), lua_(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len)){
 
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 

@@ -104,28 +104,12 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  //we only support protobuf at present
-  std::string input_type = pt.get<std::string>("mjolnir.input.type");
-  if(input_type == "protocolbuffer"){
-    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-    // relations are defined within the PBFParser class
-    auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin", "way_nodes.bin");
+  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+  // relations are defined within the PBFParser class
+  auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin", "way_nodes.bin");
 
-    // Build the graph using the OSMNodes and OSMWays from the parser
-    GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin");
-  }/*else if("postgres"){
-    //TODO
-    if (v.first == "host")
-      host = v.second.get_value<std::string>();
-    else if (v.first == "port")
-      port = v.second.get_value<unsigned int>();
-    else if (v.first == "username")
-      username = v.second.get_value<std::string>();
-    else if (v.first == "password")
-      password = v.second.get_value<std::string>();
-    else
-      return false;  //unknown value;
-  }*/
+  // Build the graph using the OSMNodes and OSMWays from the parser
+  GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin");
 
   // Add transit
   TransitBuilder::Build(pt);

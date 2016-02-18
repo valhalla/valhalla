@@ -5,6 +5,7 @@
 #include "mjolnir/osmadmin.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
+#include "mjolnir/admin_lua_proc.h"
 
 #include <future>
 #include <utility>
@@ -35,16 +36,7 @@ struct admin_callback : public OSMPBF::Callback {
   virtual ~admin_callback() {}
   // Construct PBFAdminParser based on properties file and input PBF extract
   admin_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-  : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata) {
-
-    // Initialize Lua based on config
-    lua_.SetLuaNodeScript(pt.get<std::string>("admintagtransform.node_script"));
-    lua_.SetLuaNodeFunc(pt.get<std::string>("admintagtransform.node_function"));
-    lua_.SetLuaWayScript(pt.get<std::string>("admintagtransform.way_script"));
-    lua_.SetLuaWayFunc(pt.get<std::string>("admintagtransform.way_function"));
-    lua_.SetLuaRelationScript(pt.get<std::string>("admintagtransform.relation_script"));
-    lua_.SetLuaRelationFunc(pt.get<std::string>("admintagtransform.relation_function"));
-    lua_.OpenLib();
+  : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata), lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
   }
 
   void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) {
