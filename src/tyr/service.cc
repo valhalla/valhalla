@@ -792,7 +792,7 @@ namespace {
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
           LOG_WARN("tyr::request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("tyr_long_request", " [ANALYTICS] ");
+          midgard::logging::Log("valhalla_tyr_long_request", " [ANALYTICS] ");
         }
 
         worker_t::result_t result{false};
