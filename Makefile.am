@@ -37,17 +37,18 @@ endif
 
 # proto generation etc
 PROTO_FILES = proto/osmformat.proto proto/fileformat.proto proto/transit.proto
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
 #lua code for parsing
-valhalla/mjolnir/graph_lua_proc.h:
-	-xxd -i lua/graph.lua > valhalla/mjolnir/graph_lua_proc.h
-valhalla/mjolnir/admin_lua_proc.h:
-	-xxd -i lua/admin.lua > valhalla/mjolnir/admin_lua_proc.h
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) valhalla/mjolnir/graph_lua_proc.h valhalla/mjolnir/admin_lua_proc.h
+src/mjolnir/graph_lua_proc.h:
+	-xxd -i lua/graph.lua > src/mjolnir/graph_lua_proc.h
+src/mjolnir/admin_lua_proc.h:
+	-xxd -i lua/admin.lua > src/mjolnir/admin_lua_proc.h
+
+BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
+nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
+CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
@@ -77,9 +78,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/pbfgraphparser.h \
 	valhalla/mjolnir/statistics.h \
 	valhalla/mjolnir/transitbuilder.h \
-	valhalla/mjolnir/util.h \
-	valhalla/mjolnir/graph_lua_proc.h \
-	valhalla/mjolnir/admin_lua_proc.h
+	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/transit.pb.cc \
 	src/mjolnir/dataquality.cc \
@@ -108,7 +107,9 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/pbfgraphparser.cc \
 	src/mjolnir/statistics.cc \
 	src/mjolnir/transitbuilder.cc \
-	src/mjolnir/util.cc
+	src/mjolnir/util.cc \
+	src/mjolnir/graph_lua_proc.h \
+	src/mjolnir/admin_lua_proc.h
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lsqlite3 -lspatialite
 

@@ -5,7 +5,7 @@
 #include "mjolnir/osmadmin.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
-#include "mjolnir/admin_lua_proc.h"
+#include "admin_lua_proc.h"
 
 #include <future>
 #include <utility>

@@ -3,7 +3,7 @@
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
-#include "mjolnir/graph_lua_proc.h"
+#include "graph_lua_proc.h"
 
 #include <future>
 #include <utility>
