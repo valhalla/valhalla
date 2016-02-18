@@ -60,13 +60,6 @@ class DataQuality {
                 const uint64_t wayid1, const uint64_t wayid2);
 
   /**
-   * Add an empty tile that is intersected by an edges shape but neither
-   * end node are in the tile.
-   * @param  tileid  Graph Id of the tile.
-   */
-  void AddIntersectedTile(const baldr::GraphId& tileid);
-
-  /**
    * Log simple statistics.
    */
   void LogStatistics() const;
@@ -83,9 +76,6 @@ class DataQuality {
   uint32_t timedrestrictions;
   uint32_t culdesaccount;
   uint32_t node_counts[128];
-
-  // Empty tiles that are intersected by shape
-  std::unordered_set<baldr::GraphId> intersected_tiles;
 
  protected:
   // Unconnected links

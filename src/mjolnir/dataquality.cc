@@ -28,11 +28,6 @@ void DataQuality::AddStatistics(const DataQuality& stats) {
   for (uint32_t i = 0; i < 128; i++) {
     node_counts[i] += stats.node_counts[i];
   }
-
-  // Add intersected tiles to the set
-  for (auto tileid : stats.intersected_tiles) {
-    intersected_tiles.insert(tileid);
-  }
 }
 
 // Adds an issue.
@@ -51,12 +46,6 @@ void DataQuality::AddIssue(const DataIssueType issuetype, const GraphId& graphid
   } else if (issuetype == kIncompatibleLinkUse) {
     incompatiblelinkuse_.insert(wayid1);
   }
-}
-
-// Add an empty tile that is intersected by an edges shape but neither
-// end node are in the tile.
-void DataQuality::AddIntersectedTile(const baldr::GraphId& tileid) {
-  intersected_tiles.insert(tileid);
 }
 
 // Logs statistics and issues

@@ -45,7 +45,6 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     textlistbuilder_.emplace_back("");
     text_offset_map_.emplace("", 0);
     text_list_offset_ = 1;
-    write_bins_ = false;
     return;
   }
 
@@ -106,12 +105,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     text_offsets.insert(admins_[i].state_offset());
   }
 
-  //get the edge cells
-  write_bins_ = true;
-  for(size_t i = 0; i < kCellCount; ++i) {
-    auto cell = GetCell(i % kGridDim, i / kGridDim);
-    bins_[i].assign(cell.begin(), cell.end());
-  }
+  // Edge bins are gotten by parent
 
   // Create an ordered set of edge info offsets
   std::set<uint32_t> edge_info_offsets;
@@ -241,8 +235,7 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
                admins_builder_.size() * sizeof(Admin));
 
-    // Write the edge cells
-    SerializeEdgeCellsToOstream(file);
+    // Edge bins can only be added after you've stored the tile
 
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
@@ -320,13 +313,9 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&admins_[0]),
         header_->admincount() * sizeof(Admin));
 
-    // Write the edge cells
-    if(write_bins_)
-      SerializeEdgeCellsToOstream(file);
-    else {
-      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
-        sizeof(GraphId) * header_->cell_offset(kGridDim - 1, kGridDim - 1).second);
-    }
+    // Write the edge bins
+    file.write(static_cast<const char*>(static_cast<const void*>(edge_bins_)),
+        sizeof(GraphId) * header_->bin_offset(kBinsDim - 1, kBinsDim - 1).second);
 
     // Write the existing edgeinfo
     file.write(edgeinfo_, edgeinfo_size_);
@@ -399,13 +388,9 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     file.write(reinterpret_cast<const char*>(&admins_[0]),
                hdr.admincount() * sizeof(Admin));
 
-    // Write the edge cells
-    if(write_bins_)
-      SerializeEdgeCellsToOstream(file);
-    else {
-      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
-        sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
-    }
+    // Write the edge bins
+    file.write(static_cast<const char*>(static_cast<const void*>(edge_bins_)),
+      sizeof(GraphId) * hdr.bin_offset(kBinsDim - 1, kBinsDim - 1).second);
 
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
@@ -601,13 +586,6 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
   }
 }
 
-// Write all edge cells to specified stream
-void GraphTileBuilder::SerializeEdgeCellsToOstream(std::ostream& out) const {
-  for (const auto& bin : bins_) {
-    out.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
-  }
-}
-
 // Serialize the edge info list
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) const {
   for (const auto& edgeinfo : edgeinfo_list_) {
@@ -699,55 +677,50 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
   header_builder_.set_date_created(tile_creation_date);
 }
 
-// Bin the edges in this tile and return which ones shape leaves
-std::list<GraphId> GraphTileBuilder::Bin() {
-  std::list<GraphId> strays;
-  write_bins_ = true;
-
-  //each edge please
-  std::unordered_set<uint64_t> ids(header_->directededgecount() / 2);
-  for(const DirectedEdge* edge = directededges_; edge < directededges_ + header_->directededgecount(); ++edge) {
-    //dont bin these
-    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
-      continue;
-
-    //already binned this
-    auto id = ids.find(edge->edgeinfo_offset());
-    if(id != ids.cend())
-      continue;
-
-    //TODO: compare the end and begin node tiles, if it ends in another tile
-    //let the left most, lower most tile win so that we dont have dups
-
-    //crack open that shape
-    ids.emplace(edge->edgeinfo_offset());
-    auto info = edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = info->shape();
-    /*bool uncontained;
-    auto intersected_bins = binner_.intersect(shape, uncontained);
-    GraphId edge_id(header_->graphid().tileid(), header_->graphid().level(), edge - directededges_);
-
-    //was it outside this tile
-    if(uncontained)
-      strays.emplace_back(edge_id);
-
-    //add keep the bin information
-    for(const auto& bin : intersected_bins)
-      bins_[bin].push_back(edge_id);*/
+void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+  //read bins and append and keep track of how much is appended
+  std::vector<GraphId> bins[kBinCount];
+  uint32_t shift = 0;
+  for(size_t i = 0; i < kBinCount; ++i) {
+    auto bin = tile->GetBin(i % kBinsDim, i / kBinsDim);
+    bins[i].assign(bin.begin(), bin.end());
+    bins[i].insert(bins[i].end(), more_bins[i].cbegin(), more_bins[i].cend());
+    shift += more_bins[i].size();
   }
-
-  //TODO: worry about edges in the builder?
-
-  //throw the binned edge offsets back into the header
-  uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
-  for(size_t i = 1 ; i < kCellCount; ++i)
-    offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
-  header_->set_edge_cell_offsets(offsets);
-  //since previously we shouldnt have had anything in the bins we dont have to subtract previous bins
-  header_->set_edgeinfo_offset(header_->edgeinfo_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
-  header_->set_textlist_offset(header_->textlist_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
-
-  return strays;
+  shift *= sizeof(GraphId);
+  //update header bin indices
+  uint32_t offsets[kBinCount] = { static_cast<uint32_t>(bins[0].size()) };
+  for(size_t i = 1 ; i < kBinCount; ++i)
+    offsets[i] = static_cast<uint32_t>(bins[i].size()) + offsets[i - 1];
+  //update header offsets
+  //NOTE: if format changes to add more things here we need to make a change here as well
+  GraphTileHeader header = *tile->header();
+  header.set_edge_bin_offsets(offsets);
+  header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
+  header.set_textlist_offset(header.textlist_offset() + shift);
+  //rewrite the tile
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
+  if(!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  //open it
+  if(file.is_open()) {
+    //new header
+    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+    //a bunch of stuff between header and bins
+    const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
+    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
+    file.write(begin, end - begin);
+    //the updated bins
+    for(const auto& bin : bins)
+      file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
+    //the rest of the stuff after bins
+    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
+    end = reinterpret_cast<const char*>(tile->header()) + tile->size();
+    file.write(begin, end - begin);
+  }//failed
+  else
+    throw std::runtime_error("Failed to open file " + filename.string());
 }
 
 }

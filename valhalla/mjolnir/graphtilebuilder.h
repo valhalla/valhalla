@@ -297,10 +297,13 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddTileCreationDate(const uint32_t tile_creation_date);
 
   /**
-   * Bins the non shortcut non transition edges into the header
-   * @return returns edges that bin into other tiles
+   * Adds to the bins the tile already has, only modifies the header to reflect the new counts
+   * and the bins themselves, everything else is copied directly without ever looking at it
+   * @param hierarchy  to figure out where to save the tile
+   * @param tile       the tile that needs the bins added
+   * @param more_bins  the extra bin data to append to the tile
    */
-  std::list<GraphId> Bin();
+  static void AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
  protected:
 
@@ -324,9 +327,6 @@ class GraphTileBuilder : public baldr::GraphTile {
     return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb):
         std::make_tuple(edgeindex, nodeb, nodea);
   }
-
-  // Write all edge cells to specified stream
-  void SerializeEdgeCellsToOstream(std::ostream& out) const;
 
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out) const;
@@ -388,10 +388,6 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
-
-  // Cells of the tile to intersect with the edges' shapes
-  bool write_bins_;
-  std::array<std::vector<GraphId>, kCellCount> bins_;
 };
 
 }
