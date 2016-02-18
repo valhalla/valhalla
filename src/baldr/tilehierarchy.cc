@@ -5,38 +5,13 @@ using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {
-TileHierarchy::TileLevel::TileLevel(const boost::property_tree::ptree& pt):
-  tiles({{-180, -90}, {180, 90}}, pt.get<float>("size"), kBinsDim){
-  level = pt.get<uint8_t>("level");
-  name = pt.get<std::string>("name");
-  //if not provided default to everything
-  std::string cutoff = pt.get<std::string>("importance_cutoff", "ServiceOther");
-  std::unordered_map<std::string, RoadClass>::const_iterator kv = stringToRoadClass.find(cutoff);
-  if(kv == stringToRoadClass.end())
-    throw std::runtime_error(cutoff + ": is not a valid value for importance_cutoff");
-  importance = kv->second;
-}
 
-TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string& name,
-                                    const RoadClass importance, const Tiles<PointLL>& tiles)
-  :level(level), importance(importance), name(name), tiles(tiles) {
-}
-
-TileHierarchy::TileHierarchy(const boost::property_tree::ptree& pt) {
-  //grab out other config information
-  tile_dir_ = pt.get<std::string>("tile_dir");
-
-  //grab out each tile level
-  for(const auto& tile_level : pt.get_child("levels")) {
-    TileLevel tl(tile_level.second);
-    auto success = levels_.emplace(tl.level, tl);
-    if(!success.second)
-      throw std::runtime_error("Multiple tile sets at the same level are not yet supported");
-  }
-
-  //if we didn't have any levels that is just not usable
-  if(levels_.empty())
-    throw std::runtime_error("Expected 1 or more levels in the tile hierarchy");
+TileHierarchy::TileHierarchy(const std::string& tile_dir):tile_dir_(tile_dir) {
+  levels_ = {
+    {2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local", Tiles<PointLL>{{{-180, -90}, {180, 90}}, .25, kBinsDim}}},
+    {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial", Tiles<PointLL>{{{-180, -90}, {180, 90}}, 1, kBinsDim}}},
+    {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway", Tiles<PointLL>{{{-180, -90}, {180, 90}}, 4, kBinsDim}}}
+  };
 }
 
 TileHierarchy::TileHierarchy(){}

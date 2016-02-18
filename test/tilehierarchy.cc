@@ -1,5 +1,5 @@
-#include "valhalla/baldr/tilehierarchy.h"
-#include "valhalla/baldr/graphid.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/graphid.h"
 #include <valhalla/midgard/pointll.h>
 
 #include "test.h"
@@ -13,19 +13,7 @@ using namespace valhalla::midgard;
 
 namespace {
   void test_parse() {
-    std::stringstream json; json << "\
-    {\
-      \"tile_dir\": \"/data/valhalla\",\
-      \"levels\": [\
-        {\"name\": \"local\", \"level\": 2, \"size\": 0.25},\
-        {\"name\": \"highway\", \"level\": 0, \"size\": 4},\
-        {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Trunk\"}\
-      ]\
-    }";
-
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_json(json, pt);
-    TileHierarchy h(pt);
+    TileHierarchy h("/data/valhalla");
 
     if(h.tile_dir() != "/data/valhalla")
       throw runtime_error("The tile directory was not correctly parsed");
@@ -48,10 +36,12 @@ namespace {
     id = h.GetGraphId(PointLL(-76.5, 40.5), 2);
     if(id.level() != 2 || id.tileid() != (522 * 1440) + 414 || id.id() != 0)
       throw runtime_error("Expected different graph id for this location");
-    if(h.levels().begin()->second.importance != RoadClass::kServiceOther)
+    if(h.levels().begin()->second.importance != RoadClass::kPrimary)
+      throw runtime_error("Importance should be set to primary");
+    if((++h.levels().begin())->second.importance != RoadClass::kTertiary)
+      throw runtime_error("Importance should be set to tertiary");
+    if(h.levels().rbegin()->second.importance != RoadClass::kServiceOther)
       throw runtime_error("Importance should be set to service/other");
-    if((++h.levels().begin())->second.importance != RoadClass::kTrunk)
-      throw runtime_error("Importance should be set to trunk");
   }
 }
 

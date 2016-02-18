@@ -24,15 +24,12 @@ class TileHierarchy {
   /**
    * Constructor
    */
-  TileHierarchy(const boost::property_tree::ptree& pt);
+  TileHierarchy(const std::string& tile_dir);
 
   /**
    * Encapsulates a few types together to define a level in the hierarchy
    */
   struct TileLevel{
-    TileLevel(const boost::property_tree::ptree& pt);
-    TileLevel(const uint8_t level, const std::string& name,
-              const RoadClass importance, const midgard::Tiles<midgard::PointLL>& tiles);
     bool operator<(const TileLevel& other) const;
     uint8_t level;
     RoadClass importance;
