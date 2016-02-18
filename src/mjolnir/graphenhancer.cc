@@ -110,9 +110,9 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
     } else if (use == Use::kRamp) {
       RoadClass rc = directededge.classification();
       if (rc == RoadClass::kMotorway) {
-        speed = 95;
+        speed = (density > 8) ? 90 : 95;
       } else if (rc == RoadClass::kTrunk) {
-        speed = 80;
+        speed = (density > 8) ? 75 : 80;
       } else if (rc == RoadClass::kPrimary) {
         speed = 65;
       } else if (rc == RoadClass::kSecondary) {
@@ -336,6 +336,7 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
       // Do not allow use of the start edge or any transit edges
+      // TODO - also skip diredge->use() == Use::kTransitConnection
       if ((n == 0 && diredge->endnode() == startnode) ||
           diredge->IsTransitLine()) {
         continue;
@@ -881,6 +882,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
+  bool allramps = true;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -898,6 +900,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
       } else if (edge->classification() < bestrc) {
         bestrc = edge->classification();
       }
+    }
+
+    // Check if not a ramp or turn channel
+    if (!edge->link()) {
+      allramps = false;
     }
   }
 
@@ -920,8 +927,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
 
   // TODO:Increase stop level based on classification of edges
 
-  // Reduce stop impact from a turn channel
-  if (edges[from].use() == Use::kTurnChannel) {
+  // Reduce stop impact from a turn channel or when only links
+  // (ramps and turn channels) are involved.
+  if (allramps || edges[from].use() == Use::kTurnChannel) {
     stop_impact /= 2;
   }
 
@@ -1292,7 +1300,10 @@ void enhance(const boost::property_tree::ptree& pt,
         // nodes since the stop Id is stored in that field (union).
         if (!nodeinfo.is_transit()) {
           for (uint32_t k = (j + 1); k < ntrans; k++) {
-            if (ConsistentNames(country_code,
+            // Set name consistency to true when entering a link (ramp or
+            // turn channel) to avoid double penalizing.
+            if (directededge.link() ||
+                ConsistentNames(country_code,
                                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
                                 tilebuilder.edgeinfo(tilebuilder.directededge(
                                     nodeinfo.edge_index() + k).edgeinfo_offset())->GetNames())) {
@@ -1303,6 +1314,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags. Do not do this for transit edges.
+        // TODO - also skip directededge.use() == Use::kTransitConnection
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
