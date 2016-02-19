@@ -431,6 +431,9 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
   // Add time
   next_man->set_time(next_man->time() + curr_man->time());
 
+  // Add basic time
+  next_man->set_basic_time(next_man->basic_time() + curr_man->basic_time());
+
   // TODO - heading?
 
   // Set begin node index
@@ -474,6 +477,9 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineTurnChannelManeuver(
   // Add time
   next_man->set_time(next_man->time() + curr_man->time());
 
+  // Add basic time
+  next_man->set_basic_time(next_man->basic_time() + curr_man->basic_time());
+
   // TODO - heading?
 
   // Set begin node index
@@ -502,6 +508,9 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineSameNameStraightManeuver(
 
   // Add time
   curr_man->set_time(curr_man->time() + next_man->time());
+
+  // Add basic time
+  curr_man->set_basic_time(curr_man->basic_time() + next_man->basic_time());
 
   // Update end heading
   curr_man->set_end_heading(next_man->end_node_index());
@@ -788,6 +797,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
   // Distance in kilometers
   maneuver.set_length(maneuver.length() + prev_edge->length());
+
+  // Basic time (len/speed on each edge with no stop impact) in seconds
+  maneuver.set_basic_time(maneuver.basic_time()
+          + GetTime(prev_edge->length(),
+                    GetSpeed(maneuver.travel_mode(), prev_edge->speed())));
 
   // Portions Toll
   if (prev_edge->toll()) {
@@ -1792,6 +1806,17 @@ void ManeuversBuilder::UpdateInternalTurnCount(Maneuver& maneuver,
     maneuver.set_internal_left_turn_count(
         maneuver.internal_left_turn_count() + 1);
   }
+}
+
+float ManeuversBuilder::GetSpeed(TripPath_TravelMode travel_mode,
+                                float edge_speed) const {
+  // TODO use pedestrian and bicycle speeds from costing options?
+  if (travel_mode == TripPath_TravelMode_kPedestrian)
+    return 5.1f;
+  else if (travel_mode == TripPath_TravelMode_kBicycle)
+    return 20.0f;
+  else
+    return edge_speed;
 }
 
 }

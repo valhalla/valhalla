@@ -73,8 +73,13 @@ class Maneuver {
       DirectionsOptions::Units::DirectionsOptions_Units_kKilometers) const;
   void set_length(float length);
 
+  // Seconds
   uint32_t time() const;
   void set_time(uint32_t time);
+
+  // len/speed on each edge with no stop impact in seconds
+  uint32_t basic_time() const;
+  void set_basic_time(uint32_t basic_time);
 
   uint32_t turn_degree() const;
   void set_turn_degree(uint32_t turn_degree);
@@ -193,6 +198,9 @@ class Maneuver {
   bool unnamed_mountain_bike_trail() const;
   void set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail);
 
+  bool verbal_multi_cue() const;
+  void set_verbal_multi_cue(bool verbal_multi_cue);
+
   TripPath_TravelMode travel_mode() const;
   void set_travel_mode(TripPath_TravelMode travel_mode);
 
@@ -263,7 +271,8 @@ class Maneuver {
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
   float length_;     // Kilometers
-  uint32_t time_;
+  uint32_t time_;    // Seconds
+  uint32_t basic_time_; // len/speed on each edge with no stop impact in seconds
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction_;
@@ -296,6 +305,7 @@ class Maneuver {
   bool unnamed_walkway_;
   bool unnamed_cycleway_;
   bool unnamed_mountain_bike_trail_;
+  bool verbal_multi_cue_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
