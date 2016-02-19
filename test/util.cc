@@ -50,6 +50,8 @@ void TestGetTime() {
     throw std::runtime_error("Invalid time");
   if (GetTime(5, 20) != 900)
     throw std::runtime_error("Invalid time");
+  if (GetTime(5, 0) != 0)
+    throw std::runtime_error("Invalid time");
 }
 
 void AppxEqual() {
