@@ -660,6 +660,9 @@ namespace {
             man->emplace("transit_route", std::move(json_transit_route));
           }
 
+          if (maneuver.verbal_multi_cue())
+            man->emplace("verbal_multi_cue", maneuver.verbal_multi_cue());
+
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
           //“portionsTollNote” : “<portionsTollNote>”,
