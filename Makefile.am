@@ -53,6 +53,7 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/astarheuristic.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/edgestatus.cc \
+        src/thor/get_matrix.cc \
 	src/thor/multimodal.cc \
 	src/thor/optimizer.cc \
 	src/thor/pathalgorithm.cc \
