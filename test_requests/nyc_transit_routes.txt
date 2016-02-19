@@ -6,5 +6,5 @@
 -j '{"locations":[{"lat":40.682249,"lon":-73.995861,"street":"345 Court Street"},{"lat":40.743326,"lon":-73.990005,"street":"18 West 25th Street"}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2016-01-02T08:00"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":40.744690,"lon":-73.997002},{"lat":40.780624,"lon":-73.972710,"name":"American Museum of Natural History"}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2016-01-02T08:00"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":40.780624,"lon":-73.972710,"name":"American Museum of Natural History"},{"lat":40.744690,"lon":-73.997002}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2016-01-02T08:00"}}' --config ../conf/valhalla.json
-
+-j '{"locations":[{"lat":40.686545,"lon":-73.988049},{"lat":40.744368,"lon":-73.990426}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":0}}' --config ../conf/valhalla.json
 
