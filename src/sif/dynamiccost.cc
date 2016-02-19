@@ -104,7 +104,7 @@ uint32_t DynamicCost::GetMaxTransferDistanceMM() {
 // This method overrides the weight for this mode.  The higher the value
 // the more the mode is favored.
 float DynamicCost::GetModeWeight() {
-  return 0.0f;
+  return 1.0f;
 }
 
 // This method overrides the max_distance with the max_distance_mm per segment
