@@ -65,13 +65,28 @@ class DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
-   * This method overrides the max_distance with the multi-modal per segment
+   * Returns the maximum transfer distance between stops that you are willing
+   * to travel for this mode.  It is the max distance you are willing to
+   * travel between transfers.
+   * @return  max transfer distance multimodal
+   */
+  virtual uint32_t GetMaxTransferDistanceMM();
+
+  /**
+   * This method overrides the weight for this mode.  The higher the value
+   * the more the mode is favored.
+   * @return  mode weight
+   */
+  virtual float GetModeWeight();
+
+  /**
+   * This method overrides the max_distance with the max_distance_mm per segment
    * distance. An example is a pure walking route may have a max distance of
    * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
    * meters per segment (e.g. from origin to a transit stop or from the last
    * transit stop to the destination).
    */
-  virtual void UseMaxModeDistance();
+  virtual void UseMaxMultiModalDistance();
 
   /**
    * Checks if access is allowed for the provided directed edge.
