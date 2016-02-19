@@ -50,7 +50,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
   pc->SetAllowTransitConnections(true);
-  pc->UseMaxModeDistance();
+  pc->UseMaxMultiModalDistance();
 
   // Check if there no possible path to destination based on mode to the
   // destination - for now assume pedestrian
@@ -279,7 +279,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
         Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
             directededge, nodeinfo->density());
-        c.cost *= 2.0f;  // TODO - mode weight...so transit mode is favored
+        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeWeight();
         newcost += c;
 
         // Add to walking distance
@@ -320,6 +320,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           endnode->stop_index() == pred.prior_stopid()) {
         continue;
       }
+
+      if (directededge->use() == Use::kTransitConnection && pred.prior_stopid() &&
+          walking_distance_ > mode_costing[static_cast<uint32_t>(mode_)]->GetMaxTransferDistanceMM())
+        continue;
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
