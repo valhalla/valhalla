@@ -1058,6 +1058,11 @@ function nodes_proc (kv, nokeys)
      emergency_tag = 16
   end
 
+  --do not shut off bike access if there is a highway crossing.
+  if bike_tag == 0 and kv["highway"] == "crossing" then
+    bike_tag = 4
+  end
+
   --if tag exists use it, otherwise access allowed for all modes unless access = false.  
   local auto = auto_tag or 1
   local truck = truck_tag or 8 
