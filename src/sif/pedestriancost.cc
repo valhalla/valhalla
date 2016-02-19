@@ -12,21 +12,27 @@ namespace sif {
 // Default options/values
 namespace {
 
-// Maximum walking distance for any walking leg of a multimodal route.
-// From origin/destination to any transit stop, parking, etc. or between
-// any stops
-constexpr uint32_t kMaxModeDistance    = 3000;   // 3 km
+// Maximum distance at the beginning or end of a multimodal route
+// that you are willing to travel for this mode.  In this case,
+// it is the max walking distance.
+constexpr uint32_t kMaxDistanceMM    = 2415;   // 1.5 miles
+
+// Maximum transfer distance between stops that you are willing
+// to travel for this mode.  In this case, it is the max walking
+// distance you are willing to walk between transfers.
+constexpr uint32_t kMaxTransferDistanceMM    = 805;   // 0.5 miles
 
 // Maximum distance of a walking route
 constexpr uint32_t kMaxDistance        = 100000; // 100 km
 
-constexpr float kDefaultManeuverPenalty = 5.0f;  // Seconds
-constexpr float kDefaultGatePenalty    = 300.0f; // Seconds
-constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
-constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
-constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
-constexpr float kDefaultDrivewayFactor = 5.0f;   // Avoid driveways
-constexpr float kDefaultStepPenalty    = 30.0f;  // 30 seconds
+constexpr float kModeWeight             = 2.5f;   // Favor this mode?
+constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
+constexpr float kDefaultGatePenalty     = 300.0f; // Seconds
+constexpr float kDefaultWalkingSpeed    = 5.1f;   // 3.16 MPH
+constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
+constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
+constexpr float kDefaultDrivewayFactor  = 5.0f;   // Avoid driveways
+constexpr float kDefaultStepPenalty     = 30.0f;  // 30 seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
@@ -50,13 +56,26 @@ class PedestrianCost : public DynamicCost {
   virtual ~PedestrianCost();
 
   /**
-   * This method overrides the max_distance with the multi-modal per segment
+   * This method overrides the max_distance with the max_distance_mm per segment
    * distance. An example is a pure walking route may have a max distance of
    * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
    * meters per segment (e.g. from origin to a transit stop or from the last
    * transit stop to the destination).
    */
-  virtual void UseMaxModeDistance();
+  virtual void UseMaxMultiModalDistance();
+
+  /**
+   * Returns the maximum transfer distance between stops that you are willing
+   * to travel for this mode.  In this case, it is the max walking
+   * distance you are willing to walk between transfers.
+   */
+  virtual uint32_t GetMaxTransferDistanceMM();
+
+  /**
+   * This method overrides the weight for this mode.  The higher the value
+   * the more the mode is favored.
+   */
+  virtual float GetModeWeight();
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -171,9 +190,21 @@ class PedestrianCost : public DynamicCost {
   // Maximum walking distance
   uint32_t max_distance_;
 
-  // Maximum walking distance in meters for multimodal routes. This is the maximum
-  // distance for any single walking portion of the route.
-  uint32_t max_mode_distance_;
+  // This is the weight for this mode.  The higher the value the more the
+  // mode is favored.
+  float mode_weight_;
+
+  // Maximum walking distance in meters for multimodal routes.
+  // Maximum distance at the beginning or end of a multimodal route
+  // that you are willing to travel for this mode.  In this case,
+  // it is the max walking distance.
+  uint32_t max_distance_mm_;
+
+  // Maximum transfer, walking distance in meters for multimodal routes.
+  // Maximum transfer distance between stops that you are willing
+  // to travel for this mode.  In this case, it is the max walking
+  // distance you are willing to walk between transfers.
+  uint32_t max_transfer_distance_mm_;
 
   float walking_speed_;   // Walking speed (default to 5.1 km / hour)
   float speedfactor_;     // Speed factor for costing. Based on walking speed.
@@ -191,21 +222,23 @@ class PedestrianCost : public DynamicCost {
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
-  allow_transit_connections_ = false;
-  max_distance_      = pt.get<uint32_t>("max_distance", kMaxDistance);
-  max_mode_distance_ = pt.get<uint32_t>("max_mode_distance", kMaxModeDistance);
-  walking_speed_     = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
-  walkway_factor_    = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
-  alley_factor_      = pt.get<float>("alley_factor", kDefaultAlleyFactor);
-  driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
-  step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
-  gate_penalty_      = pt.get<float>("gate_penalty", kDefaultGatePenalty);
-  maneuver_penalty_  = pt.get<float>("maneuver_penalty",
-                                    kDefaultManeuverPenalty);
-  country_crossing_cost_ = pt.get<float>("country_crossing_cost",
-                                           kDefaultCountryCrossingCost);
-  country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
-                                           kDefaultCountryCrossingPenalty);
+  allow_transit_connections_  = false;
+  mode_weight_                = pt.get<float>("mode_weight", kModeWeight);
+  max_distance_               = pt.get<uint32_t>("max_distance", kMaxDistance);
+  max_distance_mm_            = pt.get<uint32_t>("max_distance_mm", kMaxDistanceMM);
+  max_transfer_distance_mm_   = pt.get<uint32_t>("max_transfer_distance_mm", kMaxTransferDistanceMM);
+  walking_speed_              = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
+  walkway_factor_             = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+  alley_factor_               = pt.get<float>("alley_factor", kDefaultAlleyFactor);
+  driveway_factor_            = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
+  step_penalty_               = pt.get<float>("step_penalty", kDefaultStepPenalty);
+  gate_penalty_               = pt.get<float>("gate_penalty", kDefaultGatePenalty);
+  maneuver_penalty_           = pt.get<float>("maneuver_penalty",
+                                              kDefaultManeuverPenalty);
+  country_crossing_cost_      = pt.get<float>("country_crossing_cost",
+                                              kDefaultCountryCrossingCost);
+  country_crossing_penalty_   = pt.get<float>("country_crossing_penalty",
+                                              kDefaultCountryCrossingPenalty);
 
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
@@ -222,15 +255,27 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
 PedestrianCost::~PedestrianCost() {
 }
 
-// This method overrides the max_distance with the multi-modal per segment
+// This method overrides the max_distance with the max_distance_mm per segment
 // distance. An example is a pure walking route may have a max distance of
 // 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-//  meters per segment (e.g. from origin to a transit stop or from the last
-//  transit stop to the destination).
-void PedestrianCost::UseMaxModeDistance() {
-  max_distance_ = max_mode_distance_;
+// meters per segment (e.g. from origin to a transit stop or from the last
+// transit stop to the destination).
+void PedestrianCost::UseMaxMultiModalDistance() {
+  max_distance_ = max_distance_mm_;
 }
 
+// Returns the maximum transfer distance between stops that you are willing
+// to travel for this mode.  In this case, it is the max walking
+// distance you are willing to walk between transfers.
+uint32_t PedestrianCost::GetMaxTransferDistanceMM() {
+  return max_transfer_distance_mm_;
+}
+
+// This method overrides the weight for this mode.  The higher the value
+// the more the mode is favored.
+float PedestrianCost::GetModeWeight() {
+  return mode_weight_;
+}
 
 // Check if access is allowed on the specified edge. Disallow if no pedestrian
 // access. Disallow Uturns or entering not-thru edges except near the
