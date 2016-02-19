@@ -78,7 +78,8 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
                   PathLocation& dest, PathAlgorithm* pathalgorithm,
                   const std::shared_ptr<DynamicCost>* mode_costing,
                   const TravelMode mode, PathStatistics& data,
-                  bool multi_run, uint32_t iterations) {
+                  bool multi_run, uint32_t iterations,
+                  bool using_astar) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
   std::vector<PathLocation> through_loc;
@@ -89,12 +90,18 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
     if (cost->AllowMultiPass()) {
       LOG_INFO("Try again with relaxed hierarchy limits");
       pathalgorithm->Clear();
-      cost->RelaxHierarchyLimits(16.0f);
+      float relax_factor = (using_astar) ? 16.0f : 8.0f;
+      cost->RelaxHierarchyLimits(using_astar);
       pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
       data.incPasses();
     }
   }
   if (pathedges.size() == 0) {
+    // Third pass only if using astar
+    if (!using_astar) {
+      // Return an empty trip path
+      return TripPath();
+    }
     cost->DisableHighwayTransitions();
     pathalgorithm->Clear();
     pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
@@ -646,16 +653,17 @@ int main(int argc, char *argv[]) {
     PathAlgorithm* pathalgorithm;
     if (routetype == "multimodal") {
       pathalgorithm = &mm;
-    } else if (routetype == "pedestrian" || routetype == "bicycle") {
-      pathalgorithm = (km > 10.0f) ? &bd : &astar;
+    } else if (routetype == "bus") {
+      pathalgorithm = &astar;
     } else {
-      pathalgorithm = &astar; //  (km > 10.0f) ? &bd : &astar;
+      pathalgorithm = (km > 10.0f) ? &bd : &astar;
     }
+    bool using_astar = (pathalgorithm == &astar);
 
     // Get the best path
     trip_path = PathTest(reader, path_location[i], path_location[i+1],
                          pathalgorithm, mode_costing, mode, data,
-                         multi_run, iterations);
+                         multi_run, iterations, using_astar);
 
     // If successful get directions
     if (trip_path.node().size() > 0) {
