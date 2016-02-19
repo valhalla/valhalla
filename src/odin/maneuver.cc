@@ -39,6 +39,7 @@ Maneuver::Maneuver()
     : type_(TripDirections_Maneuver_Type_kNone),
       length_(0.0f),
       time_(0),
+      basic_time_(0),
       turn_degree_(0),
       begin_relative_direction_(RelativeDirection::kNone),
       begin_cardinal_direction_(
@@ -72,7 +73,8 @@ Maneuver::Maneuver()
       tee_(false),
       unnamed_walkway_(false),
       unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false) {
+      unnamed_mountain_bike_trail_(false),
+      verbal_multi_cue_(false) {
   street_names_ = make_unique<StreetNames>();
   begin_street_names_ = make_unique<StreetNames>();
   cross_street_names_ = make_unique<StreetNames>();
@@ -211,6 +213,14 @@ uint32_t Maneuver::time() const {
 
 void Maneuver::set_time(uint32_t time) {
   time_ = time;
+}
+
+uint32_t Maneuver::basic_time() const {
+  return basic_time_;
+}
+
+void Maneuver::set_basic_time(uint32_t basic_time) {
+  basic_time_ = basic_time;
 }
 
 uint32_t Maneuver::turn_degree() const {
@@ -536,6 +546,14 @@ void Maneuver::set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail)
   unnamed_mountain_bike_trail_ = unnamed_mountain_bike_trail;
 }
 
+bool Maneuver::verbal_multi_cue() const {
+  return verbal_multi_cue_;
+}
+
+void Maneuver::set_verbal_multi_cue(bool verbal_multi_cue) {
+  verbal_multi_cue_ = verbal_multi_cue;
+}
+
 TripPath_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
@@ -812,6 +830,12 @@ std::string Maneuver::ToString() const {
   man_str += " | unnamed_mountain_bike_trail=";
   man_str += std::to_string(unnamed_mountain_bike_trail_);
 
+  man_str += " | basic_time=";
+  man_str += std::to_string(basic_time_);
+
+  man_str += " | verbal_multi_cue=";
+  man_str += std::to_string(verbal_multi_cue_);
+
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
 
@@ -969,6 +993,12 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(unnamed_mountain_bike_trail_);
+
+  man_str += delim;
+  man_str += std::to_string(basic_time_);
+
+  man_str += delim;
+  man_str += std::to_string(verbal_multi_cue_);
 
   // Transit TODO
 //  man_str += delim;

@@ -505,7 +505,10 @@ void PopulateManeuver(
     std::string verbal_transition_alert_instruction = "",
     std::string verbal_pre_transition_instruction = "",
     std::string verbal_post_transition_instruction = "",
-    bool tee = false) {
+    bool tee = false,
+    bool unnamed_walkway = false, bool unnamed_cycleway = false,
+    bool unnamed_mountain_bike_trail = false, float basic_time = 0.0f,
+    bool verbal_multi_cue = false) {
 
   maneuver.set_type(type);
 
@@ -586,6 +589,11 @@ void PopulateManeuver(
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
   maneuver.set_tee(tee);
+  maneuver.set_unnamed_walkway(unnamed_walkway);
+  maneuver.set_unnamed_cycleway(unnamed_cycleway);
+  maneuver.set_unnamed_mountain_bike_trail(unnamed_mountain_bike_trail);
+  maneuver.set_basic_time(basic_time);
+  maneuver.set_verbal_multi_cue(verbal_multi_cue);
 }
 
 void TestLeftInternalStraightCombine() {

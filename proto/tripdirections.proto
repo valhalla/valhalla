@@ -154,6 +154,7 @@ message TripDirections {
     optional string arrive_instruction = 20;                 // arrive instruction - used with transit
     optional string verbal_arrive_instruction = 21;          // verbal arrive instruction - used with transit
     optional TransitRoute transit_route = 22;                // transit route attributes including a list of transit stops
+    optional bool verbal_multi_cue = 23;                     // verbal multi-cue flag
   }
   
   optional uint64 trip_id = 1;

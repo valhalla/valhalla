@@ -9,10 +9,14 @@
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 namespace {
 // Text instruction initial capacity
 constexpr auto kTextInstructionInitialCapacity = 128;
+
+// Basic time threshold in seconds for creating a verbal multi-cue
+constexpr auto kVerbalMultiCueTimeThreshold = 10;
 }
 
 namespace valhalla {
@@ -537,6 +541,10 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
     // Update previous maneuver
     prev_maneuver = &maneuver;
   }
+
+  // Iterate over maneuvers to form verbal multi-cue instructions
+  FormVerbalMultiCue(maneuvers);
+
 }
 
 // TODO - we will have to optimize when we actually use the language specific
@@ -3864,6 +3872,71 @@ std::string NarrativeBuilder::FormStreetNames(
   }
 
   return street_names_string;
+}
+
+void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
+  Maneuver* prev_maneuver = nullptr;
+  for (auto& maneuver : maneuvers) {
+    if (prev_maneuver && IsVerbalMultiCuePossible(prev_maneuver, maneuver)) {
+      // Set verbal pre transition instruction as a verbal multi-cue
+      prev_maneuver->set_verbal_pre_transition_instruction(
+          std::move(FormVerbalMultiCue(prev_maneuver, maneuver)));
+      prev_maneuver->set_verbal_multi_cue(true);
+    }
+
+    // Update previous maneuver
+    prev_maneuver = &maneuver;
+  }
+}
+
+std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
+                                          Maneuver& next_maneuver) {
+  // verbal_multi_cue: "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  // Set current verbal cue
+  std::string current_verbal_cue = maneuver->verbal_pre_transition_instruction();
+
+  // Set next verbal cue
+  std::string next_verbal_cue =
+      next_maneuver.HasVerbalTransitionAlertInstruction() ?
+          next_maneuver.verbal_transition_alert_instruction() :
+          next_maneuver.verbal_pre_transition_instruction();
+
+
+  // Set instruction to the verbal multi-cue
+  // TODO: read from dictionary with g11n merge
+  instruction = "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>";
+
+  // Replace phrase tags with values
+  // TODO: create tags with g11n merge
+  boost::replace_all(instruction, "<CURRENT_VERBAL_CUE>", current_verbal_cue);
+  boost::replace_all(instruction, "<NEXT_VERBAL_CUE>", next_verbal_cue);
+
+  return instruction;
+}
+
+bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver,
+                                                Maneuver& next_maneuver) {
+  // Current maneuver must have a verbal pre-transition instruction
+  // Next maneuver must have a verbal transition alert or a verbal pre-transition instruction
+  // Current maneuver must be quick (basic time < 10 sec)
+  // Next maneuver must not be a merge
+  // Current and next maneuvers must not be a rouandbout
+  // Current and next maneuvers must not be transit or transit connection
+  if (maneuver->HasVerbalPreTransitionInstruction()
+      && (next_maneuver.HasVerbalTransitionAlertInstruction()
+          || next_maneuver.HasVerbalPreTransitionInstruction())
+      && maneuver->basic_time() < kVerbalMultiCueTimeThreshold
+      && (next_maneuver.type() != TripDirections_Maneuver_Type_kMerge)
+      && !maneuver->roundabout() && !next_maneuver.roundabout()
+      && !maneuver->IsTransit() && !next_maneuver.IsTransit()
+      && !maneuver->transit_connection() && !next_maneuver.transit_connection()) {
+    return true;
+  }
+  return false;
 }
 
 }

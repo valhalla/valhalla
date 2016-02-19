@@ -66,7 +66,10 @@ void PopulateManeuver(
     bool intersecting_forward_edge = false,
     std::string verbal_transition_alert_instruction = "",
     std::string verbal_pre_transition_instruction = "",
-    std::string verbal_post_transition_instruction = "", bool tee = false) {
+    std::string verbal_post_transition_instruction = "", bool tee = false,
+    bool unnamed_walkway = false, bool unnamed_cycleway = false,
+    bool unnamed_mountain_bike_trail = false, float basic_time = 0.0f,
+    bool verbal_multi_cue = false) {
 
   maneuver.set_verbal_formatter(
       VerbalTextFormatterFactory::Create(country_code, state_code));
@@ -150,6 +153,11 @@ void PopulateManeuver(
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
   maneuver.set_tee(tee);
+  maneuver.set_unnamed_walkway(unnamed_walkway);
+  maneuver.set_unnamed_cycleway(unnamed_cycleway);
+  maneuver.set_unnamed_mountain_bike_trail(unnamed_mountain_bike_trail);
+  maneuver.set_basic_time(basic_time);
+  maneuver.set_verbal_multi_cue(verbal_multi_cue);
 }
 
 void TryBuild(const DirectionsOptions& directions_options,
@@ -446,7 +454,7 @@ void PopulateBearManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kRight,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 201, 204,
                    161, 187, 1461, 1805, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
-                   { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0);
+                   { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 900, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
@@ -455,7 +463,7 @@ void PopulateBearManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepLeft,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 193, 197,
                    187, 197, 1805, 1878, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 0, 1, "", "", "", 0);
+                   { }, { }, 0, 0, 0, 0, 0, 1, "", "", "", 0, 0, 0, 0, 200, 0);
 }
 
 void PopulateUturnManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -497,7 +505,7 @@ void PopulateUturnManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kRight,
                    TripDirections_Maneuver_CardinalDirection_kNorthWest, 335,
                    337, 2, 3, 36, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 1, 0, 0, 0, 1, 1, "", "", "", 0);
+                   { }, 1, 0, 0, 0, 1, 1, "", "", "", 0, 0, 0, 0, 20, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
@@ -506,7 +514,7 @@ void PopulateUturnManeuverList_2(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::KReverse,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 157, 155,
                    3, 4, 46, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
-                   0, 0, 0, 0, 0, 0, "", "", "", 0);
+                   0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 20, 0);
 }
 
 void PopulateUturnManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -546,11 +554,11 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kStart, { "Jonestown Road",
                        "US 22" },
-                   { }, { }, "", 0.062923, 0, 0,
+                   { }, { }, "", 0.062923, 2, 0,
                    Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 36, 32,
                    0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
-                   0, 0, 0, 1, 0, "", "", "", 0);
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 2, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
@@ -560,7 +568,7 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::KReverse,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
                    221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 40, 0);
 }
 
 void SetExpectedManeuverInstructions(
@@ -1090,7 +1098,7 @@ void TestBuildTurnInstructions_3_miles_en_US() {
       expected_maneuvers,
       "Turn right onto Sunstone Drive.",
       "Turn right onto Sunstone Drive.",
-      "Turn right onto Sunstone Drive.",
+      "Turn right onto Sunstone Drive. Then Turn right to stay on Sunstone Drive.",
       "Continue for 300 feet.");
   SetExpectedManeuverInstructions(
       expected_maneuvers,
@@ -1418,7 +1426,7 @@ void TestBuildUturnInstructions_5_miles_en_US() {
       expected_maneuvers,
       "Head northeast on Jonestown Road/US 22.",
       "",
-      "Head northeast on Jonestown Road, U.S. 22 for 200 feet.",
+      "Head northeast on Jonestown Road, U.S. 22 for 200 feet. Then Make a left U-turn at Devonshire Road.",
       "");
   SetExpectedManeuverInstructions(
       expected_maneuvers,
