@@ -13,12 +13,13 @@ namespace sif {
 namespace {
 constexpr uint32_t kUnitSize = 1;
 
+constexpr float kModeWeight         = 2.0f; // Favor this mode?
 constexpr float kDefaultBusFactor   = 1.0f;
 constexpr float kDefaultBusPenalty  = 0.0f;
 constexpr float kDefaultRailFactor  = 1.0f;
 constexpr float kDefaultRailPenalty = 0.0f;
-constexpr float kDefaultTransferCost = 60.0f;
-constexpr float kDefaultTransferPenalty = 300.0f;  // 5 minute default
+constexpr float kDefaultTransferCost = 300.0f;
+constexpr float kDefaultTransferPenalty = 45.0f;
 
 // User propensity to use buses. Range of values from 0 (avoid buses) to
 // 1 (totally comfortable riding on buses).
@@ -49,6 +50,12 @@ class TransitCost : public DynamicCost {
   TransitCost(const boost::property_tree::ptree& pt);
 
   virtual ~TransitCost();
+
+  /**
+   * This method overrides the weight for this mode.  The higher the value
+   * the more the mode is favored.
+   */
+  virtual float GetModeWeight();
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -179,6 +186,10 @@ class TransitCost : public DynamicCost {
 
  protected:
 
+  // This is the weight for this mode.  The higher the value the more the
+  // mode is favored.
+  float mode_weight_;
+
   // A measure of willingness to ride on buses or rail. Ranges from 0-1 with
   // 0 being not willing at all and 1 being totally comfortable with taking
   // this transportation. These factors determine how much rail or buses are
@@ -204,6 +215,8 @@ class TransitCost : public DynamicCost {
 // not present, set the default.
 TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
+
+  mode_weight_       = pt.get<float>("mode_weight", kModeWeight);
 
   // Willingness to use buses. Make sure this is within range [0, 1].
   use_bus_ = pt.get<float>("use_bus", kDefaultUseBusFactor);
@@ -239,7 +252,7 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
   transfer_factor_ = (use_transfers_ >= 0.5f) ?
                      1.0f - (use_transfers_ - 0.5f) :
-                     1.0f + (0.5f - use_transfers_) * 3.0f;
+                     1.0f + (0.5f - use_transfers_) * 5.0f;
 
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
@@ -247,6 +260,12 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
 // Destructor
 TransitCost::~TransitCost() {
+}
+
+// This method overrides the weight for this mode.  The higher the value
+// the more the mode is favored.
+float TransitCost::GetModeWeight() {
+  return mode_weight_;
 }
 
 // Check if access is allowed on the specified edge.
@@ -350,7 +369,7 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
 
 // Returns the default transfer factor between 2 transit lines.
 float TransitCost::TransferCostFactor() const {
-  return (transfer_factor_ * 3.0f);
+  return (transfer_factor_ * 5.0f);
 }
 
 // Returns the default transfer cost between 2 transit lines.
