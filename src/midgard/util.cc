@@ -27,7 +27,9 @@ namespace valhalla {
 namespace midgard {
 
 int GetTime(const float length, const float speed) {
-  return (int)(length / (speed * kHourPerSec) + 0.5f);
+  if (speed > 0.0f)
+    return (int)(length / (speed * kHourPerSec) + 0.5f);
+  return 0;
 }
 
 uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading) {
