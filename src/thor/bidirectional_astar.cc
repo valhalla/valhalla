@@ -389,7 +389,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         //  check if it is least cost candidate.
         EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
         if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          float c = pred.cost().cost +
+          float c = pred2.cost().cost +
               edgelabels_[oppedgestatus.status.index].cost().cost;
           if (c < best_connection_.cost) {
             best_connection_ = { edgeid, oppedge, c };
@@ -615,7 +615,8 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
     const EdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
     GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
 
-    // Get elapsed time on the edge
+    // Get elapsed time on the edge, then add the transition cost at
+    // prior edge.
     uint32_t pred = edgelabels_reverse_[edgelabel_index].predecessor();
     if (pred == kInvalidLabel) {
       secs += edgelabel.cost().secs;
@@ -626,8 +627,9 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
     path.emplace_back(edgelabel.mode(), static_cast<uint32_t>(secs),
                             oppedge,  edgelabel.tripid());
 
-    // Update edgelabel_index
+    // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = pred;
+    tc = edgelabel.transition_cost();
   }
   return path;
 }
