@@ -101,13 +101,14 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  */
 void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
-  // Set speed on ramps / turn channels
+  // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
     if (use == Use::kTurnChannel) {
       speed = static_cast<uint32_t>((speed * 1.25f) + 0.5f);
-    } else if (use == Use::kRamp) {
+    } else if (use == Use::kRamp &&
+               directededge.speed_type() != SpeedType::kTagged) {
       RoadClass rc = directededge.classification();
       if (rc == RoadClass::kMotorway) {
         speed = (density > 8) ? 90 : 95;
