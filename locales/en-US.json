@@ -158,7 +158,13 @@
     "post_transit_connection_destination": null,
     "post_transit_connection_destination_verbal": null,
     "post_transition_metric_verbal": null,
-    "post_transition_us_customary_verbal": null
+    "post_transition_us_customary_verbal": null,
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+      }
+    }
+    
   }
 }
 

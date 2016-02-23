@@ -15,6 +15,7 @@ constexpr auto kStartVerbalKey = "instructions.start_verbal";
 constexpr auto kDestinationKey = "instructions.destination";
 constexpr auto kDestinationVerbalAlertKey = "instructions.destination_verbal_alert";
 constexpr auto kDestinationVerbalKey = "instructions.destination_verbal";
+constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -32,6 +33,8 @@ constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kLengthTag = "<LENGTH>";
 constexpr auto kDestinationTag = "<DESTINATION>";
+constexpr auto kCurrentVerbalCueTag = "<CURRENT_VERBAL_CUE>";
+constexpr auto kNextVerbalCueTag = "<NEXT_VERBAL_CUE>";
 
 }
 
@@ -70,6 +73,8 @@ class NarrativeDictionary {
   DestinationSubset destination_subset;
   DestinationSubset destination_verbal_alert_subset;
   DestinationSubset destination_verbal_subset;
+
+  PhraseSet verbal_multi_cue_subset;
 
  protected:
 

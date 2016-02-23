@@ -3851,7 +3851,7 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
 
 std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
                                                  Maneuver& next_maneuver) {
-  // verbal_multi_cue: "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+  // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -3867,13 +3867,11 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
 
 
   // Set instruction to the verbal multi-cue
-  // TODO: read from dictionary with g11n merge
-  instruction = "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>";
+  instruction = dictionary_.verbal_multi_cue_subset.phrases.at("0");
 
   // Replace phrase tags with values
-  // TODO: create tags with g11n merge
-  boost::replace_all(instruction, "<CURRENT_VERBAL_CUE>", current_verbal_cue);
-  boost::replace_all(instruction, "<NEXT_VERBAL_CUE>", next_verbal_cue);
+  boost::replace_all(instruction, kCurrentVerbalCueTag, current_verbal_cue);
+  boost::replace_all(instruction, kNextVerbalCueTag, next_verbal_cue);
 
   return instruction;
 }

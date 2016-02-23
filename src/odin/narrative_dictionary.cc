@@ -47,6 +47,11 @@ void NarrativeDictionary::Load(
   LOG_TRACE("Populate destination_verbal_subset...");
   // Populate destination_verbal_subset
   Load(destination_verbal_subset, narrative_pt.get_child(kDestinationVerbalKey));
+
+  LOG_TRACE("Populate verbal_multi_cue_subset...");
+  // Populate verbal_multi_cue_subset
+  Load(verbal_multi_cue_subset, narrative_pt.get_child(kVerbalMultiCueKey));
+
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
@@ -58,7 +63,7 @@ void NarrativeDictionary::Load(PhraseSet& phrase_handle,
     LOG_TRACE("item.second.get_value<std::string>())=" + item.second.get_value<std::string>());
 
     phrase_handle.phrases.emplace(item.first,
-                               item.second.get_value<std::string>());
+                                  item.second.get_value<std::string>());
   }
 }
 
