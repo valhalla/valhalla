@@ -82,6 +82,15 @@ class BidirectionalAStar : public PathAlgorithm {
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
+   * Test if the edge and its opposing edge is the best connection.
+   * @param  edge     Graph ID of the directed edge.
+   * @param  oppedge  GraphId of the opposing directed edge.
+   * @return Returns true if this edge pair is the best connection.
+   */
+  bool IsBestConnection(const baldr::GraphId& edge,
+                       const baldr::GraphId& oppedge) const;
+
+  /**
    * Add edges at the origin to the forward adjacency list.
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the destination
@@ -99,17 +108,6 @@ class BidirectionalAStar : public PathAlgorithm {
   void SetDestination(baldr::GraphReader& graphreader,
                        const baldr::PathLocation& dest,
                        const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Modify hierarchy limits based on distance between origin and destination
-   * and the relative road density at the destination. For shorter routes
-   * we stay on arterial roads further from the destination. Also for lower
-   * road densities near the destination the hierarchy transition distances
-   * are increased.
-   * @param   dist     Distance between origin and destination.
-   * @param   density  Relative road density near the destination.
-   */
-  void ModifyHierarchyLimitsReverse(const float dist, const uint32_t density);
 
   /**
    * Convenience method to add an edge to the adjacency list and temporarily

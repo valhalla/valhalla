@@ -76,6 +76,16 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
   hierarchy_limits_reverse_ = costing->GetHierarchyLimits();
 }
 
+// Test if the edge and its opposing edge is the best connection.
+bool BidirectionalAStar::IsBestConnection(const GraphId& edge,
+                                         const GraphId& oppedge) const {
+  return ((best_connection_.edgeid == edge &&
+           best_connection_.opp_edgeid == oppedge) ||
+          (best_connection_.edgeid == oppedge &&
+           best_connection_.opp_edgeid == edge));
+}
+
+
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
 std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
@@ -146,10 +156,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       if (oppedge.Is_Valid()) {
         EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
         if (oppedgestatus.set() == EdgeSet::kPermanent &&
-            ((best_connection_.edgeid == pred.edgeid() &&
-              best_connection_.opp_edgeid == oppedge) ||
-             (best_connection_.edgeid == oppedge &&
-              best_connection_.opp_edgeid == pred.edgeid())))	{
+            IsBestConnection(pred.edgeid(), oppedge)) {
           return FormPath(predindex, oppedgestatus.status.index, graphreader);
         }
       }
@@ -215,8 +222,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
         // Get cost
         Cost newcost = pred.cost() +
-                       costing->EdgeCost(directededge, nodeinfo->density()) +
-                       costing->TransitionCost(directededge, nodeinfo, pred);
+                       costing->EdgeCost(directededge, nodeinfo->density());
+        Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
+        newcost += tc;
 
         // Check if edge is temporarily labeled and this path has less cost. If
         // less cost the predecessor is updated and the sort cost is decremented
@@ -245,11 +253,11 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
                       newcost, sortcost, dist, directededge->restrictions(),
                       directededge->opp_local_idx(), mode_, 0);
 
-        // Check if the opposing edge is in the reverse adjacency list. If so
-        // it is a candidate connection - is it least cost?
+        // Check if the opposing edge is in the reverse adjacency list or
+        // already settled. If so check if it is least cost candidate.
         EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
         if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          float c = pred.cost().cost +
+          float c = pred.cost().cost + tc.cost +
               edgelabels_reverse_[oppedgestatus.status.index].cost().cost;
           if (c < best_connection_.cost) {
             best_connection_ = { edgeid, oppedge, c };
@@ -272,10 +280,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       if (oppedge.Is_Valid()) {
         EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
         if (oppedgestatus.set() == EdgeSet::kPermanent &&
-            ((best_connection_.edgeid == pred2.edgeid() &&
-              best_connection_.opp_edgeid == oppedge) ||
-             (best_connection_.edgeid == oppedge &&
-              best_connection_.opp_edgeid == pred2.edgeid()))) {
+            IsBestConnection(pred2.edgeid(), oppedge)) {
           return FormPath(oppedgestatus.status.index, predindex2, graphreader);
         }
       }
@@ -385,11 +390,11 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
                       directededge->restrictions(),
                       directededge->opp_local_idx(), mode_, tc.secs);
 
-        // Check if the opposing edge is in the reverse adjacency list. If so
-        //  check if it is least cost candidate.
+        // Check if the opposing edge is in the forward adjacency list or
+        // already settled. If so check if it is least cost candidate.
         EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
         if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          float c = pred.cost().cost +
+          float c = pred2.cost().cost + tc.cost +
               edgelabels_[oppedgestatus.status.index].cost().cost;
           if (c < best_connection_.cost) {
             best_connection_ = { edgeid, oppedge, c };
@@ -421,24 +426,6 @@ void BidirectionalAStar::HandleTransitionEdgeReverse(const uint32_t level,
   edgelabels_reverse_.emplace_back(predindex, edgeid, pred.opp_edgeid(),
                 edge, pred.cost(), pred.sortcost(), dist,
                 pred.restrictions(), pred.opp_local_idx(), mode_, 0);
-}
-
-// Modulate the hierarchy expansion within distance based on density at
-// the destination (increase distance for lower densities and decrease
-// for higher densities) and the distance between origin and destination
-// (increase for shorter distances).
-void BidirectionalAStar::ModifyHierarchyLimitsReverse(const float dist,
-                                          const uint32_t density) {
-  // TODO - default distance below which we increase expansion within
-  // distance. This is somewhat temporary to address route quality on shorter
-  // routes - hopefully we will mark the data somehow to indicate how to
-  // use the hierarchy when approaching the destination (or use a
-  // bi-directional search without hierarchies for shorter routes).
-  float factor = 1.0f;
-  if (25000.0f < dist && dist < 100000.0f) {
-    factor = std::min(3.0f, 100000.0f / dist);
-  }
-  hierarchy_limits_reverse_[1].expansion_within_dist *= factor;
 }
 
 // Convenience method to add an edge to the reverse adjacency list and
@@ -615,7 +602,8 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
     const EdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
     GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
 
-    // Get elapsed time on the edge
+    // Get elapsed time on the edge, then add the transition cost at
+    // prior edge.
     uint32_t pred = edgelabels_reverse_[edgelabel_index].predecessor();
     if (pred == kInvalidLabel) {
       secs += edgelabel.cost().secs;
@@ -624,10 +612,11 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
     }
     secs += tc;
     path.emplace_back(edgelabel.mode(), static_cast<uint32_t>(secs),
-                            oppedge,  edgelabel.tripid());
+                            oppedge, edgelabel.tripid());
 
-    // Update edgelabel_index
+    // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = pred;
+    tc = edgelabel.transition_cost();
   }
   return path;
 }
