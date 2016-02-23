@@ -45,7 +45,7 @@ src/odin/locales.h:
 	-pushd locales && ./make_locales.sh *.json > ../src/odin/locales.h && popd
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) valhalla/odin/locales.h
+CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_odin.la
