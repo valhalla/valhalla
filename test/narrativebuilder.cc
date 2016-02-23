@@ -595,6 +595,30 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
                    { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 40, 0);
 }
 
+void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
+                                          const std::string& country_code,
+                                          const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kLeft, { "North Plum Street" },
+                   { }, { }, "", 0.074000, 19, 270,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 352, 352,
+                   2, 3, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   1, 0, 0, 1, 1, "", "", "", 0, 0, 0, 0, 4, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kLeft, { "East Fulton Street" },
+                   { }, { }, "", 0.120478, 29, 269,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 261, 263, 3,
+                   5, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 1,
+                   0, 0, 1, 1, "", "", "", 0, 0, 0, 0, 12, 0);
+}
+
 void SetExpectedManeuverInstructions(
     std::list<Maneuver>& expected_maneuvers,
     const string& instruction,
@@ -1458,6 +1482,41 @@ void TestBuildUturnInstructions_5_miles_en_US() {
       "Make a left U-turn at Devonshire Road.",
       "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.",
       "Continue for 200 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormVerbalMultiCue
+// 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+void TestBuildVerbalMultiCue_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateVerbalMultiCueManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateVerbalMultiCueManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Turn left onto North Plum Street.",
+      "Turn left onto North Plum Street.",
+      "Turn left onto North Plum Street. Then Turn left onto East Fulton Street.",
+      "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn left onto East Fulton Street.",
+      "Turn left onto East Fulton Street.",
+      "Turn left onto East Fulton Street.",
+      "Continue for 400 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2568,6 +2627,9 @@ int main() {
 
   // BuildUturnInstructions_5_miles_en_US
   suite.test(TEST_CASE(TestBuildUturnInstructions_5_miles_en_US));
+
+  // BuildVerbalMultiCue_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
 
   return suite.tear_down();
 }
