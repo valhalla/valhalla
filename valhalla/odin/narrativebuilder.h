@@ -398,7 +398,7 @@ class NarrativeBuilder {
    *
    * @param maneuvers The maneuver list to process.
    */
-  static void FormVerbalMultiCue(std::list<Maneuver>& maneuvers);
+  void FormVerbalMultiCue(std::list<Maneuver>& maneuvers);
 
   /**
    * Returns the verbal multi-cue instruction based on the specified maneuvers.
@@ -410,8 +410,7 @@ class NarrativeBuilder {
    *
    * @return the verbal multi-cue instruction based on the specified maneuvers.
    */
-  static std::string FormVerbalMultiCue(Maneuver* maneuver,
-                                        Maneuver& next_maneuver);
+  std::string FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver);
 
   /**
    * Returns true if a verbal multi-cue instruction should be formed for the
@@ -423,8 +422,7 @@ class NarrativeBuilder {
    * @return true if a verbal multi-cue instruction should be formed for the
    *         two specified maneuvers.
    */
-  static bool IsVerbalMultiCuePossible(Maneuver* maneuver,
-                                       Maneuver& next_maneuver);
+  bool IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& next_maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   const DirectionsOptions& directions_options_;

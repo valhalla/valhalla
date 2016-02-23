@@ -3850,7 +3850,7 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
 }
 
 std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
-                                          Maneuver& next_maneuver) {
+                                                 Maneuver& next_maneuver) {
   // verbal_multi_cue: "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 
   std::string instruction;
