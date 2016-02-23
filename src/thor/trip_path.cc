@@ -15,20 +15,8 @@ using namespace prime_server;
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/pedestriancost.h>
 
 #include "thor/service.h"
-#include "thor/trippathbuilder.h"
-#include "thor/pathalgorithm.h"
-#include "thor/bidirectional_astar.h"
-#include "thor/timedistancematrix.h"
-#include "thor/optimizer.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -81,9 +69,9 @@ namespace valhalla {
      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
     }
     return result;
-    }
+  }
 
-  worker_t::result_t getPathArriveBy(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, worker_t::result_t result) {
+  worker_t::result_t thor_worker_t::getPathArriveBy(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, worker_t::result_t result) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     // For each pair of origin/destination
@@ -197,7 +185,7 @@ namespace valhalla {
     return result;
   }
 
-  worker_t::result_t getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
+  worker_t::result_t thor_worker_t::getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     bool prior_is_node = false;

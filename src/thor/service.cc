@@ -15,20 +15,8 @@ using namespace prime_server;
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/pedestriancost.h>
 
 #include "thor/service.h"
-#include "thor/trippathbuilder.h"
-#include "thor/pathalgorithm.h"
-#include "thor/bidirectional_astar.h"
-#include "thor/timedistancematrix.h"
-#include "thor/optimizer.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -50,6 +38,7 @@ const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX{
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+
 }
 
 namespace valhalla {
@@ -99,7 +88,7 @@ namespace valhalla {
         }
 
         // Initialize request - get the PathALgorithm to use
-        std::string costing = init_request(request);
+        std::string costing = thor_worker_t::init_request(request);
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix = request.get_optional<std::string>("matrix_type");
         auto optimized = request.get_optional<bool>("optimized");
@@ -107,15 +96,15 @@ namespace valhalla {
           valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
-            return matrix(matrix_iter->second, costing, request, info);
+            return thor_worker_t::matrix(matrix_iter->second, costing, request, info);
           }
           else { //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         } else if (optimized)
-          return optimized_path(correlated, costing, request_str);
+          return thor_worker_t::optimized_path(correlated, costing, request_str);
         else
-          return trip_path(costing, request_str, date_time_type);
+          return thor_worker_t::trip_path(costing, request_str, date_time_type);
       }
 
       catch(const std::exception& e) {
@@ -131,7 +120,7 @@ namespace valhalla {
     /**
      * Update the origin edges for a through location.
      */
-    void UpdateOrigin(baldr::PathLocation& origin, bool prior_is_node,
+    void thor_worker_t::UpdateOrigin(baldr::PathLocation& origin, bool prior_is_node,
                       const baldr::GraphId& through_edge) {
       if (prior_is_node) {
         // TODO - remove the opposing through edge from list of edges unless
@@ -157,7 +146,7 @@ namespace valhalla {
       }
     }
 
-    void GetPath(thor::PathAlgorithm* path_algorithm,
+    void thor_worker_t::GetPath(PathAlgorithm* path_algorithm,
                  baldr::PathLocation& origin, baldr::PathLocation& destination,
                  std::vector<thor::PathInfo>& path_edges) {
       midgard::logging::Log("#_passes::1", " [ANALYTICS] ");
@@ -189,7 +178,7 @@ namespace valhalla {
     // Get the costing options. Get the base options from the config and the
     // options for the specified costing method. Merge in any request costing
     // options.
-    valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request,
+    valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const boost::property_tree::ptree& request,
                                           const std::string& costing) {
       std::string method_options = "costing_options." + costing;
       auto config_costing = config.get_child_optional(method_options);
@@ -210,7 +199,7 @@ namespace valhalla {
       return factory.Create(costing, *config_costing);
     }
 
-    std::string init_request(const boost::property_tree::ptree& request) {
+    std::string thor_worker_t::init_request(const boost::property_tree::ptree& request) {
       auto id = request.get_optional<std::string>("id");
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
@@ -282,26 +271,35 @@ namespace valhalla {
       }
       return *costing;
     }
-  };
-}
 
-  void run_service(const boost::property_tree::ptree& config) {
-    //gets requests from thor proxy
-    auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
-    //sends them on to odin
-    auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
-    //or returns just location information back to the server
-    auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+    void thor_worker_t::cleanup() {
+      astar.Clear();
+      bidir_astar.Clear();
+      multi_modal_astar.Clear();
+      locations.clear();
+      correlated.clear();
+      if(reader.OverCommitted())
+      reader.Clear();
+    }
 
-    //listen for requests
-    zmq::context_t context;
-    thor_worker_t thor_worker(config);
-    prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-      std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2),
-      std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
-    worker.work();
+    void run_service(const boost::property_tree::ptree& config) {
+      //gets requests from thor proxy
+      auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
+      //sends them on to odin
+      auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
+      //or returns just location information back to the server
+      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
 
-    //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+      //listen for requests
+      zmq::context_t context;
+      thor_worker_t thor_worker(config);
+      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
+        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2),
+        std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
+      worker.work();
+
+      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+    }
   }
 }
 

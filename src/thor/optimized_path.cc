@@ -42,7 +42,7 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  json::ArrayPtr locations(const std::vector<PathLocation>& correlated) {
+  json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
     auto input_locs = json::array({});
     for(size_t i = 0; i < correlated.size(); i++) {
       input_locs->emplace_back(
@@ -86,7 +86,7 @@ namespace valhalla {
         LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
 
-      return getPathDepartFrom(best_order, costing, date_time_type, request_str, result);
+      return thor_worker_t::getPathDepartFrom(best_order, costing, date_time_type, request_str, result);
     }
   }
 }
