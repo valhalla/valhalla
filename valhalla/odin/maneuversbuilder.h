@@ -110,6 +110,16 @@ class ManeuversBuilder {
 
   void UpdateInternalTurnCount(Maneuver& maneuver, int node_index) const;
 
+  /**
+   * Returns the speed based on the specified travel mode.
+   *
+   * @param travel_mode The current specified travel mode.
+   * @param edge_speed The speed of the current edge - used for driving mode.
+   *
+   * @return the speed based on the specified travel mode.
+   */
+  float GetSpeed(TripPath_TravelMode travel_mode, float edge_speed) const;
+
   const DirectionsOptions& directions_options_;
   EnhancedTripPath* trip_path_;
 

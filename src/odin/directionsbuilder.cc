@@ -310,6 +310,10 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       }
     }
 
+    // Verbal multi-cue
+    if (maneuver.verbal_multi_cue())
+      trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
+
   }
 
   // Populate summary

@@ -392,9 +392,45 @@ class NarrativeBuilder {
                                   nullptr);
 
   /////////////////////////////////////////////////////////////////////////////
+  /**
+   * Processes the specified maneuver list and creates verbal multi-cue
+   * instructions based on quick maneuvers.
+   *
+   * @param maneuvers The maneuver list to process.
+   */
+  static void FormVerbalMultiCue(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Returns the verbal multi-cue instruction based on the specified maneuvers.
+   *
+   * @param maneuver The current quick maneuver that will be the first verbal
+   *                 cue in the returned instruction.
+   * @param next_maneuver The next maneuver that will be the second verbal cue
+   *                      in the returned instruction.
+   *
+   * @return the verbal multi-cue instruction based on the specified maneuvers.
+   */
+  static std::string FormVerbalMultiCue(Maneuver* maneuver,
+                                        Maneuver& next_maneuver);
+
+  /**
+   * Returns true if a verbal multi-cue instruction should be formed for the
+   * two specified maneuvers.
+   *
+   * @param maneuver The current maneuver that must be short based on time.
+   * @param next_maneuver The next maneuver that must meet criteria to be used.
+   *
+   * @return true if a verbal multi-cue instruction should be formed for the
+   *         two specified maneuvers.
+   */
+  static bool IsVerbalMultiCuePossible(Maneuver* maneuver,
+                                       Maneuver& next_maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
   const DirectionsOptions& directions_options_;
   const EnhancedTripPath* trip_path_;
   const NarrativeDictionary& dictionary_;
+
 };
 
 }
