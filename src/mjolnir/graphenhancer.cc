@@ -337,9 +337,9 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
       // Do not allow use of the start edge or any transit edges
-      // TODO - also skip diredge->use() == Use::kTransitConnection
       if ((n == 0 && diredge->endnode() == startnode) ||
-          diredge->IsTransitLine()) {
+          diredge->IsTransitLine() ||
+          diredge->use() == Use::kTransitConnection) {
         continue;
       }
 
@@ -1315,8 +1315,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags. Do not do this for transit edges.
-        // TODO - also skip directededge.use() == Use::kTransitConnection
-        if (!directededge.IsTransitLine()) {
+        if (!directededge.IsTransitLine() ||
+            directededge.use() == Use::kTransitConnection) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
             ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
