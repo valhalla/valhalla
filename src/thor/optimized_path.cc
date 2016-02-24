@@ -62,7 +62,7 @@ namespace valhalla {
         LOG_DEBUG("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
 
-      return thor_worker_t::getPathDepartFrom(best_order, costing, date_time_type, request_str, result);
+      return thor_worker_t::path_depart_from(best_order, costing, date_time_type, request_str, result);
     }
 
   }

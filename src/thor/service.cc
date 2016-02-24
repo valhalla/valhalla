@@ -107,7 +107,7 @@ namespace valhalla {
     /**
      * Update the origin edges for a through location.
      */
-    void thor_worker_t::UpdateOrigin(baldr::PathLocation& origin, bool prior_is_node,
+    void thor_worker_t::update_origin(baldr::PathLocation& origin, bool prior_is_node,
                       const baldr::GraphId& through_edge) {
       if (prior_is_node) {
         // TODO - remove the opposing through edge from list of edges unless
@@ -133,7 +133,7 @@ namespace valhalla {
       }
     }
 
-    void thor_worker_t::GetPath(PathAlgorithm* path_algorithm,
+    void thor_worker_t::get_path(PathAlgorithm* path_algorithm,
                  baldr::PathLocation& origin, baldr::PathLocation& destination,
                  std::vector<thor::PathInfo>& path_edges) {
       midgard::logging::Log("#_passes::1", " [ANALYTICS] ");

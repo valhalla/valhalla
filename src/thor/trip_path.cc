@@ -43,9 +43,9 @@ namespace valhalla {
     result.messages.emplace_back(request_str);
 
     if (date_time_type && *date_time_type == 2) {
-     return getPathArriveBy(correlated, costing, request_str, result);
+     return path_arrive_by(correlated, costing, request_str, result);
     } else {
-     return getPathDepartFrom(correlated, costing, date_time_type, request_str, result);
+     return path_depart_from(correlated, costing, date_time_type, request_str, result);
     }
     //get processing time for thor
     auto e = std::chrono::system_clock::now();
@@ -59,7 +59,7 @@ namespace valhalla {
     return result;
   }
 
-  worker_t::result_t thor_worker_t::getPathArriveBy(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, worker_t::result_t result) {
+  worker_t::result_t thor_worker_t::path_arrive_by(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, worker_t::result_t result) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     // For each pair of origin/destination
@@ -78,7 +78,7 @@ namespace valhalla {
 
       // Through edge is valid if last orgin was "through"
       if (through_edge.Is_Valid()) {
-        UpdateOrigin(origin, prior_is_node, through_edge);
+        update_origin(origin, prior_is_node, through_edge);
       } else {
         last_break_dest = destination;
       }
@@ -98,14 +98,14 @@ namespace valhalla {
 
       // Get best path
       if (path_edges.size() == 0) {
-        GetPath(path_algorithm, origin, destination, path_edges);
+        get_path(path_algorithm, origin, destination, path_edges);
         if (path_edges.size() == 0) {
           throw std::runtime_error("No path could be found for input");
         }
       } else {
         // Get the path in a temporary vector
         std::vector<thor::PathInfo> temp_path;
-        GetPath(path_algorithm, origin, destination, temp_path);
+        get_path(path_algorithm, origin, destination, temp_path);
         if (temp_path.size() == 0) {
           throw std::runtime_error("No path could be found for input");
         }
@@ -173,7 +173,7 @@ namespace valhalla {
     return result;
   }
 
-  worker_t::result_t thor_worker_t::getPathDepartFrom(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
+  worker_t::result_t thor_worker_t::path_depart_from(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     bool prior_is_node = false;
@@ -193,7 +193,7 @@ namespace valhalla {
 
       // Through edge is valid if last destination was "through"
       if (through_edge.Is_Valid()) {
-        UpdateOrigin(origin, prior_is_node, through_edge);
+        update_origin(origin, prior_is_node, through_edge);
       } else {
         last_break_origin = origin;
       }
@@ -213,7 +213,7 @@ namespace valhalla {
 
       // Get best path
       if (path_edges.size() == 0) {
-        GetPath(path_algorithm, origin, destination, path_edges);
+        get_path(path_algorithm, origin, destination, path_edges);
         if (path_edges.size() == 0) {
           throw std::runtime_error("No path could be found for input");
         }
@@ -224,7 +224,7 @@ namespace valhalla {
       } else {
         // Get the path in a temporary vector
         std::vector<thor::PathInfo> temp_path;
-        GetPath(path_algorithm, origin, destination, temp_path);
+        get_path(path_algorithm, origin, destination, temp_path);
         if (temp_path.size() == 0) {
           throw std::runtime_error("No path could be found for input");
         }
