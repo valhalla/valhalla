@@ -42,24 +42,24 @@ namespace valhalla {
     // Forward the original request
     result.messages.emplace_back(request_str);
 
-    if (date_time_type && *date_time_type == 2) {
-     return path_arrive_by(correlated, costing, request_str, result);
-    } else {
-     return path_depart_from(correlated, costing, date_time_type, request_str, result);
+
+    auto trippaths = (date_time_type && *date_time_type == 2) ? path_arrive_by(correlated, costing, request_str) : path_depart_from(correlated, costing, date_time_type, request_str);
+    for (const auto &trippath: trippaths){
+      result.messages.emplace_back(trippath.SerializeAsString());
     }
     //get processing time for thor
     auto e = std::chrono::system_clock::now();
     std::chrono::duration<float, std::milli> elapsed_time = e - s;
     //log request if greater than X (ms)
     if ((elapsed_time.count() / correlated.size()) > long_request_route) {
-     LOG_WARN("thor::route get_trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-     LOG_WARN("thor::route get_trip_path exceeded threshold::"+ request_str);
+     LOG_WARN("thor::route trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+     LOG_WARN("thor::route trip_path exceeded threshold::"+ request_str);
      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
     }
     return result;
   }
 
-  worker_t::result_t thor_worker_t::path_arrive_by(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, worker_t::result_t result) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     // For each pair of origin/destination
@@ -69,7 +69,7 @@ namespace valhalla {
     std::vector<thor::PathInfo> path_edges;
     std::string origin_date_time;
 
-    std::list<std::string> messages;
+    std::list<valhalla::odin::TripPath> trippaths;
     baldr::PathLocation& last_break_dest = *correlated.rbegin();
 
     for(auto path_location = ++correlated.crbegin(); path_location != correlated.crend(); ++path_location) {
@@ -139,7 +139,7 @@ namespace valhalla {
             origin_date_time = *origin.date_time_;
 
           // The protobuf path
-          messages.emplace_front(trip_path.SerializeAsString());
+          trippaths.emplace_front(std::move(trip_path));
 
           // Clear path edges and set through edge to invalid
           path_edges.clear();
@@ -158,22 +158,10 @@ namespace valhalla {
         path_algorithm->Clear();
     }
 
-    for (const auto msg : messages)
-      result.messages.emplace_back(msg);
-
-    //get processing time for thor
-    auto e = std::chrono::system_clock::now();
-    std::chrono::duration<float, std::milli> elapsed_time = e - s;
-    //log request if greater than X (ms)
-    if ((elapsed_time.count() / correlated.size()) > long_request_route) {
-      LOG_WARN("thor::route getPathArriveBy elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-      LOG_WARN("thor::route getPathArriveBy exceeded threshold::"+ request_str);
-      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
-    }
-    return result;
+    return trippaths;
   }
 
-  worker_t::result_t thor_worker_t::path_depart_from(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str, worker_t::result_t result) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_from(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     bool prior_is_node = false;
@@ -182,6 +170,7 @@ namespace valhalla {
     std::vector<thor::PathInfo> path_edges;
     std::string origin_date_time, dest_date_time;
 
+    std::list<valhalla::odin::TripPath> trippaths;
     baldr::PathLocation& last_break_origin = correlated[0];
     for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
       auto origin = *std::prev(path_location);
@@ -258,8 +247,9 @@ namespace valhalla {
             origin_date_time = *last_break_origin.date_time_;
             dest_date_time = *destination.date_time_;
           }
+
           // The protobuf path
-          result.messages.emplace_back(trip_path.SerializeAsString());
+          trippaths.emplace_back(std::move(trip_path));
 
           // Clear path edges and set through edge to invalid
           path_edges.clear();
@@ -277,16 +267,8 @@ namespace valhalla {
       if (--correlated.cend() != path_location)
         path_algorithm->Clear();
     }
-    //get processing time for thor
-    auto e = std::chrono::system_clock::now();
-    std::chrono::duration<float, std::milli> elapsed_time = e - s;
-    //log request if greater than X (ms)
-    if ((elapsed_time.count() / correlated.size()) > long_request_route) {
-      LOG_WARN("thor::route getPathDepartFrom elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-      LOG_WARN("thor::route getPathDepartFrom exceeded threshold::"+ request_str);
-      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
-    }
-    return result;
+
+    return trippaths;
   }
 
   }

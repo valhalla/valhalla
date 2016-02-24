@@ -62,7 +62,20 @@ namespace valhalla {
         LOG_DEBUG("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
 
-      return thor_worker_t::path_depart_from(best_order, costing, date_time_type, request_str, result);
+      auto trippaths = path_depart_from(best_order, costing, date_time_type, request_str);
+      for (const auto &trippath: trippaths){
+        result.messages.emplace_back(trippath.SerializeAsString());
+      }
+      //get processing time for thor
+      auto e = std::chrono::system_clock::now();
+      std::chrono::duration<float, std::milli> elapsed_time = e - s;
+      //log request if greater than X (ms)
+      if ((elapsed_time.count() / correlated.size()) > long_request_manytomany) {
+       LOG_WARN("thor::route optimized_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+       LOG_WARN("thor::route optimized_path exceeded threshold::"+ request_str);
+       midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");
+      }
+      return result;
     }
 
   }

@@ -186,7 +186,7 @@ namespace valhalla {
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::" + *matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
-        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("thor_long_request_many_to_many", " [ANALYTICS] ") : midgard::logging::Log("thor_long_request_manytomany", " [ANALYTICS] ");
+        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");
       }
 
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
