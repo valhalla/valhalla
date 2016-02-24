@@ -89,6 +89,11 @@ uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::
   else if (tile_header_date > end_date) //reject.
     return 0;
 
+  // if our start date is in the future then we must start at the tile header date
+  // since we always use the tile header date as our start date.
+  if (start_date > tile_header_date)
+    start_date = tile_header_date;
+
   // only support 60 days out.  (59 days and include the end_date = 60)
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
 
@@ -96,10 +101,6 @@ uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::
     end_date = enddate;
 
   uint32_t days = 0;
-  //if our start date is in the future then we must start at that date.
-  if (start_date > tile_header_date)
-    days = days_from_pivot_date(start_date) - tile_date;
-
   boost::gregorian::day_iterator itr(tile_header_date + boost::gregorian::days(days));
 
   uint32_t x = days;
