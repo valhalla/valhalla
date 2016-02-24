@@ -2,12 +2,24 @@
 #define __VALHALLA_THOR_SERVICE_H__
 
 #include <vector>
+#include <functional>
+#include <string>
+#include <stdexcept>
+#include <vector>
+#include <unordered_map>
+#include <cstdint>
+#include <sstream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
@@ -19,6 +31,7 @@
 #include <valhalla/thor/optimizer.h>
 #include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/trippathbuilder.h>
+
 
 namespace valhalla {
   namespace thor {

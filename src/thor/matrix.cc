@@ -1,20 +1,6 @@
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 using namespace prime_server;
-
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
 
 #include "thor/service.h"
 
@@ -26,6 +12,7 @@ using namespace valhalla::thor;
 
 
 namespace {
+
   const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX {
     {"one_to_many", thor_worker_t::ONE_TO_MANY},
     {"many_to_one", thor_worker_t::MANY_TO_ONE},
@@ -142,6 +129,7 @@ namespace {
       json->emplace("id", *id);
     return json;
   }
+
 }
 
 namespace valhalla {
@@ -207,5 +195,6 @@ namespace valhalla {
       result.messages.emplace_back(response.to_string());
       return result;
     }
+
   }
 }

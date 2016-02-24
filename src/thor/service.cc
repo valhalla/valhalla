@@ -1,20 +1,6 @@
-#include <functional>
-#include <string>
-#include <stdexcept>
-#include <vector>
-#include <unordered_map>
-#include <cstdint>
-#include <sstream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 using namespace prime_server;
-
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
 
 #include "thor/service.h"
 
@@ -43,6 +29,7 @@ const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX{
 
 namespace valhalla {
   namespace thor {
+
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), reader(config.get_child("mjolnir.hierarchy")),
       long_request_route(config.get<float>("thor.logging.long_request_route")),
@@ -303,6 +290,7 @@ namespace valhalla {
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
+
   }
 }
 

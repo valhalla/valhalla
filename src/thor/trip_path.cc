@@ -1,20 +1,6 @@
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 using namespace prime_server;
-
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
 
 #include "thor/service.h"
 
@@ -26,6 +12,7 @@ using namespace valhalla::thor;
 
 
 namespace {
+
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -42,6 +29,7 @@ namespace {
     }
     return input_locs;
   }
+
 }
 
 namespace valhalla {

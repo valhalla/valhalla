@@ -1,34 +1,8 @@
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 using namespace prime_server;
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/pedestriancost.h>
-
 #include "thor/service.h"
-#include "thor/trippathbuilder.h"
-#include "thor/pathalgorithm.h"
-#include "thor/bidirectional_astar.h"
-#include "thor/timedistancematrix.h"
-#include "thor/optimizer.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -38,6 +12,7 @@ using namespace valhalla::thor;
 
 
 namespace {
+
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -54,6 +29,7 @@ namespace {
     }
     return input_locs;
   }
+
 }
 
 namespace valhalla {
@@ -74,7 +50,7 @@ namespace valhalla {
         time_costs.emplace_back(static_cast<float>(td[i].time));
       }
       for (size_t i = 0; i < correlated.size(); i++) {
-        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
+        LOG_DEBUG("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
       }
       Optimizer optimizer;
       //returns the optimal order of the path_locations
@@ -83,10 +59,11 @@ namespace valhalla {
       for (size_t i = 0; i< order.size(); i++) {
         LOG_INFO("optimizer return:: " + std::to_string(order[i]));
         best_order.emplace_back(correlated[order[i]]);
-        LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
+        LOG_DEBUG("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
 
       return thor_worker_t::getPathDepartFrom(best_order, costing, date_time_type, request_str, result);
     }
+
   }
 }
