@@ -28,14 +28,16 @@ namespace {
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> STRING_TO_ACTION {
     {"one_to_many", loki_worker_t::ONE_TO_MANY},
     {"many_to_one", loki_worker_t::MANY_TO_ONE},
-    {"many_to_many", loki_worker_t::MANY_TO_MANY}
+    {"many_to_many", loki_worker_t::MANY_TO_MANY},
+    {"optimized_order_route", loki_worker_t::OPTIMIZED_ORDER}
   };
 
 
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
     {loki_worker_t::ONE_TO_MANY, "one_to_many"},
     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
-    {loki_worker_t::MANY_TO_MANY, "many_to_many"}
+    {loki_worker_t::MANY_TO_MANY, "many_to_many"},
+    {loki_worker_t::OPTIMIZED_ORDER, "optimized_order_route"}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -94,6 +96,7 @@ namespace valhalla {
           check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, max_location_distance);
           break;
         case MANY_TO_MANY:
+        case OPTIMIZED_ORDER:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
           valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");

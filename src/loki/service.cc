@@ -179,9 +179,8 @@ namespace valhalla {
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
-            return matrix(action->second, request_pt, info);
           case OPTIMIZED_ORDER:
-            return optimized(request_pt, info);
+            return matrix(action->second, request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
