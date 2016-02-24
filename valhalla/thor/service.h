@@ -15,10 +15,10 @@
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/pedestriancost.h>
-#include "thor/bidirectional_astar.h"
-#include "thor/optimizer.h"
-#include "thor/timedistancematrix.h"
-#include "thor/trippathbuilder.h"
+#include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/optimizer.h>
+#include <valhalla/thor/timedistancematrix.h>
+#include <valhalla/thor/trippathbuilder.h>
 
 namespace valhalla {
   namespace thor {
