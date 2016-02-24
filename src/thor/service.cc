@@ -75,7 +75,7 @@ namespace valhalla {
         }
 
         // Initialize request - get the PathALgorithm to use
-        std::string costing = thor_worker_t::init_request(request);
+        std::string costing = this->init_request(request);
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix = request.get_optional<std::string>("matrix_type");
         auto optimized = request.get_optional<bool>("optimized");
@@ -269,7 +269,7 @@ namespace valhalla {
       locations.clear();
       correlated.clear();
       if(reader.OverCommitted())
-      reader.Clear();
+        reader.Clear();
     }
 
     void run_service(const boost::property_tree::ptree& config) {

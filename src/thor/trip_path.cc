@@ -17,19 +17,6 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  json::ArrayPtr locations(const std::vector<PathLocation>& correlated) {
-    auto input_locs = json::array({});
-    for(size_t i = 0; i < correlated.size(); i++) {
-      input_locs->emplace_back(
-        json::map({
-          {"lat", json::fp_t{correlated[i].latlng_.lat(), 6}},
-          {"lon", json::fp_t{correlated[i].latlng_.lng(), 6}}
-        })
-      );
-    }
-    return input_locs;
-  }
-
 }
 
 namespace valhalla {

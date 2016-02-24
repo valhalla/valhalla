@@ -17,25 +17,12 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
-    auto input_locs = json::array({});
-    for(size_t i = 0; i < correlated.size(); i++) {
-      input_locs->emplace_back(
-        json::map({
-          {"lat", json::fp_t{correlated[i].latlng_.lat(), 6}},
-          {"lon", json::fp_t{correlated[i].latlng_.lng(), 6}}
-        })
-      );
-    }
-    return input_locs;
-  }
-
 }
 
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::optimized_path(const std::vector<PathLocation> correlated, const std::string &costing, const std::string &request_str) {
+    worker_t::result_t  thor_worker_t::optimized_path(const std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str) {
       worker_t::result_t result{true};
       //get time for start of request
       auto s = std::chrono::system_clock::now();
