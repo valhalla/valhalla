@@ -2,6 +2,12 @@
 #include <prime_server/http_protocol.hpp>
 using namespace prime_server;
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/baldr/json.h>
+
 #include "thor/service.h"
 
 using namespace valhalla;

@@ -9,27 +9,17 @@
 #include <unordered_map>
 #include <cstdint>
 #include <sstream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/pedestriancost.h>
 #include <valhalla/thor/bidirectional_astar.h>
-#include <valhalla/thor/optimizer.h>
-#include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/trippathbuilder.h>
 
 

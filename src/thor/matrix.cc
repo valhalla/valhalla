@@ -2,6 +2,14 @@
 
 using namespace prime_server;
 
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/sif/autocost.h>
+#include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/pedestriancost.h>
+#include <valhalla/thor/timedistancematrix.h>
+
 #include "thor/service.h"
 
 using namespace valhalla;
