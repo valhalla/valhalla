@@ -3,12 +3,13 @@
 
 #include <vector>
 
+#include <valhalla/baldr/verbal_text_formatter.h>
+
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/narrative_dictionary.h>
 #include <valhalla/odin/maneuver.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
 
 namespace valhalla {
 namespace odin {

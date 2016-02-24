@@ -6,11 +6,12 @@
 #include <unordered_map>
 #include <memory>
 
+#include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
+
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/odin/transitstop.h>

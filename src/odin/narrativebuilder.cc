@@ -1,17 +1,18 @@
 #include <iostream>
 #include <cmath>
 #include <string>
+
+#include <boost/format.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
 
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_dictionary.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
-#include <valhalla/baldr/verbal_text_formatter.h>
-
-#include <boost/format.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/replace.hpp>
 
 namespace {
 // Text instruction initial capacity

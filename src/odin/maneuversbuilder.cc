@@ -1,3 +1,13 @@
+#include <iostream>
+#include <algorithm>
+#include <functional>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <boost/format.hpp>
+
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
@@ -8,21 +18,12 @@
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 #include <valhalla/baldr/verbal_text_formatter_factory.h>
-#include <proto/tripdirections.pb.h>
-#include <proto/directions_options.pb.h>
-#include <valhalla/odin/maneuversbuilder.h>
-#include <valhalla/odin/signs.h>
-#include <valhalla/odin/sign.h>
 
-#include <iostream>
-#include <algorithm>
-#include <functional>
-#include <cstdint>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-#include "boost/format.hpp"
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
+#include "odin/maneuversbuilder.h"
+#include "odin/signs.h"
+#include "odin/sign.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <valhalla/proto/trippath.pb.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 
+#include "proto/trippath.pb.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 

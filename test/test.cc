@@ -1,9 +1,9 @@
-#include "test.h"
-#include "config.h"
-
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+
+#include "test.h"
+#include "config.h"
 
 using namespace std;
 

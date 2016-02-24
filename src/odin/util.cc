@@ -1,10 +1,12 @@
+#include <boost/filesystem/operations.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
+#include <valhalla/midgard/logging.h>
+
+#include "proto/directions_options.pb.h"
 #include "odin/util.h"
 #include "odin/narrative_dictionary.h"
 #include "locales.h"
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/midgard/logging.h>
-#include <boost/filesystem/operations.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 namespace {
 

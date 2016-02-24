@@ -1,10 +1,12 @@
-#include <valhalla/odin/narrative_builder_factory.h>
-#include <valhalla/odin/narrativebuilder.h>
-#include <proto/directions_options.pb.h>
-#include <valhalla/odin/enhancedtrippath.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/midgard/util.h>
 #include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/midgard/util.h>
+
+#include "proto/directions_options.pb.h"
+#include "odin/narrative_builder_factory.h"
+#include "odin/narrativebuilder.h"
+#include "odin/enhancedtrippath.h"
+#include "odin/util.h"
 
 namespace valhalla {
 namespace odin {

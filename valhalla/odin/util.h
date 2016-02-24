@@ -4,9 +4,11 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/narrative_dictionary.h>
-#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace odin {

@@ -1,8 +1,9 @@
 #include <string>
 
-#include "test.h"
 #include "odin/util.h"
 #include "odin/narrative_dictionary.h"
+
+#include "test.h"
 
 using namespace valhalla::odin;
 

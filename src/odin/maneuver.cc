@@ -1,16 +1,16 @@
 #include <iostream>
 #include <list>
 
-#include "odin/maneuver.h"
-
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
-#include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/odin/transitstop.h>
+
+#include "odin/maneuver.h"
+#include "odin/transitrouteinfo.h"
+#include "odin/transitstop.h"
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;

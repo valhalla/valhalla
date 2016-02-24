@@ -4,8 +4,8 @@
 #include <string>
 #include <memory>
 
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/narrativebuilder.h>
-#include <proto/directions_options.pb.h>
 #include <valhalla/odin/enhancedtrippath.h>
 
 namespace valhalla {

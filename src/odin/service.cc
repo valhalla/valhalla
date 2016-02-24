@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <sstream>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -14,10 +15,10 @@ using namespace prime_server;
 
 #include <valhalla/midgard/logging.h>
 
-#include "odin/service.h"
-#include "odin/util.h"
 #include "proto/directions_options.pb.h"
 #include "proto/trippath.pb.h"
+#include "odin/service.h"
+#include "odin/util.h"
 #include "odin/directionsbuilder.h"
 
 using namespace valhalla;

@@ -1,16 +1,18 @@
 #include <regex>
 
-#include "test.h"
-#include "valhalla/odin/maneuver.h"
-#include "valhalla/odin/sign.h"
-#include "valhalla/odin/signs.h"
-#include "valhalla/odin/util.h"
-#include "valhalla/odin/narrative_builder_factory.h"
-#include "valhalla/odin/narrative_dictionary.h"
-#include "valhalla/odin/narrativebuilder.h"
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/baldr/verbal_text_formatter_factory.h>
+
+#include "proto/trippath.pb.h"
+#include "odin/maneuver.h"
+#include "odin/sign.h"
+#include "odin/signs.h"
+#include "odin/util.h"
+#include "odin/narrative_builder_factory.h"
+#include "odin/narrative_dictionary.h"
+#include "odin/narrativebuilder.h"
+#include "odin/enhancedtrippath.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::odin;
