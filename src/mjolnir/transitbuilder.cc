@@ -1112,12 +1112,12 @@ void build(const std::string& transit_dir,
 }
 
 GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& transit_tile) {
-  auto tile_dir = pt.get<std::string>("mjolnir.hierarchy.tile_dir");
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
   boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
   graph_tile += ".gph";
-  TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
+  TileHierarchy hierarchy(tile_dir);
   return GraphTile::GetTileId(graph_tile, hierarchy);
 }
 
@@ -1141,8 +1141,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // Also bail if nothing inside
   transit_dir->push_back('/');
   std::map<GraphId, std::string> transit_tiles;
-  TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
-  GraphReader reader(pt.get_child("mjolnir.hierarchy"));
+  GraphReader reader(pt.get_child("mjolnir"));
+  const auto& hierarchy = reader.GetTileHierarchy();
   auto local_level = hierarchy.levels().rbegin()->first;
   if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level) + "/")) {
     boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level) + "/"), end_file_itr;
@@ -1202,7 +1202,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     // Make the thread
     results.emplace_back();
     threads[i].reset(
-      new std::thread(build, *transit_dir, std::cref(pt.get_child("mjolnir.hierarchy")),
+      new std::thread(build, *transit_dir, std::cref(pt.get_child("mjolnir")),
                       std::ref(lock), std::cref(tiles), tile_start, tile_end,
                       std::ref(results.back())));
   }

@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
 
   // Get the tile
   PointLL stopll(lng, lat);
-  TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
+  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   auto local_level = hierarchy.levels().rbegin()->second.level;
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
   uint32_t tileid = tiles.TileId(stopll);
