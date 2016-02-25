@@ -24,19 +24,8 @@ boost::property_tree::ptree conf;
 std::pair<GraphId, PointLL> b({}, {}), a({}, {}), c({}, {}), d({}, {});
 
 void configure() {
-  //make the config file
-  std::stringstream json; json << "{ \
-    \"tile_dir\": \"test/tiles\", \
-    \"levels\": [ \
-      {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
-      {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-    ] \
-  }";
-  boost::property_tree::json_parser::read_json(json, conf);
-
   //basic tile information
-  TileHierarchy h(conf);
+  TileHierarchy h("test/tiles");
   GraphId tile_id = h.GetGraphId({.125,.125}, 2);
 
   // this is what it looks like

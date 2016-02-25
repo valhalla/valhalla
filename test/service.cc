@@ -92,12 +92,7 @@ namespace {
     //make the config file
     boost::property_tree::ptree config;
     std::stringstream json; json << "{ \
-      \"mjolnir\": { \"hierarchy\" : { \"tile_dir\": \"test/tiles\", \
-      \"levels\": [ \
-        {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-        {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
-        {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-      ] } }, \
+      \"mjolnir\": { \"tile_dir\": \"test/tiles\" }, \
       \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\"], \
                   \"logging\": { \"long_request\": 100.0 }, \
                   \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
