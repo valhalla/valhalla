@@ -283,7 +283,8 @@ cycleway = {
 ["sidepath"] = "true",
 ["share_busway"] = "true",
 ["allowed"] = "true",
-["private"] = "true"
+["private"] = "true",
+["cyclestreet"] = "true"
 }
 
 bike_reverse = {
@@ -663,7 +664,7 @@ function filter_tags_generic(kv)
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
 
     --check for bike_forward overrides
-    kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or kv["bike_forward"]
+    kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or kv["bike_forward"]
 
   else
     --if its a ferry and these tags dont show up we want to set them to true 
@@ -681,6 +682,7 @@ function filter_tags_generic(kv)
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
       kv["bike_backward"] = "false"
+      default_val = "false"
 
     end
 
@@ -697,7 +699,7 @@ function filter_tags_generic(kv)
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or default_val
 
     --check for bike_forward overrides
-    kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or default_val
+    kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or default_val
   end
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
@@ -1056,6 +1058,11 @@ function nodes_proc (kv, nokeys)
   local emergency_tag --implies nil 
   if kv["access"] == "emergency" or kv["emergency"] == "yes" or kv["service"] == "emergency_access" then
      emergency_tag = 16
+  end
+
+  --do not shut off bike access if there is a highway crossing.
+  if bike_tag == 0 and kv["highway"] == "crossing" then
+    bike_tag = 4
   end
 
   --if tag exists use it, otherwise access allowed for all modes unless access = false.  
