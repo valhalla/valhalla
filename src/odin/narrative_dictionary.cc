@@ -81,13 +81,9 @@ void NarrativeDictionary::Load(
   start_handle.cardinal_directions = as_vector<std::string>(
       start_subset_pt, kCardinalDirectionsKey);
 
-//  // Populate empty_street_name_labels
-//  start_handle.empty_street_name_labels = as_vector<std::string>(
-//      start_subset_pt, kEmptyStreetNameLabelsKey);
-//
-//  // Populate empty_begin_street_name_labels
-//  start_handle.empty_begin_street_name_labels = as_vector<std::string>(
-//      start_subset_pt, kEmptyBeginStreetNameLabelsKey);
+  // Populate empty_street_name_labels
+  start_handle.empty_street_name_labels = as_vector<std::string>(
+      start_subset_pt, kEmptyStreetNameLabelsKey);
 }
 
 void NarrativeDictionary::Load(

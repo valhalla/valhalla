@@ -385,9 +385,67 @@ class NarrativeBuilder {
   std::string FormTransitName(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormStreetNames(const Maneuver& maneuver,
-                              const StreetNames& street_names,
-                              bool enhance_blank_street_names = false,
+  // TODO: remove the method after g11n updates
+  std::string FormOldStreetNames(const Maneuver& maneuver,
+                                 const StreetNames& street_names,
+                                 bool enhance_empty_street_names = false,
+                                 uint32_t max_count = 0,
+                                 std::string delim = "/",
+                                 const VerbalTextFormatter* verbal_formatter =
+                                     nullptr);
+
+  /**
+   * Returns the street names string for the specified street name list.
+   * The format is controlled via the optional parameters.
+   *
+   * @param maneuver The maneuver with the street names to process.
+   * @param street_names The list of street names to process.
+   * @param empty_street_name_labels A pointer to a list of empty street name
+   *                                labels.
+   * @param enhance_empty_street_names If true, enhance the empty street name
+   *                                   string with label depending on travel
+   *                                   mode. (e.g., walkway)
+   *                                   The default value is false.
+   *                                   This parameter is optional.
+   * @param max_count The maximum number of street names to process.
+   *                  The default value is zero - meaning no limit.
+   *                  This parameter is optional.
+   * @param delim The specified delimiter to use between each street name.
+   *              The default delimiter is a slash.
+   *              This parameter is optional.
+   * @param verbal_formatter A pointer to a verbal text formatter that prepares
+   *                         strings for use with a text-to-speech engine.
+   *                         The default is a nullptr.
+   *                         This parameter is optional.
+   *
+   * @return the street names string for the specified street name list.
+   */
+  std::string FormStreetNames(
+      const Maneuver& maneuver, const StreetNames& street_names,
+      const std::vector<std::string>* empty_street_name_labels = nullptr,
+      bool enhance_empty_street_names = false, uint32_t max_count = 0,
+      std::string delim = "/", const VerbalTextFormatter* verbal_formatter =
+          nullptr);
+
+  /**
+   * Returns the street names string for the specified street name list.
+   * The format is controlled via the optional parameters.
+   *
+   * @param street_names The list of street names to process.
+   * @param max_count The maximum number of street names to process.
+   *                  The default value is zero - meaning no limit.
+   *                  This parameter is optional.
+   * @param delim The specified delimiter to use between each street name.
+   *              The default delimiter is a slash.
+   *              This parameter is optional.
+   * @param verbal_formatter A pointer to a verbal text formatter that prepares
+   *                         strings for use with a text-to-speech engine.
+   *                         The default is a nullptr.
+   *                         This parameter is optional.
+   *
+   * @return the street names string for the specified street name list.
+   */
+  std::string FormStreetNames(const StreetNames& street_names,
                               uint32_t max_count = 0, std::string delim = "/",
                               const VerbalTextFormatter* verbal_formatter =
                                   nullptr);

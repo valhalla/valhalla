@@ -22,9 +22,13 @@ constexpr auto kPhrasesKey = "phrases";
 constexpr auto kCardinalDirectionsKey = "cardinal_directions";
 constexpr auto kRelativeDirectionsKey = "relative_directions";
 constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
-constexpr auto kEmptyBeginStreetNameLabelsKey = "empty_begin_street_name_labels";
 constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
+
+// Indexes
+constexpr auto kWalkwayIndex = 0;
+constexpr auto kCyclewayIndex = 1;
+constexpr auto kMountainBikeTrailIndex = 2;
 
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
@@ -48,7 +52,6 @@ struct PhraseSet {
 struct StartSubset : PhraseSet {
   std::vector<std::string> cardinal_directions;
   std::vector<std::string> empty_street_name_labels;
-  std::vector<std::string> empty_begin_street_name_labels;
 };
 
 struct StartVerbalSubset : StartSubset {

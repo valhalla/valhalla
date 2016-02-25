@@ -6,7 +6,8 @@
         "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "start_verbal": {
       "phrases": {
@@ -14,7 +15,8 @@
         "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "destination": {
       "phrases": {

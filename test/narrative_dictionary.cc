@@ -27,9 +27,28 @@ void validate(const std::string& test_target, const std::string& expected) {
     throw std::runtime_error(
         "Invalid entry: " + test_target + "  |  expected: " + expected);
   }
+
 }
 
-void test_en_US_start_phrases() {
+void validate(const std::vector<std::string>& test_target,
+              const std::vector<std::string>& expected) {
+  if (test_target.size() != expected.size()) {
+    throw std::runtime_error(
+        "Invalid item count: " + std::to_string(test_target.size())
+            + "  |  expected: " + std::to_string(expected.size()));
+  }
+
+  for (auto test_target_item = test_target.begin(), expected_item = expected.begin();
+      test_target_item != test_target.end();
+      ++test_target_item, ++expected_item) {
+    if ((*test_target_item) != (*expected_item)) {
+      throw std::runtime_error(
+          "Invalid entry: " + (*test_target_item) + "  |  expected: " + (*expected_item));
+    }
+  }
+}
+
+void test_en_US_start() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Head <CARDINAL_DIRECTION>.",
@@ -43,9 +62,18 @@ void test_en_US_start_phrases() {
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
   const auto& phrase_2 = dictionary.start_subset.phrases.at("2");
   validate(phrase_2, "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.start_subset.cardinal_directions;
+  validate(cardinal_directions, { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" });
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.start_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
 }
 
-void test_en_US_start_verbal_phrases() {
+void test_en_US_start_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
@@ -59,6 +87,15 @@ void test_en_US_start_verbal_phrases() {
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
   const auto& phrase_2 = dictionary.start_verbal_subset.phrases.at("2");
   validate(phrase_2, "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.");
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.start_subset.cardinal_directions;
+  validate(cardinal_directions, { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" });
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.start_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
 }
 
 void test_en_US_destination_phrases() {
@@ -127,10 +164,10 @@ int main() {
   test::suite suite("narrative_dictionary");
 
   // test the en-US start phrases
-  suite.test(TEST_CASE(test_en_US_start_phrases));
+  suite.test(TEST_CASE(test_en_US_start));
 
   // test the en-US start verbal phrases
-  suite.test(TEST_CASE(test_en_US_start_verbal_phrases));
+  suite.test(TEST_CASE(test_en_US_start_verbal));
 
   // test the en-US destination phrases
   suite.test(TEST_CASE(test_en_US_destination_phrases));
