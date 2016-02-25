@@ -159,7 +159,7 @@ namespace {
   class thor_worker_t {
    public:
     thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), reader(config.get_child("mjolnir.hierarchy")),
+      config(config), reader(config.get_child("mjolnir")),
       long_request_route(config.get<float>("thor.logging.long_request_route")),
       long_request_manytomany(config.get<float>("thor.logging.long_request_manytomany")){
       // Register edge/node costing methods
