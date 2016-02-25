@@ -19,7 +19,7 @@ namespace valhalla {
 namespace baldr {
 
 //this constructor delegates to the other
-GraphReader::GraphReader(const boost::property_tree::ptree& pt):tile_hierarchy_(pt), cache_size_(0) {
+GraphReader::GraphReader(const boost::property_tree::ptree& pt):tile_hierarchy_(pt.get<std::string>("tile_dir")), cache_size_(0) {
   max_cache_size_ = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
   //assume avg of 10 megs per tile

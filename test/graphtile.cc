@@ -8,19 +8,7 @@ using namespace valhalla::baldr;
 namespace {
 
 void TestFileSuffix() {
-  std::stringstream json; json << "\
-  {\
-    \"tile_dir\": \"/data/valhalla\",\
-    \"levels\": [\
-      {\"name\": \"local\", \"level\": 2, \"size\": 0.25},\
-      {\"name\": \"highway\", \"level\": 0, \"size\": 4},\
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Trunk\"}\
-    ]\
-  }";
-
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(json, pt);
-  TileHierarchy h(pt);
+  TileHierarchy h("/data/valhalla");
 
   if(GraphTile::FileSuffix(GraphId(2, 2, 0), h) != "2/000/000/002.gph")
     throw std::runtime_error("Unexpected graphtile suffix");

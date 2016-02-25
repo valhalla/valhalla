@@ -21,12 +21,7 @@ test_reader make_cache(std::string cache_size) {
   std::stringstream json; json << "\
   {"
     + cache_size +
-    "\"tile_dir\": \"/data/valhalla\",\
-    \"levels\": [\
-      {\"name\": \"local\", \"level\": 2, \"size\": 0.25},\
-      {\"name\": \"highway\", \"level\": 0, \"size\": 4},\
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Trunk\"}\
-    ]\
+    "\"tile_dir\": \"/data/valhalla\"\
   }";
 
   boost::property_tree::ptree pt;
@@ -72,16 +67,11 @@ void TestConnectivityMap() {
   //get the hierarchy to create some tiles
   std::stringstream json; json << "\
   {\
-    \"tile_dir\": \"test/tiles\",\
-    \"levels\": [\
-      {\"name\": \"local\", \"level\": 2, \"size\": 0.25},\
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Trunk\"},\
-      {\"name\": \"highway\", \"level\": 0, \"size\": 4}\
-    ]\
+    \"tile_dir\": \"test/tiles\"\
   }";
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(json, pt);
-  TileHierarchy th(pt);
+  TileHierarchy th("test/tiles");
   const auto& level = th.levels().find(2)->second;
   boost::filesystem::remove_all(th.tile_dir());
 
