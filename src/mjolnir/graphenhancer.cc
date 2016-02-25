@@ -111,13 +111,13 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
                directededge.speed_type() != SpeedType::kTagged) {
       RoadClass rc = directededge.classification();
       if (rc == RoadClass::kMotorway) {
-        speed = (density > 8) ? 90 : 95;
+        speed = (density > 8) ? 89 : 95;
       } else if (rc == RoadClass::kTrunk) {
-        speed = (density > 8) ? 75 : 80;
+        speed = (density > 8) ? 73 : 80;
       } else if (rc == RoadClass::kPrimary) {
-        speed = 65;
+        speed = (density > 8) ? 57 : 65;
       } else if (rc == RoadClass::kSecondary) {
-        speed = 50;
+        speed = 49;
       } else if (rc == RoadClass::kTertiary) {
         speed = 40;
       } else if (rc == RoadClass::kUnclassified) {
@@ -164,13 +164,13 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
     // assumed to be urban
     if (density > 8) {
       if (directededge.classification() == RoadClass::kMotorway) {
-        directededge.set_speed(90);  // 55MPH
+        directededge.set_speed(89);  // 55MPH
       } else if (directededge.classification() == RoadClass::kTrunk) {
-        directededge.set_speed(75);  // 45MPH
+        directededge.set_speed(73);  // 45MPH
       } else if (directededge.classification() == RoadClass::kPrimary) {
-        directededge.set_speed(60);  // 35MPH
+        directededge.set_speed(57);  // 35MPH
       } else if (directededge.classification() == RoadClass::kSecondary) {
-        directededge.set_speed(50);  // 30 MPH
+        directededge.set_speed(49);  // 30 MPH
       } else if (directededge.classification() == RoadClass::kTertiary) {
         directededge.set_speed(40);  // 25 MPH
       } else if (directededge.classification() == RoadClass::kResidential ||
@@ -337,7 +337,8 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
       // Do not allow use of the start edge or any transit edges
-      // TODO - also skip diredge->use() == Use::kTransitConnection
+      // TODO - seems to be an issue with transit routes if we skip
+      // transit connections. Investigate
       if ((n == 0 && diredge->endnode() == startnode) ||
           diredge->IsTransitLine()) {
         continue;
@@ -932,6 +933,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // (ramps and turn channels) are involved.
   if (allramps || edges[from].use() == Use::kTurnChannel) {
     stop_impact /= 2;
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
+    // Increase stop impact on merge
+    stop_impact += 1;
   }
 
   // Clamp to kMaxStopImpact
@@ -1315,7 +1319,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags. Do not do this for transit edges.
-        // TODO - also skip directededge.use() == Use::kTransitConnection
+        // TODO - investigate TransitConnection use
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
