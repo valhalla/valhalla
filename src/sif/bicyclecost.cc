@@ -338,6 +338,10 @@ class BicycleCost : public DynamicCost {
       // Prohibit certain roads based on surface type and bicycle type
       if(!edge->trans_up() && !edge->trans_down() &&
         (edge->forwardaccess() & kBicycleAccess)) {
+        // Do not allow starting a bicycle route on steps
+        if (edge->use() == Use::kSteps) {
+          return true;
+        }
         if (b == BicycleType::kRoad)
           return edge->surface() > Surface::kCompacted;
         else if (b == BicycleType::kHybrid)
