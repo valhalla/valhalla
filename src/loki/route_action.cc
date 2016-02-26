@@ -107,6 +107,8 @@ namespace valhalla {
       //part of thors path proto object and then get copied into odins trip object
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
+
+      LOG_INFO("SENDING TO THOR:: " + stream.str())
       return result;
     }
   }

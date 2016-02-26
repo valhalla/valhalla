@@ -114,6 +114,8 @@ namespace valhalla {
       boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
+
+      LOG_INFO("SENDING TO THOR:: " + stream.str())
       return result;
     }
   }
