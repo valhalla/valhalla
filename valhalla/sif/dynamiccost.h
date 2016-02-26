@@ -194,12 +194,6 @@ class DynamicCost {
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
 
   /**
-   * Returns the default transfer factor between 2 transit lines.
-   * @return  Returns the transfer factor.
-   */
-  virtual float TransferCostFactor() const;
-
-  /**
    * Returns the default transfer cost between 2 transit lines.
    * @return  Returns the transfer cost and time (seconds).
    */
