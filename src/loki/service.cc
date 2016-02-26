@@ -100,7 +100,7 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
+    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir")),
         long_request(config.get<float>("loki.logging.long_request")){
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
