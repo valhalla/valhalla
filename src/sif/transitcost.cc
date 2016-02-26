@@ -13,13 +13,9 @@ namespace sif {
 namespace {
 constexpr uint32_t kUnitSize = 1;
 
-constexpr float kModeWeight         = 2.0f; // Favor this mode?
-constexpr float kDefaultBusFactor   = 1.0f;
-constexpr float kDefaultBusPenalty  = 0.0f;
-constexpr float kDefaultRailFactor  = 1.0f;
-constexpr float kDefaultRailPenalty = 0.0f;
-constexpr float kDefaultTransferCost = 300.0f;
-constexpr float kDefaultTransferPenalty = 45.0f;
+constexpr float kModeWeight             = 2.0f; // Favor this mode?
+constexpr float kDefaultTransferCost    = 15.0f;
+constexpr float kDefaultTransferPenalty = 300.0f;
 
 // User propensity to use buses. Range of values from 0 (avoid buses) to
 // 1 (totally comfortable riding on buses).
@@ -27,11 +23,11 @@ constexpr float kDefaultUseBusFactor = 0.3f;
 
 // User propensity to use rail. Range of values from 0 (avoid rail) to
 // 1 (totally comfortable riding on rail).
-constexpr float kDefaultUseRailFactor = 0.5f;
+constexpr float kDefaultUseRailFactor = 0.6f;
 
 // User propensity to use/allow transfers. Range of values from 0
 // (avoid transfers) to 1 (totally comfortable with transfers).
-constexpr float kDefaultUseTransfersFactor = 0.5f;
+constexpr float kDefaultUseTransfersFactor = 0.3f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 }
@@ -143,12 +139,6 @@ class TransitCost : public DynamicCost {
    * @return  Returns the transfer cost and time (seconds).
    */
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
-
-  /**
-   * Returns the default transfer factor between 2 transit lines.
-   * @return  Returns the transfer factor.
-   */
-  virtual float TransferCostFactor() const;
 
   /**
    * Returns the default transfer cost between 2 transit lines.
@@ -348,6 +338,7 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
   return { 0.0f, 0.0f };
 }
 
+/*
 // Returns the transfer cost between 2 transit stops.
 Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   if (transfer == nullptr) {
@@ -366,15 +357,30 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
     return kImpossibleCost;
   }
 }
+*/
 
-// Returns the default transfer factor between 2 transit lines.
-float TransitCost::TransferCostFactor() const {
-  return (transfer_factor_ * 5.0f);
+// Returns the transfer cost between 2 transit stops.
+Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
+  if (transfer == nullptr) {
+    // No transfer record exists - use defaults
+    return { transfer_cost_ +  (transfer_penalty_ * transfer_factor_), transfer_cost_};
+  }
+  switch (transfer->type()) {
+    case TransferType::kRecommended:
+      return { 15.0f + (transfer_penalty_ * transfer_factor_), 15.0f};
+    case TransferType::kTimed:
+      return { 15.0f + (transfer_penalty_ * transfer_factor_), 15.0f};
+    case TransferType::kMinTime:
+      return { static_cast<float>(transfer->mintime() + (transfer_penalty_ * transfer_factor_)) ,
+        static_cast<float>(transfer->mintime())};
+    case TransferType::kNotPossible:
+      return kImpossibleCost;
+  }
 }
 
 // Returns the default transfer cost between 2 transit lines.
 Cost TransitCost::DefaultTransferCost() const {
-  return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
+  return { transfer_cost_ +  transfer_penalty_ , transfer_cost_ };
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
