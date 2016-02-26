@@ -118,7 +118,7 @@ namespace valhalla {
         max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
-      for(const auto& matrix_type : std::list<std::string>{"one_to_many","many_to_one","many_to_many"}) {
+      for(const auto& matrix_type : std::list<std::string>{"one_to_many","many_to_one","many_to_many","optimized_order_route"}) {
         max_locations.emplace(matrix_type, config.get<size_t>("service_limits." + matrix_type + ".max_locations"));
         max_distance.emplace(matrix_type, config.get<float>("service_limits." + matrix_type + ".max_distance"));
       }

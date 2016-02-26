@@ -66,10 +66,10 @@ namespace {
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
 
       //only want to log the maximum distance between 2 locations for matrix
-      //LOG_INFO("path_distance -> " + std::to_string(path_distance));
+      LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
       if (path_distance >= max_location_distance) {
           max_location_distance = path_distance;
-         // LOG_INFO("max_location_distance -> " + std::to_string(max_location_distance));
+          LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
       }
 
       if (path_distance > matrix_max_distance)
@@ -99,7 +99,6 @@ namespace valhalla {
         case OPTIMIZED_ORDER:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
-          valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
           break;
       }
       //correlate the various locations to the underlying graph
@@ -108,6 +107,7 @@ namespace valhalla {
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
+      valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
       //pass on to thor with type of matrix
       request.put("matrix_type", action_str);
       std::stringstream stream;
