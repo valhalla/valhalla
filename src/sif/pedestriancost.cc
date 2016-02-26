@@ -369,7 +369,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   // TODO - validate if this is needed to prevent going into transit
   // stops (without boarding a transit line) as a shortcut
   if (pred.use() == Use::kTransitConnection) {
-    return { 20.0f, 0.0f };
+    return { 30.0f, 0.0f };
   }
 
   // Penalty through gates and border control.

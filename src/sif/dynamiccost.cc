@@ -70,12 +70,6 @@ Cost DynamicCost::TransferCost(const TransitTransfer* transfer) const {
   return { 0.0f, 0.0f };
 }
 
-// Returns the default transfer factor between 2 transit lines.
-float DynamicCost::TransferCostFactor() const {
-  return 0.0f;
-}
-
-
 // Returns the default transfer cost between 2 transit stops.
 Cost DynamicCost::DefaultTransferCost() const {
   return { 0.0f, 0.0f };
