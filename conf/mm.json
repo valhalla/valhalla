@@ -107,10 +107,10 @@
     "multimodal": {},
     "transit": {
       "use_bus": 0.3,
-      "use_rail": 0.5,
-      "use_transfers": 0.5,
-      "transfer_cost": 300,
-      "transfer_penalty": 45
+      "use_rail": 0.6,
+      "use_transfers": 0.3,
+      "transfer_cost": 15,
+      "transfer_penalty": 300
     }
   }
 }
