@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
 
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_filename.c_str(), pt);
-  baldr::GraphReader graphreader(pt.get_child("mjolnir.hierarchy"));
+  baldr::GraphReader graphreader(pt.get_child("mjolnir"));
 
   if (action == "coverage") {
     CompleteEdgeMap complete_edges;

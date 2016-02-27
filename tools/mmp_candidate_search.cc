@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
   boost::property_tree::ptree config;
   boost::property_tree::read_json("mmp.json", config);
-  valhalla::baldr::GraphReader graphreader(config.get_child("mjolnir.hierarchy"));
+  valhalla::baldr::GraphReader graphreader(config.get_child("mjolnir"));
   auto costing = sif::CreatePedestrianCost(config.get_child("costing_options.pedestrian"));
   PointLL location(lon, lat);
   auto tile = graphreader.GetGraphTile(location);

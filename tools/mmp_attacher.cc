@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
 
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_filename.c_str(), pt);
-  baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
+  baldr::GraphReader reader(pt.get_child("mjolnir"));
   const auto& tile_hierarchy = reader.GetTileHierarchy();
 
   if (reset) {
