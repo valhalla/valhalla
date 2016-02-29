@@ -1561,6 +1561,14 @@ void TestFormVerbalPostTransitionInstruction() {
 
   NarrativeBuilderTest nbt_km(directions_options, dictionary);
 
+  // Verify kilometer whole number
+  // TODO update after code update to (4) instead of 4.0
+  TryFormVerbalPostTransitionInstruction(nbt_km,
+      CreateVerbalPostManeuver( { "Main Street" }, 4.0f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 4.0 kilometers.");
+
+
   // Verify kilometers round down
   TryFormVerbalPostTransitionInstruction(nbt_km,
       CreateVerbalPostManeuver( { "Main Street" }, 3.54056f),
@@ -1746,6 +1754,13 @@ void TestFormVerbalPostTransitionInstruction() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
 
   NarrativeBuilderTest nbt_mi(directions_options, dictionary);
+
+  // Verify mile whole number
+  // TODO update after code update to (3) instead of 3.0
+  TryFormVerbalPostTransitionInstruction(nbt_mi,
+      CreateVerbalPostManeuver( { "Main Street" }, 4.828032f),
+      DirectionsOptions_Units_kMiles, false,
+      "Continue for 3.0 miles.");
 
   // Verify miles round down
   TryFormVerbalPostTransitionInstruction(nbt_mi,

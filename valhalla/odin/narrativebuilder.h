@@ -362,10 +362,44 @@ class NarrativeBuilder {
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the length string of the specified maneuver.
+   *
+   * @param maneuver The maneuver to process.
+   *
+   * @return the length string of the specified maneuver.
+   */
+  std::string FormLength(Maneuver& maneuver,
+                         const std::vector<std::string>& metric_lengths,
+                         const std::vector<std::string>& us_customary_lengths);
+
+  /**
+   * Returns the metric length string of the specified kilometer value.
+   *
+   * @param kilometers The length value to process.
+   *
+   * @return the metric length string of the specified length value.
+   */
+  std::string FormMetricLength(float kilometers,
+                               const std::vector<std::string>& metric_lengths);
+
+  /**
+   * Returns the US customary length string of the specified miles value.
+   *
+   * @param miles The length value to process.
+   *
+   * @return the US customary length string of the specified length value.
+   */
+  std::string FormUsCustomaryLength(float miles,
+      const std::vector<std::string>& us_customary_lengths);
+
+  // TODO remove after refactor
   std::string FormDistance(Maneuver& maneuver, DirectionsOptions_Units units);
 
+  // TODO remove after refactor
   std::string FormKilometers(float kilometers);
 
+  // TODO remove after refactor
   std::string FormMiles(float miles);
 
   /////////////////////////////////////////////////////////////////////////////

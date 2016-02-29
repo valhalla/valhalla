@@ -93,13 +93,13 @@ void NarrativeDictionary::Load(
   // Populate start_subset items
   Load(static_cast<StartSubset&>(start_verbal_handle), start_verbal_subset_pt);
 
-//  // Populate metric_lengths
-//  start_verbal_handle.metric_lengths = as_vector<std::string>(
-//      start_verbal_subset_pt, kMetricLengthsKey);
-//
-//  // Populate us_customary_lengths
-//  start_verbal_handle.us_customary_lengths = as_vector<std::string>(
-//      start_verbal_subset_pt, kUsCustomaryLengthsKey);
+  // Populate metric_lengths
+  start_verbal_handle.metric_lengths = as_vector<std::string>(
+      start_verbal_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  start_verbal_handle.us_customary_lengths = as_vector<std::string>(
+      start_verbal_subset_pt, kUsCustomaryLengthsKey);
 }
 
 void NarrativeDictionary::Load(

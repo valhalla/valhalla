@@ -25,10 +25,26 @@ constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
 constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
 
-// Indexes
+// Empty street names label indexes
 constexpr auto kWalkwayIndex = 0;
 constexpr auto kCyclewayIndex = 1;
 constexpr auto kMountainBikeTrailIndex = 2;
+
+// Metric length indexes
+constexpr auto kKilometersIndex = 0;
+constexpr auto kOneKilometerIndex = 1;
+constexpr auto kHalfKilometerIndex = 2;
+constexpr auto kMetersIndex = 3;
+constexpr auto kSmallMetersIndex = 4;
+
+// US Customary length indexes
+constexpr auto kMilesIndex = 0;
+constexpr auto kOneMileIndex = 1;
+constexpr auto kHalfMileIndex = 2;
+constexpr auto kTenthsOfMileIndex = 3;
+constexpr auto kOneTenthOfMileIndex = 4;
+constexpr auto kFeetIndex = 5;
+constexpr auto kSmallFeetIndex = 6;
 
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
@@ -39,6 +55,11 @@ constexpr auto kLengthTag = "<LENGTH>";
 constexpr auto kDestinationTag = "<DESTINATION>";
 constexpr auto kCurrentVerbalCueTag = "<CURRENT_VERBAL_CUE>";
 constexpr auto kNextVerbalCueTag = "<NEXT_VERBAL_CUE>";
+constexpr auto kKilometersTag = "<KILOMETERS>";
+constexpr auto kMetersTag = "<METERS>";
+constexpr auto kMilesTag = "<MILES>";
+constexpr auto kTenthsOfMilesTag = "<TENTHS_OF_MILES>";
+constexpr auto kFeetTag = "<FEET>";
 
 }
 

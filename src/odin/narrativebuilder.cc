@@ -16,7 +16,10 @@
 
 namespace {
 // Text instruction initial capacity
-constexpr auto kTextInstructionInitialCapacity = 128;
+constexpr auto kInstructionInitialCapacity = 128;
+
+// Text length initial capacity
+constexpr auto kLengthStringInitialCapacity = 32;
 
 // Basic time threshold in seconds for creating a verbal multi-cue
 constexpr auto kVerbalMultiCueTimeThreshold = 10;
@@ -567,7 +570,7 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Set cardinal_direction value
   std::string cardinal_direction = dictionary_.start_subset.cardinal_directions
@@ -613,7 +616,7 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Set cardinal_direction value
   std::string cardinal_direction = dictionary_.start_verbal_subset
@@ -650,9 +653,9 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
-  boost::replace_all(instruction, kLengthTag, FormDistance(maneuver, directions_options_.units()));
-
-  // TODO - side of street
+  boost::replace_all(instruction, kLengthTag,
+      FormLength(maneuver, dictionary_.start_verbal_subset.metric_lengths,
+                 dictionary_.start_verbal_subset.us_customary_lengths));
 
   return instruction;
 }
@@ -665,7 +668,7 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
 
   uint8_t phrase_id = 0;
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Determine if location (name or street) exists
   std::string destination;
@@ -713,7 +716,7 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
 
   uint8_t phrase_id = 0;
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Determine if destination (name or street) exists
   std::string destination;
@@ -765,7 +768,7 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(
 
   uint8_t phrase_id = 0;
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Determine if destination (name or street) exists
   std::string destination;
@@ -822,7 +825,7 @@ std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
   }
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // If previous maneuver has names
   // and current maneuver has names
@@ -862,7 +865,7 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(
                                         maneuver.verbal_formatter());
   }
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // If previous maneuver has names
   // and current maneuver has names
@@ -894,7 +897,7 @@ std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
                                              true);
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Continue";
 
   if (!street_names.empty()) {
@@ -916,7 +919,7 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
                                              true, element_max_count, delim,
                                              maneuver.verbal_formatter());
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Continue";
 
   if (!street_names.empty()) {
@@ -939,7 +942,7 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(
                                              true, element_max_count, delim,
                                              maneuver.verbal_formatter());
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Continue";
 
   if (!street_names.empty()) {
@@ -970,7 +973,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
       maneuver, maneuver.begin_street_names());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!street_names.empty()) {
@@ -1047,7 +1050,7 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!street_names.empty()) {
@@ -1111,7 +1114,7 @@ std::string NarrativeBuilder::FormBearInstruction(Maneuver& maneuver,
       maneuver, maneuver.begin_street_names());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!street_names.empty()) {
@@ -1188,7 +1191,7 @@ std::string NarrativeBuilder::FormVerbalBearInstruction(
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!street_names.empty()) {
@@ -1255,7 +1258,7 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
       maneuver, maneuver.cross_street_names());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Make a ";
   instruction += FormTurnTypeInstruction(maneuver.type());
   instruction += " U-turn";
@@ -1296,7 +1299,7 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Make a ";
   instruction += FormTurnTypeInstruction(maneuver.type());
   instruction += " U-turn";
@@ -1337,7 +1340,7 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Make a ";
   instruction += FormTurnTypeInstruction(maneuver.type());
   instruction += " U-turn";
@@ -1378,7 +1381,7 @@ std::string NarrativeBuilder::FormRampStraightInstruction(
   // 4 Stay straight to take the Gettysburg Pike ramp
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   // 1 = branch
@@ -1456,7 +1459,7 @@ std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
   // 3 Stay straight to take the Gettysburg Pike ramp
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   // 1 = branch
@@ -1529,7 +1532,7 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
   // 4 Stay straight to take the Gettysburg Pike ramp
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   // 1 = branch
@@ -1621,7 +1624,7 @@ std::string NarrativeBuilder::FormRampInstruction(
   // 9 Turn right to take the Gettysburg Pike ramp
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // 0 = Take the ramp on the right
   // 1 = branch
@@ -1839,7 +1842,7 @@ std::string NarrativeBuilder::FormVerbalRampInstruction(
   // 9 Turn right to take the Gettysburg Pike ramp
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   switch (phrase_id) {
     // 1 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction>."
@@ -1922,7 +1925,7 @@ std::string NarrativeBuilder::FormExitInstruction(
   //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // 0 Take the exit on the right
   // 1 = exit number
@@ -2142,7 +2145,7 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(
     const std::string& exit_toward_sign, const std::string& exit_name_sign) {
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   switch (phrase_id) {
     //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
@@ -2264,7 +2267,7 @@ std::string NarrativeBuilder::FormKeepInstruction(
   }
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   switch (phrase_id) {
     //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
@@ -2415,7 +2418,7 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(
     const std::string& exit_number_sign, const std::string& exit_toward_sign) {
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   switch (phrase_id) {
     //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
@@ -2498,7 +2501,7 @@ std::string NarrativeBuilder::FormKeepToStayOnInstruction(
   }
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   switch (phrase_id) {
     //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
@@ -2587,7 +2590,7 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
       const std::string& exit_toward_sign) {
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   switch (phrase_id) {
     //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
@@ -2629,7 +2632,7 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
                                              true);
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   if (!street_names.empty()) {
     instruction += "Merge onto ";
@@ -2660,7 +2663,7 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
                                              maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   if (!street_names.empty()) {
     instruction += "Merge onto ";
@@ -2677,7 +2680,7 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver)
   //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Enter the roundabout";
   if ((maneuver.roundabout_exit_count() > 0)
       && (maneuver.roundabout_exit_count() < 11)) {
@@ -2704,7 +2707,7 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
   //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Enter the roundabout";
   if ((maneuver.roundabout_exit_count() > 0)
       && (maneuver.roundabout_exit_count() < 11)) {
@@ -2729,7 +2732,7 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
       maneuver, maneuver.begin_street_names());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Exit the roundabout";
 
   if (!begin_street_names.empty()) {
@@ -2760,7 +2763,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Exit the roundabout";
 
   if (!begin_street_names.empty()) {
@@ -2785,7 +2788,7 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
                                              true);
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Take the ";
   if (!street_names.empty()) {
     instruction += street_names;
@@ -2822,7 +2825,7 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
                                              maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Take the ";
   if (!street_names.empty()) {
     instruction += street_names;
@@ -2850,7 +2853,7 @@ std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
       maneuver, maneuver.begin_street_names());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Head ";
   instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
@@ -2891,7 +2894,7 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Head ";
   instruction += FormCardinalDirection(maneuver.begin_cardinal_direction());
 
@@ -2913,7 +2916,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
   // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!maneuver.transit_connection_stop().name.empty()) {
@@ -2943,7 +2946,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
   // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!maneuver.transit_connection_stop().name.empty()) {
@@ -2973,7 +2976,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!maneuver.transit_connection_stop().name.empty()) {
@@ -3003,7 +3006,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!maneuver.transit_connection_stop().name.empty()) {
@@ -3033,7 +3036,7 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
   // 1 "Exit the <TRANSIT_CONNECTION_STOP> station."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!maneuver.transit_connection_stop().name.empty()) {
@@ -3064,7 +3067,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
   // 1 "Exit the <TRANSIT_CONNECTION_STOP> station."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   if (!maneuver.transit_connection_stop().name.empty()) {
@@ -3094,7 +3097,7 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
   // 1 "Depart: <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_stop_name = maneuver.GetTransitStops().front().name;
 
@@ -3127,7 +3130,7 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
   // 1 "Depart at <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_stop_name = maneuver.GetTransitStops().front().name;
 
@@ -3160,7 +3163,7 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
   // 1 "Arrive: <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_stop_name = maneuver.GetTransitStops().back().name;
 
@@ -3193,7 +3196,7 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
   // 1 "Arrive at <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_stop_name = maneuver.GetTransitStops().back().name;
 
@@ -3227,7 +3230,7 @@ std::string NarrativeBuilder::FormTransitInstruction(
   // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_route_info().headsign;
 
@@ -3261,7 +3264,7 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
   // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_route_info().headsign;
 
@@ -3293,7 +3296,7 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_route_info().headsign;
 
@@ -3329,7 +3332,7 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
   // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_route_info().headsign;
 
@@ -3362,7 +3365,7 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   // 1 "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_route_info().headsign;
 
@@ -3398,7 +3401,7 @@ std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
   // 1 "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_route_info().headsign;
 
@@ -3439,7 +3442,7 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
       maneuver, maneuver.begin_street_names());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string cardinal_direction = FormCardinalDirection(
         maneuver.begin_cardinal_direction());
@@ -3489,7 +3492,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
       maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string cardinal_direction = FormCardinalDirection(
         maneuver.begin_cardinal_direction());
@@ -3537,7 +3540,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
                                              maneuver.verbal_formatter());
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   instruction += "Continue";
 
   if (include_street_names && !street_names.empty()) {
@@ -3556,7 +3559,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   // 0 "Travel <TRANSIT_STOP_COUNT> <FormStopCountLabel>"
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
   switch (phrase_id) {
@@ -3572,6 +3575,137 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   return instruction;
 }
 
+std::string NarrativeBuilder::FormLength(
+    Maneuver& maneuver, const std::vector<std::string>& metric_lengths,
+    const std::vector<std::string>& us_customary_lengths) {
+  switch (directions_options_.units()) {
+    case DirectionsOptions_Units_kMiles: {
+      return FormUsCustomaryLength(
+          maneuver.length(DirectionsOptions_Units_kMiles), us_customary_lengths);
+    }
+    default: {
+      return FormMetricLength(
+          maneuver.length(DirectionsOptions_Units_kKilometers), metric_lengths);
+    }
+  }
+}
+
+std::string NarrativeBuilder::FormMetricLength(
+    float kilometers, const std::vector<std::string>& metric_lengths) {
+
+  // 0 "<KILOMETERS> kilometers"
+  // 1 "1 kilometer"
+  // 2 "a half kilometer"
+  // 3 "<METERS> meters" (30-400 and 600-900 meters)
+  // 4 "less than 10 meters"
+
+  std::string length_string;
+  length_string.reserve(kLengthStringInitialCapacity);
+
+  float kilometer_tenths = std::round(kilometers * 10) / 10;
+  float kilometer_tenths_floor = floor(kilometer_tenths);
+  uint32_t meters = 0;
+
+  if (kilometer_tenths > 1.0f) {
+    // 0 "<KILOMETERS> kilometers"
+    length_string += metric_lengths.at(kKilometersIndex);
+  } else if (kilometer_tenths == 1.0f) {
+    // 1 "1 kilometer"
+    length_string += metric_lengths.at(kOneKilometerIndex);
+  } else if (kilometer_tenths == 0.5f) {
+    // 2 "a half kilometer"
+    length_string += metric_lengths.at(kHalfKilometerIndex);
+  } else {
+    float kilometer_hundredths = std::round(kilometers * 100) / 100;
+    float kilometer_thousandths = std::round(kilometers * 1000) / 1000;
+
+    // Process hundred meters
+    if (kilometer_hundredths > 0.09f) {
+      // 3 "<METERS> meters" (100-400 and 600-900 meters)
+      length_string += metric_lengths.at(kMetersIndex);
+      meters = static_cast<uint32_t>(kilometer_tenths * 1000);
+    } else if (kilometer_thousandths > 0.009f) {
+      // 3 "<METERS> meters" (10-90 meters)
+      length_string += metric_lengths.at(kMetersIndex);
+      meters = static_cast<uint32_t>(kilometer_hundredths * 1000);
+    } else {
+      // 4 "less than 10 meters"
+      length_string += metric_lengths.at(kSmallMetersIndex);
+    }
+  }
+
+  // Replace tags with length values
+  boost::replace_all(length_string, kKilometersTag,
+      (kilometer_tenths == kilometer_tenths_floor) ?
+          (boost::format("%.0f") % kilometer_tenths_floor).str() :
+          (boost::format("%.1f") % kilometer_tenths).str());
+  boost::replace_all(length_string, kMetersTag, std::to_string(meters));
+
+
+  return length_string;
+}
+
+std::string NarrativeBuilder::FormUsCustomaryLength(
+    float miles, const std::vector<std::string>& us_customary_lengths) {
+
+  // 0  "<MILES> miles"
+  // 1  "1 mile"
+  // 2  "a half mile"
+  // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
+  // 4  "1 tenth of a mile"
+  // 5  "<FEET> feet" (10-90, 100-500)
+  // 6  "less than 10 feet"
+
+  std::string length_string;
+  length_string.reserve(kLengthStringInitialCapacity);
+  float mile_tenths = std::round(miles * 10) / 10;
+  float mile_tenths_floor = floor(mile_tenths);
+  uint32_t tenths_of_mile = 0;
+  uint32_t feet = static_cast<uint32_t>(std::round(miles * 5280));
+
+  if (mile_tenths > 1.0f) {
+    // 0  "<MILES> miles"
+    length_string += us_customary_lengths.at(kMilesIndex);
+  } else if (mile_tenths == 1.0f) {
+    // 1  "1 mile"
+    length_string += us_customary_lengths.at(kOneMileIndex);
+  } else if (mile_tenths == 0.5f) {
+    // 2  "a half mile"
+    length_string += us_customary_lengths.at(kHalfMileIndex);
+  } else if (mile_tenths > 0.1f) {
+    // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
+    length_string += us_customary_lengths.at(kTenthsOfMileIndex);
+    tenths_of_mile = static_cast<uint32_t>(mile_tenths * 10);
+  } else if ((miles > 0.0973f) && (mile_tenths == 0.1f)) {
+    // 4  "1 tenth of a mile"
+    length_string += us_customary_lengths.at(kOneTenthOfMileIndex);
+  } else {
+    if (feet > 94) {
+      // 5  "<FEET> feet" (100-500)
+      length_string += us_customary_lengths.at(kFeetIndex);
+      feet = static_cast<uint32_t>(std::round(feet / 100.0f) * 100);
+    } else if (feet > 9) {
+      // 5  "<FEET> feet" (10-90)
+      length_string += us_customary_lengths.at(kFeetIndex);
+      feet = static_cast<uint32_t>(std::round(feet / 10.0f) * 10);
+    } else {
+      // 6  "less than 10 feet"
+      length_string += us_customary_lengths.at(kSmallFeetIndex);
+    }
+  }
+
+  // Replace tags with length values
+  boost::replace_all(length_string, kMilesTag,
+      (mile_tenths == mile_tenths_floor) ?
+          (boost::format("%.0f") % mile_tenths_floor).str() :
+          (boost::format("%.1f") % mile_tenths).str());
+  boost::replace_all(length_string, kTenthsOfMilesTag, std::to_string(tenths_of_mile));
+  boost::replace_all(length_string, kFeetTag, std::to_string(feet));
+
+  return length_string;
+}
+
+// TODO remove after refactor
 std::string NarrativeBuilder::FormDistance(
     Maneuver& maneuver, DirectionsOptions_Units units) {
   switch (units) {
@@ -3584,16 +3718,17 @@ std::string NarrativeBuilder::FormDistance(
   }
 }
 
+// TODO remove after refactor
 std::string NarrativeBuilder::FormKilometers(float kilometers) {
 
-  // 0 "1.2 kilometers"
+  // 0 "<KILOMETERS> kilometers"
   // 1 "1 kilometer"
   // 2 "a half kilometer" (500 meters)
-  // 3 "100 meters" (30-400 and 600-900 meters)
+  // 3 "<METERS> meters" (30-400 and 600-900 meters)
   // 4 "less than 10 meters"
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   float kilometer_tenths = std::round(kilometers * 10) / 10;
 
@@ -3623,18 +3758,19 @@ std::string NarrativeBuilder::FormKilometers(float kilometers) {
   return instruction;
 }
 
+// TODO remove after refactor
 std::string NarrativeBuilder::FormMiles(float miles) {
 
-  // 0  "1.2 miles"
-  // 1  "1 mile."
+  // 0  "<MILES> miles"
+  // 1  "1 mile"
   // 2  "a half mile."
-  // 3  "2 tenths of a mile." (2-4, 6-9)
+  // 3  "<TENTHS_OF_MILE> tenths of a mile." (2-4, 6-9)
   // 4  "1 tenth of a mile."
-  // 5  "200 feet." (10-90, 100-500)
+  // 5  "<FEET> feet." (10-90, 100-500)
   // 6  "less than 10 feet."
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
   float mile_tenths = std::round(miles * 10) / 10;
 
   if (mile_tenths > 1.0f) {
@@ -3664,6 +3800,7 @@ std::string NarrativeBuilder::FormMiles(float miles) {
   return instruction;
 }
 
+// TODO remove after refactor
 std::string NarrativeBuilder::FormCardinalDirection(
     TripDirections_Maneuver_CardinalDirection cardinal_direction) {
   switch (cardinal_direction) {
@@ -3797,6 +3934,7 @@ std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
   return "train";
 }
 
+// TODO remove after refactor
 std::string NarrativeBuilder::FormOldStreetNames(
     const Maneuver& maneuver, const StreetNames& street_names,
     bool enhance_empty_street_names, uint32_t max_count, std::string delim,
@@ -3927,7 +4065,7 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 
   std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Set current verbal cue
   std::string current_verbal_cue = maneuver->verbal_pre_transition_instruction();

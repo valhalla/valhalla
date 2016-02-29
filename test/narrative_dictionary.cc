@@ -89,12 +89,20 @@ void test_en_US_start_verbal() {
   validate(phrase_2, "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.");
 
   // cardinal_directions
-  const auto& cardinal_directions = dictionary.start_subset.cardinal_directions;
+  const auto& cardinal_directions = dictionary.start_verbal_subset.cardinal_directions;
   validate(cardinal_directions, { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" });
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels = dictionary.start_subset.empty_street_name_labels;
+  const auto& empty_street_name_labels = dictionary.start_verbal_subset.empty_street_name_labels;
   validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.start_verbal_subset.metric_lengths;
+  validate(metric_lengths, { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" });
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.start_verbal_subset.us_customary_lengths;
+  validate(us_customary_lengths, { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" });
 
 }
 
