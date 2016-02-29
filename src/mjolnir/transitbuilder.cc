@@ -330,11 +330,13 @@ Use GetTransitUse(const uint32_t rt) {
   }
 }
 
-std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll,
+std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, uint32_t shapeid,
                             const float orig_dist_traveled, const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape, const std::vector<float>& distances) {
+
   std::list<PointLL> shape;
-  if (trip_shape.size() && stop_ll != endstop_ll && orig_dist_traveled < dest_dist_traveled) {
+  if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
+      orig_dist_traveled < dest_dist_traveled) {
 
     float distance = 0.0f, d_from_p0_to_x = 0.0f;
 
@@ -343,9 +345,9 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll,
     bool found = false;
 
     // find out where orig_dist_traveled should be in the list.
-    auto lower_bound = std::lower_bound(distances.begin(), distances.end(), orig_dist_traveled);
+    auto lower_bound = std::lower_bound(distances.cbegin(), distances.cend(), orig_dist_traveled);
     // find out where dest_dist_traveled should be in the list.
-    auto upper_bound = std::upper_bound(distances.begin(), distances.end(), dest_dist_traveled);
+    auto upper_bound = std::upper_bound(distances.cbegin(), distances.cend(), dest_dist_traveled);
     float prev_distance = *(lower_bound);
 
     // lower_bound returns an iterator pointing to the first element which does not compare less than the dist_traveled;
@@ -372,7 +374,7 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll,
        */
 
       // index into our vector of points
-      uint32_t index = (itr - distances.begin());
+      uint32_t index = (itr - distances.cbegin());
       PointLL p0 = trip_shape[index];
       PointLL p1 = trip_shape[index + 1];
 
@@ -407,7 +409,6 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll,
     shape.push_back(stop_ll);
     shape.push_back(endstop_ll);
   }
-
   return shape;
 }
 
@@ -749,13 +750,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
         const auto& shape_d = found->second;
         points = shape_d.shape;
         // copy only the distances that we care about.
-        std::copy(distances.begin()+shape_d.begins,
-                  distances.begin()+shape_d.ends,back_inserter(distance));
+        std::copy((distances.cbegin()+shape_d.begins),
+                  (distances.cbegin()+shape_d.ends),back_inserter(distance));
       }
       else if (transitedge.shapeid != 0)
         LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
 
-      auto shape = GetShape(stopll, endll, transitedge.orig_dist_traveled,
+      auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance);
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
@@ -995,9 +996,10 @@ void build(const std::string& transit_dir,
 
       float distance = 0.0f;
       Shape shape_data;
-      shape_data.begins = distances.size();
       //first is always 0.0f.
       distances.push_back(distance);
+      shape_data.begins = distances.size()-1;
+
       // loop through the points getting the distances.
       for (size_t index = 0; index < trip_shape.size() - 1; ++index) {
         PointLL p0 = trip_shape[index];
@@ -1005,7 +1007,9 @@ void build(const std::string& transit_dir,
         distance += p0.Distance(p1);
         distances.push_back(distance);
       }
-      shape_data.ends = distances.size()-1;
+      //must be distances.size for the end index as we use std::copy later on and want
+      //to include the last element in the vector we wish to copy.
+      shape_data.ends = distances.size();
       shape_data.shape = trip_shape;
       //shape id --> begin and end indexes in the distance vector and vector of points.
       shapes[shape.shape_id()] = shape_data;
