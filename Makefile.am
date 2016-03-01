@@ -75,7 +75,8 @@ thor_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PR
 check_PROGRAMS = \
 	test/edgestatus \
 	test/optimizer \
-	test/adjacencylist 
+	test/adjacencylist \
+	test/service
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
 test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgestatus_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_thor.la
@@ -85,6 +86,9 @@ test_optimizer_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalha
 test_adjacencylist_SOURCES = test/adjacencylist.cc test/test.cc
 test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_adjacencylist_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_thor.la
+test_service_SOURCES = test/service.cc test/test.cc
+test_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
