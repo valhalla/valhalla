@@ -36,15 +36,16 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto generation etc
-PROTO_FILES = \
-	proto/trippath.proto \
-	proto/tripdirections.proto \
-	proto/directions_options.proto
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+PROTO_FILES = proto/trippath.proto proto/tripdirections.proto proto/directions_options.proto
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
+
+#turn locales json into strings we can load
+src/odin/locales.h:
+	-pushd locales && ./make_locales.sh *.json > ../src/odin/locales.h && popd
+BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
+nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
+CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_odin.la
@@ -54,6 +55,8 @@ nobase_include_HEADERS = \
 	valhalla/proto/directions_options.pb.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
+	valhalla/odin/narrative_dictionary.h \
+	valhalla/odin/narrative_builder_factory.h \
 	valhalla/odin/narrativebuilder.h \
 	valhalla/odin/enhancedtrippath.h \
 	valhalla/odin/maneuver.h \
@@ -69,6 +72,8 @@ libvalhalla_odin_la_SOURCES = \
 	src/proto/directions_options.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
+	src/odin/narrative_dictionary.cc \
+	src/odin/narrative_builder_factory.cc \
 	src/odin/narrativebuilder.cc \
 	src/odin/enhancedtrippath.cc \
 	src/odin/maneuver.cc \
@@ -77,7 +82,8 @@ libvalhalla_odin_la_SOURCES = \
 	src/odin/util.cc \
 	src/odin/service.cc \
 	src/odin/transitrouteinfo.cc \
-	src/odin/transitstop.cc
+	src/odin/transitstop.cc \
+	src/odin/locales.h
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
@@ -94,7 +100,8 @@ check_PROGRAMS = \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
-	test/locales
+	test/locales \
+	test/narrative_dictionary
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
@@ -113,6 +120,9 @@ test_signs_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_
 test_locales_SOURCES = test/locales.cc test/test.cc
 test_locales_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_locales_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
+test_narrative_dictionary_SOURCES = test/narrative_dictionary.cc test/test.cc
+test_narrative_dictionary_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_narrative_dictionary_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

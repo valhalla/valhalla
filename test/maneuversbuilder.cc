@@ -1,11 +1,13 @@
-#include "test.h"
-#include "valhalla/odin/maneuver.h"
-#include "valhalla/odin/maneuversbuilder.h"
+#include <string>
+
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/proto/directions_options.pb.h>
 
-#include <string>
+#include "proto/directions_options.pb.h"
+#include "odin/maneuver.h"
+#include "odin/maneuversbuilder.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::odin;

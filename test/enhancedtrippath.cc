@@ -1,5 +1,5 @@
 #include "test.h"
-#include "valhalla/odin/enhancedtrippath.h"
+#include "odin/enhancedtrippath.h"
 
 using namespace std;
 using namespace valhalla::odin;

@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_TRANSIT_STOP_H_
 
 #include <string>
+
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 

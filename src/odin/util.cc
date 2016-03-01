@@ -1,30 +1,33 @@
-#include "odin/util.h"
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/midgard/logging.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <valhalla/midgard/logging.h>
+
+#include "proto/directions_options.pb.h"
+#include "odin/util.h"
+#include "odin/narrative_dictionary.h"
+#include "locales.h"
+
 namespace {
 
-  valhalla::odin::locales_singleton_t load_narrative_locals(const std::string& directory) {
-    boost::filesystem::recursive_directory_iterator locale_file_itr(directory);
-    boost::filesystem::recursive_directory_iterator end_file_itr;
+  valhalla::odin::locales_singleton_t load_narrative_locals() {
     valhalla::odin::locales_singleton_t locales;
-    //for each file
-    for(; locale_file_itr != end_file_itr; ++locale_file_itr) {
-      //is it a file and looking like json
-      if(boost::filesystem::is_regular(locale_file_itr->path()) &&
-         locale_file_itr->path().extension() == ".json") {
-        //TODO: validate the locale string in some way
-        std::string locale = locale_file_itr->path().stem().string();
-        try {
-          boost::property_tree::ptree narrative;
-          boost::property_tree::read_json(locale_file_itr->path().string(), narrative);
-          locales.emplace(std::move(locale), std::move(narrative));
-        }
-        catch(...) {
-          LOG_WARN("Failed to parse narrative for locale: " + locale);
-        }
+    //for each locale
+    for(const auto& json : locales_json) {
+      LOG_TRACE("LOCALES");
+      LOG_TRACE("-------");
+      LOG_TRACE("- " + json.first);
+      try {
+        boost::property_tree::ptree narrative_pt;
+        std::stringstream ss; ss << json.second;
+        boost::property_tree::read_json(ss, narrative_pt);
+        LOG_TRACE("JSON read");
+        valhalla::odin::NarrativeDictionary narrative_dictionary(narrative_pt);
+        LOG_TRACE("NarrativeDictionary created");
+        locales.emplace(json.first, std::move(narrative_dictionary));
+      }
+      catch(...) {
+        LOG_WARN("Failed to parse narrative for locale: " + json.first);
       }
     }
     return locales;
@@ -88,9 +91,9 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   return directions_options;
 }
 
-const locales_singleton_t& get_locales(const std::string& locales_directory) {
+const locales_singleton_t& get_locales() {
   //thread safe static initializer for singleton
-  static locales_singleton_t locales(load_narrative_locals(locales_directory));
+  static locales_singleton_t locales(load_narrative_locals());
   return locales;
 }
 

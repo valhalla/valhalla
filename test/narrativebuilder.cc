@@ -1,13 +1,18 @@
 #include <regex>
 
-#include "test.h"
-#include "valhalla/odin/maneuver.h"
-#include "valhalla/odin/sign.h"
-#include "valhalla/odin/signs.h"
-#include "valhalla/odin/narrativebuilder.h"
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/baldr/verbal_text_formatter_factory.h>
+
+#include "proto/trippath.pb.h"
+#include "odin/maneuver.h"
+#include "odin/sign.h"
+#include "odin/signs.h"
+#include "odin/util.h"
+#include "odin/narrative_builder_factory.h"
+#include "odin/narrative_dictionary.h"
+#include "odin/narrativebuilder.h"
+#include "odin/enhancedtrippath.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::odin;
@@ -17,29 +22,47 @@ namespace {
 // Sub class to test protected methods
 class NarrativeBuilderTest : public NarrativeBuilder {
  public:
+  NarrativeBuilderTest(const DirectionsOptions& directions_options,
+                       const NarrativeDictionary& dictionary,
+                       const EnhancedTripPath* trip_path = nullptr)
+      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+  }
 
-  static std::string FormRampStraightInstruction(Maneuver& maneuver) {
+  std::string FormRampStraightInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormRampStraightInstruction(maneuver);
   }
 
-  static std::string FormRampInstruction(Maneuver& maneuver) {
+  std::string FormRampInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormRampInstruction(maneuver);
   }
 
-  static std::string FormExitInstruction(Maneuver& maneuver) {
+  std::string FormExitInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormExitInstruction(maneuver);
   }
 
-  static std::string FormVerbalPostTransitionInstruction(
-      Maneuver& maneuver, DirectionsOptions_Units units,
-      bool include_street_names = false,
+  std::string FormVerbalPostTransitionInstruction(
+      Maneuver& maneuver, bool include_street_names = false,
       uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim) {
     return NarrativeBuilder::FormVerbalPostTransitionInstruction(
-        maneuver, units, include_street_names, element_max_count, delim);
+        maneuver, include_street_names, element_max_count, delim);
   }
 
 };
+
+const NarrativeDictionary& GetNarrativeDictionary(
+    const DirectionsOptions& directions_options) {
+  // Get the locale dictionary
+  const auto phrase_dictionary = get_locales().find(
+      directions_options.language());
+
+  // If language tag is not found then throw error
+  if (phrase_dictionary == get_locales().end()) {
+    throw std::runtime_error("Invalid language tag.");
+  }
+
+  return phrase_dictionary->second;
+}
 
 void PopulateManeuver(
     Maneuver& maneuver, const std::string& country_code,
@@ -164,7 +187,9 @@ void TryBuild(const DirectionsOptions& directions_options,
               std::list<Maneuver>& maneuvers,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripPath* etp = nullptr) {
-  NarrativeBuilderTest::Build(directions_options, etp, maneuvers);
+  std::unique_ptr<NarrativeBuilder> narrative_builder =
+      NarrativeBuilderFactory::Create(directions_options, etp);
+  narrative_builder->Build(directions_options, etp, maneuvers);
 
   // Check maneuver list sizes
   if (maneuvers.size() != expected_maneuvers.size())
@@ -571,6 +596,30 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
                    { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 40, 0);
 }
 
+void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
+                                          const std::string& country_code,
+                                          const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kLeft, { "North Plum Street" },
+                   { }, { }, "", 0.074000, 19, 270,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 352, 352,
+                   2, 3, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   1, 0, 0, 1, 1, "", "", "", 0, 0, 0, 0, 4, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kLeft, { "East Fulton Street" },
+                   { }, { }, "", 0.120478, 29, 269,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 261, 263, 3,
+                   5, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 1,
+                   0, 0, 1, 1, "", "", "", 0, 0, 0, 0, 12, 0);
+}
+
 void SetExpectedManeuverInstructions(
     std::list<Maneuver>& expected_maneuvers,
     const string& instruction,
@@ -922,7 +971,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
 // FormContinueInstruction
 // 0 "Continue."
 // 0 "Continue."
-// 0 "Continue for <DISTANCE>."
+// 0 "Continue for <LENGTH>."
 void TestBuildContinueInstructions_0_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -953,7 +1002,7 @@ void TestBuildContinueInstructions_0_miles_en_US() {
 // FormContinueInstruction
 // 1 "Continue on <STREET_NAMES>."
 // 1 "Continue on <STREET_NAMES(1)>."
-// 1 "Continue on <STREET_NAMES(2)> for <DISTANCE>."
+// 1 "Continue on <STREET_NAMES(2)> for <LENGTH>."
 void TestBuildContinueInstructions_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1438,6 +1487,41 @@ void TestBuildUturnInstructions_5_miles_en_US() {
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// FormVerbalMultiCue
+// 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+void TestBuildVerbalMultiCue_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateVerbalMultiCueManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateVerbalMultiCueManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Turn left onto North Plum Street.",
+      "Turn left onto North Plum Street.",
+      "Turn left onto North Plum Street. Then Turn left onto East Fulton Street.",
+      "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn left onto East Fulton Street.",
+      "Turn left onto East Fulton Street.",
+      "Turn left onto East Fulton Street.",
+      "Continue for 400 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
 // FormDestinati onInstruction
 Maneuver CreateVerbalPostManeuver(vector<std::string> street_names,
                                   float kilometers,
@@ -1452,399 +1536,358 @@ Maneuver CreateVerbalPostManeuver(vector<std::string> street_names,
   return maneuver;
 }
 
-void TryFormVerbalPostTransitionInstruction(Maneuver maneuver,
-                                            DirectionsOptions_Units units,
+void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
+                                            Maneuver maneuver,
                                             bool include_street_names,
                                             std::string expected) {
-  std::string instruction =
-      NarrativeBuilderTest::FormVerbalPostTransitionInstruction(
-          maneuver, units, include_street_names);
+  std::string instruction = nbt.FormVerbalPostTransitionInstruction(
+      maneuver, include_street_names);
   if (instruction != expected) {
     throw std::runtime_error(
-        "Incorrect FormVerbalPostTransitionInstruction - EXPECTED: "
-            + expected + "  |  FORMED: " + instruction);
+        "Incorrect FormVerbalPostTransitionInstruction - EXPECTED: " + expected
+            + "  |  FORMED: " + instruction);
   }
 }
 
 void TestFormVerbalPostTransitionInstruction() {
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
+      directions_options);
+
+  NarrativeBuilderTest nbt_km(directions_options, dictionary);
+
+  // Verify kilometer whole number
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 4.0f), false,
+      "Continue for 4 kilometers.");
+
   // Verify kilometers round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 3.54056f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 3.54056f), false,
       "Continue for 3.5 kilometers.");
 
   // Verify kilometers round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 3.86243f), false,
       "Continue for 3.9 kilometers.");
 
   // Verify kilometers street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 3.86243f), true,
       "Continue on Main Street for 3.9 kilometers.");
 
   // Verify 1 kilometer round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.04f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 1.04f), false,
       "Continue for 1 kilometer.");
 
   // Verify 1 kilometer round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.95f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.95f), false,
       "Continue for 1 kilometer.");
 
   // Verify 1 kilometer street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.0f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 1.0f), true,
       "Continue on Main Street for 1 kilometer.");
 
   // Verify a half kilometer round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.54f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.54f), false,
       "Continue for a half kilometer.");
 
   // Verify a half kilometer round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.45f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.45f), false,
       "Continue for a half kilometer.");
 
   // Verify a half kilometer street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.5f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.5f), true,
       "Continue on Main Street for a half kilometer.");
 
   // Verify 900 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.94f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.94f), false,
       "Continue for 900 meters.");
 
   // Verify 900 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.85f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.85f), false,
       "Continue for 900 meters.");
 
   // Verify 900 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.9f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.9f), true,
       "Continue on Main Street for 900 meters.");
 
   // Verify 400 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.44f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.44f), false,
       "Continue for 400 meters.");
 
   // Verify 400 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.35f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.35f), false,
       "Continue for 400 meters.");
 
   // Verify 400 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.4f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.4f), true,
       "Continue on Main Street for 400 meters.");
 
   // Verify 100 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.14f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.14f), false,
       "Continue for 100 meters.");
 
   // Verify 100 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.095f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.095f), false,
       "Continue for 100 meters.");
 
   // Verify 100 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.1f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.1f), true,
       "Continue on Main Street for 100 meters.");
 
   // Verify 90 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.094f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.094f), false,
       "Continue for 90 meters.");
 
   // Verify 90 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.085f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.085f), false,
       "Continue for 90 meters.");
 
   // Verify 90 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.09f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.09f), true,
       "Continue on Main Street for 90 meters.");
 
   // Verify 30 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.034f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.034f), false,
       "Continue for 30 meters.");
 
   // Verify 30 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.025f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.025f), false,
       "Continue for 30 meters.");
 
   // Verify 30 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.03f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.03f), true,
       "Continue on Main Street for 30 meters.");
 
   // Verify 10 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.012f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.012f), false,
       "Continue for 10 meters.");
 
   // Verify 10 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0096f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.0096f), false,
       "Continue for 10 meters.");
 
   // Verify 10 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.01f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.01f), true,
       "Continue on Main Street for 10 meters.");
 
   // Verify less than 10 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" },  0.0094f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.0094f), false,
       "Continue for less than 10 meters.");
 
   // Verify less than 10 meters
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0088f),
-      DirectionsOptions_Units_kKilometers, false,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.0088f), false,
       "Continue for less than 10 meters.");
 
   // Verify less than 10 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.005f),
-      DirectionsOptions_Units_kKilometers, true,
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.005f), true,
       "Continue on Main Street for less than 10 meters.");
 
   /////////////////////////////////////////////////////////////////////////////
 
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+
+  NarrativeBuilderTest nbt_mi(directions_options, dictionary);
+
+  // Verify mile whole number
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 4.828032f), false,
+      "Continue for 3 miles.");
+
   // Verify miles round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 3.604931f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 3.604931f), false,
       "Continue for 2.2 miles.");
 
   // Verify miles round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 3.637117f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 3.637117f), false,
       "Continue for 2.3 miles.");
 
   // Verify miles street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 3.637117f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 3.637117f), true,
       "Continue on Main Street for 2.3 miles.");
 
   // Verify 1 mile round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.657624f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.657624f), false,
       "Continue for 1 mile.");
 
   // Verify 1 mile round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.561064f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.561064f), false,
       "Continue for 1 mile.");
 
   // Verify 1 mile street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.60934f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.60934f), true,
       "Continue on Main Street for 1 mile.");
 
   // Verify half mile round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.8368589f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.8368589f), false,
       "Continue for a half mile.");
 
   // Verify half mile round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.7724851f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.7724851f), false,
       "Continue for a half mile.");
 
   // Verify half mile street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.804672f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.804672f), true,
       "Continue on Main Street for a half mile.");
 
   // Verify 9 tenths of a mile round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.480596f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.480596f), false,
       "Continue for 9 tenths of a mile.");
 
   // Verify 9 tenths of a mile round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.416223f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.416223f), false,
       "Continue for 9 tenths of a mile.");
 
   // Verify 9 tenths of a mile street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 1.44841f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.44841f), true,
       "Continue on Main Street for 9 tenths of a mile.");
 
   // Verify 4 tenths of a mile round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.675924f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.675924f), false,
       "Continue for 4 tenths of a mile.");
 
   // Verify 4 tenths of a mile round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.611551f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.611551f), false,
       "Continue for 4 tenths of a mile.");
 
   // Verify 4 tenths of a mile street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.643738f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.643738f), true,
       "Continue on Main Street for 4 tenths of a mile.");
 
   // Verify 1 tenth of a mile round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.193121f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.193121f), false,
       "Continue for 1 tenth of a mile.");
 
   // Verify 1 tenth of a mile round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.158496f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.158496f), false,
       "Continue for 1 tenth of a mile.");
 
   // Verify 1 tenth of a mile street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.160934f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.160934f), true,
       "Continue on Main Street for 1 tenth of a mile.");
 
   // Verify 500 feet round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.155448f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.155448f), false,
       "Continue for 500 feet.");
 
   // Verify 500 feet round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.149352f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.149352f), false,
       "Continue for 500 feet.");
 
   // Verify 500 feet street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.1524f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.1524f), true,
       "Continue on Main Street for 500 feet.");
 
   // Verify 100 feet round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.036576f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.036576f), false,
       "Continue for 100 feet.");
 
   // Verify 100 feet round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.028956f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.028956f), false,
       "Continue for 100 feet.");
 
   // Verify 100 feet street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.03048f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.03048f), true,
       "Continue on Main Street for 100 feet.");
 
   // Verify 90 feet round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0283464f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.0283464f), false,
       "Continue for 90 feet.");
 
   // Verify 90 feet round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0268224f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.0268224f), false,
       "Continue for 90 feet.");
 
   // Verify 90 feet street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.027432f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.027432f), true,
       "Continue on Main Street for 90 feet.");
 
   // Verify 10 feet round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0036576f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.0036576f), false,
       "Continue for 10 feet.");
 
   // Verify 10 feet round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.00292608f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.00292608f), false,
       "Continue for 10 feet.");
 
   // Verify 10 feet street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.003048f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.003048f), true,
       "Continue on Main Street for 10 feet.");
 
   // Verify less than 10 feet round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.00280416f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.00280416f), false,
       "Continue for less than 10 feet.");
 
   // Verify less than 10 feet round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.00268224f),
-      DirectionsOptions_Units_kMiles, false,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.00268224f), false,
       "Continue for less than 10 feet.");
 
   // Verify less than 10 feet street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.001524f),
-      DirectionsOptions_Units_kMiles, true,
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.001524f), true,
       "Continue on Main Street for less than 10 feet.");
 
 }
@@ -1888,64 +1931,74 @@ Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
   return maneuver;
 }
 
-void TryFormRampStraightInstruction(Maneuver maneuver, std::string expected) {
-  std::string instruction = NarrativeBuilderTest::FormRampStraightInstruction(maneuver);
+void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
+                                    Maneuver maneuver, std::string expected) {
+  std::string instruction = nbt.FormRampStraightInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampStraightInstruction");
 }
 
 void TestFormRampStraightInstruction() {
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
+      directions_options);
+
+  NarrativeBuilderTest nbt(directions_options, dictionary);
+
   // phrase_id = 0
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, { },
                          { }, { }),
       "Stay straight to take the ramp.");
 
   // phrase_id = 1
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { "I 95 South" }, { }, { }),
       "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { "I 95 South" }, { }, { "Gettysburg Pike" }),
       "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 2
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { }, { "Baltimore" }, { }),
       "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { }, { "Baltimore" }, { "Gettysburg Pike" }),
       "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 3
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { "I 95 South" }, { "Baltimore" }, { }),
       "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward exists
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { "I 95 South" }, { "Baltimore" }, { "Gettysburg Pike" }),
       "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 4
-  TryFormRampStraightInstruction(
+  TryFormRampStraightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { },
                          { }, { }, { "Gettysburg Pike" }),
@@ -1953,22 +2006,32 @@ void TestFormRampStraightInstruction() {
 
 }
 
-void TryFormRampRightInstruction(Maneuver maneuver, std::string expected) {
-  std::string instruction = NarrativeBuilderTest::FormRampInstruction(maneuver);
+void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
+                                 std::string expected) {
+  std::string instruction = nbt.FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampRightInstruction");
 }
 
 void TestFormRampRightInstruction() {
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
+      directions_options);
+
+  NarrativeBuilderTest nbt(directions_options, dictionary);
+
   // phrase_id = 0
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { }),
       "Take the ramp on the right.");
 
   // phrase_id = 1
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
@@ -1976,7 +2039,7 @@ void TestFormRampRightInstruction() {
       "Take the I 95 South ramp on the right.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
@@ -1984,7 +2047,7 @@ void TestFormRampRightInstruction() {
       "Take the I 95 South ramp on the right.");
 
   // phrase_id = 2
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Baltimore" },
@@ -1992,7 +2055,7 @@ void TestFormRampRightInstruction() {
       "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Baltimore" },
@@ -2000,7 +2063,7 @@ void TestFormRampRightInstruction() {
       "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 3
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
@@ -2009,7 +2072,7 @@ void TestFormRampRightInstruction() {
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward
   // exists
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
@@ -2017,42 +2080,42 @@ void TestFormRampRightInstruction() {
       "Take the I 95 South ramp on the right toward Baltimore.");
 
   // phrase_id = 4
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { "Gettysburg Pike" }),
       "Take the Gettysburg Pike ramp on the right.");
 
   // phrase_id = 5
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, { },
                          { }),
       "Turn right to take the ramp.");
 
   // phrase_id = 6
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { },
                          { "I 95 South" }, { }, { }),
       "Turn right to take the I 95 South ramp.");
 
   // phrase_id = 7
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { },
                          { }, { "Baltimore" }, { }),
       "Turn right to take the ramp toward Baltimore.");
 
   // phrase_id = 8
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { },
                          { "I 95 South" }, { "Baltimore" }, { }),
       "Turn right to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 9
-  TryFormRampRightInstruction(
+  TryFormRampRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, { },
                          { "Gettysburg Pike" }),
@@ -2060,22 +2123,32 @@ void TestFormRampRightInstruction() {
 
 }
 
-void TryFormRampLeftInstruction(Maneuver maneuver, std::string expected) {
-  std::string instruction = NarrativeBuilderTest::FormRampInstruction(maneuver);
+void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
+                                std::string expected) {
+  std::string instruction = nbt.FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampLeftInstruction");
 }
 
 void TestFormRampLeftInstruction() {
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
+      directions_options);
+
+  NarrativeBuilderTest nbt(directions_options, dictionary);
+
   // phrase_id = 0
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { }),
       "Take the ramp on the left.");
 
   // phrase_id = 1
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
@@ -2083,7 +2156,7 @@ void TestFormRampLeftInstruction() {
       "Take the I 95 South ramp on the left.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
@@ -2091,7 +2164,7 @@ void TestFormRampLeftInstruction() {
       "Take the I 95 South ramp on the left.");
 
   // phrase_id = 2
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Baltimore" },
@@ -2099,7 +2172,7 @@ void TestFormRampLeftInstruction() {
       "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Baltimore" },
@@ -2107,7 +2180,7 @@ void TestFormRampLeftInstruction() {
       "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 3
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
@@ -2116,7 +2189,7 @@ void TestFormRampLeftInstruction() {
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward
   // exists
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
@@ -2124,42 +2197,42 @@ void TestFormRampLeftInstruction() {
       "Take the I 95 South ramp on the left toward Baltimore.");
 
   // phrase_id = 4
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { "Gettysburg Pike" }),
       "Take the Gettysburg Pike ramp on the left.");
 
   // phrase_id = 5
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, { },
                          { }),
       "Turn left to take the ramp.");
 
   // phrase_id = 6
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { "I 95 South" }, { }, { }),
       "Turn left to take the I 95 South ramp.");
 
   // phrase_id = 7
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { }, { "Baltimore" }, { }),
       "Turn left to take the ramp toward Baltimore.");
 
   // phrase_id = 8
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { "I 95 South" }, { "Baltimore" }, { }),
       "Turn left to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 9
-  TryFormRampLeftInstruction(
+  TryFormRampLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, { },
                          { "Gettysburg Pike" }),
@@ -2167,36 +2240,46 @@ void TestFormRampLeftInstruction() {
 
 }
 
-void TryFormExitRightInstruction(Maneuver maneuver, std::string expected) {
-  std::string instruction = NarrativeBuilderTest::FormExitInstruction(maneuver);
+void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
+                                 std::string expected) {
+  std::string instruction = nbt.FormExitInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitRightInstruction");
 }
 
 void TestFormExitRightInstruction() {
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
+      directions_options);
+
+  NarrativeBuilderTest nbt(directions_options, dictionary);
+
   // phrase_id = 0
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { }),
       "Take the exit on the right.");
 
   // phrase_id = 1
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" },
                          { }, { }, { }),
       "Take exit 67A on the right.");
 
   // phrase_id = 1; Test that name is ignored when number is present
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" },
                          { }, { }, { "Gettysburg Pike" }),
       "Take exit 67A on the right.");
 
   // phrase_id = 2
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
@@ -2204,7 +2287,7 @@ void TestFormExitRightInstruction() {
       "Take the I 95 South exit on the right.");
 
   // phrase_id = 3
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" }, {
                              "I 95 South" },
@@ -2212,7 +2295,7 @@ void TestFormExitRightInstruction() {
       "Take exit 67A on the right onto I 95 South.");
 
   // phrase_id = 4
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Baltimore" },
@@ -2220,14 +2303,14 @@ void TestFormExitRightInstruction() {
       "Take the exit on the right toward Baltimore.");
 
   // phrase_id = 5
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" },
                          { }, { "Baltimore" }, { }),
       "Take exit 67A on the right toward Baltimore.");
 
   // phrase_id = 6
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
@@ -2235,7 +2318,7 @@ void TestFormExitRightInstruction() {
       "Take the I 95 South exit on the right toward Baltimore.");
 
   // phrase_id = 7
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" }, {
                              "I 95 South" },
@@ -2243,21 +2326,21 @@ void TestFormExitRightInstruction() {
       "Take exit 67A on the right onto I 95 South toward Baltimore.");
 
   // phrase_id = 8
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { "Gettysburg Pike" }),
       "Take the Gettysburg Pike exit on the right.");
 
   // phrase_id = 10
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { },
                          { "US 15" }, { }, { "Gettysburg Pike" }),
       "Take the Gettysburg Pike exit on the right onto US 15.");
 
   // phrase_id = 12
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Harrisburg", "Gettysburg" },
@@ -2265,7 +2348,7 @@ void TestFormExitRightInstruction() {
       "Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg.");
 
   // phrase_id = 14
-  TryFormExitRightInstruction(
+  TryFormExitRightInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { },
                          { "US 15" }, { "Harrisburg", "Gettysburg" }, {
@@ -2274,36 +2357,46 @@ void TestFormExitRightInstruction() {
 
 }
 
-void TryFormExitLeftInstruction(Maneuver maneuver, std::string expected) {
-  std::string instruction = NarrativeBuilderTest::FormExitInstruction(maneuver);
+void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
+                                std::string expected) {
+  std::string instruction = nbt.FormExitInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitLeftInstruction");
 }
 
 void TestFormExitLeftInstruction() {
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary(
+      directions_options);
+
+  NarrativeBuilderTest nbt(directions_options, dictionary);
+
   // phrase_id = 0
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { }),
       "Take the exit on the left.");
 
   // phrase_id = 1
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, { },
                          { }, { }),
       "Take exit 67A on the left.");
 
   // phrase_id = 1; Test that name is ignored when number is present
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, { },
                          { }, { "Gettysburg Pike" }),
       "Take exit 67A on the left.");
 
   // phrase_id = 2
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
@@ -2311,7 +2404,7 @@ void TestFormExitLeftInstruction() {
       "Take the I 95 South exit on the left.");
 
   // phrase_id = 3
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, {
                              "I 95 South" },
@@ -2319,7 +2412,7 @@ void TestFormExitLeftInstruction() {
       "Take exit 67A on the left onto I 95 South.");
 
   // phrase_id = 4
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Baltimore" },
@@ -2327,14 +2420,14 @@ void TestFormExitLeftInstruction() {
       "Take the exit on the left toward Baltimore.");
 
   // phrase_id = 5
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, { },
                          { "Baltimore" }, { }),
       "Take exit 67A on the left toward Baltimore.");
 
   // phrase_id = 6
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
@@ -2342,7 +2435,7 @@ void TestFormExitLeftInstruction() {
       "Take the I 95 South exit on the left toward Baltimore.");
 
   // phrase_id = 7
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, {
                              "I 95 South" },
@@ -2350,21 +2443,21 @@ void TestFormExitLeftInstruction() {
       "Take exit 67A on the left onto I 95 South toward Baltimore.");
 
   // phrase_id = 8
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { "Gettysburg Pike" }),
       "Take the Gettysburg Pike exit on the left.");
 
   // phrase_id = 10
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { },
                          { "US 15" }, { }, { "Gettysburg Pike" }),
       "Take the Gettysburg Pike exit on the left onto US 15.");
 
   // phrase_id = 12
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Harrisburg", "Gettysburg" },
@@ -2372,7 +2465,7 @@ void TestFormExitLeftInstruction() {
       "Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg.");
 
   // phrase_id = 14
-  TryFormExitLeftInstruction(
+  TryFormExitLeftInstruction(nbt,
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { },
                          { "US 15" }, { "Harrisburg", "Gettysburg" }, {
@@ -2481,6 +2574,9 @@ int main() {
 
   // BuildUturnInstructions_5_miles_en_US
   suite.test(TEST_CASE(TestBuildUturnInstructions_5_miles_en_US));
+
+  // BuildVerbalMultiCue_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
 
   return suite.tear_down();
 }

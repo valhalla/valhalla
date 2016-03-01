@@ -5,7 +5,6 @@
 
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 

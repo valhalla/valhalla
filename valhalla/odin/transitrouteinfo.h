@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+
 #include <valhalla/odin/transitstop.h>
 
 namespace valhalla {

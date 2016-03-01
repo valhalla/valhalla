@@ -1,7 +1,7 @@
-#include "odin/signs.h"
-
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/baldr/verbal_text_formatter_us.h>
+
+#include "odin/signs.h"
 
 using namespace valhalla::baldr;
 

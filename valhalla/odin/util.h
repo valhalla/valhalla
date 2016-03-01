@@ -4,8 +4,11 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <valhalla/proto/directions_options.pb.h>
+
 #include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/odin/narrative_dictionary.h>
 
 namespace valhalla {
 namespace odin {
@@ -24,15 +27,12 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt);
 
 /**
- * Returns a list of locales mapped to ptrees containing parsed narrative information
- * Call this once from the main thread with a directory argument to initialize it.
- * After that, from any thread, just call it without arguments
+ * Returns a list of locales mapped to NarrativeDictionary's containing parsed narrative information
  *
- * @param narrative_locales_directory  the directory where the narrative locale files are located
  * @return the map of locale to ptree of parse narrative json/yml
  */
-using locales_singleton_t = std::unordered_map<std::string, boost::property_tree::ptree>;
-const locales_singleton_t& get_locales(const std::string& locales_directory = "");
+using locales_singleton_t = std::unordered_map<std::string, NarrativeDictionary>;
+const locales_singleton_t& get_locales();
 
 }
 }

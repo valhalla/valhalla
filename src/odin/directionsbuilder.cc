@@ -4,6 +4,7 @@
 #include "odin/directionsbuilder.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/narrativebuilder.h"
+#include "odin/narrative_builder_factory.h"
 
 namespace {
 // Minimum edge length
@@ -41,8 +42,9 @@ TripDirections DirectionsBuilder::Build(
     maneuvers = maneuversBuilder.Build();
 
     // Create the narrative
-    // TODO - factory
-    NarrativeBuilder::Build(directions_options, etp, maneuvers);
+    std::unique_ptr<NarrativeBuilder> narrative_builder =
+        NarrativeBuilderFactory::Create(directions_options, etp);
+    narrative_builder->Build(directions_options, etp, maneuvers);
   }
 
   // Return trip directions
