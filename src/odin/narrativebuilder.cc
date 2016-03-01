@@ -60,8 +60,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
           maneuver.set_verbal_post_transition_instruction(
               std::move(
                   FormVerbalPostTransitionInstruction(
-                      maneuver, directions_options.units(),
-                      maneuver.HasBeginStreetNames())));
+                      maneuver, maneuver.HasBeginStreetNames())));
         }
         break;
       }
@@ -94,8 +93,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_post_transition_instruction(
             std::move(
                 FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                    maneuver, maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kSlightRight:
@@ -116,8 +114,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_post_transition_instruction(
             std::move(
                 FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                    maneuver, maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kRight:
@@ -140,8 +137,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_post_transition_instruction(
             std::move(
                 FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                    maneuver, maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kUturnRight:
@@ -160,9 +156,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kRampStraight: {
@@ -182,9 +176,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         if (maneuver.length() > kVerbalPostMinimumRampLength) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
-              std::move(
-                  FormVerbalPostTransitionInstruction(
-                      maneuver, directions_options.units())));
+              std::move(FormVerbalPostTransitionInstruction(maneuver)));
         }
         break;
       }
@@ -205,9 +197,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         if (maneuver.length() > kVerbalPostMinimumRampLength) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
-              std::move(
-                  FormVerbalPostTransitionInstruction(
-                      maneuver, directions_options.units())));
+              std::move(FormVerbalPostTransitionInstruction(maneuver)));
         }
         break;
       }
@@ -228,9 +218,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         if (maneuver.length() > kVerbalPostMinimumRampLength) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
-              std::move(
-                  FormVerbalPostTransitionInstruction(
-                      maneuver, directions_options.units())));
+              std::move(FormVerbalPostTransitionInstruction(maneuver)));
         }
         break;
       }
@@ -254,9 +242,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
           if (maneuver.length() > kVerbalPostMinimumRampLength) {
             // Set verbal post transition instruction
             maneuver.set_verbal_post_transition_instruction(
-                std::move(
-                    FormVerbalPostTransitionInstruction(
-                        maneuver, directions_options.units())));
+                std::move(FormVerbalPostTransitionInstruction(maneuver)));
           }
         } else {
           // Set instruction
@@ -274,9 +260,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
           if (maneuver.length() > kVerbalPostMinimumRampLength) {
             // Set verbal post transition instruction
             maneuver.set_verbal_post_transition_instruction(
-                std::move(
-                    FormVerbalPostTransitionInstruction(
-                        maneuver, directions_options.units())));
+                std::move(FormVerbalPostTransitionInstruction(maneuver)));
           }
         }
         break;
@@ -295,9 +279,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutEnter: {
@@ -327,8 +309,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_post_transition_instruction(
             std::move(
                 FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                    maneuver, maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryEnter: {
@@ -346,9 +327,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryExit: {
@@ -367,8 +346,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_post_transition_instruction(
             std::move(
                 FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                    maneuver, maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionStart: {
@@ -382,9 +360,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionTransfer: {
@@ -399,9 +375,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionDestination: {
@@ -416,9 +390,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kTransit: {
@@ -526,9 +498,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+            std::move(FormVerbalPostTransitionInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kContinue:
@@ -3528,28 +3498,36 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
 }
 
 std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
-    Maneuver& maneuver, DirectionsOptions_Units units,
-    bool include_street_names, uint32_t element_max_count,
+    Maneuver& maneuver, bool include_street_names, uint32_t element_max_count,
     std::string delim) {
-  // "Continue for <DISTANCE>."
-  // "Continue on <STREET_NAMES(2)> for <DISTANCE>."
-
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
+  // "0": "Continue for <LENGTH>.",
+  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Continue";
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.post_transition_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (include_street_names && !street_names.empty()) {
-    instruction += " on ";
-    instruction += street_names;
+    phrase_id = 1;
   }
-  instruction += " for ";
-  instruction += FormDistance(maneuver, units);
-  instruction += ".";
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.post_transition_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLengthTag,
+      FormLength(
+          maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
+          dictionary_.post_transition_verbal_subset.us_customary_lengths));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
 
   return instruction;
 }

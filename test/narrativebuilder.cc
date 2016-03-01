@@ -41,12 +41,11 @@ class NarrativeBuilderTest : public NarrativeBuilder {
   }
 
   std::string FormVerbalPostTransitionInstruction(
-      Maneuver& maneuver, DirectionsOptions_Units units,
-      bool include_street_names = false,
+      Maneuver& maneuver, bool include_street_names = false,
       uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim) {
     return NarrativeBuilder::FormVerbalPostTransitionInstruction(
-        maneuver, units, include_street_names, element_max_count, delim);
+        maneuver, include_street_names, element_max_count, delim);
   }
 
 };
@@ -1539,11 +1538,10 @@ Maneuver CreateVerbalPostManeuver(vector<std::string> street_names,
 
 void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
                                             Maneuver maneuver,
-                                            DirectionsOptions_Units units,
                                             bool include_street_names,
                                             std::string expected) {
   std::string instruction = nbt.FormVerbalPostTransitionInstruction(
-      maneuver, units, include_street_names);
+      maneuver, include_street_names);
   if (instruction != expected) {
     throw std::runtime_error(
         "Incorrect FormVerbalPostTransitionInstruction - EXPECTED: " + expected
@@ -1562,191 +1560,158 @@ void TestFormVerbalPostTransitionInstruction() {
   NarrativeBuilderTest nbt_km(directions_options, dictionary);
 
   // Verify kilometer whole number
-  // TODO update after code update to (4) instead of 4.0
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 4.0f),
-      DirectionsOptions_Units_kKilometers, false,
-      "Continue for 4.0 kilometers.");
-
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 4.0f), false,
+      "Continue for 4 kilometers.");
 
   // Verify kilometers round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 3.54056f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 3.54056f), false,
       "Continue for 3.5 kilometers.");
 
   // Verify kilometers round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 3.86243f), false,
       "Continue for 3.9 kilometers.");
 
   // Verify kilometers street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 3.86243f), true,
       "Continue on Main Street for 3.9 kilometers.");
 
   // Verify 1 kilometer round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.04f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 1.04f), false,
       "Continue for 1 kilometer.");
 
   // Verify 1 kilometer round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.95f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.95f), false,
       "Continue for 1 kilometer.");
 
   // Verify 1 kilometer street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.0f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 1.0f), true,
       "Continue on Main Street for 1 kilometer.");
 
   // Verify a half kilometer round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.54f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.54f), false,
       "Continue for a half kilometer.");
 
   // Verify a half kilometer round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.45f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.45f), false,
       "Continue for a half kilometer.");
 
   // Verify a half kilometer street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.5f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.5f), true,
       "Continue on Main Street for a half kilometer.");
 
   // Verify 900 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.94f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.94f), false,
       "Continue for 900 meters.");
 
   // Verify 900 meters round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.85f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.85f), false,
       "Continue for 900 meters.");
 
   // Verify 900 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.9f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.9f), true,
       "Continue on Main Street for 900 meters.");
 
   // Verify 400 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.44f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.44f), false,
       "Continue for 400 meters.");
 
   // Verify 400 meters round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.35f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.35f), false,
       "Continue for 400 meters.");
 
   // Verify 400 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.4f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.4f), true,
       "Continue on Main Street for 400 meters.");
 
   // Verify 100 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.14f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.14f), false,
       "Continue for 100 meters.");
 
   // Verify 100 meters round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.095f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.095f), false,
       "Continue for 100 meters.");
 
   // Verify 100 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.1f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.1f), true,
       "Continue on Main Street for 100 meters.");
 
   // Verify 90 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.094f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.094f), false,
       "Continue for 90 meters.");
 
   // Verify 90 meters round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.085f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.085f), false,
       "Continue for 90 meters.");
 
   // Verify 90 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.09f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.09f), true,
       "Continue on Main Street for 90 meters.");
 
   // Verify 30 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.034f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.034f), false,
       "Continue for 30 meters.");
 
   // Verify 30 meters round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.025f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.025f), false,
       "Continue for 30 meters.");
 
   // Verify 30 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.03f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.03f), true,
       "Continue on Main Street for 30 meters.");
 
   // Verify 10 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.012f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.012f), false,
       "Continue for 10 meters.");
 
   // Verify 10 meters round up
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0096f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.0096f), false,
       "Continue for 10 meters.");
 
   // Verify 10 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.01f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.01f), true,
       "Continue on Main Street for 10 meters.");
 
   // Verify less than 10 meters round down
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" },  0.0094f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.0094f), false,
       "Continue for less than 10 meters.");
 
   // Verify less than 10 meters
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0088f),
-      DirectionsOptions_Units_kKilometers, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.0088f), false,
       "Continue for less than 10 meters.");
 
   // Verify less than 10 meters street name
-  TryFormVerbalPostTransitionInstruction(nbt_km,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.005f),
-      DirectionsOptions_Units_kKilometers, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_km, CreateVerbalPostManeuver( { "Main Street" }, 0.005f), true,
       "Continue on Main Street for less than 10 meters.");
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1756,208 +1721,173 @@ void TestFormVerbalPostTransitionInstruction() {
   NarrativeBuilderTest nbt_mi(directions_options, dictionary);
 
   // Verify mile whole number
-  // TODO update after code update to (3) instead of 3.0
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 4.828032f),
-      DirectionsOptions_Units_kMiles, false,
-      "Continue for 3.0 miles.");
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 4.828032f), false,
+      "Continue for 3 miles.");
 
   // Verify miles round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 3.604931f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 3.604931f), false,
       "Continue for 2.2 miles.");
 
   // Verify miles round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 3.637117f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 3.637117f), false,
       "Continue for 2.3 miles.");
 
   // Verify miles street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 3.637117f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 3.637117f), true,
       "Continue on Main Street for 2.3 miles.");
 
   // Verify 1 mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.657624f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.657624f), false,
       "Continue for 1 mile.");
 
   // Verify 1 mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.561064f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.561064f), false,
       "Continue for 1 mile.");
 
   // Verify 1 mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.60934f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.60934f), true,
       "Continue on Main Street for 1 mile.");
 
   // Verify half mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.8368589f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.8368589f), false,
       "Continue for a half mile.");
 
   // Verify half mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.7724851f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.7724851f), false,
       "Continue for a half mile.");
 
   // Verify half mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.804672f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.804672f), true,
       "Continue on Main Street for a half mile.");
 
   // Verify 9 tenths of a mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.480596f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.480596f), false,
       "Continue for 9 tenths of a mile.");
 
   // Verify 9 tenths of a mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.416223f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.416223f), false,
       "Continue for 9 tenths of a mile.");
 
   // Verify 9 tenths of a mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 1.44841f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 1.44841f), true,
       "Continue on Main Street for 9 tenths of a mile.");
 
   // Verify 4 tenths of a mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.675924f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.675924f), false,
       "Continue for 4 tenths of a mile.");
 
   // Verify 4 tenths of a mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.611551f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.611551f), false,
       "Continue for 4 tenths of a mile.");
 
   // Verify 4 tenths of a mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.643738f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.643738f), true,
       "Continue on Main Street for 4 tenths of a mile.");
 
   // Verify 1 tenth of a mile round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.193121f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.193121f), false,
       "Continue for 1 tenth of a mile.");
 
   // Verify 1 tenth of a mile round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.158496f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.158496f), false,
       "Continue for 1 tenth of a mile.");
 
   // Verify 1 tenth of a mile street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.160934f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.160934f), true,
       "Continue on Main Street for 1 tenth of a mile.");
 
   // Verify 500 feet round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.155448f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.155448f), false,
       "Continue for 500 feet.");
 
   // Verify 500 feet round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.149352f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.149352f), false,
       "Continue for 500 feet.");
 
   // Verify 500 feet street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.1524f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.1524f), true,
       "Continue on Main Street for 500 feet.");
 
   // Verify 100 feet round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.036576f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.036576f), false,
       "Continue for 100 feet.");
 
   // Verify 100 feet round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.028956f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.028956f), false,
       "Continue for 100 feet.");
 
   // Verify 100 feet street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.03048f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.03048f), true,
       "Continue on Main Street for 100 feet.");
 
   // Verify 90 feet round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0283464f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.0283464f), false,
       "Continue for 90 feet.");
 
   // Verify 90 feet round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0268224f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.0268224f), false,
       "Continue for 90 feet.");
 
   // Verify 90 feet street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.027432f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.027432f), true,
       "Continue on Main Street for 90 feet.");
 
   // Verify 10 feet round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.0036576f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.0036576f), false,
       "Continue for 10 feet.");
 
   // Verify 10 feet round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.00292608f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.00292608f), false,
       "Continue for 10 feet.");
 
   // Verify 10 feet street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.003048f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.003048f), true,
       "Continue on Main Street for 10 feet.");
 
   // Verify less than 10 feet round down
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.00280416f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.00280416f), false,
       "Continue for less than 10 feet.");
 
   // Verify less than 10 feet round up
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.00268224f),
-      DirectionsOptions_Units_kMiles, false,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.00268224f), false,
       "Continue for less than 10 feet.");
 
   // Verify less than 10 feet street name
-  TryFormVerbalPostTransitionInstruction(nbt_mi,
-      CreateVerbalPostManeuver( { "Main Street" }, 0.001524f),
-      DirectionsOptions_Units_kMiles, true,
+  TryFormVerbalPostTransitionInstruction(
+      nbt_mi, CreateVerbalPostManeuver( { "Main Street" }, 0.001524f), true,
       "Continue on Main Street for less than 10 feet.");
 
 }

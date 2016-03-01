@@ -354,9 +354,8 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormVerbalPostTransitionInstruction(
-      Maneuver& maneuver, DirectionsOptions_Units units,
-      bool include_street_names = false, uint32_t element_max_count =
-          kVerbalPostElementMaxCount,
+      Maneuver& maneuver, bool include_street_names = false,
+      uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
 
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);

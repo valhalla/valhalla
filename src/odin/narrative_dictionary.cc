@@ -50,6 +50,10 @@ void NarrativeDictionary::Load(
   // Populate destination_verbal_subset
   Load(destination_verbal_subset, narrative_pt.get_child(kDestinationVerbalKey));
 
+  LOG_TRACE("Populate post_transition_verbal_subset...");
+  // Populate post_transition_verbal_subset
+  Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
+
   LOG_TRACE("Populate verbal_multi_cue_subset...");
   // Populate verbal_multi_cue_subset
   Load(verbal_multi_cue_subset, narrative_pt.get_child(kVerbalMultiCueKey));
@@ -113,6 +117,27 @@ void NarrativeDictionary::Load(
   // Populate relative_directions
   destination_handle.relative_directions = as_vector<std::string>(
       destination_subset_pt, kRelativeDirectionsKey);
+}
+
+void NarrativeDictionary::Load(
+    PostTransitionVerbalSubset& post_transition_verbal_handle,
+    const boost::property_tree::ptree& post_transition_verbal_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(post_transition_verbal_handle),
+       post_transition_verbal_subset_pt);
+
+  // Populate metric_lengths
+  post_transition_verbal_handle.metric_lengths = as_vector<std::string>(
+      post_transition_verbal_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  post_transition_verbal_handle.us_customary_lengths = as_vector<std::string>(
+      post_transition_verbal_subset_pt, kUsCustomaryLengthsKey);
+
+  // Populate empty_street_name_labels
+  post_transition_verbal_handle.empty_street_name_labels = as_vector<std::string>(
+      post_transition_verbal_subset_pt, kEmptyStreetNameLabelsKey);
 }
 
 }

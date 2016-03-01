@@ -161,8 +161,15 @@
     "transit_transfer_verbal": null,
     "post_transit_connection_destination": null,
     "post_transit_connection_destination_verbal": null,
-    "post_transition_metric_verbal": null,
-    "post_transition_us_customary_verbal": null,
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Continue for <LENGTH>.",
+        "1": "Continue on <STREET_NAMES> for <LENGTH>."
+      },
+      "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
+      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"

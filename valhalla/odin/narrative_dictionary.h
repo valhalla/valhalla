@@ -15,6 +15,7 @@ constexpr auto kStartVerbalKey = "instructions.start_verbal";
 constexpr auto kDestinationKey = "instructions.destination";
 constexpr auto kDestinationVerbalAlertKey = "instructions.destination_verbal_alert";
 constexpr auto kDestinationVerbalKey = "instructions.destination_verbal";
+constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
 // Variable keys
@@ -58,7 +59,7 @@ constexpr auto kNextVerbalCueTag = "<NEXT_VERBAL_CUE>";
 constexpr auto kKilometersTag = "<KILOMETERS>";
 constexpr auto kMetersTag = "<METERS>";
 constexpr auto kMilesTag = "<MILES>";
-constexpr auto kTenthsOfMilesTag = "<TENTHS_OF_MILES>";
+constexpr auto kTenthsOfMilesTag = "<TENTHS_OF_MILE>";
 constexpr auto kFeetTag = "<FEET>";
 
 }
@@ -84,6 +85,12 @@ struct DestinationSubset : PhraseSet {
   std::vector<std::string> relative_directions;
 };
 
+struct PostTransitionVerbalSubset : PhraseSet {
+  std::vector<std::string> metric_lengths;
+  std::vector<std::string> us_customary_lengths;
+  std::vector<std::string> empty_street_name_labels;
+};
+
 /**
  * A class that stores the localized narrative instructions.
  */
@@ -97,6 +104,8 @@ class NarrativeDictionary {
   DestinationSubset destination_subset;
   DestinationSubset destination_verbal_alert_subset;
   DestinationSubset destination_verbal_subset;
+
+  PostTransitionVerbalSubset post_transition_verbal_subset;
 
   PhraseSet verbal_multi_cue_subset;
 
@@ -148,6 +157,18 @@ class NarrativeDictionary {
     */
   void Load(DestinationSubset& destination_handle,
             const boost::property_tree::ptree& destination_subset_pt);
+
+  /**
+    * Loads the specified 'post transition verbal' instruction subset with the
+    * localized narrative instructions contained in the specified property tree.
+    *
+    * @param  post_transition_verbal_handle  The 'post transition verbal'
+    *                                        structure to populate.
+    * @param  post_transition_verbal_subset_pt  The 'post transition verbal'
+    *                                           property tree.
+    */
+  void Load(PostTransitionVerbalSubset& post_transition_verbal_handle,
+            const boost::property_tree::ptree& post_transition_verbal_subset_pt);
 
 };
 

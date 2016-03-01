@@ -106,7 +106,7 @@ void test_en_US_start_verbal() {
 
 }
 
-void test_en_US_destination_phrases() {
+void test_en_US_destination() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "You have arrived at your destination.",
@@ -126,7 +126,7 @@ void test_en_US_destination_phrases() {
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
 }
 
-void test_en_US_destination_verbal_alert_phrases() {
+void test_en_US_destination_verbal_alert() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "You will arrive at your destination.",
@@ -146,7 +146,7 @@ void test_en_US_destination_verbal_alert_phrases() {
   validate(phrase_3, "<DESTINATION> will be on the <RELATIVE_DIRECTION>.");
 }
 
-void test_en_US_destination_verbal_phrases() {
+void test_en_US_destination_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "You have arrived at your destination.",
@@ -166,6 +166,39 @@ void test_en_US_destination_verbal_phrases() {
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
 }
 
+void test_en_US_post_transition_verbal_subset() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Continue for <LENGTH>.",
+  const auto& phrase_0 = dictionary.post_transition_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Continue for <LENGTH>.");
+
+  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
+  const auto& phrase_1 = dictionary.post_transition_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Continue on <STREET_NAMES> for <LENGTH>.");
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.post_transition_verbal_subset.metric_lengths;
+  validate(metric_lengths, { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" });
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.post_transition_verbal_subset.us_customary_lengths;
+  validate(us_customary_lengths, { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" });
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.post_transition_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
+}
+
+void test_en_US_verbal_multi_cue() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+  const auto& phrase_0 = dictionary.verbal_multi_cue_subset.phrases.at("0");
+  validate(phrase_0, "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>");
+}
+
 }
 
 int main() {
@@ -178,13 +211,19 @@ int main() {
   suite.test(TEST_CASE(test_en_US_start_verbal));
 
   // test the en-US destination phrases
-  suite.test(TEST_CASE(test_en_US_destination_phrases));
+  suite.test(TEST_CASE(test_en_US_destination));
 
   // test the en-US destination verbal alert_phrases
-  suite.test(TEST_CASE(test_en_US_destination_verbal_alert_phrases));
+  suite.test(TEST_CASE(test_en_US_destination_verbal_alert));
 
   // test the en-US destination verbal phrases
-  suite.test(TEST_CASE(test_en_US_destination_verbal_phrases));
+  suite.test(TEST_CASE(test_en_US_destination_verbal));
+
+  // test the en-US post_transition_verbal_subset phrases
+  suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));
+
+  // test the en-US verbal_multi_cue phrases
+  suite.test(TEST_CASE(test_en_US_verbal_multi_cue));
 
   return suite.tear_down();
 }
