@@ -10,6 +10,12 @@ using namespace valhalla::odin;
 
 namespace {
 
+// Expected strings
+const std::vector<std::string> kExpectedEmptyStreetNameLabels = { "walkway", "cycleway", "mountain bike trail" };
+const std::vector<std::string> kExpectedCardinalDirections = { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" };
+const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" };
+const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };
+
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
   const auto phrase_dictionary = get_locales().find(lang_tag);
@@ -65,11 +71,11 @@ void test_en_US_start() {
 
   // cardinal_directions
   const auto& cardinal_directions = dictionary.start_subset.cardinal_directions;
-  validate(cardinal_directions, { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" });
+  validate(cardinal_directions, kExpectedCardinalDirections);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.start_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
@@ -90,19 +96,19 @@ void test_en_US_start_verbal() {
 
   // cardinal_directions
   const auto& cardinal_directions = dictionary.start_verbal_subset.cardinal_directions;
-  validate(cardinal_directions, { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" });
+  validate(cardinal_directions, kExpectedCardinalDirections);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.start_verbal_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
   // metric_lengths
   const auto& metric_lengths = dictionary.start_verbal_subset.metric_lengths;
-  validate(metric_lengths, { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" });
+  validate(metric_lengths, kExpectedMetricLengths);
 
   // us_customary_lengths
   const auto& us_customary_lengths = dictionary.start_verbal_subset.us_customary_lengths;
-  validate(us_customary_lengths, { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" });
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 
 }
 
@@ -179,7 +185,7 @@ void test_en_US_continue() {
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
@@ -196,7 +202,7 @@ void test_en_US_continue_verbal_alert() {
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_verbal_alert_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
@@ -213,15 +219,15 @@ void test_en_US_continue_verbal() {
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_verbal_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
   // metric_lengths
   const auto& metric_lengths = dictionary.continue_verbal_subset.metric_lengths;
-  validate(metric_lengths, { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" });
+  validate(metric_lengths, kExpectedMetricLengths);
 
   // us_customary_lengths
   const auto& us_customary_lengths = dictionary.continue_verbal_subset.us_customary_lengths;
-  validate(us_customary_lengths, { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" });
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 
 }
 
@@ -238,15 +244,15 @@ void test_en_US_post_transition_verbal_subset() {
 
   // metric_lengths
   const auto& metric_lengths = dictionary.post_transition_verbal_subset.metric_lengths;
-  validate(metric_lengths, { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" });
+  validate(metric_lengths, kExpectedMetricLengths);
 
   // us_customary_lengths
   const auto& us_customary_lengths = dictionary.post_transition_verbal_subset.us_customary_lengths;
-  validate(us_customary_lengths, { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" });
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.post_transition_verbal_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
