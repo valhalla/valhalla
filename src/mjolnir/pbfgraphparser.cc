@@ -199,6 +199,17 @@ struct graph_callback : public OSMPBF::Callback {
       return;
     }
 
+    // Check for ways that loop back on themselves (simple check) and add
+    // any wayids that have loops to a vector
+    if (nodes.size() > 2) {
+      for (size_t i = 2, j = 0; i < nodes.size(); i++, j++) {
+        if (nodes[i] == nodes[j]) {
+          loops_.push_back(osmid);
+          break;
+        }
+      }
+    }
+
     //unsorted extracts are just plain nasty, so they can bugger off!
     if(osmid < last_way_)
       throw std::runtime_error("Detected unsorted input data");
@@ -842,6 +853,18 @@ struct graph_callback : public OSMPBF::Callback {
     way_nodes_.reset(way_nodes);
   }
 
+  // Output list of wayids that have loops
+  void output_loops() {
+    std::ofstream loop_file;
+    loop_file.open("loop_ways.txt", std::ofstream::out | std::ofstream::trunc);
+    for (auto& wayid : loops_) {
+      loop_file << wayid << std::endl;
+    }
+    loop_file.close();
+    loops_.clear();
+    loops_.shrink_to_fit();
+  }
+
   // List of the tile levels to be created
   TileHierarchy tile_hierarchy_;
 
@@ -867,6 +890,9 @@ struct graph_callback : public OSMPBF::Callback {
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
   std::unordered_map<uint64_t, size_t> loop_nodes_;
+
+  // List of wayids with loops
+  std::vector<uint64_t> loops_;
 };
 
 }
@@ -904,6 +930,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
   }
+  callback.output_loops();
   callback.reset(nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
 
