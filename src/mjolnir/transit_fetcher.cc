@@ -491,6 +491,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     AABB2<PointLL> bbox(filter.minx(), min_y, filter.maxx(), max_y);
     ptree response;
     auto api_key = pt.get_optional<std::string>("api_key") ? "&api_key=" + pt.get<std::string>("api_key") : "";
+    auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
+        pt.get<std::string>("import_level") : "";
+
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current, hierarchy);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
@@ -572,6 +575,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     for(const auto& stop : stops) {
       request = url((boost::format("/api/v1/schedule_stop_pairs?total=false&per_page=%1%&origin_onestop_id=%2%&service_from_date=%3%-%4%-%5%")
         % pt.get<std::string>("per_page") % stop.first % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
+      request = *request + import_level;
       do {
         //grab some stuff
         response = curler(*request, "schedule_stop_pairs");
@@ -800,6 +804,7 @@ int main(int argc, char** argv) {
   pt.erase("per_page"); pt.add("per_page", argc > 3 ? std::string(argv[3]) : std::to_string(1000));
   if(argc > 4) { pt.get_child("mjolnir").erase("transit_dir"); pt.add("mjolnir.transit_dir", std::string(argv[4])); }
   if(argc > 5) { pt.erase("api_key"); pt.add("api_key", std::string(argv[5])); }
+  if(argc > 6) { pt.erase("import_level"); pt.add("import_level", std::string(argv[6])); }
 
   //yes we want to curl
   curl_global_init(CURL_GLOBAL_DEFAULT);
