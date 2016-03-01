@@ -860,69 +860,94 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(
 }
 
 std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
-  // "Continue"
-  // "Continue on <STREET_NAMES>."
+  // "0": "Continue.",
+  // "1": "Continue on <STREET_NAMES>."
 
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Continue";
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.continue_subset.empty_street_name_labels, true);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    instruction += " on ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.continue_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Continue"
-  //  "Continue on <STREET_NAMES(1)>."
+  // "0": "Continue.",
+  // "1": "Continue on <STREET_NAMES>."
 
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Continue";
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.continue_verbal_alert_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    instruction += " on ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.continue_verbal_alert_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(
     Maneuver& maneuver, DirectionsOptions_Units units,
     uint32_t element_max_count, std::string delim) {
-  //  "Continue for <DISTANCE>"
-  //  "Continue on <STREET_NAMES(2)> for <DISTANCE>."
+  // "0": "Continue for <LENGTH>.",
+  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
 
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Continue";
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.continue_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    instruction += " on ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += " for ";
-  instruction += FormDistance(maneuver, units);
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.continue_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLengthTag,
+      FormLength(maneuver, dictionary_.continue_verbal_subset.metric_lengths,
+                 dictionary_.continue_verbal_subset.us_customary_lengths));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
 }
 

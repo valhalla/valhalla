@@ -30,6 +30,7 @@ NarrativeDictionary::NarrativeDictionary(
 void NarrativeDictionary::Load(
     const boost::property_tree::ptree& narrative_pt) {
 
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate start_subset...");
   // Populate start_subset
   Load(start_subset, narrative_pt.get_child(kStartKey));
@@ -38,6 +39,7 @@ void NarrativeDictionary::Load(
   // Populate start_verbal_subset
   Load(start_verbal_subset, narrative_pt.get_child(kStartVerbalKey));
 
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate destination_subset...");
   // Populate destination_subset
   Load(destination_subset, narrative_pt.get_child(kDestinationKey));
@@ -50,10 +52,25 @@ void NarrativeDictionary::Load(
   // Populate destination_verbal_subset
   Load(destination_verbal_subset, narrative_pt.get_child(kDestinationVerbalKey));
 
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate continue_subset...");
+  // Populate continue_subset
+  Load(continue_subset, narrative_pt.get_child(kContinueKey));
+
+  LOG_TRACE("Populate continue_verbal_alert_subset...");
+  // Populate continue_verbal_alert_subset
+  Load(continue_verbal_alert_subset, narrative_pt.get_child(kContinueVerbalAlertKey));
+
+  LOG_TRACE("Populate continue_verbal_subset...");
+  // Populate continue_verbal_subset
+  Load(continue_verbal_subset, narrative_pt.get_child(kContinueVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
 
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate verbal_multi_cue_subset...");
   // Populate verbal_multi_cue_subset
   Load(verbal_multi_cue_subset, narrative_pt.get_child(kVerbalMultiCueKey));
@@ -64,10 +81,6 @@ void NarrativeDictionary::Load(PhraseSet& phrase_handle,
                                const boost::property_tree::ptree& phrase_pt) {
 
   for (const auto& item : phrase_pt.get_child(kPhrasesKey)) {
-    LOG_TRACE("read phrases...");
-    LOG_TRACE("item.first=" + item.first);
-    LOG_TRACE("item.second.get_value<std::string>())=" + item.second.get_value<std::string>());
-
     phrase_handle.phrases.emplace(item.first,
                                   item.second.get_value<std::string>());
   }
@@ -77,7 +90,6 @@ void NarrativeDictionary::Load(
     StartSubset& start_handle,
     const boost::property_tree::ptree& start_subset_pt) {
 
-  LOG_TRACE("Populate phrases...");
   // Populate phrases
   Load(static_cast<PhraseSet&>(start_handle), start_subset_pt);
 
@@ -110,13 +122,40 @@ void NarrativeDictionary::Load(
     DestinationSubset& destination_handle,
     const boost::property_tree::ptree& destination_subset_pt) {
 
-  LOG_TRACE("Populate phrases...");
   // Populate phrases
   Load(static_cast<PhraseSet&>(destination_handle), destination_subset_pt);
 
   // Populate relative_directions
   destination_handle.relative_directions = as_vector<std::string>(
       destination_subset_pt, kRelativeDirectionsKey);
+}
+
+void NarrativeDictionary::Load(
+    ContinueSubset& continue_handle,
+    const boost::property_tree::ptree& continue_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(continue_handle), continue_subset_pt);
+
+  // Populate empty_street_name_labels
+  continue_handle.empty_street_name_labels = as_vector<std::string>(
+      continue_subset_pt, kEmptyStreetNameLabelsKey);
+}
+
+void NarrativeDictionary::Load(
+    ContinueVerbalSubset& continue_verbal_handle,
+    const boost::property_tree::ptree& continue_verbal_subset_pt) {
+
+  // Populate continue_subset items
+  Load(static_cast<ContinueSubset&>(continue_verbal_handle), continue_verbal_subset_pt);
+
+  // Populate metric_lengths
+  continue_verbal_handle.metric_lengths = as_vector<std::string>(
+      continue_verbal_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  continue_verbal_handle.us_customary_lengths = as_vector<std::string>(
+      continue_verbal_subset_pt, kUsCustomaryLengthsKey);
 }
 
 void NarrativeDictionary::Load(

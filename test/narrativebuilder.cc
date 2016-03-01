@@ -971,7 +971,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
 // FormContinueInstruction
 // 0 "Continue."
 // 0 "Continue."
-// 0 "Continue for <DISTANCE>."
+// 0 "Continue for <LENGTH>."
 void TestBuildContinueInstructions_0_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1002,7 +1002,7 @@ void TestBuildContinueInstructions_0_miles_en_US() {
 // FormContinueInstruction
 // 1 "Continue on <STREET_NAMES>."
 // 1 "Continue on <STREET_NAMES(1)>."
-// 1 "Continue on <STREET_NAMES(2)> for <DISTANCE>."
+// 1 "Continue on <STREET_NAMES(2)> for <LENGTH>."
 void TestBuildContinueInstructions_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";

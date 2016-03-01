@@ -54,16 +54,27 @@
       "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
     },
     "continue": {
-      "0": "Continue.",
-      "1": "Continue on <STREET_NAMES>."
+      "phrases": {
+        "0": "Continue.",
+        "1": "Continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "continue_verbal_alert": {
-      "0": "Continue.",
-      "1": "Continue on <STREET_NAMES>."
+      "phrases": {
+        "0": "Continue.",
+        "1": "Continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "continue_verbal": {
-      "0": "Continue for <LENGTH>.",
-      "1": "Continue on <STREET_NAMES> for <LENGTH>."
+      "phrases": {
+        "0": "Continue for <LENGTH>.",
+        "1": "Continue on <STREET_NAMES> for <LENGTH>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
+      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"]
     },
     "bear": {
       "0": "Bear <RELATIVE_DIRECTION>.",

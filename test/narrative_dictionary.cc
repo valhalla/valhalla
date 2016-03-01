@@ -166,6 +166,65 @@ void test_en_US_destination_verbal() {
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
 }
 
+void test_en_US_continue() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Continue.",
+  const auto& phrase_0 = dictionary.continue_subset.phrases.at("0");
+  validate(phrase_0, "Continue.");
+
+  // "1": "Continue on <STREET_NAMES>."
+  const auto& phrase_1 = dictionary.continue_subset.phrases.at("1");
+  validate(phrase_1, "Continue on <STREET_NAMES>.");
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.continue_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
+}
+
+void test_en_US_continue_verbal_alert() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Continue.",
+  const auto& phrase_0 = dictionary.continue_verbal_alert_subset.phrases.at("0");
+  validate(phrase_0, "Continue.");
+
+  // "1": "Continue on <STREET_NAMES>."
+  const auto& phrase_1 = dictionary.continue_verbal_alert_subset.phrases.at("1");
+  validate(phrase_1, "Continue on <STREET_NAMES>.");
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.continue_verbal_alert_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
+}
+
+void test_en_US_continue_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Continue for <LENGTH>.",
+  const auto& phrase_0 = dictionary.continue_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Continue for <LENGTH>.");
+
+  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
+  const auto& phrase_1 = dictionary.continue_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Continue on <STREET_NAMES> for <LENGTH>.");
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.continue_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, { "walkway", "cycleway", "mountain bike trail" });
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.continue_verbal_subset.metric_lengths;
+  validate(metric_lengths, { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" });
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.continue_verbal_subset.us_customary_lengths;
+  validate(us_customary_lengths, { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" });
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
