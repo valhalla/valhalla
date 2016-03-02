@@ -801,6 +801,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 // Add connection edges from the transit stop to an OSM edge
 void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
                       const TileHierarchy& tilehierarchy,
+                      GraphReader& reader,
+                      std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
   PointLL stop_ll = {stop.lon(), stop.lat() };
   uint64_t wayid = stop.osm_way_id();
@@ -817,6 +819,52 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
 
       if (edgeinfo->wayid() == wayid) {
+
+        // this is a temp hack until we have some time to have loki return multiple, ranked results.
+        // if the assigned wayid is a ferry, try to find a pedestrian edge instead.
+        // use the distance to the nodes to determine who is closer and where to look for pedestrian edges
+        if (directededge->use() == Use::kFerry || directededge->use() == Use::kRailFerry) {
+          float start_distance = node->latlng().Distance(stop_ll);
+
+          const DirectedEdge* opp_de = tile->directededge(node->edge_index() + directededge->opp_index());
+          GraphId end_node = opp_de->endnode();
+          float end_distance = 0.0f;
+
+          const GraphTile* endnode_tile = tile;
+          if ( directededge->endnode().Tile_Base() != end_node.Tile_Base()) {
+              // Get the end node tile
+              lock.lock();
+              endnode_tile = reader.GetGraphTile(end_node);
+              lock.unlock();
+          }
+
+          const NodeInfo* closest_node = endnode_tile->node(end_node.id());
+          end_distance = closest_node->latlng().Distance(stop_ll);
+          if (start_distance <= end_distance)
+            closest_node = node;
+
+          // loop until we hopefully find an edge with pedestrian access.
+          for (uint32_t x = 0, count = closest_node->edge_count(); x < count; x++) {
+            const DirectedEdge* de = endnode_tile->directededge(closest_node->edge_index() + x);
+            auto edge_info = endnode_tile->edgeinfo(de->edgeinfo_offset());
+
+            if (edge_info->wayid() != wayid && (de->forwardaccess() & kPedestrianAccess) &&
+                de->use() != Use::kFerry && de->use() != Use::kRailFerry) {
+              // update the wayid
+              wayid = edge_info->wayid();
+              break;
+            }
+          }
+          if (wayid != edgeinfo->wayid()) {
+            //restart the search process with the updated wayid.
+            i = 0;
+            mindist = 10000000.0f;
+            edgelength = 0;
+            startnode = GraphId{}, endnode = GraphId{};
+            closest_shape.clear();
+            break;
+          }
+        }
 
         // Get shape and find closest point
         auto this_shape = edgeinfo->shape();
@@ -975,7 +1023,7 @@ void build(const std::string& transit_dir,
 
       // Form connections to the stop
       // TODO - deal with hierarchy (only connect egress locations)
-      AddOSMConnection(stop, tile, hierarchy, connection_edges);
+      AddOSMConnection(stop, tile, hierarchy, reader, lock, connection_edges);
 
       // Store stop information in TransitStops
       tilebuilder.AddTransitStop( { tilebuilder.AddName(stop.onestop_id()),
@@ -1231,7 +1279,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-  LOG_INFO("Finished - TransitBuider took " + std::to_string(secs) + " secs");
+  LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 
 }
