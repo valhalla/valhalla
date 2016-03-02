@@ -15,6 +15,7 @@ const std::vector<std::string> kExpectedEmptyStreetNameLabels = { "walkway", "cy
 const std::vector<std::string> kExpectedCardinalDirections = { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" };
 const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" };
 const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };
+const std::vector<std::string> kExpectedRelativelDirectionsLR = { "left", "right" };
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -130,6 +131,11 @@ void test_en_US_destination() {
   // "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
   const auto& phrase_3 = dictionary.destination_subset.phrases.at("3");
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.destination_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
 }
 
 void test_en_US_destination_verbal_alert() {
@@ -150,6 +156,11 @@ void test_en_US_destination_verbal_alert() {
   // "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
   const auto& phrase_3 = dictionary.destination_verbal_alert_subset.phrases.at("3");
   validate(phrase_3, "<DESTINATION> will be on the <RELATIVE_DIRECTION>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.destination_verbal_alert_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
 }
 
 void test_en_US_destination_verbal() {
@@ -170,6 +181,11 @@ void test_en_US_destination_verbal() {
   // "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
   const auto& phrase_3 = dictionary.destination_verbal_subset.phrases.at("3");
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.destination_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
 }
 
 void test_en_US_continue() {
@@ -231,6 +247,64 @@ void test_en_US_continue_verbal() {
 
 }
 
+void test_en_US_bear() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Bear <RELATIVE_DIRECTION>.",
+  const auto& phrase_0 = dictionary.bear_subset.phrases.at("0");
+  validate(phrase_0, "Bear <RELATIVE_DIRECTION>.");
+
+  // "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  const auto& phrase_1 = dictionary.bear_subset.phrases.at("1");
+  validate(phrase_1, "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
+
+  // "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  const auto& phrase_2 = dictionary.bear_subset.phrases.at("2");
+  validate(phrase_2, "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
+
+  // "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  const auto& phrase_3 = dictionary.bear_subset.phrases.at("3");
+  validate(phrase_3, "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.bear_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.bear_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_bear_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Bear <RELATIVE_DIRECTION>.",
+  const auto& phrase_0 = dictionary.bear_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Bear <RELATIVE_DIRECTION>.");
+
+  // "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  const auto& phrase_1 = dictionary.bear_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
+
+  // "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  const auto& phrase_2 = dictionary.bear_verbal_subset.phrases.at("2");
+  validate(phrase_2, "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
+
+  // "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  const auto& phrase_3 = dictionary.bear_verbal_subset.phrases.at("3");
+  validate(phrase_3, "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.bear_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.bear_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -283,6 +357,21 @@ int main() {
 
   // test the en-US destination verbal phrases
   suite.test(TEST_CASE(test_en_US_destination_verbal));
+
+  // test the en-US continue phrases
+  suite.test(TEST_CASE(test_en_US_continue));
+
+  // test the en-US continue verbal alert_phrases
+  suite.test(TEST_CASE(test_en_US_continue_verbal_alert));
+
+  // test the en-US continue verbal phrases
+  suite.test(TEST_CASE(test_en_US_continue_verbal));
+
+  // test the en-US bear phrases
+  suite.test(TEST_CASE(test_en_US_bear));
+
+  // test the en-US bear verbal phrases
+  suite.test(TEST_CASE(test_en_US_bear_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

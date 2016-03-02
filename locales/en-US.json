@@ -77,24 +77,24 @@
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"]
     },
     "bear": {
-      "0": "Bear <RELATIVE_DIRECTION>.",
-      "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-      "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-      "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-      "relative_directions": ["left", "right"]
-    },
-    "bear_verbal_alert": {
-      "0": "Bear <RELATIVE_DIRECTION>.",
-      "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-      "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-      "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-      "relative_directions": ["left", "right"]
+      "phrases": {
+        "0": "Bear <RELATIVE_DIRECTION>.",
+        "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "bear_verbal": {
-      "0": "Bear <RELATIVE_DIRECTION>.",
-      "1": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-      "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-      "relative_directions": ["left", "right"]
+      "phrases": {
+        "0": "Bear <RELATIVE_DIRECTION>.",
+        "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "turn": null,
     "turn_verbal_alert": null,
