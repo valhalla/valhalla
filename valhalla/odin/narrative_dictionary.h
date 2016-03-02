@@ -18,6 +18,8 @@ constexpr auto kDestinationVerbalKey = "instructions.destination_verbal";
 constexpr auto kContinueKey = "instructions.continue";
 constexpr auto kContinueVerbalAlertKey = "instructions.continue_verbal_alert";
 constexpr auto kContinueVerbalKey = "instructions.continue_verbal";
+constexpr auto kBearKey = "instructions.bear";
+constexpr auto kBearVerbalKey = "instructions.bear_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -97,6 +99,11 @@ struct ContinueVerbalSubset : ContinueSubset {
   std::vector<std::string> us_customary_lengths;
 };
 
+struct TurnSubset : PhraseSet {
+  std::vector<std::string> relative_directions;
+  std::vector<std::string> empty_street_name_labels;
+};
+
 struct PostTransitionVerbalSubset : PhraseSet {
   std::vector<std::string> metric_lengths;
   std::vector<std::string> us_customary_lengths;
@@ -123,6 +130,10 @@ class NarrativeDictionary {
   ContinueSubset continue_subset;
   ContinueSubset continue_verbal_alert_subset;
   ContinueVerbalSubset continue_verbal_subset;
+
+  // Bear
+  TurnSubset bear_subset;
+  TurnSubset bear_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
@@ -198,6 +209,16 @@ class NarrativeDictionary {
     */
   void Load(ContinueVerbalSubset& continue_verbal_handle,
             const boost::property_tree::ptree& continue_verbal_subset_pt);
+
+  /**
+    * Loads the specified 'turn' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  turn_handle  The 'turn' structure to populate.
+    * @param  turn_subset_pt  The 'turn' property tree.
+    */
+  void Load(TurnSubset& turn_handle,
+            const boost::property_tree::ptree& turn_subset_pt);
 
   /**
     * Loads the specified 'post transition verbal' instruction subset with the

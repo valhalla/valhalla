@@ -392,20 +392,17 @@ class NarrativeBuilder {
   std::string FormUsCustomaryLength(float miles,
       const std::vector<std::string>& us_customary_lengths);
 
-  // TODO remove after refactor
-  std::string FormDistance(Maneuver& maneuver, DirectionsOptions_Units units);
-
-  // TODO remove after refactor
-  std::string FormKilometers(float kilometers);
-
-  // TODO remove after refactor
-  std::string FormMiles(float miles);
-
   /////////////////////////////////////////////////////////////////////////////
+  // TODO remove after refactor
   std::string FormCardinalDirection(
       TripDirections_Maneuver_CardinalDirection cardinal_direction);
 
   /////////////////////////////////////////////////////////////////////////////
+  std::string FormRelativeTwoDirection(
+      TripDirections_Maneuver_Type type,
+      const std::vector<std::string>& relative_directions);
+
+  // TODO remove after refactor
   std::string FormTurnTypeInstruction(TripDirections_Maneuver_Type type);
 
   /////////////////////////////////////////////////////////////////////////////
