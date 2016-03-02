@@ -15,7 +15,6 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
 
 #install the service deps in the background
 $DIR/install_service_deps.sh "$1" &
-$DIR/install_yml_cpp.sh &
 
 if [ -n "$1" ] && [ -d "$1" ]; then
         pushd "$1"
