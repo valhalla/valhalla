@@ -136,7 +136,7 @@ access = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
@@ -174,7 +174,7 @@ motor_vehicle = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true"
@@ -193,7 +193,7 @@ foot = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["crossing"] = "true",
@@ -211,7 +211,8 @@ bus = {
 ["permissive"] = "true",
 ["restricted"] = "true",
 ["destination"] = "true",
-["delivery"] = "false"
+["delivery"] = "false",
+["official"] = "true"
 }
 
 psv = {
@@ -237,7 +238,7 @@ truck = {
 ["permissive"] = "false",
 ["unsuitable"] = "false",
 ["agricultural;forestry"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["forestry"] = "false",
 ["destination;delivery"] = "true"
 }
@@ -266,7 +267,8 @@ bicycle = {
 ["share_busway"] = "true",
 ["none"] = "false",
 ["allowed"] = "true",
-["private"] = "true"
+["private"] = "true",
+["official"] = "true"
 }
 
 cycleway = {
@@ -360,7 +362,7 @@ motor_vehicle_node = {
 ["forestry"] = 0,
 ["destination"] = 1,
 ["customers"] = 1,
-["official"] = 0,
+["official"] = 1,
 ["public"] = 1,
 ["restricted"] = 1,
 ["allowed"] = 1
@@ -382,7 +384,8 @@ bicycle_node = {
 ["share_busway"] = 4,
 ["none"] = 0,
 ["allowed"] = 4,
-["private"] = 4
+["private"] = 4,
+["official"] = 4
 }
 
 foot_node = {
@@ -398,7 +401,7 @@ foot_node = {
 ["forestry"] = 0,
 ["destination"] = 2,
 ["customers"] = 2,
-["official"] = 0,
+["official"] = 2,
 ["public"] = 2,
 ["restricted"] = 2,
 ["crossing"] = 2,
@@ -416,7 +419,8 @@ bus_node = {
 ["permissive"] = 64,
 ["restricted"] = 64,
 ["destination"] = 64,
-["delivery"] = 0
+["delivery"] = 0,
+["official"] = 64
 }
 
 truck_node = {
@@ -432,7 +436,7 @@ truck_node = {
 ["permissive"] = 0,
 ["unsuitable"] = 0,
 ["agricultural;forestry"] = 0,
-["official"] = 0,
+["official"] = 8,
 ["forestry"] = 0,
 ["destination;delivery"] = 8
 }
