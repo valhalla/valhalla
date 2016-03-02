@@ -15,6 +15,7 @@ const std::vector<std::string> kExpectedEmptyStreetNameLabels = { "walkway", "cy
 const std::vector<std::string> kExpectedCardinalDirections = { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" };
 const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" };
 const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };
+const std::vector<std::string> kExpectedRelativelDirectionsLR = { "left", "right" };
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -130,6 +131,11 @@ void test_en_US_destination() {
   // "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
   const auto& phrase_3 = dictionary.destination_subset.phrases.at("3");
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.destination_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
 }
 
 void test_en_US_destination_verbal_alert() {
@@ -150,6 +156,11 @@ void test_en_US_destination_verbal_alert() {
   // "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
   const auto& phrase_3 = dictionary.destination_verbal_alert_subset.phrases.at("3");
   validate(phrase_3, "<DESTINATION> will be on the <RELATIVE_DIRECTION>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.destination_verbal_alert_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
 }
 
 void test_en_US_destination_verbal() {
@@ -170,6 +181,11 @@ void test_en_US_destination_verbal() {
   // "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
   const auto& phrase_3 = dictionary.destination_verbal_subset.phrases.at("3");
   validate(phrase_3, "<DESTINATION> is on the <RELATIVE_DIRECTION>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.destination_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativelDirectionsLR);
+
 }
 
 void test_en_US_continue() {
