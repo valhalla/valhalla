@@ -136,7 +136,7 @@ access = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "true",
+["official"] = "false",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
@@ -174,7 +174,7 @@ motor_vehicle = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "true",
+["official"] = "false",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true"
@@ -212,7 +212,7 @@ bus = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "true"
+["official"] = "false"
 }
 
 psv = {
@@ -238,7 +238,7 @@ truck = {
 ["permissive"] = "false",
 ["unsuitable"] = "false",
 ["agricultural;forestry"] = "false",
-["official"] = "true",
+["official"] = "false",
 ["forestry"] = "false",
 ["destination;delivery"] = "true"
 }
@@ -362,7 +362,7 @@ motor_vehicle_node = {
 ["forestry"] = 0,
 ["destination"] = 1,
 ["customers"] = 1,
-["official"] = 1,
+["official"] = 0,
 ["public"] = 1,
 ["restricted"] = 1,
 ["allowed"] = 1
@@ -420,7 +420,7 @@ bus_node = {
 ["restricted"] = 64,
 ["destination"] = 64,
 ["delivery"] = 0,
-["official"] = 64
+["official"] = 0,
 }
 
 truck_node = {
@@ -436,7 +436,7 @@ truck_node = {
 ["permissive"] = 0,
 ["unsuitable"] = 0,
 ["agricultural;forestry"] = 0,
-["official"] = 8,
+["official"] = 0,
 ["forestry"] = 0,
 ["destination;delivery"] = 8
 }
