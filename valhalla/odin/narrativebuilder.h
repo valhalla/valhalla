@@ -402,6 +402,10 @@ class NarrativeBuilder {
       TripDirections_Maneuver_Type type,
       const std::vector<std::string>& relative_directions);
 
+  std::string FormRelativeTurnDirection(
+      TripDirections_Maneuver_Type type,
+      const std::vector<std::string>& relative_directions);
+
   // TODO remove after refactor
   std::string FormTurnTypeInstruction(TripDirections_Maneuver_Type type);
 

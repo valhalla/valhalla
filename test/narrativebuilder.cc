@@ -1031,9 +1031,9 @@ void TestBuildContinueInstructions_1_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 0 "Turn <FormTurnTypeInstruction>."
-// 0 "Turn <FormTurnTypeInstruction>."
-// 0 "Turn <FormTurnTypeInstruction>."
+// 0 "Turn <RELATIVE_DIRECTION>."
+// 0 "Turn <RELATIVE_DIRECTION>."
+// 0 "Turn <RELATIVE_DIRECTION>."
 void TestBuildTurnInstructions_0_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1062,9 +1062,9 @@ void TestBuildTurnInstructions_0_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES>."
-// 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
-// 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
 void TestBuildTurnInstructions_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "NY";
@@ -1093,9 +1093,9 @@ void TestBuildTurnInstructions_1_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-// 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
-// 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
+// 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
+// 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
 void TestBuildTurnInstructions_2_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "MD";
@@ -1124,9 +1124,9 @@ void TestBuildTurnInstructions_2_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-// 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
-// 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
+// 3 "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+// 3 "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
+// 3 "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
 void TestBuildTurnInstructions_3_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "VA";
@@ -1161,9 +1161,9 @@ void TestBuildTurnInstructions_3_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormBearInstruction
-// 0 "Bear <FormTurnTypeInstruction>."
-// 0 "Bear <FormTurnTypeInstruction>."
-// 0 "Bear <FormTurnTypeInstruction>."
+// 0 "Bear <RELATIVE_DIRECTION>."
+// 0 "Bear <RELATIVE_DIRECTION>."
+// 0 "Bear <RELATIVE_DIRECTION>."
 void TestBuildBearInstructions_0_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "MD";
@@ -1192,9 +1192,9 @@ void TestBuildBearInstructions_0_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormBearInstruction
-// 1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES>."
-// 1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
-// 1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
+// 1 "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
 void TestBuildBearInstructions_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "MD";
@@ -1223,9 +1223,9 @@ void TestBuildBearInstructions_1_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormBearInstruction
-// 2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-// 2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
-// 2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
+// 2 "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// 2 "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
+// 2 "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
 void TestBuildBearInstructions_2_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "MD";
@@ -1254,9 +1254,9 @@ void TestBuildBearInstructions_2_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormBearInstruction
-// 3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-// 3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
-// 3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
+// 3 "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+// 3 "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES(1)>."
+// 3 "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES(2)>."
 void TestBuildBearInstructions_3_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "VA";
@@ -1291,9 +1291,9 @@ void TestBuildBearInstructions_3_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormUturnInstruction
-// 0 "Make a <FormTurnTypeInstruction> U-turn."
-// 0 "Make a <FormTurnTypeInstruction> U-turn."
-// 0 "Make a <FormTurnTypeInstruction> U-turn."
+// 0 "Make a <RELATIVE_DIRECTION> U-turn."
+// 0 "Make a <RELATIVE_DIRECTION> U-turn."
+// 0 "Make a <RELATIVE_DIRECTION> U-turn."
 void TestBuildUturnInstructions_0_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1322,9 +1322,9 @@ void TestBuildUturnInstructions_0_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormUturnInstruction
-// 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
-// 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
-// 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(2)>."
+// 1 "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."
+// 1 "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES(1)>."
+// 1 "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES(2)>."
 void TestBuildUturnInstructions_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1353,9 +1353,9 @@ void TestBuildUturnInstructions_1_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormUturnInstruction
-// 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES>."
-// 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(1)>."
-// 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(2)>."
+// 2 "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."
+// 2 "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES(1)>."
+// 2 "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES(2)>."
 void TestBuildUturnInstructions_2_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1390,9 +1390,9 @@ void TestBuildUturnInstructions_2_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormUturnInstruction
-// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
-// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
-// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
+// 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
+// 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(1)>."
+// 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(2)>."
 void TestBuildUturnInstructions_3_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1421,9 +1421,9 @@ void TestBuildUturnInstructions_3_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormUturnInstruction
-// 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
-// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
-// 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
+// 4 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+// 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(1)>."
+// 4 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
 void TestBuildUturnInstructions_4_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -1452,9 +1452,9 @@ void TestBuildUturnInstructions_4_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormUturnInstruction
-// 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
-// 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> to stay on <STREET_NAMES(2)>."
+// 5 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+// 3 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(1)>."
+// 5 "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES(2)> to stay on <STREET_NAMES(2)>."
 void TestBuildUturnInstructions_5_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";

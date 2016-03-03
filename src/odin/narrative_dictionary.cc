@@ -75,6 +75,15 @@ void NarrativeDictionary::Load(
   Load(bear_verbal_subset, narrative_pt.get_child(kBearVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate turn_subset...");
+  // Populate turn_subset
+  Load(turn_subset, narrative_pt.get_child(kTurnKey));
+
+  LOG_TRACE("Populate turn_verbal_subset...");
+  // Populate turn_verbal_subset
+  Load(turn_verbal_subset, narrative_pt.get_child(kTurnVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

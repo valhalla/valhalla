@@ -20,6 +20,8 @@ constexpr auto kContinueVerbalAlertKey = "instructions.continue_verbal_alert";
 constexpr auto kContinueVerbalKey = "instructions.continue_verbal";
 constexpr auto kBearKey = "instructions.bear";
 constexpr auto kBearVerbalKey = "instructions.bear_verbal";
+constexpr auto kTurnKey = "instructions.turn";
+constexpr auto kTurnVerbalKey = "instructions.turn_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -134,6 +136,10 @@ class NarrativeDictionary {
   // Bear
   TurnSubset bear_subset;
   TurnSubset bear_verbal_subset;
+
+  // Turn
+  TurnSubset turn_subset;
+  TurnSubset turn_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;

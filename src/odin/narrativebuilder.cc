@@ -953,24 +953,26 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(
 
 std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
                                                   Maneuver* prev_maneuver) {
-  // 0 "Turn <FormTurnTypeInstruction>."
-  // 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES>."
-  // 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-  // 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-
-  // TODO
-  // maneuver.HasSimilarNames(prev_maneuver, true))
-
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names());
+  // "0": "Turn <RELATIVE_DIRECTION>.",
+  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.turn_subset.empty_street_name_labels, true);
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.turn_subset.empty_street_name_labels);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id = 1;
   }
@@ -982,47 +984,27 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
     phrase_id = 3;
   }
 
-  switch (phrase_id) {
-    // 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES>."
-    case 1: {
-      instruction = (boost::format("Turn %1% onto %2%.")
-          % FormTurnTypeInstruction(maneuver.type())
-          % street_names).str();
-      break;
-    }
-      // 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-    case 2: {
-      instruction = (boost::format("Turn %1% onto %2%. Continue on %3%.")
-          % FormTurnTypeInstruction(maneuver.type())
-          % begin_street_names
-          % street_names).str();
-      break;
-    }
-      // 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-    case 3: {
-      instruction = (boost::format("Turn %1% to stay on %2%.")
-          % FormTurnTypeInstruction(maneuver.type())
-          % street_names).str();
-      break;
-    }
-      // 0 "Turn <FormTurnTypeInstruction>."
-    default: {
-      instruction = (boost::format("Turn %1%.")
-          % FormTurnTypeInstruction(maneuver.type())).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.turn_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTurnDirection(maneuver.type(),
+                                dictionary_.turn_subset.relative_directions));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     std::string delim) {
-  // 0 "Turn <FormTurnTypeInstruction>."
-  // 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
-  // 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
-  // 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
+  // "0": "Turn <RELATIVE_DIRECTION>.",
+  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   return FormVerbalTurnInstruction(maneuver, prev_maneuver, element_max_count,
                                    delim);
@@ -1031,23 +1013,28 @@ std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(
 std::string NarrativeBuilder::FormVerbalTurnInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     std::string delim) {
-  // 0 "Turn <FormTurnTypeInstruction>."
-  // 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
-  // 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
-  // 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
-
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
-      maneuver.verbal_formatter());
+  // "0": "Turn <RELATIVE_DIRECTION>.",
+  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.turn_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.turn_verbal_subset.empty_street_name_labels, false,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id = 1;
   }
@@ -1059,40 +1046,18 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
     phrase_id = 3;
   }
 
-  switch (phrase_id) {
-    // 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
-    case 1: {
-      instruction =
-          (boost::format("Turn %1% onto %2%.")
-              % FormTurnTypeInstruction(maneuver.type())
-              % street_names).str();
-      break;
-    }
-    // 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
-    case 2: {
-      instruction =
-          (boost::format("Turn %1% onto %2%.")
-              % FormTurnTypeInstruction(maneuver.type())
-              % begin_street_names).str();
-      break;
-    }
-    // 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
-    case 3: {
-      instruction =
-          (boost::format("Turn %1% to stay on %2%.")
-              % FormTurnTypeInstruction(maneuver.type())
-              % street_names).str();
-      break;
-    }
-    // 0 "Turn <FormTurnTypeInstruction>."
-    default: {
-      instruction = (boost::format("Turn %1%.")
-          % FormTurnTypeInstruction(maneuver.type())).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.turn_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTurnDirection(
+          maneuver.type(), dictionary_.turn_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormBearInstruction(Maneuver& maneuver,
@@ -3729,6 +3694,29 @@ std::string NarrativeBuilder::FormRelativeTwoDirection(
     default: {
       throw std::runtime_error(
           "Invalid TripDirections_Maneuver_Type in method FormRelativeTwoDirection.");
+    }
+  }
+}
+
+std::string NarrativeBuilder::FormRelativeTurnDirection(
+    TripDirections_Maneuver_Type type,
+    const std::vector<std::string>& relative_directions) {
+  switch (type) {
+    case TripDirections_Maneuver_Type_kLeft: {
+      return relative_directions.at(0); // "left"
+    }
+    case TripDirections_Maneuver_Type_kSharpLeft: {
+      return relative_directions.at(1); // "sharp left"
+    }
+    case TripDirections_Maneuver_Type_kRight: {
+      return relative_directions.at(2); // "right"
+    }
+    case TripDirections_Maneuver_Type_kSharpRight: {
+      return relative_directions.at(3); // "sharp right"
+    }
+    default: {
+      throw std::runtime_error(
+          "Invalid TripDirections_Maneuver_Type in method FormRelativeTurnDirection.");
     }
   }
 }

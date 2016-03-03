@@ -15,7 +15,8 @@ const std::vector<std::string> kExpectedEmptyStreetNameLabels = { "walkway", "cy
 const std::vector<std::string> kExpectedCardinalDirections = { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" };
 const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" };
 const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };
-const std::vector<std::string> kExpectedRelativelDirectionsLR = { "left", "right" };
+const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right" };
+const std::vector<std::string> kExpectedRelativeTurnDirections = { "left", "sharp left", "right", "sharp right" };
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -134,7 +135,7 @@ void test_en_US_destination() {
 
   // relative_directions
   const auto& relative_directions = dictionary.destination_subset.relative_directions;
-  validate(relative_directions, kExpectedRelativelDirectionsLR);
+  validate(relative_directions, kExpectedRelativeTwoDirections);
 
 }
 
@@ -159,7 +160,7 @@ void test_en_US_destination_verbal_alert() {
 
   // relative_directions
   const auto& relative_directions = dictionary.destination_verbal_alert_subset.relative_directions;
-  validate(relative_directions, kExpectedRelativelDirectionsLR);
+  validate(relative_directions, kExpectedRelativeTwoDirections);
 
 }
 
@@ -184,7 +185,7 @@ void test_en_US_destination_verbal() {
 
   // relative_directions
   const auto& relative_directions = dictionary.destination_verbal_subset.relative_directions;
-  validate(relative_directions, kExpectedRelativelDirectionsLR);
+  validate(relative_directions, kExpectedRelativeTwoDirections);
 
 }
 
@@ -268,7 +269,7 @@ void test_en_US_bear() {
 
   // relative_directions
   const auto& relative_directions = dictionary.bear_subset.relative_directions;
-  validate(relative_directions, kExpectedRelativelDirectionsLR);
+  validate(relative_directions, kExpectedRelativeTwoDirections);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.bear_subset.empty_street_name_labels;
@@ -297,10 +298,68 @@ void test_en_US_bear_verbal() {
 
   // relative_directions
   const auto& relative_directions = dictionary.bear_verbal_subset.relative_directions;
-  validate(relative_directions, kExpectedRelativelDirectionsLR);
+  validate(relative_directions, kExpectedRelativeTwoDirections);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.bear_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_turn() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Turn <RELATIVE_DIRECTION>.",
+  const auto& phrase_0 = dictionary.turn_subset.phrases.at("0");
+  validate(phrase_0, "Turn <RELATIVE_DIRECTION>.");
+
+  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  const auto& phrase_1 = dictionary.turn_subset.phrases.at("1");
+  validate(phrase_1, "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
+
+  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  const auto& phrase_2 = dictionary.turn_subset.phrases.at("2");
+  validate(phrase_2, "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
+
+  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  const auto& phrase_3 = dictionary.turn_subset.phrases.at("3");
+  validate(phrase_3, "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.turn_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeTurnDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.turn_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_turn_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Turn <RELATIVE_DIRECTION>.",
+  const auto& phrase_0 = dictionary.turn_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Turn <RELATIVE_DIRECTION>.");
+
+  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  const auto& phrase_1 = dictionary.turn_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
+
+  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  const auto& phrase_2 = dictionary.turn_verbal_subset.phrases.at("2");
+  validate(phrase_2, "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
+
+  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  const auto& phrase_3 = dictionary.turn_verbal_subset.phrases.at("3");
+  validate(phrase_3, "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.turn_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeTurnDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.turn_verbal_subset.empty_street_name_labels;
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
@@ -372,6 +431,12 @@ int main() {
 
   // test the en-US bear verbal phrases
   suite.test(TEST_CASE(test_en_US_bear_verbal));
+
+  // test the en-US turn phrases
+  suite.test(TEST_CASE(test_en_US_turn));
+
+  // test the en-US turn verbal phrases
+  suite.test(TEST_CASE(test_en_US_turn_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));
