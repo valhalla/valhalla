@@ -96,9 +96,26 @@
       "relative_directions": ["left", "right"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
-    "turn": null,
-    "turn_verbal_alert": null,
-    "turn_verbal": null,
+    "turn": {
+      "phrases": {
+        "0": "Turn <RELATIVE_DIRECTION>.",
+        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "sharp left", "right", "sharp right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Turn <RELATIVE_DIRECTION>.",
+        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "sharp left", "right", "sharp right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
     "uturn": {
       "0": "Make a <RELATIVE_DIRECTION> U-turn.",
       "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
