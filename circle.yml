@@ -5,6 +5,7 @@ checkout:
 
 dependencies:
   override:
+    - sudo rm -rf /etc/apt/sources.list.d/google*.list
     - scripts/dependencies.sh
 
 test:
