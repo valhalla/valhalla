@@ -96,13 +96,13 @@ namespace valhalla {
              }
            } else if (*matrix == "optimized_order_route")  {
                valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
-               return thor_worker_t::optimized_path(correlated, costing, request_str);
+               return thor_worker_t::optimized_path(correlated, costing, request_str, info);
            } else {
             //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_order_route'.");
            }
         } else
-          return thor_worker_t::trip_path(costing, request_str, date_time_type);
+          return thor_worker_t::trip_path(costing, request_str, date_time_type, info);
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};

@@ -29,13 +29,12 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-  worker_t::result_t thor_worker_t::trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type){
+  worker_t::result_t thor_worker_t::trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type, http_request_t::info_t& request_info){
     worker_t::result_t result{true};
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     // Forward the original request
     result.messages.emplace_back(request_str);
-
 
     auto trippaths = (date_time_type && *date_time_type == 2) ? path_arrive_by(correlated, costing, request_str) : path_depart_from(correlated, costing, date_time_type, request_str);
     for (const auto &trippath: trippaths){
@@ -45,7 +44,7 @@ namespace valhalla {
     auto e = std::chrono::system_clock::now();
     std::chrono::duration<float, std::milli> elapsed_time = e - s;
     //log request if greater than X (ms)
-    if ((elapsed_time.count() / correlated.size()) > long_request_route) {
+    if (!request_info.do_not_track && (elapsed_time.count() / correlated.size()) > long_request_route) {
      LOG_WARN("thor::route trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
      LOG_WARN("thor::route trip_path exceeded threshold::"+ request_str);
      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
