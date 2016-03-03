@@ -109,19 +109,21 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
       speed = static_cast<uint32_t>((speed * 1.25f) + 0.5f);
     } else if (use == Use::kRamp &&
                directededge.speed_type() != SpeedType::kTagged) {
+      // If no tagged speed set ramp speed to slightly lower than speed
+      // for roads of this classification
       RoadClass rc = directededge.classification();
       if (rc == RoadClass::kMotorway) {
-        speed = (density > 8) ? 89 : 95;
+        speed = (density > 8) ? 85 : 92;
       } else if (rc == RoadClass::kTrunk) {
-        speed = (density > 8) ? 73 : 80;
+        speed = (density > 8) ? 69 : 77;
       } else if (rc == RoadClass::kPrimary) {
-        speed = (density > 8) ? 57 : 65;
+        speed = (density > 8) ? 53 : 61;
       } else if (rc == RoadClass::kSecondary) {
-        speed = 49;
+        speed = 45;
       } else if (rc == RoadClass::kTertiary) {
-        speed = 40;
+        speed = 38;
       } else if (rc == RoadClass::kUnclassified) {
-        speed = 35;
+        speed = 33;
       } else {
         speed = 25;
       }
