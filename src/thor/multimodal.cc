@@ -407,7 +407,6 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     if (predindex == kInvalidLabel) {
       // Throw an exception so the message is returned in the service
       throw std::runtime_error("Cannot reach destination - too far from a transit stop");
-      return false;
     }
 
     // Remove label from adjacency list, mark it as done - copy the EdgeLabel
