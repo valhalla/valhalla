@@ -14,8 +14,9 @@ popd
 
 # grab experimental zmq-based server API:
 rm -rf prime_server
-git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/kevinkreiser/prime_server.git
-pushd prime_server
+wget -O prime_server0.3.2.tar.gz https://github.com/kevinkreiser/prime_server/archive/0.3.2.tar.gz
+tar pxvf prime_server0.3.2.tar.gz
+pushd prime_server-0.3.2
 ./autogen.sh
 ./configure
 make -j4
