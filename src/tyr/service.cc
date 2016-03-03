@@ -790,7 +790,7 @@ namespace {
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        if ((elapsed_time.count() / trip_directions_length) > long_request) {
+        if (!info.do_not_track && (elapsed_time.count() / trip_directions_length) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
