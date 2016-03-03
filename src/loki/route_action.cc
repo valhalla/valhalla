@@ -55,8 +55,10 @@ namespace valhalla {
 
       auto date_type = request.get_optional<int>("date_time.type");
       //default to current date_time for mm or transit.
-      if (!date_type && (costing == "multimodal" || costing == "transit"))
+      if (!date_type && (costing == "multimodal" || costing == "transit")) {
         request.add("date_time.type", 0);
+        date_type = request.get_optional<int>("date_time.type");
+      }
 
       //check the date stuff
       auto date_time_value = request.get_optional<std::string>("date_time.value");
