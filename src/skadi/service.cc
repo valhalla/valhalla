@@ -274,12 +274,12 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if ((elapsed_time.count() / shape.size()) > long_request) {
+      if (!request_info.do_not_track && (elapsed_time.count() / shape.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("skadi::request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("skadi_long_request", " [ANALYTICS] ");
+        midgard::logging::Log("valhalla_skadi_long_request", " [ANALYTICS] ");
       }
 
       worker_t::result_t result{false};
