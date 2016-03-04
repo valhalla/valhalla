@@ -33,7 +33,7 @@ AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 
 # check zeromq version
-PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.3.1])
+PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server = 0.3.2])
 
 # optionally enable coverage information
 CHECK_COVERAGE
