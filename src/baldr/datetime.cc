@@ -7,7 +7,6 @@
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/c_local_time_adjustor.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/datetime.h>
@@ -69,6 +68,37 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
   } else
     d = boost::gregorian::from_undelimited_string(date);
   return d;
+}
+
+// get a local_date_time with support for dst.
+// 2016-11-06T02:00 ---> 2016-11-06T01:00
+boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
+                                           const boost::posix_time::time_duration& time_duration,
+                                           const boost::local_time::time_zone_ptr& time_zone) {
+
+  boost::posix_time::time_duration td = time_duration;
+  boost::local_time::local_date_time in_local_time(date, td, time_zone,
+                                                       boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+
+    // create not-a-date-time if invalid (eg: in dst transition)
+    if (in_local_time.is_not_a_date_time()) {
+
+      if (time_zone->dst_local_start_time(date.year()).date() == date) {
+        td += time_zone->dst_offset(); //clocks ahead.
+        in_local_time = boost::local_time::local_date_time(date, td, time_zone,
+                                                           boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+      }
+      else {
+//Daylight Savings Results are ambiguous: time given: 2016-Nov-06 01:00:00
+        boost::posix_time::time_duration time_dur = boost::posix_time::hours(1);
+
+        in_local_time = boost::local_time::local_date_time(date, td + time_dur, time_zone,
+                                                           boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+        in_local_time -= time_dur;
+      }
+    }
+
+    return in_local_time;
 }
 
 //Get service days
@@ -407,7 +437,8 @@ uint64_t seconds_since_epoch(const std::string& date_time,
 
     }
 
-    boost::local_time::local_date_time in_local_time(date, td, time_zone, false);
+    boost::local_time::local_date_time in_local_time = get_ldt(date,td,time_zone);
+
     boost::local_time::time_zone_ptr tz_utc(new boost::local_time::posix_time_zone("UTC"));
     boost::local_time::local_date_time local_date_time = in_local_time.local_time_in(tz_utc);
     boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
