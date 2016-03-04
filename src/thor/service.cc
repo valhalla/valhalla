@@ -81,26 +81,26 @@ namespace valhalla {
         }
 
         // Initialize request - get the PathALgorithm to use
-        std::string costing = this->init_request(request);
+        std::string costing = init_request(request);
         auto date_time_type = request.get_optional<int>("date_time.type");
-        auto matrix = request.get_optional<std::string>("matrix_type");
+        auto matrix_type = request.get_optional<std::string>("matrix_type");
 
-        if (matrix) {
-           if (*matrix != "optimized_order_route") {
-             valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
-             auto matrix_iter = MATRIX.find(*matrix);
+        if (matrix_type) {
+           if (*matrix_type != "optimized_order_route") {
+             valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
+             auto matrix_iter = MATRIX.find(*matrix_type);
              if (matrix_iter != MATRIX.cend()) {
-               return thor_worker_t::matrix(matrix_iter->second, costing, request, info);
+               return matrix(matrix_iter->second, costing, request, info);
              }
-           } else if (*matrix == "optimized_order_route")  {
-               valhalla::midgard::logging::Log("matrix_type::" + *matrix, " [ANALYTICS] ");
-               return thor_worker_t::optimized_path(correlated, costing, request_str);
+           } else if (*matrix_type == "optimized_order_route")  {
+               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
+               return optimized_path(correlated, costing, request_str);
            } else {
             //this will never happen since loki formats the request for matrix
-            throw std::runtime_error("Incorrect type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many' or 'optimized_order_route'.");
+            throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many' or 'optimized_order_route'.");
            }
         } else
-          return thor_worker_t::trip_path(costing, request_str, date_time_type);
+          return trip_path(costing, request_str, date_time_type);
       }
 
       catch(const std::exception& e) {
