@@ -214,7 +214,7 @@ namespace {
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         }
-        return get_trip_path(costing, request_str, date_time_type, info);
+        return get_trip_path(costing, request_str, date_time_type, info.do_not_track);
       }
 
       catch(const std::exception& e) {
@@ -227,7 +227,7 @@ namespace {
       }
     }
 
-    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, boost::optional<int> &date_time_type, http_request_t::info_t& request_info){
+    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, boost::optional<int> &date_time_type, bool header_dnt){
       worker_t::result_t result{true};
       //get time for start of request
       auto s = std::chrono::system_clock::now();
@@ -436,7 +436,7 @@ namespace {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if (!request_info.do_not_track && (elapsed_time.count() / correlated.size()) > long_request_route) {
+      if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request_route) {
         LOG_WARN("thor::route request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::route request exceeded threshold::"+ request_str);
         midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
