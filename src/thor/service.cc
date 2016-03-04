@@ -650,6 +650,7 @@ namespace {
         mode = cost->travelmode();
         mode_costing[static_cast<uint32_t>(mode)] = cost;
       }
+      valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)), " [ANALYTICS] ");
       return *costing;
     }
 
