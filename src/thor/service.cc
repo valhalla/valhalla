@@ -227,7 +227,7 @@ namespace {
       }
     }
 
-    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, boost::optional<int> &date_time_type, bool header_dnt){
+    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, boost::optional<int> &date_time_type, const bool header_dnt){
       worker_t::result_t result{true};
       //get time for start of request
       auto s = std::chrono::system_clock::now();
