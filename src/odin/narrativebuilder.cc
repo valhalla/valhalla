@@ -269,9 +269,14 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         // Set instruction
         maneuver.set_instruction(std::move(FormMergeInstruction(maneuver)));
 
-        // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertMergeInstruction(maneuver)));
+        // Set verbal transition alert instruction if previous maneuver
+        // is greater than 1.5 km
+        if (prev_maneuver
+            && (prev_maneuver->length(DirectionsOptions_Units_kKilometers)
+                > 1.5f)) {
+          maneuver.set_verbal_transition_alert_instruction(
+              std::move(FormVerbalAlertMergeInstruction(maneuver)));
+        }
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
