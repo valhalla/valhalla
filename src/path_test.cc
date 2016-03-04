@@ -556,7 +556,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
+  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // If we are testing connectivity
   if (connectivity) {
@@ -647,16 +647,22 @@ int main(int argc, char *argv[]) {
   BidirectionalAStar bd;
   MultiModalPathAlgorithm mm;
   for (uint32_t i = 0; i < n; i++) {
-    float km = locations[i].latlng_.Distance(locations[i+1].latlng_) * kKmPerMeter;
-
-    // Choose path algorithm. Use bi-directional A* for pedestrian > 10km
+    // Choose path algorithm
     PathAlgorithm* pathalgorithm;
     if (routetype == "multimodal") {
       pathalgorithm = &mm;
     } else if (routetype == "bus") {
       pathalgorithm = &astar;
     } else {
-      pathalgorithm = (km > 10.0f) ? &bd : &astar;
+      bool same_edge = false;
+      for (auto& edge1 : path_location[i].edges()) {
+        for (auto& edge2 : path_location[i+1].edges()) {
+          if (edge1.id == edge2.id) {
+            same_edge = true;
+          }
+        }
+      }
+      pathalgorithm = (same_edge) ? &astar : &bd;
     }
     bool using_astar = (pathalgorithm == &astar);
 
