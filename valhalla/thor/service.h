@@ -32,8 +32,10 @@ namespace valhalla {
      public:
       enum MATRIX_TYPE { ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
       thor_worker_t(const boost::property_tree::ptree& config);
+      virtual ~thor_worker_t();
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();
+
      protected:
       std::string init_request(const boost::property_tree::ptree& request);
       prime_server::worker_t::result_t trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type, const bool header_dnt);

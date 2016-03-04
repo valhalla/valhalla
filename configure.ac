@@ -39,7 +39,7 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libzmq >= 4.0 libprime_server >= 0.3.1])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libzmq >= 4.0 libprime_server = 0.3.2])
 
 # optionally enable coverage information
 CHECK_COVERAGE

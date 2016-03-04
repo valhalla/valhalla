@@ -16,6 +16,7 @@ popd
 rm -rf prime_server
 git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/kevinkreiser/prime_server.git
 pushd prime_server
+git checkout 9564abc58f13740cfefa73d98bf86138833a7777
 ./autogen.sh
 ./configure
 make -j4

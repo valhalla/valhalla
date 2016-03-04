@@ -36,7 +36,6 @@ namespace valhalla {
     // Forward the original request
     result.messages.emplace_back(request_str);
 
-
     auto trippaths = (date_time_type && *date_time_type == 2) ? path_arrive_by(correlated, costing, request_str) : path_depart_from(correlated, costing, date_time_type, request_str);
     for (const auto &trippath: trippaths){
       result.messages.emplace_back(trippath.SerializeAsString());

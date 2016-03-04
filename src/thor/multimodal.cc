@@ -243,14 +243,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
           // Add transfer cost. There is no cost if continuing along the
           // same trip Id or (valid) block Id.
-          if (mode_change || tripid != pred.tripid() ||
+          if (tripid != pred.tripid() ||
              (blockid != 0 && blockid != pred.blockid())) {
-
-            Cost c = transfer_cost;
-            if (!mode_change) {
-              c.cost *= tc->TransferCostFactor();
-            }
-            newcost += c;
+            newcost += transfer_cost;
           }
 
           // Change mode and costing to transit. Add edge cost.

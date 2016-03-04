@@ -37,7 +37,7 @@ namespace valhalla {
   namespace thor {
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), reader(config.get_child("mjolnir.hierarchy")),
+      config(config), reader(config.get_child("mjolnir")),
       long_request_route(config.get<float>("thor.logging.long_request_route")),
       long_request_manytomany(config.get<float>("thor.logging.long_request_manytomany")){
       // Register edge/node costing methods
@@ -49,6 +49,8 @@ namespace valhalla {
       factory.Register("transit", sif::CreateTransitCost);
       factory.Register("truck", sif::CreateTruckCost);
     }
+
+    thor_worker_t::~thor_worker_t(){}
 
     worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       //get time for start of request
@@ -86,7 +88,7 @@ namespace valhalla {
         auto matrix_type = request.get_optional<std::string>("matrix_type");
 
         if (matrix_type) {
-           if (*matrix_type != "optimized_order_route") {
+          if (*matrix_type == "one_to_many" || *matrix_type == "many_to_one" || *matrix_type == "many_to_many") {
              valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
              auto matrix_iter = MATRIX.find(*matrix_type);
              if (matrix_iter != MATRIX.cend()) {
@@ -97,12 +99,11 @@ namespace valhalla {
                return optimized_path(correlated, costing, request_str, info.do_not_track);
            } else {
             //this will never happen since loki formats the request for matrix
-            throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many' or 'optimized_order_route'.");
+            throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_order_route'.");
            }
         } else
           return trip_path(costing, request_str, date_time_type, info.do_not_track);
       }
-
       catch(const std::exception& e) {
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
@@ -299,4 +300,3 @@ namespace valhalla {
 
   }
 }
-
