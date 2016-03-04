@@ -94,13 +94,13 @@ namespace valhalla {
              }
            } else if (*matrix_type == "optimized_order_route")  {
                valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-               return optimized_path(correlated, costing, request_str);
+               return optimized_path(correlated, costing, request_str, info.do_not_track);
            } else {
             //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many' or 'optimized_order_route'.");
            }
         } else
-          return trip_path(costing, request_str, date_time_type);
+          return trip_path(costing, request_str, date_time_type, info.do_not_track);
       }
 
       catch(const std::exception& e) {
@@ -205,10 +205,6 @@ namespace valhalla {
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
-      else {
-        units = "km";
-        distance_scale = kKmPerMeter;
-      }
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)

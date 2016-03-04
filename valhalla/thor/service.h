@@ -36,11 +36,11 @@ namespace valhalla {
       void cleanup();
      protected:
       std::string init_request(const boost::property_tree::ptree& request);
-      prime_server::worker_t::result_t trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type);
+      prime_server::worker_t::result_t trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type, const bool header_dnt);
       std::list<valhalla::odin::TripPath> path_arrive_by(std::vector<baldr::PathLocation>& correlated, const std::string &costing, const std::string &request_str);
       std::list<valhalla::odin::TripPath> path_depart_from(std::vector<baldr::PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str);
       prime_server::worker_t::result_t matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t optimized_path(const std::vector<baldr::PathLocation>& correlated, const std::string &costing, const std::string &request_str);
+      prime_server::worker_t::result_t optimized_path(const std::vector<baldr::PathLocation>& correlated, const std::string &costing, const std::string &request_str, const bool header_dnt);
       void update_origin(baldr::PathLocation& origin, bool prior_is_node, const baldr::GraphId& through_edge);
       void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin, baldr::PathLocation& destination, std::vector<thor::PathInfo>& path_edges);
       valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);
@@ -58,7 +58,6 @@ namespace valhalla {
       MultiModalPathAlgorithm multi_modal_astar;
       float long_request_route;
       float long_request_manytomany;
-      double distance_scale;
       boost::optional<int> date_time_type;
     };
   }
