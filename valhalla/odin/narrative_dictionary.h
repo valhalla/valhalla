@@ -22,6 +22,9 @@ constexpr auto kBearKey = "instructions.bear";
 constexpr auto kBearVerbalKey = "instructions.bear_verbal";
 constexpr auto kTurnKey = "instructions.turn";
 constexpr auto kTurnVerbalKey = "instructions.turn_verbal";
+constexpr auto kUturnKey = "instructions.uturn";
+constexpr auto kUturnVerbalAlertKey = "instructions.uturn_verbal_alert";
+constexpr auto kUturnVerbalKey = "instructions.uturn_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -59,6 +62,7 @@ constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
 constexpr auto kRelativeDirectionTag = "<RELATIVE_DIRECTION>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
+constexpr auto kCrossStreetNamesTag = "<CROSS_STREET_NAMES>";
 constexpr auto kLengthTag = "<LENGTH>";
 constexpr auto kDestinationTag = "<DESTINATION>";
 constexpr auto kCurrentVerbalCueTag = "<CURRENT_VERBAL_CUE>";
@@ -140,6 +144,11 @@ class NarrativeDictionary {
   // Turn
   TurnSubset turn_subset;
   TurnSubset turn_verbal_subset;
+
+  // Uturn
+  TurnSubset uturn_subset;
+  TurnSubset uturn_verbal_alert_subset;
+  TurnSubset uturn_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;

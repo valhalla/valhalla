@@ -550,12 +550,10 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   std::string street_names = FormStreetNames(
       maneuver, maneuver.street_names(),
       &dictionary_.start_subset.empty_street_name_labels, true);
-  LOG_TRACE("street_names=" + street_names);
 
   // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(
       maneuver, maneuver.begin_street_names());
-  LOG_TRACE("begin_street_names=" + begin_street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -597,14 +595,12 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
       maneuver, maneuver.street_names(),
       &dictionary_.start_verbal_subset.empty_street_name_labels, true,
       element_max_count, delim, maneuver.verbal_formatter());
-  LOG_TRACE("street_names=" + street_names);
 
   // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(
       maneuver, maneuver.begin_street_names(),
       &dictionary_.start_verbal_subset.empty_street_name_labels, false,
       element_max_count, delim, maneuver.verbal_formatter());
-  LOG_TRACE("begin_street_names=" + begin_street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -968,8 +964,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
 
   // Assign the begin street names
   std::string begin_street_names = FormStreetNames(
-      maneuver, maneuver.begin_street_names(),
-      &dictionary_.turn_subset.empty_street_name_labels);
+      maneuver, maneuver.begin_street_names());
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -1077,8 +1072,7 @@ std::string NarrativeBuilder::FormBearInstruction(Maneuver& maneuver,
 
   // Assign the begin street names
   std::string begin_street_names = FormStreetNames(
-      maneuver, maneuver.begin_street_names(),
-      &dictionary_.bear_subset.empty_street_name_labels);
+      maneuver, maneuver.begin_street_names());
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -1170,124 +1164,153 @@ std::string NarrativeBuilder::FormVerbalBearInstruction(
 
 std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
                                                    Maneuver* prev_maneuver) {
-  // 0 "Make a <FormTurnTypeInstruction> U-turn."
-  // 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
-  // 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES>."
-  // 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
-  // 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
-  // 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-  // TODO: rework with phrase ids
-
-  // Assign the street names and the cross street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-  std::string cross_street_names = FormOldStreetNames(
-      maneuver, maneuver.cross_street_names());
+  // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
+  // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+  // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+  // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
+  // "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
+  // "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Make a ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
-  instruction += " U-turn";
 
-  if (!cross_street_names.empty()) {
-    instruction += " at ";
-    instruction += cross_street_names;
-  }
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.uturn_subset.empty_street_name_labels, true);
 
+  // Assign the cross street names
+  std::string cross_street_names = FormStreetNames(
+      maneuver, maneuver.cross_street_names());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
+    phrase_id += 1;
     if (maneuver.HasSameNames(prev_maneuver, true)) {
-      instruction += " to stay on ";
-    } else {
-      instruction += " onto ";
+      phrase_id += 1;
     }
-    instruction += street_names;
+  }
+  if (!cross_street_names.empty()) {
+    phrase_id += 3;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.uturn_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTwoDirection(maneuver.type(),
+                               dictionary_.uturn_subset.relative_directions));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     std::string delim) {
-  // 0 "Make a <FormTurnTypeInstruction> U-turn."
-  // 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
-  // 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(1)>."
-  // 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
-  // TODO: rework with phrase ids
-
-  // Assign the street names and the cross street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string cross_street_names = FormOldStreetNames(
-      maneuver, maneuver.cross_street_names(), false, element_max_count, delim,
-      maneuver.verbal_formatter());
+  // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
+  // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+  // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+  // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Make a ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
-  instruction += " U-turn";
 
-  if (!cross_street_names.empty()) {
-    instruction += " at ";
-    instruction += cross_street_names;
-  } else if (!street_names.empty()) {
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.uturn_verbal_alert_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Assign the cross street names
+  std::string cross_street_names = FormStreetNames(
+      maneuver, maneuver.cross_street_names(),
+      &dictionary_.uturn_verbal_alert_subset.empty_street_name_labels, false,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id = 1;
     if (maneuver.HasSameNames(prev_maneuver, true)) {
-      instruction += " to stay on ";
-    } else {
-      instruction += " onto ";
+      phrase_id = 2;
     }
-    instruction += street_names;
+  }
+  if (!cross_street_names.empty()) {
+    phrase_id = 3;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.uturn_verbal_alert_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTwoDirection(
+          maneuver.type(),
+          dictionary_.uturn_verbal_alert_subset.relative_directions));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalUturnInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     std::string delim) {
-  // 0 "Make a <FormTurnTypeInstruction> U-turn."
-  // 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(2)>."
-  // 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(2)>."
-  // 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
-  // 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
-  // 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> to stay on <STREET_NAMES(2)>."
-  // TODO: rework with phrase ids
-
-  // Assign the street names and the cross street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string cross_street_names = FormOldStreetNames(
-      maneuver, maneuver.cross_street_names(), false, element_max_count, delim,
-      maneuver.verbal_formatter());
+  // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
+  // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+  // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+  // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
+  // "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
+  // "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Make a ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
-  instruction += " U-turn";
 
-  if (!cross_street_names.empty()) {
-    instruction += " at ";
-    instruction += cross_street_names;
-  }
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.uturn_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
 
+  // Assign the cross street names
+  std::string cross_street_names = FormStreetNames(
+      maneuver, maneuver.cross_street_names(),
+      &dictionary_.uturn_verbal_subset.empty_street_name_labels, false,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
+    phrase_id += 1;
     if (maneuver.HasSameNames(prev_maneuver, true)) {
-      instruction += " to stay on ";
-    } else {
-      instruction += " onto ";
+      phrase_id += 1;
     }
-    instruction += street_names;
+  }
+  if (!cross_street_names.empty()) {
+    phrase_id += 3;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.uturn_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTwoDirection(
+          maneuver.type(),
+          dictionary_.uturn_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormRampStraightInstruction(

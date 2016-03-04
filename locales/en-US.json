@@ -117,29 +117,38 @@
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "uturn": {
-      "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-      "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-      "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-      "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-      "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-      "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
-      "relative_directions": ["left", "right"]
+      "phrases": {
+        "0": "Make a <RELATIVE_DIRECTION> U-turn.",
+        "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+        "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+        "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
+        "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
+        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "uturn_verbal_alert": {
-      "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-      "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-      "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-      "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-      "relative_directions": ["left", "right"]
+      "phrases": {
+        "0": "Make a <RELATIVE_DIRECTION> U-turn.",
+        "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+        "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+        "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "uturn_verbal": {
-      "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-      "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-      "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-      "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-      "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-      "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
-      "relative_directions": ["left", "right"]
+      "phrases": {
+        "0": "Make a <RELATIVE_DIRECTION> U-turn.",
+        "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
+        "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
+        "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
+        "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
+        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "ramp_straight": null,
     "ramp_straight_verbal_alert": null,
