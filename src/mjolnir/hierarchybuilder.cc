@@ -185,6 +185,12 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
     return false;
   }
 
+  // Do not contract if the node is a gate or toll booth
+  if (nodeinfo->type() == NodeType::kGate ||
+      nodeinfo->type() == NodeType::kTollBooth) {
+    return false;
+  }
+
   // Get list of valid edges from the base level that remain at this level.
   // Exclude transition edges and shortcut edges on the base level.
   std::vector<GraphId> edges;
