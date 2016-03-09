@@ -34,6 +34,78 @@ namespace {
     }
   }
 
+  //a functor to generate closest first subdivisions of a set of tiles
+  template <class coord_t>
+  struct closest_first_generator_t {
+    coord_t seed;
+    valhalla::midgard::Tiles<coord_t> tiles;
+    int32_t subcols, subrows;
+    float x, y;
+    using best_t = std::pair<float, int32_t>;
+    std::set<best_t, std::function<bool (const best_t&, const best_t&) > > queue;
+    std::unordered_set<int32_t> queued;
+
+    closest_first_generator_t(const valhalla::midgard::Tiles<coord_t>& tiles, const coord_t& seed):
+      tiles(tiles), seed(seed),
+      queue([](const best_t&a, const best_t& b){return a.first == b.first ? a.second < b.second : a.first < b.first;}) {
+      //what global subdivision are we starting in
+      //TODO: worry about wrapping around valid range
+      subcols = tiles.ncolumns() * tiles.nsubdivisions();
+      subrows = tiles.nrows() * tiles.nsubdivisions();
+      x = (seed.first - tiles.TileBounds().minx()) / tiles.TileBounds().Width() * subcols;
+      y = (seed.second - tiles.TileBounds().miny()) / tiles.TileBounds().Height() * subrows;
+      auto subdivision = static_cast<int32_t>(y) * subcols + static_cast<int32_t>(x);
+      queued.emplace(subdivision);
+      queue.emplace(std::make_pair(0, subdivision));
+      neighbors(subdivision);
+    }
+
+    //something to measure the closest possible point of a subdivision from the given seed point
+    float dist(int32_t sub) {
+      auto sx = sub % subcols; if (sx < x) ++sx;
+      auto sy = sub / subcols; if (sy < y) ++sy;
+      coord_t c(tiles.TileBounds().minx() + sx * tiles.SubdivisionSize(), tiles.TileBounds().miny() + sy * tiles.SubdivisionSize());
+      //if its purely vertical then dont use a corner
+      if(sx > x && sx - 1 < x)
+        c.first = seed.first;
+      //if its purely horizontal then dont use a corner
+      if(sy > y && sy - 1 < y)
+        c.second = seed.second;
+      return seed.DistanceSquared(c);
+    }
+
+    //something to add the neighbors of a given subdivision
+    void neighbors(int32_t s) {
+      auto left = s % subcols == 0 ? (coord_t::IsSpherical() ? s + subcols - 1 : -1) : s - 1;
+      auto right = s % subcols ==  subcols - 1 ? (coord_t::IsSpherical() ? s - subcols + 1 : -1) : s + 1;
+      auto up = s < subcols * (subrows - 1) ? s + subcols : (coord_t::IsSpherical() ? (s + subcols / 2) % subcols : -1);
+      auto down = s < subcols ? (coord_t::IsSpherical() ? subcols * (subrows - 1) + ((s + subcols / 2) % subcols) : -1) : s - subcols;
+      if(left != -1 && queued.find(left) == queued.cend()) { queued.emplace(left); queue.emplace(std::make_pair(dist(left),left)); }
+      if(right != -1 && queued.find(right) == queued.cend()) { queued.emplace(right); queue.emplace(std::make_pair(dist(right),right)); }
+      if(up != -1 && queued.find(up) == queued.cend()) { queued.emplace(up); queue.emplace(std::make_pair(dist(up),up)); }
+      if(down != -1 && queued.find(down) == queued.cend()) { queued.emplace(down); queue.emplace(std::make_pair(dist(down),down)); }
+    }
+
+    //get the next closest subdivision
+    std::tuple<int32_t, unsigned short, float> next(){
+      //get the next closest one or bail
+      if(!queue.size())
+        throw std::runtime_error("Subdivisions were exhausted");
+      auto best = *queue.cbegin();
+      queue.erase(queue.cbegin());
+      //add its neighbors
+      neighbors(best.second);
+      //return it
+      auto sx = best.second % subcols;
+      auto sy = best.second / subcols;
+      auto tile_column = sx / tiles.nsubdivisions();
+      auto tile_row = sy / tiles.nsubdivisions();
+      auto tile = tile_row * tiles.ncolumns() + tile_column;
+      unsigned short subdivision = (sy % tiles.nsubdivisions()) * tiles.nsubdivisions() + (sx % tiles.nsubdivisions());
+      return std::make_tuple(tile, subdivision, best.first);
+    }
+  };
+
 }
 
 namespace valhalla {
@@ -438,61 +510,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 
 template <class coord_t>
 std::function<std::tuple<int32_t, unsigned short, float>() > Tiles<coord_t>::ClosestFirst(const coord_t& seed) const {
-  //what global subdivision are we starting in
-  //TODO: worry about wrapping around valid range
-  auto x = (seed.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
-  auto y = (seed.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
-  auto subdivision = static_cast<int32_t>(y * nsubdivisions_) + static_cast<int32_t>(x);
-  //we could use a map here but we want a deterministic sort for testing purposes
-  using best_t = std::pair<float, int32_t>;
-  std::set<best_t, std::function<bool (const best_t&, const best_t&) > > queue(
-    [](const best_t&a, const best_t& b){
-      return a.first == b.first ? a.second < b.second : a.first < b.first;
-    }
-  );
-  std::unordered_set<int32_t> queued {subdivision};
-  //something to measure the closest possible point of a subdivision from the given seed point
-  auto dist = [this, &x, &y, &seed](int32_t sub) -> float {
-    auto sx = sub % (ncolumns_ * nsubdivisions_); if (sx < x) ++sx;
-    auto sy = sub / (nrows_ * nsubdivisions_); if (sy < y) ++sy;
-    coord_t c(sx * subdivision_size_, sy * subdivision_size_);
-    //if its purely vertical then dont use a corner
-    if(sx > x && sx - 1 < x)
-      c.first = seed.first;
-    //if its purely horizontal then dont use a corner
-    if(sy > y && sy - 1 < y)
-      c.second = seed.second;
-    return seed.DistanceSquared(c);
-  };
-  //expand one at a time, always the next closest subdivision first
-  return [this, &x, &y, &dist, queue, queued]() mutable {
-    //get the next closest one or bail
-    if(!queue.size())
-      throw std::runtime_error("Subdivisions were exhausted");
-    auto best = *queue.cbegin();
-    queue.erase(queue.cbegin());
-    //add its neighbors
-    auto left = (best.second - 1) % nsubdivisions_;
-    auto right = (best.second + 1) % nsubdivisions_;
-    auto up = best.second < nsubdivisions_ * (nsubdivisions_ - 1) ?
-                best.second + nsubdivisions_ :
-                nsubdivisions_ % (best.second + nsubdivisions_ / 2);
-    auto down = best.second < nsubdivisions_ ?
-                nsubdivisions_ * (nsubdivisions_ - 1) + (nsubdivisions_ % (best.second + nsubdivisions_ / 2)) :
-                best.second - nsubdivisions_;
-    if(queued.find(left) == queued.cend()) { queued.emplace(left); queue.emplace(std::make_pair(dist(left),left)); }
-    if(queued.find(right) == queued.cend()) { queued.emplace(right); queue.emplace(std::make_pair(dist(right),right)); }
-    if(queued.find(up) == queued.cend()) { queued.emplace(up); queue.emplace(std::make_pair(dist(up),up)); }
-    if(queued.find(down) == queued.cend()) { queued.emplace(down); queue.emplace(std::make_pair(dist(down),down)); }
-    //return it
-    auto sx = best.second % nsubdivisions_;
-    auto sy = best.second / nsubdivisions_;
-    auto tile_column = sx / nsubdivisions_;
-    auto tile_row = sy / nsubdivisions_;
-    auto tile = tile_row * ncolumns_ + tile_column;
-    unsigned short subdivision = (sy % nsubdivisions_) * nsubdivisions_ + (sx % nsubdivisions_);
-    return std::make_tuple(tile, subdivision, best.first);
-  };
+  return std::bind(&closest_first_generator_t<coord_t>::next, closest_first_generator_t<coord_t>(*this, seed));
 }
 
 // Explicit instantiation

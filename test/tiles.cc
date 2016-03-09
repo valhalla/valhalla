@@ -225,6 +225,7 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
   //place to keep the subdivisions sorted
   std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(
     [&t](const sub_t& a, const sub_t& b) {
+      //turn tile local subdivision into global subdivision for comparison
       auto ax = (std::get<0>(a) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) % t.nsubdivisions());
       auto ay = (std::get<0>(a) / t.nrows()) * t.nsubdivisions() + (std::get<1>(a) / t.nsubdivisions());
       auto as = ay * (t.ncolumns() * t.nsubdivisions()) + ax;
@@ -250,7 +251,7 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
 
           auto sx = l + (j * t.nsubdivisions()); if (sx < x) ++sx;
           auto sy = k + (i * t.nsubdivisions()); if (sy < y) ++sy;
-          Point2 c(sx * t.SubdivisionSize(), sy * t.SubdivisionSize());
+          Point2 c(t.TileBounds().minx() + sx * t.SubdivisionSize(), t.TileBounds().miny() + sy * t.SubdivisionSize());
           //if its purely vertical then dont use a corner
           if(sx > x && sx - 1 < x)
             c.first = p.first;
@@ -271,9 +272,11 @@ void test_closest_first() {
   for(const auto& p : std::list<Point2>{{0,0}}) {
     auto c = t.ClosestFirst(p);
     auto a = closest_first_answer(t, p);
-    for(const auto& s : a)
-      if(s != c())
+    for(const auto& s : a) {
+      auto r = c();
+      if(s != r)
         throw std::logic_error("Unexpected subdivision");
+    }
     try { c(); } catch (const std::runtime_error& e) { continue; }
     throw std::logic_error("Closest first functor should have thrown");
   }
@@ -297,8 +300,10 @@ int main() {
   suite.test(TEST_CASE(TileList));
 
   suite.test(TEST_CASE(test_intersect_linestring));
-  suite.test(TEST_CASE(test_random_linestring));
+
   suite.test(TEST_CASE(test_closest_first));
+
+  suite.test(TEST_CASE(test_random_linestring));
 
   return suite.tear_down();
 }
