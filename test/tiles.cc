@@ -3,7 +3,9 @@
 #include "valhalla/midgard/aabb2.h"
 #include "valhalla/midgard/pointll.h"
 
-using namespace std;
+#include <random>
+#include <set>
+
 using namespace valhalla::midgard;
 
 namespace {
@@ -200,33 +202,83 @@ void test_intersect_linestring() {
     if(i.first != 791318)
       throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
 }
-/*
-void test_intersect_circle() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
-  //TODO:
-}
 
 void test_random_linestring() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
+  Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
   std::default_random_engine generator;
   std::uniform_real_distribution<> distribution(-10, 10);
-  for(int i = 0; i < 10000; ++i) {
+  for(int i = 0; i < 1000; ++i) {
     std::vector<Point2> linestring;
     for(int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
-    bool leaves;
-    auto answer = g.intersect(linestring, leaves);
-    for(auto a : answer)
-      if(a > 24)
-        throw std::runtime_error("Non-existant cell!");
+    auto answer = t.Intersect(linestring);
+    for(auto tile : answer)
+      for(auto sub : tile.second)
+        if(sub > 24)
+          throw std::runtime_error("Non-existant bin!");
   }
 }
 
-void test_random_circle() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
-  //TODO:
+//brute force entire set of subdivisions at once
+using sub_t = std::tuple<int32_t, unsigned short, float>;
+std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first_answer(const Tiles<Point2>& t, const Point2& p){
+  //place to keep the subdivisions sorted
+  std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(
+    [&t](const sub_t& a, const sub_t& b) {
+      auto ax = (std::get<0>(a) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) % t.nsubdivisions());
+      auto ay = (std::get<0>(a) / t.nrows()) * t.nsubdivisions() + (std::get<1>(a) / t.nsubdivisions());
+      auto as = ay * (t.ncolumns() * t.nsubdivisions()) + ax;
+      auto bx = (std::get<0>(b) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) % t.nsubdivisions());
+      auto by = (std::get<0>(b) / t.nrows()) * t.nsubdivisions() + (std::get<1>(b) / t.nsubdivisions());
+      auto bs = by * (t.ncolumns() * t.nsubdivisions()) + bx;
+      if(std::get<2>(a) == std::get<2>(b))
+        return as < bs;
+      return std::get<2>(a) < std::get<2>(b);
+    }
+  );
+  //what subdivision is the point in
+  auto x = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
+  auto y = (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
+  //run over all tiles
+  for(int32_t i = 0; i < t.nrows(); ++i) {
+    for(int32_t j = 0; j < t.ncolumns(); ++j) {
+      //run over all subdivisions
+      for(unsigned short k = 0; k < t.nsubdivisions(); ++k) {
+        for(unsigned short l = 0; l < t.nsubdivisions(); ++l) {
+          auto tile = t.TileId(j, i);
+          auto subdivision = k * t.nsubdivisions() + l;
+
+          auto sx = l + (j * t.nsubdivisions()); if (sx < x) ++sx;
+          auto sy = k + (i * t.nsubdivisions()); if (sy < y) ++sy;
+          Point2 c(sx * t.SubdivisionSize(), sy * t.SubdivisionSize());
+          //if its purely vertical then dont use a corner
+          if(sx > x && sx - 1 < x)
+            c.first = p.first;
+          //if its purely horizontal then dont use a corner
+          if(sy > y && sy - 1 < y)
+            c.second = p.second;
+          auto distance = p.DistanceSquared(c);
+          answer.emplace(std::make_tuple(tile, subdivision, distance));
+        }
+      }
+    }
+  }
+  return answer;
 }
-*/
+
+void test_closest_first() {
+  Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
+  for(const auto& p : std::list<Point2>{{0,0}}) {
+    auto c = t.ClosestFirst(p);
+    auto a = closest_first_answer(t, p);
+    for(const auto& s : a)
+      if(s != c())
+        throw std::logic_error("Unexpected subdivision");
+    try { c(); } catch (const std::runtime_error& e) { continue; }
+    throw std::logic_error("Closest first functor should have thrown");
+  }
+}
+
 }
 
 int main() {
@@ -245,9 +297,8 @@ int main() {
   suite.test(TEST_CASE(TileList));
 
   suite.test(TEST_CASE(test_intersect_linestring));
-  /*suite.test(TEST_CASE(test_intersect_circle));
   suite.test(TEST_CASE(test_random_linestring));
-  suite.test(TEST_CASE(test_random_circle));*/
+  suite.test(TEST_CASE(test_closest_first));
 
   return suite.tear_down();
 }

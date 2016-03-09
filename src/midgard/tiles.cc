@@ -3,7 +3,7 @@
 #include "midgard/util.h"
 #include "midgard/distanceapproximator.h"
 #include <cmath>
-#include <functional>
+#include <set>
 #include <iostream>
 
 namespace {
@@ -34,39 +34,6 @@ namespace {
     }
   }
 
-  void bresenham_circle(int32_t x0, int32_t y0, int32_t r, const std::function<bool (int32_t, int32_t)>& set_pixel) {
-    int32_t f = 1 - r;
-    int32_t ddF_x = 0;
-    int32_t ddF_y = -2 * r;
-    int32_t x = 0;
-    int32_t y = r;
-
-    set_pixel(x0, y0 + r);
-    set_pixel(x0, y0 - r);
-    set_pixel(x0 + r, y0);
-    set_pixel(x0 - r, y0);
-
-    while(x < y) {
-      if(f >= 0) {
-        y--;
-        ddF_y += 2;
-        f += ddF_y;
-      }
-      x++;
-      ddF_x += 2;
-      f += ddF_x + 1;
-
-      set_pixel(x0 + x, y0 + y);
-      set_pixel(x0 - x, y0 + y);
-      set_pixel(x0 + x, y0 - y);
-      set_pixel(x0 - x, y0 - y);
-      set_pixel(x0 + y, y0 + x);
-      set_pixel(x0 - y, y0 + x);
-      set_pixel(x0 + y, y0 - x);
-      set_pixel(x0 - y, y0 - x);
-    }
-  }
-
 }
 
 namespace valhalla {
@@ -91,6 +58,11 @@ float Tiles<coord_t>::TileSize() const {
   return tilesize_;
 }
 
+template <class coord_t>
+float Tiles<coord_t>::SubdivisionSize() const {
+  return subdivision_size_;
+}
+
 // Get the bounding box of the tiling system.
 template <class coord_t>
 AABB2<coord_t> Tiles<coord_t>::TileBounds() const {
@@ -107,6 +79,11 @@ int32_t Tiles<coord_t>::nrows() const {
 template <class coord_t>
 int32_t Tiles<coord_t>::ncolumns() const {
   return ncolumns_;
+}
+
+template <class coord_t>
+unsigned short Tiles<coord_t>::nsubdivisions() const {
+  return nsubdivisions_;
 }
 
 // Get the "row" based on y.
@@ -406,6 +383,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
   //what to do when we want to mark a subdivision as containing a segment of this linestring
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
     //cant mark ones that are outside the valid range of tiles
+    //TODO: wrap coordinates around x and y?
     if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
       return true;
     //find the tile
@@ -459,30 +437,62 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 }
 
 template <class coord_t>
-std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const coord_t& center, const float radius) const {
-  std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
-
-  //what to do when we want to mark a subdivision as containing a segment of this linestring
-  const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
-    //cant mark ones that are outside the valid range of tiles
-    if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
-      return true;
-    //find the tile
-    int32_t tile_column = x / nsubdivisions_;
-    int32_t tile_row = y / nsubdivisions_;
-    int32_t tile = tile_row * ncolumns_ + tile_column;
-    //find the subdivision
-    unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
-    intersection[tile].insert(subdivision);
-    return false;
+std::function<std::tuple<int32_t, unsigned short, float>() > Tiles<coord_t>::ClosestFirst(const coord_t& seed) const {
+  //what global subdivision are we starting in
+  //TODO: worry about wrapping around valid range
+  auto x = (seed.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
+  auto y = (seed.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
+  auto subdivision = static_cast<int32_t>(y * nsubdivisions_) + static_cast<int32_t>(x);
+  //we could use a map here but we want a deterministic sort for testing purposes
+  using best_t = std::pair<float, int32_t>;
+  std::set<best_t, std::function<bool (const best_t&, const best_t&) > > queue(
+    [](const best_t&a, const best_t& b){
+      return a.first == b.first ? a.second < b.second : a.first < b.first;
+    }
+  );
+  std::unordered_set<int32_t> queued {subdivision};
+  //something to measure the closest possible point of a subdivision from the given seed point
+  auto dist = [this, &x, &y, &seed](int32_t sub) -> float {
+    auto sx = sub % (ncolumns_ * nsubdivisions_); if (sx < x) ++sx;
+    auto sy = sub / (nrows_ * nsubdivisions_); if (sy < y) ++sy;
+    coord_t c(sx * subdivision_size_, sy * subdivision_size_);
+    //if its purely vertical then dont use a corner
+    if(sx > x && sx - 1 < x)
+      c.first = seed.first;
+    //if its purely horizontal then dont use a corner
+    if(sy > y && sy - 1 < y)
+      c.second = seed.second;
+    return seed.DistanceSquared(c);
   };
-
-  //TODO: convert center point and radius to subdivision coordinates/units
-
-  //TODO: call bresenham circle algorithm then flood fill the circle
-
-  //give them back
-  return intersection;
+  //expand one at a time, always the next closest subdivision first
+  return [this, &x, &y, &dist, queue, queued]() mutable {
+    //get the next closest one or bail
+    if(!queue.size())
+      throw std::runtime_error("Subdivisions were exhausted");
+    auto best = *queue.cbegin();
+    queue.erase(queue.cbegin());
+    //add its neighbors
+    auto left = (best.second - 1) % nsubdivisions_;
+    auto right = (best.second + 1) % nsubdivisions_;
+    auto up = best.second < nsubdivisions_ * (nsubdivisions_ - 1) ?
+                best.second + nsubdivisions_ :
+                nsubdivisions_ % (best.second + nsubdivisions_ / 2);
+    auto down = best.second < nsubdivisions_ ?
+                nsubdivisions_ * (nsubdivisions_ - 1) + (nsubdivisions_ % (best.second + nsubdivisions_ / 2)) :
+                best.second - nsubdivisions_;
+    if(queued.find(left) == queued.cend()) { queued.emplace(left); queue.emplace(std::make_pair(dist(left),left)); }
+    if(queued.find(right) == queued.cend()) { queued.emplace(right); queue.emplace(std::make_pair(dist(right),right)); }
+    if(queued.find(up) == queued.cend()) { queued.emplace(up); queue.emplace(std::make_pair(dist(up),up)); }
+    if(queued.find(down) == queued.cend()) { queued.emplace(down); queue.emplace(std::make_pair(dist(down),down)); }
+    //return it
+    auto sx = best.second % nsubdivisions_;
+    auto sy = best.second / nsubdivisions_;
+    auto tile_column = sx / nsubdivisions_;
+    auto tile_row = sy / nsubdivisions_;
+    auto tile = tile_row * ncolumns_ + tile_column;
+    unsigned short subdivision = (sy % nsubdivisions_) * nsubdivisions_ + (sx % nsubdivisions_);
+    return std::make_tuple(tile, subdivision, best.first);
+  };
 }
 
 // Explicit instantiation
