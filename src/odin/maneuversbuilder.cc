@@ -1325,14 +1325,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit connection
-  if (maneuver.transit_connection() && !prev_edge->transit_connection()) {
+  if (maneuver.transit_connection() || prev_edge->transit_connection()) {
     return false;
-  }
-  if (prev_edge->transit_connection() && !maneuver.transit_connection()) {
-    return false;
-  }
-  if (maneuver.transit_connection() && prev_edge->transit_connection()) {
-    return true;
   }
 
   /////////////////////////////////////////////////////////////////////////////
