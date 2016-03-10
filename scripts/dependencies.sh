@@ -22,7 +22,6 @@ wait
 #install the service deps in the background
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 $DIR/install_service_deps.sh &
-$DIR/install_yml_cpp.sh &
 
 #build sync
 for dep in midgard baldr sif; do
