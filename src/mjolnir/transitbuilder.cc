@@ -78,13 +78,16 @@ struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;
   float length;
+  std::vector<std::string> names;
   std::list<PointLL> shape;
 
   OSMConnectionEdge(const GraphId& f, const GraphId& t,
-                    const float l, const std::list<PointLL>& s)
+                    const float l, const std::vector<std::string>& n,
+                    const std::list<PointLL>& s)
       :  osm_node(f),
          stop_node(t),
          length(l),
+         names(n),
          shape(s) {
   }
 
@@ -547,9 +550,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
-      std::vector<std::string> names;
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(0, conn.osm_node,
-                     endnode, 0, conn.shape, names, added);
+                     endnode, 0, conn.shape, conn.names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
       tilebuilder.directededges().emplace_back(std::move(directededge));
@@ -812,6 +814,7 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
   GraphId startnode, endnode;
   std::vector<PointLL> closest_shape;
   std::tuple<PointLL,float,int> closest;
+  std::vector<std::string> names;
   for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
     const NodeInfo* node = tile->node(i);
     for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
@@ -870,6 +873,9 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
         auto this_shape = edgeinfo->shape();
         auto this_closest = stop_ll.ClosestPoint(this_shape);
 
+        // Get names
+        names = edgeinfo->GetNames();
+
         if (std::get<1>(this_closest) < mindist) {
           startnode.Set(tile->header()->graphid().tileid(),
                         tile->header()->graphid().level(), i);
@@ -893,6 +899,7 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
     const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
     LOG_ERROR("No closest edge found for this stop: " + stop.name() + " way Id = " +
+              " LL= " + std::to_string(stop_ll.lat()) + "," + std::to_string(stop_ll.lng()) +
               std::to_string(wayid) + " tile " + std::to_string(aabb.minx()) + ", " + std::to_string(aabb.miny()) + ", " +
               std::to_string(aabb.maxx()) + ", " +  std::to_string(aabb.maxy()));
     return;
@@ -917,7 +924,8 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
     length = std::max(1.0f, valhalla::midgard::length(shape));
 
     // Add connection to start node
-    connection_edges.push_back({startnode, stop_pbf_graphid, length, shape});
+    connection_edges.push_back({startnode, stop_pbf_graphid, length,
+                names, shape});
     conn_count++;
   }
 
@@ -936,7 +944,8 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
       length2 = std::max(1.0f, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
-      connection_edges.push_back({endnode, stop_pbf_graphid, length2, shape2});
+      connection_edges.push_back({endnode, stop_pbf_graphid, length2,
+                names, shape2});
       conn_count++;
     }
   }
