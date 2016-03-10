@@ -245,27 +245,28 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // Add transfer cost. There is no cost if continuing along the
           // same trip Id or (valid) block Id.
           if (tripid != pred.tripid() ||
-             (blockid != 0 && blockid != pred.blockid())) {
+              (blockid != 0 && blockid != pred.blockid())) {
             newcost += transfer_cost;
-          }
 
-          const TransitRoute* transit_route = tile->GetTransitRoute(
-              departure->routeid());
+            const TransitRoute* transit_route = tile->GetTransitRoute(
+                departure->routeid());
 
-          //operator diff
-          if (transit_route && transit_route->op_by_onestop_id_offset()) {
-            std::string id = tile->GetName(transit_route->op_by_onestop_id_offset());
+            //operator diff
+            if (transit_route && transit_route->op_by_onestop_id_offset()) {
+              std::string id = tile->GetName(transit_route->op_by_onestop_id_offset());
 
-            if (onestop_id.empty()) //first pass.
-              onestop_id = id;
+              if (onestop_id.empty()) //first pass.
+                onestop_id = id;
 
-            if (onestop_id != id) {
-              Cost tc = transfer_cost;
-              tc.cost *= 1.5f;
-              newcost += tc;
-              onestop_id = id;
+              if (onestop_id != id) {
+                Cost tc = transfer_cost;
+                tc.cost *= 1.5f;
+                newcost += tc;
+                onestop_id = id;
+              }
             }
           }
+
           // Change mode and costing to transit. Add edge cost.
           mode_ = TravelMode::kPublicTransit;
           newcost += tc->EdgeCost(directededge, departure, localtime);
