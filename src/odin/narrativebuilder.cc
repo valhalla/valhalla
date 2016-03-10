@@ -1321,105 +1321,66 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
 std::string NarrativeBuilder::FormRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
-
-  // 0 "Stay straight to take the ramp."
-  // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
-  // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
-  // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-  // 4 "Stay straight to take the <NAME_SIGN> ramp."
-
-  // Examples
-  // 0 Stay straight to take the ramp
-  // 1 Stay straight to take the I 95 South ramp
-  // 2 Stay straight to take the ramp toward Baltimore
-  // 3 Stay straight to take the I 95 South ramp toward Baltimore
-  // 4 Stay straight to take the Gettysburg Pike ramp
+  //  "0": "Stay straight to take the ramp.",
+  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  //  "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  //  "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  // 1 = branch
-  // 2 = toward
-  // 4 = name (if no branch and toward)
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 1;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count);
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count);
   }
   if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
       && !maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count);
   }
 
-  switch (phrase_id) {
-    // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
-    case 1: {
-      instruction = (boost::format("Stay straight to take the %1% ramp.")
-          % exit_branch_sign).str();
-      break;
-    }
-    // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
-    case 2: {
-      instruction = (boost::format("Stay straight to take the ramp toward %1%.")
-          % exit_toward_sign).str();
-      break;
-    }
-    // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-    case 3: {
-      instruction = (boost::format(
-          "Stay straight to take the %1% ramp toward %2%.") % exit_branch_sign
-          % exit_toward_sign).str();
-      break;
-    }
-    // 4 "Stay straight to take the <NAME_SIGN> ramp."
-    case 4: {
-      instruction = (boost::format("Stay straight to take the %1% ramp.")
-          % exit_name_sign).str();
-      break;
-    }
-    default: {
-      // 0 "Stay straight to take the ramp."
-      instruction = "Stay straight to take the ramp.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_straight_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
-
-  // 0 "Stay straight to take the ramp."
-  // 1 "Stay straight to take the <BRANCH_SIGN(1)> ramp."
-  // 2 "Stay straight to take the ramp toward <TOWARD_SIGN(1)>."
-  // 3 "Stay straight to take the <NAME_SIGN(1)> ramp."
-
-  // Examples
-  // 0 Stay straight to take the ramp
-  // 1 Stay straight to take the I 95 South ramp
-  // 2 Stay straight to take the ramp toward Baltimore
-  // 3 Stay straight to take the Gettysburg Pike ramp
+  // "0": "Stay straight to take the ramp.",
+  // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  // "3": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  // 1 = branch
-  // 2 = toward
-  // 3 = name (if no branch and toward)
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
@@ -1430,80 +1391,58 @@ std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitTowardSign()) {
     phrase_id = 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitNameSign()) {
     phrase_id = 3;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  switch (phrase_id) {
-    // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
-    case 1: {
-      instruction = (boost::format("Stay straight to take the %1% ramp.")
-          % exit_branch_sign).str();
-      break;
-    }
-    // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
-    case 2: {
-      instruction = (boost::format("Stay straight to take the ramp toward %1%.")
-          % exit_toward_sign).str();
-      break;
-    }
-    // 3 "Stay straight to take the <NAME_SIGN> ramp."
-    case 3: {
-      instruction = (boost::format("Stay straight to take the %1% ramp.")
-          % exit_name_sign).str();
-      break;
-    }
-    default: {
-      // 0 "Stay straight to take the ramp."
-      instruction = "Stay straight to take the ramp.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_straight_verbal_alert_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
-
-  // 0 "Stay straight to take the ramp."
-  // 1 "Stay straight to take the <BRANCH_SIGN(2)> ramp."
-  // 2 "Stay straight to take the ramp toward <TOWARD_SIGN(2)>."
-  // 3 "Stay straight to take the <BRANCH_SIGN(2)> ramp toward <TOWARD_SIGN(2)>."
-  // 4 "Stay straight to take the <NAME_SIGN(2)> ramp."
-
-  // Examples
-  // 0 Stay straight to take the ramp
-  // 1 Stay straight to take the I 95 South ramp
-  // 2 Stay straight to take the ramp toward Baltimore
-  // 3 Stay straight to take the I 95 South ramp toward Baltimore
-  // 4 Stay straight to take the Gettysburg Pike ramp
+  //  "0": "Stay straight to take the ramp.",
+  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  //  "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  //  "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  // 1 = branch
-  // 2 = toward
-  // 4 = name (if no branch and toward)
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 1;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
@@ -1511,45 +1450,23 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
   if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
       && !maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  switch (phrase_id) {
-    // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
-    case 1: {
-      instruction = (boost::format("Stay straight to take the %1% ramp.")
-          % exit_branch_sign).str();
-      break;
-    }
-    // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
-    case 2: {
-      instruction = (boost::format("Stay straight to take the ramp toward %1%.")
-          % exit_toward_sign).str();
-      break;
-    }
-    // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-    case 3: {
-      instruction = (boost::format(
-          "Stay straight to take the %1% ramp toward %2%.") % exit_branch_sign
-          % exit_toward_sign).str();
-      break;
-    }
-    // 4 "Stay straight to take the <NAME_SIGN> ramp."
-    case 4: {
-      instruction = (boost::format("Stay straight to take the %1% ramp.")
-          % exit_name_sign).str();
-      break;
-    }
-    default: {
-      // 0 "Stay straight to take the ramp."
-      instruction = "Stay straight to take the ramp.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_straight_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormRampInstruction(

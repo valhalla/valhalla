@@ -150,9 +150,32 @@
       "relative_directions": ["left", "right"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
-    "ramp_straight": null,
-    "ramp_straight_verbal_alert": null,
-    "ramp_straight_verbal": null,
+    "ramp_straight": {
+      "phrases": {
+        "0": "Stay straight to take the ramp.",
+        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+        "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+        "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+        "4": "Stay straight to take the <NAME_SIGN> ramp."
+      }
+    },
+    "ramp_straight_verbal_alert": {
+      "phrases": {
+        "0": "Stay straight to take the ramp.",
+        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+        "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+        "3": "Stay straight to take the <NAME_SIGN> ramp."
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Stay straight to take the ramp.",
+        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+        "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+        "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+        "4": "Stay straight to take the <NAME_SIGN> ramp."
+      }
+    },
     "ramp": null,
     "ramp_verbal_alert": null,
     "ramp_verbal": null,
