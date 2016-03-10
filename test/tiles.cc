@@ -1,10 +1,12 @@
 #include "test.h"
-#include "valhalla/midgard/tiles.h"
-#include "valhalla/midgard/aabb2.h"
-#include "valhalla/midgard/pointll.h"
+#include "midgard/tiles.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 
 #include <random>
 #include <set>
+
 
 using namespace valhalla::midgard;
 
@@ -221,7 +223,8 @@ void test_random_linestring() {
 
 //brute force entire set of subdivisions at once
 using sub_t = std::tuple<int32_t, unsigned short, float>;
-std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first_answer(const Tiles<Point2>& t, const Point2& p){
+template <class coord_t>
+std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first_answer(const Tiles<coord_t>& t, const coord_t& p){
   //place to keep the subdivisions sorted
   std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(
     [&t](const sub_t& a, const sub_t& b) {
@@ -232,9 +235,7 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
       auto bx = (std::get<0>(b) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) % t.nsubdivisions());
       auto by = (std::get<0>(b) / t.nrows()) * t.nsubdivisions() + (std::get<1>(b) / t.nsubdivisions());
       auto bs = by * (t.ncolumns() * t.nsubdivisions()) + bx;
-      if(std::get<2>(a) == std::get<2>(b))
-        return as < bs;
-      return std::get<2>(a) < std::get<2>(b);
+      return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
     }
   );
   //what subdivision is the point in
@@ -249,9 +250,15 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
           auto tile = t.TileId(j, i);
           auto subdivision = k * t.nsubdivisions() + l;
 
-          auto sx = l + (j * t.nsubdivisions()); if (sx < x) ++sx;
-          auto sy = k + (i * t.nsubdivisions()); if (sy < y) ++sy;
-          Point2 c(t.TileBounds().minx() + sx * t.SubdivisionSize(), t.TileBounds().miny() + sy * t.SubdivisionSize());
+          auto sx = l + j * t.nsubdivisions();
+          if (sx < x) {
+            if(!coord_t::IsSpherical() || x - sx < t.ncolumns() * t.nsubdivisions() / 2.f)
+              ++sx;
+          }
+          else if(coord_t::IsSpherical() && sx - x > t.ncolumns() * t.nsubdivisions() / 2.f)
+            ++sx;
+          auto sy = k + i * t.nsubdivisions(); if (sy < y) ++sy;
+          coord_t c(t.TileBounds().minx() + sx * t.SubdivisionSize(), t.TileBounds().miny() + sy * t.SubdivisionSize());
           //if its purely vertical then dont use a corner
           if(sx > x && sx - 1 < x)
             c.first = p.first;
@@ -269,9 +276,9 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
 
 void test_closest_first() {
   Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
-  for(const auto& p : std::list<Point2>{{0,0}}) {
+  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.2} }) {
     auto c = t.ClosestFirst(p);
-    auto a = closest_first_answer(t, p);
+    auto a = closest_first_answer<Point2>(t, p);
     for(const auto& s : a) {
       auto r = c();
       if(s != r)
