@@ -276,7 +276,7 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
 
 void test_closest_first() {
   Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
-  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.2} }) {
+  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21} }) {
     auto c = t.ClosestFirst(p);
     auto a = closest_first_answer<Point2>(t, p);
     for(const auto& s : a) {
