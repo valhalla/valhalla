@@ -110,6 +110,15 @@ void NarrativeDictionary::Load(
   Load(ramp_straight_verbal_subset, narrative_pt.get_child(kRampStraightVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate ramp_subset...");
+  // Populate ramp_subset
+  Load(ramp_subset, narrative_pt.get_child(kRampKey));
+
+  LOG_TRACE("Populate ramp_verbal_subset...");
+  // Populate ramp_verbal_subset
+  Load(ramp_verbal_subset, narrative_pt.get_child(kRampVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
@@ -216,6 +225,19 @@ void NarrativeDictionary::Load(
   // Populate empty_street_name_labels
   turn_handle.empty_street_name_labels = as_vector<std::string>(
       turn_subset_pt, kEmptyStreetNameLabelsKey);
+}
+
+void NarrativeDictionary::Load(
+    RampSubset& ramp_handle,
+    const boost::property_tree::ptree& ramp_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(ramp_handle), ramp_subset_pt);
+
+  // Populate relative_directions
+  ramp_handle.relative_directions = as_vector<std::string>(
+      ramp_subset_pt, kRelativeDirectionsKey);
+
 }
 
 void NarrativeDictionary::Load(

@@ -28,6 +28,8 @@ constexpr auto kUturnVerbalKey = "instructions.uturn_verbal";
 constexpr auto kRampStraightKey = "instructions.ramp_straight";
 constexpr auto kRampStraightVerbalAlertKey = "instructions.ramp_straight_verbal_alert";
 constexpr auto kRampStraightVerbalKey = "instructions.ramp_straight_verbal";
+constexpr auto kRampKey = "instructions.ramp";
+constexpr auto kRampVerbalKey = "instructions.ramp_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -117,6 +119,10 @@ struct TurnSubset : PhraseSet {
   std::vector<std::string> empty_street_name_labels;
 };
 
+struct RampSubset : PhraseSet {
+  std::vector<std::string> relative_directions;
+};
+
 struct PostTransitionVerbalSubset : PhraseSet {
   std::vector<std::string> metric_lengths;
   std::vector<std::string> us_customary_lengths;
@@ -161,6 +167,10 @@ class NarrativeDictionary {
   PhraseSet ramp_straight_subset;
   PhraseSet ramp_straight_verbal_alert_subset;
   PhraseSet ramp_straight_verbal_subset;
+
+  // RampStraight
+  RampSubset ramp_subset;
+  RampSubset ramp_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
@@ -246,6 +256,16 @@ class NarrativeDictionary {
     */
   void Load(TurnSubset& turn_handle,
             const boost::property_tree::ptree& turn_subset_pt);
+
+  /**
+    * Loads the specified 'ramp' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  ramp_handle  The 'ramp' structure to populate.
+    * @param  ramp_subset_pt  The 'ramp' property tree.
+    */
+  void Load(RampSubset& ramp_handle,
+            const boost::property_tree::ptree& ramp_subset_pt);
 
   /**
     * Loads the specified 'post transition verbal' instruction subset with the
