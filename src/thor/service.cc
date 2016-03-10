@@ -22,7 +22,8 @@ namespace {
   const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX{
     {"one_to_many", thor_worker_t::ONE_TO_MANY},
     {"many_to_one", thor_worker_t::MANY_TO_ONE},
-    {"many_to_many", thor_worker_t::MANY_TO_MANY}
+    {"many_to_many", thor_worker_t::MANY_TO_MANY},
+    {"optimized_order_route", thor_worker_t::OPTIMIZED_ORDER_ROUTE}
   };
 
   std::size_t tdindex = 0;
@@ -86,23 +87,23 @@ namespace valhalla {
         std::string costing = init_request(request);
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix_type = request.get_optional<std::string>("matrix_type");
-
         if (matrix_type) {
-          if (*matrix_type == "one_to_many" || *matrix_type == "many_to_one" || *matrix_type == "many_to_many") {
-             valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-             auto matrix_iter = MATRIX.find(*matrix_type);
-             if (matrix_iter != MATRIX.cend()) {
-               return matrix(matrix_iter->second, costing, request, info);
-             }
-           } else if (*matrix_type == "optimized_order_route")  {
-               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-               return optimized_path(correlated, costing, request_str, info.do_not_track);
-           } else {
-            //this will never happen since loki formats the request for matrix
+          auto matrix_iter = MATRIX.find(*matrix_type);
+          if (matrix_iter == MATRIX.cend())
             throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_order_route'.");
-           }
-        } else
-          return trip_path(costing, request_str, date_time_type, info.do_not_track);
+
+          switch (matrix_iter->second) {
+            case ONE_TO_MANY:
+            case MANY_TO_ONE:
+            case MANY_TO_MANY:
+              valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
+              return matrix(matrix_iter->second, costing, request, info);
+            case OPTIMIZED_ORDER_ROUTE:
+              valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
+              return optimized_path(correlated, costing, request_str, info.do_not_track);
+          }
+        }
+        return trip_path(costing, request_str, date_time_type, info.do_not_track);
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
