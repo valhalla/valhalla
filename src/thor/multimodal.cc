@@ -96,6 +96,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   uint32_t blockid, tripid, prior_stop;
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
+  std::string onestop_id;
   const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
@@ -248,6 +249,23 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
             newcost += transfer_cost;
           }
 
+          const TransitRoute* transit_route = tile->GetTransitRoute(
+              departure->routeid());
+
+          //operator diff
+          if (transit_route && transit_route->op_by_onestop_id_offset()) {
+            std::string id = tile->GetName(transit_route->op_by_onestop_id_offset());
+
+            if (onestop_id.empty()) //first pass.
+              onestop_id = id;
+
+            if (onestop_id != id) {
+              Cost tc = transfer_cost;
+              tc.cost *= 1.5f;
+              newcost += tc;
+              onestop_id = id;
+            }
+          }
           // Change mode and costing to transit. Add edge cost.
           mode_ = TravelMode::kPublicTransit;
           newcost += tc->EdgeCost(directededge, departure, localtime);
