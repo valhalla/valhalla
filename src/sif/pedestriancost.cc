@@ -25,7 +25,7 @@ constexpr uint32_t kMaxTransferDistanceMM    = 805;   // 0.5 miles
 // Maximum distance of a walking route
 constexpr uint32_t kMaxDistance        = 100000; // 100 km
 
-constexpr float kModeWeight             = 2.5f;   // Favor this mode?
+constexpr float kModeWeight             = 2.0f;   // Favor this mode?
 constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
 constexpr float kDefaultGatePenalty     = 300.0f; // Seconds
 constexpr float kDefaultWalkingSpeed    = 5.1f;   // 3.16 MPH
