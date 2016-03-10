@@ -13,7 +13,7 @@ namespace sif {
 namespace {
 constexpr uint32_t kUnitSize = 1;
 
-constexpr float kModeWeight             = 1.5f; // Favor this mode?
+constexpr float kModeWeight             = 1.0f; // Favor this mode?
 constexpr float kDefaultTransferCost    = 15.0f;
 constexpr float kDefaultTransferPenalty = 300.0f;
 
