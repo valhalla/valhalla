@@ -338,27 +338,6 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
   return { 0.0f, 0.0f };
 }
 
-/*
-// Returns the transfer cost between 2 transit stops.
-Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
-  if (transfer == nullptr) {
-    // No transfer record exists - use defaults
-    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
-  }
-  switch (transfer->type()) {
-  case TransferType::kRecommended:
-    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
-  case TransferType::kTimed:
-    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
-  case TransferType::kMinTime:
-    return { static_cast<float>(transfer->mintime() + (transfer_penalty_ * transfer_factor_)),
-             static_cast<float>(transfer->mintime()) };
-  case TransferType::kNotPossible:
-    return kImpossibleCost;
-  }
-}
-*/
-
 // Returns the transfer cost between 2 transit stops.
 Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   if (transfer == nullptr) {
