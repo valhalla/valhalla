@@ -538,6 +538,104 @@ void test_en_US_ramp_straight_verbal() {
 
 }
 
+void test_en_US_ramp() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+  const auto& phrase_0 = dictionary.ramp_subset.phrases.at("0");
+  validate(phrase_0, "Take the ramp on the <RELATIVE_DIRECTION>.");
+
+  // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  const auto& phrase_1 = dictionary.ramp_subset.phrases.at("1");
+  validate(phrase_1, "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.");
+
+  // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  const auto& phrase_2 = dictionary.ramp_subset.phrases.at("2");
+  validate(phrase_2, "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
+
+  // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  const auto& phrase_3 = dictionary.ramp_subset.phrases.at("3");
+  validate(phrase_3, "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
+
+  // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  const auto& phrase_4 = dictionary.ramp_subset.phrases.at("4");
+  validate(phrase_4, "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.");
+
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  const auto& phrase_5 = dictionary.ramp_subset.phrases.at("5");
+  validate(phrase_5, "Turn <RELATIVE_DIRECTION> to take the ramp.");
+
+  // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+  const auto& phrase_6 = dictionary.ramp_subset.phrases.at("6");
+  validate(phrase_6, "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.");
+
+  // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+  const auto& phrase_7 = dictionary.ramp_subset.phrases.at("7");
+  validate(phrase_7, "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.");
+
+  // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  const auto& phrase_8 = dictionary.ramp_subset.phrases.at("8");
+  validate(phrase_8, "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
+
+  // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+  const auto& phrase_9 = dictionary.ramp_subset.phrases.at("9");
+  validate(phrase_9, "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.ramp_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeTwoDirections);
+
+}
+
+void test_en_US_ramp_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+  const auto& phrase_0 = dictionary.ramp_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Take the ramp on the <RELATIVE_DIRECTION>.");
+
+  // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  const auto& phrase_1 = dictionary.ramp_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.");
+
+  // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  const auto& phrase_2 = dictionary.ramp_verbal_subset.phrases.at("2");
+  validate(phrase_2, "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
+
+  // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  const auto& phrase_3 = dictionary.ramp_verbal_subset.phrases.at("3");
+  validate(phrase_3, "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
+
+  // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  const auto& phrase_4 = dictionary.ramp_verbal_subset.phrases.at("4");
+  validate(phrase_4, "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.");
+
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  const auto& phrase_5 = dictionary.ramp_verbal_subset.phrases.at("5");
+  validate(phrase_5, "Turn <RELATIVE_DIRECTION> to take the ramp.");
+
+  // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+  const auto& phrase_6 = dictionary.ramp_verbal_subset.phrases.at("6");
+  validate(phrase_6, "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.");
+
+  // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+  const auto& phrase_7 = dictionary.ramp_verbal_subset.phrases.at("7");
+  validate(phrase_7, "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.");
+
+  // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  const auto& phrase_8 = dictionary.ramp_verbal_subset.phrases.at("8");
+  validate(phrase_8, "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.");
+
+  // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+  const auto& phrase_9 = dictionary.ramp_verbal_subset.phrases.at("9");
+  validate(phrase_9, "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp.");
+
+  // relative_directions
+  const auto& relative_directions = dictionary.ramp_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeTwoDirections);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -629,6 +727,12 @@ int main() {
 
   // test the en-US ramp_straight verbal phrases
   suite.test(TEST_CASE(test_en_US_ramp_straight_verbal));
+
+  // test the en-US ramp phrases
+  suite.test(TEST_CASE(test_en_US_ramp));
+
+  // test the en-US ramp verbal phrases
+  suite.test(TEST_CASE(test_en_US_ramp_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

@@ -176,9 +176,36 @@
         "4": "Stay straight to take the <NAME_SIGN> ramp."
       }
     },
-    "ramp": null,
-    "ramp_verbal_alert": null,
-    "ramp_verbal": null,
+    "ramp": {
+      "phrases": {
+        "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+        "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+        "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+        "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+        "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+        "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+        "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+        "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+      },
+      "relative_directions": ["left", "right"]
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+        "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+        "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+        "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+        "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+        "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+        "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+        "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+      },
+      "relative_directions": ["left", "right"]
+    },
     "exit": null,
     "exit_verbal_alert": null,
     "exit_verbal": null,

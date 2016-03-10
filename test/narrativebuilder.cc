@@ -650,9 +650,13 @@ void PopulateRampStraightManeuverList_3(std::list<Maneuver>& maneuvers,
                    Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 60, 57,
                    9, 10, 88, 92, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
-                       "US 322 East", "1" } },
-                   { { "Hershey", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0,
-                   0, 0, 0, 30, 0);
+                       "US 322 East", "1" }, { "US 422 East", "1" }, {
+                       "US 522 East", "1" }, { "US 622 East", "1" }, {
+                       "US 722 East", "1" } },
+                   { { "Hershey", "1" }, { "Palmdale", "1" },
+                       { "Palmyra", "1" }, { "Campbelltown", "1" }, { "Eprata",
+                           "1" } },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
 }
 
 void PopulateRampStraightManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -668,6 +672,152 @@ void PopulateRampStraightManeuverList_4(std::list<Maneuver>& maneuvers,
                    9, 10, 88, 92, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { {
                        "Gettysburg Pike", "0" } },
                    0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
+}
+
+void PopulateRampManeuverList_0(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampRight, { }, { }, { }, "",
+                   0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 99, 137, 14,
+                   15, 61, 71, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+}
+
+void PopulateRampManeuverList_1(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampRight, { }, { }, { }, "",
+                   0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 99, 137, 14,
+                   15, 61, 71, 1, 0, 0, 0, 0, 0, 0, 0, 0, { },
+                   { { "I 95", "0" } }, { }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                   0, 0, 0, 0, 9, 0);
+}
+
+void PopulateRampManeuverList_2(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampLeft, { "NY 27 East",
+                       "South Conduit Avenue" },
+                   { }, { }, "", 0.124000, 6, 353,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 105, 102,
+                   24, 25, 204, 206, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
+                       "JFK", "0" } },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 6, 0);
+}
+
+void PopulateRampManeuverList_3(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampLeft, { "NY 27 East",
+                       "South Conduit Avenue" },
+                   { }, { }, "", 0.124000, 6, 353,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 105, 102,
+                   24, 25, 204, 206, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "South Conduit Avenue", "0" } },
+                   { { "JFK", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0,
+                   0, 0, 6, 0);
+}
+
+void PopulateRampManeuverList_4(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampRight, { }, { }, { }, "",
+                   0.234000, 9, 10, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 99, 137, 14,
+                   15, 61, 71, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { {
+                       "Gettysburg Pike", "0" } },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+}
+
+void PopulateRampManeuverList_5(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampRight, { }, { }, { }, "",
+                   0.256000, 46, 92, Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 86, 129, 11,
+                   13, 51, 62, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateRampManeuverList_6(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampLeft, { }, { }, { }, "",
+                   0.539000, 31, 266, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 86, 277, 24,
+                   26, 60, 79, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "PA 283 West", "1" } },
+                   { }, { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateRampManeuverList_7(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampLeft, { }, { }, { }, "",
+                   0.539000, 31, 266, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 86, 277, 24,
+                   26, 60, 79, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
+                       "Harrisburg", "0" }, {
+                       "Harrisburg International Airport", "0" } },
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateRampManeuverList_8(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampLeft, { }, { }, { }, "",
+                   0.539000, 31, 266, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 86, 277, 24,
+                   26, 60, 79, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "PA 283 West", "1" } },
+                   { { "Harrisburg", "0" }, {
+                       "Harrisburg International Airport", "0" } },
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateRampManeuverList_9(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRampRight, { }, { }, { }, "",
+                   0.256000, 46, 92, Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 86, 129, 11,
+                   13, 51, 62, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { }, { }, { {
+                       "Gettysburg Pike", "0" } },
+                   1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1677,9 +1827,9 @@ void TestBuildRampStraight_3_miles_en_US() {
   PopulateRampStraightManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Stay straight to take the US 322 East ramp toward Hershey.",
+      "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown.",
       "Stay straight to take the U.S. 3 22 East ramp.",
-      "Stay straight to take the U.S. 3 22 East ramp toward Hershey.",
+      "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale.",
       "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -1711,6 +1861,316 @@ void TestBuildRampStraight_4_miles_en_US() {
       "Stay straight to take the Gettysburg Pike ramp.",
       "Stay straight to take the Gettysburg Pike ramp.",
       "Stay straight to take the Gettysburg Pike ramp.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+// "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+// "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+void TestBuildRamp_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the ramp on the right.",
+      "Take the ramp on the right.",
+      "Take the ramp on the right.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+// "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+// "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+void TestBuildRamp_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the I 95 ramp on the right.",
+      "Take the Interstate 95 ramp on the right.",
+      "Take the Interstate 95 ramp on the right.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildRamp_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the ramp on the left toward JFK.",
+      "Take the ramp on the left toward JFK.",
+      "Take the ramp on the left toward JFK.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>",
+// "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildRamp_3_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_3(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_3(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the South Conduit Avenue ramp on the left toward JFK.",
+      "Take the South Conduit Avenue ramp on the left.",
+      "Take the South Conduit Avenue ramp on the left toward JFK.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+// "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+// "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+void TestBuildRamp_4_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the Gettysburg Pike ramp on the right.",
+      "Take the Gettysburg Pike ramp on the right.",
+      "Take the Gettysburg Pike ramp on the right.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+// "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+// "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+void TestBuildRamp_5_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_5(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_5(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn right to take the ramp.",
+      "Turn right to take the ramp.",
+      "Turn right to take the ramp.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+// "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+// "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+void TestBuildRamp_6_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_6(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_6(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn left to take the PA 283 West ramp.",
+      "Turn left to take the Pennsylvania 2 83 West ramp.",
+      "Turn left to take the Pennsylvania 2 83 West ramp.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+// "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+// "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+void TestBuildRamp_7_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_7(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_7(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport.",
+      "Turn left to take the ramp toward Harrisburg.",
+      "Turn left to take the ramp toward Harrisburg, Harrisburg International Airport.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+// "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+// "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+void TestBuildRamp_8_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_8(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_8(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport.",
+      "Turn left to take the Pennsylvania 2 83 West ramp.",
+      "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormRampInstruction
+// "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+// "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+// "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
+void TestBuildRamp_9_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateRampManeuverList_9(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateRampManeuverList_9(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn right to take the Gettysburg Pike ramp.",
+      "Turn right to take the Gettysburg Pike ramp.",
+      "Turn right to take the Gettysburg Pike ramp.",
       "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -2818,6 +3278,36 @@ int main() {
 
   // BuildRampStraight_4_miles_en_US
   suite.test(TEST_CASE(TestBuildRampStraight_4_miles_en_US));
+
+  // BuildRamp_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_0_miles_en_US));
+
+  // BuildRamp_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_1_miles_en_US));
+
+  // BuildRamp_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_2_miles_en_US));
+
+  // BuildRamp_3_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_3_miles_en_US));
+
+  // BuildRamp_4_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_4_miles_en_US));
+
+  // BuildRamp_5_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_5_miles_en_US));
+
+  // BuildRamp_6_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_6_miles_en_US));
+
+  // BuildRamp_7_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_7_miles_en_US));
+
+  // BuildRamp_8_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_8_miles_en_US));
+
+  // BuildRamp_9_miles_en_US
+  suite.test(TEST_CASE(TestBuildRamp_9_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));

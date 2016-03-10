@@ -1472,212 +1472,151 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
 std::string NarrativeBuilder::FormRampInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
-  // 0 "Take the ramp on the <FormTurnTypeInstruction>."
-  // 1 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction>."
-  // 2 "Take the ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  // 3 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  // 4 "Take the <NAME_SIGN> ramp on the <FormTurnTypeInstruction>."
-  // 5 "Turn <FormTurnTypeInstruction> to take the ramp."
-  // 6 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN> ramp."
-  // 7 "Turn <FormTurnTypeInstruction> to take the ramp toward <TOWARD_SIGN>."
-  // 8 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-  // 9 "Turn <FormTurnTypeInstruction> to take the <NAME_SIGN> ramp."
-
-  // Examples
-  // 0 Take the ramp on the right
-  // 1 Take the I 95 South ramp on the right
-  // 2 Take the ramp on the right toward Baltimore
-  // 3 Take the I 95 South ramp on the right toward Baltimore
-  // 4 Take the Gettysburg Pike ramp on the right
-  // 5 Turn right to take the ramp
-  // 6 Turn right to take the I 95 South ramp
-  // 7 Turn right to take the ramp toward Baltimore
-  // 8 Turn right to take the I 95 South ramp toward Baltimore
-  // 9 Turn right to take the Gettysburg Pike ramp
+  // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+  // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+  // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+  // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // 0 = Take the ramp on the right
-  // 1 = branch
-  // 2 = toward
-  // 4 = name (if no branch and toward)
-  // 5 = Turn right to take the ramp
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
-
-  if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
-      || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
-    phrase_id = 5;
-
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
+
+  // Determine if turn
+  if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
+      || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
+    phrase_id = 5;
+  }
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 1;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count);
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count);
   }
   if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
       && !maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count);
   }
 
-  switch (phrase_id) {
-    // 1 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction>."
-    case 1: {
-      instruction = (boost::format("Take the %1% ramp on the %2%.")
-          % exit_branch_sign % turn).str();
-      break;
-    }
-      // 2 "Take the ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 2: {
-      instruction = (boost::format("Take the ramp on the %1% toward %2%.")
-          % turn % exit_toward_sign).str();
-      break;
-    }
-      // 3 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 3: {
-      instruction = (boost::format("Take the %1% ramp on the %2% toward %3%.")
-          % exit_branch_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      // 4 "Take the <NAME_SIGN> ramp on the <FormTurnTypeInstruction>."
-    case 4: {
-      instruction = (boost::format("Take the %1% ramp on the %2%.")
-          % exit_name_sign % turn).str();
-      break;
-    }
-      // 5 "Turn <FormTurnTypeInstruction> to take the ramp."
-    case 5: {
-      instruction = (boost::format("Turn %1% to take the ramp.") % turn).str();
-      break;
-    }
-      // 6 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN> ramp."
-    case 6: {
-      instruction = (boost::format("Turn %1% to take the %2% ramp.")
-          % turn % exit_branch_sign).str();
-      break;
-    }
-      // 7 "Turn <FormTurnTypeInstruction> to take the ramp toward <TOWARD_SIGN>."
-    case 7: {
-      instruction = (boost::format("Turn %1% to take the ramp toward %2%.")
-          % turn % exit_toward_sign).str();
-      break;
-    }
-      // 8 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-    case 8: {
-      instruction = (boost::format("Turn %1% to take the %2% ramp toward %3%.")
-          % turn % exit_branch_sign % exit_toward_sign).str();
-      break;
-    }
-      // 9 "Turn <FormTurnTypeInstruction> to take the <NAME_SIGN> ramp."
-    case 9: {
-      instruction = (boost::format("Turn %1% to take the %2% ramp.")
-          % turn % exit_name_sign).str();
-      break;
-    }
-      // 0 "Take the ramp on the <FormTurnTypeInstruction>."
-    default: {
-      instruction = (boost::format("Take the ramp on the %1%.") % turn).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTwoDirection(maneuver.type(),
+                               dictionary_.ramp_subset.relative_directions));
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertRampInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
-  // 0 "Take the ramp on the <FormTurnTypeInstruction>."
-  // 1 "Take the <BRANCH_SIGN(1)> ramp on the <FormTurnTypeInstruction>."
-  // 2 "Take the ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(1)>."
-  // 4 "Take the <NAME_SIGN(1)> ramp on the <FormTurnTypeInstruction>."
-  // 5 "Turn <FormTurnTypeInstruction> to take the ramp."
-  // 6 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN(1)> ramp."
-  // 7 "Turn <FormTurnTypeInstruction> to take the ramp toward <TOWARD_SIGN(1)>."
-  // 9 "Turn <FormTurnTypeInstruction> to take the <NAME_SIGN(1)> ramp."
+  // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+  // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+  // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+  // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
 
-  // 0 = Take the ramp on the right
-  // 1 = branch
-  // 2 = toward
-  // 4 = name (if no branch and toward)
-  // 5 = Turn right to take the ramp
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
-      || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+      || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
     phrase_id = 5;
+  }
 
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 1;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitNameSign()) {
     phrase_id += 4;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  return FormVerbalRampInstruction(phrase_id,
-                                   FormTurnTypeInstruction(maneuver.type()),
-                                   exit_branch_sign, exit_toward_sign,
-                                   exit_name_sign);
+  return FormVerbalRampInstruction(
+      phrase_id,
+      FormRelativeTwoDirection(
+          maneuver.type(), dictionary_.ramp_verbal_subset.relative_directions),
+      exit_branch_sign, exit_toward_sign, exit_name_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalRampInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
-  // 0 "Take the ramp on the <FormTurnTypeInstruction>."
-  // 1 "Take the <BRANCH_SIGN(2)> ramp on the <FormTurnTypeInstruction>."
-  // 2 "Take the ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  // 3 "Take the <BRANCH_SIGN(2)> ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  // 4 "Take the <NAME_SIGN(2)> ramp on the <FormTurnTypeInstruction>."
-  // 5 "Turn <FormTurnTypeInstruction> to take the ramp."
-  // 6 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN(2)> ramp."
-  // 7 "Turn <FormTurnTypeInstruction> to take the ramp toward <TOWARD_SIGN(2)>."
-  // 8 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN(2)> ramp toward <TOWARD_SIGN(2)>."
-  // 9 "Turn <FormTurnTypeInstruction> to take the <NAME_SIGN(2)> ramp."
+  // "0": "Take the ramp on the <RELATIVE_DIRECTION>.",
+  // "1": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  // "2": "Take the ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
+  // "5": "Turn <RELATIVE_DIRECTION> to take the ramp.",
+  // "6": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp.",
+  // "7": "Turn <RELATIVE_DIRECTION> to take the ramp toward <TOWARD_SIGN>.",
+  // "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
 
-
-  // 0 = Take the ramp on the right
-  // 1 = branch
-  // 2 = toward
-  // 4 = name (if no branch and toward)
-  // 5 = Turn right to take the ramp
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
-      || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+      || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
     phrase_id = 5;
+  }
 
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 1;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
@@ -1685,99 +1624,38 @@ std::string NarrativeBuilder::FormVerbalRampInstruction(
   if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
       && !maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  return FormVerbalRampInstruction(phrase_id,
-                                   FormTurnTypeInstruction(maneuver.type()),
-                                   exit_branch_sign, exit_toward_sign,
-                                   exit_name_sign);
+  return FormVerbalRampInstruction(
+      phrase_id,
+      FormRelativeTwoDirection(
+          maneuver.type(), dictionary_.ramp_verbal_subset.relative_directions),
+      exit_branch_sign, exit_toward_sign, exit_name_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalRampInstruction(
-    uint8_t phrase_id, const std::string& turn,
+    uint8_t phrase_id, const std::string& relative_dir,
     const std::string& exit_branch_sign, const std::string& exit_toward_sign,
     const std::string& exit_name_sign) {
-
-  // Examples
-  // 0 Take the ramp on the right
-  // 1 Take the I 95 South ramp on the right
-  // 2 Take the ramp on the right toward Baltimore
-  // 3 Take the I 95 South ramp on the right toward Baltimore
-  // 4 Take the Gettysburg Pike ramp on the right
-  // 5 Turn right to take the ramp
-  // 6 Turn right to take the I 95 South ramp
-  // 7 Turn right to take the ramp toward Baltimore
-  // 8 Turn right to take the I 95 South ramp toward Baltimore
-  // 9 Turn right to take the Gettysburg Pike ramp
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  switch (phrase_id) {
-    // 1 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction>."
-    case 1: {
-      instruction = (boost::format("Take the %1% ramp on the %2%.")
-          % exit_branch_sign % turn).str();
-      break;
-    }
-      // 2 "Take the ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 2: {
-      instruction = (boost::format("Take the ramp on the %1% toward %2%.")
-          % turn % exit_toward_sign).str();
-      break;
-    }
-      // 3 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 3: {
-      instruction = (boost::format("Take the %1% ramp on the %2% toward %3%.")
-          % exit_branch_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      // 4 "Take the <NAME_SIGN> ramp on the <FormTurnTypeInstruction>."
-    case 4: {
-      instruction = (boost::format("Take the %1% ramp on the %2%.")
-          % exit_name_sign % turn).str();
-      break;
-    }
-      // 5 "Turn <FormTurnTypeInstruction> to take the ramp."
-    case 5: {
-      instruction = (boost::format("Turn %1% to take the ramp.") % turn).str();
-      break;
-    }
-      // 6 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN> ramp."
-    case 6: {
-      instruction = (boost::format("Turn %1% to take the %2% ramp.")
-          % turn % exit_branch_sign).str();
-      break;
-    }
-      // 7 "Turn <FormTurnTypeInstruction> to take the ramp toward <TOWARD_SIGN>."
-    case 7: {
-      instruction = (boost::format("Turn %1% to take the ramp toward %2%.")
-          % turn % exit_toward_sign).str();
-      break;
-    }
-      // 8 "Turn <FormTurnTypeInstruction> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
-    case 8: {
-      instruction = (boost::format("Turn %1% to take the %2% ramp toward %3%.")
-          % turn % exit_branch_sign % exit_toward_sign).str();
-      break;
-    }
-      // 9 "Turn <FormTurnTypeInstruction> to take the <NAME_SIGN> ramp."
-    case 9: {
-      instruction = (boost::format("Turn %1% to take the %2% ramp.")
-          % turn % exit_name_sign).str();
-      break;
-    }
-      // 0 "Take the ramp on the <FormTurnTypeInstruction>."
-    default: {
-      instruction = (boost::format("Take the ramp on the %1%.") % turn).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.ramp_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_dir);
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormExitInstruction(
@@ -3626,12 +3504,14 @@ std::string NarrativeBuilder::FormRelativeTwoDirection(
   switch (type) {
     case TripDirections_Maneuver_Type_kSlightLeft:
     case TripDirections_Maneuver_Type_kUturnLeft:
+    case TripDirections_Maneuver_Type_kRampLeft:
     case TripDirections_Maneuver_Type_kExitLeft:
     case TripDirections_Maneuver_Type_kDestinationLeft: {
       return relative_directions.at(0); // "left"
     }
     case TripDirections_Maneuver_Type_kSlightRight:
     case TripDirections_Maneuver_Type_kUturnRight:
+    case TripDirections_Maneuver_Type_kRampRight:
     case TripDirections_Maneuver_Type_kExitRight:
     case TripDirections_Maneuver_Type_kDestinationRight: {
       return relative_directions.at(1); // "right"
