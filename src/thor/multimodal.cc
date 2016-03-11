@@ -267,8 +267,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
                 // Get the operator index and compare to the predecessor. Add
                 // penalty if not the same index
                 operator_id = operator_itr->second;
-                if (pred.transit_operator() != operator_id) {
-                  newcost += transfer_cost * 1.5f;
+                if (pred.transit_operator() > 0 &&
+                    pred.transit_operator() != operator_id) {
+                  // TODO - create a configurable operator change penalty
+                  newcost.cost += transfer_cost.cost * 1.5f;
                 }
               }
             }
