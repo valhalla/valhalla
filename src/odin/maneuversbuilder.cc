@@ -254,17 +254,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
-      // Do not combine
-      // if subsequent transit connection maneuvers
-      if (curr_man->transit_connection() && next_man->transit_connection()) {
-        // Update with no combine
-        prev_man = curr_man;
-        curr_man = next_man;
-        ++next_man;
-      }
       // Collapse the TransitConnectionStart Maneuver
       // if the transit connection stop is a simple stop (not a station)
-      else if ((curr_man->type() == TripDirections_Maneuver_Type_kTransitConnectionStart)
+      if ((curr_man->type() == TripDirections_Maneuver_Type_kTransitConnectionStart)
           && next_man->IsTransit()
           && curr_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
         curr_man = CollapseTransitConnectionStartManeuver(maneuvers, curr_man, next_man);
@@ -278,6 +270,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           && next_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
         next_man = CollapseTransitConnectionDestinationManeuver(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Do not combine
+      // if any transit connection maneuvers
+      else if (curr_man->transit_connection() || next_man->transit_connection()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
       }
       // Do not combine
       // if travel mode is different
