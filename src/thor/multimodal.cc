@@ -230,7 +230,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // if allowed by costing - assume if you get a transit edge you
       // walked to the transit stop
       tripid = 0;
-      operator_id = 0;
+      operator_id = pred.transit_operator();
       if (directededge->IsTransitLine()) {
         const TransitDeparture* departure = tile->GetNextDeparture(
                     directededge->lineid(), localtime, day, dow, date_before_tile);
