@@ -1312,16 +1312,15 @@ void enhance(const boost::property_tree::ptree& pt,
 
             // Set name consistency to false going from transit connection to
             // transit connection
-            if (fromedge.use() != Use::kTransitConnection ||
-                directededge.use() != Use::kTransitConnection) {
+            if (fromedge.use()     == Use::kTransitConnection ||
+                directededge.use() == Use::kTransitConnection) {
               nodeinfo.set_name_consistency(j, k, false);
-            }
-            // Set name consistency to true when entering a link (ramp or
-            // turn channel) to avoid double penalizing.
-            if (directededge.link() ||
+            } else if (directededge.link() ||
                 ConsistentNames(country_code,
-                                tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
-                                tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
+                    tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+                    tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
+              // Set name consistency to true when entering a link (ramp or
+              // turn channel) to avoid double penalizing.
               nodeinfo.set_name_consistency(j, k, true);
             }
           }
