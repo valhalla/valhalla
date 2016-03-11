@@ -86,6 +86,7 @@ class EdgeLabel {
    * @param tripid    Trip Id for a transit edge.
    * @param prior_stopid  Prior transit stop Id.
    * @param blockid   Transit trip block Id.
+   * @param transit_operator Transit operator - index into an internal map
    * @param has_transit Does the path to this edge have any transit.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
@@ -94,7 +95,8 @@ class EdgeLabel {
             const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const uint32_t walking_distance,
             const uint32_t tripid, const uint32_t prior_stopid,
-            const uint32_t blockid, const bool has_transit);
+            const uint32_t blockid, const uint32_t transit_operator,
+            const bool has_transit);
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -283,6 +285,12 @@ class EdgeLabel {
   uint32_t blockid() const;
 
   /**
+   * Get the index of the transit operator.
+   * @return  Returns the transit operator index (0 if none).
+   */
+  uint32_t transit_operator() const;
+
+  /**
    * Operator < used for sorting.
    */
   bool operator < (const EdgeLabel& other) const;
@@ -366,6 +374,9 @@ class EdgeLabel {
 
   // Block Id
   uint32_t blockid_;
+
+  // Prior operator (index in an internal mapping). 0 indicates no prior
+  uint32_t transit_operator_;
 
   // Real transition cost in seconds (used in bidirectional reverse
   // path search).
