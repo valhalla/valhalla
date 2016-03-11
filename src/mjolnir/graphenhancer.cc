@@ -1307,13 +1307,20 @@ void enhance(const boost::property_tree::ptree& pt,
         // nodes since the stop Id is stored in that field (union).
         if (!nodeinfo.is_transit()) {
           for (uint32_t k = (j + 1); k < ntrans; k++) {
-            // Set name consistency to true when entering a link (ramp or
-            // turn channel) to avoid double penalizing.
-            if (directededge.link() ||
+            DirectedEdge& fromedge = tilebuilder.directededge(
+                      nodeinfo.edge_index() + k);
+
+            // Set name consistency to false going from transit connection to
+            // transit connection
+            if (fromedge.use()     == Use::kTransitConnection ||
+                directededge.use() == Use::kTransitConnection) {
+              nodeinfo.set_name_consistency(j, k, false);
+            } else if (directededge.link() ||
                 ConsistentNames(country_code,
-                                tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
-                                tilebuilder.edgeinfo(tilebuilder.directededge(
-                                    nodeinfo.edge_index() + k).edgeinfo_offset())->GetNames())) {
+                    tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+                    tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
+              // Set name consistency to true when entering a link (ramp or
+              // turn channel) to avoid double penalizing.
               nodeinfo.set_name_consistency(j, k, true);
             }
           }
