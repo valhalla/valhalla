@@ -93,10 +93,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   }
 
   // Find shortest path
-  uint32_t blockid, tripid, prior_stop;
+  uint32_t blockid, tripid, prior_stop, operator_id;
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
-  std::string onestop_id;
+  std::unordered_map<std::string, uint32_t> operators;
   const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
@@ -230,6 +230,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // if allowed by costing - assume if you get a transit edge you
       // walked to the transit stop
       tripid = 0;
+      operator_id = 0;
       if (directededge->IsTransitLine()) {
         const TransitDeparture* departure = tile->GetNextDeparture(
                     directededge->lineid(), localtime, day, dow, date_before_tile);
@@ -251,18 +252,24 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
             const TransitRoute* transit_route = tile->GetTransitRoute(
                 departure->routeid());
 
-            //operator diff
+            // Test if the transit operator changed
             if (transit_route && transit_route->op_by_onestop_id_offset()) {
-              std::string id = tile->GetName(transit_route->op_by_onestop_id_offset());
+              std::string operator_name =
+                    tile->GetName(transit_route->op_by_onestop_id_offset());
 
-              if (onestop_id.empty()) //first pass.
-                onestop_id = id;
-
-              if (onestop_id != id) {
-                Cost tc = transfer_cost;
-                tc.cost *= 1.5f;
-                newcost += tc;
-                onestop_id = id;
+              // Look up in the operators map
+              auto operator_itr = operators.find(operator_name);
+              if (operator_itr == operators.end()) {
+                // Operator not found - add to the map
+                operator_id = operators.size() + 1;
+                operators[operator_name] = operator_id;
+              } else {
+                // Get the operator index and compare to the predecessor. Add
+                // penalty if not the same index
+                operator_id = operator_itr->second;
+                if (pred.transit_operator() != operator_id) {
+                  newcost += transfer_cost * 1.5f;
+                }
               }
             }
           }
@@ -371,7 +378,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_,  walking_distance_,
-                    tripid, prior_stop,  blockid, has_transit);
+                    tripid, prior_stop,  blockid, operator_id, has_transit);
     }
   }
   return {};      // Should never get here
@@ -409,7 +416,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     edgelabels.emplace_back(kInvalidLabel, oppedge,
             diredge, cost, cost.cost, 0.0f, 0,
             diredge->opp_local_idx(), mode_, length,
-            0, 0,  0, false);
+            0, 0,  0, 0, false);
     adjlist.Add(label_idx, cost.cost);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
     label_idx++;
@@ -492,7 +499,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       edgelabels.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_, walking_distance,
-                    0, 0, 0, false);
+                    0, 0, 0, 0, false);
       adjlist.Add(label_idx, newcost.cost);
       edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
       label_idx++;

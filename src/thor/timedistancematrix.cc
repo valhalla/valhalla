@@ -161,7 +161,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_, distance,
-                    0, 0, 0, false);
+                    0, 0, 0, 0, false);
     }
   }
   return {};      // Should never get here
@@ -308,7 +308,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_, distance,
-                    0, 0, 0, false);
+                    0, 0, 0, 0, false);
     }
   }
   return {};      // Should never get here
@@ -368,7 +368,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     adjacencylist_->Add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             cost.cost, 0.0f, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d, 0, 0, 0, false);
+            directededge->opp_local_idx(), mode_, d, 0, 0, 0, 0, false);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
   }
@@ -412,7 +412,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     adjacencylist_->Add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost,
             cost.cost, 0.0f, 0, opp_dir_edge->opp_local_idx(), mode_, d,
-            0, 0, 0, false);
+            0, 0, 0, 0, false);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
   }

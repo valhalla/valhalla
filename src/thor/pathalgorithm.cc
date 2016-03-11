@@ -378,7 +378,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     adjacencylist_->Add(edgelabels_.size(), sortcost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d, 0, 0, 0, false);
+            directededge->opp_local_idx(), mode_, d, 0, 0, 0, 0, false);
     edge_label.set_origin();
 
     // Set the origin flag
