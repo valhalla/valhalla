@@ -42,6 +42,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       tripid_(0),
       prior_stopid_(0),
       blockid_(0),
+      transit_operator_(0),
       transition_cost_(0) {
 }
 
@@ -75,6 +76,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       tripid_(0),
       prior_stopid_(0),
       blockid_(0),
+      transit_operator_(0),
       transition_cost_(tc)  {
 }
 
@@ -85,7 +87,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
           const uint32_t restrictions, const uint32_t opp_local_idx,
           const TravelMode mode, const uint32_t walking_distance,
           const uint32_t tripid, const uint32_t prior_stopid,
-          const uint32_t blockid, const bool has_transit)
+          const uint32_t blockid, const uint32_t transit_operator,
+          const bool has_transit)
     : edgeid_(edgeid),
       opp_edgeid_ {},
       endnode_(edge->endnode()),
@@ -109,6 +112,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
       tripid_(tripid),
       prior_stopid_(prior_stopid),
       blockid_(blockid),
+      transit_operator_(transit_operator),
       transition_cost_(0)  {
 }
 
@@ -261,6 +265,11 @@ uint32_t EdgeLabel::prior_stopid() const {
 // Return the transit block Id of the prior trip.
 uint32_t EdgeLabel::blockid() const {
   return blockid_;
+}
+
+// Get the index of the transit operator.
+uint32_t EdgeLabel::transit_operator() const {
+  return transit_operator_;
 }
 
 // Get the turn cost.
