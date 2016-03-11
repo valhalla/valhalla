@@ -333,7 +333,6 @@ Use GetTransitUse(const uint32_t rt) {
 std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, uint32_t shapeid,
                             const float orig_dist_traveled, const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape, const std::vector<float>& distances) {
-
   std::list<PointLL> shape;
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
       orig_dist_traveled < dest_dist_traveled) {
@@ -342,8 +341,6 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, u
 
     // point x - we are trying to find it on the line segment between p0 and p1
     PointLL x;
-    bool found = false;
-
     // find out where orig_dist_traveled should be in the list.
     auto lower_bound = std::lower_bound(distances.cbegin(), distances.cend(), orig_dist_traveled);
     // find out where dest_dist_traveled should be in the list.
@@ -383,22 +380,32 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, u
 
       // find point x using the orig_dist_traveled - this is our first point added to shape
       if (itr == lower_bound) {
-        // distance from p0 to x using the orig_dist_traveled
-        d_from_p0_to_x = (orig_dist_traveled - prev_distance) / (distance - prev_distance);
-        x = p0 + (p1 - p0) * d_from_p0_to_x;
-        shape.push_back(x);
+        if (orig_dist_traveled == *itr) // just add p0
+          shape.push_back(p0);
+        else {
+          // distance from p0 to x using the orig_dist_traveled
+          d_from_p0_to_x = (orig_dist_traveled - prev_distance) / (distance - prev_distance);
+          x = p0 + (p1 - p0) * d_from_p0_to_x;
+          shape.push_back(x);
+        }
       }
 
       // find point x using the dest_dist_traveled - this is our last point added to the shape
       if ((itr+1) == upper_bound) {
-        // distance from p0 to x using the dest_dist_traveled
-        d_from_p0_to_x = (dest_dist_traveled - prev_distance) / (distance - prev_distance);
-        x = p0 + (p1 - p0) * d_from_p0_to_x;
-        shape.push_back(x);
-        // we are done p1 is too far away
+        if (dest_dist_traveled == *itr) { // just add p0
+          if (shape.back() != p0) //avoid dups
+            shape.push_back(p0);
+        } else {
+          // distance from p0 to x using the dest_dist_traveled
+          d_from_p0_to_x = (dest_dist_traveled - prev_distance) / (distance - prev_distance);
+          x = p0 + (p1 - p0) * d_from_p0_to_x;
+
+          if (shape.back() != x) //avoid dups
+            shape.push_back(x);
+          // we are done p1 is too far away
+        }
         break;
       }
-
       // add all the midpoints.
       shape.push_back(p1);
 
@@ -409,6 +416,7 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, u
     shape.push_back(stop_ll);
     shape.push_back(endstop_ll);
   }
+
   return shape;
 }
 
@@ -706,6 +714,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       PointLL endll;
       std::string endstopname;
       GraphId end_stop_graphid = transitedge.dest_pbf_graphid;
+
       if (end_stop_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Stop& endstop = transit.stops(end_stop_graphid.id());
@@ -756,7 +765,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       else if (transitedge.shapeid != 0)
         LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
 
-      auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
+      auto shape = GetShape(stopll, endll,transitedge.shapeid, transitedge.orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance);
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
