@@ -44,13 +44,17 @@ edge_opp_edgeid(baldr::GraphReader& graphreader,
                 const baldr::GraphTile*& tile)
 {
   if (directededge) {
-    auto nodeid = directededge->endnode();
-    if (!tile || tile->id().tileid() != nodeid.tileid()) {
-      tile = graphreader.GetGraphTile(nodeid);
+    // Skip transit line, which has no opposite edge temporally
+    if (directededge->IsTransitLine()) {
+      return {};
+    }
+    auto id = directededge->endnode();
+    if (!tile || tile->id().tileid() != id.tileid()) {
+      tile = graphreader.GetGraphTile(id);
     }
     if (tile) {
-      nodeid.fields.id = tile->node(nodeid)->edge_index() + directededge->opp_index();
-      return nodeid;
+      id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
+      return id;
     }
   }
   return {};

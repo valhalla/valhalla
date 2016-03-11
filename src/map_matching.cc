@@ -302,24 +302,22 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
 
 // Collect a nodeid set of a path location
 std::unordered_set<baldr::GraphId>
-collect_nodes(baldr::GraphReader& reader, const Candidate& location)
+collect_nodes(baldr::GraphReader& graphreader, const Candidate& location)
 {
   std::unordered_set<baldr::GraphId> results;
+  const baldr::GraphTile* tile = nullptr;
 
   for (const auto& edge : location.edges()) {
     if (!edge.id.Is_Valid()) continue;
     if (edge.dist == 0.f) {
-      const auto opp_edge = reader.GetOpposingEdge(edge.id);
-      if (opp_edge) {
-        results.insert(opp_edge->endnode());
+      const auto& startnodeid = helpers::edge_startnodeid(graphreader, edge.id, tile);
+      if (startnodeid.Is_Valid()) {
+        results.insert(startnodeid);
       }
     } else if (edge.dist == 1.f) {
-      const auto tile = reader.GetGraphTile(edge.id);
-      if (tile) {
-        const auto directededge = tile->directededge(edge.id);
-        if (directededge) {
-          results.insert(directededge->endnode());
-        }
+      const auto& endnodeid = helpers::edge_endnodeid(graphreader, edge.id, tile);
+      if (endnodeid.Is_Valid()) {
+        results.insert(endnodeid);
       }
     }
   }
