@@ -40,7 +40,7 @@ The Valhalla organization is comprised of several repositories each responsible 
 - [conf](https://github.com/valhalla/conf) - Runtime configuration files.
 - [Tools](https://github.com/valhalla/tools) - A set command line tools that exercise bits of functionality from the libraries above and provide the basis for quality testing and performance benchmarking.
 - [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs.
-- [Chef](https://github.com/valhalla/ - A chef cookbook demonstrating how to deploy the valhalla stack to a virtual machine (sample vagrant file included).
+- [Chef](https://github.com/valhalla/chef-valhalla) - A chef cookbook demonstrating how to deploy the valhalla stack to a virtual machine (sample vagrant file included).
 
 Documentation
 --------
