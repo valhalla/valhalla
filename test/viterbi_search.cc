@@ -18,22 +18,19 @@ class Candidate
 {
  public:
   Candidate(ObjectId id)
-      : id_(id), emission_cost_(-1.f) {
-  }
+      : id_(id), emission_cost_(-1.f) {}
 
   Candidate(ObjectId id, float emission_cost)
-      : id_(id), emission_cost_(emission_cost) {
-  }
+      : id_(id), emission_cost_(emission_cost) {}
 
-  ObjectId id() const {
-    return id_;
-  }
+  ObjectId id() const
+  { return id_; }
 
-  float emission_cost() const {
-    return emission_cost_;
-  }
+  float emission_cost() const
+  { return emission_cost_; }
 
-  float transition_cost(ObjectId id) const {
+  float transition_cost(ObjectId id) const
+  {
     auto iter = transition_cost_.find(id);
     if (iter == transition_cost_.end()) {
       return -1.f;
@@ -41,9 +38,8 @@ class Candidate
     return iter->second;
   }
 
-  void set_transition_cost(ObjectId id, float cost) {
-    transition_cost_[id] = cost;
-  }
+  void set_transition_cost(ObjectId id, float cost)
+  { transition_cost_[id] = cost; }
 
  protected:
   std::unordered_map<ObjectId, float> transition_cost_;
@@ -55,24 +51,23 @@ class Candidate
 
 
 bool operator==(const Candidate& lhs, const Candidate& rhs)
-{
-  return lhs.id() == rhs.id() && lhs.emission_cost() == rhs.emission_cost();
-}
+{ return lhs.id() == rhs.id() && lhs.emission_cost() == rhs.emission_cost(); }
 
 
 class State
 {
  public:
-  State(StateId id,
-        Time time,
-        const Candidate& candidate)
-      : id_(id),
-        time_(time),
-        candidate_(candidate) {
-  }
-  const Time time() const {return time_;}
-  const StateId id() const {return id_;}
-  const Candidate& candidate() const {return candidate_;}
+  State(StateId id, Time time, const Candidate& candidate)
+      : id_(id), time_(time), candidate_(candidate) {}
+
+  const Time time() const
+  { return time_; }
+
+  const StateId id() const
+  { return id_; }
+
+  const Candidate& candidate() const
+  { return candidate_; }
 
  private:
   const StateId id_;
@@ -99,23 +94,20 @@ class SimpleViterbiSearch: public ViterbiSearch<State>
   }
 
  protected:
-  float TransitionCost(const State& left,
-                       const State& right) const
+  float TransitionCost(const State& left, const State& right) const
   {
     assert(left.time() + 1 == right.time());
     auto right_id = right.candidate().id();
     return left.candidate().transition_cost(right_id);
   }
 
-  float EmissionCost(const State& candidate) const {
-    return candidate.candidate().emission_cost();
-  }
+  float EmissionCost(const State& candidate) const
+  { return candidate.candidate().emission_cost(); }
 
   double CostSofar(double prev_cost_sofar,
                    float transition_cost,
-                   float emission_cost) const {
-    return prev_cost_sofar + transition_cost + emission_cost;
-  }
+                   float emission_cost) const
+  { return prev_cost_sofar + transition_cost + emission_cost; }
 };
 
 
@@ -137,8 +129,7 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
   }
 
  protected:
-  float TransitionCost(const State& left,
-                       const State& right) const
+  float TransitionCost(const State& left, const State& right) const
   {
     assert(left.time() + 1 == right.time());
     auto right_id = right.candidate().id();
@@ -273,9 +264,11 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
     const State* svs_winner = svs_id == kInvalidStateId? nullptr : &svs.state(svs_id);
 
     if (svs_winner) {
-      assert(svs_winner->time() == svs_time &&
-             snvs_winner->time() == snvs_time);
-      assert(svs.costsofar(*svs_winner) == snvs.costsofar(*snvs_winner));
+      assert(svs_winner->time() == svs_time && snvs_winner->time() == snvs_time);
+
+      // Gurantee that both costs are optimal
+      assert(svs.AccumulatedCost(*svs_winner) == snvs.AccumulatedCost(*snvs_winner));
+
       if (svs_winner->candidate() == snvs_winner->candidate()) {
       } else {
         // It happens often that multiple winners (with the same
@@ -285,8 +278,6 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
     } else {
       assert(!snvs_winner);
     }
-
-    // TODO verify if their costs
   }
 }
 

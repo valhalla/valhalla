@@ -149,16 +149,21 @@ class IViterbiSearch
 
   virtual StateId SearchWinner(Time time) = 0;
 
-  virtual StateId predecessor(StateId id) const = 0;
-
-  // Get the state reference given its ID
-  virtual const T& state(StateId id) const = 0;
-
   state_iterator SearchPath(Time time)
   { return state_iterator(this, SearchWinner(time), time); }
 
   state_iterator PathEnd() const
   { return path_end_; }
+
+  virtual StateId predecessor(StateId id) const = 0;
+
+  // Get the state reference given its ID
+  virtual const T& state(StateId id) const = 0;
+
+  virtual double AccumulatedCost(const StateId id) const = 0;
+
+  virtual double AccumulatedCost(const T& state) const
+  { return AccumulatedCost(state.id()); }
 
  protected:
   // Calculate transition cost from left state to right state
@@ -198,7 +203,9 @@ class NaiveViterbiSearch: public IViterbiSearch<T>
 
   const T& state(StateId id) const override;
 
-  double costsofar(const T& state) const;
+  double AccumulatedCost(const StateId id) const;
+
+  double AccumulatedCost(const T& state) const;
 
  protected:
   std::vector<std::vector<const T*>> states_;
@@ -250,7 +257,13 @@ void NaiveViterbiSearch<T, Maximize>::Clear()
 
 template <typename T, bool Maximize>
 inline double
-NaiveViterbiSearch<T, Maximize>::costsofar(const T& state) const
+NaiveViterbiSearch<T, Maximize>::AccumulatedCost(const StateId id) const
+{ return id != kInvalidStateId? AccumulatedCost(state(id)) : kInvalidCost; }
+
+
+template <typename T, bool Maximize>
+inline double
+NaiveViterbiSearch<T, Maximize>::AccumulatedCost(const T& state) const
 { return label(state).costsofar; }
 
 
@@ -445,7 +458,9 @@ class ViterbiSearch: public IViterbiSearch<T>
 
   virtual bool IsInvalidCost(double cost) const;
 
-  double costsofar(const T& state) const;
+  virtual double AccumulatedCost(const StateId id) const;
+
+  using IViterbiSearch<T>::AccumulatedCost;
 
  protected:
   std::vector<const T*> state_;
@@ -533,10 +548,10 @@ ViterbiSearch<T>::IsInvalidCost(double cost) const
 
 
 template <typename T>
-double ViterbiSearch<T>::costsofar(const T& state) const
+double ViterbiSearch<T>::AccumulatedCost(const StateId id) const
 {
-  auto itr = scanned_labels_.find(state.id());
-  if (itr==scanned_labels_.end()) {
+  const auto itr = scanned_labels_.find(id);
+  if (itr == scanned_labels_.end()) {
     return -1.f;
   } else {
     return itr->second.costsofar;
