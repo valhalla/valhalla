@@ -264,15 +264,29 @@ RouteToString(baldr::GraphReader& graphreader,
       route << "[";
 
       if (segment->source == 0.f) {
-        route << helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        const auto startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        if (startnodeid.Is_Valid()) {
+          route << startnodeid;
+        } else {
+          route << "InvalidId";
+        }
       } else {
         route << segment->source;
       }
 
-      route << " " << segment->edgeid << " ";
+      if (segment->edgeid.Is_Valid()) {
+        route << " " << segment->edgeid << " ";
+      } else {
+        route << " " << "InvalidId" << " ";
+      }
 
       if (segment->target == 1.f) {
-        route << helpers::edge_endnodeid(graphreader, segment->edgeid, tile);
+        const auto endnodeid = helpers::edge_endnodeid(graphreader, segment->edgeid, tile);
+        if (endnodeid.Is_Valid()) {
+          route << endnodeid;
+        } else {
+          route << "InvalidId";
+        }
       } else {
         route << segment->target;
       }
