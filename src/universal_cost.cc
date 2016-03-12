@@ -18,7 +18,13 @@ class UniversalCost : public sif::DynamicCost {
                const sif::EdgeLabel& pred,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& edgeid) const
-  { return true; }
+  {
+    // Disable transit lines
+    if (edge->IsTransitLine()) {
+      return false;
+    }
+    return true;
+  }
 
   bool AllowedReverse(const baldr::DirectedEdge* edge,
                       const sif::EdgeLabel& pred,
@@ -45,7 +51,8 @@ class UniversalCost : public sif::DynamicCost {
   virtual const sif::EdgeFilter GetFilter() const {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge){
-      return false;
+      // Disable transit lines
+      return edge->IsTransitLine();
     };
   }
 };
