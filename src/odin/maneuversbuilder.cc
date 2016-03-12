@@ -1305,6 +1305,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
                                                   int node_index) {
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
+  auto* prev_node = trip_path_->GetEnhancedNode(node_index-1);
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit
@@ -1333,7 +1334,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit connection
-  if (maneuver.transit_connection() || prev_edge->transit_connection()) {
+  if (maneuver.transit_connection() && prev_edge->transit_connection()
+      && !(maneuver.transit_connection_stop().name.empty())
+      && (maneuver.transit_connection_stop().name
+          == prev_node->transit_stop_info().name())) {
+    return true;
+  } else if (maneuver.transit_connection() || prev_edge->transit_connection()) {
     return false;
   }
 
