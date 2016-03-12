@@ -446,6 +446,8 @@ template <typename T>
 class ViterbiSearch: public IViterbiSearch<T>
 {
  public:
+  ViterbiSearch(): earliest_time_(0) {}
+
   ~ViterbiSearch();
 
   void Clear();
@@ -495,6 +497,8 @@ class ViterbiSearch: public IViterbiSearch<T>
   void AddSuccessorsToQueue(const T* state);
 
   Time IterativeSearch(Time target, bool request_new_start);
+
+  Time earliest_time_;
 };
 
 
@@ -567,6 +571,7 @@ inline const T& ViterbiSearch<T>::state(StateId id) const
 template <typename T>
 void ViterbiSearch<T>::Clear()
 {
+  earliest_time_ = 0;
   queue_.clear();
   scanned_labels_.clear();
   unreached_states_.clear();
@@ -632,7 +637,7 @@ void ViterbiSearch<T>::AddSuccessorsToQueue(const T* state)
 
 
 // Remove a state from its column
-template<typename T, typename U>
+template <typename T, typename U>
 bool remove_state(const T& state, U& column)
 {
   StateId id = state.id();
@@ -683,6 +688,12 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
     auto state = label.state;
     auto time = state->time();
 
+    // Skip labels that are earlier than the earliest time, since
+    // they are impossible to be optimal
+    if (time < earliest_time_) {
+      continue;
+    }
+
     // Mark it as scanned and remember its cost and predecessor
     assert(scanned_labels_.find(state->id())==scanned_labels_.end());
     scanned_labels_[state->id()] = label;
@@ -690,6 +701,12 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
     // Remove it from its column
     bool removed = remove_state(*state, unreached_states_[time]);
     assert(removed);
+
+    // Earlier labels can't reach current time with better cost, so we
+    // mark time + 1 as the earliest time to skip all earlier labels
+    if (unreached_states_[time].empty()) {
+      earliest_time_ = time + 1;
+    }
 
     // If it's the first state that arrives at this column, mark it as
     // the winner at this time
