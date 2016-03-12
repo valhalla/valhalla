@@ -156,7 +156,9 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
 
 
 unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-std::default_random_engine transition_cost_generator(seed), emission_cost_generator(seed);
+std::default_random_engine TRANSITION_COST_GENERATOR(seed),
+  EMISSION_COST_GENERATOR(seed),
+  COUNT_GENERATOR(seed);
 
 
 std::vector<Candidate>
@@ -170,10 +172,10 @@ generate_candidates(ObjectId *start_id,
   std::vector<Candidate> candidates;
 
   for (size_t i = 0; i < num_candidates; i++) {
-    auto emission_cost = static_cast<float>(emission_cost_distribution(emission_cost_generator));
+    auto emission_cost = static_cast<float>(emission_cost_distribution(EMISSION_COST_GENERATOR));
     candidates.emplace_back((*start_id)++, emission_cost);
     for (const auto& candidate : next_candidates) {
-      auto transition_cost = static_cast<float>(transition_cost_distribution(transition_cost_generator));
+      auto transition_cost = static_cast<float>(transition_cost_distribution(TRANSITION_COST_GENERATOR));
       candidates.back().set_transition_cost(candidate.id(), transition_cost);
     }
   }
@@ -231,31 +233,30 @@ void print_path(const std::vector<const State*>& path)
 
 void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_distribution,
                          std::uniform_int_distribution<int> emission_cost_distribution,
-                         size_t num_states,
-                         size_t num_candidates)
+                         std::vector<size_t> candidate_counts)
 {
   // Generate candidates for testing
   ObjectId start_id = 0;
   std::vector<Candidate> prev_candidates;
-  std::vector<std::vector<Candidate>> states;
-  for (size_t i = 0; i < num_states; i++) {
-    auto candidates = generate_candidates(&start_id, num_candidates,
-                                          transition_cost_distribution,
-                                          emission_cost_distribution,
-                                          prev_candidates);
+  std::vector<std::vector<Candidate>> candidate_lists;
+  for (const auto count : candidate_counts) {
+    const auto& candidates = generate_candidates(&start_id, count,
+                                                 transition_cost_distribution,
+                                                 emission_cost_distribution,
+                                                 prev_candidates);
     prev_candidates = candidates;
-    states.push_back(candidates);
+    candidate_lists.push_back(candidates);
   }
-  std::reverse(states.begin(), states.end());
+  std::reverse(candidate_lists.begin(), candidate_lists.end());
 
   // print_trellis_diagram_vertically(states);
 
   // Test viterbi search
   SimpleNaiveViterbiSearch snvs;
   SimpleViterbiSearch svs;
-  for (const auto& state : states) {
-    auto svs_time = svs.AppendState(state.cbegin(), state.cend()),
-        snvs_time = snvs.AppendState(state.cbegin(), state.cend());
+  for (const auto& candidate_list : candidate_lists) {
+    auto svs_time = svs.AppendState(candidate_list.cbegin(), candidate_list.cend()),
+        snvs_time = snvs.AppendState(candidate_list.cbegin(), candidate_list.cend());
     assert(svs_time == snvs_time);
 
     auto snvs_id = snvs.SearchWinner(snvs_time);
@@ -265,16 +266,8 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
 
     if (svs_winner) {
       assert(svs_winner->time() == svs_time && snvs_winner->time() == snvs_time);
-
       // Gurantee that both costs are optimal
       assert(svs.AccumulatedCost(*svs_winner) == snvs.AccumulatedCost(*snvs_winner));
-
-      if (svs_winner->candidate() == snvs_winner->candidate()) {
-      } else {
-        // It happens often that multiple winners (with the same
-        // costsofar) are found at the same time
-        std::cout << "different winners with same costsofar at time " << svs_time << std::endl;
-      }
     } else {
       assert(!snvs_winner);
     }
@@ -282,31 +275,49 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
 }
 
 
+std::vector<size_t>
+generate_candidate_counts(size_t length,
+                          std::uniform_int_distribution<size_t> count_distribution)
+{
+  std::vector<size_t> counts;
+  for (size_t i = 0; i < length; i++) {
+    counts.push_back(count_distribution(COUNT_GENERATOR));
+  }
+  return counts;
+}
+
+
 void TestViterbiSearch()
 {
-  std::cout << "Iteration 1" << std::endl;
   std::uniform_int_distribution<int> transition_cost_distribution(0, 50);
   std::uniform_int_distribution<int> emission_cost_distribution(0, 100);
-  size_t num_states = 1000, num_candidates = 20;
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution, num_states, num_candidates);
+  std::uniform_int_distribution<size_t> count_distribution(1, 100);
+  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
+                      generate_candidate_counts(1000, count_distribution));
 
-  std::cout << "Iteration 2" << std::endl;
   transition_cost_distribution = std::uniform_int_distribution<int>(-50, 10);
   emission_cost_distribution = std::uniform_int_distribution<int>(-100, 10);
-  num_states = 1000, num_candidates = 20;
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution, num_states, num_candidates);
+  count_distribution = std::uniform_int_distribution<size_t>(0, 100);
+  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
+                      generate_candidate_counts(1000, count_distribution));
 
-  std::cout << "Iteration 3" << std::endl;
   transition_cost_distribution = std::uniform_int_distribution<int>(-30, -3);
   emission_cost_distribution = std::uniform_int_distribution<int>(3, 30);
-  num_states = 1000, num_candidates = 20;
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution, num_states, num_candidates);
+  count_distribution = std::uniform_int_distribution<size_t>(0, 100);
+  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
+                      generate_candidate_counts(1000, count_distribution));
 
-  std::cout << "Iteration 4" << std::endl;
   transition_cost_distribution = std::uniform_int_distribution<int>(3, 30);
   emission_cost_distribution = std::uniform_int_distribution<int>(-30, -3);
-  num_states = 1000, num_candidates = 20;
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution, num_states, num_candidates);
+  count_distribution = std::uniform_int_distribution<size_t>(0, 100);
+  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
+                      generate_candidate_counts(1000, count_distribution));
+
+  transition_cost_distribution = std::uniform_int_distribution<int>(0, 1000);
+  emission_cost_distribution = std::uniform_int_distribution<int>(0, 3000);
+  count_distribution = std::uniform_int_distribution<size_t>(1, 100);
+  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
+                      generate_candidate_counts(1000, count_distribution));
 }
 
 
