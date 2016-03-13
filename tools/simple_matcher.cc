@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
       // Clean up
       measurements.clear();
-      matcher_factory.ClearCacheIfPossible();
+      matcher_factory.ClearFullCache();
 
       if (std::cin.eof()) {
         break;

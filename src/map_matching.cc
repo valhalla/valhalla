@@ -725,7 +725,7 @@ MapMatcherFactory::init_costings(const ptree& root)
 }
 
 
-void MapMatcherFactory::ClearCacheIfPossible()
+void MapMatcherFactory::ClearFullCache()
 {
   if(graphreader_.OverCommitted()) {
     graphreader_.Clear();

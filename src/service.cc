@@ -706,7 +706,7 @@ class mm_worker_t {
   }
 
   void cleanup()
-  { matcher_factory_.ClearCacheIfPossible(); }
+  { matcher_factory_.ClearFullCache(); }
 
  protected:
   const boost::property_tree::ptree config_;
