@@ -2,6 +2,7 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -28,7 +29,7 @@ LabelSet::put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
 {
   return put(nodeid, {},         // nodeid, (invalid) edgeid
              0.f, 0.f,           // source, target
-             0.f, 0.f,           // cost, turn cost
+             0.f, 0.f, 0.f,      // cost, turn cost, sort cost
              kInvalidLabelIndex, // predecessor
              nullptr, travelmode, edgelabel);
 }
@@ -38,7 +39,7 @@ bool
 LabelSet::put(const baldr::GraphId& nodeid,
               const baldr::GraphId& edgeid,
               float source, float target,
-              float cost, float turn_cost,
+              float cost, float turn_cost, float sortcost,
               uint32_t predecessor,
               const baldr::DirectedEdge* edge,
               sif::TravelMode travelmode,
@@ -50,7 +51,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
   const auto it = node_status_.find(nodeid);
   if (it == node_status_.end()) {
     uint32_t idx = labels_.size();
-    bool inserted = queue_.add(idx, cost);
+    bool inserted = queue_.add(idx, sortcost);
     if (inserted) {
       labels_.emplace_back(nodeid, edgeid,
                            source, target,
@@ -69,7 +70,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
                                    cost, turn_cost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool updated = queue_.add(status.label_idx, cost);
+      bool updated = queue_.add(status.label_idx, sortcost);
       assert(updated);
       return true;
     }
@@ -85,7 +86,7 @@ LabelSet::put(uint16_t dest, sif::TravelMode travelmode,
 {
   return put(dest, {},           // dest, (invalid) edgeid
              0.f, 0.f,           // source, target
-             0.f, 0.f,           // cost, turn_cost
+             0.f, 0.f, 0.f,      // cost, turn cost, sort cost
              kInvalidLabelIndex, // predecessor
              nullptr, travelmode, edgelabel);
 }
@@ -95,7 +96,7 @@ bool
 LabelSet::put(uint16_t dest,
               const baldr::GraphId& edgeid,
               float source, float target,
-              float cost, float turn_cost,
+              float cost, float turn_cost, float sortcost,
               uint32_t predecessor,
               const baldr::DirectedEdge* edge,
               sif::TravelMode travelmode,
@@ -108,7 +109,7 @@ LabelSet::put(uint16_t dest,
   const auto it = dest_status_.find(dest);
   if (it == dest_status_.end()) {
     uint32_t idx = labels_.size();
-    bool inserted = queue_.add(idx, cost);
+    bool inserted = queue_.add(idx, sortcost);
     if (inserted) {
       labels_.emplace_back(dest, edgeid,
                            source, target,
@@ -127,7 +128,7 @@ LabelSet::put(uint16_t dest,
                                    cost, turn_cost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool updated = queue_.add(status.label_idx, cost);
+      bool updated = queue_.add(status.label_idx, sortcost);
       assert(updated);
       return true;
     }
@@ -318,11 +319,23 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
 }
 
 
+inline float
+heuristic(const midgard::DistanceApproximator& approximator,
+          const PointLL& lnglat,
+          float search_radius)
+{
+  const auto distance = sqrtf(approximator.DistanceSquared(lnglat));
+  return std::max(0.f, distance - search_radius);
+}
+
+
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    LabelSet& labelset,
+                   const midgard::DistanceApproximator& approximator,
+                   float search_radius,
                    sif::cost_ptr_t costing,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel,
                    const float turn_cost_table[181])
@@ -417,10 +430,11 @@ find_shortest_path(baldr::GraphReader& reader,
           for (const auto dest : it->second) {
             for (const auto& edge : destinations[dest].edges()) {
               if (edge.id == other_edgeid) {
-                const float cost = label_cost + other_edge->length() * edge.dist;
+                const float cost = label_cost + other_edge->length() * edge.dist,
+                        sortcost = cost;
                 labelset.put(dest, other_edgeid,
                              0.f, edge.dist,
-                             cost, turn_cost,
+                             cost, turn_cost, sortcost,
                              label_idx,
                              other_edge, travelmode, nullptr);
               }
@@ -428,10 +442,16 @@ find_shortest_path(baldr::GraphReader& reader,
           }
         }
 
-        const float cost = label_cost + other_edge->length();
+        const baldr::GraphTile* endtile = tile;
+        if (other_edge->endnode().tileid() != tile->id().tileid()) {
+          endtile = reader.GetGraphTile(other_edge->endnode());
+        }
+        const auto other_nodeinfo = endtile->node(other_edge->endnode());
+        const float cost = label_cost + other_edge->length(),
+                sortcost = cost + heuristic(approximator, other_nodeinfo->latlng(), search_radius);
         labelset.put(other_edge->endnode(), other_edgeid,
                      0.f, 1.f,
-                     cost, turn_cost,
+                     cost, turn_cost, sortcost,
                      label_idx,
                      other_edge, travelmode, nullptr);
       }
@@ -479,20 +499,27 @@ find_shortest_path(baldr::GraphReader& reader,
             // All edges of this destination
             for (const auto& other_edge : destinations[other_dest].edges()) {
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
-                const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist);
+                const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist),
+                        sortcost = cost;
                 labelset.put(other_dest, origin_edge.id,
                              origin_edge.dist, other_edge.dist,
-                             cost, turn_cost,
+                             cost, turn_cost, sortcost,
                              label_idx,
                              directededge, travelmode, nullptr);
               }
             }
           }
 
-          const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist);
+          const baldr::GraphTile* endtile = tile;
+          if (directededge->endnode().tileid() != tile->id().tileid()) {
+            endtile = reader.GetGraphTile(directededge->endnode());
+          }
+          const auto nodeinfo = endtile->node(directededge->endnode());
+          const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist),
+                  sortcost = cost + heuristic(approximator, nodeinfo->latlng(), search_radius);
           labelset.put(directededge->endnode(), origin_edge.id,
                        origin_edge.dist, 1.f,
-                       cost, turn_cost,
+                       cost, turn_cost, sortcost,
                        label_idx,
                        directededge, travelmode, nullptr);
         }

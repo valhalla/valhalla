@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -259,7 +260,7 @@ class LabelSet
   bool put(const baldr::GraphId& nodeid,
            const baldr::GraphId& edgeid,
            float source, float target,
-           float cost, float turn_cost,
+           float cost, float turn_cost, float sortcost,
            uint32_t predecessor,
            const baldr::DirectedEdge* edge,
            sif::TravelMode travelmode,
@@ -271,7 +272,7 @@ class LabelSet
   bool put(uint16_t dest,
            const baldr::GraphId& edgeid,
            float source, float target,
-           float cost, float turn_cost,
+           float cost, float turn_cost, float sortcost,
            uint32_t predecessor,
            const baldr::DirectedEdge* edge,
            sif::TravelMode travelmode,
@@ -307,6 +308,8 @@ find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    LabelSet& labelset,
+                   const midgard::DistanceApproximator& approximator,
+                   float search_radius,
                    sif::cost_ptr_t costing = nullptr,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr,
                    const float turn_cost_table[181] = nullptr);

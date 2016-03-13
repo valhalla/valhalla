@@ -31,6 +31,8 @@ void
 State::route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
+             const midgard::DistanceApproximator& approximator,
+             float search_radius,
              sif::cost_ptr_t costing,
              std::shared_ptr<const sif::EdgeLabel> edgelabel,
              const float turn_cost_table[181]) const
@@ -47,8 +49,9 @@ State::route(const std::vector<const State*>& states,
   labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
   // TODO pass labelset_ as shared_ptr
   const auto& results = find_shortest_path(
-      graphreader, locations, 0, *labelset_, costing,
-      edgelabel, turn_cost_table);
+      graphreader, locations, 0, *labelset_,
+      approximator, search_radius,
+      costing, edgelabel, turn_cost_table);
 
   // Cache results
   label_idx_.clear();
@@ -113,6 +116,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
                          float beta,
                          float breakage_distance,
                          float max_route_distance_factor,
+                         float search_radius,
                          float turn_penalty_factor)
     : graphreader_(graphreader),
       mode_costing_(mode_costing),
@@ -125,6 +129,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
       inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance),
       max_route_distance_factor_(max_route_distance_factor),
+      search_radius_(search_radius),
       turn_penalty_factor_(turn_penalty_factor),
       turn_cost_table_{0.f}
 {
@@ -134,6 +139,10 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
 
   if (beta_ <= 0.f) {
     throw std::invalid_argument("Expect beta to be positive");
+  }
+
+  if (search_radius_ < 0.f) {
+    throw std::invalid_argument("Expect search radius to be nonnegative");
   }
 
 #ifndef NDEBUG
@@ -161,6 +170,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
                   config.get<float>("beta"),
                   config.get<float>("breakage_distance"),
                   config.get<float>("max_route_distance_factor"),
+                  config.get<float>("search_radius"),
                   config.get<float>("turn_penalty_factor")) {}
 
 
@@ -222,8 +232,10 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     } else {
       edgelabel = nullptr;
     }
+    const midgard::DistanceApproximator approximator(right.candidate().vertex());
     left.route(unreached_states_[right.time()], graphreader_,
                MaxRouteDistance(left, right),
+               approximator, search_radius_,
                costing(), edgelabel, turn_cost_table_);
   }
   assert(left.routed());

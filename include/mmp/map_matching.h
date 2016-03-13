@@ -57,6 +57,8 @@ class State
   void route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
+             const midgard::DistanceApproximator& approximator,
+             float search_radius,
              sif::cost_ptr_t costing,
              std::shared_ptr<const sif::EdgeLabel> edgelabel,
              const float turn_cost_table[181]) const;
@@ -98,6 +100,7 @@ class MapMatching: public ViterbiSearch<State>
               float beta,
               float breakage_distance,
               float max_route_distance_factor,
+              float search_radius,
               float turn_penalty_factor);
 
   MapMatching(baldr::GraphReader& graphreader,
@@ -163,6 +166,8 @@ class MapMatching: public ViterbiSearch<State>
   float breakage_distance_;
 
   float max_route_distance_factor_;
+
+  float search_radius_;
 
   float turn_penalty_factor_;
 
