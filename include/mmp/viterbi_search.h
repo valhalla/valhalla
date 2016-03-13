@@ -203,9 +203,9 @@ class NaiveViterbiSearch: public IViterbiSearch<T>
 
   const T& state(StateId id) const override;
 
-  double AccumulatedCost(const StateId id) const;
+  double AccumulatedCost(const StateId id) const override;
 
-  double AccumulatedCost(const T& state) const;
+  double AccumulatedCost(const T& state) const override;
 
  protected:
   std::vector<std::vector<const T*>> states_;
@@ -460,9 +460,9 @@ class ViterbiSearch: public IViterbiSearch<T>
 
   virtual bool IsInvalidCost(double cost) const;
 
-  virtual double AccumulatedCost(const StateId id) const;
-
   using IViterbiSearch<T>::AccumulatedCost;
+
+  virtual double AccumulatedCost(const StateId id) const override;
 
  protected:
   std::vector<const T*> state_;
