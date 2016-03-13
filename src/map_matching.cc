@@ -471,7 +471,7 @@ std::vector<MatchResult>
 OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
-             float max_sq_search_radius,
+             float sq_search_radius,
              float interpolation_distance)
 {
   mm.Clear();
@@ -495,7 +495,7 @@ OfflineMatch(MapMatching& mm,
     // Always match the first and the last measurement
     if (sq_interpolation_distance <= sq_distance || idx == 0 || idx == end_idx) {
       const auto& candidates = cq.Query(measurement.lnglat(),
-                                        max_sq_search_radius,
+                                        sq_search_radius,
                                         mm.costing()->GetFilter());
       time = mm.AppendState(measurement, candidates.begin(), candidates.end());
       last_idx = idx;
@@ -534,7 +534,7 @@ OfflineMatch(MapMatching& mm,
       const auto& graphset = collect_graphset(mm.graphreader(), source_state, target_state);
       for (const auto idx : it->second) {
         const auto& candidates = cq.Query(measurements[idx].lnglat(),
-                                          max_sq_search_radius,
+                                          sq_search_radius,
                                           mm.costing()->GetFilter());
         results.push_back(interpolate(mm.graphreader(), graphset,
                                       candidates.begin(), candidates.end(),
