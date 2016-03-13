@@ -1,10 +1,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "mmp/universal_cost.h"
 #include "mmp/map_matching.h"
 
 using namespace mmp;
+
 
 int main(int argc, char *argv[])
 {

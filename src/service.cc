@@ -9,10 +9,6 @@
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/pedestriancost.h>
-#include <valhalla/sif/costfactory.h>
 
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
