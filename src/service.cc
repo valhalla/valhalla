@@ -120,7 +120,7 @@ class SequenceParseError: public std::runtime_error {
 };
 
 
-void jsonify(rapidjson::Document& document, const char* text)
+void parse_json(rapidjson::Document& document, const char* text)
 {
   document.Parse(text);
 
@@ -660,7 +660,7 @@ class mm_worker_t {
 
       // Parse sequence
       try {
-        jsonify(json, request.body.c_str());
+        parse_json(json, request.body.c_str());
         measurements = read_geojson(json);
       } catch (const SequenceParseError& ex) {
         return jsonify_error(ex.what(), info);
