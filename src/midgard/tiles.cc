@@ -78,7 +78,7 @@ namespace {
       //if its purely horizontal then dont use a corner
       if(sy > seed_y && sy - 1 < seed_y)
         c.second = seed.second;
-      return seed.DistanceSquared(c);
+      return seed.Distance(c);
     }
 
     //something to add the neighbors of a given subdivision

@@ -7,7 +7,6 @@
 #include <random>
 #include <set>
 
-
 using namespace valhalla::midgard;
 
 namespace {
@@ -209,7 +208,7 @@ void test_random_linestring() {
   Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
   std::default_random_engine generator;
   std::uniform_real_distribution<> distribution(-10, 10);
-  for(int i = 0; i < 1000; ++i) {
+  for(int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
     for(int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
@@ -225,19 +224,18 @@ void test_random_linestring() {
 using sub_t = std::tuple<int32_t, unsigned short, float>;
 template <class coord_t>
 std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first_answer(const Tiles<coord_t>& t, const coord_t& p){
-  //place to keep the subdivisions sorted
-  std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(
-    [&t](const sub_t& a, const sub_t& b) {
-      //turn tile local subdivision into global subdivision for comparison
-      auto ax = (std::get<0>(a) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) % t.nsubdivisions());
-      auto ay = (std::get<0>(a) / t.nrows()) * t.nsubdivisions() + (std::get<1>(a) / t.nsubdivisions());
-      auto as = ay * (t.ncolumns() * t.nsubdivisions()) + ax;
-      auto bx = (std::get<0>(b) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) % t.nsubdivisions());
-      auto by = (std::get<0>(b) / t.nrows()) * t.nsubdivisions() + (std::get<1>(b) / t.nsubdivisions());
-      auto bs = by * (t.ncolumns() * t.nsubdivisions()) + bx;
-      return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
-    }
-  );
+  //place to keep the subdivisions
+  auto sort = [&t](const sub_t& a, const sub_t& b) {
+    //turn tile local subdivision into global subdivision for comparison
+    auto ax = (std::get<0>(a) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) % t.nsubdivisions());
+    auto ay = (std::get<0>(a) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) / t.nsubdivisions());
+    auto as = ay * (t.ncolumns() * t.nsubdivisions()) + ax;
+    auto bx = (std::get<0>(b) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) % t.nsubdivisions());
+    auto by = (std::get<0>(b) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) / t.nsubdivisions());
+    auto bs = by * (t.ncolumns() * t.nsubdivisions()) + bx;
+    return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
+  };
+  std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(sort);
   //what subdivision is the point in
   auto x = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
   auto y = (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
@@ -265,20 +263,38 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
           //if its purely horizontal then dont use a corner
           if(sy > y && sy - 1 < y)
             c.second = p.second;
-          auto distance = p.DistanceSquared(c);
+          auto distance = p.Distance(c);
           answer.emplace(std::make_tuple(tile, subdivision, distance));
         }
       }
     }
   }
+  std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > z(sort);
+  z.emplace(std::make_tuple(2024, 19, 0));
+  z.emplace(std::make_tuple(2025, 10, 0));
+  z.emplace(std::make_tuple(2024, 14, 0));
+  z.emplace(std::make_tuple(2025, 15, 0));
   return answer;
 }
 
 void test_closest_first() {
   Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
-  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21} }) {
+  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76} }) {
     auto c = t.ClosestFirst(p);
     auto a = closest_first_answer<Point2>(t, p);
+    for(const auto& s : a) {
+      auto r = c();
+      if(s != r)
+        throw std::logic_error("Unexpected subdivision");
+    }
+    try { c(); } catch (const std::runtime_error& e) { continue; }
+    throw std::logic_error("Closest first functor should have thrown");
+  }
+
+  Tiles<PointLL> tl(AABB2<PointLL>{-180,-90,180,90}, 4, 5);
+  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {78.92409,11.92515}, {-54.93575,-67.61196} }) {
+    auto c = tl.ClosestFirst(p);
+    auto a = closest_first_answer<PointLL>(tl, p);
     for(const auto& s : a) {
       auto r = c();
       if(s != r)
