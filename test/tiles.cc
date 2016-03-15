@@ -220,6 +220,30 @@ void test_random_linestring() {
   }
 }
 
+template <class coord_t>
+std::pair<int32_t, int32_t> to_xy(std::tuple<int32_t, unsigned short, float> tile, const Tiles<coord_t>& t) {
+  auto ax = (std::get<0>(tile) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(tile) % t.nsubdivisions());
+  auto ay = (std::get<0>(tile) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(tile) / t.nsubdivisions());
+  return std::make_pair(ax, ay);
+}
+
+template <class coord_t>
+int32_t to_global_sub(std::tuple<int32_t, unsigned short, float> tile, const Tiles<coord_t>& t) {
+  auto xy = to_xy(tile,t);
+  return xy.second * (t.ncolumns() * t.nsubdivisions()) + xy.first;
+}
+
+constexpr double RAD_PER_DEG = M_PI / 180.0;
+constexpr double METERS_PER_RAD = 40075162.328 / (2.0 * M_PI);
+double dist(valhalla::midgard::PointLL a, valhalla::midgard::PointLL b) {
+  auto lon2 = b.first * -RAD_PER_DEG;
+  auto lat2 = b.second * RAD_PER_DEG;
+  auto d = acos(
+    sin(a.second * RAD_PER_DEG) * sin(lat2) + cos(a.second * RAD_PER_DEG) * cos(lat2) * cos(a.first * -RAD_PER_DEG - lon2)
+  ) * METERS_PER_RAD;
+  return d * d;
+}
+
 //brute force entire set of subdivisions at once
 using sub_t = std::tuple<int32_t, unsigned short, float>;
 template <class coord_t>
@@ -227,18 +251,14 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
   //place to keep the subdivisions
   auto sort = [&t](const sub_t& a, const sub_t& b) {
     //turn tile local subdivision into global subdivision for comparison
-    auto ax = (std::get<0>(a) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) % t.nsubdivisions());
-    auto ay = (std::get<0>(a) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(a) / t.nsubdivisions());
-    auto as = ay * (t.ncolumns() * t.nsubdivisions()) + ax;
-    auto bx = (std::get<0>(b) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) % t.nsubdivisions());
-    auto by = (std::get<0>(b) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(b) / t.nsubdivisions());
-    auto bs = by * (t.ncolumns() * t.nsubdivisions()) + bx;
+    auto as = to_global_sub(a, t);
+    auto bs = to_global_sub(b, t);
     return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
   };
   std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(sort);
   //what subdivision is the point in
-  auto x = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
-  auto y = (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
+  auto seed_x = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
+  auto seed_y = (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
   //run over all tiles
   for(int32_t i = 0; i < t.nrows(); ++i) {
     for(int32_t j = 0; j < t.ncolumns(); ++j) {
@@ -248,61 +268,104 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
           auto tile = t.TileId(j, i);
           auto subdivision = k * t.nsubdivisions() + l;
 
+          int32_t x_off = 0;
           auto sx = l + j * t.nsubdivisions();
-          if (sx < x) {
-            if(!coord_t::IsSpherical() || x - sx < t.ncolumns() * t.nsubdivisions() / 2.f)
-              ++sx;
+          if (sx < seed_x) {
+            if(!coord_t::IsSpherical() || seed_x - sx < (t.ncolumns() * t.nsubdivisions()) / 2.f)
+              x_off = 1;
           }
-          else if(coord_t::IsSpherical() && sx - x > t.ncolumns() * t.nsubdivisions() / 2.f)
-            ++sx;
-          auto sy = k + i * t.nsubdivisions(); if (sy < y) ++sy;
-          coord_t c(t.TileBounds().minx() + sx * t.SubdivisionSize(), t.TileBounds().miny() + sy * t.SubdivisionSize());
+          else if(coord_t::IsSpherical() && sx - seed_x > (t.ncolumns() * t.nsubdivisions()) / 2.f)
+            x_off = 1;
+          int32_t y_off = 0;
+          auto sy = k + i * t.nsubdivisions(); if (sy < seed_y) y_off = 1;
+          coord_t c(t.TileBounds().minx() + (sx + x_off) * t.SubdivisionSize(),
+                    t.TileBounds().miny() + (sy + y_off) * t.SubdivisionSize());
           //if its purely vertical then dont use a corner
-          if(sx > x && sx - 1 < x)
+          if(x_off && sx < seed_x && sx + x_off > seed_x)
             c.first = p.first;
           //if its purely horizontal then dont use a corner
-          if(sy > y && sy - 1 < y)
+          if(y_off && sy < seed_y && sy + y_off > seed_y)
             c.second = p.second;
-          auto distance = p.Distance(c);
+          //double distance = coord_t::IsSpherical() ? dist(p, c) : p.Distance(c);
+          double distance = p.Distance(c);
           answer.emplace(std::make_tuple(tile, subdivision, distance));
         }
       }
     }
   }
-  std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > z(sort);
-  z.emplace(std::make_tuple(2024, 19, 0));
-  z.emplace(std::make_tuple(2025, 10, 0));
-  z.emplace(std::make_tuple(2024, 14, 0));
-  z.emplace(std::make_tuple(2025, 15, 0));
   return answer;
 }
 
 void test_closest_first() {
+  //test a simple 8x4 grid wrapping
+  Tiles<PointLL> x(AABB2<PointLL>{-180,-90,180,90}, 90, 2);
+  auto y = x.ClosestFirst({179.99, -16.825});
+  if(to_global_sub(y(), x) != 15)
+    throw std::logic_error("Should have been 15");
+  if(to_global_sub(y(), x) != 8)
+    throw std::logic_error("Should have been wrapped to 8");
+  if(to_global_sub(y(), x) != 23)
+    throw std::logic_error("Should have been above to 23");
+
+  //check antimeridian wrapping
+  Tiles<PointLL> te(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
+  PointLL p{179.99, -16.825};
+  int px = (p.first - te.TileBounds().minx()) / te.TileBounds().Width() * te.ncolumns() * te.nsubdivisions();
+  int py = (p.second - te.TileBounds().miny()) / te.TileBounds().Height() * te.nrows() * te.nsubdivisions();
+  auto c = te.ClosestFirst(p);
+  auto first = c();
+  if(to_global_sub(first, te) != py * te.ncolumns() * te.nsubdivisions() + px)
+    throw std::logic_error("Unexpected global subdivision");
+  if(std::get<2>(first) != 0)
+    throw std::logic_error("Unexpected distance");
+  auto second  = c();
+  if(to_global_sub(second, te) != py * te.ncolumns() * te.nsubdivisions())
+    throw std::logic_error("Unexpected global subdivision");
+  if(std::get<2>(second) != p.Distance({-180, -16.825}))
+    throw std::logic_error("Unexpected distance");
+
+  //try planar coordinate system
   Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
   for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76} }) {
     auto c = t.ClosestFirst(p);
     auto a = closest_first_answer<Point2>(t, p);
+    size_t zeros = 0;
+    for(const auto& s : a)
+      if(std::get<2>(s) == 0)
+        ++zeros;
+    if(zeros != 1 && zeros != 2 && zeros != 4)
+      throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
     for(const auto& s : a) {
       auto r = c();
       if(s != r)
-        throw std::logic_error("Unexpected subdivision");
+        throw std::logic_error("Unexpected tile, subdivision or distance");
     }
-    try { c(); } catch (const std::runtime_error& e) { continue; }
+    try { c(); } catch (const std::runtime_error&) { continue; }
     throw std::logic_error("Closest first functor should have thrown");
   }
 
+  auto eoifje = dist({47.31707,9.2827},{47.31707,9.2827});
+
+  //try spherical coordinate system
   Tiles<PointLL> tl(AABB2<PointLL>{-180,-90,180,90}, 4, 5);
-  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {78.92409,11.92515}, {-54.93575,-67.61196} }) {
+  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {11.92515,78.92409}, {-67.61196,-54.93575}, {179.99155,-16.80257} }) {
     auto c = tl.ClosestFirst(p);
     auto a = closest_first_answer<PointLL>(tl, p);
+    size_t zeros = 0;
+    for(const auto& s : a)
+      if(std::get<2>(s) == 0)
+        ++zeros;
+    if(zeros != 1 && zeros != 2 && zeros != 4)
+      throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
     for(const auto& s : a) {
       auto r = c();
       if(s != r)
-        throw std::logic_error("Unexpected subdivision");
+        throw std::logic_error("Unexpected tile, subdivision or distance");
     }
-    try { c(); } catch (const std::runtime_error& e) { continue; }
+    try { c(); } catch (const std::runtime_error&) { continue; }
     throw std::logic_error("Closest first functor should have thrown");
   }
+
 }
 
 }

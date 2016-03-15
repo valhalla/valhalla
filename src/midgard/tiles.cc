@@ -63,21 +63,25 @@ namespace {
 
     //something to measure the closest possible point of a subdivision from the given seed point
     float dist(int32_t sub) {
+      int32_t x_off = 0;
       auto sx = sub % subcols;
       if (sx < seed_x) {
         if(!coord_t::IsSpherical() || seed_x - sx < subcols / 2.f)
-          ++sx;
+          x_off = 1;
       }
       else if(coord_t::IsSpherical() && sx - seed_x > subcols / 2.f)
-        ++sx;
-      auto sy = sub / subcols; if (sy < seed_y) ++sy;
-      coord_t c(tiles.TileBounds().minx() + sx * tiles.SubdivisionSize(), tiles.TileBounds().miny() + sy * tiles.SubdivisionSize());
+        x_off = 1;
+      int32_t y_off = 0;
+      auto sy = sub / subcols; if (sy < seed_y) y_off = 1;
+      coord_t c(tiles.TileBounds().minx() + (sx + x_off) * tiles.SubdivisionSize(),
+        tiles.TileBounds().miny() + (sy + y_off) * tiles.SubdivisionSize());
       //if its purely vertical then dont use a corner
-      if(sx > seed_x && sx - 1 < seed_x)
+      if(x_off && sx < seed_x && sx + x_off > seed_x)
         c.first = seed.first;
       //if its purely horizontal then dont use a corner
-      if(sy > seed_y && sy - 1 < seed_y)
+      if(y_off && sy < seed_y && sy + y_off > seed_y)
         c.second = seed.second;
+      //return coord_t::IsSpherical() ? ::dist(seed, c) : seed.Distance(c);
       return seed.Distance(c);
     }
 
@@ -88,7 +92,7 @@ namespace {
       auto y = s / subcols;
       for(auto i = -1; i < 2; ++i) {
         for(auto j = -1; j < 2; ++j) {
-          if(i==0 && j == 0)
+          if(i == 0 && j == 0)
             continue;
           auto nx = x + j;
           auto ny = y + i;
