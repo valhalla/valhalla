@@ -25,14 +25,16 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
   }
 
   if (directions_options.language() == "en-US") {
-    return midgard::make_unique<NarrativeBuilder>(directions_options,
-        trip_path, phrase_dictionary->second);
+    return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
+                                                  phrase_dictionary->second);
   }
   // TODO: add in other locale specific builders
+  else {
+    throw std::runtime_error(
+        "Narrative builder not found for language: "
+            + directions_options.language());
+  }
 
-  // TODO: set default lang to "en-US"
-  return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
-                                                phrase_dictionary->second);
 }
 
 }
