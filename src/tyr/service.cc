@@ -703,7 +703,8 @@ namespace {
             {"legs", legs(directions_legs)},
             {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
             {"status", static_cast<uint64_t>(0)}, //0 success
-            {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
+            {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")},
+            {"language", directions_options.language()}
           })
         }
       });
