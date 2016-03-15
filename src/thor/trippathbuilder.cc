@@ -459,6 +459,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
                                   trip_id);
+
+        std::cout << std::to_string(trip_id) << std::endl;
+
         assumed_schedule = false;
         uint32_t date, day = 0;
         if (origin.date_time_) {
@@ -879,7 +882,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     // TODO: Need to set based on GTFS values
     if (directededge->use() == Use::kRail)
       trip_edge->set_transit_type(
-          TripPath_TransitType::TripPath_TransitType_kMetro);
+          TripPath_TransitType::TripPath_TransitType_kRail);
 
     if (directededge->use() == Use::kBus)
       trip_edge->set_transit_type(
