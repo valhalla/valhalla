@@ -5,12 +5,12 @@ namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments
-TransitRoute:: TransitRoute(const uint32_t routeid, uint32_t one_stop_offset,
+TransitRoute:: TransitRoute(const uint32_t route_type, uint32_t one_stop_offset,
                             const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
                             const uint32_t op_by_website_offset, const uint32_t route_color,
                             const uint32_t route_text_color, const uint32_t short_name_offset,
                             const uint32_t long_name_offset, const uint32_t desc_offset)
-    : routeid_(routeid),
+    : route_type_(route_type),
       one_stop_offset_(one_stop_offset),
       op_by_onestop_id_offset_(op_by_onestop_id_offset),
       op_by_name_offset_(op_by_name_offset),
@@ -21,9 +21,9 @@ TransitRoute:: TransitRoute(const uint32_t routeid, uint32_t one_stop_offset,
       long_name_offset_(long_name_offset),
       desc_offset_(desc_offset) {}
 
-// Get the internal route Id.
-uint32_t TransitRoute::routeid() const {
-  return routeid_;
+// Get the route type.
+uint32_t TransitRoute::route_type() const {
+  return route_type_;
 }
 
 // Get the TransitLand one stop Id offset for this route.
@@ -69,11 +69,6 @@ uint32_t TransitRoute::long_name_offset() const {
 // Get the text/name offset for the route description.
 uint32_t TransitRoute::desc_offset() const {
   return desc_offset_;
-}
-
-// operator < - for sorting. Sort by route Id.
-bool TransitRoute::operator < (const TransitRoute& other) const {
-  return routeid() < other.routeid();
 }
 
 }

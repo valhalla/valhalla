@@ -14,17 +14,17 @@ namespace baldr {
 class TransitRoute {
  public:
   // Constructor with arguments
-  TransitRoute(const uint32_t routeid, const uint32_t one_stop_offset,
+  TransitRoute(const uint32_t route_type, const uint32_t one_stop_offset,
                const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
                const uint32_t op_by_website_offset, const uint32_t route_color,
                const uint32_t route_text_color, const uint32_t short_name_offset,
                const uint32_t long_name_offset, const uint32_t desc_offset);
 
   /**
-   * Get the internal route Id.
-   * @return  Returns the internal stop Id.
+   * Get the route type.
+   * @return  Returns the route type.
    */
-  uint32_t routeid() const;
+  uint32_t route_type() const;
 
   /**
    * Get the TransitLand one stop Id offset for this route.
@@ -88,7 +88,7 @@ class TransitRoute {
   bool operator < (const TransitRoute& other) const;
 
  protected:
-  uint32_t routeid_;          // Internal route Id. Used to lookup routes.
+  uint32_t route_type_;       // Internal route type
   uint32_t route_color_;      // Route color
   uint32_t route_text_color_; // Route text color
 
