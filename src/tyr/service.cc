@@ -572,6 +572,9 @@ namespace {
             const auto& transit_route = maneuver.transit_route();
             auto json_transit_route = json::map({});
 
+            if (transit_route.has_type()) {
+              json_transit_route->emplace("type", static_cast<uint64_t>(transit_route.type()));
+            }
             if (transit_route.has_onestop_id()) {
               json_transit_route->emplace("onestop_id", transit_route.onestop_id());
               valhalla::midgard::logging::Log("transit_route_stopid::" + transit_route.onestop_id(), " [ANALYTICS] ");
