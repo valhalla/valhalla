@@ -212,8 +212,7 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&stop_builder_[0]),
                stop_builder_.size() * sizeof(TransitStop));
 
-    // Sort and write the transit routes
-    std::sort(route_builder_.begin(), route_builder_.end());
+    // Write the transit routes
     file.write(reinterpret_cast<const char*>(&route_builder_[0]),
                route_builder_.size() * sizeof(TransitRoute));
 

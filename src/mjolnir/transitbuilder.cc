@@ -286,7 +286,25 @@ std::vector<uint32_t> AddRoutes(const Transit& transit,
 
   for (uint32_t i = 0; i < transit.routes_size(); i++) {
     const Transit_Route& r = transit.routes(i);
-      TransitRoute route(i,
+
+      // These should all be correctly set in the fetcher as it tosses types that we
+      // don't support.  However, let's report an error if we encounter one.
+      switch (static_cast<TransitType>(r.vehicle_type())) {
+        case TransitType::kTram:        // Tram, streetcar, lightrail
+        case TransitType::kMetro:      // Subway, metro
+        case TransitType::kRail:        // Rail
+        case TransitType::kBus:         // Bus
+        case TransitType::kFerry:       // Ferry
+        case TransitType::kCableCar:    // Cable car
+        case TransitType::kGondola:     // Gondola (suspended cable car)
+        case TransitType::kFunicular:   // Funicular (steep incline)
+          break;
+        default:
+          LOG_ERROR("Unsupported vehicle type!");
+          break;
+      }
+
+      TransitRoute route(r.vehicle_type(),
                          tilebuilder.AddName(r.onestop_id()),
                          tilebuilder.AddName(r.operated_by_onestop_id()),
                          tilebuilder.AddName(r.operated_by_name()),
@@ -317,19 +335,19 @@ void AddTransfers(GraphTileBuilder& tilebuilder) {
 // TODO - add separate Use for different types - when we do this change
 // the directed edge IsTransit method
 Use GetTransitUse(const uint32_t rt) {
-  switch (rt) {
+  switch (static_cast<TransitType>(rt)) {
     default:
-  case 0:       // Tram, streetcar, lightrail
-  case 1:       // Subway, metro
-  case 2:       // Rail
-  case 5:       // Cable car
-  case 6:       // Gondola (suspended ferry car)
-  case 7:       // Funicular (steep incline)
+  case TransitType::kTram:        // Tram, streetcar, lightrail
+  case TransitType::kMetro:      // Subway, metro
+  case TransitType::kRail:        // Rail
+  case TransitType::kCableCar:    // Cable car
+  case TransitType::kGondola:     // Gondola (suspended cable car)
+  case TransitType::kFunicular:   // Funicular (steep incline)
     return Use::kRail;
-  case 3:       // Bus
+  case TransitType::kBus:         // Bus
     return Use::kBus;
-  case 4:       // Ferry (boat)
-    return Use::kRail;    // TODO - add ferry use
+  case TransitType::kFerry:       // Ferry (boat)
+    return Use::kRail;            // TODO - add ferry use
   }
 }
 
