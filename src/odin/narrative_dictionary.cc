@@ -119,6 +119,15 @@ void NarrativeDictionary::Load(
   Load(ramp_verbal_subset, narrative_pt.get_child(kRampVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate exit_subset...");
+  // Populate exit_subset
+  Load(exit_subset, narrative_pt.get_child(kExitKey));
+
+  LOG_TRACE("Populate exit_verbal_subset...");
+  // Populate exit_verbal_subset
+  Load(exit_verbal_subset, narrative_pt.get_child(kExitVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

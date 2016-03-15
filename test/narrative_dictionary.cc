@@ -1,4 +1,6 @@
 #include <string>
+#include <vector>
+#include <map>
 
 #include "odin/util.h"
 #include "odin/narrative_dictionary.h"
@@ -17,6 +19,38 @@ const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilomete
 const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };
 const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right" };
 const std::vector<std::string> kExpectedRelativeTurnDirections = { "left", "sharp left", "right", "sharp right" };
+
+// Expected phrases
+const std::map<std::string, std::string> kExpectedExitPhrases = {
+    {"0", "Take the exit on the <RELATIVE_DIRECTION>."},
+    {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
+    {"2", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."},
+    {"3", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+    {"4", "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"5", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"6", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"7", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."},
+    {"8", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."},
+    {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+    {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."}
+};
+
+const std::map<std::string, std::string> kExpectedExitVerbalPhrases = {
+    {"0", "Take the exit on the <RELATIVE_DIRECTION>."},
+    {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
+    {"2", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."},
+    {"3", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+    {"4", "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"5", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"6", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"7", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."},
+    {"8", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."},
+    {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+    {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."}
+};
+
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -52,6 +86,18 @@ void validate(const std::vector<std::string>& test_target,
     if ((*test_target_item) != (*expected_item)) {
       throw std::runtime_error(
           "Invalid entry: " + (*test_target_item) + "  |  expected: " + (*expected_item));
+    }
+  }
+}
+
+void validate(const PhraseSet& phrase_handle,
+              const std::map<std::string, std::string>& expected) {
+
+  for (const auto& expected_phrase : expected) {
+    const auto& phrase = phrase_handle.phrases.at(expected_phrase.first);
+    if (phrase != expected_phrase.second) {
+      throw std::runtime_error(
+          "Invalid entry: " + phrase + "  |  expected: " + expected_phrase.second);
     }
   }
 }
@@ -636,6 +682,32 @@ void test_en_US_ramp_verbal() {
 
 }
 
+void test_en_US_exit() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit phrases
+  validate(static_cast<const PhraseSet&>(dictionary.exit_subset),
+           kExpectedExitPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.ramp_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeTwoDirections);
+
+}
+
+void test_en_US_exit_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.exit_verbal_subset),
+           kExpectedExitVerbalPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.ramp_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeTwoDirections);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -733,6 +805,12 @@ int main() {
 
   // test the en-US ramp verbal phrases
   suite.test(TEST_CASE(test_en_US_ramp_verbal));
+
+  // test the en-US exit phrases
+  suite.test(TEST_CASE(test_en_US_exit));
+
+  // test the en-US exit_verbal phrases
+  suite.test(TEST_CASE(test_en_US_exit_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

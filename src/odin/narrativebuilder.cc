@@ -1661,317 +1661,189 @@ std::string NarrativeBuilder::FormVerbalRampInstruction(
 std::string NarrativeBuilder::FormExitInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
-  //  0 "Take the exit on the right"
-  //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
-  //  2 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction>."
-  //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
-  //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  //  6 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-  //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
-  //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
-  //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+  // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+  // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+  // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+  // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+  // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+  // "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // 0 Take the exit on the right
-  // 1 = exit number
-  // 2 = branch
-  // 4 = toward
-  // 8 = name (when no number)
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
   std::string exit_number_sign;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
+    // Assign number sign
     exit_number_sign = maneuver.signs().GetExitNumberString();
   }
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 2;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count);
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count);
   }
   if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign()) {
     phrase_id += 8;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count);
   }
 
-  switch (phrase_id) {
-    //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
-    case 1: {
-      instruction = (boost::format("Take exit %1% on the %2%.")
-          % exit_number_sign % turn).str();
-      break;
-    }
-      //  2 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction>."
-    case 2: {
-      instruction = (boost::format("Take the %1% exit on the %2%.")
-          % exit_branch_sign % turn).str();
-      break;
-    }
-      //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
-    case 3: {
-      instruction = (boost::format("Take exit %1% on the %2% onto %3%.")
-          % exit_number_sign % turn % exit_branch_sign).str();
-      break;
-    }
-      //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 4: {
-      instruction = (boost::format("Take the exit on the %1% toward %2%.")
-          % turn % exit_toward_sign).str();
-      break;
-    }
-      //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 5: {
-      instruction = (boost::format("Take exit %1% on the %2% toward %3%.")
-          % exit_number_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      //  6 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 6: {
-      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
-          % exit_branch_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-    case 7: {
-      instruction = (boost::format(
-          "Take exit %1% on the %2% onto %3% toward %4%.") % exit_number_sign
-          % turn % exit_branch_sign % exit_toward_sign).str();
-      break;
-    }
-      //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
-    case 8: {
-      instruction = (boost::format("Take the %1% exit on the %2%.")
-          % exit_name_sign % turn).str();
-      break;
-    }
-      //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
-    case 10: {
-      instruction = (boost::format("Take the %1% exit on the %2% onto %3%.")
-          % exit_name_sign % turn % exit_branch_sign).str();
-      break;
-    }
-      //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 12: {
-      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
-          % exit_name_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-    case 14: {
-      instruction = (boost::format(
-          "Take the %1% exit on the %2% onto %3% toward %4%.") % exit_name_sign
-          % turn % exit_branch_sign % exit_toward_sign).str();
-      break;
-    }
-    default: {
-      //  0 "Take the exit on the right"
-      instruction = (boost::format("Take the exit on the %1%.") % turn).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeTwoDirection(maneuver.type(),
+                               dictionary_.exit_subset.relative_directions));
+  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertExitInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
-  //  0 "Take the exit on the right"
-  //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
-  //  2 "Take the <BRANCH_SIGN(1)> exit on the <FormTurnTypeInstruction>."
-  //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(1)>."
-  //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
+  // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+  // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+  // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
 
-  // 0 Take the exit on the right
-  // 1 = exit number
-  // 2 = branch
-  // 4 = toward
-  // 8 = name (when no number)
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
   std::string exit_number_sign;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
+    // Assign number sign
     exit_number_sign = maneuver.signs().GetExitNumberString(
         0, false, delim, maneuver.verbal_formatter());
   } else if (maneuver.HasExitBranchSign()) {
     phrase_id += 2;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitNameSign()) {
     phrase_id += 8;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  return FormVerbalExitInstruction(phrase_id, turn, exit_number_sign,
-                                   exit_branch_sign, exit_toward_sign,
-                                   exit_name_sign);
+  return FormVerbalExitInstruction(
+      phrase_id,
+      FormRelativeTwoDirection(
+          maneuver.type(), dictionary_.exit_verbal_subset.relative_directions),
+      exit_number_sign, exit_branch_sign, exit_toward_sign, exit_name_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalExitInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
-  //  0 "Take the exit on the right"
-  //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
-  //  2 "Take the <BRANCH_SIGN(2)> exit on the <FormTurnTypeInstruction>."
-  //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)>."
-  //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  //  6 "Take the <BRANCH_SIGN(2)> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
-  //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
-  //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)>."
-  //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
+  // "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+  // "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+  // "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+  // "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+  // "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+  // "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+  // "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
 
-  // 0 Take the exit on the right
-  // 1 = exit number
-  // 2 = branch
-  // 4 = toward
-  // 8 = name (when no number)
+  // Determine which phrase to use
   uint8_t phrase_id = 0;
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
   std::string exit_number_sign;
   std::string exit_branch_sign;
   std::string exit_toward_sign;
   std::string exit_name_sign;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
+    // Assign number sign
     exit_number_sign = maneuver.signs().GetExitNumberString(
         0, false, delim, maneuver.verbal_formatter());
   }
   if (maneuver.HasExitBranchSign()) {
     phrase_id += 2;
+    // Assign branch sign
     exit_branch_sign = maneuver.signs().GetExitBranchString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
   if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign()) {
     phrase_id += 8;
+    // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  return FormVerbalExitInstruction(phrase_id, turn, exit_number_sign,
-                                   exit_branch_sign, exit_toward_sign,
-                                   exit_name_sign);
+  return FormVerbalExitInstruction(
+      phrase_id,
+      FormRelativeTwoDirection(
+          maneuver.type(), dictionary_.exit_verbal_subset.relative_directions),
+      exit_number_sign, exit_branch_sign, exit_toward_sign, exit_name_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalExitInstruction(
-    uint8_t phrase_id, const std::string& turn,
+    uint8_t phrase_id, const std::string& relative_dir,
     const std::string& exit_number_sign, const std::string& exit_branch_sign,
     const std::string& exit_toward_sign, const std::string& exit_name_sign) {
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  switch (phrase_id) {
-    //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
-    case 1: {
-      instruction = (boost::format("Take exit %1% on the %2%.")
-          % exit_number_sign % turn).str();
-      break;
-    }
-      //  2 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction>."
-    case 2: {
-      instruction = (boost::format("Take the %1% exit on the %2%.")
-          % exit_branch_sign % turn).str();
-      break;
-    }
-      //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
-    case 3: {
-      instruction = (boost::format("Take exit %1% on the %2% onto %3%.")
-          % exit_number_sign % turn % exit_branch_sign).str();
-      break;
-    }
-      //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 4: {
-      instruction = (boost::format("Take the exit on the %1% toward %2%.")
-          % turn % exit_toward_sign).str();
-      break;
-    }
-      //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 5: {
-      instruction = (boost::format("Take exit %1% on the %2% toward %3%.")
-          % exit_number_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      //  6 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 6: {
-      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
-          % exit_branch_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-    case 7: {
-      instruction = (boost::format(
-          "Take exit %1% on the %2% onto %3% toward %4%.") % exit_number_sign
-          % turn % exit_branch_sign % exit_toward_sign).str();
-      break;
-    }
-      //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
-    case 8: {
-      instruction = (boost::format("Take the %1% exit on the %2%.")
-          % exit_name_sign % turn).str();
-      break;
-    }
-      //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
-    case 10: {
-      instruction = (boost::format("Take the %1% exit on the %2% onto %3%.")
-          % exit_name_sign % turn % exit_branch_sign).str();
-      break;
-    }
-      //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-    case 12: {
-      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
-          % exit_name_sign % turn % exit_toward_sign).str();
-      break;
-    }
-      //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
-    case 14: {
-      instruction = (boost::format(
-          "Take the %1% exit on the %2% onto %3% toward %4%.") % exit_name_sign
-          % turn % exit_branch_sign % exit_toward_sign).str();
-      break;
-    }
-    default: {
-      //  0 "Take the exit on the right"
-      instruction = (boost::format("Take the exit on the %1%.") % turn).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_dir);
+  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
+  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
+  boost::replace_all(instruction, kTowardignTag, exit_toward_sign);
+  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
   return instruction;
 }

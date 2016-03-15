@@ -206,9 +206,40 @@
       },
       "relative_directions": ["left", "right"]
     },
-    "exit": null,
-    "exit_verbal_alert": null,
-    "exit_verbal": null,
+    "exit": {
+      "phrases": {
+        "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+        "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+        "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+        "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+        "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "right"]
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+        "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+        "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+        "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+        "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+        "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "right"]
+    },
     "keep": null,
     "keep_verbal_alert": null,
     "keep_verbal": null,
