@@ -189,9 +189,6 @@ class TransitCost : public DynamicCost {
   float bus_factor_;
   float rail_factor_;
 
-  float bus_penalty_;
-  float rail_penalty_;
-
   // A measure of willingness to make transfers. Ranges from 0-1 with
   // 0 being not willing at all and 1 being totally comfortable.
   float use_transfers_;
@@ -206,11 +203,12 @@ class TransitCost : public DynamicCost {
 TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
 
-  mode_weight_       = pt.get<float>("mode_weight", kModeWeight);
+  mode_weight_ = pt.get<float>("mode_weight", kModeWeight);
 
   // Willingness to use buses. Make sure this is within range [0, 1].
   use_bus_ = pt.get<float>("use_bus", kDefaultUseBusFactor);
   if (use_bus_ < 0.0f || use_bus_ > 1.0f) {
+    use_bus_ = kDefaultUseBusFactor;
     LOG_WARN("Outside valid use_bus factor range " +
               std::to_string(use_bus_) + ": using default");
   }
@@ -218,6 +216,7 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   // Willingness to use rail. Make sure this is within range [0, 1].
   use_rail_ = pt.get<float>("use_rail", kDefaultUseRailFactor);
   if (use_rail_ < 0.0f || use_rail_ > 1.0f) {
+    use_rail_ = kDefaultUseRailFactor;
     LOG_WARN("Outside valid use_rail factor range " +
               std::to_string(use_rail_) + ": using default");
   }
@@ -225,6 +224,7 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   // Willingness to make transfers. Make sure this is within range [0, 1].
   use_transfers_ = pt.get<float>("use_transfers", kDefaultUseTransfersFactor);
   if (use_transfers_ < 0.0f || use_transfers_ > 1.0f) {
+    use_transfers_ = kDefaultUseTransfersFactor;
     LOG_WARN("Outside valid use_transfers factor range " +
               std::to_string(use_transfers_) + ": using default");
   }
@@ -246,6 +246,17 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
+
+  // Normalize so the favored mode has factor == 1
+  if (rail_factor_ < bus_factor_) {
+    float ratio = bus_factor_ / rail_factor_;
+    rail_factor_ = 1.0f;
+    bus_factor_ *= ratio;
+  } else {
+    float ratio = rail_factor_ / bus_factor_;
+    bus_factor_ = 1.0f;
+    rail_factor_ *= ratio;
+  }
 }
 
 // Destructor
@@ -308,9 +319,8 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const baldr::TransitDeparture* departure,
                            const uint32_t curr_time) const {
-  // wait time + time on transit until arrival at next stop
-  float elapsedtime = static_cast<float>(departure->departure_time() -
-                        curr_time + departure->elapsed_time());
+  // Separate wait time from time on transit
+  float wait_time = departure->departure_time() - curr_time;
 
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;
@@ -319,7 +329,8 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kRail) {
     weight *= rail_factor_;
   }
-  return { elapsedtime * weight, elapsedtime };
+  return { wait_time + (departure->elapsed_time() * weight),
+           wait_time + departure->elapsed_time() };
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -341,8 +352,10 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
 // Returns the transfer cost between 2 transit stops.
 Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   if (transfer == nullptr) {
-    // No transfer record exists - use defaults
-    return { (transfer_cost_ +  transfer_penalty_) * transfer_factor_, transfer_cost_ };
+    // No transfer record exists - use defaults...15 seconds for in station
+    // transfer and 1 minute otherwise
+    return { (transfer_cost_ +  transfer_penalty_) * transfer_factor_,
+              transfer_cost_ * 4.0f};
   }
   switch (transfer->type()) {
     case TransferType::kRecommended:
