@@ -742,6 +742,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_bus(prev_edge->bus());
     auto* transit_route = maneuver.mutable_transit_route_info();
     const auto& pe_transit_route = prev_edge->transit_route_info();
+    transit_route->type = prev_edge->transit_type();
     transit_route->onestop_id = pe_transit_route.onestop_id();
     transit_route->block_id = pe_transit_route.block_id();
     transit_route->trip_id = pe_transit_route.trip_id();
