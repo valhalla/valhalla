@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 
+#include <valhalla/proto/trippath.pb.h>
 #include <valhalla/odin/transitstop.h>
 
 namespace valhalla {
@@ -14,6 +15,7 @@ struct TransitRouteInfo {
   // TODO: do we need?
   std::string ToParameterString() const;
 
+  TripPath_TransitType type;
   std::string onestop_id;
   uint32_t block_id;
   uint32_t trip_id;

@@ -255,6 +255,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     if (maneuver.IsTransit()) {
       const auto& transit_route = maneuver.transit_route_info();
       auto* trip_transit_route = trip_maneuver->mutable_transit_route();
+      trip_transit_route->set_type(TranslateTransitType(transit_route.type));
       if (!transit_route.onestop_id.empty()) {
         trip_transit_route->set_onestop_id(transit_route.onestop_id);
       }
@@ -326,6 +327,39 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   trip_directions.set_shape(etp->shape());
 
   return trip_directions;
+}
+
+TripDirections_TransitRoute_Type DirectionsBuilder::TranslateTransitType(
+    TripPath_TransitType transit_type) {
+
+  switch (transit_type) {
+    case TripPath_TransitType_kTram: {
+      return TripDirections_TransitRoute_Type_kTram;
+    }
+    case TripPath_TransitType_kMetro: {
+      return TripDirections_TransitRoute_Type_kMetro;
+    }
+    case TripPath_TransitType_kRail: {
+      return TripDirections_TransitRoute_Type_kRail;
+    }
+    case TripPath_TransitType_kBus: {
+      return TripDirections_TransitRoute_Type_kBus;
+    }
+    case TripPath_TransitType_kFerry: {
+      return TripDirections_TransitRoute_Type_kFerry;
+    }
+    case TripPath_TransitType_kCableCar: {
+      return TripDirections_TransitRoute_Type_kCableCar;
+    }
+    case TripPath_TransitType_kGondola: {
+      return TripDirections_TransitRoute_Type_kGondola;
+    }
+    case TripPath_TransitType_kFunicular: {
+      return TripDirections_TransitRoute_Type_kFunicular;
+    }
+  }
+  // if not found above then throw error
+  throw std::runtime_error("Invalid transit type.");
 }
 
 }

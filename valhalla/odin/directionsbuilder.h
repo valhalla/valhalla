@@ -57,9 +57,19 @@ class DirectionsBuilder {
       const DirectionsOptions& directions_options, EnhancedTripPath* etp,
       std::list<Maneuver>& maneuvers);
 
+  /**
+   * Return the trip directions transit type for the specified trip path transit
+   * type.
+   *
+   * @param transit_type trip path transit type.
+   */
+  TripDirections_TransitRoute_Type TranslateTransitType(
+      TripPath_TransitType transit_type);
+
 };
 
 }
 }
 
 #endif  // VALHALLA_ODIN_DIRECTIONSBUILDER_H_
+
