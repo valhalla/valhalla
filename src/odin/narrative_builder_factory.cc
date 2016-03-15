@@ -30,6 +30,7 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
   }
   // TODO: add in other locale specific builders
 
+  // TODO: set default lang to "en-US"
   return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
                                                 phrase_dictionary->second);
 }

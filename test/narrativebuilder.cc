@@ -820,6 +820,198 @@ void PopulateRampManeuverList_9(std::list<Maneuver>& maneuvers,
                    1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
+void PopulateExitManeuverList_0(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_1(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
+                       "0" } },
+                   { }, { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23,
+                   0);
+}
+
+void PopulateExitManeuverList_2(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "US 322 West", "2" } },
+                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_3(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
+                       "0" } },
+                   { { "US 322 West", "2" } }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+                   "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_4(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
+                       "Lewistown", "1" } },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_5(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
+                       "0" } },
+                   { }, { { "Lewistown", "1" } }, { }, 0, 0, 0, 0, 1, 0, "", "",
+                   "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "US 322 West", "2" } },
+                   { { "Lewistown", "1" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                   0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { "US 322 West" },
+                   { }, { }, "", 0.561000, 23, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
+                   42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
+                       "0" } },
+                   { { "US 322 West", "2" }, { "US 22 West", "1" }, {
+                       "US 22 East", "0" }, { "PA 230 East", "0" }, {
+                       "Cameron Street", "0" } },
+                   { { "Lewistown", "1" }, { "State College", "1" }, {
+                       "Harrisburg", "0" } },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+}
+
+void PopulateExitManeuverList_8(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitLeft, { "MD 43 East" },
+                   { }, { }, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 135,
+                   83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { },
+                   { }, { }, { { "White Marsh Boulevard", "0" } }, 0, 0, 0, 0,
+                   1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
+}
+
+void PopulateExitManeuverList_10(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitLeft, { "MD 43 East" },
+                   { }, { }, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 135,
+                   83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "MD 43 East", "1" } },
+                   { }, { { "White Marsh Boulevard", "0" } }, 0, 0, 0, 0, 1, 0,
+                   "", "", "", 0, 0, 0, 0, 46, 0);
+}
+
+void PopulateExitManeuverList_12(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitLeft, { "MD 43 East" },
+                   { }, { }, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 135,
+                   83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { },
+                   { }, { { "White Marsh", "0" } }, { { "White Marsh Boulevard",
+                       "0" } },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
+}
+
+void PopulateExitManeuverList_14(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitLeft, { "MD 43 East" },
+                   { }, { }, "", 1.002000, 45, 356,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 135,
+                   83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "MD 43 East", "1" } },
+                   { { "White Marsh", "0" } }, {
+                       { "White Marsh Boulevard", "0" } },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -2177,6 +2369,378 @@ void TestBuildRamp_9_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+// "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+// "0": "Take the exit on the <RELATIVE_DIRECTION>.",
+void TestBuildExit_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the exit on the right.",
+      "Take the exit on the right.",
+      "Take the exit on the right.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+// "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+// "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+void TestBuildExit_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take exit 67 B-A on the right.",
+      "Take exit 67 B-A on the right.",
+      "Take exit 67 B-A on the right.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+void TestBuildExit_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the US 322 West exit on the right.",
+      "Take the U.S. 3 22 West exit on the right.",
+      "Take the U.S. 3 22 West exit on the right.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+// "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+// "3": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+void TestBuildExit_3_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_3(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_3(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take exit 67 B-A on the right onto US 322 West.",
+      "Take exit 67 B-A on the right.",
+      "Take exit 67 B-A on the right onto U.S. 3 22 West.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildExit_4_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the exit on the right toward Lewistown.",
+      "Take the exit on the right toward Lewistown.",
+      "Take the exit on the right toward Lewistown.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+// "5": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildExit_5_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_5(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_5(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take exit 67 B-A on the right toward Lewistown.",
+      "Take exit 67 B-A on the right.",
+      "Take exit 67 B-A on the right toward Lewistown.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "6": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildExit_6_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_6(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_6(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the US 322 West exit on the right toward Lewistown.",
+      "Take the U.S. 3 22 West exit on the right.",
+      "Take the U.S. 3 22 West exit on the right toward Lewistown.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+// "1": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>.",
+// "7": "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+void TestBuildExit_7_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_7(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_7(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College.",
+      "Take exit 67 B-A on the right.",
+      "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "8": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>.",
+void TestBuildExit_8_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_8(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_8(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the White Marsh Boulevard exit on the left.",
+      "Take the White Marsh Boulevard exit on the left.",
+      "Take the White Marsh Boulevard exit on the left.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+// "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "10": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>.",
+void TestBuildExit_10_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_10(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_10(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the White Marsh Boulevard exit on the left onto MD 43 East.",
+      "Take the Maryland 43 East exit on the left.",
+      "Take the White Marsh Boulevard exit on the left onto Maryland 43 East.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "4": "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+// "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+void TestBuildExit_12_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_12(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_12(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the White Marsh Boulevard exit on the left toward White Marsh.",
+      "Take the exit on the left toward White Marsh.",
+      "Take the White Marsh Boulevard exit on the left toward White Marsh.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitInstruction
+// "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+// "2": "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>.",
+// "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+void TestBuildExit_14_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitManeuverList_14(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitManeuverList_14(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh.",
+      "Take the Maryland 43 East exit on the left.",
+      "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -3308,6 +3872,42 @@ int main() {
 
   // BuildRamp_9_miles_en_US
   suite.test(TEST_CASE(TestBuildRamp_9_miles_en_US));
+
+  // BuildExit_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_0_miles_en_US));
+
+  // BuildExit_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_1_miles_en_US));
+
+  // BuildExit_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_2_miles_en_US));
+
+  // BuildExit_3_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_3_miles_en_US));
+
+  // BuildExit_4_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_4_miles_en_US));
+
+  // BuildExit_5_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_5_miles_en_US));
+
+  // BuildExit_6_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_6_miles_en_US));
+
+  // BuildExit_7_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_7_miles_en_US));
+
+  // BuildExit_8_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_8_miles_en_US));
+
+  // BuildExit_10_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_10_miles_en_US));
+
+  // BuildExit_12_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_12_miles_en_US));
+
+  // BuildExit_14_miles_en_US
+  suite.test(TEST_CASE(TestBuildExit_14_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));

@@ -158,7 +158,7 @@ class NarrativeBuilder {
                                         std::string delim = kVerbalDelim);
 
   std::string FormVerbalRampInstruction(uint8_t phrase_id,
-                                        const std::string& turn,
+                                        const std::string& relative_dir,
                                         const std::string& exit_branch_sign,
                                         const std::string& exit_toward_sign,
                                         const std::string& exit_name_sign);
@@ -184,7 +184,7 @@ class NarrativeBuilder {
                                         std::string delim = kVerbalDelim);
 
   std::string FormVerbalExitInstruction(uint8_t phrase_id,
-                                        const std::string& turn,
+                                        const std::string& relative_dir,
                                         const std::string& exit_number_sign,
                                         const std::string& exit_branch_sign,
                                         const std::string& exit_toward_sign,
