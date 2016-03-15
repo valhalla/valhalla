@@ -120,7 +120,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   }
 
   // Find shortest path
-  uint32_t blockid, tripid, operator_id;
+  uint32_t blockid, tripid;
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
   std::unordered_map<std::string, uint32_t> operators;
@@ -190,15 +190,16 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     mode_ = pred.mode();
     bool has_transit = pred.has_transit();
     uint32_t prior_stop = pred.prior_stopid();
+    uint32_t operator_id = pred.transit_operator();
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       // Get the transfer penalty when changing stations
-      if (mode_ == TravelMode::kPedestrian && prior_stop != 0 && has_transit) {
+      if (mode_ == TravelMode::kPedestrian && prior_stop > 0 && has_transit) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
-                                      nodeinfo->stop_index()));
+                                    nodeinfo->stop_index()));
       }
 
-      // Add transfer time to the local time when first entering any
-      // stop as a pedestrian. This is a small added cost on top of
+      // Add transfer time to the local time when entering a stop
+      // as a pedestrian. This is a small added cost on top of
       // any costs along paths and roads
       if (mode_ == TravelMode::kPedestrian) {
         localtime += transfer_cost.secs;
@@ -262,7 +263,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // walked to the transit stop
       tripid  = 0;
       blockid = 0;
-      operator_id = pred.transit_operator();
       if (directededge->IsTransitLine()) {
         const TransitDeparture* departure = tile->GetNextDeparture(
                     directededge->lineid(), localtime, day, dow, date_before_tile);
@@ -278,15 +278,15 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // There is no cost to remain on the same trip or valid blockId
           if ( tripid == pred.tripid() ||
               (blockid != 0 && blockid == pred.blockid())) {
-            // This departure is valid without any added cost. Operator Id is
-            // same as the predecessor
+            // This departure is valid without any added cost. Operator Id
+            // is the same as the predecessor
             operator_id = pred.transit_operator();
           } else {
             if (pred.tripid() > 0) {
               // tripId > 0 means the prior edge was a transit edge and this
               // is an "in-station" transfer. Add a small transfer time and
               // call GetNextDeparture again if we cannot make the current
-              // departure. Add transfer penalty.
+              // departure.
               // TODO - is there a better way?
               if (localtime + 30 > departure->departure_time()) {
                   departure = tile->GetNextDeparture(directededge->lineid(),
@@ -294,19 +294,17 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
                 if (!departure)
                   continue;
               }
-              newcost.cost += transfer_cost.cost;
             }
 
             // Get the operator Id
             operator_id = GetOperatorId(tile, departure->routeid(), operators);
 
-            // Not following along same trip - check if we need to add an
-            // operator change penalty. TODO - make this a method?
+            // Add transfer penalty and operator change penalty
+            newcost.cost += transfer_cost.cost;
             if (pred.transit_operator() > 0 &&
                 pred.transit_operator() != operator_id) {
               // TODO - create a configurable operator change penalty
-              newcost.secs += 60.0f;
-              newcost.cost += transfer_cost.cost * 20.0f;
+              newcost.cost += 300;
             }
           }
 
@@ -314,7 +312,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           mode_ = TravelMode::kPublicTransit;
           newcost += tc->EdgeCost(directededge, departure, localtime);
         } else {
-          continue;  // No matching departures found for this edge
+          // No matching departures found for this edge
+          continue;
         }
       } else {
         // If current mode is public transit we should only connect to
@@ -410,7 +409,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       }
 
       // Add edge label, add to the adjacency list and set edge status
-      AddToAdjacencyList(edgeid, pred.sortcost());
+      AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_,  walking_distance_,
