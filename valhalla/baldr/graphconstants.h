@@ -323,6 +323,18 @@ enum class DOW : uint8_t {
   kSaturday = 7
 };
 
+// Used for transit. Types of transit currently supported.
+enum class TransitType : uint32_t {
+  kTram = 0,
+  kMetro = 1,
+  kRail = 2,
+  kBus = 3,
+  kFerry = 4,
+  kCableCar = 5,
+  kGondola = 6,
+  kFunicular = 7
+};
+
 //This is our pivot date for transit.  No dates will be older than this date.
 const std::string kPivotDate = "20140101";  //January 1, 2014
 
