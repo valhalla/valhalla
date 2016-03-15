@@ -480,7 +480,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
                                   trip_id);
-
         assumed_schedule = false;
         uint32_t date, day = 0;
         if (origin.date_time_) {
