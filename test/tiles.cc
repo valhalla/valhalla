@@ -287,6 +287,13 @@ void test_closest_first() {
     throw std::logic_error("Should have been wrapped to 8");
   if(to_global_sub(y(), t) != 23)
     throw std::logic_error("Should have been above to 23");
+  y = t.ClosestFirst({-179.99, -16.825});
+  if(to_global_sub(y(), t) != 8)
+    throw std::logic_error("Should have been 8");
+  if(to_global_sub(y(), t) != 15)
+    throw std::logic_error("Should have been wrapped to 15");
+  if(to_global_sub(y(), t) != 16)
+    throw std::logic_error("Should have been above to 16");
 
   //check antimeridian wrapping
   t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
