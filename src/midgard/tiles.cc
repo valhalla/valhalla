@@ -40,7 +40,6 @@ namespace {
     coord_t seed;
     valhalla::midgard::Tiles<coord_t> tiles;
     int32_t subcols, subrows;
-    float seed_x, seed_y;
     std::unordered_set<int32_t> queued;
     using best_t = std::pair<float, int32_t>;
     std::set<best_t, std::function<bool (const best_t&, const best_t&) > > queue;
@@ -53,9 +52,9 @@ namespace {
       //TODO: worry about wrapping around valid range
       subcols = tiles.ncolumns() * tiles.nsubdivisions();
       subrows = tiles.nrows() * tiles.nsubdivisions();
-      seed_x = (seed.first - tiles.TileBounds().minx()) / tiles.TileBounds().Width() * subcols;
-      seed_y = (seed.second - tiles.TileBounds().miny()) / tiles.TileBounds().Height() * subrows;
-      auto subdivision = static_cast<int32_t>(seed_y) * subcols + static_cast<int32_t>(seed_x);
+      auto x = (seed.first - tiles.TileBounds().minx()) / tiles.TileBounds().Width() * subcols;
+      auto y = (seed.second - tiles.TileBounds().miny()) / tiles.TileBounds().Height() * subrows;
+      auto subdivision = static_cast<int32_t>(y) * subcols + static_cast<int32_t>(x);
       queued.emplace(subdivision);
       queue.emplace(std::make_pair(0, subdivision));
       neighbors(subdivision);
@@ -63,26 +62,22 @@ namespace {
 
     //something to measure the closest possible point of a subdivision from the given seed point
     float dist(int32_t sub) {
-      int32_t x_off = 0;
-      auto sx = sub % subcols;
-      if (sx < seed_x) {
-        if(!coord_t::IsSpherical() || seed_x - sx < subcols / 2.f)
-          x_off = 1;
+      auto x = sub % subcols;
+      auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
+      auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
+      auto y = sub / subcols;
+      auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
+      auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
+      auto distance = std::numeric_limits<float>::max();
+      std::list<coord_t> corners{ {x0, y0}, {x1, y0}, {x0, y1}, {x1, y1} };
+      if(x0 < seed.first && x1 > seed.first) { corners.emplace_back(seed.first, y0); corners.emplace_back(seed.first, y1); }
+      if(y0 < seed.second && y1 > seed.second) { corners.emplace_back(x0, seed.second); corners.emplace_back(x1, seed.second); }
+      for(const auto& c : corners) {
+        auto d = seed.Distance(c);
+        if(d < distance)
+          distance = d;
       }
-      else if(coord_t::IsSpherical() && sx - seed_x > subcols / 2.f)
-        x_off = 1;
-      int32_t y_off = 0;
-      auto sy = sub / subcols; if (sy < seed_y) y_off = 1;
-      coord_t c(tiles.TileBounds().minx() + (sx + x_off) * tiles.SubdivisionSize(),
-        tiles.TileBounds().miny() + (sy + y_off) * tiles.SubdivisionSize());
-      //if its purely vertical then dont use a corner
-      if(x_off && sx < seed_x && sx + x_off > seed_x)
-        c.first = seed.first;
-      //if its purely horizontal then dont use a corner
-      if(y_off && sy < seed_y && sy + y_off > seed_y)
-        c.second = seed.second;
-      //return coord_t::IsSpherical() ? ::dist(seed, c) : seed.Distance(c);
-      return seed.Distance(c);
+      return distance;
     }
 
     //something to add the neighbors of a given subdivision
