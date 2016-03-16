@@ -5,7 +5,7 @@
 #include "midgard/util.h"
 
 #include <random>
-#include <set>
+#include <algorithm>
 
 using namespace valhalla::midgard;
 
@@ -236,15 +236,9 @@ int32_t to_global_sub(std::tuple<int32_t, unsigned short, float> tile, const Til
 //brute force entire set of subdivisions at once
 using sub_t = std::tuple<int32_t, unsigned short, float>;
 template <class coord_t>
-std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first_answer(const Tiles<coord_t>& t, const coord_t& p){
-  //place to keep the subdivisions
-  auto sort = [&t](const sub_t& a, const sub_t& b) {
-    //turn tile local subdivision into global subdivision for comparison
-    auto as = to_global_sub(a, t);
-    auto bs = to_global_sub(b, t);
-    return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
-  };
-  std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > answer(sort);
+std::vector<sub_t> closest_first_answer(const Tiles<coord_t>& t, const coord_t& p){
+  std::vector<sub_t> answer;
+  answer.reserve(t.nrows()*t.ncolumns()*t.nsubdivisions()*t.nsubdivisions());
   //run over all tiles
   for(int32_t i = 0; i < t.nrows(); ++i) {
     for(int32_t j = 0; j < t.ncolumns(); ++j) {
@@ -269,16 +263,39 @@ std::set<sub_t, std::function<bool (const sub_t&, const sub_t&)> > closest_first
 
           auto tile = t.TileId(j, i);
           auto subdivision = k * t.nsubdivisions() + l;
-          answer.emplace(std::make_tuple(tile, subdivision, distance));
+          answer.emplace_back(std::make_tuple(tile, subdivision, distance));
         }
       }
     }
   }
+  //sort it and throw it back
+  std::sort(answer.begin(), answer.end(), [&t](const sub_t& a, const sub_t& b) {
+    auto as = to_global_sub(a, t);
+    auto bs = to_global_sub(b, t);
+    return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
+  });
+  return answer;
+}
+
+template <class coord_t>
+std::vector<sub_t> closest_first_answer(const Tiles<coord_t>& t, const std::function<std::tuple<int32_t, unsigned short, float>() >& foo) {
+  std::vector<sub_t> answer;
+  answer.reserve(t.nrows()*t.ncolumns()*t.nsubdivisions()*t.nsubdivisions());
+  //run over all tiles
+  while(true) {
+    try { answer.emplace_back(foo()); } catch (const std::runtime_error&) { break; }
+  }
+  //sort it and throw it back
+  std::sort(answer.begin(), answer.end(), [&t](const sub_t& a, const sub_t& b) {
+    auto as = to_global_sub(a, t);
+    auto bs = to_global_sub(b, t);
+    return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
+  });
   return answer;
 }
 
 void test_closest_first() {
-  //test a simple 8x4 grid wrapping
+  //test a simple 8x4 grid for polar and meridian wrapping
   Tiles<PointLL> t(AABB2<PointLL>{-180,-90,180,90}, 90, 2);
   auto y = t.ClosestFirst({179.99, -16.825});
   if(to_global_sub(y(), t) != 15)
@@ -295,7 +312,7 @@ void test_closest_first() {
   if(to_global_sub(y(), t) != 16)
     throw std::logic_error("Should have been above to 16");
 
-  //check antimeridian wrapping
+  //check realistic antimeridian wrapping
   t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
   PointLL p{179.99, -16.825};
   int px = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
@@ -314,54 +331,36 @@ void test_closest_first() {
 
   //try planar coordinate system
   Tiles<Point2> tp(AABB2<Point2>{-10,-10,10,10}, 1, 5);
-  auto foo = tp.ClosestFirst({0,0});
-  auto bar = closest_first_answer<Point2>(tp, {0,0});
   for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76} }) {
-    auto c = tp.ClosestFirst(p);
     auto a = closest_first_answer<Point2>(tp, p);
+    auto b = closest_first_answer<Point2>(tp, tp.ClosestFirst(p));
+    if(a.size() != b.size())
+      throw std::logic_error("Number of subdivisions didnt match");
+    if(!std::equal(a.cbegin(), a.cend(), b.cbegin()))
+      throw std::logic_error("Unexpected tile, subdivision or distance");
     size_t zeros = 0;
-    for(const auto& s : a)
-      if(std::get<2>(s) == 0)
-        ++zeros;
-    if(zeros != 1 && zeros != 2 && zeros != 4)
-      throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
-    zeros = 0;
-    for(const auto& s : a) {
-      auto r = c();
-      if(s != r)
-        throw std::logic_error("Unexpected tile, subdivision or distance");
+    for(const auto& r : b)
       if(std::get<2>(r) == 0)
         ++zeros;
-    }
     if(zeros != 1 && zeros != 2 && zeros != 4)
       throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
-    try { c(); } catch (const std::runtime_error&) { continue; }
-    throw std::logic_error("Closest first functor should have thrown");
   }
 
   //try spherical coordinate system
   t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, 4, 5);
   for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {11.92515,78.92409}, {-67.61196,-54.93575}, {179.99155,-16.80257} }) {
-    auto c = t.ClosestFirst(p);
     auto a = closest_first_answer<PointLL>(t, p);
+    auto b = closest_first_answer<PointLL>(t, t.ClosestFirst(p));
+    if(a.size() != b.size())
+      throw std::logic_error("Number of subdivisions didnt match");
+    if(!std::equal(a.cbegin(), a.cend(), b.cbegin()))
+      throw std::logic_error("Unexpected tile, subdivision or distance");
     size_t zeros = 0;
-    for(const auto& s : a)
-      if(std::get<2>(s) == 0)
-        ++zeros;
-    if(zeros != 1 && zeros != 2 && zeros != 4)
-      throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
-    zeros = 0;
-    for(const auto& s : a) {
-      auto r = c();
-      if(s != r)
-        throw std::logic_error("Unexpected tile, subdivision or distance");
+    for(const auto& r : b)
       if(std::get<2>(r) == 0)
         ++zeros;
-    }
     if(zeros != 1 && zeros != 2 && zeros != 4)
       throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
-    try { c(); } catch (const std::runtime_error&) { continue; }
-    throw std::logic_error("Closest first functor should have thrown");
   }
 
 }

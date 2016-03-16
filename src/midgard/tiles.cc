@@ -97,7 +97,7 @@ namespace {
               continue;
             nx = (nx + subcols) % subcols;
           }
-          //fix y
+          //fix y TODO: this is wrong
           if(ny == -1 || ny == subrows){
             if(!coord_t::IsSpherical())
               continue;
