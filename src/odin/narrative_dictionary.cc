@@ -128,6 +128,15 @@ void NarrativeDictionary::Load(
   Load(exit_verbal_subset, narrative_pt.get_child(kExitVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate keep_subset...");
+  // Populate keep_subset
+  Load(keep_subset, narrative_pt.get_child(kKeepKey));
+
+  LOG_TRACE("Populate keep_verbal_subset...");
+  // Populate keep_verbal_subset
+  Load(keep_verbal_subset, narrative_pt.get_child(kKeepVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

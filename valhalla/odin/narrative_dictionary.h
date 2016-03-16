@@ -32,6 +32,8 @@ constexpr auto kRampKey = "instructions.ramp";
 constexpr auto kRampVerbalKey = "instructions.ramp_verbal";
 constexpr auto kExitKey = "instructions.exit";
 constexpr auto kExitVerbalKey = "instructions.exit_verbal";
+constexpr auto kKeepKey = "instructions.keep";
+constexpr auto kKeepVerbalKey = "instructions.keep_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -177,6 +179,10 @@ class NarrativeDictionary {
   // Exit
   RampSubset exit_subset;
   RampSubset exit_verbal_subset;
+
+  // Keep
+  RampSubset keep_subset;
+  RampSubset keep_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
