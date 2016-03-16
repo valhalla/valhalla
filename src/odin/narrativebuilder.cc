@@ -1851,15 +1851,14 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(
 std::string NarrativeBuilder::FormKeepInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
-
-  //  0 "Keep <FormTurnTypeInstruction> at the fork."
-  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
-  //  2 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN>."
-  //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN>."
-  //  4 "Keep <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
-  //  5 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
-  //  6 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN> toward <TOWARD_SIGN>."
-  //  7 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN> toward <TOWARD_SIGN>."
+  // "0": "Keep <RELATIVE_DIRECTION> at the fork.",
+  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
+  // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
+  // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+  // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+  // "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+  // "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -1949,10 +1948,10 @@ std::string NarrativeBuilder::FormVerbalAlertKeepInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
 
-  //  0 "Keep <FormTurnTypeInstruction> at the fork."
-  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
-  //  2 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN(1)>."
-  //  4 "Keep <FormTurnTypeInstruction> toward <TOWARD_SIGN(1)>."
+  // "0": "Keep <RELATIVE_DIRECTION> at the fork.",
+  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
+  // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
+  // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -1991,14 +1990,14 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
 
-  //  0 "Keep <FormTurnTypeInstruction> at the fork."
-  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
-  //  2 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN(2)>."
-  //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN(2)>."
-  //  4 "Keep <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
-  //  5 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN(2)>."
-  //  6 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
-  //  7 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
+  // "0": "Keep <RELATIVE_DIRECTION> at the fork.",
+  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
+  // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
+  // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+  // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+  // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+  // "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+  // "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2100,10 +2099,10 @@ std::string NarrativeBuilder::FormKeepToStayOnInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
 
-  //  0 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-  //  2 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-  //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+  // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+  // "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+  // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2160,7 +2159,7 @@ std::string NarrativeBuilder::FormVerbalAlertKeepToStayOnInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
 
-  //  0 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
+  // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2176,10 +2175,10 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, std::string delim) {
 
-  //  0 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
-  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES(2)>."
-  //  2 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)> toward <TOWARD_SIGN(2)>."
-  //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES(2)> toward <TOWARD_SIGN(2)>."
+  // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+  // "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+  // "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+  // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),

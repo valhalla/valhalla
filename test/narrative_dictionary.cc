@@ -74,6 +74,20 @@ const std::map<std::string, std::string> kExpectedKeepVerbalPhrases = {
     {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."}
 };
 
+const std::map<std::string, std::string> kExpectedKeepToStayOnPhrases = {
+    {"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
+    {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
+    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."}
+};
+
+const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases = {
+    {"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
+    {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
+    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."}
+};
+
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -757,6 +771,32 @@ void test_en_US_keep_verbal() {
 
 }
 
+void test_en_US_keep_to_stay_on() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate keep_to_stay_on phrases
+  validate(static_cast<const PhraseSet&>(dictionary.keep_to_stay_on_subset),
+           kExpectedKeepToStayOnPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.keep_to_stay_on_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeThreeDirections);
+
+}
+
+void test_en_US_keep_to_stay_on_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate keep_to_stay_on_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.keep_to_stay_on_verbal_subset),
+           kExpectedKeepToStayOnVerbalPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.keep_to_stay_on_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeThreeDirections);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -866,6 +906,12 @@ int main() {
 
   // test the en-US keep_verbal phrases
   suite.test(TEST_CASE(test_en_US_keep_verbal));
+
+  // test the en-US keep_to_stay_on phrases
+  suite.test(TEST_CASE(test_en_US_keep_to_stay_on));
+
+  // test the en-US keep_to_stay_on_verbal phrases
+  suite.test(TEST_CASE(test_en_US_keep_to_stay_on_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

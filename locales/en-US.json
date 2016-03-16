@@ -266,8 +266,24 @@
       },
       "relative_directions": ["left", "straight", "right"]
     },
-    "keep_to_stay_on": null,
-    "keep_to_stay_on_verbal": null,
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "straight", "right"]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "straight", "right"]
+    },
     "merge": null,
     "merge_verbal_alert": null,
     "merge_verbal": null,
