@@ -80,33 +80,28 @@ namespace {
     }
 
     //something to add the neighbors of a given subdivision
+    const std::list<std::pair<int, int> > neighbor_offsets{ {0,-1}, {-1,0}, {1,0}, {0,1} };
     void neighbors(int32_t s) {
       //walk over all adjacent subdivisions in row major order
       auto x = s % subcols;
       auto y = s / subcols;
-      for(auto i = -1; i < 2; ++i) {
+      for(const auto& off : neighbor_offsets) {
         //skip y out of bounds
-        auto ny = y + i;
+        auto ny = y + off.second;
         if(ny == -1 || ny == subrows)
           continue;
-        //do x
-        for(auto j = -1; j < 2; ++j) {
-          //skip if exactly one of them isnt zero
-          if(j == 0 && i == 0)
+        //fix x
+        auto nx = x + off.first;
+        if(nx == -1 || nx == subcols){
+          if(!coord_t::IsSpherical())
             continue;
-          //fix x
-          auto nx = x + j;
-          if(nx == -1 || nx == subcols){
-            if(!coord_t::IsSpherical())
-              continue;
-            nx = (nx + subcols) % subcols;
-          }
-          //actually add the thing
-          auto neighbor = ny * subcols + nx;
-          if(queued.find(neighbor) == queued.cend()) {
-            queued.emplace(neighbor);
-            queue.emplace(std::make_pair(dist(neighbor), neighbor));
-          }
+          nx = (nx + subcols) % subcols;
+        }
+        //actually add the thing
+        auto neighbor = ny * subcols + nx;
+        if(queued.find(neighbor) == queued.cend()) {
+          queued.emplace(neighbor);
+          queue.emplace(std::make_pair(dist(neighbor), neighbor));
         }
       }
     }
