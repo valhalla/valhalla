@@ -4,7 +4,6 @@
 #include "midgard/distanceapproximator.h"
 #include <cmath>
 #include <set>
-#include <iostream>
 
 namespace {
 
