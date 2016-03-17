@@ -82,27 +82,25 @@ namespace {
 
     //something to add the neighbors of a given subdivision
     void neighbors(int32_t s) {
-      //walk over all adjacent subdivisions
+      //walk over all adjacent subdivisions in row major order
       auto x = s % subcols;
       auto y = s / subcols;
       for(auto i = -1; i < 2; ++i) {
+        //skip y out of bounds
+        auto ny = y + i;
+        if(ny == -1 || ny == subrows)
+          continue;
+        //do x
         for(auto j = -1; j < 2; ++j) {
-          if(i == 0 && j == 0)
+          //skip if exactly one of them isnt zero
+          if(j == 0 && i == 0)
             continue;
-          auto nx = x + j;
-          auto ny = y + i;
           //fix x
+          auto nx = x + j;
           if(nx == -1 || nx == subcols){
             if(!coord_t::IsSpherical())
               continue;
             nx = (nx + subcols) % subcols;
-          }
-          //fix y TODO: this is wrong
-          if(ny == -1 || ny == subrows){
-            if(!coord_t::IsSpherical())
-              continue;
-            ny = std::min(std::max(ny, 0), subrows - 1);
-            nx = (nx + subcols / 2) % subcols;
           }
           //actually add the thing
           auto neighbor = ny * subcols + nx;

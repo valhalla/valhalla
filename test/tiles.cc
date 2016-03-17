@@ -5,7 +5,7 @@
 #include "midgard/util.h"
 
 #include <random>
-#include <algorithm>
+#include <iostream>
 
 using namespace valhalla::midgard;
 
@@ -233,68 +233,71 @@ int32_t to_global_sub(std::tuple<int32_t, unsigned short, float> tile, const Til
   return xy.second * (t.ncolumns() * t.nsubdivisions()) + xy.first;
 }
 
-//brute force entire set of subdivisions at once
-using sub_t = std::tuple<int32_t, unsigned short, float>;
 template <class coord_t>
-std::vector<sub_t> closest_first_answer(const Tiles<coord_t>& t, const coord_t& p){
-  std::vector<sub_t> answer;
-  answer.reserve(t.nrows()*t.ncolumns()*t.nsubdivisions()*t.nsubdivisions());
-  //run over all tiles
-  for(int32_t i = 0; i < t.nrows(); ++i) {
-    for(int32_t j = 0; j < t.ncolumns(); ++j) {
-      //run over all subdivisions
-      for(unsigned short k = 0; k < t.nsubdivisions(); ++k) {
-        for(unsigned short l = 0; l < t.nsubdivisions(); ++l) {
-          auto x0 = t.TileBounds().minx() + (l + j * t.nsubdivisions()) * t.SubdivisionSize();
-          auto x1 = t.TileBounds().minx() + (l + j * t.nsubdivisions() + 1) * t.SubdivisionSize();
-          auto y0 = t.TileBounds().miny() + (k + i * t.nsubdivisions()) * t.SubdivisionSize();
-          auto y1 = t.TileBounds().miny() + (k + i * t.nsubdivisions() + 1) * t.SubdivisionSize();
-          int both = 0;
-          auto distance = std::numeric_limits<float>::max();
-          std::list<coord_t> corners{ {x0, y0}, {x1, y0}, {x0, y1}, {x1, y1} };
-          if(x0 < p.first && x1 > p.first) { corners.emplace_back(p.first, y0); corners.emplace_back(p.first, y1); ++both; }
-          if(y0 < p.second && y1 > p.second) { corners.emplace_back(x0, p.second); corners.emplace_back(x1, p.second); ++both; }
-          if(both == 2) corners = { p };
-          for(const auto& c : corners) {
-            auto d = p.Distance(c);
-            if(d < distance)
-              distance = d;
-          }
-
-          auto tile = t.TileId(j, i);
-          auto subdivision = k * t.nsubdivisions() + l;
-          answer.emplace_back(std::make_tuple(tile, subdivision, distance));
-        }
-      }
+coord_t dist(int32_t sub, const Tiles<coord_t>& tiles, const coord_t& seed) {
+  auto subcols = tiles.ncolumns() * tiles.nsubdivisions();
+  auto x = sub % subcols;
+  auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
+  auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
+  auto y = sub / subcols;
+  auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
+  auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
+  auto distance = std::numeric_limits<float>::max();
+  std::list<coord_t> corners{ {x0, y0}, {x1, y0}, {x0, y1}, {x1, y1} };
+  if(x0 < seed.first && x1 > seed.first) { corners.emplace_back(seed.first, y0); corners.emplace_back(seed.first, y1); }
+  if(y0 < seed.second && y1 > seed.second) { corners.emplace_back(x0, seed.second); corners.emplace_back(x1, seed.second); }
+  coord_t used;
+  for(const auto& c : corners) {
+    auto d = seed.Distance(c);
+    if(d < distance) {
+      distance = d;
+      used = c;
     }
   }
-  //sort it and throw it back
-  std::sort(answer.begin(), answer.end(), [&t](const sub_t& a, const sub_t& b) {
-    auto as = to_global_sub(a, t);
-    auto bs = to_global_sub(b, t);
-    return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
-  });
-  return answer;
+  return used;
 }
 
 template <class coord_t>
-std::vector<sub_t> closest_first_answer(const Tiles<coord_t>& t, const std::function<std::tuple<int32_t, unsigned short, float>() >& foo) {
-  std::vector<sub_t> answer;
-  answer.reserve(t.nrows()*t.ncolumns()*t.nsubdivisions()*t.nsubdivisions());
-  //run over all tiles
+void test_point(const Tiles<coord_t>& t, const coord_t& p) {
+  auto a = t.ClosestFirst(p);
+  size_t size = 0;
+  size_t zeros = 0;
+  std::tuple<int32_t, unsigned short, float> last{-1, -1, 0};
   while(true) {
-    try { answer.emplace_back(foo()); } catch (const std::runtime_error&) { break; }
+    try {
+      //keep track of zero distsance subdivisions
+      auto r = a();
+      auto d = std::get<2>(r);
+      if(d == 0)
+        ++zeros;
+      //if its out of order you fail
+      if(d < std::get<2>(last)) {
+        //auto l = dist(to_global_sub(last, t), t, p);
+        //auto c = dist(to_global_sub(r, t), t, p);
+        throw std::logic_error("Distances should be smallest first");
+      }
+      //remember the last distance and how many we've seen
+      last = r;
+      ++size;
+    }
+    catch(const std::runtime_error& e) {
+      if(std::string(e.what()) != "Subdivisions were exhausted")
+        throw std::logic_error("Should have thrown only for running out of subdivisions");
+      break;
+    }
   }
-  //sort it and throw it back
-  std::sort(answer.begin(), answer.end(), [&t](const sub_t& a, const sub_t& b) {
-    auto as = to_global_sub(a, t);
-    auto bs = to_global_sub(b, t);
-    return std::get<2>(a) == std::get<2>(b) ? as < bs : std::get<2>(a) < std::get<2>(b);
-  });
-  return answer;
+
+  if(size != t.ncolumns()*t.nsubdivisions()*t.nrows()*t.nsubdivisions())
+    throw std::logic_error("Number of subdivisions didnt match");
+  if(zeros != 1 && zeros != 2 && zeros != 4)
+    throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
 }
 
 void test_closest_first() {
+
+  auto m = PointLL(8.99546623, -78.2651062).Distance({-91.2, 90});
+  auto n = PointLL(8.99546623, -78.2651062).Distance({-92, 90});
+
   //test a simple 8x4 grid for polar and meridian wrapping
   Tiles<PointLL> t(AABB2<PointLL>{-180,-90,180,90}, 90, 2);
   auto y = t.ClosestFirst({179.99, -16.825});
@@ -331,38 +334,21 @@ void test_closest_first() {
 
   //try planar coordinate system
   Tiles<Point2> tp(AABB2<Point2>{-10,-10,10,10}, 1, 5);
-  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76} }) {
-    auto a = closest_first_answer<Point2>(tp, p);
-    auto b = closest_first_answer<Point2>(tp, tp.ClosestFirst(p));
-    if(a.size() != b.size())
-      throw std::logic_error("Number of subdivisions didnt match");
-    if(!std::equal(a.cbegin(), a.cend(), b.cbegin()))
-      throw std::logic_error("Unexpected tile, subdivision or distance");
-    size_t zeros = 0;
-    for(const auto& r : b)
-      if(std::get<2>(r) == 0)
-        ++zeros;
-    if(zeros != 1 && zeros != 2 && zeros != 4)
-      throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
-  }
+  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76}, {9.99,9.99} })
+    test_point(tp, p);
 
   //try spherical coordinate system
   t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, 4, 5);
-  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {11.92515,78.92409}, {-67.61196,-54.93575}, {179.99155,-16.80257} }) {
-    auto a = closest_first_answer<PointLL>(t, p);
-    auto b = closest_first_answer<PointLL>(t, t.ClosestFirst(p));
-    if(a.size() != b.size())
-      throw std::logic_error("Number of subdivisions didnt match");
-    if(!std::equal(a.cbegin(), a.cend(), b.cbegin()))
-      throw std::logic_error("Unexpected tile, subdivision or distance");
-    size_t zeros = 0;
-    for(const auto& r : b)
-      if(std::get<2>(r) == 0)
-        ++zeros;
-    if(zeros != 1 && zeros != 2 && zeros != 4)
-      throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
-  }
+  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {11.92515,78.92409}, {-67.61196,-54.93575}, {179.99155,-16.80257}, {179.99,89.99} })
+    test_point(t, p);
 
+  //try some randos
+  std::default_random_engine generator;
+  std::uniform_real_distribution<> distribution(0,360);
+  for(size_t i = 0; i < 25; ++i) {
+    PointLL p{ distribution(generator) - 180.f, distribution(generator)/2 - 90.f };
+    test_point(t, p);
+  }
 }
 
 }
