@@ -17,10 +17,6 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  // Minimum and maximum walking distances (to validate input).
-  constexpr uint32_t kMinWalkingDistance = 1; // 1 meter
-  constexpr uint32_t kMaxWalkingDistance = 10000; // 10 km
-
   void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
     if (location_count > max_locations)
@@ -60,21 +56,23 @@ namespace valhalla {
       // Validate walking distances (make sure they are in the accepted range)
       if (costing == "multimodal" || costing == "transit") {
 
-        auto max_distance = request.get_optional<int>("costing_options.pedestrian.max_distance_mm");
-        auto max_transfer_distance = request.get_optional<int>("costing_options.pedestrian.max_transfer_distance_mm");
+        auto transit_start_end_max_distance =
+            request.get_optional<int>("costing_options.pedestrian.transit_start_end_max_distance");
+        auto transit_transfer_max_distance =
+            request.get_optional<int>("costing_options.pedestrian.transit_transfer_max_distance");
 
-        if (max_distance) {
-          if (*max_distance < kMinWalkingDistance || *max_distance > kMaxWalkingDistance) {
+        if (transit_start_end_max_distance) {
+          if (*transit_start_end_max_distance < min_transit_walking_dis || *transit_start_end_max_distance > max_transit_walking_dis) {
             throw std::runtime_error("Outside the valid walking distance at the beginning or end of a multimodal route.  Min: " +
-                                     std::to_string(kMinWalkingDistance) + " Max: " + std::to_string(kMaxWalkingDistance) +
-                                     " (Meters) ");
+                                     std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                     " (Meters)");
           }
         }
-        if (max_transfer_distance) {
-          if (*max_transfer_distance < kMinWalkingDistance || *max_transfer_distance > kMaxWalkingDistance) {
+        if (transit_transfer_max_distance) {
+          if (*transit_transfer_max_distance < min_transit_walking_dis || *transit_transfer_max_distance > max_transit_walking_dis) {
             throw std::runtime_error("Outside the valid walking distance between stops of a multimodal route.  Min: " +
-                                     std::to_string(kMinWalkingDistance) + " Max: " + std::to_string(kMaxWalkingDistance) +
-                                     " (Meters) ");
+                                     std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                     " (Meters)");
           }
         }
       }
