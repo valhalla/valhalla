@@ -368,6 +368,11 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, u
     auto upper_bound = std::upper_bound(distances.cbegin(), distances.cend(), dest_dist_traveled);
     float prev_distance = *(lower_bound);
 
+    // distance calculations can be off just a bit (i.e., 9372.224609 < 9372.500000) so set it to
+    // the last element.
+    if (distances.back() < dest_dist_traveled)
+      upper_bound = distances.cend()-1;
+
     // lower_bound returns an iterator pointing to the first element which does not compare less than the dist_traveled;
     // therefore, we need to back up one if it does not equal the lower_bound value.  For example, we could be starting
     // at the beginning of the points list
