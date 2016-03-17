@@ -17,6 +17,10 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
+  // Minimum and maximum walking distances (to validate input).
+  constexpr uint32_t kMinWalkingDistance = 1; // 1 meter
+  constexpr uint32_t kMaxWalkingDistance = 10000; // 10 km
+
   void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
     if (location_count > max_locations)
@@ -52,6 +56,28 @@ namespace valhalla {
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);
       check_distance(reader, locations, max_distance.find(costing)->second);
+
+      // Validate walking distances (make sure they are in the accepted range)
+      if (costing == "multimodal" || costing == "transit") {
+
+        auto max_distance = request.get_optional<int>("costing_options.pedestrian.max_distance_mm");
+        auto max_transfer_distance = request.get_optional<int>("costing_options.pedestrian.max_transfer_distance_mm");
+
+        if (max_distance) {
+          if (*max_distance < kMinWalkingDistance || *max_distance > kMaxWalkingDistance) {
+            throw std::runtime_error("Outside the valid walking distance at the beginning or end of a multimodal route.  Min: " +
+                                     std::to_string(kMinWalkingDistance) + " Max: " + std::to_string(kMaxWalkingDistance) +
+                                     " (Meters) ");
+          }
+        }
+        if (max_transfer_distance) {
+          if (*max_transfer_distance < kMinWalkingDistance || *max_transfer_distance > kMaxWalkingDistance) {
+            throw std::runtime_error("Outside the valid walking distance between stops of a multimodal route.  Min: " +
+                                     std::to_string(kMinWalkingDistance) + " Max: " + std::to_string(kMaxWalkingDistance) +
+                                     " (Meters) ");
+          }
+        }
+      }
 
       auto date_type = request.get_optional<int>("date_time.type");
       //default to current date_time for mm or transit.
