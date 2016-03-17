@@ -2044,55 +2044,43 @@ std::string NarrativeBuilder::FormKeepToStayOnInstruction(
   // "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
   // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
 
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
   // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count);
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.keep_to_stay_on_subset.empty_street_name_labels, true, element_max_count);
+
+  // Determine which phrase to use
   std::string exit_number_sign;
   std::string exit_toward_sign;
   uint8_t phrase_id = 0;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
+    // Assign number sign
     exit_number_sign = maneuver.signs().GetExitNumberString();
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count);
   }
 
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.keep_to_stay_on_subset.phrases.at(std::to_string(phrase_id));
 
-  switch (phrase_id) {
-    //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-    case 1: {
-      instruction += (boost::format("Keep %1% to take exit %2% to stay on %3%.")
-          % turn % exit_number_sign % street_names).str();
-      break;
-    }
-      //  2 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-    case 2: {
-      instruction += (boost::format("Keep %1% to stay on %2% toward %3%.")
-          % turn % street_names % exit_toward_sign).str();
-      break;
-    }
-      //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-    case 3: {
-      instruction += (boost::format(
-          "Keep %1% to take exit %2% to stay on %3% toward %4%.") % turn
-          % exit_number_sign % street_names % exit_toward_sign).str();
-      break;
-    }
-      //  0 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-    default: {
-      instruction += (boost::format("Keep %1% to stay on %2%.") % turn
-          % street_names).str();
-      break;
-    }
-  }
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag,
+      FormRelativeThreeDirection(maneuver.type(),
+                                 dictionary_.keep_to_stay_on_subset.relative_directions));
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
+  boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertKeepToStayOnInstruction(
@@ -2102,13 +2090,17 @@ std::string NarrativeBuilder::FormVerbalAlertKeepToStayOnInstruction(
   // "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
 
   // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.keep_to_stay_on_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
 
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
-
-  return FormVerbalKeepToStayOnInstruction(0, turn, street_names);
+  return FormVerbalKeepToStayOnInstruction(
+      0,
+      FormRelativeThreeDirection(
+          maneuver.type(),
+          dictionary_.keep_to_stay_on_verbal_subset.relative_directions),
+      street_names);
 }
 
 std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
@@ -2121,67 +2113,57 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
   // "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
 
   // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.keep_to_stay_on_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
 
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  // Determine which phrase to use
   std::string exit_number_sign;
   std::string exit_toward_sign;
   uint8_t phrase_id = 0;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
+    // Assign number sign
     exit_number_sign = maneuver.signs().GetExitNumberString(
         0, false, delim, maneuver.verbal_formatter());
   }
   if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    // Assign toward sign
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  return FormVerbalKeepToStayOnInstruction(phrase_id, turn, street_names,
-                                           exit_number_sign, exit_toward_sign);
+  return FormVerbalKeepToStayOnInstruction(
+      phrase_id,
+      FormRelativeThreeDirection(
+          maneuver.type(),
+          dictionary_.keep_to_stay_on_verbal_subset.relative_directions),
+      street_names, exit_number_sign, exit_toward_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
-      uint8_t phrase_id, const std::string& turn,
+      uint8_t phrase_id, const std::string& relative_dir,
       const std::string& street_names, const std::string& exit_number_sign,
       const std::string& exit_toward_sign) {
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  switch (phrase_id) {
-    //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."
-    case 1: {
-      instruction += (boost::format("Keep %1% to take exit %2% to stay on %3%.")
-          % turn % exit_number_sign % street_names).str();
-      break;
-    }
-      //  2 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-    case 2: {
-      instruction += (boost::format("Keep %1% to stay on %2% toward %3%.")
-          % turn % street_names % exit_toward_sign).str();
-      break;
-    }
-      //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
-    case 3: {
-      instruction += (boost::format(
-          "Keep %1% to take exit %2% to stay on %3% toward %4%.") % turn
-          % exit_number_sign % street_names % exit_toward_sign).str();
-      break;
-    }
-      //  0 "Keep <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-    default: {
-      instruction += (boost::format("Keep %1% to stay on %2%.") % turn
-          % street_names).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.keep_to_stay_on_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_dir);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
+  boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {

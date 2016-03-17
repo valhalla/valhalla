@@ -236,7 +236,7 @@ class NarrativeBuilder {
       std::string delim = kVerbalDelim);
 
   std::string FormVerbalKeepToStayOnInstruction(
-      uint8_t phrase_id, const std::string& turn,
+      uint8_t phrase_id, const std::string& relative_dir,
       const std::string& street_name, const std::string& exit_number_sign = "",
       const std::string& exit_toward_sign = "");
 
