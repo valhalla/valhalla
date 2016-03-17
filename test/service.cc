@@ -100,7 +100,8 @@ namespace {
       \"httpd\": { \"service\": { \"loopback\": \"ipc:///tmp/test_loki_results\" } }, \
       \"service_limits\": { \
         \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
-        \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50 }, \
+        \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50, \
+        \"min_transit_walking_distance\": 1, \"max_transit_walking_distance\": 10000 }, \
         \"one_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
         \"many_to_one\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
         \"many_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
