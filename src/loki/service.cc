@@ -127,9 +127,9 @@ namespace valhalla {
         throw std::runtime_error("Missing max_distance configuration.");
 
       min_transit_walking_dis =
-          config.get<int>("costing_options.pedestrian.min_transit_walking_distance");
+          config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
       max_transit_walking_dis =
-          config.get<int>("costing_options.pedestrian.max_transit_walking_distance");
+          config.get<int>("service_limits.pedestrian.max_transit_walking_distance");
 
       // Register edge/node costing methods
       // TODO: move this into the loop above
