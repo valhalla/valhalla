@@ -15,12 +15,12 @@ namespace {
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
 // it is the max walking distance.
-constexpr uint32_t kMaxDistanceMM    = 2415;   // 1.5 miles
+constexpr uint32_t kTransitStartEndMaxDistance    = 2415;   // 1.5 miles
 
 // Maximum transfer distance between stops that you are willing
 // to travel for this mode.  In this case, it is the max walking
 // distance you are willing to walk between transfers.
-constexpr uint32_t kMaxTransferDistanceMM    = 805;   // 0.5 miles
+constexpr uint32_t kTransitTransferMaxDistance   = 805;   // 0.5 miles
 
 // Maximum distance of a walking route
 constexpr uint32_t kMaxDistance        = 100000; // 100 km
@@ -198,13 +198,13 @@ class PedestrianCost : public DynamicCost {
   // Maximum distance at the beginning or end of a multimodal route
   // that you are willing to travel for this mode.  In this case,
   // it is the max walking distance.
-  uint32_t max_distance_mm_;
+  uint32_t transit_start_end_max_distance_;
 
   // Maximum transfer, walking distance in meters for multimodal routes.
   // Maximum transfer distance between stops that you are willing
   // to travel for this mode.  In this case, it is the max walking
   // distance you are willing to walk between transfers.
-  uint32_t max_transfer_distance_mm_;
+  uint32_t transit_transfer_max_distance_;
 
   float walking_speed_;   // Walking speed (default to 5.1 km / hour)
   float speedfactor_;     // Speed factor for costing. Based on walking speed.
@@ -222,23 +222,25 @@ class PedestrianCost : public DynamicCost {
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
-  allow_transit_connections_  = false;
-  mode_weight_                = pt.get<float>("mode_weight", kModeWeight);
-  max_distance_               = pt.get<uint32_t>("max_distance", kMaxDistance);
-  max_distance_mm_            = pt.get<uint32_t>("max_distance_mm", kMaxDistanceMM);
-  max_transfer_distance_mm_   = pt.get<uint32_t>("max_transfer_distance_mm", kMaxTransferDistanceMM);
-  walking_speed_              = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
-  walkway_factor_             = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
-  alley_factor_               = pt.get<float>("alley_factor", kDefaultAlleyFactor);
-  driveway_factor_            = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
-  step_penalty_               = pt.get<float>("step_penalty", kDefaultStepPenalty);
-  gate_penalty_               = pt.get<float>("gate_penalty", kDefaultGatePenalty);
-  maneuver_penalty_           = pt.get<float>("maneuver_penalty",
-                                              kDefaultManeuverPenalty);
-  country_crossing_cost_      = pt.get<float>("country_crossing_cost",
-                                              kDefaultCountryCrossingCost);
-  country_crossing_penalty_   = pt.get<float>("country_crossing_penalty",
-                                              kDefaultCountryCrossingPenalty);
+  allow_transit_connections_      = false;
+  mode_weight_                    = pt.get<float>("mode_weight", kModeWeight);
+  max_distance_                   = pt.get<uint32_t>("max_distance", kMaxDistance);
+  transit_start_end_max_distance_ = pt.get<uint32_t>("transit_start_end_max_distance",
+                                                     kTransitStartEndMaxDistance);
+  transit_transfer_max_distance_  = pt.get<uint32_t>("transit_transfer_max_distance",
+                                                     kTransitTransferMaxDistance);
+  walking_speed_                  = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
+  walkway_factor_                 = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+  alley_factor_                   = pt.get<float>("alley_factor", kDefaultAlleyFactor);
+  driveway_factor_                = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
+  step_penalty_                   = pt.get<float>("step_penalty", kDefaultStepPenalty);
+  gate_penalty_                   = pt.get<float>("gate_penalty", kDefaultGatePenalty);
+  maneuver_penalty_               = pt.get<float>("maneuver_penalty",
+                                                  kDefaultManeuverPenalty);
+  country_crossing_cost_          = pt.get<float>("country_crossing_cost",
+                                                  kDefaultCountryCrossingCost);
+  country_crossing_penalty_       = pt.get<float>("country_crossing_penalty",
+                                                  kDefaultCountryCrossingPenalty);
 
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
@@ -261,14 +263,14 @@ PedestrianCost::~PedestrianCost() {
 // meters per segment (e.g. from origin to a transit stop or from the last
 // transit stop to the destination).
 void PedestrianCost::UseMaxMultiModalDistance() {
-  max_distance_ = max_distance_mm_;
+  max_distance_ = transit_start_end_max_distance_;
 }
 
 // Returns the maximum transfer distance between stops that you are willing
 // to travel for this mode.  In this case, it is the max walking
 // distance you are willing to walk between transfers.
 uint32_t PedestrianCost::GetMaxTransferDistanceMM() {
-  return max_transfer_distance_mm_;
+  return transit_transfer_max_distance_;
 }
 
 // This method overrides the weight for this mode.  The higher the value
