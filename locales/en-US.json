@@ -251,7 +251,8 @@
         "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
         "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"]
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "keep_verbal": {
       "phrases": {
@@ -264,7 +265,8 @@
         "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
         "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"]
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "keep_to_stay_on": {
       "phrases": {
@@ -273,7 +275,8 @@
         "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
         "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"]
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
@@ -282,7 +285,8 @@
         "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
         "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"]
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
     "merge": null,
     "merge_verbal_alert": null,

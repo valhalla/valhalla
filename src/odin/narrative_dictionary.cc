@@ -268,6 +268,19 @@ void NarrativeDictionary::Load(
 }
 
 void NarrativeDictionary::Load(
+    KeepSubset& keep_handle,
+    const boost::property_tree::ptree& keep_subset_pt) {
+
+  // Populate ramp_subset items
+  Load(static_cast<RampSubset&>(keep_handle), keep_subset_pt);
+
+  // Populate empty_street_name_labels
+  keep_handle.empty_street_name_labels = as_vector<std::string>(
+      keep_subset_pt, kEmptyStreetNameLabelsKey);
+
+}
+
+void NarrativeDictionary::Load(
     PostTransitionVerbalSubset& post_transition_verbal_handle,
     const boost::property_tree::ptree& post_transition_verbal_subset_pt) {
 

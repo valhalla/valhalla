@@ -85,7 +85,7 @@ constexpr auto kTenthsOfMilesTag = "<TENTHS_OF_MILE>";
 constexpr auto kFeetTag = "<FEET>";
 constexpr auto kNumberSignTag = "<NUMBER_SIGN>";
 constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
-constexpr auto kTowardignTag = "<TOWARD_SIGN>";
+constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 
 }
@@ -127,6 +127,10 @@ struct TurnSubset : PhraseSet {
 
 struct RampSubset : PhraseSet {
   std::vector<std::string> relative_directions;
+};
+
+struct KeepSubset : RampSubset {
+  std::vector<std::string> empty_street_name_labels;
 };
 
 struct PostTransitionVerbalSubset : PhraseSet {
@@ -183,12 +187,12 @@ class NarrativeDictionary {
   RampSubset exit_verbal_subset;
 
   // Keep
-  RampSubset keep_subset;
-  RampSubset keep_verbal_subset;
+  KeepSubset keep_subset;
+  KeepSubset keep_verbal_subset;
 
   // KeepToStayOn
-  RampSubset keep_to_stay_on_subset;
-  RampSubset keep_to_stay_on_verbal_subset;
+  KeepSubset keep_to_stay_on_subset;
+  KeepSubset keep_to_stay_on_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
@@ -284,6 +288,16 @@ class NarrativeDictionary {
     */
   void Load(RampSubset& ramp_handle,
             const boost::property_tree::ptree& ramp_subset_pt);
+
+  /**
+    * Loads the specified 'keep' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  keep_handle  The 'keep' structure to populate.
+    * @param  keep_subset_pt  The 'keep' property tree.
+    */
+  void Load(KeepSubset& keep_handle,
+            const boost::property_tree::ptree& keep_subset_pt);
 
   /**
     * Loads the specified 'post transition verbal' instruction subset with the

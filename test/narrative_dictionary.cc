@@ -756,6 +756,10 @@ void test_en_US_keep() {
   const auto& relative_directions = dictionary.keep_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeThreeDirections);
 
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
 }
 
 void test_en_US_keep_verbal() {
@@ -766,8 +770,12 @@ void test_en_US_keep_verbal() {
            kExpectedKeepVerbalPhrases);
 
   // relative_directions
-  const auto& relative_directions = dictionary.keep_subset.relative_directions;
+  const auto& relative_directions = dictionary.keep_verbal_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeThreeDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
@@ -782,6 +790,10 @@ void test_en_US_keep_to_stay_on() {
   const auto& relative_directions = dictionary.keep_to_stay_on_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeThreeDirections);
 
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_to_stay_on_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
 }
 
 void test_en_US_keep_to_stay_on_verbal() {
@@ -792,8 +804,12 @@ void test_en_US_keep_to_stay_on_verbal() {
            kExpectedKeepToStayOnVerbalPhrases);
 
   // relative_directions
-  const auto& relative_directions = dictionary.keep_to_stay_on_subset.relative_directions;
+  const auto& relative_directions = dictionary.keep_to_stay_on_verbal_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeThreeDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_to_stay_on_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
