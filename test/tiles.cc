@@ -5,7 +5,6 @@
 #include "midgard/util.h"
 
 #include <random>
-#include <iostream>
 
 using namespace valhalla::midgard;
 
