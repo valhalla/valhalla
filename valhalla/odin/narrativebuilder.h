@@ -20,6 +20,7 @@ constexpr uint32_t kVerbalAlertElementMaxCount = 1;
 constexpr uint32_t kVerbalPreElementMaxCount = 2;
 constexpr uint32_t kVerbalPostElementMaxCount = 2;
 constexpr float kVerbalPostMinimumRampLength = 2.0f;  // Kilometers
+constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimumRampLength;
 const std::string kVerbalDelim = ", ";
 
 class NarrativeBuilder {
@@ -409,9 +410,6 @@ class NarrativeBuilder {
   std::string FormRelativeTurnDirection(
       TripDirections_Maneuver_Type type,
       const std::vector<std::string>& relative_directions);
-
-  // TODO remove after refactor
-  std::string FormTurnTypeInstruction(TripDirections_Maneuver_Type type);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormOrdinalValue(uint32_t value);

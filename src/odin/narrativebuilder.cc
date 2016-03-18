@@ -270,10 +270,10 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_instruction(std::move(FormMergeInstruction(maneuver)));
 
         // Set verbal transition alert instruction if previous maneuver
-        // is greater than 1.5 km
+        // is greater than 2 km
         if (prev_maneuver
             && (prev_maneuver->length(DirectionsOptions_Units_kKilometers)
-                > 1.5f)) {
+                > kVerbalAlertMergePriorManeuverMinimumLength)) {
           maneuver.set_verbal_transition_alert_instruction(
               std::move(FormVerbalAlertMergeInstruction(maneuver)));
         }
@@ -1876,7 +1876,6 @@ std::string NarrativeBuilder::FormKeepInstruction(
   }
 
   // Determine which phrase to use
-  std::string turn = FormTurnTypeInstruction(maneuver.type());
   std::string exit_number_sign;
   std::string exit_toward_sign;
   uint8_t phrase_id = 0;
@@ -2167,55 +2166,69 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
 }
 
 std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
-  //  0 "Merge."
-  //  1 "Merge onto <STREET_NAMES>."
-
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
+  // "0": "Merge.",
+  // "1": "Merge onto <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  if (!street_names.empty()) {
-    instruction += "Merge onto ";
-    instruction += street_names;
-  } else
-    instruction += "Merge";
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.merge_subset.empty_street_name_labels, true);
 
-  instruction += ".";
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id = 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.merge_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalAlertMergeInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Merge."
-  //  1 "Merge onto <STREET_NAMES(1)>."
+  // "0": "Merge.",
+  // "1": "Merge onto <STREET_NAMES>."
 
   return FormVerbalMergeInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalMergeInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Merge."
-  //  1 "Merge onto <STREET_NAMES(2)>."
-
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
+  // "0": "Merge.",
+  // "1": "Merge onto <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  if (!street_names.empty()) {
-    instruction += "Merge onto ";
-    instruction += street_names;
-  } else
-    instruction += "Merge";
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.merge_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
 
-  instruction += ".";
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id = 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.merge_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
@@ -3357,45 +3370,6 @@ std::string NarrativeBuilder::FormRelativeTurnDirection(
           "Invalid TripDirections_Maneuver_Type in method FormRelativeTurnDirection.");
     }
   }
-}
-
-// TODO remove after refator
-std::string NarrativeBuilder::FormTurnTypeInstruction(
-    TripDirections_Maneuver_Type type) {
-  switch (type) {
-    case TripDirections_Maneuver_Type_kSlightRight:
-    case TripDirections_Maneuver_Type_kRight:
-    case TripDirections_Maneuver_Type_kUturnRight:
-    case TripDirections_Maneuver_Type_kRampRight:
-    case TripDirections_Maneuver_Type_kExitRight:
-    case TripDirections_Maneuver_Type_kStayRight:
-    case TripDirections_Maneuver_Type_kDestinationRight: {
-      return "right";
-    }
-    case TripDirections_Maneuver_Type_kSharpRight: {
-      return "sharp right";
-    }
-    case TripDirections_Maneuver_Type_kSharpLeft: {
-      return "sharp left";
-    }
-    case TripDirections_Maneuver_Type_kSlightLeft:
-    case TripDirections_Maneuver_Type_kLeft:
-    case TripDirections_Maneuver_Type_kUturnLeft:
-    case TripDirections_Maneuver_Type_kRampLeft:
-    case TripDirections_Maneuver_Type_kExitLeft:
-    case TripDirections_Maneuver_Type_kStayLeft:
-    case TripDirections_Maneuver_Type_kDestinationLeft: {
-      return "left";
-    }
-    case TripDirections_Maneuver_Type_kStayStraight: {
-      return "straight";
-    }
-    default: {
-      throw std::runtime_error(
-          "Invalid TripDirections_Maneuver_Type in method FormTurnTypeInstruction.");
-    }
-  }
-
 }
 
 std::string NarrativeBuilder::FormOrdinalValue(uint32_t value) {

@@ -36,6 +36,8 @@ constexpr auto kKeepKey = "instructions.keep";
 constexpr auto kKeepVerbalKey = "instructions.keep_verbal";
 constexpr auto kKeepToStayOnKey = "instructions.keep_to_stay_on";
 constexpr auto kKeepToStayOnVerbalKey = "instructions.keep_to_stay_on_verbal";
+constexpr auto kMergeKey = "instructions.merge";
+constexpr auto kMergeVerbalKey = "instructions.merge_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -193,6 +195,10 @@ class NarrativeDictionary {
   // KeepToStayOn
   KeepSubset keep_to_stay_on_subset;
   KeepSubset keep_to_stay_on_verbal_subset;
+
+  // Merge
+  ContinueSubset merge_subset;
+  ContinueSubset merge_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;

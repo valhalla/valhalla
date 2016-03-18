@@ -146,6 +146,15 @@ void NarrativeDictionary::Load(
   Load(keep_to_stay_on_verbal_subset, narrative_pt.get_child(kKeepToStayOnVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate merge_subset...");
+  // Populate merge_subset
+  Load(merge_subset, narrative_pt.get_child(kMergeKey));
+
+  LOG_TRACE("Populate merge_verbal_subset...");
+  // Populate merge_verbal_subset
+  Load(merge_verbal_subset, narrative_pt.get_child(kMergeVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

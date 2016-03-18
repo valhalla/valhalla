@@ -288,9 +288,20 @@
       "relative_directions": ["left", "straight", "right"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
-    "merge": null,
-    "merge_verbal_alert": null,
-    "merge_verbal": null,
+    "merge": {
+      "phrases": {
+        "0": "Merge.",
+        "1": "Merge onto <STREET_NAMES>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Merge.",
+        "1": "Merge onto <STREET_NAMES>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
     "enter_roundabout": null,
     "enter_roundabout_verbal_alert": null,
     "enter_roundabout_verbal": null,
