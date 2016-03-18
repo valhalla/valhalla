@@ -155,6 +155,15 @@ void NarrativeDictionary::Load(
   Load(merge_verbal_subset, narrative_pt.get_child(kMergeVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate enter_roundabout_subset...");
+  // Populate enter_roundabout_subset
+  Load(enter_roundabout_subset, narrative_pt.get_child(kEnterRoundaboutKey));
+
+  LOG_TRACE("Populate enter_roundabout_verbal_subset...");
+  // Populate enter_roundabout_verbal_subset
+  Load(enter_roundabout_verbal_subset, narrative_pt.get_child(kEnterRoundaboutVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
@@ -286,6 +295,19 @@ void NarrativeDictionary::Load(
   // Populate empty_street_name_labels
   keep_handle.empty_street_name_labels = as_vector<std::string>(
       keep_subset_pt, kEmptyStreetNameLabelsKey);
+
+}
+
+void NarrativeDictionary::Load(
+    EnterRoundaboutSubset& enter_roundabout_handle,
+    const boost::property_tree::ptree& enter_roundabout_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(enter_roundabout_handle), enter_roundabout_subset_pt);
+
+  // Populate ordinal_values
+  enter_roundabout_handle.ordinal_values = as_vector<std::string>(
+      enter_roundabout_subset_pt, kOrdinalValuesKey);
 
 }
 

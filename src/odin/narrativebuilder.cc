@@ -2232,8 +2232,8 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
 }
 
 std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
-  //  0 "Enter the roundabout."
-  //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
+  // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2251,7 +2251,7 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver)
 
 std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Enter roundabout."
+  // "0": "Enter the roundabout.",
   // TODO - determine if we need anything more here
 
   return "Enter roundabout.";
@@ -2259,8 +2259,8 @@ std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
 
 std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Enter the roundabout."
-  //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
+  // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
