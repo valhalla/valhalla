@@ -76,6 +76,7 @@ constexpr auto kSmallFeetIndex = 6;
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
 constexpr auto kRelativeDirectionTag = "<RELATIVE_DIRECTION>";
+constexpr auto kOrdinalValueTag = "<ORDINAL_VALUE>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kCrossStreetNamesTag = "<CROSS_STREET_NAMES>";

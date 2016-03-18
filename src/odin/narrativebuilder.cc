@@ -23,6 +23,14 @@ constexpr auto kLengthStringInitialCapacity = 32;
 
 // Basic time threshold in seconds for creating a verbal multi-cue
 constexpr auto kVerbalMultiCueTimeThreshold = 10;
+
+constexpr float kVerbalPostMinimumRampLength = 2.0f;  // Kilometers
+constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimumRampLength;
+
+// Lower and upper bounds for roundabout_exit_count
+constexpr uint32_t kRoundaboutExitCountLowerBound = 1;
+constexpr uint32_t kRoundaboutExitCountUpperBound = 10;
+
 }
 
 namespace valhalla {
@@ -2237,24 +2245,43 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver)
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Enter the roundabout";
-  if ((maneuver.roundabout_exit_count() > 0)
-      && (maneuver.roundabout_exit_count() < 11)) {
-    instruction += " and take the ";
-    instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
-    instruction += " exit";
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string ordinal_value;
+  if ((maneuver.roundabout_exit_count() >= kRoundaboutExitCountLowerBound)
+      && (maneuver.roundabout_exit_count() <= kRoundaboutExitCountUpperBound)) {
+    phrase_id = 1;
+    // Set ordinal_value
+    ordinal_value = dictionary_.enter_roundabout_subset.ordinal_values.at(
+        maneuver.roundabout_exit_count()-1);
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_roundabout_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "0": "Enter the roundabout.",
-  // TODO - determine if we need anything more here
 
-  return "Enter the roundabout.";
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
@@ -2264,16 +2291,26 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Enter the roundabout";
-  if ((maneuver.roundabout_exit_count() > 0)
-      && (maneuver.roundabout_exit_count() < 11)) {
-    instruction += " and take the ";
-    instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
-    instruction += " exit";
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string ordinal_value;
+  if ((maneuver.roundabout_exit_count() >= kRoundaboutExitCountLowerBound)
+      && (maneuver.roundabout_exit_count() <= kRoundaboutExitCountUpperBound)) {
+    phrase_id = 1;
+    // Set ordinal_value
+    ordinal_value = dictionary_.enter_roundabout_verbal_subset.ordinal_values.at(
+        maneuver.roundabout_exit_count()-1);
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {

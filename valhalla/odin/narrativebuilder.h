@@ -19,8 +19,6 @@ constexpr uint32_t kElementMaxCount = 4;
 constexpr uint32_t kVerbalAlertElementMaxCount = 1;
 constexpr uint32_t kVerbalPreElementMaxCount = 2;
 constexpr uint32_t kVerbalPostElementMaxCount = 2;
-constexpr float kVerbalPostMinimumRampLength = 2.0f;  // Kilometers
-constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimumRampLength;
 const std::string kVerbalDelim = ", ";
 
 class NarrativeBuilder {
