@@ -18,6 +18,7 @@ const std::vector<std::string> kExpectedCardinalDirections = { "north", "northea
 const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" };
 const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };
 const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right" };
+const std::vector<std::string> kExpectedRelativeThreeDirections = { "left", "straight", "right" };
 const std::vector<std::string> kExpectedRelativeTurnDirections = { "left", "sharp left", "right", "sharp right" };
 
 // Expected phrases
@@ -49,6 +50,42 @@ const std::map<std::string, std::string> kExpectedExitVerbalPhrases = {
     {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
     {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
     {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."}
+};
+
+const std::map<std::string, std::string> kExpectedKeepPhrases = {
+    {"0", "Keep <RELATIVE_DIRECTION> at the fork."},
+    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."},
+    {"2", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."},
+    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."},
+    {"4", "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"5", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
+    {"6", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."},
+    {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."}
+};
+
+const std::map<std::string, std::string> kExpectedKeepVerbalPhrases = {
+    {"0", "Keep <RELATIVE_DIRECTION> at the fork."},
+    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."},
+    {"2", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."},
+    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."},
+    {"4", "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+    {"5", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
+    {"6", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."},
+    {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."}
+};
+
+const std::map<std::string, std::string> kExpectedKeepToStayOnPhrases = {
+    {"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
+    {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
+    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."}
+};
+
+const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases = {
+    {"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
+    {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
+    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."}
 };
 
 
@@ -690,7 +727,7 @@ void test_en_US_exit() {
            kExpectedExitPhrases);
 
   // relative_directions
-  const auto& relative_directions = dictionary.ramp_subset.relative_directions;
+  const auto& relative_directions = dictionary.exit_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeTwoDirections);
 
 }
@@ -703,8 +740,76 @@ void test_en_US_exit_verbal() {
            kExpectedExitVerbalPhrases);
 
   // relative_directions
-  const auto& relative_directions = dictionary.ramp_subset.relative_directions;
+  const auto& relative_directions = dictionary.exit_subset.relative_directions;
   validate(relative_directions, kExpectedRelativeTwoDirections);
+
+}
+
+void test_en_US_keep() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate keep phrases
+  validate(static_cast<const PhraseSet&>(dictionary.keep_subset),
+           kExpectedKeepPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.keep_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeThreeDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_keep_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate keep_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.keep_verbal_subset),
+           kExpectedKeepVerbalPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.keep_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeThreeDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_keep_to_stay_on() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate keep_to_stay_on phrases
+  validate(static_cast<const PhraseSet&>(dictionary.keep_to_stay_on_subset),
+           kExpectedKeepToStayOnPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.keep_to_stay_on_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeThreeDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_to_stay_on_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_keep_to_stay_on_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate keep_to_stay_on_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.keep_to_stay_on_verbal_subset),
+           kExpectedKeepToStayOnVerbalPhrases);
+
+  // relative_directions
+  const auto& relative_directions = dictionary.keep_to_stay_on_verbal_subset.relative_directions;
+  validate(relative_directions, kExpectedRelativeThreeDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.keep_to_stay_on_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 
 }
 
@@ -811,6 +916,18 @@ int main() {
 
   // test the en-US exit_verbal phrases
   suite.test(TEST_CASE(test_en_US_exit_verbal));
+
+  // test the en-US keep phrases
+  suite.test(TEST_CASE(test_en_US_keep));
+
+  // test the en-US keep_verbal phrases
+  suite.test(TEST_CASE(test_en_US_keep_verbal));
+
+  // test the en-US keep_to_stay_on phrases
+  suite.test(TEST_CASE(test_en_US_keep_to_stay_on));
+
+  // test the en-US keep_to_stay_on_verbal phrases
+  suite.test(TEST_CASE(test_en_US_keep_to_stay_on_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

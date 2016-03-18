@@ -211,7 +211,7 @@ class NarrativeBuilder {
                                         std::string delim = kVerbalDelim);
 
   std::string FormVerbalKeepInstruction(uint8_t phrase_id,
-                                        const std::string& turn,
+                                        const std::string& relative_dir,
                                         const std::string& street_name,
                                         const std::string& exit_number_sign,
                                         const std::string& exit_toward_sign);
@@ -236,7 +236,7 @@ class NarrativeBuilder {
       std::string delim = kVerbalDelim);
 
   std::string FormVerbalKeepToStayOnInstruction(
-      uint8_t phrase_id, const std::string& turn,
+      uint8_t phrase_id, const std::string& relative_dir,
       const std::string& street_name, const std::string& exit_number_sign = "",
       const std::string& exit_toward_sign = "");
 
@@ -399,6 +399,10 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormRelativeTwoDirection(
+      TripDirections_Maneuver_Type type,
+      const std::vector<std::string>& relative_directions);
+
+  std::string FormRelativeThreeDirection(
       TripDirections_Maneuver_Type type,
       const std::vector<std::string>& relative_directions);
 

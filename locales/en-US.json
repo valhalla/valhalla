@@ -240,12 +240,54 @@
       },
       "relative_directions": ["left", "right"]
     },
-    "keep": null,
-    "keep_verbal_alert": null,
-    "keep_verbal": null,
-    "keep_to_stay_on": null,
-    "keep_to_stay_on_verbal_alert": null,
-    "keep_to_stay_on_verbal": null,
+    "keep": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> at the fork.",
+        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
+        "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
+        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+        "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> at the fork.",
+        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
+        "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
+        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
+        "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+        "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
+        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
+        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": ["left", "straight", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
     "merge": null,
     "merge_verbal_alert": null,
     "merge_verbal": null,
