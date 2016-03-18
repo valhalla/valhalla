@@ -88,6 +88,16 @@ const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases = {
     {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."}
 };
 
+const std::map<std::string, std::string> kExpectedMergePhrases = {
+    {"0", "Merge."},
+    {"1", "Merge onto <STREET_NAMES>."}
+};
+
+const std::map<std::string, std::string> kExpectedMergeVerbalPhrases = {
+    {"0", "Merge."},
+    {"1", "Merge onto <STREET_NAMES>."}
+};
+
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -813,6 +823,32 @@ void test_en_US_keep_to_stay_on_verbal() {
 
 }
 
+void test_en_US_merge() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate merge phrases
+  validate(static_cast<const PhraseSet&>(dictionary.merge_subset),
+           kExpectedMergePhrases);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.merge_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_merge_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate merge_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.merge_verbal_subset),
+           kExpectedMergeVerbalPhrases);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.merge_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -928,6 +964,12 @@ int main() {
 
   // test the en-US keep_to_stay_on_verbal phrases
   suite.test(TEST_CASE(test_en_US_keep_to_stay_on_verbal));
+
+  // test the en-US merge phrases
+  suite.test(TEST_CASE(test_en_US_merge));
+
+  // test the en-US merge_verbal phrases
+  suite.test(TEST_CASE(test_en_US_merge_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));
