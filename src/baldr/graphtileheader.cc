@@ -214,11 +214,15 @@ void GraphTileHeader::set_edge_bin_offsets(const uint32_t (&offsets)[kBinCount])
   memcpy(bin_offsets_, offsets, sizeof(bin_offsets_));
 }
 
-// Get the offset to the given bin in the 5x5 grid.
+// Get the offsets to the given bin in the 5x5 grid.
 std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t column, size_t row) const {
-  auto i = row * kBinsDim + column;
-  if(i < kBinCount)
-    return std::make_pair(i == 0 ? 0 : bin_offsets_[i - 1], bin_offsets_[i]);
+  return bin_offset(row * kBinsDim + column);
+}
+
+// Get the offsets to the given bin in the 5x5 grid.
+std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t index) const {
+  if(index < kBinCount)
+    return std::make_pair(index == 0 ? 0 : bin_offsets_[index - 1], bin_offsets_[index]);
   throw std::runtime_error("Bin out of bounds");
 }
 

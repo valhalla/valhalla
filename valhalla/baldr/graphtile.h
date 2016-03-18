@@ -252,6 +252,13 @@ class GraphTile {
    */
   midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
 
+  /**
+   * Get an iteratable list of GraphIds given a bin in the tile
+   * @param  index the bin's index in the row major array
+   * @return iterable container of graphids contained in the bin
+   */
+  midgard::iterable_t<GraphId> GetBin(size_t index) const;
+
  protected:
 
   // Size of the tile in bytes

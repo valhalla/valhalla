@@ -705,5 +705,10 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const 
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
+midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
+  auto offsets = header_->bin_offset(index);
+  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+}
+
 }
 }
