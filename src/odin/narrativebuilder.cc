@@ -2169,20 +2169,26 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
   // "0": "Merge.",
   // "1": "Merge onto <STREET_NAMES>."
 
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  if (!street_names.empty()) {
-    instruction += "Merge onto ";
-    instruction += street_names;
-  } else
-    instruction += "Merge";
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.merge_subset.empty_street_name_labels, true);
 
-  instruction += ".";
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id = 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.merge_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
 }
 
@@ -2199,22 +2205,30 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
   // "0": "Merge.",
   // "1": "Merge onto <STREET_NAMES>."
 
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  if (!street_names.empty()) {
-    instruction += "Merge onto ";
-    instruction += street_names;
-  } else
-    instruction += "Merge";
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.merge_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
 
-  instruction += ".";
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id = 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.merge_verbal_subset.phrases.at(
+      std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
