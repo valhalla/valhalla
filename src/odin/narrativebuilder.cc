@@ -270,10 +270,10 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_instruction(std::move(FormMergeInstruction(maneuver)));
 
         // Set verbal transition alert instruction if previous maneuver
-        // is greater than 1.5 km
+        // is greater than 2 km
         if (prev_maneuver
             && (prev_maneuver->length(DirectionsOptions_Units_kKilometers)
-                > 1.5f)) {
+                > kVerbalAlertMergePriorManeuverMinimumLength)) {
           maneuver.set_verbal_transition_alert_instruction(
               std::move(FormVerbalAlertMergeInstruction(maneuver)));
         }
@@ -2166,8 +2166,8 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
 }
 
 std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
-  //  0 "Merge."
-  //  1 "Merge onto <STREET_NAMES>."
+  // "0": "Merge.",
+  // "1": "Merge onto <STREET_NAMES>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2188,16 +2188,16 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormVerbalAlertMergeInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Merge."
-  //  1 "Merge onto <STREET_NAMES(1)>."
+  // "0": "Merge.",
+  // "1": "Merge onto <STREET_NAMES>."
 
   return FormVerbalMergeInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalMergeInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Merge."
-  //  1 "Merge onto <STREET_NAMES(2)>."
+  // "0": "Merge.",
+  // "1": "Merge onto <STREET_NAMES>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),

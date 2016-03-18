@@ -1245,6 +1245,82 @@ void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
                    0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
 }
 
+void PopulateMergeManeuverList_0(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { }, { }, { }, "",
+                   0.864000, 34, 6, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 174, 241,
+                   39, 41, 158, 180, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { {
+                       "I 76 West", "1" } },
+                   { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                   0, 0, 0, 0, 34, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kMerge, { }, { }, { }, "",
+                   7.624001, 245, 1, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
+                   293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
+                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
+}
+
+void PopulateMergeManeuverList_1_1(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { }, { }, { }, "",
+                   0.864000, 34, 6, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 174, 241,
+                   39, 41, 158, 180, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { {
+                       "I 76 West", "1" } },
+                   { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                   0, 0, 0, 0, 34, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kMerge, { "I 76 West",
+                       "Pennsylvania Turnpike" },
+                   { }, { }, "", 7.624001, 245, 1,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
+                   293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
+                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
+}
+
+void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kExitRight, { }, { }, { }, "",
+                   2.1, 34, 6, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 174, 241,
+                   39, 41, 158, 180, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { {
+                       "I 76 West", "1" } },
+                   { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                   0, 0, 0, 0, 34, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kMerge, { "I 76 West",
+                       "Pennsylvania Turnpike" },
+                   { }, { }, "", 7.624001, 245, 1,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
+                   293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
+                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -3293,6 +3369,114 @@ void TestBuildKeepToStayOn_3_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormMergeInstruction
+// "0": "Merge.",
+// No alert since prior maneuver is not > 2 km
+// "0": "Merge.",
+void TestBuildMerge_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateMergeManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateMergeManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Take the I 76 West exit on the right toward Pittsburgh.",
+      "Take the Interstate 76 West exit on the right.",
+      "Take the Interstate 76 West exit on the right toward Pittsburgh.",
+      "");
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Merge.",
+                                  "",
+                                  "Merge.",
+                                  "Continue for 4.7 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormMergeInstruction
+// "1": "Merge onto <STREET_NAMES>."
+// No alert since prior maneuver is not > 2 km
+// "1": "Merge onto <STREET_NAMES>."
+void TestBuildMerge_1_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateMergeManeuverList_1_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateMergeManeuverList_1_1(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Take the I 76 West exit on the right toward Pittsburgh.",
+      "Take the Interstate 76 West exit on the right.",
+      "Take the Interstate 76 West exit on the right toward Pittsburgh.",
+      "");
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Merge onto I 76 West/Pennsylvania Turnpike.",
+                                  "",
+                                  "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
+                                  "Continue for 4.7 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormMergeInstruction
+// "1": "Merge onto <STREET_NAMES>."
+// "1": "Merge onto <STREET_NAMES>."
+// "1": "Merge onto <STREET_NAMES>."
+void TestBuildMerge_1_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateMergeManeuverList_1_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateMergeManeuverList_1_2(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Take the I 76 West exit on the right toward Pittsburgh.",
+      "Take the Interstate 76 West exit on the right.",
+      "Take the Interstate 76 West exit on the right toward Pittsburgh.",
+      "Continue for 1.3 miles.");
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Merge onto I 76 West/Pennsylvania Turnpike.",
+                                  "Merge onto Interstate 76 West.",
+                                  "Merge onto Interstate 76 West, Pennsylvania Turnpike.",
+                                  "Continue for 4.7 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -4566,6 +4750,15 @@ int main() {
 
   // BuildKeepToStayOn_3_miles_en_US
   suite.test(TEST_CASE(TestBuildKeepToStayOn_3_miles_en_US));
+
+  // BuildMerge_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildMerge_0_miles_en_US));
+
+  // BuildMerge_1_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildMerge_1_1_miles_en_US));
+
+  // BuildMerge_1_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildMerge_1_2_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
