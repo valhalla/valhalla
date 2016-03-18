@@ -38,6 +38,8 @@ constexpr auto kKeepToStayOnKey = "instructions.keep_to_stay_on";
 constexpr auto kKeepToStayOnVerbalKey = "instructions.keep_to_stay_on_verbal";
 constexpr auto kMergeKey = "instructions.merge";
 constexpr auto kMergeVerbalKey = "instructions.merge_verbal";
+constexpr auto kEnterRoundaboutKey = "instructions.enter_roundabout";
+constexpr auto kEnterRoundaboutVerbalKey = "instructions.enter_roundabout_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -45,6 +47,7 @@ constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 constexpr auto kPhrasesKey = "phrases";
 constexpr auto kCardinalDirectionsKey = "cardinal_directions";
 constexpr auto kRelativeDirectionsKey = "relative_directions";
+constexpr auto kOrdinalValuesKey = "ordinal_values";
 constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
 constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
@@ -73,6 +76,7 @@ constexpr auto kSmallFeetIndex = 6;
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
 constexpr auto kRelativeDirectionTag = "<RELATIVE_DIRECTION>";
+constexpr auto kOrdinalValueTag = "<ORDINAL_VALUE>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kCrossStreetNamesTag = "<CROSS_STREET_NAMES>";
@@ -141,6 +145,11 @@ struct PostTransitionVerbalSubset : PhraseSet {
   std::vector<std::string> empty_street_name_labels;
 };
 
+struct EnterRoundaboutSubset : PhraseSet {
+  std::vector<std::string> ordinal_values;
+};
+
+
 /**
  * A class that stores the localized narrative instructions.
  */
@@ -199,6 +208,10 @@ class NarrativeDictionary {
   // Merge
   ContinueSubset merge_subset;
   ContinueSubset merge_verbal_subset;
+
+  // EnterRoundabout
+  EnterRoundaboutSubset enter_roundabout_subset;
+  EnterRoundaboutSubset enter_roundabout_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
@@ -304,6 +317,16 @@ class NarrativeDictionary {
     */
   void Load(KeepSubset& keep_handle,
             const boost::property_tree::ptree& keep_subset_pt);
+
+  /**
+    * Loads the specified 'enter_roundabout' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  enter_roundabout_handle  The 'enter_roundabout' structure to populate.
+    * @param  enter_roundabout_subset_pt  The 'enter_roundabout' property tree.
+    */
+  void Load(EnterRoundaboutSubset& enter_roundabout_handle,
+            const boost::property_tree::ptree& enter_roundabout_subset_pt);
 
   /**
     * Loads the specified 'post transition verbal' instruction subset with the
