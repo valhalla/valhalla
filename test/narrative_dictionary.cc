@@ -20,6 +20,7 @@ const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", 
 const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right" };
 const std::vector<std::string> kExpectedRelativeThreeDirections = { "left", "straight", "right" };
 const std::vector<std::string> kExpectedRelativeTurnDirections = { "left", "sharp left", "right", "sharp right" };
+const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th" };
 
 // Expected phrases
 const std::map<std::string, std::string> kExpectedExitPhrases = {
@@ -96,6 +97,16 @@ const std::map<std::string, std::string> kExpectedMergePhrases = {
 const std::map<std::string, std::string> kExpectedMergeVerbalPhrases = {
     {"0", "Merge."},
     {"1", "Merge onto <STREET_NAMES>."}
+};
+
+const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases = {
+    {"0", "Enter the roundabout."},
+    {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}
+};
+
+const std::map<std::string, std::string> kExpectedEnterRoundaboutVerbalPhrases = {
+    {"0", "Enter the roundabout."},
+    {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}
 };
 
 
@@ -849,6 +860,32 @@ void test_en_US_merge_verbal() {
 
 }
 
+void test_en_US_enter_roundabout() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate enter_roundabout phrases
+  validate(static_cast<const PhraseSet&>(dictionary.enter_roundabout_subset),
+           kExpectedEnterRoundaboutPhrases);
+
+  // ordinal_values: "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"
+  const auto& ordinal_values = dictionary.enter_roundabout_subset.ordinal_values;
+  validate(ordinal_values, kExpectedOrdinalValues);
+
+}
+
+void test_en_US_enter_roundabout_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate enter_roundabout_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.enter_roundabout_verbal_subset),
+           kExpectedEnterRoundaboutVerbalPhrases);
+
+  // ordinal_values: "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"
+  const auto& ordinal_values = dictionary.enter_roundabout_verbal_subset.ordinal_values;
+  validate(ordinal_values, kExpectedOrdinalValues);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -970,6 +1007,12 @@ int main() {
 
   // test the en-US merge_verbal phrases
   suite.test(TEST_CASE(test_en_US_merge_verbal));
+
+  // test the en-US enter_roundabout phrases
+  suite.test(TEST_CASE(test_en_US_enter_roundabout));
+
+  // test the en-US enter_roundabout_verbal phrases
+  suite.test(TEST_CASE(test_en_US_enter_roundabout_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));
