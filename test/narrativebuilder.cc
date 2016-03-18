@@ -1321,6 +1321,38 @@ void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
                    { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
 }
 
+void PopulateEnterRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRoundaboutEnter, { "US 15",
+                       "MD 464" },
+                   { }, { }, "", 0.043000, 2, 41,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 264, 167,
+                   135, 139, 1457, 1464, 0, 0, 0, 0, 1, 0, 0, 0, 0, { }, { },
+                   { }, { }, 1, 2, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 2, 0);
+}
+
+void PopulateEnterRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code,
+                                           uint32_t roundabout_exit_count) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRoundaboutEnter, { "US 15",
+                       "MD 464" },
+                   { }, { }, "", 0.043000, 2, 41,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 264, 167,
+                   135, 139, 1457, 1464, 0, 0, 0, 0, 1, 0, 0, 0, 0, { }, { },
+                   { }, { }, 1, 2, roundabout_exit_count, 0, 1, 0, "", "", "",
+                   0, 0, 0, 0, 2, 0);
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -3477,6 +3509,71 @@ void TestBuildMerge_1_2_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormEnterRoundaboutInstruction
+// "0": "Enter the roundabout.",
+// "0": "Enter the roundabout.",
+// "0": "Enter the roundabout.",
+void TestBuildEnterRoundabout_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateEnterRoundaboutManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateEnterRoundaboutManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Enter the roundabout.",
+                                  "Enter the roundabout.",
+                                  "Enter the roundabout.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormEnterRoundaboutInstruction
+// "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+// "0": "Enter the roundabout.",
+// "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+void TestBuildEnterRoundabout_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  uint32_t roundabout_exit_count = 1;
+  const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th" };
+
+for (auto& ordinal_value : kExpectedOrdinalValues) {
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateEnterRoundaboutManeuverList_1(maneuvers, country_code, state_code, roundabout_exit_count);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateEnterRoundaboutManeuverList_1(expected_maneuvers, country_code, state_code, roundabout_exit_count++);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Enter the roundabout and take the " + ordinal_value + " exit.",
+      "Enter the roundabout.",
+      "Enter the roundabout and take the " + ordinal_value + " exit.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -4759,6 +4856,15 @@ int main() {
 
   // BuildMerge_1_2_miles_en_US
   suite.test(TEST_CASE(TestBuildMerge_1_2_miles_en_US));
+
+  // BuildEnterRoundabout_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildEnterRoundabout_0_miles_en_US));
+
+  // BuildEnterRoundabout_1_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildEnterRoundabout_1_miles_en_US));
+
+//  // BuildEnterRoundabout_1_2_miles_en_US
+//  suite.test(TEST_CASE(TestBuildEnterRoundabout_1_2_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));

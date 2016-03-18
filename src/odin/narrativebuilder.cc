@@ -2254,7 +2254,7 @@ std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
   // "0": "Enter the roundabout.",
   // TODO - determine if we need anything more here
 
-  return "Enter roundabout.";
+  return "Enter the roundabout.";
 }
 
 std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
