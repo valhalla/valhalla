@@ -53,6 +53,30 @@ namespace valhalla {
       check_locations(locations.size(), max_locations.find(costing)->second);
       check_distance(reader, locations, max_distance.find(costing)->second);
 
+      // Validate walking distances (make sure they are in the accepted range)
+      if (costing == "multimodal" || costing == "transit") {
+
+        auto transit_start_end_max_distance =
+            request.get_optional<int>("costing_options.pedestrian.transit_start_end_max_distance");
+        auto transit_transfer_max_distance =
+            request.get_optional<int>("costing_options.pedestrian.transit_transfer_max_distance");
+
+        if (transit_start_end_max_distance) {
+          if (*transit_start_end_max_distance < min_transit_walking_dis || *transit_start_end_max_distance > max_transit_walking_dis) {
+            throw std::runtime_error("Outside the valid walking distance at the beginning or end of a multimodal route.  Min: " +
+                                     std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                     " (Meters)");
+          }
+        }
+        if (transit_transfer_max_distance) {
+          if (*transit_transfer_max_distance < min_transit_walking_dis || *transit_transfer_max_distance > max_transit_walking_dis) {
+            throw std::runtime_error("Outside the valid walking distance between stops of a multimodal route.  Min: " +
+                                     std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                     " (Meters)");
+          }
+        }
+      }
+
       auto date_type = request.get_optional<int>("date_time.type");
       //default to current date_time for mm or transit.
       if (!date_type && (costing == "multimodal" || costing == "transit")) {
