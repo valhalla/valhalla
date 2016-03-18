@@ -25,8 +25,11 @@ enum class SearchStrategy : bool { NODE, EDGE };
 /**
  * A callable element which returns true if an edge should be
  * filtered out of the correlated set and false if the edge is usable
+ *
+ * TODO: remove the filtering of transit edges when they get proper
+ * opposing edges added to the graph
  */
-const sif::EdgeFilter PassThroughFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down(); };
+const sif::EdgeFilter PassThroughFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down() || edge->IsTransitLine(); };
 
 /**
  * Find an location within the route network given an input location
