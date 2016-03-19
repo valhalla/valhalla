@@ -40,6 +40,8 @@ constexpr auto kMergeKey = "instructions.merge";
 constexpr auto kMergeVerbalKey = "instructions.merge_verbal";
 constexpr auto kEnterRoundaboutKey = "instructions.enter_roundabout";
 constexpr auto kEnterRoundaboutVerbalKey = "instructions.enter_roundabout_verbal";
+constexpr auto kExitRoundaboutKey = "instructions.exit_roundabout";
+constexpr auto kExitRoundaboutVerbalKey = "instructions.exit_roundabout_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -212,6 +214,10 @@ class NarrativeDictionary {
   // EnterRoundabout
   EnterRoundaboutSubset enter_roundabout_subset;
   EnterRoundaboutSubset enter_roundabout_verbal_subset;
+
+  // ExitRoundabout
+  ContinueSubset exit_roundabout_subset;
+  ContinueSubset exit_roundabout_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;

@@ -316,8 +316,21 @@
       },
       "ordinal_values": ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"]
     },
-    "exit_roundabout": null,
-    "exit_roundabout_verbal": null,
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Exit the roundabout.",
+        "1": "Exit the roundabout onto <STREET_NAMES>.",
+        "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Exit the roundabout.",
+        "1": "Exit the roundabout onto <STREET_NAMES>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
     "enter_ferry": null,
     "enter_ferry_verbal_alert": null,
     "enter_ferry_verbal": null,
