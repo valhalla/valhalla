@@ -2314,9 +2314,9 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
 }
 
 std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
-  //  0 "Exit the roundabout."
-  //  1 "Exit the roundabout onto <STREET_NAMES>."
-  //  2 "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  // "0": "Exit the roundabout.",
+  // "1": "Exit the roundabout onto <STREET_NAMES>.",
+  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
   // Assign the street names and the begin street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2344,8 +2344,8 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
 
 std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Exit the roundabout."
-  //  1 "Exit the roundabout onto <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
+  // "0": "Exit the roundabout.",
+  // "1": "Exit the roundabout onto <STREET_NAMES>.",
 
   // Assign the street names and the begin street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
