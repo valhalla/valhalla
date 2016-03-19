@@ -2318,28 +2318,36 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
   // "1": "Exit the roundabout onto <STREET_NAMES>.",
   // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names());
-
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Exit the roundabout";
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.exit_roundabout_subset.empty_street_name_labels, true);
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.exit_roundabout_subset.empty_street_name_labels);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!begin_street_names.empty()) {
-    instruction += " onto ";
-    instruction += begin_street_names;
-    instruction += ". Continue on ";
-    instruction += street_names;
+    phrase_id = 2;
   } else if (!street_names.empty()) {
-    instruction += " onto ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_roundabout_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
@@ -2347,28 +2355,39 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
   // "0": "Exit the roundabout.",
   // "1": "Exit the roundabout onto <STREET_NAMES>.",
 
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
-      maneuver.verbal_formatter());
-
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Exit the roundabout";
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.exit_roundabout_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.exit_roundabout_verbal_subset.empty_street_name_labels,
+      false, element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!begin_street_names.empty()) {
-    instruction += " onto ";
-    instruction += begin_street_names;
+    phrase_id = 1;
+    // Assign to so street names for tag replacement
+    street_names = begin_street_names;
   } else if (!street_names.empty()) {
-    instruction += " onto ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
