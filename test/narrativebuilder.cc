@@ -1956,8 +1956,10 @@ void TestBuildBearInstructions_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateBearManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bear right.",
-                                  "Bear right.", "Bear right.",
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bear right.",
+                                  "Bear right.",
+                                  "Bear right.",
                                   "Continue for 60 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
