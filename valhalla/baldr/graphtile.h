@@ -9,7 +9,7 @@
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
-#include <valhalla/baldr/transittransfer.h>
+#include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
@@ -213,25 +213,12 @@ class GraphTile {
   const TransitRoute* GetTransitRoute(const uint32_t idx) const;
 
   /**
-   * Get a pointer to the first transfer record given the stop Id and
-   * compute the number of transfer records for the stop.
-   * @param   stopid  Stop Id.
-   * @return  Returns a pair with a pointer to the initial transfer record
-   *          and a count of transfer records from the given stop Id.
+   * Get the transit schedule given its schedule index.
+   * @param   idx     Schedule index within the tile.
+   * @return  Returns a pointer to the transit schedule information. Returns
+   *          nullptr if the schedule is not found.
    */
-  std::pair<TransitTransfer*, uint32_t> GetTransfers(
-      const uint32_t stopid) const;
-
-  /**
-   * Get a pointer to the transfer record given the from stop Id and
-   * the to stop id.
-   * @param   from_stopid  From stop Id.
-   * @param   to_stopid    To stop Id.
-   * @return  Returns a pointer to the transfer record between the 2 stops.
-   *          Returns nullptr if no transfer record exists.
-   */
-  TransitTransfer* GetTransfer(const uint32_t from_stopid,
-                               const uint32_t to_stopid) const;
+  const TransitSchedule* GetTransitSchedule(const uint32_t idx) const;
 
   /**
    * Convenience method to get the access restrictions for an edge given the
@@ -283,14 +270,14 @@ class GraphTile {
   // sorted by departure time)
   TransitDeparture* departures_;
 
-  // Transit stops (indexed by stop Id - unique)
+  // Transit stops (indexed by stop index within the tile)
   TransitStop* transit_stops_;
 
-  // Transit route (indexed by route Id - unique)
+  // Transit route (indexed by route index within the tile)
   TransitRoute* transit_routes_;
 
-  // Transit transfers, 1 or more per index (indexed by from stop Id)
-  TransitTransfer* transit_transfers_;
+  // Transit schedules (index by schedule index within the tile)
+  TransitSchedule* transit_schedules_;
 
   // Access restrictions, 1 or more per edge id
   AccessRestriction* access_restrictions_;
