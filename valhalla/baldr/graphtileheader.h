@@ -185,16 +185,16 @@ class GraphTileHeader {
   void set_routecount(const uint32_t routes);
 
   /**
-   * Gets the number of transit transfers in this tile.
-   * @return  Returns the number of transit transfers.
+   * Gets the number of transit schedules in this tile.
+   * @return  Returns the number of transit schedules.
    */
-  uint32_t transfercount() const;
+  uint32_t schedulecount() const;
 
   /**
-   * Sets the number of transit transfers in this tile.
-   * @param  transfers   The number of transit transfers.
+   * Sets the number of transit schedules in this tile.
+   * @param  schedules   The number of transit schedules.
    */
-  void set_transfercount(const uint32_t transfers);
+  void set_schedulecount(const uint32_t schedules);
 
   /**
    * Gets the number of access restrictions in this tile.
@@ -295,11 +295,11 @@ class GraphTileHeader {
   uint64_t exit_quality_  : 4;
   uint64_t spare1_        : 48;
 
-  // Number of transit departure records
+  // Number of transit records
   uint64_t departurecount_ : 24;
   uint64_t stopcount_      : 16;
   uint64_t routecount_     : 12;
-  uint64_t transfercount_  : 12;
+  uint64_t schedulecount_  : 12;
 
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;
