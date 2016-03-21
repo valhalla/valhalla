@@ -86,14 +86,22 @@
         "0": "Continue.",
         "1": "Continue on <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Continue."],
+        "1": ["Continue on 10th Avenue."]
+      }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Continue.",
         "1": "Continue on <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Continue."],
+        "1": ["Continue on 10th Avenue."]
+      }
     },
     "continue_verbal": {
       "phrases": {
@@ -102,7 +110,11 @@
       },
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
-      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"]
+      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
+      "example_phrases": {
+        "0": ["Continue for 300 feet."],
+        "1": ["Continue on 10th Avenue for 3 tenths of a mile."]
+      }
     },
     "bear": {
       "phrases": {
