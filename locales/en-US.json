@@ -37,7 +37,13 @@
         "2": "Your destination is on the <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["You have arrived at your destination."],
+        "1": ["You have arrived at 3206 Powelton Avenue."],
+        "2": ["Your destination is on the left.", "Your destination is on the right."],
+        "3": ["Lancaster Brewing Company is on the left."]
+      }
     },
     "destination_verbal_alert": {
       "phrases": {
@@ -46,7 +52,13 @@
         "2": "Your destination will be on the <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["You will arrive at your destination."],
+        "1": ["You will arrive at 32 o6 Powelton Avenue."],
+        "2": ["Your destination will be on the left.", "Your destination will be on the right."],
+        "3": ["Lancaster Brewing Company will be on the left."]
+      }
     },
     "destination_verbal": {
       "phrases": {
@@ -55,7 +67,13 @@
         "2": "Your destination is on the <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["You have arrived at your destination."],
+        "1": ["You have arrived at 32 o6 Powelton Avenue."],
+        "2": ["Your destination is on the left.", "Your destination is on the right."],
+        "3": ["Lancaster Brewing Company is on the left."]
+      }
     },
     "becomes": {
       "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
