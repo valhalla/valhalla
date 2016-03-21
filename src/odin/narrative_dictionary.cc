@@ -164,6 +164,15 @@ void NarrativeDictionary::Load(
   Load(enter_roundabout_verbal_subset, narrative_pt.get_child(kEnterRoundaboutVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate exit_roundabout_subset...");
+  // Populate exit_roundabout_subset
+  Load(exit_roundabout_subset, narrative_pt.get_child(kExitRoundaboutKey));
+
+  LOG_TRACE("Populate exit_roundabout_verbal_subset...");
+  // Populate exit_roundabout_verbal_subset
+  Load(exit_roundabout_verbal_subset, narrative_pt.get_child(kExitRoundaboutVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

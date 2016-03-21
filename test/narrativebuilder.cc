@@ -1353,6 +1353,50 @@ void PopulateEnterRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 2, 0);
 }
 
+void PopulateExitRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRoundaboutExit, { },
+                   { }, { }, "", 1.041000, 69, 24,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 224,
+                   262, 8, 11, 32, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 64, 0);
+}
+
+void PopulateExitRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRoundaboutExit, {
+                       "Philadelphia Road", "MD 7" },
+                   { }, { }, "", 1.041000, 69, 24,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 224,
+                   262, 8, 11, 32, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 64, 0);
+}
+
+void PopulateExitRoundaboutManeuverList_2(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRoundaboutExit, { "US 15" }, {
+                       "Catoctin Mountain Highway", "US 15" },
+                   { }, "", 18.278002, 923, 34,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 201, 204,
+                   139, 154, 1464, 1808, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
+                   { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 914, 0);
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -3574,6 +3618,99 @@ for (auto& ordinal_value : kExpectedOrdinalValues) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormExitRoundaboutInstruction
+// "0": "Exit the roundabout.",
+// No verbal alert
+// "0": "Exit the roundabout.",
+void TestBuildExitRoundabout_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitRoundaboutManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitRoundaboutManeuverList_0(expected_maneuvers, country_code,
+                                       state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Exit the roundabout.",
+      "",
+      "Exit the roundabout.",
+      "Continue for 6 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitRoundaboutInstruction
+// "1": "Exit the roundabout onto <STREET_NAMES>.",
+// No verbal alert
+// "1": "Exit the roundabout onto <STREET_NAMES>.",
+void TestBuildExitRoundabout_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitRoundaboutManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitRoundaboutManeuverList_1(expected_maneuvers, country_code,
+                                       state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Exit the roundabout onto Philadelphia Road/MD 7.",
+      "",
+      "Exit the roundabout onto Philadelphia Road, Maryland 7.",
+      "Continue for 6 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitRoundaboutInstruction
+// "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// No verbal alert
+// "1": "Exit the roundabout onto <STREET_NAMES>.",
+void TestBuildExitRoundabout_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitRoundaboutManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitRoundaboutManeuverList_2(expected_maneuvers, country_code,
+                                       state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15.",
+      "",
+      "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15.",
+      "Continue on U.S. 15 for 11.4 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -4860,11 +4997,17 @@ int main() {
   // BuildEnterRoundabout_0_miles_en_US
   suite.test(TEST_CASE(TestBuildEnterRoundabout_0_miles_en_US));
 
-  // BuildEnterRoundabout_1_1_miles_en_US
+  // BuildEnterRoundabout_1_miles_en_US
   suite.test(TEST_CASE(TestBuildEnterRoundabout_1_miles_en_US));
 
-//  // BuildEnterRoundabout_1_2_miles_en_US
-//  suite.test(TEST_CASE(TestBuildEnterRoundabout_1_2_miles_en_US));
+  // BuildExitRoundabout_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitRoundabout_0_miles_en_US));
+
+  // BuildExitRoundabout_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitRoundabout_1_miles_en_US));
+
+  // BuildExitRoundabout_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitRoundabout_2_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
