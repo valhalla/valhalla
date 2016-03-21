@@ -2082,8 +2082,10 @@ void TestBuildUturnInstructions_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn.",
-                                  "Make a left U-turn.", "Make a left U-turn.",
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Make a left U-turn.",
+                                  "Make a left U-turn.",
+                                  "Make a left U-turn.",
                                   "Continue for 4 tenths of a mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -2146,7 +2148,8 @@ void TestBuildUturnInstructions_2_miles_en_US() {
                                           "Turn right onto Bunker Hill Road.",
                                           "Continue for 2 tenths of a mile.");
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Make a left U-turn to stay on Bunker Hill Road.",
+      expected_maneuvers,
+      "Make a left U-turn to stay on Bunker Hill Road.",
       "Make a left U-turn to stay on Bunker Hill Road.",
       "Make a left U-turn to stay on Bunker Hill Road.",
       "Continue for 2 tenths of a mile.");
