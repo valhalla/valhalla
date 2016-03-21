@@ -7,7 +7,12 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head east.", "Head north."],
+        "1": ["Head southwest on 5th Avenue."],
+        "2": ["Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."]
+      }
     },
     "start_verbal": {
       "phrases": {
@@ -18,7 +23,12 @@
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
-      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"]
+      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
+      "example_phrases": {
+        "0": ["Head east for a half mile.", "Head north for 1 kilometer."],
+        "1": ["Head southwest on 5th Avenue for 1 tenth of a mile."],
+        "2": ["Head south on North Prince Street, U.S. 2 22."]
+      }
     },
     "destination": {
       "phrases": {
