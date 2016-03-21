@@ -18,6 +18,16 @@ constexpr uint8_t kBusAccess        = 64;
 constexpr uint8_t kHOVAccess        = 128;
 constexpr uint8_t kAllAccess        = 255;
 
+// Maximum number of transit records per tile
+constexpr uint32_t kMaxTransitDepartures    = 16777215;
+constexpr uint32_t kMaxTransitStops         = 65535;
+constexpr uint32_t kMaxTransitRoutes        = 4095;
+constexpr uint32_t kMaxTransitSchedules     = 4095;
+constexpr uint32_t kMaxTransitBlockId       = 1048575;
+constexpr uint32_t kMaxTransitLineId        = 1048576;
+constexpr uint32_t kMaxTransitDepartureTime = 131071;
+constexpr uint32_t kMaxTransitElapsedTime   = 32767;
+
 // Payment constants. Bit constants.
 constexpr uint8_t kCoins  = 1; // Coins
 constexpr uint8_t kNotes  = 2; // Bills
@@ -115,6 +125,9 @@ constexpr uint32_t kMaxStopImpact = 7;
 // Maximum grade and curvature factors.
 constexpr uint32_t kMaxGradeFactor = 15;
 constexpr uint32_t kMaxCurvatureFactor = 15;
+
+// Maximum added time along shortcuts to approximate transition costs
+constexpr uint32_t kMaxAddedTime = 255;
 
 // Node types.
 enum class NodeType : uint8_t {
