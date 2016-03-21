@@ -66,7 +66,7 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
 }
 
 // Returns the transfer cost between 2 transit stops.
-Cost DynamicCost::TransferCost(const TransitTransfer* transfer) const {
+Cost DynamicCost::TransferCost() const {
   return { 0.0f, 0.0f };
 }
 
