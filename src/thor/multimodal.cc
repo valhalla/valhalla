@@ -194,8 +194,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       // Get the transfer penalty when changing stations
       if (mode_ == TravelMode::kPedestrian && prior_stop > 0 && has_transit) {
-        transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
-                                    nodeinfo->stop_index()));
+        transfer_cost = tc->TransferCost();
       }
 
       // Add transfer time to the local time when entering a stop
