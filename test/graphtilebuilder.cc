@@ -56,7 +56,7 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, cons
      ah->speed_quality() == bh->speed_quality() &&
      ah->stopcount() == bh->stopcount() &&
      ah->textlist_offset() + difference== bh->textlist_offset() &&
-     ah->transfercount() == bh->transfercount() &&
+     ah->schedulecount() == bh->schedulecount() &&
      ah->version() ==  bh->version()) {
     //make sure the edges' shape and names match
     for(size_t i = 0; i < ah->directededgecount(); ++i) {

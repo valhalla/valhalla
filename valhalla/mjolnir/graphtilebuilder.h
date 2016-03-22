@@ -21,8 +21,8 @@
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
+#include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
-#include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/mjolnir/directededgebuilder.h>
@@ -119,10 +119,10 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddTransitRoute(const baldr::TransitRoute& route);
 
   /**
-   * Add a transit transfer.
-   * @param  transfer  Transit transfer record.
+   * Add a transit schedule.
+   * @param  schedule  Transit schedule record.
    */
-  void AddTransitTransfer(const baldr::TransitTransfer& transfer);
+  void AddTransitSchedule(const baldr::TransitSchedule& schedule);
 
   /**
    * Add an access restriction.
@@ -352,14 +352,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   // departure time
   std::vector<baldr::TransitDeparture> departure_builder_;
 
-  // Transit stops. Sorted by stop Id.
+  // Transit stops.
   std::vector<baldr::TransitStop> stop_builder_;
 
-  // Transit route. Sorted by route Id.
+  // Transit route.
   std::vector<baldr::TransitRoute> route_builder_;
 
-  // Transit transfers. Sorted by from stop Id.
-  std::vector<baldr::TransitTransfer> transfer_builder_;
+  // Transit schedules.
+  std::vector<baldr::TransitSchedule> schedule_builder_;
 
   // List of restrictions. Sorted by directed edge Id
   std::vector<baldr::AccessRestriction> access_restriction_builder_;

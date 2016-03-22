@@ -80,8 +80,8 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     text_offsets.insert(transit_routes_[i].long_name_offset());
     text_offsets.insert(transit_routes_[i].desc_offset());
   }
-  for (uint32_t i = 0; i < header_->transfercount(); i++) {
-    transfer_builder_.emplace_back(std::move(transit_transfers_[i]));
+  for (uint32_t i = 0; i < header_->schedulecount(); i++) {
+    schedule_builder_.emplace_back(std::move(transit_schedules_[i]));
   }
 
   // Create access restriction list
@@ -171,7 +171,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_departurecount(departure_builder_.size());
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
-    header_builder_.set_transfercount(transfer_builder_.size());
+    header_builder_.set_schedulecount(schedule_builder_.size());
     header_builder_.set_access_restriction_count(
                 access_restriction_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
@@ -183,7 +183,7 @@ void GraphTileBuilder::StoreTileData() {
             + (departure_builder_.size() * sizeof(TransitDeparture))
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
-            + (transfer_builder_.size() * sizeof(TransitTransfer))
+            + (schedule_builder_.size() * sizeof(TransitSchedule))
             + (access_restriction_builder_.size() * sizeof(AccessRestriction))
             + (signs_builder_.size() * sizeof(Sign))
             + (admins_builder_.size() * sizeof(Admin)));
@@ -216,10 +216,9 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&route_builder_[0]),
                route_builder_.size() * sizeof(TransitRoute));
 
-    // Sort and write the transit transfers
-    std::sort(transfer_builder_.begin(), transfer_builder_.end());
-    file.write(reinterpret_cast<const char*>(&transfer_builder_[0]),
-               transfer_builder_.size() * sizeof(TransitTransfer));
+    // Write transit schedules
+    file.write(reinterpret_cast<const char*>(&schedule_builder_[0]),
+               schedule_builder_.size() * sizeof(TransitSchedule));
 
     // Sort and write the access restrictions
     std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
@@ -296,9 +295,9 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
         header_->routecount() * sizeof(TransitRoute));
 
-    // Write the existing transit transfers
-    file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
-        header_->transfercount() * sizeof(TransitTransfer));
+    // Write the existing transit schedules
+    file.write(reinterpret_cast<const char*>(&transit_schedules_[0]),
+        header_->schedulecount() * sizeof(TransitSchedule));
 
     // Write the existing access restrictions
     file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
@@ -371,9 +370,9 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
                hdr.routecount() * sizeof(TransitRoute));
 
-    // Write the existing transit transfers
-    file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
-               hdr.transfercount() * sizeof(TransitTransfer));
+    // Write the existing transit schedules
+    file.write(reinterpret_cast<const char*>(&transit_schedules_[0]),
+               hdr.schedulecount() * sizeof(TransitSchedule));
 
     // Write the updated access restrictions
     file.write(reinterpret_cast<const char*>(&restrictions[0]),
@@ -432,9 +431,9 @@ void GraphTileBuilder::AddTransitRoute(const TransitRoute& route)  {
   route_builder_.emplace_back(std::move(route));
 }
 
-// Add a transit transfer.
-void GraphTileBuilder::AddTransitTransfer(const TransitTransfer& transfer)  {
-  transfer_builder_.emplace_back(std::move(transfer));
+// Add a transit schedule.
+void GraphTileBuilder::AddTransitSchedule(const TransitSchedule& schedule)  {
+  schedule_builder_.emplace_back(std::move(schedule));
 }
 
 // Add an access restriction.
