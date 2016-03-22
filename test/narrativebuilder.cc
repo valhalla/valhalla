@@ -3200,7 +3200,8 @@ void TestBuildKeep_3_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take exit 62 onto I 895 South.",
+      expected_maneuvers,
+      "Keep right to take exit 62 onto I 895 South.",
       "Keep right to take exit 62.",
       "Keep right to take exit 62 onto Interstate 8 95 South.",
       "Continue for 9 miles.");
@@ -3260,9 +3261,11 @@ void TestBuildKeep_5_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take exit 62 toward Annapolis.",
+      expected_maneuvers,
+      "Keep right to take exit 62 toward Annapolis.",
       "Keep right to take exit 62.",
-      "Keep right to take exit 62 toward Annapolis.", "Continue for 9 miles.");
+      "Keep right to take exit 62 toward Annapolis.",
+      "Continue for 9 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -3289,7 +3292,8 @@ void TestBuildKeep_6_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_6(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take I 895 South toward Annapolis.",
+      expected_maneuvers,
+      "Keep right to take I 895 South toward Annapolis.",
       "Keep right to take Interstate 8 95 South.",
       "Keep right to take Interstate 8 95 South toward Annapolis.",
       "Continue for 9 miles.");

@@ -422,7 +422,17 @@
         "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
+        "1": ["Keep right to take exit 62."],
+        "2": ["Keep right to take I 895 South."],
+        "3": ["Keep right to take exit 62 onto I 895 South."],
+        "4": ["Keep right toward Annapolis."],
+        "5": ["Keep right to take exit 62 toward Annapolis."],
+        "6": ["Keep right to take I 895 South toward Annapolis."],
+        "7": ["Keep right to take exit 62 onto I 895 South toward Annapolis."]
+      }
     },
     "keep_verbal": {
       "phrases": {
@@ -436,7 +446,17 @@
         "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
+        "1": ["Keep right to take exit 62."],
+        "2": ["Keep right to take Interstate 8 95 South."],
+        "3": ["Keep right to take exit 62 onto Interstate 8 95 South."],
+        "4": ["Keep right toward Annapolis."],
+        "5": ["Keep right to take exit 62 toward Annapolis."],
+        "6": ["Keep right to take Interstate 8 95 South toward Annapolis."],
+        "7": ["Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."]
+      }
     },
     "keep_to_stay_on": {
       "phrases": {
