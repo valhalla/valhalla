@@ -490,7 +490,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             assumed_schedule = true;
           } else {
             day = date - graphtile->header()->date_created();
-            if (day > transit_departure->end_day()) {
+            if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
               transit_stop_info->set_assumed_schedule(true);
               assumed_schedule = true;
             }
