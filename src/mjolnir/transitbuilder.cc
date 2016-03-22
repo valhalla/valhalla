@@ -9,6 +9,8 @@
 #include <vector>
 #include <queue>
 #include <unordered_map>
+#include <tuple>
+#include <set>
 #include <sqlite3.h>
 #include <spatialite.h>
 #include <fstream>
@@ -34,20 +36,18 @@ using namespace valhalla::mjolnir;
 namespace {
 
 struct Departure {
-  uint64_t days;
   GraphId  orig_pbf_graphid;   // GraphId in pbf tiles
   GraphId  dest_pbf_graphid;   // GraphId in pbf tiles
   uint32_t trip;
   uint32_t route;
   uint32_t blockid;
   uint32_t shapeid;
-  uint32_t end_day;
   uint32_t headsign_offset;
   uint32_t dep_time;
+  uint32_t schedule_index;
   float    orig_dist_traveled;
   float    dest_dist_traveled;
   uint16_t elapsed_time;
-  uint8_t  dow;
   bool     wheelchair_accessible;
 };
 
@@ -122,6 +122,10 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
   // Check if there are no schedule stop pairs in this tile
   std::unordered_multimap<GraphId, Departure> departures;
   uint32_t tile_date = tilebuilder.header()->date_created();
+
+  // Map of unique schedules (validity) in this tile
+  uint32_t schedule_index = 0;
+  std::map<TransitSchedule, uint32_t> schedules;
 
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0,slash_found);
@@ -205,7 +209,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           stop_access[dep.dest_pbf_graphid] = bikes_allowed;
 
           // Compute days of week mask
-          uint8_t dow_mask = kDOWNone;
+          uint32_t dow_mask = kDOWNone;
           for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
             bool dow = sp.service_days_of_week(x);
             if (dow) {
@@ -234,37 +238,50 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
               }
             }
           }
-          dep.dow = dow_mask;
 
           // Compute the valid days
           // set the bits based on the dow.
           boost::gregorian::date start_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
           boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
-          dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
+          uint64_t days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
 
           // if this is a service addition for one day, delete the dow_mask.
           if (sp.service_start_date() == sp.service_end_date())
-            dep.dow = kDOWNone;
+            dow_mask = kDOWNone;
 
           // if dep.days == 0 then feed either starts after the end_date or tile_header_date > end_date
-          if (dep.days == 0 && !sp.service_added_dates_size()) {
+          if (days == 0 && !sp.service_added_dates_size()) {
             LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) + " End date: " + to_iso_extended_string(end_date));
             continue;
           }
 
           dep.headsign_offset = tilebuilder.AddName(sp.trip_headsign());
-          dep.end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
+          uint32_t end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
 
           //if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, d);
+            days = DateTime::remove_service_day(days, start_date, end_date, d);
           }
 
           //if additions are between start and end date then turn on bit.
           for (const auto& x : sp.service_added_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            dep.days = DateTime::add_service_day(dep.days, start_date, end_date, d);
+            days = DateTime::add_service_day(days, start_date, end_date, d);
+          }
+
+          TransitSchedule sched(days, dow_mask, end_day);
+          auto sched_itr = schedules.find(sched);
+          if (sched_itr == schedules.end()) {
+            // Not in the map - add a new transit schedule to the tile
+            tilebuilder.AddTransitSchedule(sched);
+
+            // Add to the map and increment the index
+            schedules[sched] = schedule_index;
+            dep.schedule_index = schedule_index;
+            schedule_index++;
+          } else {
+            dep.schedule_index = sched_itr->second;
           }
 
           // Add to the departures list
@@ -274,7 +291,8 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     }
   }
   LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-           std::to_string(departures.size()) + " departures");
+           std::to_string(departures.size()) + " departures" +
+           " schedules: " + std::to_string(schedules.size()));
   return departures;
 }
 
@@ -790,11 +808,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       else if (transitedge.shapeid != 0)
         LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
 
-      auto shape = GetShape(stopll, endll,transitedge.shapeid, transitedge.orig_dist_traveled,
+      // TODO - if we separate transit edges based on more than just routeid
+      // we will need to do something to differentiate edges (maybe use
+      // lineid) so the shape doesn't get messed up.
+      auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance);
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
-
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -1143,36 +1163,76 @@ void build(const std::string& transit_dir,
         stopedges.intrastation.push_back(stop.parent);
       } **/
 
-      // Find unique transit graph edges.
+      // TODO - perhaps replace this code with use of headsign below
+      // to solve problem of a trip that doesn't go the whole way to
+      // the end of the route line
       std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
+      auto range = departures.equal_range(stop_pbf_graphid);
+       for(auto key = range.first; key != range.second; ++key) {
+         Departure dep = key->second;
+
+         // Identify unique route and arrival stop pairs - associate to a
+         // unique line Id stored in the directed edge.
+         uint32_t lineid;
+         auto m = unique_transit_edges.find({dep.route, dep.dest_pbf_graphid});
+         if (m == unique_transit_edges.end()) {
+           // Add to the map and update the line id
+           lineid = unique_lineid;
+           unique_transit_edges[{dep.route, dep.dest_pbf_graphid}] = unique_lineid;
+           unique_lineid++;
+           stopedges.lines.emplace_back(TransitLine{lineid, dep.route,
+                 dep.dest_pbf_graphid, dep.shapeid, dep.orig_dist_traveled,
+                 dep.dest_dist_traveled});
+         } else {
+           lineid = m->second;
+         }
+
+/* TODO - this had some side effects!
+      // Find unique transit graph edges. Use route Id, headsign offset,
+      // and end node graph Id to form a unique line Id / directed edge.
+      using key_t = std::tuple<uint32_t, uint32_t, GraphId>;
+      auto sorter = [](const key_t& t1, const key_t& t2) {
+        if (std::get<0>(t1) == std::get<0>(t2)) {
+          if (std::get<1>(t1) == std::get<1>(t2)) {
+            return std::get<2>(t1) < std::get<2>(t2);
+          } else {
+            return std::get<1>(t1) <std::get<1>(t2);
+          }
+        } else {
+          return std::get<0>(t1) == std::get<0>(t2);
+        }
+      };
+      std::map<key_t, uint32_t, std::function<bool (const key_t&, const key_t&)> > unique_transit_edges(sorter);
+
       auto range = departures.equal_range(stop_pbf_graphid);
       for(auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
 
-        // Identify unique route and arrival stop pairs - associate to a
-        // unique line Id stored in the directed edge.
+        // Identify unique route, headsign and arrival stop tuples - associate
+        // to a unique line Id stored in the directed edge.
         uint32_t lineid;
-        auto m = unique_transit_edges.find({dep.route, dep.dest_pbf_graphid});
+        key_t tpl = std::make_tuple(dep.route, dep.headsign_offset, dep.dest_pbf_graphid);
+        auto m = unique_transit_edges.find(tpl);
         if (m == unique_transit_edges.end()) {
           // Add to the map and update the line id
           lineid = unique_lineid;
-          unique_transit_edges[{dep.route, dep.dest_pbf_graphid}] = unique_lineid;
+          unique_transit_edges[tpl] = unique_lineid;
           unique_lineid++;
           stopedges.lines.emplace_back(TransitLine{lineid, dep.route,
-                      dep.dest_pbf_graphid, dep.shapeid, dep.orig_dist_traveled, dep.dest_dist_traveled});
+                dep.dest_pbf_graphid, dep.shapeid, dep.orig_dist_traveled,
+                dep.dest_dist_traveled});
         } else {
           lineid = m->second;
         }
+*/
+/*        LOG_DEBUG("Add departure: " + std::to_string(lineid) +
+                " dep time = " + std::to_string(td.departure_time()) +
+                " arr time = " + std::to_string(dep.arr_time));*/
 
         // Form transit departures
         TransitDeparture td(lineid, dep.trip, dep.route,
                     dep.blockid, dep.headsign_offset, dep.dep_time,
-                    dep.elapsed_time, dep.end_day, dep.dow, dep.days);
-
-/*        LOG_DEBUG("Add departure: " + std::to_string(lineid) +
-                     " dep time = " + std::to_string(td.departure_time()) +
-                     " arr time = " + std::to_string(dep.arr_time));*/
-
+                    dep.elapsed_time, dep.schedule_index);
         tilebuilder.AddTransitDeparture(std::move(td));
       }
 
