@@ -15,6 +15,10 @@ namespace {
 //the cutoff at which we will assume the input is too far away from civilisation to be
 //worth correlating to the nearest graph elements
 constexpr float SEARCH_CUTTOFF = 35000.f;
+//during edge correlation, if you end up < 5 meters from the beginning or end of the
+//edge we just assume you were at that node and not actually along the edge
+//we keep it small because point and click interfaces are more accurate than gps input
+constexpr float NODE_SNAP = 5.f;
 //during side of street computations we figured you're on the street if you are less than
 //5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
 //data for the roads it might want half that) but its better to assume on street than not
@@ -123,21 +127,7 @@ PathLocation::SideOfStreet GetSide(const DirectedEdge* edge, const std::unique_p
 const NodeInfo* GetEndNode(GraphReader& reader, const DirectedEdge* edge) {
   //the node could be in another tile so we grab that
   const auto tile = reader.GetGraphTile(edge->endnode());
-  //grab the nth edge leaving the node
   return tile->node(edge->endnode());
-}
-
-bool FilterNode(const GraphTile* tile, const NodeInfo* node, const EdgeFilter filter) {
-  //for each edge leaving this node
-  const auto start_edge = tile->directededge(node->edge_index());
-  const auto end_edge = start_edge + node->edge_count();
-  for(auto edge = start_edge; edge < end_edge; ++edge) {
-    //if this edge is good we'll take
-    if(!filter(edge)){
-      return false;
-    }
-  }
-  return true;
 }
 
 PathLocation CorrelateNode(GraphReader& reader, const Location& location, EdgeFilter filter, const GraphTile* tile, const NodeInfo* node, const float sqdist){
@@ -198,16 +188,13 @@ PathLocation CorrelateEdge(GraphReader& reader, const Location& location, EdgeFi
   if(closest_edge != nullptr){
     //correlate the spot
     correlated.CorrelateVertex(std::get<0>(closest_point));
-    //compute partial distance along the shape
+    //we need the ratio in the direction of the edge we are correlated to
     double partial_length = 0;
     for(size_t i = 0; i < std::get<2>(closest_point); ++i)
-        partial_length += closest_edge_info->shape()[i].Distance(closest_edge_info->shape()[i + 1]);
+      partial_length += closest_edge_info->shape()[i].Distance(closest_edge_info->shape()[i + 1]);
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
+    partial_length = std::min(partial_length, static_cast<double>(closest_edge->length()));
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
-    // The length ratio at this point could be slightly greater than 1.0
-    // because of floating point imprecisions during the partial_length
-    // computation, so we clip it to 1.0.
-    length_ratio = std::min(1.0f, length_ratio);
     if(!closest_edge->forward())
       length_ratio = 1.f - length_ratio;
     //side of street
@@ -241,39 +228,6 @@ PathLocation CorrelateEdge(GraphReader& reader, const Location& location, EdgeFi
 
   //give it back
   return correlated;
-}
-
-PathLocation NodeSearch(const Location& location, GraphReader& reader, EdgeFilter filter) {
-  //grab the tile the lat, lon is in
-  const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-
-  //we couldn't find any data for this region
-  //TODO: be smarter about this either in loki or in baldr cache
-  if(!tile)
-    throw std::runtime_error("No data found for location");
-
-  //grab the absolute closest node to this location
-  float square_distance = std::numeric_limits<float>::max();
-  //a place to keep track of which node is closest to our location
-  const NodeInfo* closest = nullptr;
-  DistanceApproximator approximator(location.latlng_);
-  //for each node
-  const auto start_node = tile->node(0);
-  const auto end_node = start_node + tile->header()->nodecount();
-  for(auto node = start_node; node < end_node; ++node) {
-    //if this is closer then its better, unless nothing interesting leaves it..
-    float node_sqdist = approximator.DistanceSquared(node->latlng());
-    if(node_sqdist < square_distance && !FilterNode(tile, node, filter)) {
-      square_distance = node_sqdist;
-      closest = node;
-    }
-  }
-  //TODO: look in other tiles
-  if(closest == nullptr)
-    throw std::runtime_error("No data found for location");
-
-  //get some information about it that we can use to make a path from it
-  return CorrelateNode(reader, location, filter, tile, closest, square_distance);
 }
 
 std::tuple<PointLL, float, size_t> Project(const PointLL& p, const std::vector<PointLL>& shape) {
@@ -380,16 +334,19 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     }
   }
 
-  //snap to node
-  bool front = std::get<0>(closest_point) == closest_edge_info->shape().front();
-  bool back = std::get<0>(closest_point) == closest_edge_info->shape().back();
+  //this may be at a node, either because it was the closest thing or from snap tolerance
+  bool front = std::get<0>(closest_point) == closest_edge_info->shape().front() ||
+               location.latlng_.Distance(closest_edge_info->shape().front()) < NODE_SNAP;
+  bool back = std::get<0>(closest_point) == closest_edge_info->shape().back() ||
+              location.latlng_.Distance(closest_edge_info->shape().back()) < NODE_SNAP;
   //it was the begin node
   if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
     const GraphTile* other_tile;
     auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
     return CorrelateNode(reader, location, filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
-  }//it was the end node
-  else if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
+  }
+  //it was the end node
+  if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
     const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
     return CorrelateNode(reader, location, filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
   }
@@ -402,10 +359,8 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
 namespace valhalla {
 namespace loki {
 
-PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter filter, const SearchStrategy strategy) {
-  if(strategy == SearchStrategy::EDGE)
-    return EdgeSearch(location, reader, filter);
-  return NodeSearch(location, reader, filter);
+PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter filter) {
+  return EdgeSearch(location, reader, filter);
 }
 
 }
