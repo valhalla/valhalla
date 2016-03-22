@@ -272,7 +272,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
 
           TransitSchedule sched(days, dow_mask, end_day);
           auto sched_itr = schedules.find(sched);
-          if (schedules.find(sched) == schedules.end()) {
+          if (sched_itr == schedules.end()) {
             // Not in the map - add a new transit schedule to the tile
             tilebuilder.AddTransitSchedule(sched);
 
@@ -808,12 +808,12 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       else if (transitedge.shapeid != 0)
         LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
 
-      // TODO - how to share shape between 2 different stop Ids and routes
-      // but in different directions? For now use the line Id, which will not
-      // share edge info or shape
+      // TODO - if we separate transit edges based on more than just routeid
+      // we will need to do something to differentiate edges (maybe use
+      // lineid) so the shape doesn't get messed up.
       auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance);
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.lineid,
+      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
@@ -1163,6 +1163,31 @@ void build(const std::string& transit_dir,
         stopedges.intrastation.push_back(stop.parent);
       } **/
 
+      // TODO - perhaps replace this code with use of headsign below
+      // to solve problem of a trip that doesn't go the whole way to
+      // the end of the route line
+      std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
+      auto range = departures.equal_range(stop_pbf_graphid);
+       for(auto key = range.first; key != range.second; ++key) {
+         Departure dep = key->second;
+
+         // Identify unique route and arrival stop pairs - associate to a
+         // unique line Id stored in the directed edge.
+         uint32_t lineid;
+         auto m = unique_transit_edges.find({dep.route, dep.dest_pbf_graphid});
+         if (m == unique_transit_edges.end()) {
+           // Add to the map and update the line id
+           lineid = unique_lineid;
+           unique_transit_edges[{dep.route, dep.dest_pbf_graphid}] = unique_lineid;
+           unique_lineid++;
+           stopedges.lines.emplace_back(TransitLine{lineid, dep.route,
+                 dep.dest_pbf_graphid, dep.shapeid, dep.orig_dist_traveled,
+                 dep.dest_dist_traveled});
+         } else {
+           lineid = m->second;
+         }
+
+/* TODO - this had some side effects!
       // Find unique transit graph edges. Use route Id, headsign offset,
       // and end node graph Id to form a unique line Id / directed edge.
       using key_t = std::tuple<uint32_t, uint32_t, GraphId>;
@@ -1178,12 +1203,13 @@ void build(const std::string& transit_dir,
         }
       };
       std::map<key_t, uint32_t, std::function<bool (const key_t&, const key_t&)> > unique_transit_edges(sorter);
+
       auto range = departures.equal_range(stop_pbf_graphid);
       for(auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
 
-        // Identify unique route and arrival stop pairs - associate to a
-        // unique line Id stored in the directed edge.
+        // Identify unique route, headsign and arrival stop tuples - associate
+        // to a unique line Id stored in the directed edge.
         uint32_t lineid;
         key_t tpl = std::make_tuple(dep.route, dep.headsign_offset, dep.dest_pbf_graphid);
         auto m = unique_transit_edges.find(tpl);
@@ -1198,16 +1224,15 @@ void build(const std::string& transit_dir,
         } else {
           lineid = m->second;
         }
+*/
+/*        LOG_DEBUG("Add departure: " + std::to_string(lineid) +
+                " dep time = " + std::to_string(td.departure_time()) +
+                " arr time = " + std::to_string(dep.arr_time));*/
 
         // Form transit departures
         TransitDeparture td(lineid, dep.trip, dep.route,
                     dep.blockid, dep.headsign_offset, dep.dep_time,
                     dep.elapsed_time, dep.schedule_index);
-
-/*        LOG_DEBUG("Add departure: " + std::to_string(lineid) +
-                     " dep time = " + std::to_string(td.departure_time()) +
-                     " arr time = " + std::to_string(dep.arr_time));*/
-
         tilebuilder.AddTransitDeparture(std::move(td));
       }
 
