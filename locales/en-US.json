@@ -562,14 +562,23 @@
         "1": "Exit the roundabout onto <STREET_NAMES>.",
         "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Exit the roundabout."],
+        "1": ["Exit the roundabout onto Philadelphia Road/MD 7."],
+        "2": ["Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."]
+      }
     },
     "exit_roundabout_verbal": {
       "phrases": {
         "0": "Exit the roundabout.",
         "1": "Exit the roundabout onto <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Exit the roundabout."],
+        "1": ["Exit the roundabout onto Philadelphia Road, Maryland 7."]
+      }
     },
     "enter_ferry": null,
     "enter_ferry_verbal_alert": null,
