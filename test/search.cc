@@ -15,8 +15,10 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
+/*
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
+*/
 
 namespace {
 
