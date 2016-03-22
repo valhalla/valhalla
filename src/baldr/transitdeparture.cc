@@ -1,5 +1,7 @@
 #include "baldr/transitdeparture.h"
 
+#include <valhalla/midgard/logging.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -10,21 +12,42 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
                  const uint32_t headsign_offset,
                  const uint32_t departure_time,
                  const uint32_t elapsed_time,
-                 const uint32_t end_day,
-                 const uint32_t days_of_week,
-                 const uint64_t days)
-    : lineid_(lineid),
-      tripid_(tripid),
-      routeid_(routeid),
-      blockid_(blockid),
-      headsign_offset_(headsign_offset),
-      departure_time_(departure_time),
-      end_day_(end_day),
-      days_of_week_(days_of_week),
-      days_(days) {
-  // TODO - protect against max values...blockId?
-  uint32_t elapsed = (elapsed_time < 32767) ? elapsed_time : 32767;
-  elapsed_time_    = elapsed;
+                 const uint32_t schedule_index)
+    : tripid_(tripid),
+      headsign_offset_(headsign_offset) {
+  // Protect against exceeding max. values
+  if (lineid > kMaxTransitLineId) {
+    throw std::runtime_error("Exceeded maximum transit line Ids per tile");
+  }
+  lineid_ = lineid;
+
+  if (routeid > kMaxTransitRoutes) {
+    throw std::runtime_error("Exceeded maximum transit routes per tile");
+  }
+  routeid_ = routeid;
+
+  if (blockid > kMaxTransitBlockId) {
+    throw std::runtime_error("Exceeded maximum transit block Id");
+  }
+  blockid_ = blockid;
+
+  if (schedule_index > kMaxTransitSchedules) {
+    throw std::runtime_error("Exceeded maximum transit schedules per tile");
+  }
+  schedule_index_ = schedule_index;
+
+  if (departure_time_ > kMaxTransitDepartureTime) {
+    throw std::runtime_error("Exceeded maximum transit departure time");
+  }
+  departure_time_ = departure_time;
+
+  if (elapsed_time > kMaxTransitElapsedTime) {
+    LOG_ERROR("Elapsed time = " + std::to_string(elapsed_time));
+    elapsed_time_ = kMaxTransitElapsedTime;
+    //throw std::runtime_error("Exceeded maximum transit elapsed time");
+  } else {
+    elapsed_time_ = elapsed_time;
+  }
 }
 
 // Get the line Id - for lookup of all departures along an edge. Each line Id
@@ -63,19 +86,9 @@ uint32_t TransitDeparture::elapsed_time() const {
   return elapsed_time_;
 }
 
-// Get the end day for this scheduled departure.
-uint32_t TransitDeparture::end_day() const {
-  return end_day_;
-}
-
-// Gets the days of the week for this departure.
-uint32_t TransitDeparture::days_of_week() const {
-  return days_of_week_;
-}
-
-// Gets the days for this departure.
-uint64_t TransitDeparture::days() const {
-  return days_;
+// Get the schedule index.
+uint32_t TransitDeparture::schedule_index() const {
+  return schedule_index_;
 }
 
 // operator < - for sorting. Sort by line Id and departure time.

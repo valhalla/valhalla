@@ -51,7 +51,7 @@ GraphTile::GraphTile()
       departures_(nullptr),
       transit_stops_(nullptr),
       transit_routes_(nullptr),
-      transit_transfers_(nullptr),
+      transit_schedules_(nullptr),
       access_restrictions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
@@ -110,9 +110,9 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
     ptr += header_->routecount() * sizeof(TransitRoute);
 
-    // Set a pointer to the transit transfer list
-    transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
-    ptr += header_->transfercount() * sizeof(TransitTransfer);
+    // Set a pointer to the transit schedule list
+    transit_schedules_ = reinterpret_cast<TransitSchedule*>(ptr);
+    ptr += header_->schedulecount() * sizeof(TransitSchedule);
 
     // Set a pointer access restriction list
     access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
@@ -401,7 +401,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   // Departures are sorted by edge Id and then by departure time.
-  // Binary search to find a departure with matching edge Id.
+  // Binary search to find a departure with matching line Id.
   int32_t low = 0;
   int32_t high = count-1;
   int32_t mid;
@@ -412,7 +412,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
       found = true;
       break;
     }
-    if (lineid < departures_[mid].lineid() ) {
+    if (lineid < departures_[mid].lineid()) {
       high = mid - 1;
     } else {
       low = mid + 1;
@@ -434,27 +434,21 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
+  const TransitDeparture* dep = &departures_[mid];
   while (true) {
     // Make sure valid departure time
-    if (departures_[mid].departure_time() >= current_time) {
-      // If within 60 days of tile creation use the days mask else fallback
-      // to the day of week mask
-      const TransitDeparture& dep = departures_[mid];
-      if (!date_before_tile && day <= dep.end_day()) {
-        // Check days bit
-        if ((dep.days() & (1ULL << day))) {
-          return &dep;
-        }
-      } else {
-        if ((dep.days_of_week() & dow) > 0)
-          return &dep;
+    if (dep->departure_time() >= current_time) {
+      if (GetTransitSchedule(dep->schedule_index())->IsValid(day, dow, date_before_tile)) {
+        return dep;
       }
     }
 
-    // Advance to next departure
-    if (mid+1 < count && departures_[mid+1].lineid() == lineid) {
-      mid++;
-    } else {
+    // Advance to next departure and break if
+    if (mid++ == count) {
+      break;
+    }
+    dep++;
+    if (dep->lineid() != lineid) {
       break;
     }
   }
@@ -544,107 +538,16 @@ const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
   throw std::runtime_error("GraphTile GetTransitRoute index out of bounds");
 }
 
-// Get a pointer to the first transfer record given the stop Id and also
-// compute the number of transfer records for the stop.
-std::pair<TransitTransfer*, uint32_t> GraphTile::GetTransfers(
-              const uint32_t stopid) const {
-  uint32_t count = header_->transfercount();
-  if (count == 0) {
-    return {nullptr, 0};
-  }
-
-  // Binary search
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  bool found = false;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_transfers_[mid].from_stopid() == stopid) {
-      found = true;
-      break;
-    }
-    if (stopid < transit_transfers_[mid].from_stopid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  if (found) {
-    // Back up while prior is equal (or at the beginning)
-    while (mid > 0 &&
-          transit_transfers_[mid-1].from_stopid() == stopid) {
-      mid--;
-    }
-
-    // Set the start and increment until not equal to get the count
-    uint32_t n = 0;
-    TransitTransfer* start = &transit_transfers_[mid];
-    while (transit_transfers_[mid].from_stopid() == stopid && mid < count) {
-      n++;
-      mid++;
-    }
-    return {start, n};
-  } else {
-    LOG_DEBUG("No transfers found from stopid = " + std::to_string(stopid));
-    return {nullptr, 0};
-  }
-}
-
-// Get a pointer to the transfer record given the from stop Id and
-// the to stop id.
-TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
-                                        const uint32_t to_stopid) const {
-  uint32_t count = header_->transfercount();
-  if (count == 0) {
+// Get the transit schedule given its schedule index.
+const TransitSchedule* GraphTile::GetTransitSchedule(const uint32_t idx) const {
+  uint32_t count = header_->schedulecount();
+  if (count == 0)
     return nullptr;
-  }
 
-  // Binary search
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  bool found = false;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_transfers_[mid].from_stopid() == from_stopid) {
-      found = true;
-      break;
-    }
-    if (from_stopid < transit_transfers_[mid].from_stopid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
+  if (idx < count) {
+    return &transit_schedules_[idx];
   }
-
-  if (found) {
-    // Back up while prior is equal (or at the beginning)
-    uint32_t m = mid;
-    while (mid > 0 &&
-          transit_transfers_[mid-1].from_stopid() == from_stopid) {
-      if (transit_transfers_[mid-1].to_stopid() == to_stopid) {
-        return &transit_transfers_[mid-1];
-      }
-      mid--;
-    }
-
-    // Set the start and increment until not equal to get the count
-    mid = m;
-    TransitTransfer* start = &transit_transfers_[mid];
-    while (transit_transfers_[mid].from_stopid() == from_stopid && mid < count) {
-      if (transit_transfers_[mid].to_stopid() == to_stopid) {
-        return &transit_transfers_[mid];
-      }
-      mid++;
-    }
-    return nullptr;
-  } else {
-    LOG_DEBUG("No transfers found from stopid = " + std::to_string(from_stopid) +
-              " to stopid " + std::to_string(to_stopid));
-    return nullptr;
-  }
+  throw std::runtime_error("GraphTile GetTransitSchedule index out of bounds");
 }
 
 // Get the access restriction given its directed edge index

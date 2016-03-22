@@ -126,6 +126,11 @@ uint32_t GraphTileHeader::departurecount() const {
 
 // Sets the number of transit departures in this tile.
 void GraphTileHeader::set_departurecount(const uint32_t departures) {
+  // Check against limit
+  if (departures > kMaxTransitDepartures) {
+    throw std::runtime_error(
+        "Exceeding maximum number of transit departures per tile");
+  }
   departurecount_ = departures;
 }
 
@@ -136,6 +141,11 @@ uint32_t GraphTileHeader::stopcount() const {
 
 // Sets the number of transit stops in this tile.
 void GraphTileHeader::set_stopcount(const uint32_t stops) {
+  // Check against limit
+  if (stops >= kMaxTransitStops) {
+    throw std::runtime_error(
+        "Exceeding maximum number of transit stops per tile");
+  }
   stopcount_ = stops;
 }
 
@@ -146,17 +156,27 @@ uint32_t GraphTileHeader::routecount() const {
 
 // Sets the number of transit routes in this tile.
 void GraphTileHeader::set_routecount(const uint32_t routes) {
+  // Check against limit
+  if (routes >= kMaxTransitRoutes) {
+    throw std::runtime_error(
+        "Exceeding maximum number of transit routes per tile");
+  }
   routecount_ = routes;
 }
 
-// Gets the number of transit transfers in this tile.
-uint32_t GraphTileHeader::transfercount() const {
-  return transfercount_;
+// Gets the number of transit schedules in this tile.
+uint32_t GraphTileHeader::schedulecount() const {
+  return schedulecount_;
 }
 
-// Sets the number of transit transfers in this tile.
-void GraphTileHeader::set_transfercount(const uint32_t transfers) {
-  transfercount_ = transfers;
+// Sets the number of transit schedules in this tile.
+void GraphTileHeader::set_schedulecount(const uint32_t schedules) {
+  // Check against limit
+  if (schedules >= kMaxTransitSchedules) {
+    throw std::runtime_error(
+        "Exceeding maximum number of transit schedule entries per tile");
+  }
+  schedulecount_ = schedules;
 }
 
 // Gets the number of access restrictions in this tile.
