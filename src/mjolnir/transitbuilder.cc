@@ -508,8 +508,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::vector<float> distances,
                 const std::vector<uint32_t>& route_types) {
   auto t1 = std::chrono::high_resolution_clock::now();
-LOG_INFO("Add transit to graph: TileID = " + std::to_string(tilebuilder.header()->graphid().tileid()) +
-        " size = " + std::to_string(tilebuilder.size()));
+
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfo> currentnodes(std::move(tilebuilder.nodes()));
   uint32_t nodecount = currentnodes.size();
@@ -817,7 +816,7 @@ LOG_INFO("Add transit to graph: TileID = " + std::to_string(tilebuilder.header()
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.lineid,
            origin_node, endnode, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
-      directededge.set_forward(true);
+      directededge.set_forward(added);
 
       // Add to list of directed edges
       tilebuilder.directededges().emplace_back(std::move(directededge));
