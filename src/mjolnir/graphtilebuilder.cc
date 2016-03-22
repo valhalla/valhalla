@@ -676,6 +676,57 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
   header_builder_.set_date_created(tile_creation_date);
 }
 
+//return this tiles' edges' bins and its edges' tweeners' bins
+using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
+std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
+  std::array<std::vector<GraphId>, kBinCount> bins;
+  //only do most detailed level
+  if(tile->header()->graphid().level() != hierarchy.levels().rbegin()->first)
+    return bins;
+  auto tiles = hierarchy.levels().rbegin()->second.tiles;
+
+  //each edge please
+  std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
+  const auto* start_edge = tile->directededge(0);
+  for(const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount(); ++edge) {
+    //dont bin these
+    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
+      continue;
+
+    //already binned this
+    auto id = ids.insert(edge->edgeinfo_offset());
+    if(!id.second)
+      continue;
+
+    //intersect the shape
+    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    const auto& shape = info->shape();
+    auto intersection = tiles.Intersect(shape);
+
+    //bin some in, save some for later, ignore some
+    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(), edge - start_edge);
+    for(const auto& i : intersection) {
+      //to avoid dups and minimize having to leave the tile for shape we:
+      //always write a given edge to the tile it originates in
+      bool originating = i.first == edge_id.tileid();
+      //never write a given edge to the tile it terminates in
+      bool terminating = i.first == edge->endnode().tileid();
+      //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
+      bool intermediate = i.first < edge->endnode().tileid();
+      if(originating || (intermediate && !terminating)) {
+        //which set of bins
+        auto& out_bins = originating ? bins : tweeners.insert({GraphId(i.first, edge_id.level(), 0), {}}).first->second;
+        //keep the edge id
+        for(auto bin : i.second)
+          out_bins[bin].push_back(edge_id);
+      }
+    }
+  }
+
+  //give back this tiles bins
+  return bins;
+}
+
 void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
   //read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];

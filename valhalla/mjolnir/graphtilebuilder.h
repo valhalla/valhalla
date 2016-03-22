@@ -297,6 +297,15 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddTileCreationDate(const uint32_t tile_creation_date);
 
   /**
+   * Generates bin information for the edges in the provided tile
+   * @param hierarchy  to perform the intersection with the bins' geoms
+   * @param tile       the tile whose edges need the binned
+   * @param tweeners   the additional bins in other tiles that intersect this tiles edges
+   */
+  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners);
+
+  /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
    * and the bins themselves, everything else is copied directly without ever looking at it
    * @param hierarchy  to figure out where to save the tile
