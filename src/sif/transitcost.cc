@@ -135,10 +135,9 @@ class TransitCost : public DynamicCost {
 
   /**
    * Returns the transfer cost between 2 transit stops.
-   * @param  transfer  Pointer to transit transfer record.
    * @return  Returns the transfer cost and time (seconds).
    */
-  virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
+  virtual Cost TransferCost() const;
 
   /**
    * Returns the default transfer cost between 2 transit lines.
@@ -350,24 +349,10 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
 }
 
 // Returns the transfer cost between 2 transit stops.
-Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
-  if (transfer == nullptr) {
-    // No transfer record exists - use defaults...15 seconds for in station
-    // transfer and 1 minute otherwise
-    return { (transfer_cost_ +  transfer_penalty_) * transfer_factor_,
-              transfer_cost_ * 4.0f};
-  }
-  switch (transfer->type()) {
-    case TransferType::kRecommended:
-      return { 15.0f + (transfer_penalty_ * transfer_factor_), 15.0f};
-    case TransferType::kTimed:
-      return { 15.0f + (transfer_penalty_ * transfer_factor_), 15.0f};
-    case TransferType::kMinTime:
-      return { static_cast<float>(transfer->mintime() + (transfer_penalty_ * transfer_factor_)) ,
-        static_cast<float>(transfer->mintime())};
-    case TransferType::kNotPossible:
-      return kImpossibleCost;
-  }
+Cost TransitCost::TransferCost() const {
+  // Defaults...15 seconds for in station transfer and 1 minute otherwise
+  return { (transfer_cost_ +  transfer_penalty_) * transfer_factor_,
+            transfer_cost_ * 4.0f};
 }
 
 // Returns the default transfer cost between 2 transit lines.

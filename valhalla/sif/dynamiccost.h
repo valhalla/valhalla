@@ -4,7 +4,6 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 
@@ -188,10 +187,9 @@ class DynamicCost {
 
   /**
    * Returns the transfer cost between 2 transit stops.
-   * @param  transfer  Pointer to transit transfer record.
    * @return  Returns the transfer cost and time (seconds).
    */
-  virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
+  virtual Cost TransferCost() const;
 
   /**
    * Returns the default transfer cost between 2 transit lines.
