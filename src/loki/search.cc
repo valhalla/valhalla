@@ -272,7 +272,12 @@ std::tuple<PointLL, float, size_t> Project(const PointLL& p, const std::vector<P
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment);
 }
 
-PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter) {
+}
+
+namespace valhalla {
+namespace loki {
+
+PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter filter) {
   //iterate over bins in a closest first manner
   const auto& tiles = reader.GetTileHierarchy().levels().rbegin()->second.tiles;
   const auto level = reader.GetTileHierarchy().levels().rbegin()->first;
@@ -293,7 +298,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     try {
       //TODO: make configurable the radius at which we give up searching
       auto bin = binner();
-      if(std::get<2>(bin) > 35000.f)
+      if(std::get<2>(bin) > SEARCH_CUTTOFF)
         throw std::runtime_error("No data found for location");
 
       //the closest thing in this bin is further than what we have already
@@ -352,15 +357,6 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
   }
   //it was along the edge
   return CorrelateEdge(reader, location, filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
-}
-
-}
-
-namespace valhalla {
-namespace loki {
-
-PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter filter) {
-  return EdgeSearch(location, reader, filter);
 }
 
 }
