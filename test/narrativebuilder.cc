@@ -1829,8 +1829,10 @@ void TestBuildTurnInstructions_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Turn left.",
-                                  "Turn left.", "Turn left.",
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Turn left.",
+                                  "Turn left.",
+                                  "Turn left.",
                                   "Continue for a half mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -1954,8 +1956,10 @@ void TestBuildBearInstructions_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateBearManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bear right.",
-                                  "Bear right.", "Bear right.",
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bear right.",
+                                  "Bear right.",
+                                  "Bear right.",
                                   "Continue for 60 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -2078,8 +2082,10 @@ void TestBuildUturnInstructions_0_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateUturnManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Make a left U-turn.",
-                                  "Make a left U-turn.", "Make a left U-turn.",
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Make a left U-turn.",
+                                  "Make a left U-turn.",
+                                  "Make a left U-turn.",
                                   "Continue for 4 tenths of a mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -2142,7 +2148,8 @@ void TestBuildUturnInstructions_2_miles_en_US() {
                                           "Turn right onto Bunker Hill Road.",
                                           "Continue for 2 tenths of a mile.");
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Make a left U-turn to stay on Bunker Hill Road.",
+      expected_maneuvers,
+      "Make a left U-turn to stay on Bunker Hill Road.",
       "Make a left U-turn to stay on Bunker Hill Road.",
       "Make a left U-turn to stay on Bunker Hill Road.",
       "Continue for 2 tenths of a mile.");
@@ -2302,9 +2309,11 @@ void TestBuildRampStraight_1_miles_en_US() {
   PopulateRampStraightManeuverList_1(expected_maneuvers, country_code,
                                      state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Stay straight to take the US 322 East ramp.",
+      expected_maneuvers,
+      "Stay straight to take the US 322 East ramp.",
       "Stay straight to take the U.S. 3 22 East ramp.",
-      "Stay straight to take the U.S. 3 22 East ramp.", "");
+      "Stay straight to take the U.S. 3 22 East ramp.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2332,9 +2341,11 @@ void TestBuildRampStraight_2_miles_en_US() {
   PopulateRampStraightManeuverList_2(expected_maneuvers, country_code,
                                      state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Stay straight to take the ramp toward Hershey.",
+      expected_maneuvers,
       "Stay straight to take the ramp toward Hershey.",
-      "Stay straight to take the ramp toward Hershey.", "");
+      "Stay straight to take the ramp toward Hershey.",
+      "Stay straight to take the ramp toward Hershey.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2374,7 +2385,7 @@ void TestBuildRampStraight_3_miles_en_US() {
 ///////////////////////////////////////////////////////////////////////////////
 // FormRampStraightInstruction
 // 4 "Stay straight to take the <NAME_SIGN> ramp."
-// 4 "Stay straight to take the <NAME_SIGN> ramp."
+// 3 "Stay straight to take the <NAME_SIGN> ramp."
 // 4 "Stay straight to take the <NAME_SIGN> ramp."
 void TestBuildRampStraight_4_miles_en_US() {
   std::string country_code = "US";
@@ -2394,9 +2405,11 @@ void TestBuildRampStraight_4_miles_en_US() {
   PopulateRampStraightManeuverList_4(expected_maneuvers, country_code,
                                      state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Stay straight to take the Gettysburg Pike ramp.",
+      expected_maneuvers,
       "Stay straight to take the Gettysburg Pike ramp.",
-      "Stay straight to take the Gettysburg Pike ramp.", "");
+      "Stay straight to take the Gettysburg Pike ramp.",
+      "Stay straight to take the Gettysburg Pike ramp.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2425,7 +2438,8 @@ void TestBuildRamp_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the ramp on the right.",
                                   "Take the ramp on the right.",
-                                  "Take the ramp on the right.", "");
+                                  "Take the ramp on the right.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2484,7 +2498,8 @@ void TestBuildRamp_2_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the ramp on the left toward JFK.",
                                   "Take the ramp on the left toward JFK.",
-                                  "Take the ramp on the left toward JFK.", "");
+                                  "Take the ramp on the left toward JFK.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2514,7 +2529,8 @@ void TestBuildRamp_3_miles_en_US() {
       expected_maneuvers,
       "Take the South Conduit Avenue ramp on the left toward JFK.",
       "Take the South Conduit Avenue ramp on the left.",
-      "Take the South Conduit Avenue ramp on the left toward JFK.", "");
+      "Take the South Conduit Avenue ramp on the left toward JFK.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2573,7 +2589,8 @@ void TestBuildRamp_5_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Turn right to take the ramp.",
                                   "Turn right to take the ramp.",
-                                  "Turn right to take the ramp.", "");
+                                  "Turn right to take the ramp.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2600,9 +2617,11 @@ void TestBuildRamp_6_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_6(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Turn left to take the PA 283 West ramp.",
+      expected_maneuvers,
+      "Turn left to take the PA 283 West ramp.",
       "Turn left to take the Pennsylvania 2 83 West ramp.",
-      "Turn left to take the Pennsylvania 2 83 West ramp.", "");
+      "Turn left to take the Pennsylvania 2 83 West ramp.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2691,9 +2710,11 @@ void TestBuildRamp_9_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateRampManeuverList_9(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Turn right to take the Gettysburg Pike ramp.",
+      expected_maneuvers,
       "Turn right to take the Gettysburg Pike ramp.",
-      "Turn right to take the Gettysburg Pike ramp.", "");
+      "Turn right to take the Gettysburg Pike ramp.",
+      "Turn right to take the Gettysburg Pike ramp.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2722,7 +2743,8 @@ void TestBuildExit_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the exit on the right.",
                                   "Take the exit on the right.",
-                                  "Take the exit on the right.", "");
+                                  "Take the exit on the right.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2751,7 +2773,8 @@ void TestBuildExit_1_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take exit 67 B-A on the right.",
                                   "Take exit 67 B-A on the right.",
-                                  "Take exit 67 B-A on the right.", "");
+                                  "Take exit 67 B-A on the right.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2808,9 +2831,11 @@ void TestBuildExit_3_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take exit 67 B-A on the right onto US 322 West.",
+      expected_maneuvers,
+      "Take exit 67 B-A on the right onto US 322 West.",
       "Take exit 67 B-A on the right.",
-      "Take exit 67 B-A on the right onto U.S. 3 22 West.", "");
+      "Take exit 67 B-A on the right onto U.S. 3 22 West.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2837,9 +2862,11 @@ void TestBuildExit_4_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the exit on the right toward Lewistown.",
+      expected_maneuvers,
       "Take the exit on the right toward Lewistown.",
-      "Take the exit on the right toward Lewistown.", "");
+      "Take the exit on the right toward Lewistown.",
+      "Take the exit on the right toward Lewistown.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2866,9 +2893,11 @@ void TestBuildExit_5_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take exit 67 B-A on the right toward Lewistown.",
+      expected_maneuvers,
+      "Take exit 67 B-A on the right toward Lewistown.",
       "Take exit 67 B-A on the right.",
-      "Take exit 67 B-A on the right toward Lewistown.", "");
+      "Take exit 67 B-A on the right toward Lewistown.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2898,7 +2927,8 @@ void TestBuildExit_6_miles_en_US() {
       expected_maneuvers,
       "Take the US 322 West exit on the right toward Lewistown.",
       "Take the U.S. 3 22 West exit on the right.",
-      "Take the U.S. 3 22 West exit on the right toward Lewistown.", "");
+      "Take the U.S. 3 22 West exit on the right toward Lewistown.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2956,9 +2986,11 @@ void TestBuildExit_8_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_8(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the White Marsh Boulevard exit on the left.",
+      expected_maneuvers,
       "Take the White Marsh Boulevard exit on the left.",
-      "Take the White Marsh Boulevard exit on the left.", "");
+      "Take the White Marsh Boulevard exit on the left.",
+      "Take the White Marsh Boulevard exit on the left.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -3168,7 +3200,8 @@ void TestBuildKeep_3_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take exit 62 onto I 895 South.",
+      expected_maneuvers,
+      "Keep right to take exit 62 onto I 895 South.",
       "Keep right to take exit 62.",
       "Keep right to take exit 62 onto Interstate 8 95 South.",
       "Continue for 9 miles.");
@@ -3228,9 +3261,11 @@ void TestBuildKeep_5_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take exit 62 toward Annapolis.",
+      expected_maneuvers,
+      "Keep right to take exit 62 toward Annapolis.",
       "Keep right to take exit 62.",
-      "Keep right to take exit 62 toward Annapolis.", "Continue for 9 miles.");
+      "Keep right to take exit 62 toward Annapolis.",
+      "Continue for 9 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -3257,7 +3292,8 @@ void TestBuildKeep_6_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateKeepManeuverList_6(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Keep right to take I 895 South toward Annapolis.",
+      expected_maneuvers,
+      "Keep right to take I 895 South toward Annapolis.",
       "Keep right to take Interstate 8 95 South.",
       "Keep right to take Interstate 8 95 South toward Annapolis.",
       "Continue for 9 miles.");
