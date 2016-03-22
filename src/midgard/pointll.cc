@@ -87,9 +87,9 @@ float PointLL::Distance(const PointLL& ll2) const {
 
   // Delta longitude. Don't need to worry about crossing 180
   // since cos(x) = cos(-x)
-  double deltalng = (ll2.lng() - lng()) * kRadPerDeg;
-  double a = lat() * kRadPerDeg;
-  double c = ll2.lat() * kRadPerDeg;
+  double deltalng = (ll2.lng() - lng()) * RAD_PER_DEG;
+  double a = lat() * RAD_PER_DEG;
+  double c = ll2.lat() * RAD_PER_DEG;
 
   // Find the angle subtended in radians (law of cosines)
   double cosb = (sin(a) * sin(c)) + (cos(a) * cos(c) * cos(deltalng));

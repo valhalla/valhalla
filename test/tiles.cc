@@ -1,9 +1,11 @@
 #include "test.h"
-#include "valhalla/midgard/tiles.h"
-#include "valhalla/midgard/aabb2.h"
-#include "valhalla/midgard/pointll.h"
+#include "midgard/tiles.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 
-using namespace std;
+#include <random>
+
 using namespace valhalla::midgard;
 
 namespace {
@@ -200,33 +202,154 @@ void test_intersect_linestring() {
     if(i.first != 791318)
       throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
 }
-/*
-void test_intersect_circle() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
-  //TODO:
-}
 
 void test_random_linestring() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
+  Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
   std::default_random_engine generator;
   std::uniform_real_distribution<> distribution(-10, 10);
-  for(int i = 0; i < 10000; ++i) {
+  for(int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
     for(int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
-    bool leaves;
-    auto answer = g.intersect(linestring, leaves);
-    for(auto a : answer)
-      if(a > 24)
-        throw std::runtime_error("Non-existant cell!");
+    auto answer = t.Intersect(linestring);
+    for(auto tile : answer)
+      for(auto sub : tile.second)
+        if(sub > 24)
+          throw std::runtime_error("Non-existant bin!");
   }
 }
 
-void test_random_circle() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
-  //TODO:
+template <class coord_t>
+std::pair<int32_t, int32_t> to_xy(std::tuple<int32_t, unsigned short, float> tile, const Tiles<coord_t>& t) {
+  auto ax = (std::get<0>(tile) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(tile) % t.nsubdivisions());
+  auto ay = (std::get<0>(tile) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(tile) / t.nsubdivisions());
+  return std::make_pair(ax, ay);
 }
-*/
+
+template <class coord_t>
+int32_t to_global_sub(std::tuple<int32_t, unsigned short, float> tile, const Tiles<coord_t>& t) {
+  auto xy = to_xy(tile,t);
+  return xy.second * (t.ncolumns() * t.nsubdivisions()) + xy.first;
+}
+
+template <class coord_t>
+coord_t dist(int32_t sub, const Tiles<coord_t>& tiles, const coord_t& seed) {
+  auto subcols = tiles.ncolumns() * tiles.nsubdivisions();
+  auto x = sub % subcols;
+  auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
+  auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
+  auto y = sub / subcols;
+  auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
+  auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
+  auto distance = std::numeric_limits<float>::max();
+  std::list<coord_t> corners{ {x0, y0}, {x1, y0}, {x0, y1}, {x1, y1} };
+  if(x0 < seed.first && x1 > seed.first) { corners.emplace_back(seed.first, y0); corners.emplace_back(seed.first, y1); }
+  if(y0 < seed.second && y1 > seed.second) { corners.emplace_back(x0, seed.second); corners.emplace_back(x1, seed.second); }
+  coord_t used;
+  for(const auto& c : corners) {
+    auto d = seed.Distance(c);
+    if(d < distance) {
+      distance = d;
+      used = c;
+    }
+  }
+  return used;
+}
+
+template <class coord_t>
+void test_point(const Tiles<coord_t>& t, const coord_t& p) {
+  auto a = t.ClosestFirst(p);
+  size_t size = 0;
+  size_t zeros = 0;
+  std::tuple<int32_t, unsigned short, float> last{-1, -1, 0};
+  while(true) {
+    try {
+      //keep track of zero distsance subdivisions
+      auto r = a();
+      auto d = std::get<2>(r);
+      if(d == 0)
+        ++zeros;
+      //if its out of order you fail
+      if(d < std::get<2>(last)) {
+        //auto l = dist(to_global_sub(last, t), t, p);
+        //auto c = dist(to_global_sub(r, t), t, p);
+        throw std::logic_error("Distances should be smallest first");
+      }
+      //remember the last distance and how many we've seen
+      last = r;
+      ++size;
+    }
+    catch(const std::runtime_error& e) {
+      if(std::string(e.what()) != "Subdivisions were exhausted")
+        throw std::logic_error("Should have thrown only for running out of subdivisions");
+      break;
+    }
+  }
+
+  if(size != t.ncolumns()*t.nsubdivisions()*t.nrows()*t.nsubdivisions())
+    throw std::logic_error("Number of subdivisions didnt match");
+  if(zeros != 1 && zeros != 2 && zeros != 4)
+    throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
+}
+
+void test_closest_first() {
+
+  auto m = PointLL(8.99546623, -78.2651062).Distance({-91.2, 90});
+  auto n = PointLL(8.99546623, -78.2651062).Distance({-92, 90});
+
+  //test a simple 8x4 grid for polar and meridian wrapping
+  Tiles<PointLL> t(AABB2<PointLL>{-180,-90,180,90}, 90, 2);
+  auto y = t.ClosestFirst({179.99, -16.825});
+  if(to_global_sub(y(), t) != 15)
+    throw std::logic_error("Should have been 15");
+  if(to_global_sub(y(), t) != 8)
+    throw std::logic_error("Should have been wrapped to 8");
+  if(to_global_sub(y(), t) != 23)
+    throw std::logic_error("Should have been above to 23");
+  y = t.ClosestFirst({-179.99, -16.825});
+  if(to_global_sub(y(), t) != 8)
+    throw std::logic_error("Should have been 8");
+  if(to_global_sub(y(), t) != 15)
+    throw std::logic_error("Should have been wrapped to 15");
+  if(to_global_sub(y(), t) != 16)
+    throw std::logic_error("Should have been above to 16");
+
+  //check realistic antimeridian wrapping
+  t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
+  PointLL p{179.99, -16.825};
+  int px = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
+  int py = (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
+  auto c = t.ClosestFirst(p);
+  auto first = c();
+  if(to_global_sub(first, t) != py * t.ncolumns() * t.nsubdivisions() + px)
+    throw std::logic_error("Unexpected global subdivision");
+  if(std::get<2>(first) != 0)
+    throw std::logic_error("Unexpected distance");
+  auto second  = c();
+  if(to_global_sub(second, t) != py * t.ncolumns() * t.nsubdivisions())
+    throw std::logic_error("Unexpected global subdivision");
+  if(std::get<2>(second) != p.Distance({-180, -16.825}))
+    throw std::logic_error("Unexpected distance");
+
+  //try planar coordinate system
+  Tiles<Point2> tp(AABB2<Point2>{-10,-10,10,10}, 1, 5);
+  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76}, {9.99,9.99} })
+    test_point(tp, p);
+
+  //try spherical coordinate system
+  t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, 4, 5);
+  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {11.92515,78.92409}, {-67.61196,-54.93575}, {179.99155,-16.80257}, {179.99,89.99} })
+    test_point(t, p);
+
+  //try some randos
+  std::default_random_engine generator;
+  std::uniform_real_distribution<> distribution(0,360);
+  for(size_t i = 0; i < 25; ++i) {
+    PointLL p{ distribution(generator) - 180.f, distribution(generator)/2 - 90.f };
+    test_point(t, p);
+  }
+}
+
 }
 
 int main() {
@@ -245,9 +368,10 @@ int main() {
   suite.test(TEST_CASE(TileList));
 
   suite.test(TEST_CASE(test_intersect_linestring));
-  /*suite.test(TEST_CASE(test_intersect_circle));
+
+  suite.test(TEST_CASE(test_closest_first));
+
   suite.test(TEST_CASE(test_random_linestring));
-  suite.test(TEST_CASE(test_random_circle));*/
 
   return suite.tear_down();
 }
