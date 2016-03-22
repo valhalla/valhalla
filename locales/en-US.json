@@ -466,7 +466,13 @@
         "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Keep left to stay on I 95 South.", "Keep straight to stay on I 95 South.", "Keep right to stay on I 95 South."],
+        "1": ["Keep left to take exit 62 to stay on I 95 South."],
+        "2": ["Keep left to stay on I 95 South toward Baltimore."],
+        "3": ["Keep left to take exit 62 to stay on I 95 South toward Baltimore."]
+      }
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
@@ -476,7 +482,13 @@
         "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Keep left to stay on Interstate 95 South.", "Keep straight to stay on Interstate 95 South.", "Keep right to stay on Interstate 95 South."],
+        "1": ["Keep left to take exit 62 to stay on Interstate 95 South."],
+        "2": ["Keep left to stay on I 95 South toward Baltimore."],
+        "3": ["Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."]
+      }
     },
     "merge": {
       "phrases": {
