@@ -29,15 +29,14 @@ namespace {
     {"one_to_many", loki_worker_t::ONE_TO_MANY},
     {"many_to_one", loki_worker_t::MANY_TO_ONE},
     {"many_to_many", loki_worker_t::MANY_TO_MANY},
-    {"optimized_order_route", loki_worker_t::OPTIMIZED_ORDER}
+    {"optimized", loki_worker_t::OPTIMIZED}
   };
-
 
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
     {loki_worker_t::ONE_TO_MANY, "one_to_many"},
     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
     {loki_worker_t::MANY_TO_MANY, "many_to_many"},
-    {loki_worker_t::OPTIMIZED_ORDER, "optimized_order_route"}
+    {loki_worker_t::OPTIMIZED, "optimized"}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -82,7 +81,9 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      auto action_str = ACTION_TO_STRING.find(action)->second;
+      //we want optimized to use the same location and distance limits as many_to_many
+      auto action_str = ACTION_TO_STRING.find(action == loki_worker_t::OPTIMIZED ? loki_worker_t::MANY_TO_MANY : action)->second;
+
       //check that location size does not exceed max.
       check_locations(locations.size(), max_locations.find(action_str)->second);
 
@@ -96,7 +97,7 @@ namespace valhalla {
           check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, max_location_distance);
           break;
         case MANY_TO_MANY:
-        case OPTIMIZED_ORDER:
+        case OPTIMIZED:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
           break;
@@ -109,13 +110,16 @@ namespace valhalla {
 
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
       //pass on to thor with type of matrix
-      request.put("matrix_type", action_str);
+      request.put("matrix_type", ACTION_TO_STRING.find(action)->second);
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
 
-      LOG_INFO("SENDING TO THOR:: " + stream.str())
+      /*for (auto message : result.messages){
+        LOG_INFO("SENDING TO THOR:: " + message);
+      }*/
+
       return result;
     }
   }

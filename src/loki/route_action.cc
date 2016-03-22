@@ -108,7 +108,10 @@ namespace valhalla {
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
 
-      LOG_INFO("SENDING TO THOR:: " + stream.str())
+      /*for (auto message : result.messages){
+        LOG_INFO("SENDING TO THOR:: " + message);
+      }*/
+
       return result;
     }
   }
