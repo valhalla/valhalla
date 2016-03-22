@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <cstdint>
+#include <functional>
 
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/aabb2.h>
@@ -45,6 +46,12 @@ class Tiles {
   float TileSize() const;
 
   /**
+   * Get the tile subdivision size.
+   * @return tile subdivision size.
+   */
+  float SubdivisionSize() const;
+
+  /**
    * Get the number of rows in the tiling system.
    * @return  Returns the number of rows.
    */
@@ -55,6 +62,12 @@ class Tiles {
    * @return  Returns the number of columns.
    */
   int32_t ncolumns() const;
+
+  /**
+   * Get the number of subdivisions in a tile in the tiling system.
+   * @return  Returns the number of subdivisions.
+   */
+  unsigned short nsubdivisions() const;
 
   /**
    * Get the bounding box of the tiling system.
@@ -243,12 +256,13 @@ class Tiles {
   std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& linestring) const;
 
   /**
-   * Intersect a circle with the tiles to see which tiles and sub cells it intersects
-   * @param center  the center of the circle
-   * @param radius  the radius of the circle
-   * @return        the map of each tile intersected to a list of its intersected sub cell indices
+   * Returns a functor which returns subdivisions close to the original point on each invocation in a best first fashion
+   * If the functor can't expand any further (no more subdivisions) it will throw
+   * @param seed   the point at for which we measure 'closeness'
+   * @return       the functor to be called
    */
-  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const coord_t& center, const float radius) const;
+  std::function<std::tuple<int32_t, unsigned short, float>() > ClosestFirst(const coord_t& seed) const;
+
 
  protected:
   // Bounding box of the tiling system.
