@@ -2309,9 +2309,11 @@ void TestBuildRampStraight_1_miles_en_US() {
   PopulateRampStraightManeuverList_1(expected_maneuvers, country_code,
                                      state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Stay straight to take the US 322 East ramp.",
+      expected_maneuvers,
+      "Stay straight to take the US 322 East ramp.",
       "Stay straight to take the U.S. 3 22 East ramp.",
-      "Stay straight to take the U.S. 3 22 East ramp.", "");
+      "Stay straight to take the U.S. 3 22 East ramp.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2339,9 +2341,11 @@ void TestBuildRampStraight_2_miles_en_US() {
   PopulateRampStraightManeuverList_2(expected_maneuvers, country_code,
                                      state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Stay straight to take the ramp toward Hershey.",
+      expected_maneuvers,
       "Stay straight to take the ramp toward Hershey.",
-      "Stay straight to take the ramp toward Hershey.", "");
+      "Stay straight to take the ramp toward Hershey.",
+      "Stay straight to take the ramp toward Hershey.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2381,7 +2385,7 @@ void TestBuildRampStraight_3_miles_en_US() {
 ///////////////////////////////////////////////////////////////////////////////
 // FormRampStraightInstruction
 // 4 "Stay straight to take the <NAME_SIGN> ramp."
-// 4 "Stay straight to take the <NAME_SIGN> ramp."
+// 3 "Stay straight to take the <NAME_SIGN> ramp."
 // 4 "Stay straight to take the <NAME_SIGN> ramp."
 void TestBuildRampStraight_4_miles_en_US() {
   std::string country_code = "US";
@@ -2401,9 +2405,11 @@ void TestBuildRampStraight_4_miles_en_US() {
   PopulateRampStraightManeuverList_4(expected_maneuvers, country_code,
                                      state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Stay straight to take the Gettysburg Pike ramp.",
+      expected_maneuvers,
       "Stay straight to take the Gettysburg Pike ramp.",
-      "Stay straight to take the Gettysburg Pike ramp.", "");
+      "Stay straight to take the Gettysburg Pike ramp.",
+      "Stay straight to take the Gettysburg Pike ramp.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
