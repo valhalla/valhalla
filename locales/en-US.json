@@ -307,7 +307,19 @@
         "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
         "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["Take the ramp on the left.", "Take the ramp on the right."],
+        "1": ["Take the I 95 ramp on the right."],
+        "2": ["Take the ramp on the left toward JFK."],
+        "3": ["Take the South Conduit Avenue ramp on the left toward JFK."],
+        "4": ["Take the Gettysburg Pike ramp on the right."],
+        "5": ["Turn left to take the ramp.", "Turn right to take the ramp."],
+        "6": ["Turn left to take the PA 283 West ramp."],
+        "7": ["Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."],
+        "8": ["Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."],
+        "9": ["Turn right to take the Gettysburg Pike ramp."]
+      }
     },
     "ramp_verbal": {
       "phrases": {
@@ -322,7 +334,19 @@
         "8": "Turn <RELATIVE_DIRECTION> to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
         "9": "Turn <RELATIVE_DIRECTION> to take the <NAME_SIGN> ramp."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["Take the ramp on the left.", "Take the ramp on the right."],
+        "1": ["Take the Interstate 95 ramp on the right."],
+        "2": ["Take the ramp on the left toward JFK."],
+        "3": ["Take the South Conduit Avenue ramp on the left toward JFK."],
+        "4": ["Take the Gettysburg Pike ramp on the right."],
+        "5": ["Turn left to take the ramp.", "Turn right to take the ramp."],
+        "6": ["Turn left to take the Pennsylvania 2 83 West ramp."],
+        "7": ["Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."],
+        "8": ["Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."],
+        "9": ["Turn right to take the Gettysburg Pike ramp."]
+      }
     },
     "exit": {
       "phrases": {
