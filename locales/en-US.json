@@ -363,7 +363,21 @@
         "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["Take the exit on the left.", "Take the exit on the right."],
+        "1": ["Take exit 67 B-A on the right."],
+        "2": ["Take the US 322 West exit on the right."],
+        "3": ["Take exit 67 B-A on the right onto US 322 West."],
+        "4": ["Take the exit on the right toward Lewistown."],
+        "5": ["Take exit 67 B-A on the right toward Lewistown."],
+        "6": ["Take the US 322 West exit on the right toward Lewistown."],
+        "7": ["Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."],
+        "8": ["Take the White Marsh Boulevard exit on the left."],
+        "10": ["Take the White Marsh Boulevard exit on the left onto MD 43 East."],
+        "12": ["Take the White Marsh Boulevard exit on the left toward White Marsh."],
+        "14": ["Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."]
+      }
     },
     "exit_verbal": {
       "phrases": {
@@ -380,7 +394,21 @@
         "12": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
         "14": "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "right"]
+      "relative_directions": ["left", "right"],
+      "example_phrases": {
+        "0": ["Take the exit on the left.", "Take the exit on the right."],
+        "1": ["Take exit 67 B-A on the right."],
+        "2": ["Take the U.S. 3 22 West exit on the right."],
+        "3": ["Take exit 67 B-A on the right onto U.S. 3 22 West."],
+        "4": ["Take the exit on the right toward Lewistown."],
+        "5": ["Take exit 67 B-A on the right toward Lewistown."],
+        "6": ["Take the U.S. 3 22 West exit on the right toward Lewistown."],
+        "7": ["Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."],
+        "8": ["Take the White Marsh Boulevard exit on the left."],
+        "10": ["Take the White Marsh Boulevard exit on the left onto Maryland 43 East."],
+        "12": ["Take the White Marsh Boulevard exit on the left toward White Marsh."],
+        "14": ["Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."]
+      }
     },
     "keep": {
       "phrases": {

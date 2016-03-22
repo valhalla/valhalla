@@ -2743,7 +2743,8 @@ void TestBuildExit_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the exit on the right.",
                                   "Take the exit on the right.",
-                                  "Take the exit on the right.", "");
+                                  "Take the exit on the right.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2772,7 +2773,8 @@ void TestBuildExit_1_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take exit 67 B-A on the right.",
                                   "Take exit 67 B-A on the right.",
-                                  "Take exit 67 B-A on the right.", "");
+                                  "Take exit 67 B-A on the right.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2829,9 +2831,11 @@ void TestBuildExit_3_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_3(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take exit 67 B-A on the right onto US 322 West.",
+      expected_maneuvers,
+      "Take exit 67 B-A on the right onto US 322 West.",
       "Take exit 67 B-A on the right.",
-      "Take exit 67 B-A on the right onto U.S. 3 22 West.", "");
+      "Take exit 67 B-A on the right onto U.S. 3 22 West.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2858,9 +2862,11 @@ void TestBuildExit_4_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the exit on the right toward Lewistown.",
+      expected_maneuvers,
       "Take the exit on the right toward Lewistown.",
-      "Take the exit on the right toward Lewistown.", "");
+      "Take the exit on the right toward Lewistown.",
+      "Take the exit on the right toward Lewistown.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2887,9 +2893,11 @@ void TestBuildExit_5_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take exit 67 B-A on the right toward Lewistown.",
+      expected_maneuvers,
+      "Take exit 67 B-A on the right toward Lewistown.",
       "Take exit 67 B-A on the right.",
-      "Take exit 67 B-A on the right toward Lewistown.", "");
+      "Take exit 67 B-A on the right toward Lewistown.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2919,7 +2927,8 @@ void TestBuildExit_6_miles_en_US() {
       expected_maneuvers,
       "Take the US 322 West exit on the right toward Lewistown.",
       "Take the U.S. 3 22 West exit on the right.",
-      "Take the U.S. 3 22 West exit on the right toward Lewistown.", "");
+      "Take the U.S. 3 22 West exit on the right toward Lewistown.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2977,9 +2986,11 @@ void TestBuildExit_8_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateExitManeuverList_8(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Take the White Marsh Boulevard exit on the left.",
+      expected_maneuvers,
       "Take the White Marsh Boulevard exit on the left.",
-      "Take the White Marsh Boulevard exit on the left.", "");
+      "Take the White Marsh Boulevard exit on the left.",
+      "Take the White Marsh Boulevard exit on the left.",
+      "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
