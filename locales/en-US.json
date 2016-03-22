@@ -495,14 +495,22 @@
         "0": "Merge.",
         "1": "Merge onto <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Merge."],
+        "1": ["Merge onto I 76 West/Pennsylvania Turnpike."]
+      }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Merge.",
         "1": "Merge onto <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Merge."],
+        "1": ["Merge onto Interstate 76 West, Pennsylvania Turnpike."]
+      }
     },
     "enter_roundabout": {
       "phrases": {
