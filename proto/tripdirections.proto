@@ -78,6 +78,13 @@ message TripDirections {
     optional Type type = 12;
   }
 
+  enum TravelMode {
+    kDrive = 0;
+    kPedestrian = 1;
+    kBicycle = 2;
+    kTransit = 3;
+  }
+    
   message Maneuver {
     enum CardinalDirection {
       kNorth = 0;
@@ -167,6 +174,7 @@ message TripDirections {
     optional string verbal_arrive_instruction = 21;          // verbal arrive instruction - used with transit
     optional TransitRoute transit_route = 22;                // transit route attributes including a list of transit stops
     optional bool verbal_multi_cue = 23;                     // verbal multi-cue flag
+    optional TravelMode travel_mode = 24;                    // travel mode
   }
   
   optional uint64 trip_id = 1;

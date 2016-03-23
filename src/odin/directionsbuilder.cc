@@ -315,6 +315,9 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     if (maneuver.verbal_multi_cue())
       trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
 
+    // Travel mode
+    trip_maneuver->set_travel_mode(TranslateTravelMode(maneuver.travel_mode()));
+
   }
 
   // Populate summary
@@ -360,6 +363,27 @@ TripDirections_TransitRoute_Type DirectionsBuilder::TranslateTransitType(
   }
   // if not found above then throw error
   throw std::runtime_error("Invalid transit type.");
+}
+
+TripDirections_TravelMode DirectionsBuilder::TranslateTravelMode(
+    TripPath_TravelMode travel_mode) {
+
+  switch (travel_mode) {
+    case TripPath_TravelMode_kDrive: {
+      return TripDirections_TravelMode_kDrive;
+    }
+    case TripPath_TravelMode_kPedestrian: {
+      return TripDirections_TravelMode_kPedestrian;
+    }
+    case TripPath_TravelMode_kBicycle: {
+      return TripDirections_TravelMode_kBicycle;
+    }
+    case TripPath_TravelMode_kTransit: {
+      return TripDirections_TravelMode_kTransit;
+    }
+  }
+  // if not found above then throw error
+  throw std::runtime_error("Invalid travel mode.");
 }
 
 }
