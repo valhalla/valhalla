@@ -385,6 +385,22 @@ namespace {
       return locations;
     }
 
+    std::string travel_mode_as_string(TripDirections_TravelMode travel_mode) {
+      switch (travel_mode) {
+        case TripDirections_TravelMode_kDrive: {
+          return "drive";
+        }
+        case TripDirections_TravelMode_kPedestrian: {
+          return "pedestrian";
+        }
+        case TripDirections_TravelMode_kBicycle: {
+          return "bicycle";
+        }
+        case TripDirections_TravelMode_kTransit: {
+          return "transit";
+        }
+      }
+    }
 
     json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs){
 
@@ -665,6 +681,9 @@ namespace {
 
           if (maneuver.verbal_multi_cue())
             man->emplace("verbal_multi_cue", maneuver.verbal_multi_cue());
+
+          // Travel mode
+          man->emplace("travel_mode", travel_mode_as_string(maneuver.travel_mode()));
 
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
