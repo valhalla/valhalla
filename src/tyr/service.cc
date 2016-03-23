@@ -584,49 +584,49 @@ namespace {
           }
 
           // Process transit route
-          if (maneuver.has_transit_route()) {
-            const auto& transit_route = maneuver.transit_route();
-            auto json_transit_route = json::map({});
+          if (maneuver.has_transit_info()) {
+            const auto& transit_info = maneuver.transit_info();
+            auto json_transit_info = json::map({});
 
-            if (transit_route.has_type()) {
-              json_transit_route->emplace("type", static_cast<uint64_t>(transit_route.type()));
+            if (transit_info.has_type()) {
+              json_transit_info->emplace("type", static_cast<uint64_t>(transit_info.type()));
             }
-            if (transit_route.has_onestop_id()) {
-              json_transit_route->emplace("onestop_id", transit_route.onestop_id());
-              valhalla::midgard::logging::Log("transit_route_stopid::" + transit_route.onestop_id(), " [ANALYTICS] ");
+            if (transit_info.has_onestop_id()) {
+              json_transit_info->emplace("onestop_id", transit_info.onestop_id());
+              valhalla::midgard::logging::Log("transit_route_stopid::" + transit_info.onestop_id(), " [ANALYTICS] ");
             }
-            if (transit_route.has_short_name()) {
-              json_transit_route->emplace("short_name", transit_route.short_name());
+            if (transit_info.has_short_name()) {
+              json_transit_info->emplace("short_name", transit_info.short_name());
             }
-            if (transit_route.has_long_name()) {
-              json_transit_route->emplace("long_name", transit_route.long_name());
+            if (transit_info.has_long_name()) {
+              json_transit_info->emplace("long_name", transit_info.long_name());
             }
-            if (transit_route.has_headsign()) {
-              json_transit_route->emplace("headsign", transit_route.headsign());
+            if (transit_info.has_headsign()) {
+              json_transit_info->emplace("headsign", transit_info.headsign());
             }
-            if (transit_route.has_color()) {
-              json_transit_route->emplace("color", static_cast<uint64_t>(transit_route.color()));
+            if (transit_info.has_color()) {
+              json_transit_info->emplace("color", static_cast<uint64_t>(transit_info.color()));
             }
-            if (transit_route.has_text_color()) {
-              json_transit_route->emplace("text_color", static_cast<uint64_t>(transit_route.text_color()));
+            if (transit_info.has_text_color()) {
+              json_transit_info->emplace("text_color", static_cast<uint64_t>(transit_info.text_color()));
             }
-            if (transit_route.has_description()) {
-              json_transit_route->emplace("description", transit_route.description());
+            if (transit_info.has_description()) {
+              json_transit_info->emplace("description", transit_info.description());
             }
-            if (transit_route.has_operator_onestop_id()) {
-              json_transit_route->emplace("operator_onestop_id", transit_route.operator_onestop_id());
+            if (transit_info.has_operator_onestop_id()) {
+              json_transit_info->emplace("operator_onestop_id", transit_info.operator_onestop_id());
             }
-            if (transit_route.has_operator_name()) {
-              json_transit_route->emplace("operator_name", transit_route.operator_name());
+            if (transit_info.has_operator_name()) {
+              json_transit_info->emplace("operator_name", transit_info.operator_name());
             }
-            if (transit_route.has_operator_url()) {
-              json_transit_route->emplace("operator_url", transit_route.operator_url());
+            if (transit_info.has_operator_url()) {
+              json_transit_info->emplace("operator_url", transit_info.operator_url());
             }
 
             // Add transit stops
-            if (transit_route.transit_stops().size() > 0) {
+            if (transit_info.transit_stops().size() > 0) {
               auto json_transit_stops = json::array({});
-              for (const auto& transit_stop : transit_route.transit_stops()) {
+              for (const auto& transit_stop : transit_info.transit_stops()) {
                 auto json_transit_stop = json::map({});
 
                 // type
@@ -672,11 +672,11 @@ namespace {
                 json_transit_stops->emplace_back(json_transit_stop);
 
               }
-              json_transit_route->emplace("transit_stops",
+              json_transit_info->emplace("transit_stops",
                                           std::move(json_transit_stops));
             }
 
-            man->emplace("transit_route", std::move(json_transit_route));
+            man->emplace("transit_info", std::move(json_transit_info));
           }
 
           if (maneuver.verbal_multi_cue())
