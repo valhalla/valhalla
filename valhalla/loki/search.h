@@ -30,7 +30,7 @@ const sif::EdgeFilter PassThroughFilter = [](const baldr::DirectedEdge* edge){ r
  * @param filter    a function/functor to be used in the rejection of edges. defaults to a pass through filter
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
-baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader, sif::EdgeFilter filter = PassThroughFilter);
+baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader, const sif::EdgeFilter& filter = PassThroughFilter);
 
 }
 }
