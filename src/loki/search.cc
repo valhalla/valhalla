@@ -1,5 +1,4 @@
 #include "loki/search.h"
-#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/linesegment2.h>
 
 #include <unordered_set>
@@ -347,7 +346,8 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
   }
 
   //keep track of bins we looked in but only the ones that had something
-  midgard::logging::Log("valhalla_loki_bins_searched::" + std::to_string(bins), " [ANALYTICS] ");
+  //would rather log this in the service only, so lets figure a way to pass it back
+  //midgard::logging::Log("valhalla_loki_bins_searched::" + std::to_string(bins), " [ANALYTICS] ");
 
   //this may be at a node, either because it was the closest thing or from snap tolerance
   bool front = std::get<0>(closest_point) == closest_edge_info->shape().front() ||
