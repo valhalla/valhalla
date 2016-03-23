@@ -1397,6 +1397,50 @@ void PopulateExitRoundaboutManeuverList_2(std::list<Maneuver>& maneuvers,
                    { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 914, 0);
 }
 
+void PopulateEnterFerryManeuverList_0(std::list<Maneuver>& maneuvers,
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryEnter, { },
+                   { }, { }, "", 1.446000, 822, 4,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 280, 280, 5,
+                   6, 8, 9, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                   0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 521, 0);
+}
+
+void PopulateEnterFerryManeuverList_1(std::list<Maneuver>& maneuvers,
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryEnter, {
+                       "Millersburg Ferry" },
+                   { }, { }, "", 1.446000, 822, 4,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 280, 280, 5,
+                   6, 8, 9, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                   0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 521, 0);
+}
+
+void PopulateEnterFerryManeuverList_2(std::list<Maneuver>& maneuvers,
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryEnter, {
+                       "Bridgeport - Port Jefferson" },
+                   { }, { }, "", 27.731001, 3628, 24,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 151,
+                   142, 3, 4, 15, 30, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 3328, 0);
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -3747,6 +3791,99 @@ void TestBuildExitRoundabout_2_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormEnterFerryInstruction
+// "0": "Take the Ferry.",
+// "0": "Take the Ferry.",
+// "0": "Take the Ferry.",
+void TestBuildEnterFerry_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateEnterFerryManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateEnterFerryManeuverList_0(expected_maneuvers, country_code,
+                                   state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Take the Ferry.",
+      "Take the Ferry.",
+      "Take the Ferry.",
+      "Continue for 9 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormEnterFerryInstruction
+// "1": "Take the <STREET_NAMES>.",
+// "1": "Take the <STREET_NAMES>.",
+// "1": "Take the <STREET_NAMES>.",
+void TestBuildEnterFerry_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateEnterFerryManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateEnterFerryManeuverList_1(expected_maneuvers, country_code,
+                                   state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Take the Millersburg Ferry.",
+      "Take the Millersburg Ferry.",
+      "Take the Millersburg Ferry.",
+      "Continue for 9 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormEnterFerryInstruction
+// "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+// "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+// "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+void TestBuildEnterFerry_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateEnterFerryManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateEnterFerryManeuverList_2(expected_maneuvers, country_code,
+                                   state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+      "Take the Bridgeport - Port Jefferson Ferry.",
+      "Take the Bridgeport - Port Jefferson Ferry.",
+      "Take the Bridgeport - Port Jefferson Ferry.",
+      "Continue for 17.2 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -5045,9 +5182,19 @@ int main() {
   // BuildExitRoundabout_2_miles_en_US
   suite.test(TEST_CASE(TestBuildExitRoundabout_2_miles_en_US));
 
+  // BuildEnterFerry_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildEnterFerry_0_miles_en_US));
+
+  // BuildEnterFerry_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildEnterFerry_1_miles_en_US));
+
+  // BuildEnterFerry_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildEnterFerry_2_miles_en_US));
+
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
 
   return suite.tear_down();
 }
+
 

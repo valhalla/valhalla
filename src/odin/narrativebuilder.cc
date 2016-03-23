@@ -2391,9 +2391,9 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
 }
 
 std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
-  //  0 "Take the Ferry."
-  //  1 "Take the <STREET_NAMES>."
-  //  2 "Take the <STREET_NAMES> Ferry."
+  // "0": "Take the Ferry.",
+  // "1": "Take the <STREET_NAMES>.",
+  // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2407,8 +2407,11 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   }
 
   // TODO - handle properly with locale narrative builder
-  std::string ferry_label = " Ferry";
+  std::string ferry_label = "Ferry";
   if (!boost::algorithm::ends_with(instruction, ferry_label)) {
+    if (!street_names.empty()) {
+      instruction += " ";
+    }
     instruction += ferry_label;
   }
 
@@ -2418,18 +2421,18 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormVerbalAlertEnterFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Take the Ferry."
-  //  1 "Take the <STREET_NAMES(1)>."
-  //  2 "Take the <STREET_NAMES(1)> Ferry."
+  // "0": "Take the Ferry.",
+  // "1": "Take the <STREET_NAMES>.",
+  // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 
   return FormVerbalEnterFerryInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Take the Ferry."
-  //  1 "Take the <STREET_NAMES(2)>."
-  //  2 "Take the <STREET_NAMES(2)> Ferry."
+  // "0": "Take the Ferry.",
+  // "1": "Take the <STREET_NAMES>.",
+  // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 
   // Assign the street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -2444,8 +2447,11 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
   }
 
   // TODO - handle properly with locale narrative builder
-  std::string ferry_label = " Ferry";
+  std::string ferry_label = "Ferry";
   if (!boost::algorithm::ends_with(instruction, ferry_label)) {
+    if (!street_names.empty()) {
+      instruction += " ";
+    }
     instruction += ferry_label;
   }
 
