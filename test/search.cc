@@ -15,48 +15,39 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-/*#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>*/
+/*
+#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/directededgebuilder.h>
+*/
 
 namespace {
 
-boost::property_tree::ptree conf;
-std::pair<GraphId, PointLL> b({}, {}), a({}, {}), c({}, {}), d({}, {});
-
-void configure() {
-  //basic tile information
-  TileHierarchy h("test/tiles");
-  GraphId tile_id = h.GetGraphId({.125,.125}, 2);
-
-  // this is what it looks like
-  //    b
-  //    |\
-  //  1 | \ 0
-  //    |  \
-  //  2 |   \ 7
-  //    |    \
-  //    a-3-8-d
-  //    |    /
-  //  4 |   / 9
-  //    |  /
-  //  5 | / 6
-  //    |/
-  //    c
-  b.first = {tile_id.tileid(), tile_id.level(), 0}; b.second = {.01, .2};
-  a.first = {tile_id.tileid(), tile_id.level(), 1}; a.second = {.01, .1};
-  c.first = {tile_id.tileid(), tile_id.level(), 2}; c.second = {.01, .01};
-  d.first = {tile_id.tileid(), tile_id.level(), 3}; d.second = {.2, .1};
-}
-
-
+// this is what it looks like
+//    b
+//    |\
+//  1 | \ 0
+//    |  \
+//  2 |   \ 7
+//    |    \
+//    a-3-8-d
+//    |    /
+//  4 |   / 9
+//    |  /
+//  5 | / 6
+//    |/
+//    c
+TileHierarchy h("test/tiles");
+GraphId tile_id = h.GetGraphId({.125,.125}, 2);
+std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
+std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
+std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
+std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
 /*
 void make_tile() {
   using namespace valhalla::mjolnir;
   using namespace valhalla::baldr;
 
   //basic tile information
-  TileHierarchy h(conf);
-  GraphId tile_id = h.GetGraphId({.125,.125}, 2);
   GraphTileBuilder tile(h, tile_id, false);
   uint32_t edge_index = 0;
 
@@ -74,7 +65,7 @@ void make_tile() {
 
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {}, {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
-    std::vector<PointLL> shape = {u.second, u.second.AffineCombination(.7f, .3f, v.second), u.second.AffineCombination(.3f, .7f, v.second), v.second};
+    std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if(!forward)
       std::reverse(shape.begin(), shape.end());
 
@@ -134,25 +125,25 @@ void make_tile() {
 
   //write the tile
   tile.StoreTileData();
+
+  //write the bin data
+  GraphTileBuilder::tweeners_t tweeners;
+  GraphTile reloaded(h, tile_id);
+  auto bins = GraphTileBuilder::BinEdges(h, &reloaded, tweeners);
+  GraphTileBuilder::AddBins(h, &reloaded, bins);
 }
 */
+
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
-  const std::vector<PathLocation::PathEdge>& expected_edges, const valhalla::loki::SearchStrategy& strategy){
+  const std::vector<PathLocation::PathEdge>& expected_edges){
 
   //make the config file
-  std::stringstream json; json << "{ \
-    \"tile_dir\": \"test/tiles\", \
-    \"levels\": [ \
-      {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
-      {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-    ] \
-  }";
+  std::stringstream json; json << "{ \"tile_dir\": \"test/tiles\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
   valhalla::baldr::GraphReader reader(conf);
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PassThroughFilter, strategy);
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PassThroughFilter);
 
   if(p.IsNode() != expected_node)
     throw std::runtime_error(expected_node ? "Should've snapped to node" : "Shouldn't've snapped to node");
@@ -170,86 +161,54 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
   }
 }
 
-void TestNodeSearch() {
-  auto t = a.first.tileid();
-  auto l = a.first.level();
-  using S = PathLocation::SideOfStreet;
-  using PE = PathLocation::PathEdge;
-
-  search({b.second}, true, b.second, { PE{{t, l, 0}, 0, S::NONE}, PE{{t, l, 1}, 0, S::NONE}, //leaving edges
-                                 PE{{t, l, 7}, 1, S::NONE}, PE{{t, l, 2}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
-
-  search({a.second}, true, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE}, //leaving edges
-                                 PE{{t, l, 1}, 1, S::NONE}, PE{{t, l, 8}, 1, S::NONE}, PE{{t, l, 5}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
-
-  search({c.second}, true, c.second, { PE{{t, l, 5}, 0, S::NONE}, PE{{t, l, 6}, 0, S::NONE}, //leaving edges
-                                 PE{{t, l, 4}, 1, S::NONE}, PE{{t, l, 9}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
-
-  search({d.second}, true, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE}, //leaving edges
-                                 PE{{t, l, 0}, 1, S::NONE}, PE{{t, l, 3}, 1, S::NONE}, PE{{t, l, 6}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
-
-  //slightly off the node
-  search({d.second + PointLL(.0001, .0001)}, true, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE}, //leaving edges
-                                                         PE{{t, l, 0}, 1, S::NONE}, PE{{t, l, 3}, 1, S::NONE}, PE{{t, l, 6}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
-
-  //with heading
-  Location x{a.second};
-  x.heading_ = 90;    //leaving only
-  search(x, true, a.second, { PE{{t, l, 3}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  x.heading_ = 270;   //arriving only
-  search(x, true, a.second, { PE{{t, l, 8}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  x.heading_ = 265;   //leaving                    //arriving
-  search(x, true, a.second, { PE{{t, l, 4}, 0, S::NONE}, PE{{t, l, 1}, 1, S::NONE}, PE{{t, l, 8}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-}
-
 void TestEdgeSearch() {
   auto t = a.first.tileid();
   auto l = a.first.level();
   using S = PathLocation::SideOfStreet;
   using PE = PathLocation::PathEdge;
 
-  //degenerate to node searches
-  search({a.second}, true, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
-  search({d.second}, true, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  //snap to node searches
+  search({a.second}, true, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE} });
+  search({d.second}, true, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} });
   //snap to end of edge degenerates to node searches
   search({{d.second.first + .049, d.second.second}}, true, d.second,
     { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE}, //leaving edges
       PE{{t, l, 0}, 1, S::NONE}, PE{{t, l, 3}, 1, S::NONE}, PE{{t, l, 6}, 1, S::NONE}  //arriving edges
-    }, valhalla::loki::SearchStrategy::EDGE);
+    });
 
   //mid point search
-  search({a.second.MidPoint(d.second)}, false, a.second.MidPoint(d.second), { PE{{t, l, 3}, .5f, S::NONE}, PE{{t, l, 8}, .5f, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  search({a.second.MidPoint(d.second)}, false, a.second.MidPoint(d.second), { PE{{t, l, 3}, .5f, S::NONE}, PE{{t, l, 8}, .5f, S::NONE} });
 
   //set a point 40% along the edge runs with the shape direction
   PointLL answer = a.second.AffineCombination(.6f, .4f, d.second);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
-  search({answer}, false, answer, { PE{{t, l, 3}, ratio, S::NONE}, PE{{t, l, 8}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  search({answer}, false, answer, { PE{{t, l, 3}, ratio, S::NONE}, PE{{t, l, 8}, 1.f - ratio, S::NONE} });
 
   //with heading
   Location x{answer};
   x.heading_ = 90;
-  search(x, false, answer, { PE{{t, l, 3}, ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  search(x, false, answer, { PE{{t, l, 3}, ratio, S::NONE} });
   x.heading_ = 0;
-  search(x, false, answer, { PE{{t, l, 3}, ratio, S::NONE}, PE{{t, l, 8}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  search(x, false, answer, { PE{{t, l, 3}, ratio, S::NONE}, PE{{t, l, 8}, 1.f - ratio, S::NONE} });
   x.heading_ = 269;
-  search(x, false, answer, { PE{{t, l, 8}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  search(x, false, answer, { PE{{t, l, 8}, 1.f - ratio, S::NONE} });
 
   //check for side of street by offsetting the test point from the line orthogonally
   auto ortho = (d.second - a.second).GetPerpendicular(true).Normalize() * .01;
   PointLL test{answer.first + ortho.x(), answer.second + ortho.y()};
-  search({test}, false, answer, { PE{{t, l, 3}, ratio, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, S::LEFT} }, valhalla::loki::SearchStrategy::EDGE);
+  search({test}, false, answer, { PE{{t, l, 3}, ratio, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, S::LEFT} });
 
   //set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
-  search({answer}, false, answer, { PE{{t, l, 0}, ratio, S::NONE}, PE{{t, l, 7}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  search({answer}, false, answer, { PE{{t, l, 0}, ratio, S::NONE}, PE{{t, l, 7}, 1.f - ratio, S::NONE} });
 
   //check for side of street by offsetting the test point from the line orthogonally
   ortho = (d.second - b.second).GetPerpendicular(false).Normalize() * .01;
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
-  search({test}, false, answer, { PE{{t, l, 0}, ratio, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, S::RIGHT} }, valhalla::loki::SearchStrategy::EDGE);
+  search({test}, false, answer, { PE{{t, l, 0}, ratio, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, S::RIGHT} });
 
-  //TODO: add test that has to snap a point not actually on the geometry
+  //TODO: add more tests that are not actually on the geometry
 }
 
 }
@@ -259,10 +218,6 @@ int main() {
 
   //TODO: move to mjolnir?
   //suite.test(TEST_CASE(make_tile));
-
-  suite.test(TEST_CASE(configure));
-
-  suite.test(TEST_CASE(TestNodeSearch));
 
   suite.test(TEST_CASE(TestEdgeSearch));
 

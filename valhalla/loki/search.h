@@ -13,16 +13,6 @@ namespace valhalla{
 namespace loki{
 
 /**
- * Notifies the search which type of precision should be used
- * Should it find the closest node to the input position
- * or instead try to use the geometry of the edges to find
- * an intermediate position along the edge. The former is
- * quite a bit faster but can be extremely inaccurate in
- * low density route networks
- */
-enum class SearchStrategy : bool { NODE, EDGE };
-
-/**
  * A callable element which returns true if an edge should be
  * filtered out of the correlated set and false if the edge is usable
  *
@@ -38,11 +28,9 @@ const sif::EdgeFilter PassThroughFilter = [](const baldr::DirectedEdge* edge){ r
  * @param location  the position which needs to be correlated to the route network
  * @param reader    and object used to access tiled route data TODO: switch this out for a proper cache
  * @param filter    a function/functor to be used in the rejection of edges. defaults to a pass through filter
- * @param strategy  what type of search to do, defaults to edge based searching
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
-baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  sif::EdgeFilter filter = PassThroughFilter, const SearchStrategy strategy = SearchStrategy::EDGE);
+baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader, const sif::EdgeFilter& filter = PassThroughFilter);
 
 }
 }
