@@ -580,9 +580,34 @@
         "1": ["Exit the roundabout onto Philadelphia Road, Maryland 7."]
       }
     },
-    "enter_ferry": null,
-    "enter_ferry_verbal_alert": null,
-    "enter_ferry_verbal": null,
+    "enter_ferry": {
+      "phrases": {
+        "0": "Take the Ferry.",
+        "1": "Take the <STREET_NAMES>.",
+        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": ["Take the Ferry."],
+        "1": ["Take the Millersburg Ferry."],
+        "2": ["Take the Bridgeport - Port Jefferson Ferry."]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Take the Ferry.",
+        "1": "Take the <STREET_NAMES>.",
+        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": ["Take the Ferry."],
+        "1": ["Take the Millersburg Ferry."],
+        "2": ["Take the Bridgeport - Port Jefferson Ferry."]
+      }
+    },
     "exit_ferry": null,
     "exit_ferry_verbal_alert": null,
     "exit_ferry_verbal": null,
