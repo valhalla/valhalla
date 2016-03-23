@@ -253,40 +253,40 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
     // Process transit route
     if (maneuver.IsTransit()) {
-      const auto& transit_route = maneuver.transit_route_info();
-      auto* trip_transit_route = trip_maneuver->mutable_transit_route();
-      trip_transit_route->set_type(TranslateTransitType(transit_route.type));
+      const auto& transit_route = maneuver.transit_info();
+      auto* trip_transit_info = trip_maneuver->mutable_transit_info();
+      trip_transit_info->set_type(TranslateTransitType(transit_route.type));
       if (!transit_route.onestop_id.empty()) {
-        trip_transit_route->set_onestop_id(transit_route.onestop_id);
+        trip_transit_info->set_onestop_id(transit_route.onestop_id);
       }
       if (!transit_route.short_name.empty()) {
-        trip_transit_route->set_short_name(transit_route.short_name);
+        trip_transit_info->set_short_name(transit_route.short_name);
       }
       if (!transit_route.long_name.empty()) {
-        trip_transit_route->set_long_name(transit_route.long_name);
+        trip_transit_info->set_long_name(transit_route.long_name);
       }
       if (!transit_route.headsign.empty()) {
-        trip_transit_route->set_headsign(transit_route.headsign);
+        trip_transit_info->set_headsign(transit_route.headsign);
       }
-      trip_transit_route->set_color(transit_route.color);
-      trip_transit_route->set_text_color(transit_route.text_color);
+      trip_transit_info->set_color(transit_route.color);
+      trip_transit_info->set_text_color(transit_route.text_color);
       if (!transit_route.description.empty()) {
-        trip_transit_route->set_description(transit_route.description);
+        trip_transit_info->set_description(transit_route.description);
       }
       if (!transit_route.operator_onestop_id.empty()) {
-        trip_transit_route->set_operator_onestop_id(
+        trip_transit_info->set_operator_onestop_id(
             transit_route.operator_onestop_id);
       }
       if (!transit_route.operator_name.empty()) {
-        trip_transit_route->set_operator_name(transit_route.operator_name);
+        trip_transit_info->set_operator_name(transit_route.operator_name);
       }
       if (!transit_route.operator_url.empty()) {
-        trip_transit_route->set_operator_url(transit_route.operator_url);
+        trip_transit_info->set_operator_url(transit_route.operator_url);
       }
 
       // Process transit stops
       for (auto& transit_stop : transit_route.transit_stops) {
-        auto* trip_transit_stop = trip_transit_route->add_transit_stops();
+        auto* trip_transit_stop = trip_transit_info->add_transit_stops();
         trip_transit_stop->set_type(transit_stop.type);
         if (!transit_stop.onestop_id.empty()) {
           trip_transit_stop->set_onestop_id(transit_stop.onestop_id);
@@ -332,33 +332,33 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   return trip_directions;
 }
 
-TripDirections_TransitRoute_Type DirectionsBuilder::TranslateTransitType(
+TripDirections_TransitInfo_Type DirectionsBuilder::TranslateTransitType(
     TripPath_TransitType transit_type) {
 
   switch (transit_type) {
     case TripPath_TransitType_kTram: {
-      return TripDirections_TransitRoute_Type_kTram;
+      return TripDirections_TransitInfo_Type_kTram;
     }
     case TripPath_TransitType_kMetro: {
-      return TripDirections_TransitRoute_Type_kMetro;
+      return TripDirections_TransitInfo_Type_kMetro;
     }
     case TripPath_TransitType_kRail: {
-      return TripDirections_TransitRoute_Type_kRail;
+      return TripDirections_TransitInfo_Type_kRail;
     }
     case TripPath_TransitType_kBus: {
-      return TripDirections_TransitRoute_Type_kBus;
+      return TripDirections_TransitInfo_Type_kBus;
     }
     case TripPath_TransitType_kFerry: {
-      return TripDirections_TransitRoute_Type_kFerry;
+      return TripDirections_TransitInfo_Type_kFerry;
     }
     case TripPath_TransitType_kCableCar: {
-      return TripDirections_TransitRoute_Type_kCableCar;
+      return TripDirections_TransitInfo_Type_kCableCar;
     }
     case TripPath_TransitType_kGondola: {
-      return TripDirections_TransitRoute_Type_kGondola;
+      return TripDirections_TransitInfo_Type_kGondola;
     }
     case TripPath_TransitType_kFunicular: {
-      return TripDirections_TransitRoute_Type_kFunicular;
+      return TripDirections_TransitInfo_Type_kFunicular;
     }
   }
   // if not found above then throw error

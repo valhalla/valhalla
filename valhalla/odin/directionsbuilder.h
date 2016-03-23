@@ -63,7 +63,7 @@ class DirectionsBuilder {
    *
    * @param transit_type trip path transit type.
    */
-  TripDirections_TransitRoute_Type TranslateTransitType(
+  TripDirections_TransitInfo_Type TranslateTransitType(
       TripPath_TransitType transit_type);
 
   /**

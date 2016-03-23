@@ -219,8 +219,8 @@ class Maneuver {
 
   bool IsTransit() const;
 
-  const TransitRouteInfo& transit_route_info() const;
-  TransitRouteInfo* mutable_transit_route_info();
+  const TransitRouteInfo& transit_info() const;
+  TransitRouteInfo* mutable_transit_info();
 
   std::string GetTransitArrivalTime() const;
 
@@ -321,7 +321,7 @@ class Maneuver {
   TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
 
   // The transit route info including list of stops
-  TransitRouteInfo transit_route_info_;
+  TransitRouteInfo transit_info_;
 
   std::string depart_instruction_;
   std::string verbal_depart_instruction_;

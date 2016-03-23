@@ -10,6 +10,7 @@
 namespace valhalla {
 namespace odin {
 
+// TODO maybe rename later
 struct TransitRouteInfo {
 
   // TODO: do we need?
