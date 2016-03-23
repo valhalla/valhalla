@@ -890,7 +890,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   else if (mode == sif::TravelMode::kPedestrian)
     trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
   else if (mode == sif::TravelMode::kPublicTransit)
-    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPublicTransit);
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kTransit);
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information
