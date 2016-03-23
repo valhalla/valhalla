@@ -66,6 +66,15 @@ class DirectionsBuilder {
   TripDirections_TransitRoute_Type TranslateTransitType(
       TripPath_TransitType transit_type);
 
+  /**
+   * Return the trip directions travel mode for the specified trip path travel
+   * mode.
+   *
+   * @param transit_type trip path transit type.
+   */
+  TripDirections_TravelMode TranslateTravelMode(
+      TripPath_TravelMode travel_mode);
+
 };
 
 }

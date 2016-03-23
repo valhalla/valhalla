@@ -647,6 +647,9 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   maneuver.set_begin_shape_index(prev_edge->end_shape_index());
   maneuver.set_end_shape_index(prev_edge->end_shape_index());
 
+  // Travel mode
+  maneuver.set_travel_mode(prev_edge->travel_mode());
+
   // Set the verbal text formatter
   maneuver.set_verbal_formatter(
       VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
