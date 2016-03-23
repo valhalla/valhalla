@@ -61,7 +61,7 @@ message TripPath {
     kDrive = 0;
     kPedestrian = 1;
     kBicycle = 2;
-    kPublicTransit = 3;
+    kTransit = 3;
   }
 
   // TODO: review and update as needed
