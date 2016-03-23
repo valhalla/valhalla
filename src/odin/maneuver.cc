@@ -606,38 +606,38 @@ bool Maneuver::IsTransit() const {
       || (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
 }
 
-const TransitRouteInfo& Maneuver::transit_route_info() const {
-  return transit_route_info_;
+const TransitRouteInfo& Maneuver::transit_info() const {
+  return transit_info_;
 }
 
-TransitRouteInfo* Maneuver::mutable_transit_route_info() {
-  return &transit_route_info_;
+TransitRouteInfo* Maneuver::mutable_transit_info() {
+  return &transit_info_;
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  return transit_route_info_.transit_stops.back().arrival_date_time;
+  return transit_info_.transit_stops.back().arrival_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitArrivalTime() const {
-  return DateTime::time(transit_route_info_.transit_stops.back().arrival_date_time);
+  return DateTime::time(transit_info_.transit_stops.back().arrival_date_time);
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  return transit_route_info_.transit_stops.front().departure_date_time;
+  return transit_info_.transit_stops.front().departure_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitDepartureTime() const {
-  return DateTime::time(transit_route_info_.transit_stops.front().departure_date_time);
+  return DateTime::time(transit_info_.transit_stops.front().departure_date_time);
 }
 
 const std::list<TransitStop>& Maneuver::GetTransitStops() const {
-  return transit_route_info_.transit_stops;
+  return transit_info_.transit_stops;
 }
 
 size_t Maneuver::GetTransitStopCount() const {
   return
-      (transit_route_info_.transit_stops.size() > 0) ?
-          (transit_route_info_.transit_stops.size() - 1) : 0;
+      (transit_info_.transit_stops.size() > 0) ?
+          (transit_info_.transit_stops.size() - 1) : 0;
 }
 
 void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
@@ -646,7 +646,7 @@ void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
                                  std::string departure_date_time,
                                  bool is_parent_stop,
                                  bool assumed_schedule) {
-  transit_route_info_.transit_stops.emplace_front(type, onestop_id, name,
+  transit_info_.transit_stops.emplace_front(type, onestop_id, name,
                                                   arrival_date_time,
                                                   departure_date_time,
                                                   is_parent_stop,

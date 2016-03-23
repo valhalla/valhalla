@@ -743,7 +743,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
     maneuver.set_rail(prev_edge->rail());
     maneuver.set_bus(prev_edge->bus());
-    auto* transit_route = maneuver.mutable_transit_route_info();
+    auto* transit_route = maneuver.mutable_transit_info();
     const auto& pe_transit_route = prev_edge->transit_route_info();
     transit_route->type = prev_edge->transit_type();
     transit_route->onestop_id = pe_transit_route.onestop_id();
@@ -1014,9 +1014,9 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     if (prev_edge
         && prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
       // Process transit remain on
-      if ((maneuver.transit_route_info().block_id != 0)
-          && (maneuver.transit_route_info().block_id == prev_edge->transit_route_info().block_id())
-          && (maneuver.transit_route_info().trip_id != prev_edge->transit_route_info().trip_id())) {
+      if ((maneuver.transit_info().block_id != 0)
+          && (maneuver.transit_info().block_id == prev_edge->transit_route_info().block_id())
+          && (maneuver.transit_info().trip_id != prev_edge->transit_route_info().trip_id())) {
         maneuver.set_type(TripDirections_Maneuver_Type_kTransitRemainOn);
         LOG_TRACE("ManeuverType=TRANSIT_REMAIN_ON");
       }
@@ -1325,8 +1325,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
       && (prev_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
 
     // Both block id and trip id must be the same so we can combine...
-    if ((maneuver.transit_route_info().block_id == prev_edge->transit_route_info().block_id())
-        && (maneuver.transit_route_info().trip_id == prev_edge->transit_route_info().trip_id())) {
+    if ((maneuver.transit_info().block_id == prev_edge->transit_route_info().block_id())
+        && (maneuver.transit_info().trip_id == prev_edge->transit_route_info().trip_id())) {
       return true;
     }
     // ...otherwise, it is a transfer or remain on

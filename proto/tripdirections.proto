@@ -52,7 +52,7 @@ message TripDirections {
     optional bool assumed_schedule = 7;        // true if the times are based on an assumed schedule
   }
 
-  message TransitRoute {
+  message TransitInfo {
     enum Type {
       kTram = 0;
       kMetro = 1;
@@ -172,7 +172,7 @@ message TripDirections {
     optional string verbal_depart_instruction = 19;          // verbal depart instruction - used with transit
     optional string arrive_instruction = 20;                 // arrive instruction - used with transit
     optional string verbal_arrive_instruction = 21;          // verbal arrive instruction - used with transit
-    optional TransitRoute transit_route = 22;                // transit route attributes including a list of transit stops
+    optional TransitInfo transit_info = 22;                  // transit attributes including a list of transit stops
     optional bool verbal_multi_cue = 23;                     // verbal multi-cue flag
     optional TravelMode travel_mode = 24;                    // travel mode
   }
