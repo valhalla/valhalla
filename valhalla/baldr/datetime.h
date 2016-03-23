@@ -36,6 +36,17 @@ namespace DateTime {
   boost::gregorian::date get_formatted_date(const std::string& date);
 
   /**
+   * Get a local_date_time with support for dst.
+   * @param date            Date
+   * @param time_duration   Time
+   * @param time_zone       Timezone
+   *
+   */
+  boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
+                                             const boost::posix_time::time_duration& time_duration,
+                                             const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
    * Get the days that this transit service is running in 60 days or less
    * @param   start_date
    * @param   end_date
