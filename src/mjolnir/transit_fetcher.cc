@@ -225,7 +225,8 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
 }
 
 void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes,
-    const std::unordered_map<std::string, std::string>& websites, const ptree& response) {
+    const std::unordered_map<std::string, std::string>& websites,
+    const std::unordered_map<std::string, std::string>& short_names, const ptree& response) {
   for(const auto& route_pt : response.get_child("routes")) {
     auto* route = tile.add_routes();
     set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
@@ -254,7 +255,6 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
     }
     route->set_vehicle_type(type);
     set_no_null(std::string, route_pt.second, "operated_by_onestop_id", "null", route->set_operated_by_onestop_id);
-    set_no_null(std::string, route_pt.second, "operated_by_name", "null", route->set_operated_by_name);
     set_no_null(std::string, route_pt.second, "name", "null", route->set_name);
     set_no_null(std::string, route_pt.second, "tags.route_long_name", "null", route->set_route_long_name);
     set_no_null(std::string, route_pt.second, "tags.route_desc", "null", route->set_route_desc);
@@ -264,9 +264,17 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
     boost::algorithm::trim(route_text_color);
     route_color = (route_color == "null" ? "FFFFFF" : route_color);
     route_text_color = (route_text_color == "null" ? "000000" : route_text_color);
+
     auto website = websites.find(route->operated_by_onestop_id());
     if(website != websites.cend())
       route->set_operated_by_website(website->second);
+
+    //use short name (e.g., BART) over long name (e.g., Bay Area Rapid Transit)
+    auto short_name = short_names.find(route->operated_by_onestop_id());
+    if(short_name != short_names.cend())
+      route->set_operated_by_name(short_name->second);
+    else set_no_null(std::string, route_pt.second, "operated_by_name", "null", route->set_operated_by_name);
+
     route->set_route_color(strtol(route_color.c_str(), nullptr, 16));
     route->set_route_text_color(strtol(route_text_color.c_str(), nullptr, 16));
     routes.emplace(route->onestop_id(), routes.size());
@@ -526,6 +534,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     request = url((boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, std::string> websites;
+    std::unordered_map<std::string, std::string> short_names;
     do {
       //grab some stuff
       response = curler(*request, "operators");
@@ -535,6 +544,10 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
         std::string website = operators_pt.second.get<std::string>("website", "");
         if(!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null")
           websites.emplace(onestop_id, website);
+
+        std::string short_name = operators_pt.second.get<std::string>("short_name", "");
+        if(!onestop_id.empty() && onestop_id != "null" && !short_name.empty() && short_name != "null")
+          short_names.emplace(onestop_id, short_name);
       }
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
@@ -550,7 +563,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       response = curler(*request, "routes");
       uniques.lock.unlock();
       //copy routes in, keeping track of routeid to route index
-      get_routes(tile, routes, websites, response);
+      get_routes(tile, routes, websites, short_names, response);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
     } while(request && (request = *request + api_key));
