@@ -1,5 +1,5 @@
 #include "loki/search.h"
-#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/linesegment2.h>
 
 #include <unordered_set>
@@ -22,10 +22,10 @@ constexpr float NODE_SNAP = 5.f;
 //during side of street computations we figured you're on the street if you are less than
 //5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
 //data for the roads it might want half that) but its better to assume on street than not
-constexpr float SIDE_OF_STREET_SNAP = 5.f * 5.f;
+constexpr float SIDE_OF_STREET_SNAP = 5.f;
 //if you are this far away from the edge we are considering and you set a heading we will
 //ignore it because its not really useful at this distance from the geometry
-constexpr float NO_HEADING = 30.f * 30.f;
+constexpr float NO_HEADING = 30.f;
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
@@ -114,11 +114,14 @@ PathLocation::SideOfStreet GetSide(const DirectedEdge* edge, const std::unique_p
 
   //if the projected point is way too close to the begin or end of the shape
   //TODO: if the original point is really far away side of street may also not make much sense..
-  if(std::get<0>(point).DistanceSquared(info->shape().front()) < SIDE_OF_STREET_SNAP ||
-     std::get<0>(point).DistanceSquared(info->shape().back()) < SIDE_OF_STREET_SNAP)
+  if(std::get<0>(point).Distance(info->shape().front()) < SIDE_OF_STREET_SNAP ||
+     std::get<0>(point).Distance(info->shape().back()) < SIDE_OF_STREET_SNAP)
     return PathLocation::SideOfStreet::NONE;
 
-  //what side
+  //get the side TODO: this can technically fail for longer segments..
+  //to fix it we simply compute the plane formed by the triangle
+  //through the center of the earth and the two shape points and test
+  //whether the original point is above or below the plane (depending on winding)
   auto index = std::get<2>(point);
   LineSegment2<PointLL> segment(info->shape()[index], info->shape()[index + 1]);
   return (segment.IsLeft(original) > 0) == edge->forward()  ? PathLocation::SideOfStreet::LEFT : PathLocation::SideOfStreet::RIGHT;
@@ -294,12 +297,13 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
   std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
 
   //give up if we find nothing after a while
+  size_t bins = 0;
   while(true) {
     try {
       //TODO: make configurable the radius at which we give up searching
       auto bin = binner();
       if(std::get<2>(bin) > SEARCH_CUTTOFF)
-        throw std::runtime_error("No data found for location");
+        throw std::exception{};
 
       //the closest thing in this bin is further than what we have already
       if(std::get<2>(bin) > std::get<1>(closest_point))
@@ -312,6 +316,7 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
 
       //iterate over the edges in the bin
       auto edges = tile->GetBin(std::get<1>(bin));
+      bins += static_cast<size_t>(edges.size() > 0);
       for(const auto e : edges) {
         //get the tile and edge
         if(e.fields.tileid != std::get<0>(bin))
@@ -334,10 +339,13 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
         }
       }
     }
-    catch(const std::runtime_error& e) {
+    catch(...) {
       throw std::runtime_error("No data found for location");
     }
   }
+
+  //keep track of bins we looked in but only the ones that had something
+  midgard::logging::Log("valhalla_loki_bins_searched::" + std::to_string(bins), " [ANALYTICS] ");
 
   //this may be at a node, either because it was the closest thing or from snap tolerance
   bool front = std::get<0>(closest_point) == closest_edge_info->shape().front() ||
