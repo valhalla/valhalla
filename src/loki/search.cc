@@ -319,12 +319,14 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
       bins += static_cast<size_t>(edges.size() > 0);
       for(auto e : edges) {
         //get the tile and edge
-        if(e.fields.tileid != std::get<0>(bin))
+        if(e.tileid() != tile->id().tileid())
           tile = reader.GetGraphTile(e);
         const auto* edge = tile->directededge(e);
-        //no thanks on this one
-        if(filter(edge))
+        //no thanks on this one or it evil twin
+        if(filter(edge) && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
+          filter(edge = tile->directededge(e)))) {
           continue;
+        }
         //get some info about the edge
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
         auto candidate = project(location.latlng_, edge_info->shape());
