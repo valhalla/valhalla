@@ -385,19 +385,55 @@ namespace {
       return locations;
     }
 
-    std::string travel_mode_as_string(TripDirections_TravelMode travel_mode) {
-      switch (travel_mode) {
+    const std::unordered_map<int, std::string> vehicle_to_string {
+      { static_cast<int>(TripDirections_VehicleType_kCar), "car" },
+      { static_cast<int>(TripDirections_VehicleType_kMotorcycle), "motorcycle" },
+      { static_cast<int>(TripDirections_VehicleType_kFourWheelDrive), "four_wheel_drive" },
+      { static_cast<int>(TripDirections_VehicleType_kTractorTrailers), "tractor_trailer" },
+    };
+
+    std::unordered_map<int, std::string> pedestrian_to_string {
+      { static_cast<int>(TripDirections_PedestrianType_kFoot), "foot" },
+      { static_cast<int>(TripDirections_PedestrianType_kWheelChair), "wheelchair" },
+      { static_cast<int>(TripDirections_PedestrianType_kSegway), "segway" },
+    };
+
+    std::unordered_map<int, std::string> bicycle_to_string {
+      { static_cast<int>(TripDirections_BicycleType_kRoad), "road" },
+      { static_cast<int>(TripDirections_BicycleType_kHybrid), "hybrid" },
+      { static_cast<int>(TripDirections_BicycleType_kCity), "city" },
+      { static_cast<int>(TripDirections_BicycleType_kCross), "cross" },
+      { static_cast<int>(TripDirections_BicycleType_kMountain), "mountain" },
+    };
+
+    std::unordered_map<int, std::string> transit_to_string {
+      { static_cast<int>(TripDirections_TransitType_kTram), "tram" },
+      { static_cast<int>(TripDirections_TransitType_kMetro), "metro" },
+      { static_cast<int>(TripDirections_TransitType_kRail), "rail" },
+      { static_cast<int>(TripDirections_TransitType_kBus), "bus" },
+      { static_cast<int>(TripDirections_TransitType_kFerry), "ferry" },
+      { static_cast<int>(TripDirections_TransitType_kCableCar), "cable_car" },
+      { static_cast<int>(TripDirections_TransitType_kGondola), "gondola" },
+      { static_cast<int>(TripDirections_TransitType_kFunicular), "funicular" },
+    };
+
+    std::pair<std::string, std::string> travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
+      switch (maneuver.travel_mode()) {
         case TripDirections_TravelMode_kDrive: {
-          return "drive";
+          auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type()) : vehicle_to_string.cend();
+          return i == vehicle_to_string.cend() ? make_pair("drive", "car") : make_pair("drive", i->second);
         }
         case TripDirections_TravelMode_kPedestrian: {
-          return "pedestrian";
+          auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type()) : pedestrian_to_string.cend();
+          return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot") : make_pair("pedestrian", i->second);
         }
         case TripDirections_TravelMode_kBicycle: {
-          return "bicycle";
+          auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type()) : bicycle_to_string.cend();
+          return i == bicycle_to_string.cend() ? make_pair("bicycle", "road") : make_pair("bicycle", i->second);
         }
         case TripDirections_TravelMode_kTransit: {
-          return "transit";
+          auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type()) : transit_to_string.cend();
+          return i == transit_to_string.cend() ? make_pair("transit", "rail") : make_pair("transit", i->second);
         }
       }
     }
@@ -588,9 +624,6 @@ namespace {
             const auto& transit_info = maneuver.transit_info();
             auto json_transit_info = json::map({});
 
-            if (transit_info.has_type()) {
-              json_transit_info->emplace("type", static_cast<uint64_t>(transit_info.type()));
-            }
             if (transit_info.has_onestop_id()) {
               json_transit_info->emplace("onestop_id", transit_info.onestop_id());
               valhalla::midgard::logging::Log("transit_route_stopid::" + transit_info.onestop_id(), " [ANALYTICS] ");
@@ -683,7 +716,11 @@ namespace {
             man->emplace("verbal_multi_cue", maneuver.verbal_multi_cue());
 
           // Travel mode
-          man->emplace("travel_mode", travel_mode_as_string(maneuver.travel_mode()));
+          auto mode_type = travel_mode_type(maneuver);
+          man->emplace("travel_mode", mode_type.first);
+
+          // Travel type
+          man->emplace("travel_type", mode_type.second);
 
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
