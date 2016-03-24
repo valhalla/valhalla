@@ -650,6 +650,26 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   // Travel mode
   maneuver.set_travel_mode(prev_edge->travel_mode());
 
+  // Vehicle type
+  if (prev_edge->has_vehicle_type()) {
+    maneuver.set_vehicle_type(prev_edge->vehicle_type());
+  }
+
+  // Pedestrian type
+  if (prev_edge->has_pedestrian_type()) {
+    maneuver.set_pedestrian_type(prev_edge->pedestrian_type());
+  }
+
+  // Bicycle type
+  if (prev_edge->has_bicycle_type()) {
+    maneuver.set_bicycle_type(prev_edge->bicycle_type());
+  }
+
+  // Transit type
+  if (prev_edge->has_transit_type()) {
+    maneuver.set_transit_type(prev_edge->transit_type());
+  }
+
   // Set the verbal text formatter
   maneuver.set_verbal_formatter(
       VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
@@ -730,6 +750,26 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Travel mode
   maneuver.set_travel_mode(prev_edge->travel_mode());
 
+  // Vehicle type
+  if (prev_edge->has_vehicle_type()) {
+    maneuver.set_vehicle_type(prev_edge->vehicle_type());
+  }
+
+  // Pedestrian type
+  if (prev_edge->has_pedestrian_type()) {
+    maneuver.set_pedestrian_type(prev_edge->pedestrian_type());
+  }
+
+  // Bicycle type
+  if (prev_edge->has_bicycle_type()) {
+    maneuver.set_bicycle_type(prev_edge->bicycle_type());
+  }
+
+  // Transit type
+  if (prev_edge->has_transit_type()) {
+    maneuver.set_transit_type(prev_edge->transit_type());
+  }
+
   // Unnamed walkway
   maneuver.set_unnamed_walkway(prev_edge->IsUnnamedWalkway());
 
@@ -745,7 +785,6 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_bus(prev_edge->bus());
     auto* transit_route = maneuver.mutable_transit_info();
     const auto& pe_transit_route = prev_edge->transit_route_info();
-    transit_route->type = prev_edge->transit_type();
     transit_route->onestop_id = pe_transit_route.onestop_id();
     transit_route->block_id = pe_transit_route.block_id();
     transit_route->trip_id = pe_transit_route.trip_id();

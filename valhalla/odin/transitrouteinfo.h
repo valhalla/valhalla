@@ -16,7 +16,6 @@ struct TransitRouteInfo {
   // TODO: do we need?
   std::string ToParameterString() const;
 
-  TripPath_TransitType type;
   std::string onestop_id;
   uint32_t block_id;
   uint32_t trip_id;
