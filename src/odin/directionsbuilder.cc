@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/directionsbuilder.h"
 #include "odin/maneuversbuilder.h"
@@ -9,10 +11,50 @@
 namespace {
 // Minimum edge length
 constexpr auto kMinEdgeLength = 0.0003f;
+
 }
 
 namespace valhalla {
 namespace odin {
+
+const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type {
+  { static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar },
+  { static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle },
+  { static_cast<int>(TripPath_VehicleType_kFourWheelDrive), TripDirections_VehicleType_kFourWheelDrive },
+  { static_cast<int>(TripPath_VehicleType_kTractorTrailers), TripDirections_VehicleType_kTractorTrailers },
+};
+
+const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type {
+  { static_cast<int>(TripPath_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot },
+  { static_cast<int>(TripPath_PedestrianType_kWheelChair), TripDirections_PedestrianType_kWheelChair },
+  { static_cast<int>(TripPath_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway },
+};
+
+const std::unordered_map<int, TripDirections_BicycleType> translate_bicycle_type {
+  { static_cast<int>(TripPath_BicycleType_kRoad), TripDirections_BicycleType_kRoad },
+  { static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid },
+  { static_cast<int>(TripPath_BicycleType_kCity), TripDirections_BicycleType_kCity },
+  { static_cast<int>(TripPath_BicycleType_kCross), TripDirections_BicycleType_kCross },
+  { static_cast<int>(TripPath_BicycleType_kMountain), TripDirections_BicycleType_kMountain },
+};
+
+const std::unordered_map<int, TripDirections_TransitType> translate_transit_type {
+  { static_cast<int>(TripPath_TransitType_kTram), TripDirections_TransitType_kTram },
+  { static_cast<int>(TripPath_TransitType_kMetro), TripDirections_TransitType_kMetro },
+  { static_cast<int>(TripPath_TransitType_kRail), TripDirections_TransitType_kRail },
+  { static_cast<int>(TripPath_TransitType_kBus), TripDirections_TransitType_kBus },
+  { static_cast<int>(TripPath_TransitType_kFerry), TripDirections_TransitType_kFerry },
+  { static_cast<int>(TripPath_TransitType_kCableCar), TripDirections_TransitType_kCableCar },
+  { static_cast<int>(TripPath_TransitType_kGondola), TripDirections_TransitType_kGondola },
+  { static_cast<int>(TripPath_TransitType_kFunicular), TripDirections_TransitType_kFunicular },
+};
+
+const std::unordered_map<int, TripDirections_TravelMode> translate_travel_mode {
+  { static_cast<int>(TripPath_TravelMode_kDrive), TripDirections_TravelMode_kDrive },
+  { static_cast<int>(TripPath_TravelMode_kPedestrian), TripDirections_TravelMode_kPedestrian },
+  { static_cast<int>(TripPath_TravelMode_kBicycle), TripDirections_TravelMode_kBicycle },
+  { static_cast<int>(TripPath_TravelMode_kTransit), TripDirections_TravelMode_kTransit },
+};
 
 DirectionsBuilder::DirectionsBuilder() {
 }
@@ -253,40 +295,39 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
     // Process transit route
     if (maneuver.IsTransit()) {
-      const auto& transit_route = maneuver.transit_route_info();
-      auto* trip_transit_route = trip_maneuver->mutable_transit_route();
-      trip_transit_route->set_type(TranslateTransitType(transit_route.type));
+      const auto& transit_route = maneuver.transit_info();
+      auto* trip_transit_info = trip_maneuver->mutable_transit_info();
       if (!transit_route.onestop_id.empty()) {
-        trip_transit_route->set_onestop_id(transit_route.onestop_id);
+        trip_transit_info->set_onestop_id(transit_route.onestop_id);
       }
       if (!transit_route.short_name.empty()) {
-        trip_transit_route->set_short_name(transit_route.short_name);
+        trip_transit_info->set_short_name(transit_route.short_name);
       }
       if (!transit_route.long_name.empty()) {
-        trip_transit_route->set_long_name(transit_route.long_name);
+        trip_transit_info->set_long_name(transit_route.long_name);
       }
       if (!transit_route.headsign.empty()) {
-        trip_transit_route->set_headsign(transit_route.headsign);
+        trip_transit_info->set_headsign(transit_route.headsign);
       }
-      trip_transit_route->set_color(transit_route.color);
-      trip_transit_route->set_text_color(transit_route.text_color);
+      trip_transit_info->set_color(transit_route.color);
+      trip_transit_info->set_text_color(transit_route.text_color);
       if (!transit_route.description.empty()) {
-        trip_transit_route->set_description(transit_route.description);
+        trip_transit_info->set_description(transit_route.description);
       }
       if (!transit_route.operator_onestop_id.empty()) {
-        trip_transit_route->set_operator_onestop_id(
+        trip_transit_info->set_operator_onestop_id(
             transit_route.operator_onestop_id);
       }
       if (!transit_route.operator_name.empty()) {
-        trip_transit_route->set_operator_name(transit_route.operator_name);
+        trip_transit_info->set_operator_name(transit_route.operator_name);
       }
       if (!transit_route.operator_url.empty()) {
-        trip_transit_route->set_operator_url(transit_route.operator_url);
+        trip_transit_info->set_operator_url(transit_route.operator_url);
       }
 
       // Process transit stops
       for (auto& transit_stop : transit_route.transit_stops) {
-        auto* trip_transit_stop = trip_transit_route->add_transit_stops();
+        auto* trip_transit_stop = trip_transit_info->add_transit_stops();
         trip_transit_stop->set_type(transit_stop.type);
         if (!transit_stop.onestop_id.empty()) {
           trip_transit_stop->set_onestop_id(transit_stop.onestop_id);
@@ -315,6 +356,32 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     if (maneuver.verbal_multi_cue())
       trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
 
+    // Travel mode
+    trip_maneuver->set_travel_mode(translate_travel_mode.find(maneuver.travel_mode())->second);
+
+    // Travel type
+    switch (maneuver.travel_mode()) {
+      case TripPath_TravelMode_kDrive: {
+        trip_maneuver->set_vehicle_type(
+            translate_vehicle_type.find(maneuver.vehicle_type())->second);
+        break;
+      }
+      case TripPath_TravelMode_kPedestrian: {
+        trip_maneuver->set_pedestrian_type(
+            translate_pedestrian_type.find(maneuver.pedestrian_type())->second);
+        break;
+      }
+      case TripPath_TravelMode_kBicycle: {
+        trip_maneuver->set_bicycle_type(
+            translate_bicycle_type.find(maneuver.bicycle_type())->second);
+        break;
+      }
+      case TripPath_TravelMode_kTransit: {
+        trip_maneuver->set_transit_type(
+            translate_transit_type.find(maneuver.transit_type())->second);
+        break;
+      }
+    }
   }
 
   // Populate summary
@@ -327,39 +394,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   trip_directions.set_shape(etp->shape());
 
   return trip_directions;
-}
-
-TripDirections_TransitRoute_Type DirectionsBuilder::TranslateTransitType(
-    TripPath_TransitType transit_type) {
-
-  switch (transit_type) {
-    case TripPath_TransitType_kTram: {
-      return TripDirections_TransitRoute_Type_kTram;
-    }
-    case TripPath_TransitType_kMetro: {
-      return TripDirections_TransitRoute_Type_kMetro;
-    }
-    case TripPath_TransitType_kRail: {
-      return TripDirections_TransitRoute_Type_kRail;
-    }
-    case TripPath_TransitType_kBus: {
-      return TripDirections_TransitRoute_Type_kBus;
-    }
-    case TripPath_TransitType_kFerry: {
-      return TripDirections_TransitRoute_Type_kFerry;
-    }
-    case TripPath_TransitType_kCableCar: {
-      return TripDirections_TransitRoute_Type_kCableCar;
-    }
-    case TripPath_TransitType_kGondola: {
-      return TripDirections_TransitRoute_Type_kGondola;
-    }
-    case TripPath_TransitType_kFunicular: {
-      return TripDirections_TransitRoute_Type_kFunicular;
-    }
-  }
-  // if not found above then throw error
-  throw std::runtime_error("Invalid transit type.");
 }
 
 }

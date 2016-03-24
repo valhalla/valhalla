@@ -205,22 +205,34 @@ class Maneuver {
   TripPath_TravelMode travel_mode() const;
   void set_travel_mode(TripPath_TravelMode travel_mode);
 
-  bool transit_connection() const;
-  void set_transit_connection(bool transit_connection);
-
-  const TransitStop& transit_connection_stop() const;
-  void set_transit_connection_stop(const TransitStop& transit_connection_stop);
-
   bool rail() const;
   void set_rail(bool rail);
 
   bool bus() const;
   void set_bus(bool bus);
 
+  TripPath_VehicleType vehicle_type() const;
+  void set_vehicle_type(TripPath_VehicleType vehicle_type);
+
+  TripPath_PedestrianType pedestrian_type() const;
+  void set_pedestrian_type(TripPath_PedestrianType pedestrian_type);
+
+  TripPath_BicycleType bicycle_type() const;
+  void set_bicycle_type(TripPath_BicycleType bicycle_type);
+
+  TripPath_TransitType transit_type() const;
+  void set_transit_type(TripPath_TransitType transit_type);
+
+  bool transit_connection() const;
+  void set_transit_connection(bool transit_connection);
+
+  const TransitStop& transit_connection_stop() const;
+  void set_transit_connection_stop(const TransitStop& transit_connection_stop);
+
   bool IsTransit() const;
 
-  const TransitRouteInfo& transit_route_info() const;
-  TransitRouteInfo* mutable_transit_route_info();
+  const TransitRouteInfo& transit_info() const;
+  TransitRouteInfo* mutable_transit_info();
 
   std::string GetTransitArrivalTime() const;
 
@@ -311,23 +323,29 @@ class Maneuver {
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
 
-  // Travel mode
-  TripPath_TravelMode travel_mode_;
-  bool rail_;
-  bool bus_;
-
   // Transit connection flag and the associated stop
   bool transit_connection_;
   TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
 
   // The transit route info including list of stops
-  TransitRouteInfo transit_route_info_;
+  TransitRouteInfo transit_info_;
 
   std::string depart_instruction_;
   std::string verbal_depart_instruction_;
   std::string arrive_instruction_;
   std::string verbal_arrive_instruction_;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Travel mode
+  TripPath_TravelMode travel_mode_;
+  bool rail_;
+  bool bus_;
+
+  // Travel types
+  TripPath_VehicleType vehicle_type_;
+  TripPath_PedestrianType pedestrian_type_;
+  TripPath_BicycleType bicycle_type_;
+  TripPath_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 

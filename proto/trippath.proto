@@ -61,7 +61,7 @@ message TripPath {
     kDrive = 0;
     kPedestrian = 1;
     kBicycle = 2;
-    kPublicTransit = 3;
+    kTransit = 3;
   }
 
   // TODO: review and update as needed
@@ -79,14 +79,14 @@ message TripPath {
     kSegway = 2;
   }
 
-  // TODO: review and update as needed
   enum BicycleType {
     kRoad = 0;
-    kCross = 1;
-    kMountain = 2;
+    kHybrid = 1;
+    kCity = 2;
+    kCross = 3;
+    kMountain = 4;
   }
   
-  // TODO: review and update as needed
   enum TransitType {
     kTram = 0;
     kMetro = 1;

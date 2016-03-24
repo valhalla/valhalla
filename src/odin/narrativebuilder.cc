@@ -2850,7 +2850,7 @@ std::string NarrativeBuilder::FormTransitInstruction(
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_headsign = maneuver.transit_route_info().headsign;
+  std::string transit_headsign = maneuver.transit_info().headsign;
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2884,7 +2884,7 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_headsign = maneuver.transit_route_info().headsign;
+  std::string transit_headsign = maneuver.transit_info().headsign;
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2916,7 +2916,7 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_headsign = maneuver.transit_route_info().headsign;
+  std::string transit_headsign = maneuver.transit_info().headsign;
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2952,7 +2952,7 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_headsign = maneuver.transit_route_info().headsign;
+  std::string transit_headsign = maneuver.transit_info().headsign;
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2985,7 +2985,7 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_headsign = maneuver.transit_route_info().headsign;
+  std::string transit_headsign = maneuver.transit_info().headsign;
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -3021,7 +3021,7 @@ std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_headsign = maneuver.transit_route_info().headsign;
+  std::string transit_headsign = maneuver.transit_info().headsign;
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -3485,10 +3485,10 @@ std::string NarrativeBuilder::FormStopCountLabel(size_t stop_count) {
 }
 
 std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
-  if (!maneuver.transit_route_info().short_name.empty()) {
-    return maneuver.transit_route_info().short_name;
-  } else if (!maneuver.transit_route_info().long_name.empty()) {
-    return (maneuver.transit_route_info().long_name);
+  if (!maneuver.transit_info().short_name.empty()) {
+    return maneuver.transit_info().short_name;
+  } else if (!maneuver.transit_info().long_name.empty()) {
+    return (maneuver.transit_info().long_name);
   } else if (maneuver.bus()) {
     return "bus";
   }

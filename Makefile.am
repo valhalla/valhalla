@@ -41,7 +41,7 @@ src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
 #turn locales json into strings we can load
-src/odin/locales.h:
+src/odin/locales.h: locales/*.json
 	-pushd locales && ./make_locales.sh *.json > ../src/odin/locales.h && popd
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h

@@ -8,6 +8,8 @@
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
 
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 #include "odin/transitstop.h"
@@ -63,6 +65,10 @@ Maneuver::Maneuver()
       internal_left_turn_count_(0),
       roundabout_exit_count_(0),
       travel_mode_(TripPath_TravelMode_kDrive),
+      vehicle_type_(TripPath_VehicleType_kCar),
+      pedestrian_type_(TripPath_PedestrianType_kFoot),
+      bicycle_type_(TripPath_BicycleType_kRoad),
+      transit_type_(TripPath_TransitType_kRail),
       transit_connection_(false),
       transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", false, false),
       rail_(false),
@@ -562,6 +568,38 @@ void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
+TripPath_VehicleType Maneuver::vehicle_type() const {
+  return vehicle_type_;
+}
+
+void Maneuver::set_vehicle_type(TripPath_VehicleType vehicle_type) {
+  vehicle_type_ = vehicle_type;
+}
+
+TripPath_PedestrianType Maneuver::pedestrian_type() const {
+  return pedestrian_type_;
+}
+
+void Maneuver::set_pedestrian_type(TripPath_PedestrianType pedestrian_type) {
+  pedestrian_type_ = pedestrian_type;
+}
+
+TripPath_BicycleType Maneuver::bicycle_type() const {
+  return bicycle_type_;
+}
+
+void Maneuver::set_bicycle_type(TripPath_BicycleType bicycle_type) {
+  bicycle_type_ = bicycle_type;
+}
+
+TripPath_TransitType Maneuver::transit_type() const {
+  return transit_type_;
+}
+
+void Maneuver::set_transit_type(TripPath_TransitType transit_type) {
+  transit_type_ = transit_type;
+}
+
 bool Maneuver::transit_connection() const {
   return transit_connection_;
 }
@@ -604,38 +642,38 @@ bool Maneuver::IsTransit() const {
       || (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
 }
 
-const TransitRouteInfo& Maneuver::transit_route_info() const {
-  return transit_route_info_;
+const TransitRouteInfo& Maneuver::transit_info() const {
+  return transit_info_;
 }
 
-TransitRouteInfo* Maneuver::mutable_transit_route_info() {
-  return &transit_route_info_;
+TransitRouteInfo* Maneuver::mutable_transit_info() {
+  return &transit_info_;
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  return transit_route_info_.transit_stops.back().arrival_date_time;
+  return transit_info_.transit_stops.back().arrival_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitArrivalTime() const {
-  return DateTime::time(transit_route_info_.transit_stops.back().arrival_date_time);
+  return DateTime::time(transit_info_.transit_stops.back().arrival_date_time);
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  return transit_route_info_.transit_stops.front().departure_date_time;
+  return transit_info_.transit_stops.front().departure_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitDepartureTime() const {
-  return DateTime::time(transit_route_info_.transit_stops.front().departure_date_time);
+  return DateTime::time(transit_info_.transit_stops.front().departure_date_time);
 }
 
 const std::list<TransitStop>& Maneuver::GetTransitStops() const {
-  return transit_route_info_.transit_stops;
+  return transit_info_.transit_stops;
 }
 
 size_t Maneuver::GetTransitStopCount() const {
   return
-      (transit_route_info_.transit_stops.size() > 0) ?
-          (transit_route_info_.transit_stops.size() - 1) : 0;
+      (transit_info_.transit_stops.size() > 0) ?
+          (transit_info_.transit_stops.size() - 1) : 0;
 }
 
 void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
@@ -644,7 +682,7 @@ void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
                                  std::string departure_date_time,
                                  bool is_parent_stop,
                                  bool assumed_schedule) {
-  transit_route_info_.transit_stops.emplace_front(type, onestop_id, name,
+  transit_info_.transit_stops.emplace_front(type, onestop_id, name,
                                                   arrival_date_time,
                                                   departure_date_time,
                                                   is_parent_stop,
@@ -845,6 +883,8 @@ std::string Maneuver::ToString() const {
   man_str += " | bus=";
   man_str += std::to_string(bus_);
 
+  // TODO travel types
+
   man_str += " | transit_connection=";
   man_str += std::to_string(transit_connection_);
 
@@ -1000,7 +1040,6 @@ std::string Maneuver::ToParameterString() const {
   man_str += delim;
   man_str += std::to_string(verbal_multi_cue_);
 
-  // Transit TODO
 //  man_str += delim;
 //  man_str += "TripPath_TravelMode_";
 //  man_str += TripPath_TravelMode_descriptor()
@@ -1008,6 +1047,9 @@ std::string Maneuver::ToParameterString() const {
 //  bool rail_;
 //  bool bus_;
 
+  // TODO Travel Types
+
+  // Transit TODO
   // Transit connection flag and the associated stop
 //  transit_connection_;
 //  TransitStop transit_connection_stop_;
