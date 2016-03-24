@@ -745,7 +745,7 @@ function filter_tags_generic(kv)
     end
   end
 
-  if ((kv["oneway"] == "yes" and kv["oneway:bus"] == "no") or kv["bus:backward"] == "yes" or kv["bus:backward"] == "no") then
+  if ((kv["oneway"] == "yes" and kv["oneway:bus"] == "no") or kv["bus:backward"] == "yes" or kv["bus:backward"] == "designated") then
     kv["bus_backward"] = "true"
   end
 
