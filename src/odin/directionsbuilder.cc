@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/directionsbuilder.h"
 #include "odin/maneuversbuilder.h"
@@ -9,10 +11,50 @@
 namespace {
 // Minimum edge length
 constexpr auto kMinEdgeLength = 0.0003f;
+
 }
 
 namespace valhalla {
 namespace odin {
+
+const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type {
+  { static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar },
+  { static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle },
+  { static_cast<int>(TripPath_VehicleType_kFourWheelDrive), TripDirections_VehicleType_kFourWheelDrive },
+  { static_cast<int>(TripPath_VehicleType_kTractorTrailers), TripDirections_VehicleType_kTractorTrailers },
+};
+
+const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type {
+  { static_cast<int>(TripPath_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot },
+  { static_cast<int>(TripPath_PedestrianType_kWheelChair), TripDirections_PedestrianType_kWheelChair },
+  { static_cast<int>(TripPath_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway },
+};
+
+const std::unordered_map<int, TripDirections_BicycleType> translate_bicycle_type {
+  { static_cast<int>(TripPath_BicycleType_kRoad), TripDirections_BicycleType_kRoad },
+  { static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid },
+  { static_cast<int>(TripPath_BicycleType_kCity), TripDirections_BicycleType_kCity },
+  { static_cast<int>(TripPath_BicycleType_kCross), TripDirections_BicycleType_kCross },
+  { static_cast<int>(TripPath_BicycleType_kMountain), TripDirections_BicycleType_kMountain },
+};
+
+const std::unordered_map<int, TripDirections_TransitType> translate_transit_type {
+  { static_cast<int>(TripPath_TransitType_kTram), TripDirections_TransitType_kTram },
+  { static_cast<int>(TripPath_TransitType_kMetro), TripDirections_TransitType_kMetro },
+  { static_cast<int>(TripPath_TransitType_kRail), TripDirections_TransitType_kRail },
+  { static_cast<int>(TripPath_TransitType_kBus), TripDirections_TransitType_kBus },
+  { static_cast<int>(TripPath_TransitType_kFerry), TripDirections_TransitType_kFerry },
+  { static_cast<int>(TripPath_TransitType_kCableCar), TripDirections_TransitType_kCableCar },
+  { static_cast<int>(TripPath_TransitType_kGondola), TripDirections_TransitType_kGondola },
+  { static_cast<int>(TripPath_TransitType_kFunicular), TripDirections_TransitType_kFunicular },
+};
+
+const std::unordered_map<int, TripDirections_TravelMode> translate_travel_mode {
+  { static_cast<int>(TripPath_TravelMode_kDrive), TripDirections_TravelMode_kDrive },
+  { static_cast<int>(TripPath_TravelMode_kPedestrian), TripDirections_TravelMode_kPedestrian },
+  { static_cast<int>(TripPath_TravelMode_kBicycle), TripDirections_TravelMode_kBicycle },
+  { static_cast<int>(TripPath_TravelMode_kTransit), TripDirections_TravelMode_kTransit },
+};
 
 DirectionsBuilder::DirectionsBuilder() {
 }
@@ -315,28 +357,28 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
 
     // Travel mode
-    trip_maneuver->set_travel_mode(TranslateTravelMode(maneuver.travel_mode()));
+    trip_maneuver->set_travel_mode(translate_travel_mode.find(maneuver.travel_mode())->second);
 
     // Travel type
     switch (maneuver.travel_mode()) {
       case TripPath_TravelMode_kDrive: {
         trip_maneuver->set_vehicle_type(
-            TranslateVehicleType(maneuver.vehicle_type()));
+            translate_vehicle_type.find(maneuver.vehicle_type())->second);
         break;
       }
       case TripPath_TravelMode_kPedestrian: {
         trip_maneuver->set_pedestrian_type(
-            TranslatePedestrianType(maneuver.pedestrian_type()));
+            translate_pedestrian_type.find(maneuver.pedestrian_type())->second);
         break;
       }
       case TripPath_TravelMode_kBicycle: {
         trip_maneuver->set_bicycle_type(
-            TranslateBicycleType(maneuver.bicycle_type()));
+            translate_bicycle_type.find(maneuver.bicycle_type())->second);
         break;
       }
       case TripPath_TravelMode_kTransit: {
         trip_maneuver->set_transit_type(
-            TranslateTransitType(maneuver.transit_type()));
+            translate_transit_type.find(maneuver.transit_type())->second);
         break;
       }
     }
@@ -352,123 +394,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   trip_directions.set_shape(etp->shape());
 
   return trip_directions;
-}
-
-TripDirections_VehicleType DirectionsBuilder::TranslateVehicleType(
-    TripPath_VehicleType vehicle_type) {
-
-  switch (vehicle_type) {
-    case TripPath_VehicleType_kCar: {
-      return TripDirections_VehicleType_kCar;
-    }
-    case TripPath_VehicleType_kMotorcycle: {
-      return TripDirections_VehicleType_kMotorcycle;
-    }
-    case TripPath_VehicleType_kFourWheelDrive: {
-      return TripDirections_VehicleType_kFourWheelDrive;
-    }
-    case TripPath_VehicleType_kTractorTrailers: {
-      return TripDirections_VehicleType_kTractorTrailers;
-    }
-  }
-  // if not found above then throw error
-  throw std::runtime_error("Invalid vehicle type.");
-}
-
-TripDirections_PedestrianType DirectionsBuilder::TranslatePedestrianType(
-    TripPath_PedestrianType pedestrian_type) {
-
-  switch (pedestrian_type) {
-    case TripPath_PedestrianType_kFoot: {
-      return TripDirections_PedestrianType_kFoot;
-    }
-    case TripPath_PedestrianType_kWheelChair: {
-      return TripDirections_PedestrianType_kWheelChair;
-    }
-    case TripPath_PedestrianType_kSegway: {
-      return TripDirections_PedestrianType_kSegway;
-    }
-  }
-  // if not found above then throw error
-  throw std::runtime_error("Invalid pedestrian type.");
-}
-
-TripDirections_BicycleType DirectionsBuilder::TranslateBicycleType(
-    TripPath_BicycleType bicycle_type) {
-
-  switch (bicycle_type) {
-    case TripPath_BicycleType_kRoad: {
-      return TripDirections_BicycleType_kRoad;
-    }
-    case TripPath_BicycleType_kHybrid: {
-      return TripDirections_BicycleType_kHybrid;
-    }
-    case TripPath_BicycleType_kCity: {
-      return TripDirections_BicycleType_kCity;
-    }
-    case TripPath_BicycleType_kCross: {
-      return TripDirections_BicycleType_kCross;
-    }
-    case TripPath_BicycleType_kMountain: {
-      return TripDirections_BicycleType_kMountain;
-    }
-  }
-  // if not found above then throw error
-  throw std::runtime_error("Invalid bicycle type.");
-}
-
-TripDirections_TransitType DirectionsBuilder::TranslateTransitType(
-    TripPath_TransitType transit_type) {
-
-  switch (transit_type) {
-    case TripPath_TransitType_kTram: {
-      return TripDirections_TransitType_kTram;
-    }
-    case TripPath_TransitType_kMetro: {
-      return TripDirections_TransitType_kMetro;
-    }
-    case TripPath_TransitType_kRail: {
-      return TripDirections_TransitType_kRail;
-    }
-    case TripPath_TransitType_kBus: {
-      return TripDirections_TransitType_kBus;
-    }
-    case TripPath_TransitType_kFerry: {
-      return TripDirections_TransitType_kFerry;
-    }
-    case TripPath_TransitType_kCableCar: {
-      return TripDirections_TransitType_kCableCar;
-    }
-    case TripPath_TransitType_kGondola: {
-      return TripDirections_TransitType_kGondola;
-    }
-    case TripPath_TransitType_kFunicular: {
-      return TripDirections_TransitType_kFunicular;
-    }
-  }
-  // if not found above then throw error
-  throw std::runtime_error("Invalid transit type.");
-}
-
-TripDirections_TravelMode DirectionsBuilder::TranslateTravelMode(
-    TripPath_TravelMode travel_mode) {
-
-  switch (travel_mode) {
-    case TripPath_TravelMode_kDrive: {
-      return TripDirections_TravelMode_kDrive;
-    }
-    case TripPath_TravelMode_kPedestrian: {
-      return TripDirections_TravelMode_kPedestrian;
-    }
-    case TripPath_TravelMode_kBicycle: {
-      return TripDirections_TravelMode_kBicycle;
-    }
-    case TripPath_TravelMode_kTransit: {
-      return TripDirections_TravelMode_kTransit;
-    }
-  }
-  // if not found above then throw error
-  throw std::runtime_error("Invalid travel mode.");
 }
 
 }

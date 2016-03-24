@@ -57,51 +57,6 @@ class DirectionsBuilder {
       const DirectionsOptions& directions_options, EnhancedTripPath* etp,
       std::list<Maneuver>& maneuvers);
 
-  /**
-   * Return the trip directions vehicle type for the specified trip path vehicle
-   * type.
-   *
-   * @param vehicle_type trip path vehicle type.
-   */
-  TripDirections_VehicleType TranslateVehicleType(
-      TripPath_VehicleType vehicle_type);
-
-  /**
-   * Return the trip directions pedestrian type for the specified trip path pedestrian
-   * type.
-   *
-   * @param pedestrian_type trip path pedestrian type.
-   */
-  TripDirections_PedestrianType TranslatePedestrianType(
-      TripPath_PedestrianType pedestrian_type);
-
-  /**
-   * Return the trip directions bicycle type for the specified trip path bicycle
-   * type.
-   *
-   * @param bicycle_type trip path bicycle type.
-   */
-  TripDirections_BicycleType TranslateBicycleType(
-      TripPath_BicycleType bicycle_type);
-
-  /**
-   * Return the trip directions transit type for the specified trip path transit
-   * type.
-   *
-   * @param transit_type trip path transit type.
-   */
-  TripDirections_TransitType TranslateTransitType(
-      TripPath_TransitType transit_type);
-
-  /**
-   * Return the trip directions travel mode for the specified trip path travel
-   * mode.
-   *
-   * @param transit_type trip path transit type.
-   */
-  TripDirections_TravelMode TranslateTravelMode(
-      TripPath_TravelMode travel_mode);
-
 };
 
 }
