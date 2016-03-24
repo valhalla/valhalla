@@ -402,6 +402,78 @@ namespace {
       }
     }
 
+    std::string vehicle_type_as_string(TripDirections_VehicleType vehicle_type) {
+      switch (vehicle_type) {
+        case TripDirections_VehicleType_kCar:
+        case TripDirections_VehicleType_kMotorcycle:
+        case TripDirections_VehicleType_kFourWheelDrive:
+        case TripDirections_VehicleType_kTractorTrailers: {
+          // TODO: fill in other strings
+          return "car";
+        }
+      }
+    }
+
+    std::string pedestrian_type_as_string(TripDirections_PedestrianType pedestrian_type) {
+      switch (pedestrian_type) {
+        case TripDirections_PedestrianType_kFoot:
+        case TripDirections_PedestrianType_kWheelChair:
+        case TripDirections_PedestrianType_kSegway: {
+          // TODO: fill in other strings
+          return "foot";
+        }
+      }
+    }
+
+    std::string bicycle_type_as_string(TripDirections_BicycleType bicycle_type) {
+      switch (bicycle_type) {
+        case TripDirections_BicycleType_kRoad: {
+          return "road";
+        }
+        case TripDirections_BicycleType_kHybrid: {
+          return "hybrid";
+        }
+        case TripDirections_BicycleType_kCity: {
+          return "city";
+        }
+        case TripDirections_BicycleType_kCross: {
+          return "cross";
+        }
+        case TripDirections_BicycleType_kMountain: {
+          return "mountain";
+        }
+      }
+    }
+
+    std::string transit_type_as_string(TripDirections_TransitType transit_type) {
+      switch (transit_type) {
+        case TripDirections_TransitType_kTram: {
+          return "tram";
+        }
+        case TripDirections_TransitType_kMetro: {
+          return "metro";
+        }
+        case TripDirections_TransitType_kRail: {
+          return "rail";
+        }
+        case TripDirections_TransitType_kBus: {
+          return "bus";
+        }
+        case TripDirections_TransitType_kFerry: {
+          return "ferry";
+        }
+        case TripDirections_TransitType_kCableCar: {
+          return "cable car";
+        }
+        case TripDirections_TransitType_kGondola: {
+          return "gondola";
+        }
+        case TripDirections_TransitType_kFunicular: {
+          return "funicular";
+        }
+      }
+    }
+
     json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs){
 
       // TODO: multiple legs.
@@ -588,9 +660,6 @@ namespace {
             const auto& transit_info = maneuver.transit_info();
             auto json_transit_info = json::map({});
 
-            if (transit_info.has_type()) {
-              json_transit_info->emplace("type", static_cast<uint64_t>(transit_info.type()));
-            }
             if (transit_info.has_onestop_id()) {
               json_transit_info->emplace("onestop_id", transit_info.onestop_id());
               valhalla::midgard::logging::Log("transit_route_stopid::" + transit_info.onestop_id(), " [ANALYTICS] ");
@@ -684,6 +753,20 @@ namespace {
 
           // Travel mode
           man->emplace("travel_mode", travel_mode_as_string(maneuver.travel_mode()));
+
+          // Travel type
+          if (maneuver.has_vehicle_type()) {
+            man->emplace("travel_type", vehicle_type_as_string(maneuver.vehicle_type()));
+          }
+          if (maneuver.has_pedestrian_type()) {
+            man->emplace("travel_type", pedestrian_type_as_string(maneuver.pedestrian_type()));
+          }
+          if (maneuver.has_bicycle_type()) {
+            man->emplace("travel_type", bicycle_type_as_string(maneuver.bicycle_type()));
+          }
+          if (maneuver.has_transit_type()) {
+            man->emplace("travel_type", transit_type_as_string(maneuver.transit_type()));
+          }
 
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
