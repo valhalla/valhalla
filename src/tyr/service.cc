@@ -385,91 +385,55 @@ namespace {
       return locations;
     }
 
-    std::string travel_mode_as_string(TripDirections_TravelMode travel_mode) {
-      switch (travel_mode) {
+    const std::unordered_map<int, std::string> vehicle_to_string {
+      { static_cast<int>(TripDirections_VehicleType_kCar), "car" },
+      { static_cast<int>(TripDirections_VehicleType_kMotorcycle), "motorcycle" },
+      { static_cast<int>(TripDirections_VehicleType_kFourWheelDrive), "four_wheel_drive" },
+      { static_cast<int>(TripDirections_VehicleType_kTractorTrailers), "tractor_trailer" },
+    };
+
+    std::unordered_map<int, std::string> pedestrian_to_string {
+      { static_cast<int>(TripDirections_PedestrianType_kFoot), "foot" },
+      { static_cast<int>(TripDirections_PedestrianType_kWheelChair), "wheelchair" },
+      { static_cast<int>(TripDirections_PedestrianType_kSegway), "segway" },
+    };
+
+    std::unordered_map<int, std::string> bicycle_to_string {
+      { static_cast<int>(TripDirections_BicycleType_kRoad), "road" },
+      { static_cast<int>(TripDirections_BicycleType_kHybrid), "hybrid" },
+      { static_cast<int>(TripDirections_BicycleType_kCity), "city" },
+      { static_cast<int>(TripDirections_BicycleType_kCross), "cross" },
+      { static_cast<int>(TripDirections_BicycleType_kMountain), "mountain" },
+    };
+
+    std::unordered_map<int, std::string> transit_to_string {
+      { static_cast<int>(TripDirections_TransitType_kTram), "tram" },
+      { static_cast<int>(TripDirections_TransitType_kMetro), "metro" },
+      { static_cast<int>(TripDirections_TransitType_kRail), "rail" },
+      { static_cast<int>(TripDirections_TransitType_kBus), "bus" },
+      { static_cast<int>(TripDirections_TransitType_kFerry), "ferry" },
+      { static_cast<int>(TripDirections_TransitType_kCableCar), "cable_car" },
+      { static_cast<int>(TripDirections_TransitType_kGondola), "gondola" },
+      { static_cast<int>(TripDirections_TransitType_kFunicular), "funicular" },
+    };
+
+    std::pair<std::string, std::string> travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
+      switch (maneuver.travel_mode()) {
         case TripDirections_TravelMode_kDrive: {
-          return "drive";
+          auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type()) : vehicle_to_string.cend();
+          return i == vehicle_to_string.cend() ? make_pair("drive", "car") : make_pair("drive", i->second);
         }
         case TripDirections_TravelMode_kPedestrian: {
-          return "pedestrian";
+          auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type()) : pedestrian_to_string.cend();
+          return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot") : make_pair("pedestrian", i->second);
         }
         case TripDirections_TravelMode_kBicycle: {
-          return "bicycle";
+          auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type()) : vehicle_to_string.cend();
+          return i == vehicle_to_string.cend() ? make_pair("bicycle", "road") : make_pair("bicycle", i->second);
         }
         case TripDirections_TravelMode_kTransit: {
-          return "transit";
-        }
-      }
-    }
-
-    std::string vehicle_type_as_string(TripDirections_VehicleType vehicle_type) {
-      switch (vehicle_type) {
-        case TripDirections_VehicleType_kCar:
-        case TripDirections_VehicleType_kMotorcycle:
-        case TripDirections_VehicleType_kFourWheelDrive:
-        case TripDirections_VehicleType_kTractorTrailers: {
-          // TODO: fill in other strings
-          return "car";
-        }
-      }
-    }
-
-    std::string pedestrian_type_as_string(TripDirections_PedestrianType pedestrian_type) {
-      switch (pedestrian_type) {
-        case TripDirections_PedestrianType_kFoot:
-        case TripDirections_PedestrianType_kWheelChair:
-        case TripDirections_PedestrianType_kSegway: {
-          // TODO: fill in other strings
-          return "foot";
-        }
-      }
-    }
-
-    std::string bicycle_type_as_string(TripDirections_BicycleType bicycle_type) {
-      switch (bicycle_type) {
-        case TripDirections_BicycleType_kRoad: {
-          return "road";
-        }
-        case TripDirections_BicycleType_kHybrid: {
-          return "hybrid";
-        }
-        case TripDirections_BicycleType_kCity: {
-          return "city";
-        }
-        case TripDirections_BicycleType_kCross: {
-          return "cross";
-        }
-        case TripDirections_BicycleType_kMountain: {
-          return "mountain";
-        }
-      }
-    }
-
-    std::string transit_type_as_string(TripDirections_TransitType transit_type) {
-      switch (transit_type) {
-        case TripDirections_TransitType_kTram: {
-          return "tram";
-        }
-        case TripDirections_TransitType_kMetro: {
-          return "metro";
-        }
-        case TripDirections_TransitType_kRail: {
-          return "rail";
-        }
-        case TripDirections_TransitType_kBus: {
-          return "bus";
-        }
-        case TripDirections_TransitType_kFerry: {
-          return "ferry";
-        }
-        case TripDirections_TransitType_kCableCar: {
-          return "cable car";
-        }
-        case TripDirections_TransitType_kGondola: {
-          return "gondola";
-        }
-        case TripDirections_TransitType_kFunicular: {
-          return "funicular";
+          auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type()) : vehicle_to_string.cend();
+          return i == vehicle_to_string.cend() ? make_pair("transit", "rail") : make_pair("transit", i->second);
         }
       }
     }
@@ -752,21 +716,11 @@ namespace {
             man->emplace("verbal_multi_cue", maneuver.verbal_multi_cue());
 
           // Travel mode
-          man->emplace("travel_mode", travel_mode_as_string(maneuver.travel_mode()));
+          auto mode_type = travel_mode_type(maneuver);
+          man->emplace("travel_mode", mode_type.first);
 
           // Travel type
-          if (maneuver.has_vehicle_type()) {
-            man->emplace("travel_type", vehicle_type_as_string(maneuver.vehicle_type()));
-          }
-          if (maneuver.has_pedestrian_type()) {
-            man->emplace("travel_type", pedestrian_type_as_string(maneuver.pedestrian_type()));
-          }
-          if (maneuver.has_bicycle_type()) {
-            man->emplace("travel_type", bicycle_type_as_string(maneuver.bicycle_type()));
-          }
-          if (maneuver.has_transit_type()) {
-            man->emplace("travel_type", transit_type_as_string(maneuver.transit_type()));
-          }
+          man->emplace("travel_type", mode_type.second);
 
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
