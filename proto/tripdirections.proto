@@ -53,17 +53,6 @@ message TripDirections {
   }
 
   message TransitInfo {
-    enum Type {
-      kTram = 0;
-      kMetro = 1;
-      kRail = 2;
-      kBus = 3;
-      kFerry = 4;
-      kCableCar = 5;
-      kGondola = 6;
-      kFunicular = 7;
-    }
-    
     optional string onestop_id = 1;
     optional string short_name = 2;
     optional string long_name = 3;
@@ -75,7 +64,6 @@ message TripDirections {
     optional string operator_name = 9;
     optional string operator_url = 10;
     repeated TransitStop transit_stops = 11;
-    optional Type type = 12;
   }
 
   enum TravelMode {
@@ -84,7 +72,41 @@ message TripDirections {
     kBicycle = 2;
     kTransit = 3;
   }
-    
+
+  // TODO: review and update as needed
+  enum VehicleType {
+    kCar = 0;
+    kMotorcycle = 1;
+    kFourWheelDrive = 2;
+    kTractorTrailers = 3;
+  }
+
+  // TODO: review and update as needed
+  enum PedestrianType {
+    kFoot = 0;
+    kWheelChair = 1;
+    kSegway = 2;
+  }
+
+  enum BicycleType {
+    kRoad = 0;
+    kHybrid = 1;
+    kCity = 2;
+    kCross = 3;
+    kMountain = 4;
+  }
+
+  enum TransitType {
+    kTram = 0;
+    kMetro = 1;
+    kRail = 2;
+    kBus = 3;
+    kFerry = 4;
+    kCableCar = 5;
+    kGondola = 6;
+    kFunicular = 7;
+  }
+
   message Maneuver {
     enum CardinalDirection {
       kNorth = 0;
@@ -175,6 +197,10 @@ message TripDirections {
     optional TransitInfo transit_info = 22;                  // transit attributes including a list of transit stops
     optional bool verbal_multi_cue = 23;                     // verbal multi-cue flag
     optional TravelMode travel_mode = 24;                    // travel mode
+    optional VehicleType vehicle_type = 25;
+    optional PedestrianType pedestrian_type = 26;
+    optional BicycleType bicycle_type = 27;
+    optional TransitType transit_type = 28;
   }
   
   optional uint64 trip_id = 1;

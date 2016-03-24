@@ -255,7 +255,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     if (maneuver.IsTransit()) {
       const auto& transit_route = maneuver.transit_info();
       auto* trip_transit_info = trip_maneuver->mutable_transit_info();
-      trip_transit_info->set_type(TranslateTransitType(transit_route.type));
       if (!transit_route.onestop_id.empty()) {
         trip_transit_info->set_onestop_id(transit_route.onestop_id);
       }
@@ -318,6 +317,29 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     // Travel mode
     trip_maneuver->set_travel_mode(TranslateTravelMode(maneuver.travel_mode()));
 
+    // Travel type
+    switch (maneuver.travel_mode()) {
+      case TripPath_TravelMode_kDrive: {
+        trip_maneuver->set_vehicle_type(
+            TranslateVehicleType(maneuver.vehicle_type()));
+        break;
+      }
+      case TripPath_TravelMode_kPedestrian: {
+        trip_maneuver->set_pedestrian_type(
+            TranslatePedestrianType(maneuver.pedestrian_type()));
+        break;
+      }
+      case TripPath_TravelMode_kBicycle: {
+        trip_maneuver->set_bicycle_type(
+            TranslateBicycleType(maneuver.bicycle_type()));
+        break;
+      }
+      case TripPath_TravelMode_kTransit: {
+        trip_maneuver->set_transit_type(
+            TranslateTransitType(maneuver.transit_type()));
+        break;
+      }
+    }
   }
 
   // Populate summary
@@ -332,33 +354,96 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   return trip_directions;
 }
 
-TripDirections_TransitInfo_Type DirectionsBuilder::TranslateTransitType(
+TripDirections_VehicleType DirectionsBuilder::TranslateVehicleType(
+    TripPath_VehicleType vehicle_type) {
+
+  switch (vehicle_type) {
+    case TripPath_VehicleType_kCar: {
+      return TripDirections_VehicleType_kCar;
+    }
+    case TripPath_VehicleType_kMotorcycle: {
+      return TripDirections_VehicleType_kMotorcycle;
+    }
+    case TripPath_VehicleType_kFourWheelDrive: {
+      return TripDirections_VehicleType_kFourWheelDrive;
+    }
+    case TripPath_VehicleType_kTractorTrailers: {
+      return TripDirections_VehicleType_kTractorTrailers;
+    }
+  }
+  // if not found above then throw error
+  throw std::runtime_error("Invalid vehicle type.");
+}
+
+TripDirections_PedestrianType DirectionsBuilder::TranslatePedestrianType(
+    TripPath_PedestrianType pedestrian_type) {
+
+  switch (pedestrian_type) {
+    case TripPath_PedestrianType_kFoot: {
+      return TripDirections_PedestrianType_kFoot;
+    }
+    case TripPath_PedestrianType_kWheelChair: {
+      return TripDirections_PedestrianType_kWheelChair;
+    }
+    case TripPath_PedestrianType_kSegway: {
+      return TripDirections_PedestrianType_kSegway;
+    }
+  }
+  // if not found above then throw error
+  throw std::runtime_error("Invalid pedestrian type.");
+}
+
+TripDirections_BicycleType DirectionsBuilder::TranslateBicycleType(
+    TripPath_BicycleType bicycle_type) {
+
+  switch (bicycle_type) {
+    case TripPath_BicycleType_kRoad: {
+      return TripDirections_BicycleType_kRoad;
+    }
+    case TripPath_BicycleType_kHybrid: {
+      return TripDirections_BicycleType_kHybrid;
+    }
+    case TripPath_BicycleType_kCity: {
+      return TripDirections_BicycleType_kCity;
+    }
+    case TripPath_BicycleType_kCross: {
+      return TripDirections_BicycleType_kCross;
+    }
+    case TripPath_BicycleType_kMountain: {
+      return TripDirections_BicycleType_kMountain;
+    }
+  }
+  // if not found above then throw error
+  throw std::runtime_error("Invalid bicycle type.");
+}
+
+TripDirections_TransitType DirectionsBuilder::TranslateTransitType(
     TripPath_TransitType transit_type) {
 
   switch (transit_type) {
     case TripPath_TransitType_kTram: {
-      return TripDirections_TransitInfo_Type_kTram;
+      return TripDirections_TransitType_kTram;
     }
     case TripPath_TransitType_kMetro: {
-      return TripDirections_TransitInfo_Type_kMetro;
+      return TripDirections_TransitType_kMetro;
     }
     case TripPath_TransitType_kRail: {
-      return TripDirections_TransitInfo_Type_kRail;
+      return TripDirections_TransitType_kRail;
     }
     case TripPath_TransitType_kBus: {
-      return TripDirections_TransitInfo_Type_kBus;
+      return TripDirections_TransitType_kBus;
     }
     case TripPath_TransitType_kFerry: {
-      return TripDirections_TransitInfo_Type_kFerry;
+      return TripDirections_TransitType_kFerry;
     }
     case TripPath_TransitType_kCableCar: {
-      return TripDirections_TransitInfo_Type_kCableCar;
+      return TripDirections_TransitType_kCableCar;
     }
     case TripPath_TransitType_kGondola: {
-      return TripDirections_TransitInfo_Type_kGondola;
+      return TripDirections_TransitType_kGondola;
     }
     case TripPath_TransitType_kFunicular: {
-      return TripDirections_TransitInfo_Type_kFunicular;
+      return TripDirections_TransitType_kFunicular;
     }
   }
   // if not found above then throw error

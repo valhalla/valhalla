@@ -65,6 +65,10 @@ Maneuver::Maneuver()
       internal_left_turn_count_(0),
       roundabout_exit_count_(0),
       travel_mode_(TripPath_TravelMode_kDrive),
+      vehicle_type_(TripPath_VehicleType_kCar),
+      pedestrian_type_(TripPath_PedestrianType_kFoot),
+      bicycle_type_(TripPath_BicycleType_kRoad),
+      transit_type_(TripPath_TransitType_kRail),
       transit_connection_(false),
       transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", false, false),
       rail_(false),
@@ -564,6 +568,38 @@ void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
+TripPath_VehicleType Maneuver::vehicle_type() const {
+  return vehicle_type_;
+}
+
+void Maneuver::set_vehicle_type(TripPath_VehicleType vehicle_type) {
+  vehicle_type_ = vehicle_type;
+}
+
+TripPath_PedestrianType Maneuver::pedestrian_type() const {
+  return pedestrian_type_;
+}
+
+void Maneuver::set_pedestrian_type(TripPath_PedestrianType pedestrian_type) {
+  pedestrian_type_ = pedestrian_type;
+}
+
+TripPath_BicycleType Maneuver::bicycle_type() const {
+  return bicycle_type_;
+}
+
+void Maneuver::set_bicycle_type(TripPath_BicycleType bicycle_type) {
+  bicycle_type_ = bicycle_type;
+}
+
+TripPath_TransitType Maneuver::transit_type() const {
+  return transit_type_;
+}
+
+void Maneuver::set_transit_type(TripPath_TransitType transit_type) {
+  transit_type_ = transit_type;
+}
+
 bool Maneuver::transit_connection() const {
   return transit_connection_;
 }
@@ -847,6 +883,8 @@ std::string Maneuver::ToString() const {
   man_str += " | bus=";
   man_str += std::to_string(bus_);
 
+  // TODO travel types
+
   man_str += " | transit_connection=";
   man_str += std::to_string(transit_connection_);
 
@@ -1002,7 +1040,6 @@ std::string Maneuver::ToParameterString() const {
   man_str += delim;
   man_str += std::to_string(verbal_multi_cue_);
 
-  // Transit TODO
 //  man_str += delim;
 //  man_str += "TripPath_TravelMode_";
 //  man_str += TripPath_TravelMode_descriptor()
@@ -1010,6 +1047,9 @@ std::string Maneuver::ToParameterString() const {
 //  bool rail_;
 //  bool bus_;
 
+  // TODO Travel Types
+
+  // Transit TODO
   // Transit connection flag and the associated stop
 //  transit_connection_;
 //  TransitStop transit_connection_stop_;
