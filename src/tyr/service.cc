@@ -428,12 +428,12 @@ namespace {
           return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot") : make_pair("pedestrian", i->second);
         }
         case TripDirections_TravelMode_kBicycle: {
-          auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type()) : vehicle_to_string.cend();
-          return i == vehicle_to_string.cend() ? make_pair("bicycle", "road") : make_pair("bicycle", i->second);
+          auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type()) : bicycle_to_string.cend();
+          return i == bicycle_to_string.cend() ? make_pair("bicycle", "road") : make_pair("bicycle", i->second);
         }
         case TripDirections_TravelMode_kTransit: {
-          auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type()) : vehicle_to_string.cend();
-          return i == vehicle_to_string.cend() ? make_pair("transit", "rail") : make_pair("transit", i->second);
+          auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type()) : transit_to_string.cend();
+          return i == transit_to_string.cend() ? make_pair("transit", "rail") : make_pair("transit", i->second);
         }
       }
     }
