@@ -98,6 +98,7 @@ constexpr auto kNumberSignTag = "<NUMBER_SIGN>";
 constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
+constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 
 }
 
