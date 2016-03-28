@@ -619,7 +619,7 @@
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "example_phrases": {
-        "0": ["Head northeast."],
+        "0": ["Head southeast."],
         "1": ["Head west on Ferry Lane"],
         "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."]
       }
@@ -633,7 +633,7 @@
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "example_phrases": {
-        "0": ["Head northeast."],
+        "0": ["Head southeast."],
         "1": ["Head west on Ferry Lane"],
         "2": ["Head south on Summerfield Place, New York 1 14."]
       }
