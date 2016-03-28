@@ -8,3 +8,5 @@
 -j '{"locations":[{"lat":41.065929,"lon":-72.331223,"street":"South Ferry Road"},{"lat":41.014751,"lon":-72.312233,"street":"Ferry Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":41.522480,"lon":-70.663223,"street":"Church Street"},{"lat":41.424229,"lon":-70.644524,"street":"Old County Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":41.424171,"lon":-70.644569,"street":"Old County Road"},{"lat":41.522591,"lon":-70.663239,"street":"Church Street"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.760727,"lon":-75.145538,"street":"Kings Highway"},{"lat":38.968803,"lon":-74.897659,"street":"GSP"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.968803,"lon":-74.897659,"street":"GSP"},{"lat":38.760727,"lon":-75.145538,"street":"Kings Highway"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
