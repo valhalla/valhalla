@@ -2354,6 +2354,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "0": "Exit the roundabout.",
   // "1": "Exit the roundabout onto <STREET_NAMES>.",
+  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2373,9 +2374,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!begin_street_names.empty()) {
-    phrase_id = 1;
-    // Assign to so street names for tag replacement
-    street_names = begin_street_names;
+    phrase_id = 2;
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
@@ -2385,6 +2384,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
   return instruction;
 

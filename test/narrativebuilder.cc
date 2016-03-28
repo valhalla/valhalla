@@ -3763,7 +3763,7 @@ void TestBuildExitRoundabout_1_miles_en_US() {
 // FormExitRoundaboutInstruction
 // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 // No verbal alert
-// "1": "Exit the roundabout onto <STREET_NAMES>.",
+// "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>.",
 void TestBuildExitRoundabout_2_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
