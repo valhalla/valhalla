@@ -182,6 +182,15 @@ void NarrativeDictionary::Load(
   Load(enter_ferry_verbal_subset, narrative_pt.get_child(kEnterFerryVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate exit_ferry_subset...");
+  // Populate exit_ferry_subset
+  Load(exit_ferry_subset, narrative_pt.get_child(kExitFerryKey));
+
+  LOG_TRACE("Populate exit_ferry_verbal_subset...");
+  // Populate exit_ferry_verbal_subset
+  Load(exit_ferry_verbal_subset, narrative_pt.get_child(kExitFerryVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

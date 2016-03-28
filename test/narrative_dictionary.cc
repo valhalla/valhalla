@@ -134,6 +134,18 @@ const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases = {
     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}
 };
 
+const std::map<std::string, std::string> kExpectedExitFerryPhrases = {
+    {"0", "Head <CARDINAL_DIRECTION>."},
+    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}
+};
+
+const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases = {
+    {"0", "Head <CARDINAL_DIRECTION>."},
+    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}
+};
+
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -969,6 +981,40 @@ void test_en_US_enter_ferry_verbal() {
 
 }
 
+void test_en_US_exit_ferry() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit_ferry phrases
+  validate(static_cast<const PhraseSet&>(dictionary.exit_ferry_subset),
+           kExpectedExitFerryPhrases);
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.exit_ferry_subset.cardinal_directions;
+  validate(cardinal_directions, kExpectedCardinalDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.exit_ferry_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_exit_ferry_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit_ferry_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.exit_ferry_verbal_subset),
+           kExpectedExitFerryVerbalPhrases);
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.exit_ferry_verbal_subset.cardinal_directions;
+  validate(cardinal_directions, kExpectedCardinalDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.exit_ferry_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1108,6 +1154,12 @@ int main() {
 
   // test the en-US enter_ferry_verbal phrases
   suite.test(TEST_CASE(test_en_US_enter_ferry_verbal));
+
+  // test the en-US exit_ferry phrases
+  suite.test(TEST_CASE(test_en_US_exit_ferry));
+
+  // test the en-US exit_ferry_verbal phrases
+  suite.test(TEST_CASE(test_en_US_exit_ferry_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

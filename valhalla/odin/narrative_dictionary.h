@@ -44,6 +44,8 @@ constexpr auto kExitRoundaboutKey = "instructions.exit_roundabout";
 constexpr auto kExitRoundaboutVerbalKey = "instructions.exit_roundabout_verbal";
 constexpr auto kEnterFerryKey = "instructions.enter_ferry";
 constexpr auto kEnterFerryVerbalKey = "instructions.enter_ferry_verbal";
+constexpr auto kExitFerryKey = "instructions.exit_ferry";
+constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -231,6 +233,10 @@ class NarrativeDictionary {
   // EnterFerry
   EnterFerrySubset enter_ferry_subset;
   EnterFerrySubset enter_ferry_verbal_subset;
+
+  // ExitFerry
+  StartSubset exit_ferry_subset;
+  StartSubset exit_ferry_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
