@@ -2663,8 +2663,8 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
 }
 
 std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
-  // 0 "Depart: <GetFormattedTransitDepartureTime>.
-  // 1 "Depart: <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
+  // "0": "Depart: <TIME>",
+  // "1": "Depart: <TIME> from <TRANSIT_STOP>"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2696,8 +2696,8 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
-  // 0 "Depart at <GetFormattedTransitDepartureTime>.
-  // 1 "Depart at <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
+  // "0": "Depart at <TIME>",
+  // "1": "Depart at <TIME> from <TRANSIT_STOP>"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2729,8 +2729,8 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
-  // 0 "Arrive: <GetFormattedTransitArrivalTime>.
-  // 1 "Arrive: <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
+  // "0": "Arrive: <TIME>",
+  // "1": "Arrive: <TIME> at <TRANSIT_STOP>"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2762,8 +2762,8 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
-  // 0 "Arrive at <GetFormattedTransitArrivalTime>.
-  // 1 "Arrive at <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
+  // "0": "Arrive at <TIME>",
+  // "1": "Arrive at <TIME> at <TRANSIT_STOP>"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
