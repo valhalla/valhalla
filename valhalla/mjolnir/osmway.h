@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <set>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/mjolnir/uniquenames.h>
