@@ -245,10 +245,15 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");
 
+  if(!database) {
+    LOG_INFO("Admin config info not found. Admins will not be created.");
+    return;
+  }
+
   if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path()))
     boost::filesystem::create_directories(boost::filesystem::path(*database).parent_path());
 
-  if(!database || !boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
+  if(!boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
     LOG_INFO("Admin directory not found. Admins will not be created.");
     return;
   }
