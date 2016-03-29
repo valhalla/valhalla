@@ -759,8 +759,27 @@
         "1": ["Take the F toward JAMAICA - 179 ST."]
       }
     },
-    "transit_remain_on": null,
-    "transit_remain_on_verbal": null,
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Remain on the New Haven. (1 stop)"],
+        "1": ["Remain on the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Remain on the <TRANSIT_NAME>.",
+        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "example_phrases": {
+        "0": ["Remain on the New Haven."],
+        "1": ["Remain on the F toward JAMAICA - 179 ST."]
+      }
+    },
     "transit_transfer": null,
     "transit_transfer_verbal": null,
     "post_transit_connection_destination": null,
