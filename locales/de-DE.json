@@ -730,10 +730,46 @@
         "1": ["Exit the 8 St - NYU Station."]
       }
     },
-    "depart": null,
-    "depart_verbal": null,
-    "arrive": null,
-    "arrive_verbal": null,
+    "depart": {
+      "phrases": {
+        "0": "Abfahrt: <TIME>.",
+        "1": "Abfahrt: <TIME> an <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": ["Depart: 8:02 AM."],
+        "1": ["Depart: 8:02 AM from 8 St - NYU."]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Um <TIME> abfahren.",
+        "1": "Um <TIME> von <TRANSIT_STOP> abfahren."
+      },
+      "example_phrases": {
+        "0": ["Depart at 8:02 AM."],
+        "1": ["Depart at 8:02 AM from 8 St - NYU."]
+      }
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Ankunft: <TIME>.",
+        "1": "Ankunft: <TIME> am <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": ["Arrive: 8:02 AM."],
+        "1": ["Arrive: 8:02 AM at 8 St - NYU."]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Um <TIME> ankommen",
+        "1": "Um <TIME> am <TRANSIT_STOP> ankommen."
+      },
+      "example_phrases": {
+        "0": ["Arrive at 8:02 AM."],
+        "1": ["Arrive at 8:02 AM at 8 St - NYU."]
+      }
+    },
     "transit": null,
     "transit_verbal": null,
     "post_transition_transit_verbal": null,
