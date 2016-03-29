@@ -638,8 +638,26 @@
         "2": ["Head south on Summerfield Place, New York 1 14."]
       }
     },
-    "transit_connection_start": null,
-    "transit_connection_start_verbal": null,
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Enter the station.",
+        "1": "Enter the <TRANSIT_STOP> station."
+      },
+      "example_phrases": {
+        "0": ["Enter the station."],
+        "1": ["Enter the 8 St - NYU station."]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Enter the station.",
+        "1": "Enter the <TRANSIT_STOP> station."
+      },
+      "example_phrases": {
+        "0": ["Enter the station."],
+        "1": ["Enter the 8 St - NYU station."]
+      }
+    },
     "transit_connection_transfer": null,
     "transit_connection_transfer_verbal": null,
     "transit_connection_destination": null,

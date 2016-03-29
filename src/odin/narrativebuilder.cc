@@ -2575,8 +2575,8 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
 
 std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
     Maneuver& maneuver) {
-  // 0 "Enter station."
-  // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
+  // "0": "Enter the station.",
+  // "1": "Enter the <TRANSIT_STOP> station."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2605,8 +2605,8 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
 
 std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
     Maneuver& maneuver) {
-  // 0 "Enter station."
-  // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
+  // "0": "Enter the station.",
+  // "1": "Enter the <TRANSIT_STOP> station."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);

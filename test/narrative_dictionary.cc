@@ -146,6 +146,16 @@ const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases = {
     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}
 };
 
+const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases = {
+    {"0", "Enter the station."},
+    {"1", "Enter the <TRANSIT_STOP> station."}
+};
+
+const std::map<std::string, std::string> kExpectedTransitConnectionStartVerbalPhrases = {
+    {"0", "Enter the station."},
+    {"1", "Enter the <TRANSIT_STOP> station."}
+};
+
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -1015,6 +1025,24 @@ void test_en_US_exit_ferry_verbal() {
 
 }
 
+void test_en_US_transit_connection_start() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate transit_connection_start phrases
+  validate(dictionary.transit_connection_start_subset,
+           kExpectedTransitConnectionStartPhrases);
+
+}
+
+void test_en_US_transit_connection_start_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate transit_connection_start_verbal phrases
+  validate(dictionary.transit_connection_start_verbal_subset,
+           kExpectedTransitConnectionStartVerbalPhrases);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1160,6 +1188,12 @@ int main() {
 
   // test the en-US exit_ferry_verbal phrases
   suite.test(TEST_CASE(test_en_US_exit_ferry_verbal));
+
+  // test the en-US transit_connection_start phrases
+  suite.test(TEST_CASE(test_en_US_transit_connection_start));
+
+  // test the en-US transit_connection_start_verbal phrases
+  suite.test(TEST_CASE(test_en_US_transit_connection_start_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));
