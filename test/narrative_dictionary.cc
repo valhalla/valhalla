@@ -21,6 +21,7 @@ const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right
 const std::vector<std::string> kExpectedRelativeThreeDirections = { "left", "straight", "right" };
 const std::vector<std::string> kExpectedRelativeTurnDirections = { "left", "sharp left", "right", "sharp right" };
 const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th" };
+const std::string kExpectedFerryLabel = "Ferry";
 
 // Expected phrases
 const std::map<std::string, std::string> kExpectedExitPhrases = {
@@ -117,7 +118,32 @@ const std::map<std::string, std::string> kExpectedExitRoundaboutPhrases = {
 
 const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases = {
     {"0", "Exit the roundabout."},
-    {"1", "Exit the roundabout onto <STREET_NAMES>."}
+    {"1", "Exit the roundabout onto <STREET_NAMES>."},
+    {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."}
+};
+
+const std::map<std::string, std::string> kExpectedEnterFerryPhrases = {
+    {"0", "Take the Ferry."},
+    {"1", "Take the <STREET_NAMES>."},
+    {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}
+};
+
+const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases = {
+    {"0", "Take the Ferry."},
+    {"1", "Take the <STREET_NAMES>."},
+    {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}
+};
+
+const std::map<std::string, std::string> kExpectedExitFerryPhrases = {
+    {"0", "Head <CARDINAL_DIRECTION>."},
+    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}
+};
+
+const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases = {
+    {"0", "Head <CARDINAL_DIRECTION>."},
+    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}
 };
 
 
@@ -923,6 +949,72 @@ void test_en_US_exit_roundabout_verbal() {
 
 }
 
+void test_en_US_enter_ferry() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate enter_ferry phrases
+  validate(static_cast<const PhraseSet&>(dictionary.enter_ferry_subset),
+           kExpectedEnterFerryPhrases);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.enter_ferry_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+  // Ferry label
+  validate(dictionary.enter_ferry_subset.ferry_label, kExpectedFerryLabel);
+
+}
+
+void test_en_US_enter_ferry_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate enter_ferry_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.enter_ferry_verbal_subset),
+           kExpectedEnterFerryVerbalPhrases);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.enter_ferry_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+  // Ferry label
+  validate(dictionary.enter_ferry_verbal_subset.ferry_label, kExpectedFerryLabel);
+
+}
+
+void test_en_US_exit_ferry() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit_ferry phrases
+  validate(static_cast<const PhraseSet&>(dictionary.exit_ferry_subset),
+           kExpectedExitFerryPhrases);
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.exit_ferry_subset.cardinal_directions;
+  validate(cardinal_directions, kExpectedCardinalDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.exit_ferry_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_exit_ferry_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit_ferry_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.exit_ferry_verbal_subset),
+           kExpectedExitFerryVerbalPhrases);
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.exit_ferry_verbal_subset.cardinal_directions;
+  validate(cardinal_directions, kExpectedCardinalDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.exit_ferry_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
 void test_en_US_post_transition_verbal_subset() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1056,6 +1148,18 @@ int main() {
 
   // test the en-US exit_roundabout_verbal phrases
   suite.test(TEST_CASE(test_en_US_exit_roundabout_verbal));
+
+  // test the en-US enter_ferry phrases
+  suite.test(TEST_CASE(test_en_US_enter_ferry));
+
+  // test the en-US enter_ferry_verbal phrases
+  suite.test(TEST_CASE(test_en_US_enter_ferry_verbal));
+
+  // test the en-US exit_ferry phrases
+  suite.test(TEST_CASE(test_en_US_exit_ferry));
+
+  // test the en-US exit_ferry_verbal phrases
+  suite.test(TEST_CASE(test_en_US_exit_ferry_verbal));
 
   // test the en-US post_transition_verbal_subset phrases
   suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));

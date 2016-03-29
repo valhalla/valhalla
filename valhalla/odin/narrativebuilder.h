@@ -275,6 +275,9 @@ class NarrativeBuilder {
                                                       kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
+  // TODO make virtual
+  bool HasFerryLabel(const std::string& name, const std::string& ferry_label);
+
   std::string FormEnterFerryInstruction(Maneuver& maneuver);
 
   std::string FormVerbalAlertEnterFerryInstruction(

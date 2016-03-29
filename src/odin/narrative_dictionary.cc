@@ -173,6 +173,24 @@ void NarrativeDictionary::Load(
   Load(exit_roundabout_verbal_subset, narrative_pt.get_child(kExitRoundaboutVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate enter_ferry_subset...");
+  // Populate enter_ferry_subset
+  Load(enter_ferry_subset, narrative_pt.get_child(kEnterFerryKey));
+
+  LOG_TRACE("Populate enter_ferry_verbal_subset...");
+  // Populate enter_ferry_verbal_subset
+  Load(enter_ferry_verbal_subset, narrative_pt.get_child(kEnterFerryVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate exit_ferry_subset...");
+  // Populate exit_ferry_subset
+  Load(exit_ferry_subset, narrative_pt.get_child(kExitFerryKey));
+
+  LOG_TRACE("Populate exit_ferry_verbal_subset...");
+  // Populate exit_ferry_verbal_subset
+  Load(exit_ferry_verbal_subset, narrative_pt.get_child(kExitFerryVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
@@ -317,6 +335,23 @@ void NarrativeDictionary::Load(
   // Populate ordinal_values
   enter_roundabout_handle.ordinal_values = as_vector<std::string>(
       enter_roundabout_subset_pt, kOrdinalValuesKey);
+
+}
+
+void NarrativeDictionary::Load(
+    EnterFerrySubset& enter_ferry_handle,
+    const boost::property_tree::ptree& enter_ferry_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(enter_ferry_handle), enter_ferry_subset_pt);
+
+  // Populate empty_street_name_labels
+  enter_ferry_handle.empty_street_name_labels = as_vector<std::string>(
+      enter_ferry_subset_pt, kEmptyStreetNameLabelsKey);
+
+  // Populate ferry_label
+  enter_ferry_handle.ferry_label = enter_ferry_subset_pt.get<std::string>(
+      kFerryLabelKey);
 
 }
 

@@ -42,6 +42,10 @@ constexpr auto kEnterRoundaboutKey = "instructions.enter_roundabout";
 constexpr auto kEnterRoundaboutVerbalKey = "instructions.enter_roundabout_verbal";
 constexpr auto kExitRoundaboutKey = "instructions.exit_roundabout";
 constexpr auto kExitRoundaboutVerbalKey = "instructions.exit_roundabout_verbal";
+constexpr auto kEnterFerryKey = "instructions.enter_ferry";
+constexpr auto kEnterFerryVerbalKey = "instructions.enter_ferry_verbal";
+constexpr auto kExitFerryKey = "instructions.exit_ferry";
+constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -53,6 +57,7 @@ constexpr auto kOrdinalValuesKey = "ordinal_values";
 constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
 constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
+constexpr auto kFerryLabelKey = "ferry_label";
 
 // Empty street names label indexes
 constexpr auto kWalkwayIndex = 0;
@@ -95,6 +100,7 @@ constexpr auto kNumberSignTag = "<NUMBER_SIGN>";
 constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
+constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 
 }
 
@@ -139,6 +145,11 @@ struct RampSubset : PhraseSet {
 
 struct KeepSubset : RampSubset {
   std::vector<std::string> empty_street_name_labels;
+};
+
+struct EnterFerrySubset : PhraseSet {
+  std::vector<std::string> empty_street_name_labels;
+  std::string ferry_label;
 };
 
 struct PostTransitionVerbalSubset : PhraseSet {
@@ -218,6 +229,14 @@ class NarrativeDictionary {
   // ExitRoundabout
   ContinueSubset exit_roundabout_subset;
   ContinueSubset exit_roundabout_verbal_subset;
+
+  // EnterFerry
+  EnterFerrySubset enter_ferry_subset;
+  EnterFerrySubset enter_ferry_verbal_subset;
+
+  // ExitFerry
+  StartSubset exit_ferry_subset;
+  StartSubset exit_ferry_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
@@ -333,6 +352,16 @@ class NarrativeDictionary {
     */
   void Load(EnterRoundaboutSubset& enter_roundabout_handle,
             const boost::property_tree::ptree& enter_roundabout_subset_pt);
+
+  /**
+    * Loads the specified 'enter_ferry' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  enter_ferry_handle  The 'enter_ferry' structure to populate.
+    * @param  enter_ferry_subset_pt  The 'enter_ferry' property tree.
+    */
+  void Load(EnterFerrySubset& enter_ferry_handle,
+            const boost::property_tree::ptree& enter_ferry_subset_pt);
 
   /**
     * Loads the specified 'post transition verbal' instruction subset with the

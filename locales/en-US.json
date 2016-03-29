@@ -572,20 +572,72 @@
     "exit_roundabout_verbal": {
       "phrases": {
         "0": "Exit the roundabout.",
-        "1": "Exit the roundabout onto <STREET_NAMES>."
+        "1": "Exit the roundabout onto <STREET_NAMES>.",
+        "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
       },
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "example_phrases": {
         "0": ["Exit the roundabout."],
-        "1": ["Exit the roundabout onto Philadelphia Road, Maryland 7."]
+        "1": ["Exit the roundabout onto Philadelphia Road, Maryland 7."],
+        "2": ["Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."]
       }
     },
-    "enter_ferry": null,
-    "enter_ferry_verbal_alert": null,
-    "enter_ferry_verbal": null,
-    "exit_ferry": null,
-    "exit_ferry_verbal_alert": null,
-    "exit_ferry_verbal": null,
+    "enter_ferry": {
+      "phrases": {
+        "0": "Take the Ferry.",
+        "1": "Take the <STREET_NAMES>.",
+        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": ["Take the Ferry."],
+        "1": ["Take the Millersburg Ferry."],
+        "2": ["Take the Bridgeport - Port Jefferson Ferry."]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Take the Ferry.",
+        "1": "Take the <STREET_NAMES>.",
+        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+      },
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": ["Take the Ferry."],
+        "1": ["Take the Millersburg Ferry."],
+        "2": ["Take the Bridgeport - Port Jefferson Ferry."]
+      }
+    },
+    "exit_ferry": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+      },
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head southeast."],
+        "1": ["Head west on Ferry Lane"],
+        "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."]
+      }
+    },
+    "exit_ferry_verbal": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head southeast."],
+        "1": ["Head west on Ferry Lane"],
+        "2": ["Head south on Summerfield Place, New York 1 14."]
+      }
+    },
     "transit_connection_start": null,
     "transit_connection_start_verbal": null,
     "transit_connection_transfer": null,

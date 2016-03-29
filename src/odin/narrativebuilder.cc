@@ -2354,6 +2354,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "0": "Exit the roundabout.",
   // "1": "Exit the roundabout onto <STREET_NAMES>.",
+  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2373,9 +2374,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!begin_street_names.empty()) {
-    phrase_id = 1;
-    // Assign to so street names for tag replacement
-    street_names = begin_street_names;
+    phrase_id = 2;
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
@@ -2385,141 +2384,193 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
   return instruction;
 
 }
 
-std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
-  //  0 "Take the Ferry."
-  //  1 "Take the <STREET_NAMES>."
-  //  2 "Take the <STREET_NAMES> Ferry."
+bool NarrativeBuilder::HasFerryLabel(const std::string& name,
+                                     const std::string& ferry_label) {
+  return boost::algorithm::ends_with(name, ferry_label);
+}
 
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
+std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
+  // "0": "Take the Ferry.",
+  // "1": "Take the <STREET_NAMES>.",
+  // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Take the ";
+
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.enter_ferry_subset.empty_street_name_labels, true);
+
+  std::string ferry_label = dictionary_.enter_ferry_subset.ferry_label;
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    instruction += street_names;
+    phrase_id = 1;
+    if (!HasFerryLabel(street_names, ferry_label)) {
+      phrase_id = 2;
+    }
   }
 
-  // TODO - handle properly with locale narrative builder
-  std::string ferry_label = " Ferry";
-  if (!boost::algorithm::ends_with(instruction, ferry_label)) {
-    instruction += ferry_label;
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_ferry_subset.phrases.at(std::to_string(phrase_id));
 
-  instruction += ".";
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kFerryLabelTag, ferry_label);
+
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalAlertEnterFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Take the Ferry."
-  //  1 "Take the <STREET_NAMES(1)>."
-  //  2 "Take the <STREET_NAMES(1)> Ferry."
+  // "0": "Take the Ferry.",
+  // "1": "Take the <STREET_NAMES>.",
+  // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 
   return FormVerbalEnterFerryInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Take the Ferry."
-  //  1 "Take the <STREET_NAMES(2)>."
-  //  2 "Take the <STREET_NAMES(2)> Ferry."
-
-  // Assign the street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
+  // "0": "Take the Ferry.",
+  // "1": "Take the <STREET_NAMES>.",
+  // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Take the ";
+
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.enter_ferry_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  std::string ferry_label = dictionary_.enter_ferry_verbal_subset.ferry_label;
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    instruction += street_names;
+    phrase_id = 1;
+    if (!HasFerryLabel(street_names, ferry_label)) {
+      phrase_id = 2;
+    }
   }
 
-  // TODO - handle properly with locale narrative builder
-  std::string ferry_label = " Ferry";
-  if (!boost::algorithm::ends_with(instruction, ferry_label)) {
-    instruction += ferry_label;
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_ferry_verbal_subset.phrases.at(std::to_string(phrase_id));
 
-  instruction += ".";
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kFerryLabelTag, ferry_label);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
-  //  0 "Head <FormCardinalDirection>."
-  //  1 "Head <FormCardinalDirection> on <STREET_NAMES>."
-  //  2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names());
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Head ";
-  instruction += FormCardinalDirection(
-      maneuver.begin_cardinal_direction());
 
+  // Set cardinal_direction value
+  std::string cardinal_direction = dictionary_.exit_ferry_subset
+      .cardinal_directions.at(maneuver.begin_cardinal_direction());
+
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.exit_ferry_subset.empty_street_name_labels, true);
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.exit_ferry_subset.empty_street_name_labels);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!begin_street_names.empty()) {
-    instruction += " on ";
-    instruction += begin_street_names;
-    instruction += ". Continue on ";
-    instruction += street_names;
+    phrase_id = 2;
   } else if (!street_names.empty()) {
-    instruction += " on ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_ferry_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalAlertExitFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Head <FormCardinalDirection>."
-  //  1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(1)>."
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 
   return FormVerbalExitFerryInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Head <FormCardinalDirection>."
-  //  1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
-
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
-      maneuver.verbal_formatter());
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  instruction += "Head ";
-  instruction += FormCardinalDirection(maneuver.begin_cardinal_direction());
 
+  // Set cardinal_direction value
+  std::string cardinal_direction = dictionary_.exit_ferry_verbal_subset
+      .cardinal_directions.at(maneuver.begin_cardinal_direction());
+
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.exit_ferry_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.exit_ferry_verbal_subset.empty_street_name_labels, false,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
   if (!begin_street_names.empty()) {
-    instruction += " on ";
-    instruction += begin_street_names;
+    phrase_id = 2;
   } else if (!street_names.empty()) {
-    instruction += " on ";
-    instruction += street_names;
+    phrase_id = 1;
   }
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_ferry_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
