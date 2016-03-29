@@ -187,7 +187,8 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 
   // Do not contract if the node is a gate or toll booth
   if (nodeinfo->type() == NodeType::kGate ||
-      nodeinfo->type() == NodeType::kTollBooth) {
+      nodeinfo->type() == NodeType::kTollBooth ||
+      nodeinfo->intersection() == IntersectionType::kFork) {
     return false;
   }
 
