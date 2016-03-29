@@ -670,16 +670,6 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP> Station."
-      },
-      "example_phrases": {
-        "0": ["Enter the station."],
-        "1": ["Enter the 8 St - NYU Station."]
-      }
-    },
-    "transit_connection_transfer": {
-      "phrases": {
         "0": "Transfer at the station.",
         "1": "Transfer at the <TRANSIT_STOP> Station."
       },
@@ -710,8 +700,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Depart: <TIME>",
-        "1": "Depart: <TIME> from <TRANSIT_STOP>"
+        "0": "Depart: <TIME>.",
+        "1": "Depart: <TIME> from <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": ["Depart: 8:02 AM."],
@@ -720,8 +710,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Depart at <TIME>",
-        "1": "Depart at <TIME> from <TRANSIT_STOP>"
+        "0": "Depart at <TIME>.",
+        "1": "Depart at <TIME> from <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": ["Depart at 8:02 AM."],
@@ -730,8 +720,8 @@
     },
     "arrive": {
       "phrases": {
-        "0": "Arrive: <TIME>",
-        "1": "Arrive: <TIME> at <TRANSIT_STOP>"
+        "0": "Arrive: <TIME>.",
+        "1": "Arrive: <TIME> at <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": ["Arrive: 8:02 AM."],
@@ -740,16 +730,35 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrive at <TIME>",
-        "1": "Arrive at <TIME> at <TRANSIT_STOP>"
+        "0": "Arrive at <TIME>.",
+        "1": "Arrive at <TIME> at <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": ["Arrive at 8:02 AM."],
         "1": ["Arrive at 8:02 AM at 8 St - NYU."]
       }
     },
-    "transit": null,
-    "transit_verbal": null,
+    "transit": {
+      "phrases": {
+        "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Take the New Haven. (1 stop)"],
+        "1": ["Take the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Take the <TRANSIT_NAME>.",
+        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "example_phrases": {
+        "0": ["Take the New Haven."],
+        "1": ["Take the F toward JAMAICA - 179 ST."]
+      }
+    },
     "transit_remain_on": null,
     "transit_remain_on_verbal": null,
     "transit_transfer": null,
