@@ -221,6 +221,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 
+  // Get the local tile level
+  uint32_t local_level = graphreader.GetTileHierarchy().levels().rbegin()->first;
+
   // Set origin (assumed to be a break)
   TripPath_Location* tp_orig = trip_path.add_location();
   TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
@@ -609,9 +612,17 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             || (edge_idx == directededge->localedgeidx())) {
           continue;
         }
+
+        // If we are on the local level get the intersecting directed edge
+        // so we can set walkability and cyclability
+        const DirectedEdge* intersecting_de = nullptr;
+        if (startnode.level() == local_level) {
+          intersecting_de =
+              graphtile->directededge(edge_idx + nodeinfo->edge_index());
+        }
         AddTripIntersectingEdge(edge_idx, prior_opp_local_index,
                                 directededge->localedgeidx(), nodeinfo,
-                                tile, trip_node);
+                                tile, trip_node, intersecting_de);
       }
     }
 
@@ -971,12 +982,8 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
                                               uint32_t curr_edge_index,
                                               const baldr::NodeInfo* nodeinfo,
                                               const baldr::GraphTile* graphtile,
-                                              odin::TripPath_Node* trip_node) {
-
-
-  const DirectedEdge* directededge =
-      graphtile->directededge(edge_index + nodeinfo->edge_index());
-
+                                              odin::TripPath_Node* trip_node,
+                                              const DirectedEdge* intersecting_de) {
   TripPath_IntersectingEdge* itersecting_edge =
       trip_node->add_intersecting_edge();
 
@@ -984,23 +991,27 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
   itersecting_edge->set_begin_heading(nodeinfo->heading(edge_index));
 
   Traversability traversability = Traversability::kNone;
-  if (directededge->forwardaccess() & kPedestrianAccess) {
-    traversability = (directededge->reverseaccess() & kPedestrianAccess) ?
-        Traversability::kBoth : Traversability::kForward;
-  } else {
-    traversability = (directededge->reverseaccess() & kPedestrianAccess) ?
-        Traversability::kBackward : Traversability::kNone;
+  if (intersecting_de != nullptr) {
+    if (intersecting_de->forwardaccess() & kPedestrianAccess) {
+      traversability = (intersecting_de->reverseaccess() & kPedestrianAccess) ?
+          Traversability::kBoth : Traversability::kForward;
+    } else {
+      traversability = (intersecting_de->reverseaccess() & kPedestrianAccess) ?
+          Traversability::kBackward : Traversability::kNone;
+    }
   }
   // Set the walkability flag for the intersecting edge
   itersecting_edge->set_walkability(GetTripPathTraversability(traversability));
 
   traversability = Traversability::kNone;
-  if (directededge->forwardaccess() & kBicycleAccess) {
-    traversability = (directededge->reverseaccess() & kBicycleAccess) ?
-        Traversability::kBoth : Traversability::kForward;
-  } else {
-    traversability = (directededge->reverseaccess() & kBicycleAccess) ?
-        Traversability::kBackward : Traversability::kNone;
+  if (intersecting_de != nullptr) {
+    if (intersecting_de->forwardaccess() & kBicycleAccess) {
+      traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ?
+          Traversability::kBoth : Traversability::kForward;
+    } else {
+      traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ?
+          Traversability::kBackward : Traversability::kNone;
+    }
   }
   // Set the cyclability flag for the intersecting edge
   itersecting_edge->set_cyclability(GetTripPathTraversability(traversability));
