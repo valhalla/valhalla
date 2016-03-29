@@ -673,27 +673,73 @@
     "transit_connection_start": {
       "phrases": {
         "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP> station."
+        "1": "Enter the <TRANSIT_STOP> Station."
       },
       "example_phrases": {
         "0": ["Enter the station."],
-        "1": ["Enter the 8 St - NYU station."]
+        "1": ["Enter the 8 St - NYU Station."]
       }
     },
     "transit_connection_start_verbal": {
       "phrases": {
         "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP> station."
+        "1": "Enter the <TRANSIT_STOP> Station."
       },
       "example_phrases": {
         "0": ["Enter the station."],
-        "1": ["Enter the 8 St - NYU station."]
+        "1": ["Enter the 8 St - NYU Station."]
       }
     },
-    "transit_connection_transfer": null,
-    "transit_connection_transfer_verbal": null,
-    "transit_connection_destination": null,
-    "transit_connection_destination_verbal": null,
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Transfer at the station.",
+        "1": "Transfer at the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Transfer at the station."],
+        "1": ["Transfer at the Embarcadero Station."]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Enter the station.",
+        "1": "Enter the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Enter the station."],
+        "1": ["Enter the 8 St - NYU Station."]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Transfer at the station.",
+        "1": "Transfer at the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Transfer at the station."],
+        "1": ["Transfer at the Embarcadero Station."]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Exit the station.",
+        "1": "Exit the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Exit the station."],
+        "1": ["Exit the 8 St - NYU Station."]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Exit the station.",
+        "1": "Exit the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Exit the station."],
+        "1": ["Exit the 8 St - NYU Station."]
+      }
+    },
     "depart": null,
     "depart_verbal": null,
     "arrive": null,
