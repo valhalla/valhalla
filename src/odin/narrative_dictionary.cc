@@ -200,6 +200,15 @@ void NarrativeDictionary::Load(
   Load(exit_ferry_verbal_subset, narrative_pt.get_child(kExitFerryVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_connection_start_subset...");
+  // Populate transit_connection_start_subset
+  Load(transit_connection_start_subset, narrative_pt.get_child(kTransitConnectionStartKey));
+
+  LOG_TRACE("Populate transit_connection_start_verbal_subset...");
+  // Populate transit_connection_start_verbal_subset
+  Load(transit_connection_start_verbal_subset, narrative_pt.get_child(kTransitConnectionStartVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

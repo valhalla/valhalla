@@ -48,6 +48,8 @@ constexpr auto kEnterFerryKey = "instructions.enter_ferry";
 constexpr auto kEnterFerryVerbalKey = "instructions.enter_ferry_verbal";
 constexpr auto kExitFerryKey = "instructions.exit_ferry";
 constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
+constexpr auto kTransitConnectionStartKey = "instructions.transit_connection_start";
+constexpr auto kTransitConnectionStartVerbalKey = "instructions.transit_connection_start_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -103,6 +105,7 @@ constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
+constexpr auto kTransitStopTag = "<TRANSIT_STOP>";
 
 }
 
@@ -243,6 +246,10 @@ class NarrativeDictionary {
   // ExitFerry
   StartSubset exit_ferry_subset;
   StartSubset exit_ferry_verbal_subset;
+
+  // TransitConnectionStart
+  PhraseSet transit_connection_start_subset;
+  PhraseSet transit_connection_start_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
