@@ -560,6 +560,7 @@ bool OSMWay::link() const {
   return classification_.fields.link;
 }
 
+
 // Get the names for the edge info based on the road class.
 std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           const UniqueNames& ref_offset_map,
@@ -576,8 +577,23 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
     else
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
 
-    for (const auto t : tokens)
-      names.insert(t);
+    if (tokens.size())
+    {
+      std::cout << "toks" << std::endl;
+
+      for (auto t : tokens)
+        std::cout << t << std::endl;
+    }
+
+    std::copy( tokens.begin(), tokens.end(), std::back_inserter( names));
+
+    if (tokens.size())
+    {
+      std::cout << "names" << std::endl;
+
+      for (auto n : names)
+        std::cout << n << std::endl;
+    }
   }
 
   // TODO int_ref
@@ -595,8 +611,23 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
     else
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
 
-    for (const auto t : tokens)
-      names.insert(t);
+    if (tokens.size())
+    {
+      std::cout << "toks" << std::endl;
+
+      for (auto t : tokens)
+        std::cout << t << std::endl;
+    }
+
+    std::copy( tokens.begin(), tokens.end(), std::back_inserter( names));
+
+    if (tokens.size())
+    {
+      std::cout << "names" << std::endl;
+
+      for (auto n : names)
+        std::cout << n << std::endl;
+    }
   }
 
   // Process alt_name
@@ -617,5 +648,90 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   return  v;
 }
 
+/*
+// Get the names for the edge info based on the road class.
+std::vector<std::string> OSMWay::GetNames(const std::string& ref,
+                                          const UniqueNames& ref_offset_map,
+                                          const UniqueNames& name_offset_map) const {
+  std::vector<std::string> names;
+  // Process motorway and trunk refs
+  if ((ref_index_ != 0 || !ref.empty())
+      && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
+          || (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
+    std::vector<std::string> tokens;
+
+    if (!ref.empty())
+      tokens = GetTagTokens(ref);// use updated refs from relations.
+    else
+      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+
+    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    if (tokens.size())
+    {
+      std::cout << "toks" << std::endl;
+
+      for (auto t : tokens)
+        std::cout << t << std::endl;
+    }
+
+    if (tokens.size())
+    {
+      std::cout << "names" << std::endl;
+
+      for (auto n : names)
+        std::cout << n << std::endl;
+    }
+  }
+
+  // TODO int_ref
+
+  // Process name
+  if (name_index_ != 0)
+    names.emplace_back(name_offset_map.name(name_index_));
+
+  // Process non limited access refs
+  if (ref_index_ != 0 && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
+      && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
+    std::vector<std::string> tokens;
+    if (!ref.empty())
+      tokens = GetTagTokens(ref);// use updated refs from relations.
+    else
+      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    if (tokens.size())
+    {
+      std::cout << "toks" << std::endl;
+
+      for (auto t : tokens)
+        std::cout << t << std::endl;
+    }
+
+    if (tokens.size())
+    {
+      std::cout << "names" << std::endl;
+
+      for (auto n : names)
+        std::cout << n << std::endl;
+    }
+  }
+
+  // Process alt_name
+  if (alt_name_index_ != 0)
+    names.emplace_back(name_offset_map.name(alt_name_index_));
+
+  // Process official_name
+  if (official_name_index_ != 0)
+    names.emplace_back(name_offset_map.name(official_name_index_));
+
+  // Process name_en_
+  // TODO: process country specific names
+  if (name_en_index_ != 0)
+    names.emplace_back(ref_offset_map.name(name_en_index_));
+
+  return names;
+}
+*/
 }
 }
