@@ -615,11 +615,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
         // If we are on the local level get the intersecting directed edge
         // so we can set walkability and cyclability
-        const DirectedEdge* intersecting_de = nullptr;
-        if (startnode.level() == local_level) {
-          intersecting_de =
-              graphtile->directededge(edge_idx + nodeinfo->edge_index());
-        }
+        const DirectedEdge* intersecting_de = (startnode.level() == local_level) ?
+              graphtile->directededge(edge_idx + nodeinfo->edge_index()) : nullptr;
         AddTripIntersectingEdge(edge_idx, prior_opp_local_index,
                                 directededge->localedgeidx(), nodeinfo,
                                 tile, trip_node, intersecting_de);
@@ -977,7 +974,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   return trip_edge;
 }
 
-void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
+void TripPathBuilder::AddTripIntersectingEdge(uint32_t local_edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,
                                               const baldr::NodeInfo* nodeinfo,
@@ -988,7 +985,7 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
       trip_node->add_intersecting_edge();
 
   // Set the heading for the intersecting edge
-  itersecting_edge->set_begin_heading(nodeinfo->heading(edge_index));
+  itersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
 
   Traversability traversability = Traversability::kNone;
   if (intersecting_de != nullptr) {
@@ -1018,15 +1015,15 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
 
   // Set the driveability flag for the intersecting edge
   itersecting_edge->set_driveability(
-      GetTripPathTraversability(nodeinfo->local_driveability(edge_index)));
+      GetTripPathTraversability(nodeinfo->local_driveability(local_edge_index)));
 
   // Set the previous/intersecting edge name consistency
   itersecting_edge->set_prev_name_consistency(
-      nodeinfo->name_consistency(prev_edge_index, edge_index));
+      nodeinfo->name_consistency(prev_edge_index, local_edge_index));
 
   // Set the current/intersecting edge name consistency
   itersecting_edge->set_curr_name_consistency(
-      nodeinfo->name_consistency(curr_edge_index, edge_index));
+      nodeinfo->name_consistency(curr_edge_index, local_edge_index));
 }
 
 }

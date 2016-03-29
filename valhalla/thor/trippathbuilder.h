@@ -70,7 +70,7 @@ class TripPathBuilder {
     * @param  intersecting_de Intersecting directed edge. Will be nullptr except for
     *                         local hierarchy.
     */
-   static void AddTripIntersectingEdge(uint32_t edge_index,
+   static void AddTripIntersectingEdge(uint32_t local_edge_index,
                                        uint32_t prev_edge_index,
                                        uint32_t curr_edge_index,
                                        const baldr::NodeInfo* nodeinfo,
