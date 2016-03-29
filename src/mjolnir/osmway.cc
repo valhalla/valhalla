@@ -1,6 +1,7 @@
 #include "mjolnir/osmway.h"
 #include "mjolnir/util.h"
 
+#include <iostream>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
@@ -563,7 +564,7 @@ bool OSMWay::link() const {
 std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           const UniqueNames& ref_offset_map,
                                           const UniqueNames& name_offset_map) const {
-  std::vector<std::string> names;
+  std::set<std::string> names;
   // Process motorway and trunk refs
   if ((ref_index_ != 0 || !ref.empty())
       && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
@@ -575,14 +576,15 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
     else
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
 
-    names.insert(names.end(), tokens.begin(), tokens.end());
+    for (const auto t : tokens)
+      names.insert(t);
   }
 
   // TODO int_ref
 
   // Process name
   if (name_index_ != 0)
-    names.emplace_back(name_offset_map.name(name_index_));
+    names.insert(name_offset_map.name(name_index_));
 
   // Process non limited access refs
   if (ref_index_ != 0 && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
@@ -592,23 +594,27 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
       tokens = GetTagTokens(ref);// use updated refs from relations.
     else
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
-    names.insert(names.end(), tokens.begin(), tokens.end());
+
+    for (const auto t : tokens)
+      names.insert(t);
   }
 
   // Process alt_name
   if (alt_name_index_ != 0)
-    names.emplace_back(name_offset_map.name(alt_name_index_));
+    names.insert(name_offset_map.name(alt_name_index_));
 
   // Process official_name
   if (official_name_index_ != 0)
-    names.emplace_back(name_offset_map.name(official_name_index_));
+    names.insert(name_offset_map.name(official_name_index_));
 
   // Process name_en_
   // TODO: process country specific names
   if (name_en_index_ != 0)
-    names.emplace_back(ref_offset_map.name(name_en_index_));
+    names.insert(name_offset_map.name(name_en_index_));
 
-  return names;
+  std::vector<std::string> v(names.size());
+  std::copy(names.begin(), names.end(), std::inserter(v, v.begin()));
+  return  v;
 }
 
 }
