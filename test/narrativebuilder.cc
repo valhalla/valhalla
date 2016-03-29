@@ -377,7 +377,7 @@ void PopulateTurnManeuverList_0(std::list<Maneuver>& maneuvers,
                    0, 0, 1, 1, "", "", "", 0);
 }
 
-void PopulateTurnManeuverList_1(std::list<Maneuver>& maneuvers,
+void PopulateSharpManeuverList_1(std::list<Maneuver>& maneuvers,
                                 const std::string& country_code,
                                 const std::string& state_code) {
   maneuvers.emplace_back();
@@ -391,7 +391,7 @@ void PopulateTurnManeuverList_1(std::list<Maneuver>& maneuvers,
                    { }, 1, 0, 0, 0, 1, 1, "", "", "", 0);
 }
 
-void PopulateTurnManeuverList_2(std::list<Maneuver>& maneuvers,
+void PopulateSharpManeuverList_2(std::list<Maneuver>& maneuvers,
                                 const std::string& country_code,
                                 const std::string& state_code) {
   maneuvers.emplace_back();
@@ -1928,10 +1928,10 @@ void TestBuildTurnInstructions_0_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
-// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
-// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
-void TestBuildTurnInstructions_1_miles_en_US() {
+// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
+void TestBuildSharpInstructions_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -1942,11 +1942,11 @@ void TestBuildTurnInstructions_1_miles_en_US() {
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
-  PopulateTurnManeuverList_1(maneuvers, country_code, state_code);
+  PopulateSharpManeuverList_1(maneuvers, country_code, state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
-  PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
+  PopulateSharpManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Turn sharp right onto Flatbush Avenue.",
                                   "Turn sharp right onto Flatbush Avenue.",
@@ -1958,10 +1958,10 @@ void TestBuildTurnInstructions_1_miles_en_US() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTurnInstruction
-// 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-// 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
-// 2 "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
-void TestBuildTurnInstructions_2_miles_en_US() {
+// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(1)>."
+// 2 "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES(2)>."
+void TestBuildSharpInstructions_2_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "MD";
 
@@ -1972,11 +1972,11 @@ void TestBuildTurnInstructions_2_miles_en_US() {
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
-  PopulateTurnManeuverList_2(maneuvers, country_code, state_code);
+  PopulateSharpManeuverList_2(maneuvers, country_code, state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
-  PopulateTurnManeuverList_2(expected_maneuvers, country_code, state_code);
+  PopulateSharpManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
@@ -5092,10 +5092,10 @@ int main() {
   suite.test(TEST_CASE(TestBuildTurnInstructions_0_miles_en_US));
 
   // BuildTurnInstructions_1_miles_en_US
-  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_en_US));
+  suite.test(TEST_CASE(TestBuildSharpInstructions_1_miles_en_US));
 
   // BuildTurnInstructions_2_miles_en_US
-  suite.test(TEST_CASE(TestBuildTurnInstructions_2_miles_en_US));
+  suite.test(TEST_CASE(TestBuildSharpInstructions_2_miles_en_US));
 
   // BuildTurnInstructions_3_miles_en_US
   suite.test(TEST_CASE(TestBuildTurnInstructions_3_miles_en_US));

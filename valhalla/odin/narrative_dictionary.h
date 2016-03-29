@@ -22,6 +22,8 @@ constexpr auto kBearKey = "instructions.bear";
 constexpr auto kBearVerbalKey = "instructions.bear_verbal";
 constexpr auto kTurnKey = "instructions.turn";
 constexpr auto kTurnVerbalKey = "instructions.turn_verbal";
+constexpr auto kSharpKey = "instructions.sharp";
+constexpr auto kSharpVerbalKey = "instructions.sharp_verbal";
 constexpr auto kUturnKey = "instructions.uturn";
 constexpr auto kUturnVerbalAlertKey = "instructions.uturn_verbal_alert";
 constexpr auto kUturnVerbalKey = "instructions.uturn_verbal";
@@ -191,6 +193,10 @@ class NarrativeDictionary {
   // Turn
   TurnSubset turn_subset;
   TurnSubset turn_verbal_subset;
+
+  // Sharp
+  TurnSubset sharp_subset;
+  TurnSubset sharp_verbal_subset;
 
   // Uturn
   TurnSubset uturn_subset;
