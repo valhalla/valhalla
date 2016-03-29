@@ -708,13 +708,48 @@
         "1": ["Exit the 8 St - NYU Station."]
       }
     },
-    "depart": null,
-    "depart_verbal": null,
-    "arrive": null,
-    "arrive_verbal": null,
+    "depart": {
+      "phrases": {
+        "0": "Depart: <TIME>",
+        "1": "Depart: <TIME> from <TRANSIT_STOP>"
+      },
+      "example_phrases": {
+        "0": ["Depart: 8:02 AM."],
+        "1": ["Depart: 8:02 AM from 8 St - NYU."]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Depart at <TIME>",
+        "1": "Depart at <TIME> from <TRANSIT_STOP>"
+      },
+      "example_phrases": {
+        "0": ["Depart at 8:02 AM."],
+        "1": ["Depart at 8:02 AM from 8 St - NYU."]
+      }
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Arrive: <TIME>",
+        "1": "Arrive: <TIME> at <TRANSIT_STOP>"
+      },
+      "example_phrases": {
+        "0": ["Arrive: 8:02 AM."],
+        "1": ["Arrive: 8:02 AM at 8 St - NYU."]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Arrive at <TIME>",
+        "1": "Arrive at <TIME> at <TRANSIT_STOP>"
+      },
+      "example_phrases": {
+        "0": ["Arrive at 8:02 AM."],
+        "1": ["Arrive at 8:02 AM at 8 St - NYU."]
+      }
+    },
     "transit": null,
     "transit_verbal": null,
-    "post_transition_transit_verbal": null,
     "transit_remain_on": null,
     "transit_remain_on_verbal": null,
     "transit_transfer": null,
@@ -730,6 +765,7 @@
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
+    "post_transition_transit_verbal": null,
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
