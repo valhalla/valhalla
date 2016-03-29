@@ -148,12 +148,12 @@ const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases = {
 
 const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases = {
     {"0", "Enter the station."},
-    {"1", "Enter the <TRANSIT_STOP> station."}
+    {"1", "Enter the <TRANSIT_STOP> Station."}
 };
 
 const std::map<std::string, std::string> kExpectedTransitConnectionStartVerbalPhrases = {
     {"0", "Enter the station."},
-    {"1", "Enter the <TRANSIT_STOP> station."}
+    {"1", "Enter the <TRANSIT_STOP> Station."}
 };
 
 
