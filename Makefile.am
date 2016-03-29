@@ -155,6 +155,7 @@ check_PROGRAMS = \
 	test/graphtilebuilder \
 	test/graphbuilder \
 	test/graphparser \
+        test/names \
 	test/refs \
 	test/signinfo
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
@@ -175,10 +176,13 @@ test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ l
 test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
 test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_graphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_refs_SOURCES = test/refs.cc test/test.cc
 test_graphparser_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_graphparser_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_graphparser_SOURCES = test/graphparser.cc test/test.cc
+test_names_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_names_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_names_SOURCES = test/names.cc test/test.cc
+test_refs_SOURCES = test/refs.cc test/test.cc
 test_refs_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_refs_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_signinfo_SOURCES = test/signinfo.cc test/test.cc
