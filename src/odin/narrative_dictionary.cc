@@ -84,6 +84,15 @@ void NarrativeDictionary::Load(
   Load(turn_verbal_subset, narrative_pt.get_child(kTurnVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate sharp_subset...");
+  // Populate sharp_subset
+  Load(sharp_subset, narrative_pt.get_child(kSharpKey));
+
+  LOG_TRACE("Populate sharp_verbal_subset...");
+  // Populate sharp_verbal_subset
+  Load(sharp_verbal_subset, narrative_pt.get_child(kSharpVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate uturn_subset...");
   // Populate uturn_subset
   Load(uturn_subset, narrative_pt.get_child(kUturnKey));
@@ -198,6 +207,15 @@ void NarrativeDictionary::Load(
   LOG_TRACE("Populate transit_connection_start_verbal_subset...");
   // Populate transit_connection_start_verbal_subset
   Load(transit_connection_start_verbal_subset, narrative_pt.get_child(kTransitConnectionStartVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_connection_transfer_subset...");
+  // Populate transit_connection_transfer_subset
+  Load(transit_connection_transfer_subset, narrative_pt.get_child(kTransitConnectionTransferKey));
+
+  LOG_TRACE("Populate transit_connection_transfer_verbal_subset...");
+  // Populate transit_connection_transfer_verbal_subset
+  Load(transit_connection_transfer_verbal_subset, narrative_pt.get_child(kTransitConnectionTransferVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");

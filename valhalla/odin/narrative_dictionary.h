@@ -22,6 +22,8 @@ constexpr auto kBearKey = "instructions.bear";
 constexpr auto kBearVerbalKey = "instructions.bear_verbal";
 constexpr auto kTurnKey = "instructions.turn";
 constexpr auto kTurnVerbalKey = "instructions.turn_verbal";
+constexpr auto kSharpKey = "instructions.sharp";
+constexpr auto kSharpVerbalKey = "instructions.sharp_verbal";
 constexpr auto kUturnKey = "instructions.uturn";
 constexpr auto kUturnVerbalAlertKey = "instructions.uturn_verbal_alert";
 constexpr auto kUturnVerbalKey = "instructions.uturn_verbal";
@@ -48,6 +50,8 @@ constexpr auto kExitFerryKey = "instructions.exit_ferry";
 constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
 constexpr auto kTransitConnectionStartKey = "instructions.transit_connection_start";
 constexpr auto kTransitConnectionStartVerbalKey = "instructions.transit_connection_start_verbal";
+constexpr auto kTransitConnectionTransferKey = "instructions.transit_connection_transfer";
+constexpr auto kTransitConnectionTransferVerbalKey = "instructions.transit_connection_transfer_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 
@@ -195,6 +199,10 @@ class NarrativeDictionary {
   TurnSubset turn_subset;
   TurnSubset turn_verbal_subset;
 
+  // Sharp
+  TurnSubset sharp_subset;
+  TurnSubset sharp_verbal_subset;
+
   // Uturn
   TurnSubset uturn_subset;
   TurnSubset uturn_verbal_alert_subset;
@@ -244,6 +252,10 @@ class NarrativeDictionary {
   // TransitConnectionStart
   PhraseSet transit_connection_start_subset;
   PhraseSet transit_connection_start_verbal_subset;
+
+  // TransitConnectionStart
+  PhraseSet transit_connection_transfer_subset;
+  PhraseSet transit_connection_transfer_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
