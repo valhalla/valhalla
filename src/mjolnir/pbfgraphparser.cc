@@ -316,14 +316,11 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_emergency_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
-
-      else if (tag.first == "private")
-        w.set_destination_only(tag.second == "true" ? true : false);
-
-      else if (tag.first == "use") {
-
+      else if (tag.first == "private" && tag.second == "true") {
+        // Make sure we do not unset this flag if set previously
+        w.set_destination_only(true);
+      } else if (tag.first == "use") {
         Use use = (Use) std::stoi(tag.second);
-
         switch (use) {
           case Use::kCycleway:
             w.set_use(Use::kCycleway);
@@ -535,7 +532,7 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "seasonal")
         w.set_seasonal(tag.second == "true" ? true : false);
       else if (tag.first == "hov")
-        w.set_seasonal(tag.second == "true" ? true : false);
+        w.set_hov(tag.second == "true" ? true : false);
 
       else if (tag.first == "bike_network_mask")
         w.set_bike_network(std::stoi(tag.second));
