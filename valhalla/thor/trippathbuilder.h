@@ -65,15 +65,16 @@ class TripPathBuilder {
     * @param  prev_edge_index  Index of the local previous path edge at intersection.
     * @param  curr_edge_index  Index of the local current path edge at intersection.
     * @param  nodeinfo  Node information of the intersection.
-    * @param  graphtile     Graph tile for accessing data.
     * @param  trip_node  Trip node that will store the intersecting edge information.
+    * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
+    *                         on the local hierarchy.
     */
-   static void AddTripIntersectingEdge(uint32_t edge_index,
+   static void AddTripIntersectingEdge(uint32_t local_edge_index,
                                        uint32_t prev_edge_index,
                                        uint32_t curr_edge_index,
                                        const baldr::NodeInfo* nodeinfo,
-                                       const baldr::GraphTile* graphtile,
-                                       odin::TripPath_Node* trip_node);
+                                       odin::TripPath_Node* trip_node,
+                                       const baldr::DirectedEdge* intersecting_de);
 
 };
 
