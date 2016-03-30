@@ -77,7 +77,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREV_STREET_NAMES> wird <STREET_NAMES>."
+        "0": "<PREV_STREET_NAMES> wird zu <STREET_NAMES>."
       },
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
@@ -86,7 +86,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREV_STREET_NAMES> wird <STREET_NAMES>."
+        "0": "<PREV_STREET_NAMES> wird zu<STREET_NAMES>."
       },
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {

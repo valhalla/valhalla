@@ -21,6 +21,7 @@ const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right
 const std::vector<std::string> kExpectedRelativeThreeDirections = { "left", "straight", "right" };
 const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th" };
 const std::string kExpectedFerryLabel = "Ferry";
+const std::vector<std::string> kExpectedTransitStopCountLabels = { "stop", "stops" };
 
 // Expected phrases
 const std::map<std::string, std::string> kExpectedExitPhrases = {
@@ -163,6 +164,48 @@ const std::map<std::string, std::string> kExpectedTransitConnectionTransferPhras
 const std::map<std::string, std::string> kExpectedTransitConnectionTransferVerbalPhrases = {
     {"0", "Transfer at the station."},
     {"1", "Transfer at the <TRANSIT_STOP> Station."}
+};
+
+const std::map<std::string, std::string> kExpectedTransitConnectionDestinationPhrases = {
+    {"0", "Exit the station."},
+    {"1", "Exit the <TRANSIT_STOP> Station."}
+};
+
+const std::map<std::string, std::string> kExpectedTransitConnectionDestinationVerbalPhrases = {
+    {"0", "Exit the station."},
+    {"1", "Exit the <TRANSIT_STOP> Station."}
+};
+
+const std::map<std::string, std::string> kExpectedDepartPhrases = {
+    {"0", "Depart: <TIME>."},
+    {"1", "Depart: <TIME> from <TRANSIT_STOP>."}
+};
+
+const std::map<std::string, std::string> kExpectedDepartVerbalPhrases = {
+    {"0", "Depart at <TIME>."},
+    {"1", "Depart at <TIME> from <TRANSIT_STOP>."}
+};
+
+const std::map<std::string, std::string> kExpectedArrivePhrases = {
+    {"0", "Arrive: <TIME>."},
+    {"1", "Arrive: <TIME> at <TRANSIT_STOP>."}
+};
+
+const std::map<std::string, std::string> kExpectedArriveVerbalPhrases = {
+    {"0", "Arrive at <TIME>."},
+    {"1", "Arrive at <TIME> at <TRANSIT_STOP>."}
+};
+
+const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationPhrases = {
+    {"0", "Head <CARDINAL_DIRECTION>."},
+    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}
+};
+
+const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationVerbalPhrases = {
+    {"0", "Head <CARDINAL_DIRECTION>."},
+    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}
 };
 
 
@@ -1128,7 +1171,169 @@ void test_en_US_transit_connection_transfer_verbal() {
 
 }
 
-void test_en_US_post_transition_verbal_subset() {
+void test_en_US_transit_connection_destination() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate transit_destination_start phrases
+  validate(dictionary.transit_connection_destination_subset,
+           kExpectedTransitConnectionDestinationPhrases);
+
+}
+
+void test_en_US_transit_connection_destination_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate transit_destination_start_verbal phrases
+  validate(dictionary.transit_connection_destination_verbal_subset,
+           kExpectedTransitConnectionDestinationVerbalPhrases);
+
+}
+
+void test_en_US_depart() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate depart phrases
+  validate(dictionary.depart_subset, kExpectedDepartPhrases);
+
+}
+
+void test_en_US_depart_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate depart_verbal phrases
+  validate(dictionary.depart_verbal_subset, kExpectedDepartVerbalPhrases);
+
+}
+
+void test_en_US_arrive() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate arrive phrases
+  validate(dictionary.arrive_subset, kExpectedArrivePhrases);
+
+}
+
+void test_en_US_arrive_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate arrive_verbal phrases
+  validate(dictionary.arrive_verbal_subset, kExpectedArriveVerbalPhrases);
+
+}
+
+void test_en_US_transit() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  const auto& phrase_0 = dictionary.transit_subset.phrases.at("0");
+  validate(phrase_0, "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  const auto& phrase_1 = dictionary.transit_subset.phrases.at("1");
+  validate(phrase_1, "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  // transit_stop_count_labels
+  const auto& transit_stop_count_labels = dictionary.transit_subset.transit_stop_count_labels;
+  validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
+
+}
+
+void test_en_US_transit_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  const auto& phrase_0 = dictionary.transit_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Take the <TRANSIT_NAME>.");
+
+  const auto& phrase_1 = dictionary.transit_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.");
+
+}
+
+void test_en_US_transit_remain_on() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  const auto& phrase_0 = dictionary.transit_remain_on_subset.phrases.at("0");
+  validate(phrase_0, "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  const auto& phrase_1 = dictionary.transit_remain_on_subset.phrases.at("1");
+  validate(phrase_1, "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  // transit_stop_count_labels
+  const auto& transit_stop_count_labels = dictionary.transit_remain_on_subset.transit_stop_count_labels;
+  validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
+
+}
+
+void test_en_US_transit_remain_on_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  const auto& phrase_0 = dictionary.transit_remain_on_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Remain on the <TRANSIT_NAME>.");
+
+  const auto& phrase_1 = dictionary.transit_remain_on_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.");
+
+}
+
+void test_en_US_transit_transfer() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  const auto& phrase_0 = dictionary.transit_transfer_subset.phrases.at("0");
+  validate(phrase_0, "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  const auto& phrase_1 = dictionary.transit_transfer_subset.phrases.at("1");
+  validate(phrase_1, "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  // transit_stop_count_labels
+  const auto& transit_stop_count_labels = dictionary.transit_transfer_subset.transit_stop_count_labels;
+  validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
+
+}
+
+void test_en_US_transit_transfer_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  const auto& phrase_0 = dictionary.transit_transfer_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Transfer to take the <TRANSIT_NAME>.");
+
+  const auto& phrase_1 = dictionary.transit_transfer_verbal_subset.phrases.at("1");
+  validate(phrase_1, "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.");
+
+}
+
+void test_en_US_post_transit_connection_destination() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate post_transit_connection_destination phrases
+  validate(static_cast<const PhraseSet&>(dictionary.post_transit_connection_destination_subset),
+           kExpectedPostTransitConnectionDestinationPhrases);
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.post_transit_connection_destination_subset.cardinal_directions;
+  validate(cardinal_directions, kExpectedCardinalDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.post_transit_connection_destination_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_post_transit_connection_destination_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate post_transit_connection_destination_verbal phrases
+  validate(static_cast<const PhraseSet&>(dictionary.post_transit_connection_destination_verbal_subset),
+           kExpectedPostTransitConnectionDestinationVerbalPhrases);
+
+  // cardinal_directions
+  const auto& cardinal_directions = dictionary.post_transit_connection_destination_verbal_subset.cardinal_directions;
+  validate(cardinal_directions, kExpectedCardinalDirections);
+
+  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
+  const auto& empty_street_name_labels = dictionary.post_transit_connection_destination_verbal_subset.empty_street_name_labels;
+  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_post_transition_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // "0": "Continue for <LENGTH>.",
@@ -1150,6 +1355,19 @@ void test_en_US_post_transition_verbal_subset() {
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.post_transition_verbal_subset.empty_street_name_labels;
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
+
+}
+
+void test_en_US_post_transition_transit_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "Continue for <LENGTH>.",
+  const auto& phrase_0 = dictionary.post_transition_transit_verbal_subset.phrases.at("0");
+  validate(phrase_0, "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>.");
+
+  // transit_stop_count_labels
+  const auto& transit_stop_count_labels = dictionary.post_transition_transit_verbal_subset.transit_stop_count_labels;
+  validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
 
 }
 
@@ -1292,8 +1510,53 @@ int main() {
   // test the en-US transit_connection_transfer_verbal phrases
   suite.test(TEST_CASE(test_en_US_transit_connection_transfer_verbal));
 
+  // test the en-US transit_connection_destination phrases
+  suite.test(TEST_CASE(test_en_US_transit_connection_destination));
+
+  // test the en-US transit_connection_destination_verbal phrases
+  suite.test(TEST_CASE(test_en_US_transit_connection_destination_verbal));
+
+  // test the en-US depart phrases
+  suite.test(TEST_CASE(test_en_US_depart));
+
+  // test the en-US depart_verbal phrases
+  suite.test(TEST_CASE(test_en_US_depart_verbal));
+
+  // test the en-US arrive phrases
+  suite.test(TEST_CASE(test_en_US_arrive));
+
+  // test the en-US arrive_verbal phrases
+  suite.test(TEST_CASE(test_en_US_arrive_verbal));
+
+  // test the en-US transit phrases
+  suite.test(TEST_CASE(test_en_US_transit));
+
+  // test the en-US transit_verbal phrases
+  suite.test(TEST_CASE(test_en_US_transit_verbal));
+
+  // test the en-US transit_remain_on phrases
+  suite.test(TEST_CASE(test_en_US_transit_remain_on));
+
+  // test the en-US transit_remain_on_verbal phrases
+  suite.test(TEST_CASE(test_en_US_transit_remain_on_verbal));
+
+  // test the en-US transit_transfer phrases
+  suite.test(TEST_CASE(test_en_US_transit_transfer));
+
+  // test the en-US transit_transfer_verbal phrases
+  suite.test(TEST_CASE(test_en_US_transit_transfer_verbal));
+
+  // test the en-US post_transit_connection_destination phrases
+  suite.test(TEST_CASE(test_en_US_post_transit_connection_destination));
+
+  // test the en-US post_transit_connection_destination_verbal phrases
+  suite.test(TEST_CASE(test_en_US_post_transit_connection_destination_verbal));
+
   // test the en-US post_transition_verbal_subset phrases
-  suite.test(TEST_CASE(test_en_US_post_transition_verbal_subset));
+  suite.test(TEST_CASE(test_en_US_post_transition_verbal));
+
+  // test the en-US post_transition_transit_verbal phrases
+  suite.test(TEST_CASE(test_en_US_post_transition_transit_verbal));
 
   // test the en-US verbal_multi_cue phrases
   suite.test(TEST_CASE(test_en_US_verbal_multi_cue));
