@@ -2487,27 +2487,23 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  if (!maneuver.transit_connection_stop().name.empty()) {
+  std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!transit_stop.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
-    case 1: {
-      instruction = (boost::format("Enter the %1% station.")
-          % maneuver.transit_connection_stop().name).str();
-      break;
-    }
-    // 0 "Enter station."
-    default: {
-      instruction = "Enter station.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_connection_start_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
@@ -2517,27 +2513,23 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  if (!maneuver.transit_connection_stop().name.empty()) {
+  std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!transit_stop.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
-    case 1: {
-      instruction = (boost::format("Enter the %1% station.")
-          % maneuver.transit_connection_stop().name).str();
-      break;
-    }
-    // 0 "Enter station."
-    default: {
-      instruction = "Enter station.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_connection_start_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(

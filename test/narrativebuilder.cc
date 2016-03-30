@@ -4223,24 +4223,19 @@ void TestBuildTransitConnectionStart_0_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitConnectionStartManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Enter station.",
+                                  "Enter the station.",
                                   "",
-                                  "Enter station.",
+                                  "Enter the station.",
                                   "Continue for 100 feet.");
-//TODO: update when code is updated
-//                                  "Enter the station.",
-//                                  "",
-//                                  "Enter the station.",
-//                                  "Continue for 100 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // FormTransitConnectionStartInstruction
-// "1": "Enter the station.",
+// "1": "Enter the <TRANSIT_STOP> Station."
 // No verbal alert
-// "1": "Enter the station.",
+// "1": "Enter the <TRANSIT_STOP> Station."
 void TestBuildTransitConnectionStart_1_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -4258,15 +4253,10 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitConnectionStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Enter the 8 St - NYU station.",
+                                  "Enter the 8 St - NYU Station.",
                                   "",
-                                  "Enter the 8 St - NYU station.",
+                                  "Enter the 8 St - NYU Station.",
                                   "Continue for 100 feet.");
-//TODO: update when code is updated
-//                                  "Enter the 8 St - NYU Station.",
-//                                  "",
-//                                  "Enter the 8 St - NYU Station.",
-//                                  "Continue for 100 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
