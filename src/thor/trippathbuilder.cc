@@ -619,7 +619,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
               graphtile->directededge(edge_idx + nodeinfo->edge_index()) : nullptr;
         AddTripIntersectingEdge(edge_idx, prior_opp_local_index,
                                 directededge->localedgeidx(), nodeinfo,
-                                tile, trip_node, intersecting_de);
+                                trip_node, intersecting_de);
       }
     }
 
@@ -978,7 +978,6 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t local_edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,
                                               const baldr::NodeInfo* nodeinfo,
-                                              const baldr::GraphTile* graphtile,
                                               odin::TripPath_Node* trip_node,
                                               const DirectedEdge* intersecting_de) {
   TripPath_IntersectingEdge* itersecting_edge =
