@@ -838,7 +838,15 @@
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
     },
-    "post_transition_transit_verbal": null,
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Travel 1 stop.", "Travel 3 stops."]
+      }
+    },
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"

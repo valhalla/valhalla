@@ -3227,7 +3227,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
 
 std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
     Maneuver& maneuver) {
-  // 0 "Travel <TRANSIT_STOP_COUNT> <FormStopCountLabel>"
+  // "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
