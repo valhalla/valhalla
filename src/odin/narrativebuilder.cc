@@ -2796,8 +2796,8 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormTransitInstruction(
     Maneuver& maneuver) {
-  // 0 "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-  // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+  // "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+  // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2830,8 +2830,8 @@ std::string NarrativeBuilder::FormTransitInstruction(
 }
 
 std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
-  // 0 "Take the <TRANSIT_NAME>."
-  // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+  // "0": "Take the <TRANSIT_NAME>.",
+  // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2862,8 +2862,8 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormTransitRemainOnInstruction(
     Maneuver& maneuver) {
-  // 0 Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-  // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+  // "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+  // "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2898,8 +2898,8 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
 
 std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
     Maneuver& maneuver) {
-  // 0 Remain on the <TRANSIT_NAME>."
-  // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+  // "0": "Remain on the <TRANSIT_NAME>.",
+  // "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2931,8 +2931,8 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
 
 std::string NarrativeBuilder::FormTransitTransferInstruction(
     Maneuver& maneuver) {
-  // 0 "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-  // 1 "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+  // "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+  // "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2967,8 +2967,8 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
 
 std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
     Maneuver& maneuver) {
-  // 0 "Transfer to take the <TRANSIT_NAME>."
-  // 1 "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+  // "0": "Transfer to take the <TRANSIT_NAME>.",
+  // "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
