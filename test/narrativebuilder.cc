@@ -3973,6 +3973,36 @@ void TestBuildExitFerry_2_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormTransitConnectionStartInstruction
+// "0": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// "0": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+// "0": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildTransitConnectionStart_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+//  PopulateTransitConnectionStartManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+//  PopulateTransitConnectionStartManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Head northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+                                  "Head northeast on Cape May-Lewes Ferry Entrance.",
+                                  "Head northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+                                  "Continue on U.S. 9 for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -5288,6 +5318,9 @@ int main() {
 
   // BuildExitFerry_2_miles_en_US
   suite.test(TEST_CASE(TestBuildExitFerry_2_miles_en_US));
+
+  // BuildTransitConnectionStart_0_miles_en_US
+//  suite.test(TEST_CASE(TestBuildTransitConnectionStart_0_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
