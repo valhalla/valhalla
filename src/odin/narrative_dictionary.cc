@@ -278,7 +278,7 @@ void NarrativeDictionary::Load(
 
   LOG_TRACE("Populate post_transit_connection_destination_verbal_subset...");
   // Populate post_transit_connection_destination_verbal_subset
-  Load(post_transit_connection_destination_subset, narrative_pt.get_child(kPostTransitConnectionDestinationVerbalKey));
+  Load(post_transit_connection_destination_verbal_subset, narrative_pt.get_child(kPostTransitConnectionDestinationVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
