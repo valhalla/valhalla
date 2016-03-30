@@ -218,9 +218,76 @@ void NarrativeDictionary::Load(
   Load(transit_connection_transfer_verbal_subset, narrative_pt.get_child(kTransitConnectionTransferVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_connection_destination_subset...");
+  // Populate transit_connection_transfer_subset
+  Load(transit_connection_destination_subset, narrative_pt.get_child(kTransitConnectionDestinationKey));
+
+  LOG_TRACE("Populate transit_connection_destination_verbal_subset...");
+  // Populate transit_connection_transfer_verbal_subset
+  Load(transit_connection_destination_verbal_subset, narrative_pt.get_child(kTransitConnectionDestinationVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate depart_subset...");
+  // Populate depart_subset
+  Load(depart_subset, narrative_pt.get_child(kDepartKey));
+
+  LOG_TRACE("Populate depart_verbal_subset...");
+  // Populate depart_verbal_subset
+  Load(depart_verbal_subset, narrative_pt.get_child(kDepartVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate arrive_subset...");
+  // Populate arrive_subset
+  Load(arrive_subset, narrative_pt.get_child(kArriveKey));
+
+  LOG_TRACE("Populate arrive_verbal_subset...");
+  // Populate arrive_verbal_subset
+  Load(arrive_verbal_subset, narrative_pt.get_child(kArriveVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_subset...");
+  // Populate transit_subset
+  Load(transit_subset, narrative_pt.get_child(kTransitKey));
+
+  LOG_TRACE("Populate transit_verbal_subset...");
+  // Populate transit_verbal_subset
+  Load(transit_verbal_subset, narrative_pt.get_child(kTransitVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_remain_on_subset...");
+  // Populate transit_remain_on_subset
+  Load(transit_remain_on_subset, narrative_pt.get_child(kTransitRemainOnKey));
+
+  LOG_TRACE("Populate transit_remain_on_verbal_subset...");
+  // Populate transit_remain_on_verbal_subset
+  Load(transit_remain_on_verbal_subset, narrative_pt.get_child(kTransitRemainOnVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_transfer_subset...");
+  // Populate transit_transfer_subset
+  Load(transit_transfer_subset, narrative_pt.get_child(kTransitTransferKey));
+
+  LOG_TRACE("Populate transit_transfer_verbal_subset...");
+  // Populate transit_transfer_verbal_subset
+  Load(transit_transfer_verbal_subset, narrative_pt.get_child(kTransitTransferVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate post_transit_connection_destination_subset...");
+  // Populate post_transit_connection_destination_subset
+  Load(post_transit_connection_destination_subset, narrative_pt.get_child(kPostTransitConnectionDestinationKey));
+
+  LOG_TRACE("Populate post_transit_connection_destination_verbal_subset...");
+  // Populate post_transit_connection_destination_verbal_subset
+  Load(post_transit_connection_destination_subset, narrative_pt.get_child(kPostTransitConnectionDestinationVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
+
+  LOG_TRACE("Populate post_transition_transit_verbal_subset...");
+  // Populate post_transition_transit_verbal_subset
+  Load(post_transition_transit_verbal_subset, narrative_pt.get_child(kPostTransitTransitionVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate verbal_multi_cue_subset...");
@@ -401,6 +468,19 @@ void NarrativeDictionary::Load(
   // Populate empty_street_name_labels
   post_transition_verbal_handle.empty_street_name_labels = as_vector<std::string>(
       post_transition_verbal_subset_pt, kEmptyStreetNameLabelsKey);
+}
+
+void NarrativeDictionary::Load(
+    TransitStopSubset& transit_stop_handle,
+    const boost::property_tree::ptree& transit_stop_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(transit_stop_handle), transit_stop_subset_pt);
+
+  // Populate transit_stop_count_labels
+  transit_stop_handle.transit_stop_count_labels = as_vector<std::string>(
+      transit_stop_subset_pt, kTransitStopCountLabelsKey);
+
 }
 
 }
