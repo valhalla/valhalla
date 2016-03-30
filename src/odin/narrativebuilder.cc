@@ -2483,7 +2483,7 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
 std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   // "0": "Enter the station.",
-  // "1": "Enter the <TRANSIT_STOP> station."
+  // "1": "Enter the <TRANSIT_STOP> Station."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2513,7 +2513,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
 std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   // "0": "Enter the station.",
-  // "1": "Enter the <TRANSIT_STOP> station."
+  // "1": "Enter the <TRANSIT_STOP> Station."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2543,7 +2543,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
 std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
     Maneuver& maneuver) {
   // "0": "Transfer at the station.",
-  // "1": "Transfer at the <TRANSIT_STOP> station."
+  // "1": "Transfer at the <TRANSIT_STOP> Station."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2573,7 +2573,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
 std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
     Maneuver& maneuver) {
   // "0": "Transfer at the station.",
-  // "1": "Transfer at the <TRANSIT_STOP> station."
+  // "1": "Transfer at the <TRANSIT_STOP> Station."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);

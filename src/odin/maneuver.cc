@@ -615,9 +615,7 @@ const TransitStop& Maneuver::transit_connection_stop() const {
 void Maneuver::set_transit_connection_stop(
     const TransitStop& transit_connection_stop) {
   transit_connection_stop_ = transit_connection_stop;
-  LOG_TRACE("transit_connection_stop_.name=" + transit_connection_stop_.name);
-  LOG_TRACE("transit_connection_stop_.arrival_date_time=" + transit_connection_stop_.arrival_date_time);
-  LOG_TRACE("transit_connection_stop_.departure_date_time=" + transit_connection_stop_.departure_date_time);
+  LOG_TRACE("transit_connection_stop=" + transit_connection_stop_.ToParameterString());
 }
 
 bool Maneuver::rail() const {
