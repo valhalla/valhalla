@@ -30,7 +30,7 @@ AC_DEFUN([CHECK_VALHALLA_LOKI],
         	[AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/loki/search.h>]],
 			[[using namespace valhalla::loki;
-			SearchStrategy s;]])],
+			auto f = valhalla::loki::PassThroughFilter;]])],
 			ax_cv_valhalla_loki=yes, ax_cv_valhalla_loki=no)
 		AC_LANG_POP([C++])
 	])
