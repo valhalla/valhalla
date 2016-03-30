@@ -1,6 +1,7 @@
 #include "mjolnir/osmway.h"
 #include "mjolnir/util.h"
 
+#include <iostream>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
@@ -596,17 +597,23 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   }
 
   // Process alt_name
-  if (alt_name_index_ != 0)
+  if (alt_name_index_ != 0 &&
+      alt_name_index_ != name_index_)
     names.emplace_back(name_offset_map.name(alt_name_index_));
 
   // Process official_name
-  if (official_name_index_ != 0)
+  if (official_name_index_ != 0 &&
+      official_name_index_ != name_index_ &&
+      official_name_index_ != alt_name_index_)
     names.emplace_back(name_offset_map.name(official_name_index_));
 
   // Process name_en_
   // TODO: process country specific names
-  if (name_en_index_ != 0)
-    names.emplace_back(ref_offset_map.name(name_en_index_));
+  if (name_en_index_ != 0 &&
+      name_en_index_ != name_index_ &&
+      name_en_index_ != alt_name_index_ &&
+      name_en_index_ != official_name_index_)
+    names.emplace_back(name_offset_map.name(name_en_index_));
 
   return names;
 }

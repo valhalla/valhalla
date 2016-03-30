@@ -244,7 +244,16 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");
-  if(!database || !boost::filesystem::create_directories(boost::filesystem::path(*database).parent_path()) ) {
+
+  if(!database) {
+    LOG_INFO("Admin config info not found. Admins will not be created.");
+    return;
+  }
+
+  if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path()))
+    boost::filesystem::create_directories(boost::filesystem::path(*database).parent_path());
+
+  if(!boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
     LOG_INFO("Admin directory not found. Admins will not be created.");
     return;
   }
@@ -517,23 +526,7 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  //we only support protobuf at present
-  std::string input_type = pt.get<std::string>("mjolnir.input.type");
-  if(input_type == "protocolbuffer"){
-    BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
-  }/*else if("postgres"){
-    //TODO
-    if (v.first == "host")
-      host = v.second.get_value<std::string>();
-    else if (v.first == "port")
-      port = v.second.get_value<unsigned int>();
-    else if (v.first == "username")
-      username = v.second.get_value<std::string>();
-    else if (v.first == "password")
-      password = v.second.get_value<std::string>();
-    else
-      return false;  //unknown value;
-  }*/
+  BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
 
   return EXIT_SUCCESS;
 }

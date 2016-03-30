@@ -59,6 +59,7 @@ void NamesTest() {
 
   w3.set_alt_name_index(name_offset_map.index("Lanc Pike"));
   w3.set_official_name_index(name_offset_map.index("LP"));
+  w3.set_name_en_index(name_offset_map.index("LancP"));
 
   w3_names.clear();
   w3_names = w3.GetNames("",ref_offset_map,name_offset_map);
@@ -70,6 +71,9 @@ void NamesTest() {
 
   if (w3_names.at(3) != "LP")
     throw std::runtime_error("official name failed.");
+
+  if (w3_names.at(4) != "LancP")
+    throw std::runtime_error("name en failed.");
 
 }
 

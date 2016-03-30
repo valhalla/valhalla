@@ -145,20 +145,18 @@ std::cout << "In Benchmark" << std::endl;
   uint32_t counts[128] = {};
 
   // Initialize the admin DB (if it exists)
-  boost::property_tree::ptree admin = pt.get_child("admin");
-  std::string dir = admin.get<std::string>("admin_dir");
-  std::string db_name = admin.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
+  auto database = pt.get_optional<std::string>("admin");
+
   sqlite3* db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
+  if (boost::filesystem::exists(*database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
+    uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle,
                         SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
+      LOG_ERROR("cannot open " + *database);
       sqlite3_close(db_handle);
       db_handle = nullptr;
       return;
@@ -177,7 +175,7 @@ std::cout << "In Benchmark" << std::endl;
     LOG_INFO("SpatiaLite loaded as an extension");
   }
   else {
-    LOG_ERROR("Admin db " + database + " not found.");
+    LOG_ERROR("Admin db " + *database + " not found.");
     return;
   }
 
