@@ -833,8 +833,34 @@
         "1": ["Transfer to take the F toward JAMAICA - 179 ST."]
       }
     },
-    "post_transit_connection_destination": null,
-    "post_transit_connection_destination_verbal": null,
+    "post_transit_connection_destination": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+      },
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head west."],
+        "1": ["Head northeast on Broadway"],
+        "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head west."],
+        "1": ["Head northeast on Broadway"],
+        "2": ["Head south on Summerfield Place, New York 1 14."]
+      }
+    },
     "post_transition_verbal": {
       "phrases": {
         "0": "<LENGTH> weiter.",
@@ -843,6 +869,15 @@
       "metric_lengths": ["<KILOMETERS> Kilometer", "einen Kilometer", "einen halben Kilometer", "<METERS> Meter", "weniger als 10 Meter"],
       "us_customary_lengths": ["<MILES> Milen", "eine Meile", "eine halbe Meile", "<TENTHS_OF_MILE> zehntel der Meile", "eine zehntel der Miele", "<FEET> Füße", "weniger als 10 Füße"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Travel 1 stop.", "Travel 3 stops."]
+      }
     },
     "verbal_multi_cue": {
       "phrases": {
