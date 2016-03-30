@@ -835,12 +835,12 @@
     },
     "post_transit_connection_destination": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "0": "Nach <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
+      "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Head west."],
         "1": ["Head northeast on Broadway"],
@@ -849,12 +849,12 @@
     },
     "post_transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "0": "Nach <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
+      "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Head west."],
         "1": ["Head northeast on Broadway"],
@@ -872,9 +872,9 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> fahren."
       },
-      "transit_stop_count_labels": ["stop", "stops"],
+      "transit_stop_count_labels": ["Haltestelle", "Haltestellen"],
       "example_phrases": {
         "0": ["Travel 1 stop.", "Travel 3 stops."]
       }
