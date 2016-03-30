@@ -209,6 +209,15 @@ void NarrativeDictionary::Load(
   Load(transit_connection_start_verbal_subset, narrative_pt.get_child(kTransitConnectionStartVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate transit_connection_transfer_subset...");
+  // Populate transit_connection_transfer_subset
+  Load(transit_connection_transfer_subset, narrative_pt.get_child(kTransitConnectionTransferKey));
+
+  LOG_TRACE("Populate transit_connection_transfer_verbal_subset...");
+  // Populate transit_connection_transfer_verbal_subset
+  Load(transit_connection_transfer_verbal_subset, narrative_pt.get_child(kTransitConnectionTransferVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));

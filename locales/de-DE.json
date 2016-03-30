@@ -706,8 +706,8 @@
         "1": "Am Bahnhof <TRANSIT_STOP> umsteigen."
       },
       "example_phrases": {
-        "0": ["Enter the station."],
-        "1": ["Enter the 8 St - NYU Station."]
+        "0": ["Transfer at the station."],
+        "1": ["Transfer at the Embarcadero Station."]
       }
     },
     "transit_connection_destination": {
