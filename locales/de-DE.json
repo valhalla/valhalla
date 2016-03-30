@@ -770,13 +770,69 @@
         "1": ["Arrive at 8:02 AM at 8 St - NYU."]
       }
     },
-    "transit": null,
-    "transit_verbal": null,
-    "post_transition_transit_verbal": null,
-    "transit_remain_on": null,
-    "transit_remain_on_verbal": null,
-    "transit_transfer": null,
-    "transit_transfer_verbal": null,
+    "transit": {
+      "phrases": {
+        "0": "Mit der Linie <TRANSIT_NAME> fahren. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Mit der Linie <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> fahren. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["Haltestelle", "Haltestellen"],
+      "example_phrases": {
+        "0": ["Take the New Haven. (1 stop)"],
+        "1": ["Take the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Mit der Linie <TRANSIT_NAME> fahren.",
+        "1": "Mit der Linie <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> fahren."
+      },
+      "example_phrases": {
+        "0": ["Take the New Haven."],
+        "1": ["Take the F toward JAMAICA - 179 ST."]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Mit der Linie <TRANSIT_NAME> weiter. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Mit der Linie <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> weiter. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["Haltestelle", "Haltestellen"],
+      "example_phrases": {
+        "0": ["Remain on the New Haven. (1 stop)"],
+        "1": ["Remain on the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Mit der Linie <TRANSIT_NAME> weiter.",
+        "1": "Mit der Linie <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> weiter."
+      },
+      "example_phrases": {
+        "0": ["Remain on the New Haven."],
+        "1": ["Remain on the F toward JAMAICA - 179 ST."]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Zur Linie <TRANSIT_NAME> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Zur Linie <TRANSIT_NAME> Richtugn <TRANSIT_HEADSIGN> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["Haltestelle", "Haltestellen"],
+      "example_phrases": {
+        "0": ["Transfer to take the New Haven. (1 stop)"],
+        "1": ["Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Zur Linie <TRANSIT_NAME> umsteigen.",
+        "1": "Zur Linie <TRANSIT_NAME> Richtugn <TRANSIT_HEADSIGN> umsteigen."
+      },
+      "example_phrases": {
+        "0": ["Transfer to take the New Haven."],
+        "1": ["Transfer to take the F toward JAMAICA - 179 ST."]
+      }
+    },
     "post_transit_connection_destination": null,
     "post_transit_connection_destination_verbal": null,
     "post_transition_verbal": {
