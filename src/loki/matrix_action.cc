@@ -28,14 +28,15 @@ namespace {
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> STRING_TO_ACTION {
     {"one_to_many", loki_worker_t::ONE_TO_MANY},
     {"many_to_one", loki_worker_t::MANY_TO_ONE},
-    {"many_to_many", loki_worker_t::MANY_TO_MANY}
+    {"many_to_many", loki_worker_t::MANY_TO_MANY},
+    {"optimized", loki_worker_t::OPTIMIZED}
   };
-
 
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
     {loki_worker_t::ONE_TO_MANY, "one_to_many"},
     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
-    {loki_worker_t::MANY_TO_MANY, "many_to_many"}
+    {loki_worker_t::MANY_TO_MANY, "many_to_many"},
+    {loki_worker_t::OPTIMIZED, "optimized"}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -49,7 +50,6 @@ namespace {
   }
 
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float matrix_max_distance, float& max_location_distance) {
-
 
     //see if any locations pairs are unreachable or too far apart
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
@@ -65,10 +65,10 @@ namespace {
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
 
       //only want to log the maximum distance between 2 locations for matrix
-      //LOG_INFO("path_distance -> " + std::to_string(path_distance));
+      LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
       if (path_distance >= max_location_distance) {
           max_location_distance = path_distance;
-         // LOG_INFO("max_location_distance -> " + std::to_string(max_location_distance));
+          LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
       }
 
       if (path_distance > matrix_max_distance)
@@ -81,7 +81,9 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      auto action_str = ACTION_TO_STRING.find(action)->second;
+      //we want optimized to use the same location and distance limits as many_to_many
+      auto action_str = ACTION_TO_STRING.find(action == loki_worker_t::OPTIMIZED ? loki_worker_t::MANY_TO_MANY : action)->second;
+
       //check that location size does not exceed max.
       check_locations(locations.size(), max_locations.find(action_str)->second);
 
@@ -95,9 +97,9 @@ namespace valhalla {
           check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, max_location_distance);
           break;
         case MANY_TO_MANY:
+        case OPTIMIZED:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
-          valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
           break;
       }
       //correlate the various locations to the underlying graph
@@ -106,12 +108,18 @@ namespace valhalla {
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
+      valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
       //pass on to thor with type of matrix
-      request.put("matrix_type", action_str);
+      request.put("matrix_type", ACTION_TO_STRING.find(action)->second);
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
+
+      /*for (auto message : result.messages){
+        LOG_INFO("SENDING TO THOR:: " + message);
+      }*/
+
       return result;
     }
   }
