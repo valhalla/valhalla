@@ -1582,6 +1582,40 @@ void PopulateTransitConnectionStartManeuverList_1(
                   "2016-03-29T08:02", 0, 0));
 }
 
+void PopulateTransitConnectionTransferManeuverList_0(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitConnectionTransfer, {
+                       "Broadway" },
+                   { }, { }, "", 0.036000, 25, 196,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+}
+
+void PopulateTransitConnectionTransferManeuverList_1(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitConnectionTransfer, {
+                       "Broadway" },
+                   { }, { }, "", 0.036000, 25, 196,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+  maneuver.set_transit_connection_stop(
+      TransitStop(TripDirections_TransitStop_Type_kStation,
+                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19",
+                  "", 0, 0));
+}
+
 void PopulateTransitConnectionDestinationManeuverList_0(
     std::list<Maneuver>& maneuvers, const std::string& country_code,
     const std::string& state_code) {
@@ -4296,6 +4330,66 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormTransitConnectionTransferInstruction
+// "0": "Transfer at the station.",
+// No verbal alert
+// "0": "Transfer at the station.",
+void TestBuildTransitConnectionTransfer_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitConnectionTransferManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitConnectionTransferManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Transfer at the station.",
+                                  "",
+                                  "Transfer at the station.",
+                                  "Continue for 100 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitConnectionTransferInstruction
+// "1": "Transfer at the <TRANSIT_STOP> Station."
+// No verbal alert
+// "1": "Transfer at the <TRANSIT_STOP> Station."
+void TestBuildTransitConnectionTransfer_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitConnectionTransferManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitConnectionTransferManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Transfer at the 8 St - NYU Station.",
+                                  "",
+                                  "Transfer at the 8 St - NYU Station.",
+                                  "Continue for 100 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormTransitConnectionDestinationInstruction
 // "0": "Exit the station.",
 // No verbal alert
@@ -5689,6 +5783,12 @@ int main() {
 
   // BuildTransitConnectionStart_1_miles_en_US
   suite.test(TEST_CASE(TestBuildTransitConnectionStart_1_miles_en_US));
+
+  // BuildTransitConnectionTransfer_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitConnectionTransfer_0_miles_en_US));
+
+  // BuildTransitConnectionTransfer_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitConnectionTransfer_1_miles_en_US));
 
   // BuildTransitConnectionDestination_0_miles_en_US
   suite.test(TEST_CASE(TestBuildTransitConnectionDestination_0_miles_en_US));

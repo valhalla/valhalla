@@ -2554,6 +2554,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
@@ -2578,6 +2579,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
 
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
