@@ -2548,13 +2548,13 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   switch (phrase_id) {
     // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
     case 1: {
-      instruction = (boost::format("Transfer at the %1% station.")
+      instruction = (boost::format("Transfer at the %1% Station.")
           % maneuver.transit_connection_stop().name).str();
       break;
     }
     // 0 "Transfer at station."
     default: {
-      instruction = "Transfer at station.";
+      instruction = "Transfer at the station.";
       break;
     }
   }
@@ -2578,13 +2578,13 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   switch (phrase_id) {
     // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
     case 1: {
-      instruction = (boost::format("Transfer at the %1% station.")
+      instruction = (boost::format("Transfer at the %1% Station.")
           % maneuver.transit_connection_stop().name).str();
       break;
     }
     // 0 "Transfer at station."
     default: {
-      instruction = "Transfer at station.";
+      instruction = "Transfer at the station.";
       break;
     }
   }
