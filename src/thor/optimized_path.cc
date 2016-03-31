@@ -45,12 +45,17 @@ namespace valhalla {
       for (size_t i = 0; i < td.size(); i++)
         time_costs.emplace_back(static_cast<float>(td[i].time));
 
+      for (size_t i = 0; i < correlated.size(); i++)
+        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
+
       Optimizer optimizer;
       //returns the optimal order of the path_locations
       auto order = optimizer.Solve(correlated.size(), time_costs);
       std::vector<PathLocation> best_order;
-      for (auto index : order)
-        best_order.emplace_back(correlated[order[index]]);
+      for (size_t i = 0; i< order.size(); i++) {
+        best_order.emplace_back(correlated[order[i]]);
+        LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
+      }
 
       auto trippaths = path_depart_from(best_order, costing, date_time_type, request_str);
       for (const auto &trippath: trippaths)
