@@ -51,16 +51,18 @@ that closer the walk distance from `u` to `v` is to the measurement
 distance, the more likely `v`'s measurement is to match it.
 
 ```python
-# A gaussian distribution. Constants are ignored
+# A gaussian distribution
 def emission_prob(u):
-    return math.exp(-great_circle_distance(u.measurement, u)**2)
+    c = 1 / (SIGMA_Z * math.sqrt(2 * math.pi))
+    return c * math.exp(-great_circle_distance(u.measurement, u)**2)
 
-# A empirical distribution. Constants are ignored
+# A empirical distribution
 def transition_prob(u, v):
+    c = 1 / BETA
     # Calculating route distance is expensive.
     # We will discuss how to reduce the number of calls to this function later.
     delta = math.abs(route_distance(u, v) - great_circle_distance(u.measurement, v.measurement))
-    return math.exp(-delta)
+    return c * math.exp(-delta)
 ```
 
 A path is a list of edges. The probability of a path is defined as
@@ -98,7 +100,7 @@ def maximum_path_prob(adjacency_list, s, t):
         for path in all_paths(adjacency_list, s, t),
         key=lambda prob, path: prob)
 
-# Generate all paths from s to t recursively. You can safely ignore the implementation
+# Generate all paths from s to t recursively
 def all_paths(adjacency_list, s, t):
     if s == t: return [[]]
     paths = []
