@@ -53,7 +53,7 @@ namespace valhalla {
   }
 
   thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
-               baldr::PathLocation& origin, baldr::PathLocation& destination) {
+        const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
     if (routetype == "multimodal") {
       return &multi_modal_astar;
     } else if (routetype == "bus") {
