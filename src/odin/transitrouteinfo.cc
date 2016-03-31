@@ -4,15 +4,45 @@
 namespace valhalla {
 namespace odin {
 
-// TODO: do we need?
 std::string TransitRouteInfo::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
   str += "{ ";
-  //str += GetQuotedString(text_);
+
+  str += GetQuotedString(onestop_id);
 
   str += delim;
-  //str += GetQuotedString(std::to_string(consecutive_count_));
+  str += std::to_string(block_id);
+
+  str += delim;
+  str += std::to_string(trip_id);
+
+  str += delim;
+  str += GetQuotedString(short_name);
+
+  str += delim;
+  str += GetQuotedString(long_name);
+
+  str += delim;
+  str += GetQuotedString(headsign);
+
+  str += delim;
+  str += std::to_string(color);
+
+  str += delim;
+  str += std::to_string(text_color);
+
+  str += delim;
+  str += GetQuotedString(description);
+
+  str += delim;
+  str += GetQuotedString(operator_onestop_id);
+
+  str += delim;
+  str += GetQuotedString(operator_name);
+
+  str += delim;
+  str += GetQuotedString(operator_url);
 
   str += " }";
 

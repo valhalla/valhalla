@@ -783,20 +783,21 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
     maneuver.set_rail(prev_edge->rail());
     maneuver.set_bus(prev_edge->bus());
-    auto* transit_route = maneuver.mutable_transit_info();
-    const auto& pe_transit_route = prev_edge->transit_route_info();
-    transit_route->onestop_id = pe_transit_route.onestop_id();
-    transit_route->block_id = pe_transit_route.block_id();
-    transit_route->trip_id = pe_transit_route.trip_id();
-    transit_route->short_name = pe_transit_route.short_name();
-    transit_route->long_name = pe_transit_route.long_name();
-    transit_route->headsign = pe_transit_route.headsign();
-    transit_route->color = pe_transit_route.color();
-    transit_route->text_color = pe_transit_route.text_color();
-    transit_route->description = pe_transit_route.description();
-    transit_route->operator_onestop_id = pe_transit_route.operator_onestop_id();
-    transit_route->operator_name = pe_transit_route.operator_name();
-    transit_route->operator_url = pe_transit_route.operator_url();
+    auto* transit_info = maneuver.mutable_transit_info();
+    const auto& pe_transit_info = prev_edge->transit_route_info();
+    transit_info->onestop_id = pe_transit_info.onestop_id();
+    transit_info->block_id = pe_transit_info.block_id();
+    transit_info->trip_id = pe_transit_info.trip_id();
+    transit_info->short_name = pe_transit_info.short_name();
+    transit_info->long_name = pe_transit_info.long_name();
+    transit_info->headsign = pe_transit_info.headsign();
+    transit_info->color = pe_transit_info.color();
+    transit_info->text_color = pe_transit_info.text_color();
+    transit_info->description = pe_transit_info.description();
+    transit_info->operator_onestop_id = pe_transit_info.operator_onestop_id();
+    transit_info->operator_name = pe_transit_info.operator_name();
+    transit_info->operator_url = pe_transit_info.operator_url();
+    LOG_TRACE("TransitInfo=" + transit_info->ToParameterString());
   }
 
   // Transit connection
@@ -914,13 +915,15 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // Insert transit stop into the transit maneuver
   if (prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
-    maneuver.InsertTransitStop(node->transit_stop_info().type(),
-                               node->transit_stop_info().onestop_id(),
-                               node->transit_stop_info().name(),
-                               node->transit_stop_info().arrival_date_time(),
-                               node->transit_stop_info().departure_date_time(),
-                               node->transit_stop_info().is_parent_stop(),
-                               node->transit_stop_info().assumed_schedule());
+    maneuver.InsertTransitStop(
+        std::move(
+            TransitStop(node->transit_stop_info().type(),
+                        node->transit_stop_info().onestop_id(),
+                        node->transit_stop_info().name(),
+                        node->transit_stop_info().arrival_date_time(),
+                        node->transit_stop_info().departure_date_time(),
+                        node->transit_stop_info().is_parent_stop(),
+                        node->transit_stop_info().assumed_schedule())));
   }
 
 }
@@ -1004,13 +1007,15 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Insert first transit stop
   if (maneuver.travel_mode() == TripPath_TravelMode_kTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
-    maneuver.InsertTransitStop(node->transit_stop_info().type(),
-                               node->transit_stop_info().onestop_id(),
-                               node->transit_stop_info().name(),
-                               node->transit_stop_info().arrival_date_time(),
-                               node->transit_stop_info().departure_date_time(),
-                               node->transit_stop_info().is_parent_stop(),
-                               node->transit_stop_info().assumed_schedule());
+    maneuver.InsertTransitStop(
+        std::move(
+            TransitStop(node->transit_stop_info().type(),
+                        node->transit_stop_info().onestop_id(),
+                        node->transit_stop_info().name(),
+                        node->transit_stop_info().arrival_date_time(),
+                        node->transit_stop_info().departure_date_time(),
+                        node->transit_stop_info().is_parent_stop(),
+                        node->transit_stop_info().assumed_schedule())));
   }
 
   // Set the begin intersecting edge name consistency
