@@ -2599,25 +2599,20 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  if (!maneuver.transit_connection_stop().name.empty()) {
+  std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!transit_stop.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Exit the <TRANSIT_CONNECTION_STOP> station."
-    case 1: {
-      instruction = (boost::format("Exit the %1% station.")
-          % maneuver.transit_connection_stop().name).str();
-      break;
-    }
-    // 0 "Exit station."
-    default: {
-      instruction = "Exit station.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_connection_destination_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop);
 
   return instruction;
 
@@ -2630,25 +2625,20 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
 
-  if (!maneuver.transit_connection_stop().name.empty()) {
+  std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!transit_stop.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Exit the <TRANSIT_CONNECTION_STOP> station."
-    case 1: {
-      instruction = (boost::format("Exit the %1% station.")
-          % maneuver.transit_connection_stop().name).str();
-      break;
-    }
-    // 0 "Exit station."
-    default: {
-      instruction = "Exit station.";
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_connection_destination_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop);
 
   return instruction;
 

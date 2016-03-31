@@ -1582,6 +1582,40 @@ void PopulateTransitConnectionStartManeuverList_1(
                   "2016-03-29T08:02", 0, 0));
 }
 
+void PopulateTransitConnectionDestinationManeuverList_0(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitConnectionDestination, {
+                       "Broadway" },
+                   { }, { }, "", 0.036000, 25, 196,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+}
+
+void PopulateTransitConnectionDestinationManeuverList_1(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitConnectionDestination, {
+                       "Broadway" },
+                   { }, { }, "", 0.036000, 25, 196,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+  maneuver.set_transit_connection_stop(
+      TransitStop(TripDirections_TransitStop_Type_kStation,
+                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19",
+                  "", 0, 0));
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -4262,6 +4296,66 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormTransitConnectionDestinationInstruction
+// "0": "Exit the station.",
+// No verbal alert
+// "0": "Exit the station.",
+void TestBuildTransitConnectionDestination_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitConnectionDestinationManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitConnectionDestinationManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Exit the station.",
+                                  "",
+                                  "Exit the station.",
+                                  "Continue for 100 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitConnectionDestinationInstruction
+// "1": "Exit the <TRANSIT_STOP> Station."
+// No verbal alert
+// "1": "Exit the <TRANSIT_STOP> Station."
+void TestBuildTransitConnectionDestination_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitConnectionDestinationManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitConnectionDestinationManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Exit the 8 St - NYU Station.",
+                                  "",
+                                  "Exit the 8 St - NYU Station.",
+                                  "Continue for 100 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -5595,6 +5689,12 @@ int main() {
 
   // BuildTransitConnectionStart_1_miles_en_US
   suite.test(TEST_CASE(TestBuildTransitConnectionStart_1_miles_en_US));
+
+  // BuildTransitConnectionDestination_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitConnectionDestination_0_miles_en_US));
+
+  // BuildTransitConnectionDestination_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitConnectionDestination_1_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
