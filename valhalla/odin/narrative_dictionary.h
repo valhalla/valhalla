@@ -124,6 +124,11 @@ constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 constexpr auto kTransitStopTag = "<TRANSIT_STOP>";
+constexpr auto kTimeTag = "<TIME>";
+constexpr auto kTransitNameTag = "<TRANSIT_NAME>";
+constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
+constexpr auto kTransitStopCountTag = "<TRANSIT_STOP_COUNT>";
+constexpr auto kTransitStopCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 
 }
 
