@@ -52,6 +52,25 @@ namespace valhalla {
     return result;
   }
 
+  thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
+        const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
+    if (routetype == "multimodal") {
+      return &multi_modal_astar;
+    } else if (routetype == "bus") {
+      return &astar;
+    } else {
+      bool same_edge = false;
+      for (auto& edge1 : origin.edges()) {
+        for (auto& edge2 : destination.edges()) {
+          if (edge1.id == edge2.id) {
+            same_edge = true;
+          }
+        }
+      }
+      return (same_edge) ? &astar : &bidir_astar;
+    }
+  }
+
   std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
@@ -77,17 +96,8 @@ namespace valhalla {
       }
 
       // Get the algorithm type for this location pair
-      thor::PathAlgorithm* path_algorithm;
-
-      if (costing == "multimodal") {
-        path_algorithm = &multi_modal_astar;
-      } else if (costing == "pedestrian" || costing == "bicycle") {
-        // Use bidirectional A* for pedestrian and bicycle if over 10km
-        float dist = origin.latlng_.Distance(destination.latlng_);
-        path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
-      } else {
-        path_algorithm = &astar;
-      }
+      thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing,
+                           origin, destination);
 
       // Get best path
       if (path_edges.size() == 0) {
@@ -181,17 +191,8 @@ namespace valhalla {
       }
 
       // Get the algorithm type for this location pair
-      thor::PathAlgorithm* path_algorithm;
-
-      if (costing == "multimodal") {
-        path_algorithm = &multi_modal_astar;
-      } else if (costing == "pedestrian" || costing == "bicycle") {
-        // Use bidirectional A* for pedestrian and bicycle if over 10km
-        float dist = origin.latlng_.Distance(destination.latlng_);
-        path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
-      } else {
-        path_algorithm = &astar;
-      }
+      thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing,
+                           origin, destination);
 
       // Get best path
       if (path_edges.size() == 0) {

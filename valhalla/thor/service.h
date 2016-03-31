@@ -46,6 +46,7 @@ namespace valhalla {
       void update_origin(baldr::PathLocation& origin, bool prior_is_node, const baldr::GraphId& through_edge);
       void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin, baldr::PathLocation& destination, std::vector<thor::PathInfo>& path_edges);
       valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);
+      thor::PathAlgorithm* get_path_algorithm(const std::string& routetype, const baldr::PathLocation& origin, const baldr::PathLocation& destination);
 
       valhalla::sif::TravelMode mode;
       boost::property_tree::ptree config;
