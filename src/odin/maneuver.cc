@@ -652,7 +652,7 @@ std::string Maneuver::GetTransitArrivalTime() const {
   return transit_info_.transit_stops.back().arrival_date_time;
 }
 
-std::string Maneuver::GetFormattedTransitArrivalTime() const {
+std::string Maneuver::GetFormattedTransitArrivalTime(const std::string& locale) const {
   return DateTime::time(transit_info_.transit_stops.back().arrival_date_time);
 }
 
@@ -660,7 +660,7 @@ std::string Maneuver::GetTransitDepartureTime() const {
   return transit_info_.transit_stops.front().departure_date_time;
 }
 
-std::string Maneuver::GetFormattedTransitDepartureTime() const {
+std::string Maneuver::GetFormattedTransitDepartureTime(const std::string& locale) const {
   return DateTime::time(transit_info_.transit_stops.front().departure_date_time);
 }
 
