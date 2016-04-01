@@ -48,7 +48,7 @@ test/narrativebuilder
 test/enhancedtrippath
 test/sign
 test/signs
-test/locales
+test/util
 test/narrative_dictionary
 test/*.log
 test/*.trs

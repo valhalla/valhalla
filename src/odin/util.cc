@@ -118,7 +118,8 @@ std::string get_localized_time(const std::string& date_time, const std::string& 
       ss << pt;
       std::string time = ss.str();
 
-      if (time.find("PM") == std::string::npos && time.find("AM") == std::string::npos) {//AM or PM
+      if (time.find("PM") == std::string::npos &&
+          time.find("AM") == std::string::npos) {//AM or PM
         std::size_t found = time.find_last_of(":"); // remove seconds.
         if (found != std::string::npos)
           time = time.substr(0,found);
@@ -166,7 +167,7 @@ std::string get_localized_date(const std::string& date_time, const std::string& 
     try {
       ss.imbue(std::locale(std::locale(locale.c_str()), output_facet));  // output in the locale requested
     } catch (std::exception& e) { //Locale is not installed!  Return default.
-      output_facet = new boost::posix_time::time_facet("%Y%m%d");
+      output_facet = new boost::posix_time::time_facet("%m/%d/%Y");
       ss.imbue(std::locale(std::locale::classic(), output_facet));
     }
     ss << pt;
