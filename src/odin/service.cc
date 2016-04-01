@@ -54,7 +54,7 @@ namespace {
         }
 
         // Grab language from options and set
-        auto language = request.get_optional<std::string>("directions_options.langauge");
+        auto language = request.get_optional<std::string>("directions_options.language");
         // If language is not found then set to the default language (en-US)
         if (!language || (odin::get_locales().find(*language) == odin::get_locales().end())) {
           request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
