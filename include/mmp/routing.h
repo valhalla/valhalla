@@ -50,28 +50,45 @@ class BucketQueue
       throw std::invalid_argument("expect non-negative cost");
     }
 
+    if (costmap_.find(key) != costmap_.end()) {
+      throw std::invalid_argument("the key " + std::to_string(key) + " exists");
+    }
+
     const auto idx = bucket_idx(cost);
 
-    // TODO split them into add and update two functions
+    if (idx < bucket_count_) {
+      if (buckets_.size() <= idx) {
+        buckets_.resize(idx + 1);
+      }
+      buckets_[idx].push_back(key);
+      costmap_[key] = cost;
+
+      // Update top cursor
+      if (idx < top_) {
+        top_ = idx;
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  bool decrease(const key_t& key, float cost)
+  {
+    if (cost < 0.f) {
+      throw std::invalid_argument("expect non-negative cost");
+    }
+
     const auto it = costmap_.find(key);
     if (it == costmap_.end()) {
-      if (idx < bucket_count_) {
-        if (buckets_.size() <= idx) {
-          buckets_.resize(idx + 1);
-        }
-        buckets_[idx].push_back(key);
-        costmap_[key] = cost;
+      throw std::runtime_error("the key " + std::to_string(key) + " to decrease doesn't exists");
+    }
 
-        // Update top cursor
-        if (idx < top_) {
-          top_ = idx;
-        }
-
-        return true;
-      }
-    } else if (cost < it->second) {
+    if (cost < it->second) {
       // Remove the old item
       const auto old_idx = bucket_idx(it->second);
+      const auto idx = bucket_idx(cost);
       if (idx > old_idx) {
         throw std::runtime_error("invalid cost: " + std::to_string(cost) + " (old value is " + std::to_string(it->second) + ")");
       }

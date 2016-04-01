@@ -51,8 +51,8 @@ LabelSet::put(const baldr::GraphId& nodeid,
   const auto it = node_status_.find(nodeid);
   if (it == node_status_.end()) {
     uint32_t idx = labels_.size();
-    bool inserted = queue_.add(idx, sortcost);
-    if (inserted) {
+    bool added = queue_.add(idx, sortcost);
+    if (added) {
       labels_.emplace_back(nodeid, edgeid,
                            source, target,
                            cost, turn_cost, sortcost,
@@ -61,6 +61,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
       node_status_[nodeid] = {idx, false};
       return true;
     }
+    // !added -> rejected since queue's full
   } else {
     const auto& status = it->second;
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
@@ -70,8 +71,8 @@ LabelSet::put(const baldr::GraphId& nodeid,
                                    cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool updated = queue_.add(status.label_idx, sortcost);
-      assert(updated);
+      bool decreased = queue_.decrease(status.label_idx, sortcost);
+      assert(decreased);
       return true;
     }
   }
@@ -109,8 +110,8 @@ LabelSet::put(uint16_t dest,
   const auto it = dest_status_.find(dest);
   if (it == dest_status_.end()) {
     uint32_t idx = labels_.size();
-    bool inserted = queue_.add(idx, sortcost);
-    if (inserted) {
+    bool added = queue_.add(idx, sortcost);
+    if (added) {
       labels_.emplace_back(dest, edgeid,
                            source, target,
                            cost, turn_cost, sortcost,
@@ -119,6 +120,7 @@ LabelSet::put(uint16_t dest,
       dest_status_[dest] = {idx, false};
       return true;
     }
+    // !added -> rejected since queue's full
   } else {
     const auto& status = it->second;
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
@@ -128,8 +130,8 @@ LabelSet::put(uint16_t dest,
                                    cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool updated = queue_.add(status.label_idx, sortcost);
-      assert(updated);
+      bool decreased = queue_.decrease(status.label_idx, sortcost);
+      assert(decreased);
       return true;
     }
   }
