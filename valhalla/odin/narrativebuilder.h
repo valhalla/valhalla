@@ -380,11 +380,6 @@ class NarrativeBuilder {
       const std::vector<std::string>& us_customary_lengths);
 
   /////////////////////////////////////////////////////////////////////////////
-  // TODO remove after refactor
-  std::string FormCardinalDirection(
-      TripDirections_Maneuver_CardinalDirection cardinal_direction);
-
-  /////////////////////////////////////////////////////////////////////////////
   std::string FormRelativeTwoDirection(
       TripDirections_Maneuver_Type type,
       const std::vector<std::string>& relative_directions);
@@ -396,12 +391,6 @@ class NarrativeBuilder {
   std::string FormRelativeTurnDirection(
       TripDirections_Maneuver_Type type,
       const std::vector<std::string>& relative_directions);
-
-  /////////////////////////////////////////////////////////////////////////////
-  std::string FormOrdinalValue(uint32_t value);
-
-  /////////////////////////////////////////////////////////////////////////////
-  std::string FormStopCountLabel(size_t stop_count);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormTransitName(Maneuver& maneuver);

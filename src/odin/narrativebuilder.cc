@@ -526,9 +526,6 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
 }
 
-// TODO - we will have to optimize when we actually use the language specific
-// dictionary
-
 std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   // "0": "Head <CARDINAL_DIRECTION>.",
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
@@ -566,8 +563,6 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
-
-  // TODO - side of street
 
   return instruction;
 }
@@ -3164,41 +3159,6 @@ std::string NarrativeBuilder::FormUsCustomaryLength(
   return length_string;
 }
 
-// TODO remove after refactor
-std::string NarrativeBuilder::FormCardinalDirection(
-    TripDirections_Maneuver_CardinalDirection cardinal_direction) {
-  switch (cardinal_direction) {
-    case TripDirections_Maneuver_CardinalDirection_kNorth: {
-      return "north";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kNorthEast: {
-      return "northeast";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kEast: {
-      return "east";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kSouthEast: {
-      return "southeast";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kSouth: {
-      return "south";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kSouthWest: {
-      return "southwest";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kWest: {
-      return "west";
-    }
-    case TripDirections_Maneuver_CardinalDirection_kNorthWest: {
-      return "northwest";
-    }
-    default: {
-      throw std::runtime_error(
-          "Invalid TripDirections_Maneuver_CardinalDirection in method FormCardinalDirection.");
-    }
-  }
-}
-
 std::string NarrativeBuilder::FormRelativeTwoDirection(
     TripDirections_Maneuver_Type type,
     const std::vector<std::string>& relative_directions) {
@@ -3248,56 +3208,7 @@ std::string NarrativeBuilder::FormRelativeThreeDirection(
   }
 }
 
-std::string NarrativeBuilder::FormOrdinalValue(uint32_t value) {
-  switch (value) {
-    case 1: {
-      return "1st";
-    }
-    case 2: {
-      return "2nd";
-    }
-    case 3: {
-      return "3rd";
-    }
-    case 4: {
-      return "4th";
-    }
-    case 5: {
-      return "5th";
-    }
-    case 6: {
-      return "6th";
-    }
-    case 7: {
-      return "7th";
-    }
-    case 8: {
-      return "8th";
-    }
-    case 9: {
-      return "9th";
-    }
-    case 10: {
-      return "10th";
-    }
-    default: {
-      return "undefined";
-    }
-  }
-
-}
-
-std::string NarrativeBuilder::FormStopCountLabel(size_t stop_count) {
-  switch (stop_count) {
-    case 1: {
-      return "stop";
-    }
-    default: {
-      return "stops";
-    }
-  }
-}
-
+// TODO: handle bus/train
 std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
   if (!maneuver.transit_info().short_name.empty()) {
     return maneuver.transit_info().short_name;
