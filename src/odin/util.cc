@@ -122,7 +122,8 @@ std::string get_localized_time(const std::string& date_time, const std::string& 
       ss << pt;
       std::string time = ss.str();
 
-      if (time.find("PM") == std::string::npos && time.find("AM") == std::string::npos) {//AM or PM
+      if (time.find("PM") == std::string::npos &&
+          time.find("AM") == std::string::npos) {//AM or PM
         std::size_t found = time.find_last_of(":"); // remove seconds.
         if (found != std::string::npos)
           time = time.substr(0,found);
