@@ -2698,7 +2698,7 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitDepartureTime());
+  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitArrivalTime());
 
   return instruction;
 }
@@ -2721,7 +2721,7 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitDepartureTime());
+  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitArrivalTime());
 
   return instruction;
 }
