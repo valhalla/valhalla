@@ -1873,6 +1873,324 @@ void PopulateTransitManeuverList_1(std::list<Maneuver>& maneuvers,
                       "2016-03-29T08:02", 0, 1)));
 }
 
+void PopulateTransitTransferManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitTransfer, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "",
+      "",
+      "",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                      "2016-03-29T08:08", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                      "2016-03-29T08:07", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06",
+                      "2016-03-29T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                      "2016-03-29T08:04", "2016-03-29T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02", 0, 1)));
+}
+
+void PopulateTransitTransferManeuverList_0(std::list<Maneuver>& maneuvers,
+                                   const std::string& country_code,
+                                   const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitTransfer, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "R",
+      "Broadway Local",
+      "",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                      "2016-03-29T08:08", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                      "2016-03-29T08:07", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06",
+                      "2016-03-29T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                      "2016-03-29T08:04", "2016-03-29T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02", 0, 1)));
+}
+
+void PopulateTransitTransferManeuverList_1(std::list<Maneuver>& maneuvers,
+                                   const std::string& country_code,
+                                   const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitTransfer, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "R",
+      "Broadway Local",
+      "FOREST HILLS - 71 AV",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                      "2016-03-29T08:08", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                      "2016-03-29T08:07", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06",
+                      "2016-03-29T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                      "2016-03-29T08:04", "2016-03-29T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02", 0, 1)));
+}
+
+void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitRemainOn, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "",
+      "",
+      "",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                      "2016-03-29T08:08", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                      "2016-03-29T08:07", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06",
+                      "2016-03-29T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                      "2016-03-29T08:04", "2016-03-29T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02", 0, 1)));
+}
+
+void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
+                                   const std::string& country_code,
+                                   const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitRemainOn, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "R",
+      "Broadway Local",
+      "",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                      "2016-03-29T08:08", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                      "2016-03-29T08:07", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06",
+                      "2016-03-29T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                      "2016-03-29T08:04", "2016-03-29T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02", 0, 1)));
+}
+
+void PopulateTransitRemainOnManeuverList_1(std::list<Maneuver>& maneuvers,
+                                   const std::string& country_code,
+                                   const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitRemainOn, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "R",
+      "Broadway Local",
+      "FOREST HILLS - 71 AV",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                      "2016-03-29T08:08", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                      "2016-03-29T08:07", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06",
+                      "2016-03-29T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                      "2016-03-29T08:04", "2016-03-29T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02", 0, 1)));
+}
+
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
                                           const std::string& country_code,
                                           const std::string& state_code) {
@@ -4781,6 +5099,208 @@ void TestBuildTransit_1_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormTransitTransferInstruction
+// "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+// No verbal alert
+// "0": "Transfer to take the <TRANSIT_NAME>.",
+void TestBuildTransitTransfer_0_no_name_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitTransferManeuverList_0_no_name(maneuvers, country_code,
+                                                state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitTransferManeuverList_0_no_name(expected_maneuvers,
+                                                country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Transfer to take the train. (4 stops)", "",
+                                  "Transfer to take the train.",
+                                  "Travel 4 stops.",
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitTransferInstruction
+// "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+// No verbal alert
+// "0": "Transfer to take the <TRANSIT_NAME>.",
+void TestBuildTransitTransfer_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitTransferManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitTransferManeuverList_0(expected_maneuvers, country_code,
+                                        state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Transfer to take the R. (4 stops)", "",
+                                  "Transfer to take the R.", "Travel 4 stops.",
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitTransferInstruction
+// "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransitTransfer_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitTransferManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitTransferManeuverList_1(expected_maneuvers, country_code,
+                                        state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Transfer to take the R toward FOREST HILLS - 71 AV. (4 stops)", "",
+      "Transfer to take the R toward FOREST HILLS - 71 AV.", "Travel 4 stops.",
+      "Depart: 8:02 AM from 8 St - NYU.", "Depart at 8:02 AM from 8 St - NYU.",
+      "Arrive: 8:08 AM at 34 St - Herald Sq.",
+      "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitRemainOnInstruction
+// "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+// No verbal alert
+// "0": "Remain on the <TRANSIT_NAME>.",
+void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitRemainOnManeuverList_0_no_name(maneuvers, country_code,
+                                                state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitRemainOnManeuverList_0_no_name(expected_maneuvers,
+                                                country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Remain on the train. (4 stops)", "",
+                                  "Remain on the train.",
+                                  "Travel 4 stops.",
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitRemainOnInstruction
+// "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+// No verbal alert
+// "0": "Remain on the <TRANSIT_NAME>.",
+void TestBuildTransitRemainOn_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitRemainOnManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitRemainOnManeuverList_0(expected_maneuvers, country_code,
+                                        state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Remain on the R. (4 stops)", "",
+                                  "Remain on the R.", "Travel 4 stops.",
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitRemainOnInstruction
+// "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransitRemainOn_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitRemainOnManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitRemainOnManeuverList_1(expected_maneuvers, country_code,
+                                        state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Remain on the R toward FOREST HILLS - 71 AV. (4 stops)", "",
+      "Remain on the R toward FOREST HILLS - 71 AV.", "Travel 4 stops.",
+      "Depart: 8:02 AM from 8 St - NYU.", "Depart at 8:02 AM from 8 St - NYU.",
+      "Arrive: 8:08 AM at 34 St - Herald Sq.",
+      "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -6135,6 +6655,24 @@ int main() {
 
   // BuildTransit_1_miles_en_US
   suite.test(TEST_CASE(TestBuildTransit_1_miles_en_US));
+
+  // BuildTransitTransfer_0_no_name_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitTransfer_0_no_name_miles_en_US));
+
+  // BuildTransitTransfer_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitTransfer_0_miles_en_US));
+
+  // BuildTransitTransfer_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitTransfer_1_miles_en_US));
+
+  // BuildTransitRemainOn_0_no_name_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitRemainOn_0_no_name_miles_en_US));
+
+  // BuildTransitRemainOn_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitRemainOn_0_miles_en_US));
+
+  // BuildTransitRemainOn_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransitRemainOn_1_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));

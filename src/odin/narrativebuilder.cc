@@ -2970,9 +2970,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
-
   return instruction;
-
 }
 
 std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
