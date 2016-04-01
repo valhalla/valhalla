@@ -236,11 +236,7 @@ class Maneuver {
 
   std::string GetTransitArrivalTime() const;
 
-  std::string GetFormattedTransitArrivalTime() const;
-
   std::string GetTransitDepartureTime() const;
-
-  std::string GetFormattedTransitDepartureTime() const;
 
   const std::list<TransitStop>& GetTransitStops() const;
 

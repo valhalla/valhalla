@@ -13,6 +13,7 @@
 #include "odin/narrative_dictionary.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
+#include "odin/util.h"
 
 namespace {
 // Text instruction initial capacity
@@ -2652,7 +2653,8 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitDepartureTime());
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2675,7 +2677,8 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitDepartureTime());
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2698,7 +2701,8 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitArrivalTime());
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2721,7 +2725,8 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, maneuver.GetFormattedTransitArrivalTime());
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
