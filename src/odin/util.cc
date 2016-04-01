@@ -104,10 +104,6 @@ std::string get_localized_time(const std::string& date_time, const std::string& 
     if (date_time.find("T") == std::string::npos)
       return ss.str();
 
-    std::string loc = locale;
-    boost::replace_all(loc, "-", "_");
-    loc += ".utf8";
-
     boost::local_time::local_time_input_facet* input_facet =
         new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M");
     boost::posix_time::time_facet* output_facet = new boost::posix_time::time_facet("%X");
@@ -118,7 +114,7 @@ std::string get_localized_time(const std::string& date_time, const std::string& 
     ss >> pt; // read in with the format of "%Y-%m-%dT%H:%M"
     ss.str("");
     try {
-      ss.imbue(std::locale(std::locale(loc.c_str()), output_facet));  // output in the locale requested
+      ss.imbue(std::locale(std::locale(locale.c_str()), output_facet));  // output in the locale requested
       ss << pt;
       std::string time = ss.str();
 
@@ -158,9 +154,6 @@ std::string get_localized_date(const std::string& date_time, const std::string& 
     if (date_time.find("T") == std::string::npos)
       return ss.str();
 
-    std::string loc = locale;
-    boost::replace_all(loc, "-", "_");
-    loc += ".utf8";
     boost::local_time::local_time_input_facet* input_facet =
         new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M");
     boost::posix_time::time_facet* output_facet = new boost::posix_time::time_facet("%x");
@@ -171,7 +164,7 @@ std::string get_localized_date(const std::string& date_time, const std::string& 
     ss >> pt; // read in with the format of "%Y-%m-%dT%H:%M"
     ss.str("");
     try {
-      ss.imbue(std::locale(std::locale(loc.c_str()), output_facet));  // output in the locale requested
+      ss.imbue(std::locale(std::locale(locale.c_str()), output_facet));  // output in the locale requested
     } catch (std::exception& e) { //Locale is not installed!  Return default.
       output_facet = new boost::posix_time::time_facet("%Y%m%d");
       ss.imbue(std::locale(std::locale::classic(), output_facet));
