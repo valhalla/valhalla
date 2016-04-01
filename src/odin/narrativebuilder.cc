@@ -3023,9 +3023,9 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
 
 std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruction(
     Maneuver& maneuver, uint32_t element_max_count, const std::string& delim) {
-  // 0 "Head <FormCardinalDirection>."
-  // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
-  // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 
   // Assign the street names and the begin street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
