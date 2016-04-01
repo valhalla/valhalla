@@ -345,6 +345,13 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const uint32_t density) const {
+  // Ferries are a special case - they use the ferry speed (stored on the edge)
+  if (edge->use() == Use::kFerry) {
+    float sec = edge->length() * (kSecPerHour * 0.001f) /
+            static_cast<float>(edge->speed());
+    return { sec, sec };
+  }
+
   // Slightly favor walkways/paths and penalize alleys and driveways.
   float sec = edge->length() * speedfactor_;
   if (edge->use() == Use::kFootway) {
