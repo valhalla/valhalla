@@ -296,7 +296,7 @@ void NarrativeDictionary::Load(
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate posix_locale...");
-  // Populate verbal_multi_cue_subset
+  // Populate posix locale
   posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.utf8"); //TODO: more appropriate default?
 
 }
