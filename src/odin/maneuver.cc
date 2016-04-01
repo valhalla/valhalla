@@ -615,7 +615,7 @@ const TransitStop& Maneuver::transit_connection_stop() const {
 void Maneuver::set_transit_connection_stop(
     const TransitStop& transit_connection_stop) {
   transit_connection_stop_ = transit_connection_stop;
-  LOG_TRACE("transit_connection_stop=" + transit_connection_stop_.ToParameterString());
+  LOG_TRACE("set_transit_connection_stop=" + transit_connection_stop_.ToParameterString());
 }
 
 bool Maneuver::rail() const {
@@ -674,17 +674,9 @@ size_t Maneuver::GetTransitStopCount() const {
           (transit_info_.transit_stops.size() - 1) : 0;
 }
 
-void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
-                                 std::string onestop_id, std::string name,
-                                 std::string arrival_date_time,
-                                 std::string departure_date_time,
-                                 bool is_parent_stop,
-                                 bool assumed_schedule) {
-  transit_info_.transit_stops.emplace_front(type, onestop_id, name,
-                                                  arrival_date_time,
-                                                  departure_date_time,
-                                                  is_parent_stop,
-                                                  assumed_schedule);
+void Maneuver::InsertTransitStop(TransitStop&& transit_stop) {
+  transit_info_.transit_stops.push_front(std::move(transit_stop));
+  LOG_TRACE("InsertTransitStop=" + transit_info_.transit_stops.front().ToParameterString());
 }
 
 const std::string& Maneuver::depart_instruction() const {
