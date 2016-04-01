@@ -100,7 +100,7 @@ check_PROGRAMS = \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
-	test/locales \
+	test/util \
 	test/narrative_dictionary
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
@@ -117,9 +117,9 @@ test_sign_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_o
 test_signs_SOURCES = test/signs.cc test/test.cc
 test_signs_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_signs_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
-test_locales_SOURCES = test/locales.cc test/test.cc
-test_locales_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_locales_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
+test_util_SOURCES = test/util.cc test/test.cc
+test_util_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_util_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 test_narrative_dictionary_SOURCES = test/narrative_dictionary.cc test/test.cc
 test_narrative_dictionary_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_narrative_dictionary_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
