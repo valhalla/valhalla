@@ -13,6 +13,7 @@
 #include "odin/narrative_dictionary.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
+#include "odin/util.h"
 
 namespace {
 // Text instruction initial capacity
@@ -2539,7 +2540,6 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-
   std::string transit_stop = maneuver.transit_connection_stop().name;
 
   // Determine which phrase to use
@@ -2565,7 +2565,6 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-
   std::string transit_stop = maneuver.transit_connection_stop().name;
 
   // Determine which phrase to use
@@ -2649,22 +2648,13 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Depart: <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
-    case 1: {
-      instruction =
-          (boost::format("Depart: %1% from %2%.")
-              % maneuver.GetFormattedTransitDepartureTime() % transit_stop_name)
-              .str();
-      break;
-    }
-    // 0 "Depart: <GetFormattedTransitDepartureTime>.
-    default: {
-      instruction = (boost::format("Depart: %1%.")
-          % maneuver.GetFormattedTransitDepartureTime()).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.depart_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2682,22 +2672,13 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Depart at <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
-    case 1: {
-      instruction =
-          (boost::format("Depart at %1% from %2%.")
-              % maneuver.GetFormattedTransitDepartureTime() % transit_stop_name)
-              .str();
-      break;
-    }
-    // 0 "Depart at <GetFormattedTransitDepartureTime>.
-    default: {
-      instruction = (boost::format("Depart at %1%.")
-          % maneuver.GetFormattedTransitDepartureTime()).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.depart_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2715,22 +2696,13 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Arrive: <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
-    case 1: {
-      instruction =
-          (boost::format("Arrive: %1% at %2%.")
-              % maneuver.GetFormattedTransitArrivalTime() % transit_stop_name)
-              .str();
-      break;
-    }
-    // 0 "Arrive: <GetFormattedTransitArrivalTime>.
-    default: {
-      instruction = (boost::format("Arrive: %1%.")
-          % maneuver.GetFormattedTransitArrivalTime()).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.arrive_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2748,22 +2720,13 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Arrive at <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
-    case 1: {
-      instruction =
-          (boost::format("Arrive at %1% at %2%.")
-              % maneuver.GetFormattedTransitArrivalTime() % transit_stop_name)
-              .str();
-      break;
-    }
-    // 0 "Arrive at <GetFormattedTransitArrivalTime>.
-    default: {
-      instruction = (boost::format("Arrive at %1%.")
-          % maneuver.GetFormattedTransitArrivalTime()).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.arrive_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
+      dictionary_.posix_locale));
 
   return instruction;
 }
@@ -2777,28 +2740,21 @@ std::string NarrativeBuilder::FormTransitInstruction(
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
+  auto stop_count = maneuver.GetTransitStopCount();
+  auto stop_count_label = dictionary_.transit_subset.transit_stop_count_labels.at(stop_count != 1);
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-    case 1: {
-      instruction = (boost::format("Take the %1% toward %2%. (%3% %4%)")
-          % FormTransitName(maneuver) % transit_headsign
-          % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-    // 0 "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-    default: {
-      instruction = (boost::format("Take the %1%. (%2% %3%)")
-          % FormTransitName(maneuver) % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
+  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
   return instruction;
 }
@@ -2816,20 +2772,12 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-    case 1: {
-      instruction = (boost::format("Take the %1% toward %2%.")
-          % FormTransitName(maneuver) % transit_headsign).str();
-      break;
-    }
-    // 0 "Take the <TRANSIT_NAME>."
-    default: {
-      instruction = (boost::format("Take the %1%.") % FormTransitName(maneuver))
-          .str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
 
   return instruction;
 }
@@ -2843,28 +2791,21 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
+  auto stop_count = maneuver.GetTransitStopCount();
+  auto stop_count_label = dictionary_.transit_remain_on_subset.transit_stop_count_labels.at(stop_count != 1);
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-    case 1: {
-      instruction = (boost::format("Remain on the %1% toward %2%. (%3% %4%)")
-          % FormTransitName(maneuver) % transit_headsign
-          % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-    // 0 Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-    default: {
-      instruction = (boost::format("Remain on the %1%. (%2% %3%)")
-          % FormTransitName(maneuver) % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_remain_on_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
+  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
   return instruction;
 
@@ -2884,23 +2825,14 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-    case 1: {
-      instruction = (boost::format("Remain on the %1% toward %2%.")
-          % FormTransitName(maneuver) % transit_headsign).str();
-      break;
-    }
-    // 0 Remain on the <TRANSIT_NAME>."
-    default: {
-      instruction = (boost::format("Remain on the %1%.")
-          % FormTransitName(maneuver)).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_remain_on_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
 
   return instruction;
-
 }
 
 std::string NarrativeBuilder::FormTransitTransferInstruction(
@@ -2912,28 +2844,21 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
+  auto stop_count = maneuver.GetTransitStopCount();
+  auto stop_count_label = dictionary_.transit_transfer_subset.transit_stop_count_labels.at(stop_count != 1);
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-    case 1: {
-      instruction = (boost::format("Transfer to take the %1% toward %2%. (%3% %4%)")
-          % FormTransitName(maneuver) % transit_headsign
-          % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-    // 0 "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
-    default: {
-      instruction = (boost::format("Transfer to take the %1%. (%2% %3%)")
-          % FormTransitName(maneuver) % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_transfer_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
+  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
   return instruction;
 
@@ -2953,21 +2878,12 @@ std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
-    case 1: {
-      instruction = (boost::format(
-          "Transfer to take the %1% toward %2%.")
-          % FormTransitName(maneuver) % transit_headsign).str();
-      break;
-    }
-    // 0 "Transfer to take the <TRANSIT_NAME>."
-    default: {
-      instruction = (boost::format("Transfer to take the %1%.")
-          % FormTransitName(maneuver)).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.transit_transfer_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
 
   return instruction;
 
@@ -2979,43 +2895,40 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names());
-
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-  std::string cardinal_direction = FormCardinalDirection(
-        maneuver.begin_cardinal_direction());
 
-  if (!begin_street_names.empty() && !street_names.empty()) {
+  // Set cardinal_direction value
+  std::string cardinal_direction = dictionary_.post_transit_connection_destination_subset
+      .cardinal_directions.at(maneuver.begin_cardinal_direction());
+
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.post_transit_connection_destination_subset.empty_street_name_labels, true);
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.post_transit_connection_destination_subset.empty_street_name_labels);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!begin_street_names.empty()) {
     phrase_id = 2;
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
-    case 1: {
-      instruction = (boost::format("Head %1% on %2%.") % cardinal_direction
-          % street_names).str();
-      break;
-    }
-    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-    case 2: {
-      instruction = (boost::format("Head %1% on %2%. Continue on %3%.")
-          % cardinal_direction % begin_street_names % street_names).str();
-      break;
-    }
-    // 0 "Head <FormCardinalDirection>."
-    default: {
-      instruction = (boost::format("Head %1%.") % cardinal_direction).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.post_transit_connection_destination_subset.
+      phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+
 
   return instruction;
 
@@ -3023,52 +2936,46 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
 
 std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruction(
     Maneuver& maneuver, uint32_t element_max_count, const std::string& delim) {
-  // "0": "Head <CARDINAL_DIRECTION>.",
-  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-
-  // Assign the street names and the begin street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string begin_street_names = FormOldStreetNames(
-      maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
-      maneuver.verbal_formatter());
+  // 0 "Head <FormCardinalDirection>."
+  // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+  // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
-  uint8_t phrase_id = 0;
-  std::string cardinal_direction = FormCardinalDirection(
-        maneuver.begin_cardinal_direction());
 
-  if (!begin_street_names.empty() && !street_names.empty()) {
+  // Set cardinal_direction value
+  std::string cardinal_direction = dictionary_.post_transit_connection_destination_verbal_subset
+      .cardinal_directions.at(maneuver.begin_cardinal_direction());
+
+  // Assign the street names
+  std::string street_names = FormStreetNames(
+      maneuver, maneuver.street_names(),
+      &dictionary_.post_transit_connection_destination_verbal_subset.empty_street_name_labels, true,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Assign the begin street names
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(),
+      &dictionary_.post_transit_connection_destination_verbal_subset.empty_street_name_labels, false,
+      element_max_count, delim, maneuver.verbal_formatter());
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!begin_street_names.empty()) {
     phrase_id = 2;
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
 
-  switch (phrase_id) {
-    // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
-    case 1: {
-      instruction = (boost::format("Head %1% on %2%.") % cardinal_direction
-          % street_names).str();
-      break;
-    }
-    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
-    case 2: {
-      instruction = (boost::format("Head %1% on %2%.")
-          % cardinal_direction % begin_street_names).str();
-      break;
-    }
-    // 0 "Head <FormCardinalDirection>."
-    default: {
-      instruction = (boost::format("Head %1%.") % cardinal_direction).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.post_transit_connection_destination_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
   return instruction;
-
 }
 
 std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
@@ -3113,16 +3020,16 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
+  auto stop_count = maneuver.GetTransitStopCount();
+  auto stop_count_label = dictionary_.post_transition_transit_verbal_subset.
+      transit_stop_count_labels.at(stop_count != 1);
 
-  switch (phrase_id) {
-    // 0 "Travel <TRANSIT_STOP_COUNT> <FormStopCountLabel>"
-    default: {
-      instruction = (boost::format("Travel %1% %2%.")
-          % maneuver.GetTransitStopCount()
-          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
-      break;
-    }
-  }
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.post_transition_transit_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
   return instruction;
 }
@@ -3191,7 +3098,7 @@ std::string NarrativeBuilder::FormMetricLength(
       (kilometer_tenths == kilometer_tenths_floor) ?
           (boost::format("%.0f") % kilometer_tenths_floor).str() :
           (boost::format("%.1f") % kilometer_tenths).str());
-  boost::replace_all(length_string, kMetersTag, std::to_string(meters));
+  boost::replace_all(length_string, kMetersTag, std::to_string(meters));  //TODO: locale specific numerals
 
 
   return length_string;
@@ -3251,8 +3158,8 @@ std::string NarrativeBuilder::FormUsCustomaryLength(
       (mile_tenths == mile_tenths_floor) ?
           (boost::format("%.0f") % mile_tenths_floor).str() :
           (boost::format("%.1f") % mile_tenths).str());
-  boost::replace_all(length_string, kTenthsOfMilesTag, std::to_string(tenths_of_mile));
-  boost::replace_all(length_string, kFeetTag, std::to_string(feet));
+  boost::replace_all(length_string, kTenthsOfMilesTag, std::to_string(tenths_of_mile));  //TODO: locale specific numerals
+  boost::replace_all(length_string, kFeetTag, std::to_string(feet));  //TODO: locale specific numerals
 
   return length_string;
 }

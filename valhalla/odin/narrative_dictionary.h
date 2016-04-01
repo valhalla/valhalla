@@ -69,6 +69,7 @@ constexpr auto kPostTransitConnectionDestinationVerbalKey = "instructions.post_t
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
+constexpr auto kPosixLocaleKey = "posix_locale";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -124,6 +125,11 @@ constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 constexpr auto kTransitStopTag = "<TRANSIT_STOP>";
+constexpr auto kTimeTag = "<TIME>";
+constexpr auto kTransitNameTag = "<TRANSIT_NAME>";
+constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
+constexpr auto kTransitStopCountTag = "<TRANSIT_STOP_COUNT>";
+constexpr auto kTransitStopCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 
 }
 
@@ -311,6 +317,9 @@ class NarrativeDictionary {
 
   // Verbal miulti-cue
   PhraseSet verbal_multi_cue_subset;
+
+  // Posix locale
+  std::string posix_locale;
 
  protected:
 
