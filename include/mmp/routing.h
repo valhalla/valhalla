@@ -149,28 +149,28 @@ struct Label
   Label(const baldr::GraphId& the_nodeid,
         const baldr::GraphId& the_edgeid,
         float the_source, float the_target,
-        float the_cost, float the_turn_cost,
+        float the_cost, float the_turn_cost, float the_sortcost,
         uint32_t the_predecessor,
         const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
         std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : Label(the_nodeid, kInvalidDestination, the_edgeid,
               the_source, the_target,
-              the_cost, the_turn_cost,
+              the_cost, the_turn_cost, the_sortcost,
               the_predecessor,
               the_edge, the_travelmode, the_edgelabel) {}
 
   Label(uint16_t the_dest,
         const baldr::GraphId& the_edgeid,
         float the_source, float the_target,
-        float the_cost, float the_turn_cost,
+        float the_cost, float the_turn_cost, float the_sortcost,
         uint32_t the_predecessor,
         const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
         std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : Label({}, the_dest, the_edgeid,
               the_source, the_target,
-              the_cost, the_turn_cost,
+              the_cost, the_turn_cost, the_sortcost,
               the_predecessor,
               the_edge, the_travelmode, the_edgelabel)
   { assert(!nodeid.Is_Valid()); }
@@ -179,14 +179,14 @@ struct Label
         uint16_t the_dest,
         const baldr::GraphId& the_edgeid,
         float the_source, float the_target,
-        float the_cost, float the_turn_cost,
+        float the_cost, float the_turn_cost, float the_sortcost,
         uint32_t the_predecessor,
         const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
         std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : nodeid(the_nodeid), dest(the_dest), edgeid(the_edgeid),
         source(the_source), target(the_target),
-        cost(the_cost), turn_cost(the_turn_cost),
+        cost(the_cost), turn_cost(the_turn_cost), sortcost(the_sortcost),
         predecessor(the_predecessor),
         edgelabel(the_edgelabel)
   {
@@ -210,7 +210,7 @@ struct Label
                                                          the_edgeid,
                                                          the_edge,
                                                          sif::Cost(the_cost, the_cost), // Cost
-                                                         the_cost, // Sortcost
+                                                         sortcost, // Sortcost
                                                          the_cost, // Distance
                                                          the_edge->restrictions(),
                                                          the_edge->opp_local_idx(),
@@ -234,6 +234,8 @@ struct Label
   // Turn cost since origin (including the turn cost of this edge
   // segment)
   float turn_cost;
+
+  float sortcost;
 
   uint32_t predecessor;
 

@@ -55,7 +55,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
     if (inserted) {
       labels_.emplace_back(nodeid, edgeid,
                            source, target,
-                           cost, turn_cost,
+                           cost, turn_cost, sortcost,
                            predecessor,
                            edge, travelmode, edgelabel);
       node_status_[nodeid] = {idx, false};
@@ -63,11 +63,11 @@ LabelSet::put(const baldr::GraphId& nodeid,
     }
   } else {
     const auto& status = it->second;
-    if (!status.permanent && cost < labels_[status.label_idx].cost) {
+    if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
       // TODO check if it goes through constructor
       labels_[status.label_idx] = {nodeid, edgeid,
                                    source, target,
-                                   cost, turn_cost,
+                                   cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
       bool updated = queue_.add(status.label_idx, sortcost);
@@ -113,7 +113,7 @@ LabelSet::put(uint16_t dest,
     if (inserted) {
       labels_.emplace_back(dest, edgeid,
                            source, target,
-                           cost, turn_cost,
+                           cost, turn_cost, sortcost,
                            predecessor,
                            edge, travelmode, edgelabel);
       dest_status_[dest] = {idx, false};
@@ -121,11 +121,11 @@ LabelSet::put(uint16_t dest,
     }
   } else {
     const auto& status = it->second;
-    if (!status.permanent && cost < labels_[status.label_idx].cost) {
+    if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
       // TODO check if it goes through constructor
       labels_[status.label_idx] = {dest, edgeid,
                                    source, target,
-                                   cost, turn_cost,
+                                   cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
       bool updated = queue_.add(status.label_idx, sortcost);
