@@ -35,7 +35,7 @@ namespace {
     std::string locale = "blah";
     try_get_formatted_time("2014-01-02T23:59","11:59 PM",locale);
 
-    locale = "en-US";
+    locale = "en_US.utf8";
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
     try_get_formatted_time("2014-01-02T23:59","11:59 PM",locale);
@@ -44,7 +44,7 @@ namespace {
     try_get_formatted_time("2014-01-02T24:00","12:00 AM",locale);
     try_get_formatted_time("2014-01-02T12:00","12:00 PM",locale);
 
-    locale = "de-DE";
+    locale = "de_DE.utf8";
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
     try_get_formatted_time("2014-01-02T23:59","23:59",locale);
@@ -59,13 +59,13 @@ namespace {
     std::string locale = "blah";
     try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
 
-    locale = "en-US";
+    locale = "en_US.utf8";
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
     try_get_formatted_date("2015-07-05T15:00","07/05/2015",locale);
 
-    locale = "de-DE";
+    locale = "de_DE.utf8";
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","01.01.2014",locale);
