@@ -4,7 +4,6 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
 
@@ -13,6 +12,7 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 #include "odin/transitstop.h"
+#include "odin/util.h"
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
@@ -653,7 +653,7 @@ std::string Maneuver::GetTransitArrivalTime() const {
 }
 
 std::string Maneuver::GetFormattedTransitArrivalTime() const {
-  return DateTime::time(transit_info_.transit_stops.back().arrival_date_time);
+  return get_formatted_time(transit_info_.transit_stops.back().arrival_date_time);
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
@@ -661,7 +661,7 @@ std::string Maneuver::GetTransitDepartureTime() const {
 }
 
 std::string Maneuver::GetFormattedTransitDepartureTime() const {
-  return DateTime::time(transit_info_.transit_stops.front().departure_date_time);
+  return get_formatted_time(transit_info_.transit_stops.front().departure_date_time);
 }
 
 const std::list<TransitStop>& Maneuver::GetTransitStops() const {
