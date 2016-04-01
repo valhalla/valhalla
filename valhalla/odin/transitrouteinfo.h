@@ -13,7 +13,6 @@ namespace odin {
 // TODO maybe rename later
 struct TransitRouteInfo {
 
-  // TODO: do we need?
   std::string ToParameterString() const;
 
   std::string onestop_id;

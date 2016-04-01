@@ -22,6 +22,8 @@ constexpr auto kBearKey = "instructions.bear";
 constexpr auto kBearVerbalKey = "instructions.bear_verbal";
 constexpr auto kTurnKey = "instructions.turn";
 constexpr auto kTurnVerbalKey = "instructions.turn_verbal";
+constexpr auto kSharpKey = "instructions.sharp";
+constexpr auto kSharpVerbalKey = "instructions.sharp_verbal";
 constexpr auto kUturnKey = "instructions.uturn";
 constexpr auto kUturnVerbalAlertKey = "instructions.uturn_verbal_alert";
 constexpr auto kUturnVerbalKey = "instructions.uturn_verbal";
@@ -46,8 +48,28 @@ constexpr auto kEnterFerryKey = "instructions.enter_ferry";
 constexpr auto kEnterFerryVerbalKey = "instructions.enter_ferry_verbal";
 constexpr auto kExitFerryKey = "instructions.exit_ferry";
 constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
+constexpr auto kTransitConnectionStartKey = "instructions.transit_connection_start";
+constexpr auto kTransitConnectionStartVerbalKey = "instructions.transit_connection_start_verbal";
+constexpr auto kTransitConnectionTransferKey = "instructions.transit_connection_transfer";
+constexpr auto kTransitConnectionTransferVerbalKey = "instructions.transit_connection_transfer_verbal";
+constexpr auto kTransitConnectionDestinationKey = "instructions.transit_connection_destination";
+constexpr auto kTransitConnectionDestinationVerbalKey = "instructions.transit_connection_destination_verbal";
+constexpr auto kDepartKey = "instructions.depart";
+constexpr auto kDepartVerbalKey = "instructions.depart_verbal";
+constexpr auto kArriveKey = "instructions.arrive";
+constexpr auto kArriveVerbalKey = "instructions.arrive_verbal";
+constexpr auto kTransitKey = "instructions.transit";
+constexpr auto kTransitVerbalKey = "instructions.transit_verbal";
+constexpr auto kTransitRemainOnKey = "instructions.transit_remain_on";
+constexpr auto kTransitRemainOnVerbalKey = "instructions.transit_remain_on_verbal";
+constexpr auto kTransitTransferKey = "instructions.transit_transfer";
+constexpr auto kTransitTransferVerbalKey = "instructions.transit_transfer_verbal";
+constexpr auto kPostTransitConnectionDestinationKey = "instructions.post_transit_connection_destination";
+constexpr auto kPostTransitConnectionDestinationVerbalKey = "instructions.post_transit_connection_destination_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
+constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
+constexpr auto kPosixLocaleKey = "posix_locale";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -58,6 +80,7 @@ constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
 constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
 constexpr auto kFerryLabelKey = "ferry_label";
+constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
 
 // Empty street names label indexes
 constexpr auto kWalkwayIndex = 0;
@@ -101,6 +124,12 @@ constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
+constexpr auto kTransitStopTag = "<TRANSIT_STOP>";
+constexpr auto kTimeTag = "<TIME>";
+constexpr auto kTransitNameTag = "<TRANSIT_NAME>";
+constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
+constexpr auto kTransitStopCountTag = "<TRANSIT_STOP_COUNT>";
+constexpr auto kTransitStopCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 
 }
 
@@ -162,6 +191,10 @@ struct EnterRoundaboutSubset : PhraseSet {
   std::vector<std::string> ordinal_values;
 };
 
+struct TransitStopSubset : PhraseSet {
+  std::vector<std::string> transit_stop_count_labels;
+};
+
 
 /**
  * A class that stores the localized narrative instructions.
@@ -191,6 +224,10 @@ class NarrativeDictionary {
   // Turn
   TurnSubset turn_subset;
   TurnSubset turn_verbal_subset;
+
+  // Sharp
+  TurnSubset sharp_subset;
+  TurnSubset sharp_verbal_subset;
 
   // Uturn
   TurnSubset uturn_subset;
@@ -238,11 +275,51 @@ class NarrativeDictionary {
   StartSubset exit_ferry_subset;
   StartSubset exit_ferry_verbal_subset;
 
+  // TransitConnectionStart
+  PhraseSet transit_connection_start_subset;
+  PhraseSet transit_connection_start_verbal_subset;
+
+  // TransitConnectionTransfer
+  PhraseSet transit_connection_transfer_subset;
+  PhraseSet transit_connection_transfer_verbal_subset;
+
+  // TransitConnectionDestination
+  PhraseSet transit_connection_destination_subset;
+  PhraseSet transit_connection_destination_verbal_subset;
+
+  // Depart
+  PhraseSet depart_subset;
+  PhraseSet depart_verbal_subset;
+
+  // Arrive
+  PhraseSet arrive_subset;
+  PhraseSet arrive_verbal_subset;
+
+  // Transit
+  TransitStopSubset transit_subset;
+  PhraseSet transit_verbal_subset;
+
+  // TransitRemainOn
+  TransitStopSubset transit_remain_on_subset;
+  PhraseSet transit_remain_on_verbal_subset;
+
+  // TransitTransfer
+  TransitStopSubset transit_transfer_subset;
+  PhraseSet transit_transfer_verbal_subset;
+
+  // PostTransitConnectionDestination
+  StartSubset post_transit_connection_destination_subset;
+  StartSubset post_transit_connection_destination_verbal_subset;
+
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
+  TransitStopSubset post_transition_transit_verbal_subset;
 
   // Verbal miulti-cue
   PhraseSet verbal_multi_cue_subset;
+
+  // Posix locale
+  std::string posix_locale;
 
  protected:
 
@@ -374,6 +451,16 @@ class NarrativeDictionary {
     */
   void Load(PostTransitionVerbalSubset& post_transition_verbal_handle,
             const boost::property_tree::ptree& post_transition_verbal_subset_pt);
+
+  /**
+    * Loads the specified 'transit_stop' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  transit_stop_handle  The 'transit_stop' structure to populate.
+    * @param  transit_stop_subset_pt  The 'transit_stop' property tree.
+    */
+  void Load(TransitStopSubset& transit_stop_handle,
+            const boost::property_tree::ptree& transit_stop_subset_pt);
 
 };
 

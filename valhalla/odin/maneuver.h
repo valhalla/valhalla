@@ -236,22 +236,13 @@ class Maneuver {
 
   std::string GetTransitArrivalTime() const;
 
-  std::string GetFormattedTransitArrivalTime() const;
-
   std::string GetTransitDepartureTime() const;
-
-  std::string GetFormattedTransitDepartureTime() const;
 
   const std::list<TransitStop>& GetTransitStops() const;
 
   size_t GetTransitStopCount() const;
 
-  void InsertTransitStop(TripPath_TransitStopInfo_Type type,
-                         std::string onestop_id, std::string name,
-                         std::string arrival_date_time,
-                         std::string departure_date_time,
-                         bool is_parent_stop,
-                         bool assumed_schedule);
+  void InsertTransitStop(TransitStop&& transit_stop);
 
   const std::string& depart_instruction() const;
   void set_depart_instruction(const std::string& depart_instruction);

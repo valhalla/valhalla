@@ -1,5 +1,10 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 #include <valhalla/midgard/logging.h>
 
@@ -89,6 +94,87 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   }
 
   return directions_options;
+}
+
+//Get the time from the inputed date.
+//date_time is in the format of 2015-05-06T08:00
+std::string get_localized_time(const std::string& date_time, const std::string& locale) {
+  std::stringstream ss("");
+  try {
+    if (date_time.find("T") == std::string::npos)
+      return ss.str();
+
+    boost::local_time::local_time_input_facet* input_facet =
+        new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M");
+    boost::posix_time::time_facet* output_facet = new boost::posix_time::time_facet("%X");
+
+    ss.imbue(std::locale(ss.getloc(), input_facet));
+    boost::posix_time::ptime pt;
+    ss.str(date_time);
+    ss >> pt; // read in with the format of "%Y-%m-%dT%H:%M"
+    ss.str("");
+    try {
+      ss.imbue(std::locale(std::locale(locale.c_str()), output_facet));  // output in the locale requested
+      ss << pt;
+      std::string time = ss.str();
+
+      if (time.find("PM") == std::string::npos &&
+          time.find("AM") == std::string::npos) {//AM or PM
+        std::size_t found = time.find_last_of(":"); // remove seconds.
+        if (found != std::string::npos)
+          time = time.substr(0,found);
+        else {
+          found = time.find_last_of("00"); // remove seconds.
+          if (found != std::string::npos)
+            time = time.substr(0,found-1);
+        }
+      } else { // has AM or PM
+        boost::replace_all(time, ":00 ", " ");
+        if (time.substr(0,1) == "0")
+          time = time.substr(1,time.size());
+      }
+      ss.str(time);
+    } catch (std::exception& e) { //Locale is not installed!  Return default.
+      output_facet = new boost::posix_time::time_facet("%l:%M %p");
+      ss.imbue(std::locale(std::locale::classic(), output_facet));
+      ss << pt;
+      std::cout << ss.str() << std::endl;
+
+    }
+  } catch (std::exception& e){}
+  std::string result = ss.str();
+  boost::algorithm::trim(result);
+  return result;
+}
+
+//Get the date from the inputed date.
+//date_time is in the format of 2015-05-06T08:00
+std::string get_localized_date(const std::string& date_time, const std::string& locale) {
+  std::stringstream ss("");
+  try {
+    if (date_time.find("T") == std::string::npos)
+      return ss.str();
+
+    boost::local_time::local_time_input_facet* input_facet =
+        new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M");
+    boost::posix_time::time_facet* output_facet = new boost::posix_time::time_facet("%x");
+
+    ss.imbue(std::locale(ss.getloc(), input_facet));
+    boost::posix_time::ptime pt;
+    ss.str(date_time);
+    ss >> pt; // read in with the format of "%Y-%m-%dT%H:%M"
+    ss.str("");
+    try {
+      ss.imbue(std::locale(std::locale(locale.c_str()), output_facet));  // output in the locale requested
+    } catch (std::exception& e) { //Locale is not installed!  Return default.
+      output_facet = new boost::posix_time::time_facet("%m/%d/%Y");
+      ss.imbue(std::locale(std::locale::classic(), output_facet));
+    }
+    ss << pt;
+  } catch (std::exception& e){}
+  std::string result = ss.str();
+  boost::algorithm::trim(result);
+  return result;
 }
 
 const locales_singleton_t& get_locales() {

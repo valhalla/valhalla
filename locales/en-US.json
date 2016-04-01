@@ -1,4 +1,5 @@
 {
+  "posix_locale": "en_US.utf8",
   "instructions": {
     "start": {
       "phrases": {
@@ -167,12 +168,12 @@
         "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
-      "relative_directions": ["left", "sharp left", "right", "sharp right"],
+      "relative_directions": ["left", "right"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "example_phrases": {
         "0": ["Turn left."],
-        "1": ["Turn sharp right onto Flatbush Avenue."],
-        "2": ["Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."],
+        "1": ["Turn right onto Flatbush Avenue."],
+        "2": ["Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."],
         "3": ["Turn right to stay on Sunstone Drive."]
       }
     },
@@ -183,13 +184,45 @@
         "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
         "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
-      "relative_directions": ["left", "sharp left", "right", "sharp right"],
+      "relative_directions": ["left", "right"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
       "example_phrases": {
         "0": ["Turn left."],
+        "1": ["Turn right onto Flatbush Avenue."],
+        "2": ["Turn left onto North Bond Street, U.S. 1 Business."],
+        "3": ["Turn right to stay on Sunstone Drive."]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Turn sharp <RELATIVE_DIRECTION>.",
+        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Turn sharp left."],
+        "1": ["Turn sharp right onto Flatbush Avenue."],
+        "2": ["Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."],
+        "3": ["Turn sharp right to stay on Sunstone Drive."]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Turn sharp <RELATIVE_DIRECTION>.",
+        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+      },
+      "relative_directions": ["left", "right"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Turn sharp left."],
         "1": ["Turn sharp right onto Flatbush Avenue."],
         "2": ["Turn sharp left onto North Bond Street, U.S. 1 Business."],
-        "3": ["Turn right to stay on Sunstone Drive."]
+        "3": ["Turn sharp right to stay on Sunstone Drive."]
       }
     },
     "uturn": {
@@ -638,25 +671,197 @@
         "2": ["Head south on Summerfield Place, New York 1 14."]
       }
     },
-    "transit_connection_start": null,
-    "transit_connection_start_verbal": null,
-    "transit_connection_transfer": null,
-    "transit_connection_transfer_verbal": null,
-    "transit_connection_destination": null,
-    "transit_connection_destination_verbal": null,
-    "depart": null,
-    "depart_verbal": null,
-    "arrive": null,
-    "arrive_verbal": null,
-    "transit": null,
-    "transit_verbal": null,
-    "post_transition_transit_verbal": null,
-    "transit_remain_on": null,
-    "transit_remain_on_verbal": null,
-    "transit_transfer": null,
-    "transit_transfer_verbal": null,
-    "post_transit_connection_destination": null,
-    "post_transit_connection_destination_verbal": null,
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Enter the station.",
+        "1": "Enter the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Enter the station."],
+        "1": ["Enter the 8 St - NYU Station."]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Enter the station.",
+        "1": "Enter the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Enter the station."],
+        "1": ["Enter the 8 St - NYU Station."]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Transfer at the station.",
+        "1": "Transfer at the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Transfer at the station."],
+        "1": ["Transfer at the Embarcadero Station."]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Transfer at the station.",
+        "1": "Transfer at the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Transfer at the station."],
+        "1": ["Transfer at the Embarcadero Station."]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Exit the station.",
+        "1": "Exit the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Exit the station."],
+        "1": ["Exit the 8 St - NYU Station."]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Exit the station.",
+        "1": "Exit the <TRANSIT_STOP> Station."
+      },
+      "example_phrases": {
+        "0": ["Exit the station."],
+        "1": ["Exit the 8 St - NYU Station."]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Depart: <TIME>.",
+        "1": "Depart: <TIME> from <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": ["Depart: 8:02 AM."],
+        "1": ["Depart: 8:02 AM from 8 St - NYU."]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Depart at <TIME>.",
+        "1": "Depart at <TIME> from <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": ["Depart at 8:02 AM."],
+        "1": ["Depart at 8:02 AM from 8 St - NYU."]
+      }
+    },
+    "arrive": {
+      "phrases": {
+        "0": "Arrive: <TIME>.",
+        "1": "Arrive: <TIME> at <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": ["Arrive: 8:02 AM."],
+        "1": ["Arrive: 8:02 AM at 8 St - NYU."]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Arrive at <TIME>.",
+        "1": "Arrive at <TIME> at <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": ["Arrive at 8:02 AM."],
+        "1": ["Arrive at 8:02 AM at 8 St - NYU."]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Take the New Haven. (1 stop)"],
+        "1": ["Take the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Take the <TRANSIT_NAME>.",
+        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "example_phrases": {
+        "0": ["Take the New Haven."],
+        "1": ["Take the F toward JAMAICA - 179 ST."]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Remain on the New Haven. (1 stop)"],
+        "1": ["Remain on the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Remain on the <TRANSIT_NAME>.",
+        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "example_phrases": {
+        "0": ["Remain on the New Haven."],
+        "1": ["Remain on the F toward JAMAICA - 179 ST."]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Transfer to take the New Haven. (1 stop)"],
+        "1": ["Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Transfer to take the <TRANSIT_NAME>.",
+        "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+      },
+      "example_phrases": {
+        "0": ["Transfer to take the New Haven."],
+        "1": ["Transfer to take the F toward JAMAICA - 179 ST."]
+      }
+    },
+    "post_transit_connection_destination": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+      },
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head west."],
+        "1": ["Head northeast on Broadway"],
+        "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
+      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "example_phrases": {
+        "0": ["Head west."],
+        "1": ["Head northeast on Broadway"],
+        "2": ["Head south on Summerfield Place, New York 1 14."]
+      }
+    },
     "post_transition_verbal": {
       "phrases": {
         "0": "Continue for <LENGTH>.",
@@ -665,6 +870,15 @@
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": ["stop", "stops"],
+      "example_phrases": {
+        "0": ["Travel 1 stop.", "Travel 3 stops."]
+      }
     },
     "verbal_multi_cue": {
       "phrases": {
