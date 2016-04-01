@@ -4,7 +4,6 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
 

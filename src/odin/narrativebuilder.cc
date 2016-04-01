@@ -13,6 +13,7 @@
 #include "odin/narrative_dictionary.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
+#include "odin/util.h"
 
 namespace {
 // Text instruction initial capacity
@@ -2654,14 +2655,14 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
     case 1: {
       instruction =
           (boost::format("Depart: %1% from %2%.")
-              % util::GetLocalizedTime(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale) % transit_stop_name)
+              % get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale) % transit_stop_name)
               .str();
       break;
     }
     // 0 "Depart: <GetFormattedTransitDepartureTime>.
     default: {
       instruction = (boost::format("Depart: %1%.")
-          % util::GetLocalizedTime(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale)).str();
+          % get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale)).str();
       break;
     }
   }
@@ -2687,14 +2688,14 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
     case 1: {
       instruction =
           (boost::format("Depart at %1% from %2%.")
-              % util::GetLocalizedTime(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale) % transit_stop_name)
+              % get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale) % transit_stop_name)
               .str();
       break;
     }
     // 0 "Depart at <GetFormattedTransitDepartureTime>.
     default: {
       instruction = (boost::format("Depart at %1%.")
-          % util::GetLocalizedTime(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale)).str();
+          % get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.posix_locale)).str();
       break;
     }
   }
@@ -2720,14 +2721,14 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
     case 1: {
       instruction =
           (boost::format("Arrive: %1% at %2%.")
-              % util::GetLocalizedTime(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale) % transit_stop_name)
+              % get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale) % transit_stop_name)
               .str();
       break;
     }
     // 0 "Arrive: <GetFormattedTransitArrivalTime>.
     default: {
       instruction = (boost::format("Arrive: %1%.")
-          % util::GetLocalizedTime(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale)).str();
+          % get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale)).str();
       break;
     }
   }
@@ -2753,14 +2754,14 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
     case 1: {
       instruction =
           (boost::format("Arrive at %1% at %2%.")
-              % util::GetLocalizedTime(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale) % transit_stop_name)
+              % get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale) % transit_stop_name)
               .str();
       break;
     }
     // 0 "Arrive at <GetFormattedTransitArrivalTime>.
     default: {
       instruction = (boost::format("Arrive at %1%.")
-          % util::GetLocalizedTime(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale)).str();
+          % get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.posix_locale)).str();
       break;
     }
   }
