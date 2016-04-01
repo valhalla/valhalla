@@ -113,6 +113,12 @@ class BucketQueue
     return false;
   }
 
+  float cost(const key_t& key)
+  {
+    const auto it = costmap_.find(key);
+    return it == costmap_.end()? -1.f : it->second;
+  }
+
   key_t pop() {
     if (empty()) {
       return invalid_key;

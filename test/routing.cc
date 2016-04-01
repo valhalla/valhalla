@@ -40,6 +40,7 @@ void TryRemove(AdjacencyList &adjlist, size_t num_to_remove, const std::vector<f
 
 void TestAddRemove()
 {
+  // Test add and remove
   AdjacencyList adjlist(100000);
   std::vector<float> costs = { 67, 325, 25, 466, 1000, 10000, 758, 167,
                                258, 16442, 278 };
@@ -49,6 +50,7 @@ void TestAddRemove()
     throw std::runtime_error("TestAddRemove: expect list to be empty");
   }
 
+  // Test add randomly and remove
   costs.clear();
   for (size_t i = 0; i < 10000; i++) {
     auto cost = std::floor(rand01() * 100000);
@@ -63,20 +65,24 @@ void TestAddRemove()
 
   AdjacencyList adjlist3(10);
   adjlist3.add(1, 100);
-  if (!adjlist3.empty()) {
-    throw std::runtime_error("TestAddRemove: 100 should be added");
+  if (!(adjlist3.empty() && adjlist3.cost(1) < 0.f)) {
+    throw std::runtime_error("TestAddRemove: 100 should not be added");
   }
   adjlist3.add(1, 10);
-  if (!adjlist3.empty()) {
-    throw std::runtime_error("TestAddRemove: 10 shouldn't be added");
-  }
-  adjlist3.add(1, 9.99);
-  if (adjlist3.empty()) {
-    throw std::runtime_error("TestAddRemove: 9.99 should be added");
+  if (!(adjlist3.empty() && adjlist3.cost(1) < 0.f)) {
+    throw std::runtime_error("TestAddRemove: 10 should not be added");
   }
   adjlist3.add(1, 9);
-  if (adjlist3.empty()) {
+  if (!(!adjlist3.empty() && adjlist3.cost(1) == 9)) {
     throw std::runtime_error("TestAddRemove: 9 should be added");
+  }
+  adjlist3.decrease(1, 3);
+  if (!(!adjlist3.empty() && adjlist3.cost(1) == 3)) {
+    throw std::runtime_error("TestAddRemove: 3 should be decreased");
+  }
+  adjlist3.decrease(1, 5);
+  if (!(!adjlist3.empty() && adjlist3.cost(1) == 3)) {
+    throw std::runtime_error("TestAddRemove: 5 should not be decreased");
   }
 }
 
@@ -110,7 +116,7 @@ void TrySimulation(AdjacencyList& adjlist, size_t loop_count, size_t expansion_s
       if (i % 2 == 0 && !track.empty()) {
         // Decrease cost
         auto idx = *std::next(track.begin(), rand01() * track.size());
-        bool updated = adjlist.add(idx, newcost);
+        bool updated = adjlist.decrease(idx, newcost);
         if (updated) {
           if (newcost > costs[idx]) {
             throw std::runtime_error("Simulation: wrong");
