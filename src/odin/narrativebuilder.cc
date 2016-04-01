@@ -3054,10 +3054,10 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
           % street_names).str();
       break;
     }
-    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
     case 2: {
-      instruction = (boost::format("Head %1% on %2%. Continue on %3%.")
-          % cardinal_direction % begin_street_names % street_names).str();
+      instruction = (boost::format("Head %1% on %2%.")
+          % cardinal_direction % begin_street_names).str();
       break;
     }
     // 0 "Head <FormCardinalDirection>."
