@@ -44,20 +44,6 @@ void TryGetSecondsFromMidnight(std::string date_time, uint32_t expected_seconds)
   }
 }
 
-void TryGetTime(std::string date_time, std::string expected_date_time) {
-  if (DateTime::time(date_time) != expected_date_time) {
-    throw std::runtime_error(
-        std::string("Incorrect Time ") + DateTime::time(date_time));
-  }
-}
-
-void TryGetDate(std::string date_time, std::string expected_date_time) {
-  if (DateTime::date(date_time) != expected_date_time) {
-    throw std::runtime_error(
-        std::string("Incorrect Date ") + DateTime::time(date_time));
-  }
-}
-
 void TryIsoDateTime() {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
@@ -265,27 +251,6 @@ void TestDuration() {
 
 }
 
-void TestTime() {
-
-  TryGetTime("20140101","");
-  TryGetTime("Blah","");
-  TryGetTime("2014-01-01T07:01","7:01 AM");
-  TryGetTime("2014-01-02T15:00","3:00 PM");
-  TryGetTime("2014-01-02T23:59","11:59 PM");
-  TryGetTime("2014-01-02T24:00","12:00 AM");
-  TryGetTime("2014-01-02T12:00","12:00 PM");
-
-}
-
-void TestDate() {
-
-  TryGetDate("20140101","");
-  TryGetDate("Blah","");
-  TryGetDate("2014-01-01T07:01","20140101");
-  TryGetDate("2015-07-05T15:00","20150705");
-
-}
-
 void TestIsoDateTime() {
   TryIsoDateTime();
 }
@@ -432,8 +397,6 @@ int main(void) {
   suite.test(TEST_CASE(TestGetSecondsFromMidnight));
   suite.test(TEST_CASE(TestDOW));
   suite.test(TEST_CASE(TestDuration));
-  suite.test(TEST_CASE(TestTime));
-  suite.test(TEST_CASE(TestDate));
   suite.test(TEST_CASE(TestIsoDateTime));
   suite.test(TEST_CASE(TestServiceDays));
   suite.test(TEST_CASE(TestEpoch));

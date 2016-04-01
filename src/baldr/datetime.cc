@@ -231,63 +231,6 @@ uint32_t days_from_pivot_date(const boost::gregorian::date& date_time) {
   return static_cast<uint32_t>(range.length().days());
 }
 
-//Get the time from the inputed date.
-//date_time is in the format of 2015-05-06T08:00
-std::string time(const std::string& date_time) {
-  std::stringstream ss("");
-  try {
-    if (date_time.find("T") == std::string::npos)
-      return ss.str();
-
-    boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
-    boost::local_time::local_time_facet* output_facet = new boost::local_time::local_time_facet();
-
-    input_facet->format("%Y-%m-%dT%H:%M");
-    output_facet->format("%l:%M %p");
-
-    ss.imbue(std::locale(std::locale::classic(), output_facet));
-    ss.imbue(std::locale(ss.getloc(), input_facet));
-
-    boost::local_time::local_date_time ldt(boost::local_time::not_a_date_time);
-    ss.str(date_time);
-    ss >> ldt;
-    ss.str("");
-    ss << ldt;
-
-  } catch (std::exception& e){}
-  std::string result = ss.str();
-  boost::algorithm::trim(result);
-  return result;
-}
-
-//Get the date from the inputed date.
-//date_time is in the format of 2015-05-06T08:00
-std::string date(const std::string& date_time) {
-  std::stringstream ss("");
-  try {
-    if (date_time.find("T") == std::string::npos)
-      return ss.str();
-
-    boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
-    boost::local_time::local_time_facet* output_facet = new boost::local_time::local_time_facet();
-
-    input_facet->format("%Y-%m-%dT%H:%M");
-    output_facet->format("%Y%m%d");
-
-    ss.imbue(std::locale(std::locale::classic(), output_facet));
-    ss.imbue(std::locale(ss.getloc(), input_facet));
-
-    boost::local_time::local_date_time ldt(boost::local_time::not_a_date_time);
-    ss.str(date_time);
-    ss >> ldt;
-    ss.str("");
-    ss << ldt;
-  } catch (std::exception& e){}
-  std::string result = ss.str();
-  boost::algorithm::trim(result);
-  return result;
-}
-
 //Get the iso date and time from a DOW mask and time.
 std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                           const boost::local_time::time_zone_ptr& time_zone) {
