@@ -173,7 +173,7 @@ std::string get_localized_date(const std::string& date_time, const std::string& 
     try {
       ss.imbue(std::locale(std::locale(loc.c_str()), output_facet));  // output in the locale requested
     } catch (std::exception& e) { //Locale is not installed!  Return default.
-      output_facet = new boost::posix_time::time_facet("%Y%m%d");
+      output_facet = new boost::posix_time::time_facet("%m/%d/%Y");
       ss.imbue(std::locale(std::locale::classic(), output_facet));
     }
     ss << pt;
