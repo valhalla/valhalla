@@ -232,7 +232,7 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
 
   // Modify ferry penalty and edge weighting based on use_ferry factor
-  float use_ferry = pt.get<float>("use_ferry", 0.5f);
+  float use_ferry = pt.get<float>("use_ferry", 0.6f);
   if (use_ferry < 0.5f) {
     // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
     float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
