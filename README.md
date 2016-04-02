@@ -16,8 +16,8 @@ Build Status
 
 [![Circle CI](https://circleci.com/gh/valhalla/tools.svg?style=svg)](https://circleci.com/gh/valhalla/tools)
 
-Overview
---------
+Valhalla Overview
+-----------------
 
 The are several key features that we hope can differentiate the valhalla project from other route engines. They are:
 
@@ -43,8 +43,8 @@ The valhalla organization is comprised of several repositories each responsible 
 - [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs
 - [Chef](https://github.com/valhalla/chef-valhalla) - This cookbook for installing and running valhalla
 
-Building and Running
---------------------
+Building and Running Valhalla
+-----------------------------
 
 To build, install and run valhalla on Ubuntu (or other Debian based systems) try the following bash commands:
 
@@ -111,37 +111,11 @@ To build, install and run valhalla on Ubuntu (or other Debian based systems) try
 
     #HAVE FUN!
 
-Using
------
+Command Line Tools
+------------------
+- path_test
 
-The build will install libraries, headers, executables and python modules for use in running the service and cutting tiles, however you are free to use any of these for your own projects as well. To simplify the inclusion of the these libraries in another autotoolized project you may make use of the various [valhalla_* m4s](m4/) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. This cookbook, and all of the projects under the Valhalla organization use the [MIT License](LICENSE.).
 
-Contributing
-------------
-
-We welcome contributions to the cookbook. If you would like to report an issue, or even better fix an existing one, please use the [chef issue tracker](https://github.com/valhalla/chef-valhalla/issues) on GitHub.
-
-If you would like to make an improvement to the cookbook, please be aware that we adhere to strict style guidlines and enforce them using `rake`. If you would like to make an improvement to the C++ APIs, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the repository linked above and highly recommend that your pull request include a test to validate the addition/change of functionality.
-
-As noted above we forsee several good places to start in terms of contributing. We've outlined plugin architectures for the path finding algorithm's costing model, maneuver generation and narrative generation. As these things take shape please look to the [Thor](https//github.com/valhalla/thor) and [Odin](https//github.com/valhalla/odin) repositories' documentation. These should provide more information on how to write your own plugins for custom functionality.
-
-Tests
----------
-
-We highly encourage running and updating the tests to make sure no regressions have been made. We use the Automake test suite to run our tests by simply making the `check` target:
-
-    make check
-
-You can also build a test coverage report. This requires that the packages `lcov`, `gcov` and `genhtml` be installed. On Ubuntu you can get these with:
-
-    sudo apt-get install lcov
-
-To make the coverage report, configure the build for it:
-
-    ./configure --enable-coverage
-
-And generate an HTML coverage report in the `coverage/` directory:
-
-    make coverage-report
-
-Note also that, because calculating the coverage requires compiler support, you will need to clean any object files from a non-coverage build by running `make clean` before `make coverage-report`.
+Batch Script Tools
+------------------
+- [Batch Path Test](https://github.com/valhalla/tools/blob/master/path_test_scripts/README.md)
