@@ -183,5 +183,9 @@ const locales_singleton_t& get_locales() {
   return locales;
 }
 
+const std::unordered_map<std::string, std::string>& get_locales_json() {
+  return locales_json;
+}
+
 }
 }

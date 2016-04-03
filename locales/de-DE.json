@@ -619,7 +619,7 @@
       "phrases": {
         "0": "Die Fähre nehmen.",
         "1": "Die <STREET_NAMES> nehmen.",
-        "2": "Die <STREET_NAMES> <FERRY_LABEL> nehmen."
+        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen."
       },
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "ferry_label": "Fähre",
@@ -633,7 +633,7 @@
       "phrases": {
         "0": "Die Fähre nehmen.",
         "1": "Die <STREET_NAMES> nehmen.",
-        "2": "Die <STREET_NAMES> <FERRY_LABEL> nehmen."
+        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen."
       },
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "ferry_label": "Ferry",
