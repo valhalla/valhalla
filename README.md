@@ -114,11 +114,12 @@ To build, install and run valhalla on Ubuntu (or other Debian based systems) try
 Command Line Tools
 ------------------
 ####path_test
+A C++ application that will create a path with guidance instructions for the specified route request.
 ```
 #Usage
-TBD
+./path_test -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
 #Example
-TBD
+./path_test -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ./conf/valhalla.json
 ```
 
 ####tyr_simple_service
