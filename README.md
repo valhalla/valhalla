@@ -114,8 +114,12 @@ To build, install and run valhalla on Ubuntu (or other Debian based systems) try
 Command Line Tools
 ------------------
 - path_test
-
-    TBD
+```
+#Usage
+TBD
+#Example
+TBD
+```
 
 - tyr_simple_service
 
