@@ -302,7 +302,7 @@
         "0": "Geradeaus über die Rampe fahren.",
         "1": "Auf <BRANCH_SIGN> geradeaus über die Rampe fahren.",
         "2": "Geradeaus über die Rampe fahren Richtung <TOWARD_SIGN>.",
-        "4": "Geradeaus über die Rampe <NAME_SIGN> fahren."
+        "3": "Geradeaus über die Rampe <NAME_SIGN> fahren."
       },
       "example_phrases": {
         "0": ["Stay straight to take the ramp."],
