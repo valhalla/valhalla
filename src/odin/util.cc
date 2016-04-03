@@ -138,8 +138,6 @@ std::string get_localized_time(const std::string& date_time, const std::string& 
       output_facet = new boost::posix_time::time_facet("%l:%M %p");
       ss.imbue(std::locale(std::locale::classic(), output_facet));
       ss << pt;
-      std::cout << ss.str() << std::endl;
-
     }
   } catch (std::exception& e){}
   std::string result = ss.str();
