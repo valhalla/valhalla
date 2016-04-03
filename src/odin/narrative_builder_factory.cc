@@ -24,7 +24,9 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
     throw std::runtime_error("Invalid language tag.");
   }
 
-  if (directions_options.language() == "en-US") {
+  // TODO determine if we want to handle differently
+  if ((directions_options.language() == "en-US")
+      || (directions_options.language() == "de-DE")) {
     return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
                                                   phrase_dictionary->second);
   }
