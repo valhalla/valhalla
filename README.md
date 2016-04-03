@@ -115,7 +115,13 @@ Command Line Tools
 ------------------
 - path_test
 
+    TBD
+
+- tyr_simple_service
+
+    TBD
 
 Batch Script Tools
 ------------------
 - [Batch Path Test](https://github.com/valhalla/tools/blob/master/path_test_scripts/README.md)
+
