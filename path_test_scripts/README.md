@@ -7,6 +7,7 @@ Run the path_test application using the demo_routes.txt route request file:
 ./run.sh demo_routes.txt
 ```
 The results will be stored in the `<TIMESTAMP>_<ROUTE_REQUEST_FILE_BASENAME>` directory, e.g. `20160112_181443_demo_routes`
+
 [Create and save diffs](https://github.com/valhalla/tools/blob/master/path_test_scripts/results/README.md) in the `results` directory.
 
 ```
