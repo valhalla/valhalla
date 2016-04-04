@@ -341,10 +341,10 @@ namespace {
     json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs){
       auto locations = json::array({});
 
+      int index = 0;
       for(auto leg = legs.begin(); leg != legs.end(); ++leg) {
-        for(auto location = (leg == legs.begin() ? leg->location().begin() : leg->location().begin()++);
-            location != leg->location().end(); ++location) {
-
+        for(auto location = leg->location().begin() + index; location != leg->location().end(); ++location) {
+          index = 1;
           auto loc = json::map({});
           if (location->type() == valhalla::odin::TripDirections_Location_Type_kThrough) {
             loc->emplace("type", std::string("through"));
