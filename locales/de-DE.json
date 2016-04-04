@@ -3,23 +3,23 @@
   "instructions": {
     "start": {
       "phrases": {
-        "0": "Nach <CARDINAL_DIRECTION>.",
-        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
-        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
+        "0": "Richtung <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
       },
       "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
-        "0": ["Nach Osten.", "Nach Norden."],
-        "1": ["Auf Hauptstraße nach Südwesten."],
-        "2": ["Auf A 1 nach Süden. Dann weiter auf B 13."]
+        "0": ["Richtung Osten.", "Richtung Norden."],
+        "1": ["Auf Hauptstraße Richtung Südwesten."],
+        "2": ["Auf A 1 Richtung Süden. Dann weiter auf B 13."]
       }
     },
     "start_verbal": {
       "phrases": {
-        "0": "<LENGTH> nach <CARDINAL_DIRECTION>.",
-        "1": "<LENGTH> auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
-        "2": "<LENGTH> auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>."
+        "0": "<LENGTH> Richtung <CARDINAL_DIRECTION>.",
+        "1": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "2": "<LENGTH> auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>."
       },
       "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
@@ -33,8 +33,8 @@
     },
     "destination": {
       "phrases": {
-        "0": "Ziel erreichen.",
-        "1": "<DESTINATION> erreichen.",
+        "0": "Ziel erreicht.",
+        "1": "<DESTINATION> erreicht.",
         "2": "Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
         "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
       },
@@ -63,8 +63,8 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Ziel erreichen.",
-        "1": "<DESTINATION> erreichen.",
+        "0": "Ziel erreicht.",
+        "1": "<DESTINATION> erreicht.",
         "2": "Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
         "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
       },
@@ -645,9 +645,9 @@
     },
     "exit_ferry": {
       "phrases": {
-        "0": "Nach <CARDINAL_DIRECTION>.",
-        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
-        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
+        "0": "Richtung <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
       },
       "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
@@ -659,9 +659,9 @@
     },
     "exit_ferry_verbal": {
       "phrases": {
-        "0": "Nach <CARDINAL_DIRECTION>.",
-        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
-        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>."
+        "0": "Richtung <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>."
       },
       "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
       "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
@@ -842,9 +842,9 @@
     },
     "post_transit_connection_destination": {
       "phrases": {
-        "0": "Nach <CARDINAL_DIRECTION>.",
-        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
-        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
+        "0": "Richtung <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>."
       },
       "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
@@ -856,9 +856,9 @@
     },
     "post_transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Nach <CARDINAL_DIRECTION>.",
-        "1": "Auf <STREET_NAMES> nach <CARDINAL_DIRECTION>.",
-        "2": "Auf <BEGIN_STREET_NAMES> nach <CARDINAL_DIRECTION>."
+        "0": "Richtung <CARDINAL_DIRECTION>.",
+        "1": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "2": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>."
       },
       "cardinal_directions": ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
