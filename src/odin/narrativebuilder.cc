@@ -2293,11 +2293,6 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
 
 }
 
-bool NarrativeBuilder::HasFerryLabel(const std::string& name,
-                                     const std::string& ferry_label) {
-  return boost::algorithm::ends_with(name, ferry_label);
-}
-
 std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   // "0": "Take the Ferry.",
   // "1": "Take the <STREET_NAMES>.",
@@ -2317,7 +2312,7 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id = 1;
-    if (!HasFerryLabel(street_names, ferry_label)) {
+    if (!HasLabel(street_names, ferry_label)) {
       phrase_id = 2;
     }
   }
@@ -2362,7 +2357,7 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
     phrase_id = 1;
-    if (!HasFerryLabel(street_names, ferry_label)) {
+    if (!HasLabel(street_names, ferry_label)) {
       phrase_id = 2;
     }
   }
@@ -3218,6 +3213,14 @@ std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
     return "bus";
   }
   return "train";
+}
+
+// NOTE: Tried to use 'contains' instead of 'ends_with'
+//       however, the results were not good when name had the label in the middle.
+//       Should implement per language.
+bool NarrativeBuilder::HasLabel(const std::string& name,
+                                const std::string& label) {
+  return boost::algorithm::iends_with(name, label);
 }
 
 // TODO remove after refactor

@@ -1547,7 +1547,7 @@ void PopulateEnterFerryManeuverList_1(std::list<Maneuver>& maneuvers,
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryEnter, {
-                       "Millersburg Ferry" },
+                       "Millersburg FERRY" },
                    { }, { }, "", 1.446000, 822, 4,
                    Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 280, 280, 5,
@@ -4734,9 +4734,9 @@ void TestBuildEnterFerry_1_miles_en_US() {
   PopulateEnterFerryManeuverList_1(expected_maneuvers, country_code,
                                    state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Take the Millersburg Ferry.",
-                                  "Take the Millersburg Ferry.",
-                                  "Take the Millersburg Ferry.",
+                                  "Take the Millersburg FERRY.",
+                                  "Take the Millersburg FERRY.",
+                                  "Take the Millersburg FERRY.",
                                   "Continue for 9 tenths of a mile.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
