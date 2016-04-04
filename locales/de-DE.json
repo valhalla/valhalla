@@ -33,8 +33,8 @@
     },
     "destination": {
       "phrases": {
-        "0": "Ziel erreichen.",
-        "1": "<DESTINATION> erreichen.",
+        "0": "Ziel erreicht.",
+        "1": "<DESTINATION> erreicht.",
         "2": "Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
         "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
       },
@@ -63,8 +63,8 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Ziel erreichen.",
-        "1": "<DESTINATION> erreichen.",
+        "0": "Ziel erreicht.",
+        "1": "<DESTINATION> erreicht.",
         "2": "Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
         "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
       },
