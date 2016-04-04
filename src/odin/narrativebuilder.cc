@@ -2474,7 +2474,7 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
 std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   // "0": "Enter the station.",
-  // "1": "Enter the <TRANSIT_STOP>."
+  // "1": "Enter the <TRANSIT_STOP>.",
   // "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
@@ -2509,7 +2509,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
 std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   // "0": "Enter the station.",
-  // "1": "Enter the <TRANSIT_STOP>."
+  // "1": "Enter the <TRANSIT_STOP>.",
   // "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
@@ -2544,16 +2544,25 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
 std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
     Maneuver& maneuver) {
   // "0": "Transfer at the station.",
-  // "1": "Transfer at the <TRANSIT_STOP> Station."
+  // "1": "Transfer at the <TRANSIT_STOP>.",
+  // "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
+
+  // Assign transit stop
   std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Assign station label
+  std::string station_label = dictionary_.transit_connection_transfer_subset.station_label;
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!transit_stop.empty()) {
     phrase_id = 1;
+    if (!HasLabel(transit_stop, station_label)) {
+      phrase_id = 2;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2561,6 +2570,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kStationLabelTag, station_label);
 
   return instruction;
 
@@ -2569,16 +2579,25 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
 std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
     Maneuver& maneuver) {
   // "0": "Transfer at the station.",
-  // "1": "Transfer at the <TRANSIT_STOP> Station."
+  // "1": "Transfer at the <TRANSIT_STOP>.",
+  // "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
+
+  // Assign transit stop
   std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Assign station label
+  std::string station_label = dictionary_.transit_connection_transfer_verbal_subset.station_label;
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!transit_stop.empty()) {
     phrase_id = 1;
+    if (!HasLabel(transit_stop, station_label)) {
+      phrase_id = 2;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2586,6 +2605,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kStationLabelTag, station_label);
 
   return instruction;
 
@@ -2594,17 +2614,25 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
 std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
     Maneuver& maneuver) {
   // "0": "Exit the station.",
-  // "1": "Exit the <TRANSIT_STOP> Station."
+  // "1": "Exit the <TRANSIT_STOP>.",
+  // "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
+  // Assign transit stop
   std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Assign station label
+  std::string station_label = dictionary_.transit_connection_destination_subset.station_label;
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!transit_stop.empty()) {
     phrase_id = 1;
+    if (!HasLabel(transit_stop, station_label)) {
+      phrase_id = 2;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2612,6 +2640,7 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kStationLabelTag, station_label);
 
   return instruction;
 
@@ -2620,17 +2649,25 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
 std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
     Maneuver& maneuver) {
   // "0": "Exit the station.",
-  // "1": "Exit the <TRANSIT_STOP> Station."
+  // "1": "Exit the <TRANSIT_STOP>.",
+  // "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
+  // Assign transit stop
   std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Assign station label
+  std::string station_label = dictionary_.transit_connection_destination_verbal_subset.station_label;
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!transit_stop.empty()) {
     phrase_id = 1;
+    if (!HasLabel(transit_stop, station_label)) {
+      phrase_id = 2;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2638,6 +2675,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kStationLabelTag, station_label);
 
   return instruction;
 

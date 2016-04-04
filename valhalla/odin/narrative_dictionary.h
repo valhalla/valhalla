@@ -286,12 +286,12 @@ class NarrativeDictionary {
   TransitConnectionSubset transit_connection_start_verbal_subset;
 
   // TransitConnectionTransfer
-  PhraseSet transit_connection_transfer_subset;
-  PhraseSet transit_connection_transfer_verbal_subset;
+  TransitConnectionSubset transit_connection_transfer_subset;
+  TransitConnectionSubset transit_connection_transfer_verbal_subset;
 
   // TransitConnectionDestination
-  PhraseSet transit_connection_destination_subset;
-  PhraseSet transit_connection_destination_verbal_subset;
+  TransitConnectionSubset transit_connection_destination_subset;
+  TransitConnectionSubset transit_connection_destination_verbal_subset;
 
   // Depart
   PhraseSet depart_subset;

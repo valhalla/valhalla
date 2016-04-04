@@ -674,7 +674,7 @@
     "transit_connection_start": {
       "phrases": {
         "0": "Bahnhof eintreten.",
-        "1": "Bahnhof <TRANSIT_STOP> eintreten.",
+        "1": "<TRANSIT_STOP> eintreten.",
         "2": "<STATION_LABEL> <TRANSIT_STOP> eintreten."
       },
       "station_label": "Bahnhof",
@@ -687,7 +687,7 @@
     "transit_connection_start_verbal": {
       "phrases": {
         "0": "Bahnhof eintreten.",
-        "1": "Bahnhof <TRANSIT_STOP> eintreten.",
+        "1": "<TRANSIT_STOP> eintreten.",
         "2": "<STATION_LABEL> <TRANSIT_STOP> eintreten."
       },
       "station_label": "Bahnhof",
@@ -700,41 +700,53 @@
     "transit_connection_transfer": {
       "phrases": {
         "0": "Am Bahnhof umsteigen.",
-        "1": "Am Bahnhof <TRANSIT_STOP> umsteigen."
+        "1": "Am <TRANSIT_STOP> umsteigen.",
+        "2": "Am <STATION_LABEL> <TRANSIT_STOP> umsteigen."
       },
+      "station_label": "Bahnhof",
       "example_phrases": {
         "0": ["Transfer at the station."],
-        "1": ["Transfer at the Embarcadero Station."]
+        "1": ["Transfer at the Embarcadero Station."],
+        "2": ["Transfer at the 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
         "0": "Am Bahnhof umsteigen.",
-        "1": "Am Bahnhof <TRANSIT_STOP> umsteigen."
+        "1": "Am <TRANSIT_STOP> umsteigen.",
+        "2": "Am <STATION_LABEL> <TRANSIT_STOP> umsteigen."
       },
+      "station_label": "Bahnhof",
       "example_phrases": {
         "0": ["Transfer at the station."],
-        "1": ["Transfer at the Embarcadero Station."]
+        "1": ["Transfer at the Embarcadero Station."],
+        "2": ["Transfer at the 8 St - NYU Station."]
       }
     },
     "transit_connection_destination": {
       "phrases": {
         "0": "Bahnhof verlassen.",
-        "1": "Bahnhof <TRANSIT_STOP> verlassen."
+        "1": "<TRANSIT_STOP> verlassen.",
+        "2": "<STATION_LABEL> <TRANSIT_STOP> verlassen."
       },
+      "station_label": "Bahnhof",
       "example_phrases": {
         "0": ["Exit the station."],
-        "1": ["Exit the 8 St - NYU Station."]
+        "1": ["Exit the Embarcadero Station."],
+        "2": ["Exit the 8 St - NYU Station."]
       }
     },
     "transit_connection_destination_verbal": {
       "phrases": {
         "0": "Bahnhof verlassen.",
-        "1": "Bahnhof <TRANSIT_STOP> verlassen."
+        "1": "<TRANSIT_STOP> verlassen.",
+        "2": "<STATION_LABEL> <TRANSIT_STOP> verlassen."
       },
+      "station_label": "Bahnhof",
       "example_phrases": {
         "0": ["Exit the station."],
-        "1": ["Exit the 8 St - NYU Station."]
+        "1": ["Exit the Embarcadero Station."],
+        "2": ["Exit the 8 St - NYU Station."]
       }
     },
     "depart": {
