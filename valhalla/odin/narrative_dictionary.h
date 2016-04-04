@@ -80,6 +80,7 @@ constexpr auto kEmptyStreetNameLabelsKey = "empty_street_name_labels";
 constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
 constexpr auto kFerryLabelKey = "ferry_label";
+constexpr auto kStationLabelKey = "station_label";
 constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
 
 // Empty street names label indexes
@@ -125,6 +126,7 @@ constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 constexpr auto kTransitStopTag = "<TRANSIT_STOP>";
+constexpr auto kStationLabelTag = "<STATION_LABEL>";
 constexpr auto kTimeTag = "<TIME>";
 constexpr auto kTransitNameTag = "<TRANSIT_NAME>";
 constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
@@ -189,6 +191,10 @@ struct PostTransitionVerbalSubset : PhraseSet {
 
 struct EnterRoundaboutSubset : PhraseSet {
   std::vector<std::string> ordinal_values;
+};
+
+struct TransitConnectionSubset : PhraseSet {
+  std::string station_label;
 };
 
 struct TransitStopSubset : PhraseSet {
@@ -276,8 +282,8 @@ class NarrativeDictionary {
   StartSubset exit_ferry_verbal_subset;
 
   // TransitConnectionStart
-  PhraseSet transit_connection_start_subset;
-  PhraseSet transit_connection_start_verbal_subset;
+  TransitConnectionSubset transit_connection_start_subset;
+  TransitConnectionSubset transit_connection_start_verbal_subset;
 
   // TransitConnectionTransfer
   PhraseSet transit_connection_transfer_subset;
@@ -451,6 +457,16 @@ class NarrativeDictionary {
     */
   void Load(PostTransitionVerbalSubset& post_transition_verbal_handle,
             const boost::property_tree::ptree& post_transition_verbal_subset_pt);
+
+  /**
+    * Loads the specified 'transit_connection' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  transit_connection_handle  The 'transit_connection' structure to populate.
+    * @param  transit_connection_subset_pt  The 'transit_connection' property tree.
+    */
+  void Load(TransitConnectionSubset& transit_connection_handle,
+            const boost::property_tree::ptree& transit_connection_subset_pt);
 
   /**
     * Loads the specified 'transit_stop' instruction subset with the localized

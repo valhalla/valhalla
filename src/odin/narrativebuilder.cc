@@ -2474,17 +2474,25 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
 std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   // "0": "Enter the station.",
-  // "1": "Enter the <TRANSIT_STOP> Station."
+  // "1": "Enter the <TRANSIT_STOP>."
+  // "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
+  // Assign transit stop
   std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Assign station label
+  std::string station_label = dictionary_.transit_connection_start_subset.station_label;
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!transit_stop.empty()) {
     phrase_id = 1;
+    if (!HasLabel(transit_stop, station_label)) {
+      phrase_id = 2;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2492,6 +2500,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kStationLabelTag, station_label);
 
   return instruction;
 
@@ -2500,17 +2509,25 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
 std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   // "0": "Enter the station.",
-  // "1": "Enter the <TRANSIT_STOP> Station."
+  // "1": "Enter the <TRANSIT_STOP>."
+  // "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
+  // Assign transit stop
   std::string transit_stop = maneuver.transit_connection_stop().name;
+
+  // Assign station label
+  std::string station_label = dictionary_.transit_connection_start_verbal_subset.station_label;
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!transit_stop.empty()) {
     phrase_id = 1;
+    if (!HasLabel(transit_stop, station_label)) {
+      phrase_id = 2;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2518,6 +2535,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kStationLabelTag, station_label);
 
   return instruction;
 

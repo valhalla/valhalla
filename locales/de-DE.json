@@ -674,21 +674,27 @@
     "transit_connection_start": {
       "phrases": {
         "0": "Bahnhof eintreten.",
-        "1": "Bahnhof <TRANSIT_STOP> eintreten."
+        "1": "Bahnhof <TRANSIT_STOP> eintreten.",
+        "2": "<STATION_LABEL> <TRANSIT_STOP> eintreten."
       },
+      "station_label": "Bahnhof",
       "example_phrases": {
         "0": ["Enter the station."],
-        "1": ["Enter the 8 St - NYU Station."]
+        "1": ["Enter the Embarcadero Station."],
+        "2": ["Enter the 8 St - NYU Station."]
       }
     },
     "transit_connection_start_verbal": {
       "phrases": {
         "0": "Bahnhof eintreten.",
-        "1": "Bahnhof <TRANSIT_STOP> eintreten."
+        "1": "Bahnhof <TRANSIT_STOP> eintreten.",
+        "2": "<STATION_LABEL> <TRANSIT_STOP> eintreten."
       },
+      "station_label": "Bahnhof",
       "example_phrases": {
         "0": ["Enter the station."],
-        "1": ["Enter the 8 St - NYU Station."]
+        "1": ["Enter the Embarcadero Station."],
+        "2": ["Enter the 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer": {
