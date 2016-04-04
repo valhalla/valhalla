@@ -1,4 +1,4 @@
-# Diffs  
+# Create and save diffs  
 Diff two route results directories and save diff results in a new directory. The diff directory shall be named as follows: `<PREVIOUS_ROUTE_RESULTS_DIRECTORY>_<CURRENT_ROUTE_RESULTS_DIRECTORY>_diff`
 ```
 #Usage:
@@ -33,7 +33,7 @@ Output all of the narrative differences:
 ../catnd
 ```
 
-# Stats  
+# Create and save stats  
 To sum all of the route results stats and store in the `<ROUTE_RESULTS_DIRECTORY>/total_statistics.csv` file:  
 ```
 #Usage:
