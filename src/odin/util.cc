@@ -138,8 +138,6 @@ std::string get_localized_time(const std::string& date_time, const std::string& 
       output_facet = new boost::posix_time::time_facet("%l:%M %p");
       ss.imbue(std::locale(std::locale::classic(), output_facet));
       ss << pt;
-      std::cout << ss.str() << std::endl;
-
     }
   } catch (std::exception& e){}
   std::string result = ss.str();
@@ -181,6 +179,10 @@ const locales_singleton_t& get_locales() {
   //thread safe static initializer for singleton
   static locales_singleton_t locales(load_narrative_locals());
   return locales;
+}
+
+const std::unordered_map<std::string, std::string>& get_locales_json() {
+  return locales_json;
 }
 
 }

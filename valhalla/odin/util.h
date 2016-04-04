@@ -47,12 +47,19 @@ std::string get_localized_date(const std::string& date_time,
                                const std::string& locale);
 
 /**
- * Returns a list of locales mapped to NarrativeDictionary's containing parsed narrative information
+ * Returns locale strings mapped to NarrativeDictionaries containing parsed narrative information
  *
- * @return the map of locale to ptree of parse narrative json/yml
+ * @return the map of locales to NarrativeDictionaries
  */
 using locales_singleton_t = std::unordered_map<std::string, NarrativeDictionary>;
 const locales_singleton_t& get_locales();
+
+/**
+ * Returns locale strings mapped to json strings defining the dictionaries
+ *
+ * @return the map of locales to json strings
+ */
+const std::unordered_map<std::string, std::string>& get_locales_json();
 
 }
 }
