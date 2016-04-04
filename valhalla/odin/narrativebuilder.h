@@ -260,9 +260,6 @@ class NarrativeBuilder {
                                                       kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  // TODO make virtual
-  bool HasFerryLabel(const std::string& name, const std::string& ferry_label);
-
   std::string FormEnterFerryInstruction(Maneuver& maneuver);
 
   std::string FormVerbalAlertEnterFerryInstruction(
@@ -394,6 +391,10 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormTransitName(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // TODO make virtual
+  bool HasLabel(const std::string& name, const std::string& label);
 
   /////////////////////////////////////////////////////////////////////////////
   // TODO: remove the method after g11n updates

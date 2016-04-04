@@ -21,6 +21,7 @@ const std::vector<std::string> kExpectedRelativeTwoDirections = { "left", "right
 const std::vector<std::string> kExpectedRelativeThreeDirections = { "left", "straight", "right" };
 const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th" };
 const std::string kExpectedFerryLabel = "Ferry";
+const std::string kExpectedStationLabel = "Station";
 const std::vector<std::string> kExpectedTransitStopCountLabels = { "stop", "stops" };
 
 // Expected phrases
@@ -148,32 +149,38 @@ const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases = {
 
 const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases = {
     {"0", "Enter the station."},
-    {"1", "Enter the <TRANSIT_STOP> Station."}
+    {"1", "Enter the <TRANSIT_STOP>."},
+    {"2", "Enter the <TRANSIT_STOP> <STATION_LABEL>."}
 };
 
 const std::map<std::string, std::string> kExpectedTransitConnectionStartVerbalPhrases = {
     {"0", "Enter the station."},
-    {"1", "Enter the <TRANSIT_STOP> Station."}
+    {"1", "Enter the <TRANSIT_STOP>."},
+    {"2", "Enter the <TRANSIT_STOP> <STATION_LABEL>."}
 };
 
 const std::map<std::string, std::string> kExpectedTransitConnectionTransferPhrases = {
     {"0", "Transfer at the station."},
-    {"1", "Transfer at the <TRANSIT_STOP> Station."}
+    {"1", "Transfer at the <TRANSIT_STOP>."},
+    {"2", "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."}
 };
 
 const std::map<std::string, std::string> kExpectedTransitConnectionTransferVerbalPhrases = {
     {"0", "Transfer at the station."},
-    {"1", "Transfer at the <TRANSIT_STOP> Station."}
+    {"1", "Transfer at the <TRANSIT_STOP>."},
+    {"2", "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."}
 };
 
 const std::map<std::string, std::string> kExpectedTransitConnectionDestinationPhrases = {
     {"0", "Exit the station."},
-    {"1", "Exit the <TRANSIT_STOP> Station."}
+    {"1", "Exit the <TRANSIT_STOP>."},
+    {"2", "Exit the <TRANSIT_STOP> <STATION_LABEL>."}
 };
 
 const std::map<std::string, std::string> kExpectedTransitConnectionDestinationVerbalPhrases = {
     {"0", "Exit the station."},
-    {"1", "Exit the <TRANSIT_STOP> Station."}
+    {"1", "Exit the <TRANSIT_STOP>."},
+    {"2", "Exit the <TRANSIT_STOP> <STATION_LABEL>."}
 };
 
 const std::map<std::string, std::string> kExpectedDepartPhrases = {
@@ -1142,6 +1149,10 @@ void test_en_US_transit_connection_start() {
   validate(dictionary.transit_connection_start_subset,
            kExpectedTransitConnectionStartPhrases);
 
+  // Station label
+  validate(dictionary.transit_connection_start_subset.station_label,
+           kExpectedStationLabel);
+
 }
 
 void test_en_US_transit_connection_start_verbal() {
@@ -1150,6 +1161,10 @@ void test_en_US_transit_connection_start_verbal() {
   // Validate transit_connection_start_verbal phrases
   validate(dictionary.transit_connection_start_verbal_subset,
            kExpectedTransitConnectionStartVerbalPhrases);
+
+  // Station label
+  validate(dictionary.transit_connection_start_verbal_subset.station_label,
+           kExpectedStationLabel);
 
 }
 
@@ -1160,6 +1175,10 @@ void test_en_US_transit_connection_transfer() {
   validate(dictionary.transit_connection_transfer_subset,
            kExpectedTransitConnectionTransferPhrases);
 
+  // Station label
+  validate(dictionary.transit_connection_transfer_subset.station_label,
+           kExpectedStationLabel);
+
 }
 
 void test_en_US_transit_connection_transfer_verbal() {
@@ -1168,6 +1187,10 @@ void test_en_US_transit_connection_transfer_verbal() {
   // Validate transit_connection_start_verbal phrases
   validate(dictionary.transit_connection_transfer_verbal_subset,
            kExpectedTransitConnectionTransferVerbalPhrases);
+
+  // Station label
+  validate(dictionary.transit_connection_transfer_verbal_subset.station_label,
+           kExpectedStationLabel);
 
 }
 
@@ -1178,6 +1201,10 @@ void test_en_US_transit_connection_destination() {
   validate(dictionary.transit_connection_destination_subset,
            kExpectedTransitConnectionDestinationPhrases);
 
+  // Station label
+  validate(dictionary.transit_connection_destination_subset.station_label,
+           kExpectedStationLabel);
+
 }
 
 void test_en_US_transit_connection_destination_verbal() {
@@ -1186,6 +1213,10 @@ void test_en_US_transit_connection_destination_verbal() {
   // Validate transit_destination_start_verbal phrases
   validate(dictionary.transit_connection_destination_verbal_subset,
            kExpectedTransitConnectionDestinationVerbalPhrases);
+
+  // Station label
+  validate(dictionary.transit_connection_destination_verbal_subset.station_label,
+           kExpectedStationLabel);
 
 }
 

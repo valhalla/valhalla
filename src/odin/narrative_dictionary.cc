@@ -476,6 +476,19 @@ void NarrativeDictionary::Load(
 }
 
 void NarrativeDictionary::Load(
+    TransitConnectionSubset& transit_connection_handle,
+    const boost::property_tree::ptree& transit_connection_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(transit_connection_handle), transit_connection_subset_pt);
+
+  // Populate station_label
+  transit_connection_handle.station_label = transit_connection_subset_pt.get<std::string>(
+      kStationLabelKey);
+
+}
+
+void NarrativeDictionary::Load(
     TransitStopSubset& transit_stop_handle,
     const boost::property_tree::ptree& transit_stop_subset_pt) {
 
