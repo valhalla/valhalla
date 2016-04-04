@@ -116,18 +116,18 @@ Command Line Tools
 ####path_test
 A C++ application that will create a route path with guidance instructions for the specified route request.
 ```
-#Usage
+#Usage:
 ./path_test -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
-#Example
+#Example:
 ./path_test -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config conf/valhalla.json
 ```
 
 ####tyr_simple_service
 A C++ service that can be used to test Valhalla locally.
 ```
-#Usage
+#Usage:
 ./tyr_simple_service <CONFIG_FILE>
-#Example
+#Example:
 ./tyr_simple_service conf/valhalla.json
 #Localhost URL
 http://localhost:8002/route?json={"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}
