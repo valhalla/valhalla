@@ -19,6 +19,6 @@ The `<PREVIOUS_ROUTE_RESULTS_DIRECTORY>` and the current route results will be c
   
 Run the path_test application using all of the country specific route request files in the `requests/city_to_city` directory:  
 ```
-#Example
+#Example:
 ./run_city_routes.sh
 ```
