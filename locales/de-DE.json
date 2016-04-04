@@ -283,11 +283,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Geradeaus über die Rampe fahren.",
-        "1": "Auf <BRANCH_SIGN> geradeaus über die Rampe fahren.",
-        "2": "Geradeaus über die Rampe fahren Richtung <TOWARD_SIGN>.",
-        "3": "Auf <BRANCH_SIGN> geradeaus über die Rampe fahren Richtung <TOWARD_SIGN>.",
-        "4": "Geradeaus über die Rampe <NAME_SIGN> fahren."
+        "0": "Geradeaus über die Auffahrt fahren.",
+        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.",
+        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.",
+        "3": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.",
+        "4": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
       },
       "example_phrases": {
         "0": ["Stay straight to take the ramp."],
@@ -299,10 +299,10 @@
     },
     "ramp_straight_verbal_alert": {
       "phrases": {
-        "0": "Geradeaus über die Rampe fahren.",
-        "1": "Auf <BRANCH_SIGN> geradeaus über die Rampe fahren.",
-        "2": "Geradeaus über die Rampe fahren Richtung <TOWARD_SIGN>.",
-        "3": "Geradeaus über die Rampe <NAME_SIGN> fahren."
+        "0": "Geradeaus über die Auffahrt fahren.",
+        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.",
+        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.",
+        "3": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
       },
       "example_phrases": {
         "0": ["Stay straight to take the ramp."],
@@ -313,11 +313,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Geradeaus über die Rampe fahren.",
-        "1": "Auf <BRANCH_SIGN> geradeaus über die Rampe fahren.",
-        "2": "Geradeaus über die Rampe fahren Richtung <TOWARD_SIGN>.",
-        "3": "Auf <BRANCH_SIGN> geradeaus über die Rampe fahren Richtung <TOWARD_SIGN>.",
-        "4": "Geradeaus über die Rampe <NAME_SIGN> fahren."
+        "0": "Geradeaus über die Auffahrt fahren.",
+        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.",
+        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.",
+        "3": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.",
+        "4": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
       },
       "example_phrases": {
         "0": ["Stay straight to take the ramp."],
@@ -329,16 +329,16 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Auf die Rampe leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Über die Rampe leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "2": "Auf die Rampe leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "3": "Über die Rampe leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "4": "Auf die Rampe <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Auf die Rampe nach <RELATIVE_DIRECTION> abbiegen.",
-        "6": "Über die Rampe nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "7": "Auf die Rampe nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "8": "Über die Rampe nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "9": "Auf die Rampe <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
+        "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.",
+        "1": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
+        "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
+        "3": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
+        "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.",
+        "6": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
+        "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
+        "8": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
+        "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       },
       "relative_directions": ["links", "rechts"],
       "example_phrases": {
@@ -356,16 +356,16 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Auf die Rampe leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Über die Rampe leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "2": "Auf die Rampe leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "3": "Über die Rampe leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "4": "Auf die Rampe <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Auf die Rampe nach <RELATIVE_DIRECTION> abbiegen.",
-        "6": "Über die Rampe nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "7": "Auf die Rampe nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "8": "Über die Rampe nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "9": "Auf die Rampe <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
+        "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.",
+        "1": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
+        "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
+        "3": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
+        "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.",
+        "6": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
+        "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
+        "8": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
+        "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       },
       "relative_directions": ["links", "rechts"],
       "example_phrases": {
