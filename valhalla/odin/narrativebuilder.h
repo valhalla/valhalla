@@ -396,16 +396,6 @@ class NarrativeBuilder {
   // TODO make virtual
   bool HasLabel(const std::string& name, const std::string& label);
 
-  /////////////////////////////////////////////////////////////////////////////
-  // TODO: remove the method after g11n updates
-  std::string FormOldStreetNames(const Maneuver& maneuver,
-                                 const StreetNames& street_names,
-                                 bool enhance_empty_street_names = false,
-                                 uint32_t max_count = 0,
-                                 const std::string& delim = "/",
-                                 const VerbalTextFormatter* verbal_formatter =
-                                     nullptr);
-
   /**
    * Returns the street names string for the specified street name list.
    * The format is controlled via the optional parameters.

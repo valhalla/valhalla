@@ -768,80 +768,60 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(
 }
 
 std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
-                                              Maneuver* prev_maneuver) {
-  // "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
-
-  // Assign the street names and the previous maneuver street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true);
-  std::string prev_street_names;
-  if (prev_maneuver) {
-    prev_street_names = FormOldStreetNames(maneuver,
-                                        prev_maneuver->street_names());
-  }
+                                                     Maneuver* prev_maneuver) {
+  // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // If previous maneuver has names
-  // and current maneuver has names
-  // then form "becomes" narrative
-  if (!prev_street_names.empty() && !street_names.empty()) {
-    instruction += prev_street_names;
-    instruction += " becomes ";
-    instruction += street_names;
-  }
-  // Items are missing - fallback to just "Continue" narrative
-  else {
-    instruction += "Continue";
+  // Assign the street names and the previous maneuver street names
+  std::string street_names = FormStreetNames(maneuver, maneuver.street_names());
+  std::string prev_street_names = FormStreetNames(
+      *prev_maneuver, prev_maneuver->street_names());
 
-    if (!street_names.empty()) {
-      instruction += " on ";
-      instruction += street_names;
-    }
-  }
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.becomes_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kPreviousStreetNamesTag, prev_street_names);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalBecomesInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     const std::string& delim) {
-  // "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
-
-  // Assign the street names and the previous maneuver street names
-  std::string street_names = FormOldStreetNames(maneuver,
-                                                maneuver.street_names(), true,
-                                                element_max_count, delim,
-                                                maneuver.verbal_formatter());
-  std::string prev_street_names = FormOldStreetNames(
-      *prev_maneuver, prev_maneuver->street_names(), false, element_max_count,
-      delim, prev_maneuver->verbal_formatter());
+  // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // If previous maneuver has names
-  // and current maneuver has names
-  // then form "becomes" narrative
-  if (!prev_street_names.empty() && !street_names.empty()) {
-    instruction += prev_street_names;
-    instruction += " becomes ";
-    instruction += street_names;
-  }
-  // Items are missing - fallback to just "Continue" narrative
-  else {
-    instruction += "Continue";
+  // Assign the street names and the previous maneuver street names
+  std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                             nullptr, false, element_max_count,
+                                             delim,
+                                             prev_maneuver->verbal_formatter());
+  std::string prev_street_names = FormStreetNames(
+      *prev_maneuver, prev_maneuver->street_names(), nullptr, false,
+      element_max_count, delim, prev_maneuver->verbal_formatter());
 
-    if (!street_names.empty()) {
-      instruction += " on ";
-      instruction += street_names;
-    }
-  }
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
 
-  instruction += ".";
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.becomes_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kPreviousStreetNamesTag, prev_street_names);
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
@@ -3276,48 +3256,6 @@ std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
 bool NarrativeBuilder::HasLabel(const std::string& name,
                                 const std::string& label) {
   return boost::algorithm::iends_with(name, label);
-}
-
-// TODO remove after refactor
-std::string NarrativeBuilder::FormOldStreetNames(
-    const Maneuver& maneuver, const StreetNames& street_names,
-    bool enhance_empty_street_names, uint32_t max_count, const std::string& delim,
-    const VerbalTextFormatter* verbal_formatter) {
-  std::string street_names_string;
-
-  // Verify that the street name list is not empty
-  if (!street_names.empty()) {
-    street_names_string = street_names.ToString(max_count, delim,
-                                                verbal_formatter);
-  }
-
-  // If empty street names string
-  // then determine if walkway or bike path
-  if (enhance_empty_street_names && street_names_string.empty()) {
-
-    // If pedestrian travel mode on unnamed footway
-    // then set street names string to walkway
-    if ((maneuver.travel_mode() ==  TripPath_TravelMode_kPedestrian)
-        && maneuver.unnamed_walkway()) {
-      street_names_string = "walkway";
-    }
-
-    // If bicycle travel mode on unnamed cycleway
-    // then set street names string to cycleway
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle)
-        && maneuver.unnamed_cycleway()) {
-      street_names_string = "cycleway";
-    }
-
-    // If bicycle travel mode on unnamed mountain bike trail
-    // then set street names string to mountain bike trail
-    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle)
-        && maneuver.unnamed_mountain_bike_trail()) {
-      street_names_string = "mountain bike trail";
-    }
-  }
-
-  return street_names_string;
 }
 
 std::string NarrativeBuilder::FormStreetNames(

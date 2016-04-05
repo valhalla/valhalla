@@ -78,18 +78,16 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREV_STREET_NAMES> wird zu <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> wird zu <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Vine Street becomes Middletown Road."]
       }
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREV_STREET_NAMES> wird zu<STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> wird zu<STREET_NAMES>."
       },
-      "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Vine Street becomes Middletown Road."]
       }
