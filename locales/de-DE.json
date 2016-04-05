@@ -548,7 +548,7 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Kreisverkehr nehmen.",
-        "1": "Im Kreisverkehr die <ORDINAL_VALUE> Ausfahrt nehmen."
+        "1": "<ORDINAL_VALUE> Ausfahrt aus dem Kreisverkehr ausfahren."
       },
       "ordinal_values": ["1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10."],
       "example_phrases": {
@@ -570,9 +570,9 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Kreisverkehr nehmen.",
-        "1": "Im Kreisverkehr die <ORDINAL_VALUE> Ausfahrt nehmen."
+        "1": "<ORDINAL_VALUE> Ausfahrt aus dem Kreisverkehr ausfahren."
       },
-      "ordinal_values": ["erste", "zweite", "dritte", "vierte", "fünfte", "sechste", "siebte", "ochte", "neunte", "zehnte"],
+      "ordinal_values": ["Erste", "zweite", "Dritte", "Vierte", "Fünfte", "Sechste", "Siebte", "Achte", "Neunte", "Zehnte"],
       "example_phrases": {
         "0": ["Enter the roundabout."],
         "1": [
@@ -591,9 +591,9 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Dem Kreisverkehr abfahren.",
-        "1": "Dem Kreisverkehr auf <STREET_NAMES> abfahren.",
-        "2": "Dem Kreisverkehr auf <BEGIN_STREET_NAMES> abfahren. Dann weiter auf <STREET_NAMES>."
+        "0": "Aus dem Kreisverkehr ausfahren.",
+        "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
+        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>."
       },
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
@@ -604,9 +604,9 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Dem Kreisverkehr abfahren.",
-        "1": "Dem Kreisverkehr auf <STREET_NAMES> abfahren.",
-        "2": "Dem Kreisverkehr auf <BEGIN_STREET_NAMES> abfahren. Dann weiter auf <STREET_NAMES>."
+        "0": "Aus dem Kreisverkehr ausfahren.",
+        "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
+        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>."
       },
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
@@ -673,8 +673,8 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Bahnhof eintreten.",
-        "1": "Bahnhof <TRANSIT_STOP> eintreten."
+        "0": "Bahnhof betreten.",
+        "1": "Bahnhof <TRANSIT_STOP> betreten."
       },
       "example_phrases": {
         "0": ["Enter the station."],
@@ -683,8 +683,8 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Bahnhof eintreten.",
-        "1": "Bahnhof <TRANSIT_STOP> eintreten."
+        "0": "Bahnhof betreten.",
+        "1": "Bahnhof <TRANSIT_STOP> betreten."
       },
       "example_phrases": {
         "0": ["Enter the station."],
