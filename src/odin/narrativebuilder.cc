@@ -769,7 +769,7 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(
 
 std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
                                               Maneuver* prev_maneuver) {
-  // "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
+  // "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
 
   // Assign the street names and the previous maneuver street names
   std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
@@ -808,18 +808,17 @@ std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
 std::string NarrativeBuilder::FormVerbalBecomesInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     const std::string& delim) {
-  // "<PREV_STREET_NAMES(2)> becomes <STREET_NAMES(2)>."
+  // "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
 
   // Assign the street names and the previous maneuver street names
-  std::string street_names = FormOldStreetNames(maneuver, maneuver.street_names(),
-                                             true, element_max_count, delim,
-                                             maneuver.verbal_formatter());
-  std::string prev_street_names;
-  if (prev_maneuver) {
-    prev_street_names = FormOldStreetNames(maneuver, maneuver.begin_street_names(),
-                                        false, element_max_count, delim,
-                                        maneuver.verbal_formatter());
-  }
+  std::string street_names = FormOldStreetNames(maneuver,
+                                                maneuver.street_names(), true,
+                                                element_max_count, delim,
+                                                maneuver.verbal_formatter());
+  std::string prev_street_names = FormOldStreetNames(
+      *prev_maneuver, prev_maneuver->street_names(), false, element_max_count,
+      delim, prev_maneuver->verbal_formatter());
+
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
