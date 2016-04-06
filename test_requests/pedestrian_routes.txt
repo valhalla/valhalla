@@ -2,3 +2,7 @@
 -j '{"locations":[{"lat":37.741725,"lon":-122.422686,"type":"break"},{"lat":37.743766,"lon":-122.425508,"type":"break"}],"costing":"pedestrian"}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":37.743766,"lon":-122.425508,"type":"break"},{"lat":37.741725,"lon":-122.422686,"type":"break"}],"costing":"pedestrian"}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":38.92828,"lon":-77.22812},{"lat":38.92849,"lon":-77.22634}],"costing":"pedestrian"}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.772236,"lon":-73.977226,"street":""},{"lat":40.764332,"lon":-73.974045,"street":"Grand Army Plaza"}],"costing":"pedestrian","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.764332,"lon":-73.974045,"street":"Grand Army Plaza"},{"lat":40.772236,"lon":-73.977226,"street":""}],"costing":"pedestrian","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.731392,"lon":-73.997192,"street":""},{"lat":40.731190,"lon":-73.999771,"street":"West 4th Street"}],"costing":"pedestrian","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.731190,"lon":-73.999771,"street":"West 4th Street"},{"lat":40.731392,"lon":-73.997192,"street":""}],"costing":"pedestrian","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
