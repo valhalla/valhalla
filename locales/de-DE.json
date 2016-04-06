@@ -547,8 +547,8 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Kreisverkehr nehmen.",
-        "1": "<ORDINAL_VALUE> Ausfahrt aus dem Kreisverkehr ausfahren."
+        "0": "In den Kreisverkehr fahren.",
+        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen."
       },
       "ordinal_values": ["1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10."],
       "example_phrases": {
@@ -569,10 +569,10 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Kreisverkehr nehmen.",
-        "1": "<ORDINAL_VALUE> Ausfahrt aus dem Kreisverkehr ausfahren."
+        "0": "In den Kreisverkehr fahren.",
+        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen."
       },
-      "ordinal_values": ["Erste", "zweite", "Dritte", "Vierte", "Fünfte", "Sechste", "Siebte", "Achte", "Neunte", "Zehnte"],
+      "ordinal_values": ["erste", "zweite", "dritte", "vierte", "fünfte", "sechste", "siebte", "achte", "neunte", "zehnte"],
       "example_phrases": {
         "0": ["Enter the roundabout."],
         "1": [
