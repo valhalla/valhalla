@@ -40,6 +40,7 @@ lib_LTLIBRARIES = libvalhalla_midgard.la
 nobase_include_HEADERS = \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
+	valhalla/midgard/gridded_data.h \
 	valhalla/midgard/polyline2.h \
 	valhalla/midgard/obb2.h \
 	valhalla/midgard/pointll.h \
@@ -55,6 +56,7 @@ nobase_include_HEADERS = \
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
+	src/midgard/gridded_data.cc \
 	src/midgard/polyline2.cc \
 	src/midgard/obb2.cc \
 	src/midgard/pointll.cc \
