@@ -8,10 +8,10 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Head east.", "Head north."],
-        "1": ["Head southwest on 5th Avenue."],
+        "1": ["Head southwest on 5th Avenue.", "Head west on the walkway", "Head east on the cycleway", "Head north on the mountain bike trail"],
         "2": ["Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."]
       }
     },
@@ -22,7 +22,7 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "example_phrases": {
@@ -97,7 +97,7 @@
         "0": "Continue.",
         "1": "Continue on <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Continue."],
         "1": ["Continue on 10th Avenue."]
@@ -108,7 +108,7 @@
         "0": "Continue.",
         "1": "Continue on <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Continue."],
         "1": ["Continue on 10th Avenue."]
@@ -119,7 +119,7 @@
         "0": "Continue for <LENGTH>.",
         "1": "Continue on <STREET_NAMES> for <LENGTH>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "example_phrases": {
@@ -135,7 +135,7 @@
         "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Bear right."],
         "1": ["Bear left onto Arlen Road."],
@@ -151,7 +151,7 @@
         "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Bear right."],
         "1": ["Bear left onto Arlen Road."],
@@ -167,7 +167,7 @@
         "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Turn left."],
         "1": ["Turn right onto Flatbush Avenue."],
@@ -183,7 +183,7 @@
         "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Turn left."],
         "1": ["Turn right onto Flatbush Avenue."],
@@ -199,7 +199,7 @@
         "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Turn sharp left."],
         "1": ["Turn sharp right onto Flatbush Avenue."],
@@ -215,7 +215,7 @@
         "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Turn sharp left."],
         "1": ["Turn sharp right onto Flatbush Avenue."],
@@ -233,7 +233,7 @@
         "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Make a left U-turn."],
         "1": ["Make a right U-turn onto Bunker Hill Road."],
@@ -251,7 +251,7 @@
         "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Make a left U-turn."],
         "1": ["Make a right U-turn onto Bunker Hill Road."],
@@ -269,7 +269,7 @@
         "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
       },
       "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Make a left U-turn."],
         "1": ["Make a right U-turn onto Bunker Hill Road."],
@@ -453,7 +453,7 @@
         "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
         "1": ["Keep right to take exit 62."],
@@ -477,7 +477,7 @@
         "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
         "1": ["Keep right to take exit 62."],
@@ -497,7 +497,7 @@
         "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Keep left to stay on I 95 South.", "Keep straight to stay on I 95 South.", "Keep right to stay on I 95 South."],
         "1": ["Keep left to take exit 62 to stay on I 95 South."],
@@ -513,7 +513,7 @@
         "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Keep left to stay on Interstate 95 South.", "Keep straight to stay on Interstate 95 South.", "Keep right to stay on Interstate 95 South."],
         "1": ["Keep left to take exit 62 to stay on Interstate 95 South."],
@@ -526,7 +526,7 @@
         "0": "Merge.",
         "1": "Merge onto <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Merge."],
         "1": ["Merge onto I 76 West/Pennsylvania Turnpike."]
@@ -537,7 +537,7 @@
         "0": "Merge.",
         "1": "Merge onto <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Merge."],
         "1": ["Merge onto Interstate 76 West, Pennsylvania Turnpike."]
@@ -593,7 +593,7 @@
         "1": "Exit the roundabout onto <STREET_NAMES>.",
         "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Exit the roundabout."],
         "1": ["Exit the roundabout onto Philadelphia Road/MD 7."],
@@ -606,7 +606,7 @@
         "1": "Exit the roundabout onto <STREET_NAMES>.",
         "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Exit the roundabout."],
         "1": ["Exit the roundabout onto Philadelphia Road, Maryland 7."],
@@ -619,7 +619,7 @@
         "1": "Take the <STREET_NAMES>.",
         "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "ferry_label": "Ferry",
       "example_phrases": {
         "0": ["Take the Ferry."],
@@ -633,7 +633,7 @@
         "1": "Take the <STREET_NAMES>.",
         "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
       },
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "ferry_label": "Ferry",
       "example_phrases": {
         "0": ["Take the Ferry."],
@@ -648,7 +648,7 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Head southeast."],
         "1": ["Head west on Ferry Lane"],
@@ -662,7 +662,7 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Head southeast."],
         "1": ["Head west on Ferry Lane"],
@@ -857,7 +857,7 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Head west."],
         "1": ["Head northeast on Broadway"],
@@ -871,7 +871,7 @@
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"],
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
       "example_phrases": {
         "0": ["Head west."],
         "1": ["Head northeast on Broadway"],
@@ -885,7 +885,7 @@
       },
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
-      "empty_street_name_labels": ["walkway", "cycleway", "mountain bike trail"]
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"]
     },
     "post_transition_transit_verbal": {
       "phrases": {
