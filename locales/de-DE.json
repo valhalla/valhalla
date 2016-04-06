@@ -166,7 +166,7 @@
         "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben."
       },
-      "relative_directions": ["links", "rechts"],
+      "relative_directions": ["Links", "Rechts"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Turn left."],
@@ -182,7 +182,7 @@
         "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben."
       },
-      "relative_directions": ["links", "rechts"],
+      "relative_directions": ["Links", "Rechts"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Turn left."],
@@ -443,7 +443,7 @@
     },
     "keep": {
       "phrases": {
-        "0": "An der Gabelung <RELATIVE_DIRECTION> halten.",
+        "0": "<RELATIVE_DIRECTION> halten an der Gabelung.",
         "1": "<RELATIVE_DIRECTION> halten auf die Ausfahrt <NUMBER_SIGN>.",
         "2": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> zu nehmen.",
@@ -452,7 +452,7 @@
         "6": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES> Richtung <TOWARD_SIGN>.",
         "7": "<RELATIVE_DIRECTION> halften um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
       },
-      "relative_directions": ["links", "geradeaus", "rechts"],
+      "relative_directions": ["Links", "Geradeaus", "Rechts"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
@@ -467,7 +467,7 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "An der Gabelung <RELATIVE_DIRECTION> halten.",
+        "0": "<RELATIVE_DIRECTION> halten an der Gabelung.",
         "1": "<RELATIVE_DIRECTION> halten auf die Ausfahrt <NUMBER_SIGN>.",
         "2": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> zu nehmen.",
@@ -476,7 +476,7 @@
         "6": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES> Richtung <TOWARD_SIGN>.",
         "7": "<RELATIVE_DIRECTION> halften um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
       },
-      "relative_directions": ["links", "geradeaus", "rechts"],
+      "relative_directions": ["Links", "Geradeaus", "Rechts"],
       "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
       "example_phrases": {
         "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
