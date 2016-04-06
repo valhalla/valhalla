@@ -1,8 +1,9 @@
 #include <map>
 #include <algorithm>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/gridded_data.h>
+#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace midgard {
@@ -55,8 +56,15 @@ template <class coord_t>
 void GriddedData<coord_t>::GenerateContourLines(const std::vector<float> contours) {
   // Values at tile corners and center (0 element is center)
   int sh[5];
-  float s[5];            // Seconds at the tile corners and center
+  float s[5];               // Values at the tile corners and center
   coord_t tile_corners[5];    // coord_t at tile corners and center
+
+  // Find the intersection along a tile edge
+  auto sect = [&tile_corners, &s](const int p1, const int p2) {
+    float ds = s[p2] - s[p1];
+    return coord_t((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
+                   (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
+  };
 
   int nrows = this->nrows();
   int ncols = this->ncolumns();
@@ -156,27 +164,27 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float> contour
             break;
           case 4:              // Line between vertex 1 and side 2-3
             pt1 = tile_corners[m1];
-            pt2 = sect(m2, m3, s, tile_corners);
+            pt2 = sect(m2, m3);
             break;
           case 5:              // Line between vertex 2 and side 3-1
             pt1 = tile_corners[m2];
-            pt2 = sect(m3, m1, s, tile_corners);
+            pt2 = sect(m3, m1);
             break;
           case 6:              // Line between vertex 3 and side 1-2
             pt1 = tile_corners[m3];
-            pt2 = sect(m1, m2, s, tile_corners);
+            pt2 = sect(m1, m2);
             break;
           case 7:              // Line between sides 1-2 and 2-3
-            pt1 = sect(m1, m2, s, tile_corners);
-            pt2 = sect(m2, m3, s, tile_corners);
+            pt1 = sect(m1, m2);
+            pt2 = sect(m2, m3);
           break;
           case 8:              // Line between sides 2-3 and 3-1
-            pt1 = sect(m2, m3, s, tile_corners);
-            pt2 = sect(m3, m1, s, tile_corners);
+            pt1 = sect(m2, m3);
+            pt2 = sect(m3, m1);
             break;
           case 9:              // Line between sides 3-1 and 1-2
-            pt1 = sect(m3, m1, s, tile_corners);
-            pt2 = sect(m1, m2, s, tile_corners);
+            pt1 = sect(m3, m1);
+            pt2 = sect(m1, m2);
             break;
           default:
             break;

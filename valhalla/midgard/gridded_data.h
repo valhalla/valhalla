@@ -61,15 +61,6 @@ class GriddedData : public Tiles<coord_t> {
    */
   void AddToContourLine(const coord_t& pt1, const coord_t& pt2,
                         const int level);
-
-
-  // Find the intersection along a tile edge
-  coord_t sect(const int p1, const int p2, const float s[5], const coord_t* tile_corners) {
-    float ds = s[p2] - s[p1];
-    return coord_t((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
-                   (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
-  }
-
 };
 
 }
