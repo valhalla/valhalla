@@ -13,7 +13,7 @@ using namespace valhalla::odin;
 namespace {
 
 // Expected strings
-const std::vector<std::string> kExpectedEmptyStreetNameLabels = { "walkway", "cycleway", "mountain bike trail" };
+const std::vector<std::string> kExpectedEmptyStreetNameLabels = { "the walkway", "the cycleway", "the mountain bike trail" };
 const std::vector<std::string> kExpectedCardinalDirections = { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" };
 const std::vector<std::string> kExpectedMetricLengths = { "<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters" };
 const std::vector<std::string> kExpectedUsCustomaryLengths = { "<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet" };

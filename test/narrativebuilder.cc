@@ -336,6 +336,51 @@ void PopulateStartManeuverList_1(std::list<Maneuver>& maneuvers,
 
 }
 
+void PopulateStartManeuverList_1_unnamed_walkway(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.050737, 35, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
+                   209, 0, 3, 0, 4, 0, 0, 0, 0, 0, 0, 1, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 1, 0, 0, 36, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+
+}
+
+void PopulateStartManeuverList_1_unnamed_cycleway(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   2.675882, 386, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 84, 70, 0,
+                   2, 0, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 1, 0, 482, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+
+}
+
+void PopulateStartManeuverList_1_unnamed_mountain_bike_trail(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.200000, 29, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 269, 221, 0,
+                   2, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 1, 36, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+
+}
+
 void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
                                  const std::string& country_code,
                                  const std::string& state_code) {
@@ -2420,8 +2465,92 @@ void TestBuildStartInstructions_1_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
-      expected_maneuvers, "Head southwest on 5th Avenue.", "",
-      "Head southwest on 5th Avenue for 1 tenth of a mile.", "");
+      expected_maneuvers,
+      "Head southwest on 5th Avenue.",
+      "",
+      "Head southwest on 5th Avenue for 1 tenth of a mile.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_1_unnamed_walkway_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_1_unnamed_walkway(maneuvers, country_code,
+                                              state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_1_unnamed_walkway(expected_maneuvers, country_code,
+                                              state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Head southwest on the walkway.",
+                                  "",
+                                  "Head southwest on the walkway for 200 feet.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_1_unnamed_cycleway_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_1_unnamed_cycleway(maneuvers, country_code,
+                                              state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_1_unnamed_cycleway(expected_maneuvers, country_code,
+                                              state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Head east on the cycleway.",
+                                  "",
+                                  "Head east on the cycleway for 1.7 miles.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_1_unnamed_mountain_bike_trail_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_1_unnamed_mountain_bike_trail(maneuvers, country_code,
+                                              state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_1_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
+                                              state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Head west on the mountain bike trail.",
+                                  "",
+                                  "Head west on the mountain bike trail for 1 tenth of a mile.",
+                                  "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6728,6 +6857,15 @@ int main() {
 
   // BuildStartInstructions_1_miles_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_1_miles_en_US));
+
+  // BuildStartInstructions_1_unnamed_walkway_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_1_unnamed_walkway_miles_en_US));
+
+  // BuildStartInstructions_1_unnamed_cycleway_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_1_unnamed_cycleway_miles_en_US));
+
+  // BuildStartInstructions_1_unnamed_mountain_bike_trail_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_1_unnamed_mountain_bike_trail_miles_en_US));
 
   // BuildStartInstructions_2_miles_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_2_miles_en_US));
