@@ -289,6 +289,16 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
+  // Turn on foreign keys
+   sql = "PRAGMA foreign_keys = ON";
+   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+   if (ret != SQLITE_OK) {
+     LOG_ERROR("Error on foreign_keys: " + std::string(err_msg));
+     sqlite3_free(err_msg);
+     sqlite3_close(db_handle);
+     return;
+   }
+
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
   sql += "admin_level INTEGER NOT NULL,";
@@ -297,6 +307,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "name TEXT NOT NULL,";
   sql += "name_en TEXT,";
   sql += "drive_on_right INTEGER NOT NULL)";
+
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -317,12 +328,37 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Created admin table.");
 
+  /* creating an admin access table */
+  sql = "CREATE TABLE admin_access (";
+  sql += "admin_id INTEGER NOT NULL,";
+  sql += "trunk INTEGER NOT NULL,";
+  sql += "trunk_link INTEGER NOT NULL,";
+  sql += "track INTEGER NOT NULL,";
+  sql += "footway INTEGER NOT NULL,";
+  sql += "pedestrian INTEGER NOT NULL,";
+  sql += "bridleway INTEGER NOT NULL,";
+  sql += "cycleway INTEGER NOT NULL,";
+  sql += "path INTEGER NOT NULL,";
+  sql += "FOREIGN KEY (admin_id) REFERENCES admin(rowid))";
+
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
+  LOG_INFO("Created admin access table.");
+
   /*
    * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
-  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, drive_on_right, geom) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, CastToMulti(GeomFromText(?, 4326)))";
+  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
+  sql += "drive_on_right, geom) VALUES (?, ?, ?, ?, ?, ?, ";
+  sql += "CastToMulti(GeomFromText(?, 4326)))";
+
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -413,7 +449,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           else
             sqlite3_bind_null(stmt,5);
 
-          sqlite3_bind_int (stmt, 6, admin.drive_on_right());
+          sqlite3_bind_int (stmt,  6, admin.drive_on_right());
           sqlite3_bind_text (stmt, 7, wkt.c_str(), wkt.length(), SQLITE_STATIC);
           /* performing INSERT INTO */
           ret = sqlite3_step (stmt);
@@ -507,6 +543,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating Parent admin");
 
+ /* sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
+  sql += "drive_on_right, trunk, trunk_link, track, footway, pedestrian, bridleway, ";
+  sql += "cycleway, path, geom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ";
+  sql += "CastToMulti(GeomFromText(?, 4326)))";
+  */
   sqlite3_close (db_handle);
 }
 
