@@ -402,6 +402,29 @@ void PopulateDestinationManeuverList_3(std::list<Maneuver>& maneuvers,
                    0, 0, 0, "", "", "", 0);
 }
 
+void PopulateBecomesManeuverList_0(std::list<Maneuver>& maneuvers,
+                                   const std::string& country_code,
+                                   const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kSlightRight, { "Vine Street" },
+                   { }, { }, "", 0.365000, 25, 25,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 355, 25,
+                   47, 49, 497, 504, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 19, 0);
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kBecomes,
+                   { "Middletown Road" }, { }, { }, "", 1.489000, 98, 4,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 29, 30,
+                   49, 65, 504, 529, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 97, 0);
+}
+
 void PopulateContinueManeuverList_0(std::list<Maneuver>& maneuvers,
                                     const std::string& country_code,
                                     const std::string& state_code) {
@@ -2657,6 +2680,41 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
 
   TryBuild(directions_options, maneuvers, expected_maneuvers,
            static_cast<EnhancedTripPath*>(&path));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormBecomesInstruction
+// "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
+// no verbal alert
+// "0": "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
+void TestBuildBecomesInstructions_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "VA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateBecomesManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateBecomesManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(expected_maneuvers,
+                                          "Bear right onto Vine Street.",
+                                          "Bear right onto Vine Street.",
+                                          "Bear right onto Vine Street.",
+                                          "Continue for 2 tenths of a mile.");
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Vine Street becomes Middletown Road.",
+                                  "",
+                                  "Vine Street becomes Middletown Road.",
+                                  "Continue for 9 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6694,6 +6752,9 @@ int main() {
 
   // BuildDestinationInstructions_3_miles_en_US
   suite.test(TEST_CASE(TestBuildDestinationInstructions_3_miles_en_US));
+
+  // BuildBecomesInstructions_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildBecomesInstructions_0_miles_en_US));
 
   // BuildContinueInstructions_0_miles_en_US
   suite.test(TEST_CASE(TestBuildContinueInstructions_0_miles_en_US));

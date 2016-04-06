@@ -15,6 +15,8 @@ constexpr auto kStartVerbalKey = "instructions.start_verbal";
 constexpr auto kDestinationKey = "instructions.destination";
 constexpr auto kDestinationVerbalAlertKey = "instructions.destination_verbal_alert";
 constexpr auto kDestinationVerbalKey = "instructions.destination_verbal";
+constexpr auto kBecomesKey = "instructions.becomes";
+constexpr auto kBecomesVerbalKey = "instructions.becomes_verbal";
 constexpr auto kContinueKey = "instructions.continue";
 constexpr auto kContinueVerbalAlertKey = "instructions.continue_verbal_alert";
 constexpr auto kContinueVerbalKey = "instructions.continue_verbal";
@@ -109,6 +111,7 @@ constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
 constexpr auto kRelativeDirectionTag = "<RELATIVE_DIRECTION>";
 constexpr auto kOrdinalValueTag = "<ORDINAL_VALUE>";
 constexpr auto kStreetNamesTag = "<STREET_NAMES>";
+constexpr auto kPreviousStreetNamesTag = "<PREVIOUS_STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kCrossStreetNamesTag = "<CROSS_STREET_NAMES>";
 constexpr auto kLengthTag = "<LENGTH>";
@@ -217,6 +220,10 @@ class NarrativeDictionary {
   DestinationSubset destination_subset;
   DestinationSubset destination_verbal_alert_subset;
   DestinationSubset destination_verbal_subset;
+
+  // Becomes
+  PhraseSet becomes_subset;
+  PhraseSet becomes_verbal_subset;
 
   // Continue
   ContinueSubset continue_subset;

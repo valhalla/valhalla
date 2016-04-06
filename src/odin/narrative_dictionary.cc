@@ -53,6 +53,15 @@ void NarrativeDictionary::Load(
   Load(destination_verbal_subset, narrative_pt.get_child(kDestinationVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate becomes_subset...");
+  // Populate becomes_subset
+  Load(becomes_subset, narrative_pt.get_child(kBecomesKey));
+
+  LOG_TRACE("Populate becomes_verbal_subset...");
+  // Populate becomes_verbal_subset
+  Load(becomes_verbal_subset, narrative_pt.get_child(kBecomesVerbalKey));
+
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate continue_subset...");
   // Populate continue_subset
   Load(continue_subset, narrative_pt.get_child(kContinueKey));

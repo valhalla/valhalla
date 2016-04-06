@@ -399,6 +399,24 @@ void test_en_US_destination_verbal() {
 
 }
 
+void test_en_US_becomes() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.",
+  const auto& phrase_0 = dictionary.becomes_subset.phrases.at("0");
+  validate(phrase_0, "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.");
+
+}
+
+void test_en_US_becomes_verbal() {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.",
+  const auto& phrase_0 = dictionary.becomes_verbal_subset.phrases.at("0");
+  validate(phrase_0, "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>.");
+
+}
+
 void test_en_US_continue() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1429,6 +1447,12 @@ int main() {
 
   // test the en-US destination verbal phrases
   suite.test(TEST_CASE(test_en_US_destination_verbal));
+
+  // test the en-US becomes phrases
+  suite.test(TEST_CASE(test_en_US_becomes));
+
+  // test the en-US becomes verbal phrases
+  suite.test(TEST_CASE(test_en_US_becomes_verbal));
 
   // test the en-US continue phrases
   suite.test(TEST_CASE(test_en_US_continue));
