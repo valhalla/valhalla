@@ -36,6 +36,7 @@ pbfadminbuilder
 connectivitymap
 transit_fetcher
 transit_stop_query
+ways_to_edges
 *.o
 .deps/
 .dirstamp
