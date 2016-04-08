@@ -102,14 +102,16 @@ namespace {
         const auto& other_inst = other.get_child("instructions." + instruction.first);
         //check the number of things in each thing
         for(const auto& sub : instruction.second) {
-          const auto& other_sub = other_inst.get_child(sub.first);
-          if(sub.second.size() != other_sub.size())
+          auto other_sub = other_inst.get_child_optional(sub.first);
+          if(!other_sub)
+            throw std::runtime_error("Missing: " + locale.first + "::" + instruction.first + "." + sub.first);
+          if(sub.second.size() != other_sub->size())
             throw std::runtime_error("Wrong number of elements in " +
               locale.first + "::" + instruction.first + "." + sub.first);
           //check the keys
           std::set<std::string> keys, other_keys;
           for(const auto& kv : sub.second) keys.insert(kv.first);
-          for(const auto& kv : other_sub) other_keys.insert(kv.first);
+          for(const auto& kv : *other_sub) other_keys.insert(kv.first);
           if(keys != other_keys)
             throw std::runtime_error("Wrong keys in " +
               locale.first + "::" + instruction.first + "." + sub.first);
@@ -135,10 +137,10 @@ namespace {
 int main() {
   test::suite suite("util");
 
+  suite.test(TEST_CASE(test_supported_locales));
   suite.test(TEST_CASE(test_get_locales));
   suite.test(TEST_CASE(test_time));
   suite.test(TEST_CASE(test_date));
-  suite.test(TEST_CASE(test_supported_locales));
 
   return suite.tear_down();
 }
