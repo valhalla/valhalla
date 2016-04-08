@@ -1842,7 +1842,7 @@ void PopulateTransitConnectionDestinationManeuverList_2(
                   "", 0, 0));
 }
 
-void PopulateTransitManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
+void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
                                            const std::string& country_code,
                                            const std::string& state_code) {
   maneuvers.emplace_back();
@@ -1893,6 +1893,8 @@ void PopulateTransitManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
                       "2016-03-29T08:02", 0, 1)));
+
+  maneuver.set_transit_type(TripPath_TransitType_kRail);
 }
 
 void PopulateTransitManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1946,6 +1948,71 @@ void PopulateTransitManeuverList_0(std::list<Maneuver>& maneuvers,
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
                       "2016-03-29T08:02", 0, 1)));
+}
+
+void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
+                                             const std::string& country_code,
+                                             const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransit, { }, { }, { }, "",
+                   0.826000, 502, 289, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 171, 171,
+                   2, 9, 3, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 595, 0);
+
+  PopulateTransitInfo(maneuver.mutable_transit_info(), "r-9q8zn-powell~hyde", 0,
+                      26285, "", "", "Powell & Market", 16777215, 0,
+                      "", "o-9q8y-sfmta",
+                      "San Francisco Municipal Transportation Agency",
+                      "http://www.sfmta.com/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn2c3gg-hydest~vallejost", "Hyde St & Vallejo St",
+                      "2016-05-17T08:06", "", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn2cpr9-hydest~greenst", "Hyde St & Green St",
+                      "2016-05-17T08:06", "2016-05-17T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn31h5q-hydest~unionst", "Hyde St & Union St",
+                      "2016-05-17T08:06", "2016-05-17T08:06", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn32fnv-hydest~filbertst", "Hyde St & Filbert St",
+                      "2016-05-17T08:05", "2016-05-17T08:05", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn32yg5-hydest~greenwichst",
+                      "Hyde St & Greenwich St", "2016-05-17T08:05",
+                      "2016-05-17T08:05", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn38ez1-hydest~lombardst", "Hyde St & Lombard St",
+                      "2016-05-17T08:04", "2016-05-17T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn3b9cv-hydest~chestnutst", "Hyde St & Chestnut St",
+                      "2016-05-17T08:04", "2016-05-17T08:04", 0, 1)));
+  maneuver.InsertTransitStop(
+      std::move(
+          TransitStop(TripDirections_TransitStop_Type_kStation,
+                      "s-9q8zn60kc1-hydest~bayst", "Hyde St & Bay St", "",
+                      "2016-05-17T08:03", 0, 1)));
+
+  maneuver.set_transit_type(TripPath_TransitType_kCableCar);
+
 }
 
 void PopulateTransitManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -5385,7 +5452,7 @@ void TestBuildTransitConnectionDestination_2_miles_en_US() {
 // "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
 // No verbal alert
 // "0": "Take the <TRANSIT_NAME>.",
-void TestBuildTransit_0_no_name_miles_en_US() {
+void TestBuildTransit_0_train_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
 
@@ -5396,11 +5463,11 @@ void TestBuildTransit_0_no_name_miles_en_US() {
 
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
-  PopulateTransitManeuverList_0_no_name(maneuvers, country_code, state_code);
+  PopulateTransitManeuverList_0_train(maneuvers, country_code, state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
-  PopulateTransitManeuverList_0_no_name(expected_maneuvers, country_code,
+  PopulateTransitManeuverList_0_train(expected_maneuvers, country_code,
                                         state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the train. (4 stops)",
                                   "", "Take the train.", "Travel 4 stops.",
@@ -5442,6 +5509,41 @@ void TestBuildTransit_0_miles_en_US() {
                                   "Depart at 8:02 AM from 8 St - NYU.",
                                   "Arrive: 8:08 AM at 34 St - Herald Sq.",
                                   "Arrive at 8:08 AM at 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitInstruction
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransit_1_cable_car_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitManeuverList_1_cable_car(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitManeuverList_1_cable_car(expected_maneuvers, country_code,
+                                          state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Take the cable car toward Powell & Market. (7 stops)",
+      "",
+      "Take the cable car toward Powell & Market.", "Travel 7 stops.",
+      "Depart: 8:03 AM from Hyde St & Bay St.",
+      "Depart at 8:03 AM from Hyde St & Bay St.",
+      "Arrive: 8:06 AM at Hyde St & Vallejo St.",
+      "Arrive at 8:06 AM at Hyde St & Vallejo St.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7141,10 +7243,13 @@ int main() {
   suite.test(TEST_CASE(TestBuildTransitConnectionDestination_2_miles_en_US));
 
   // BuildTransit_0_no_name_miles_en_US
-  suite.test(TEST_CASE(TestBuildTransit_0_no_name_miles_en_US));
+  suite.test(TEST_CASE(TestBuildTransit_0_train_miles_en_US));
 
   // BuildTransit_0_miles_en_US
   suite.test(TEST_CASE(TestBuildTransit_0_miles_en_US));
+
+  // BuildTransit_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildTransit_1_cable_car_miles_en_US));
 
   // BuildTransit_1_miles_en_US
   suite.test(TEST_CASE(TestBuildTransit_1_miles_en_US));

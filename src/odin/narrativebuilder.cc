@@ -2776,7 +2776,11 @@ std::string NarrativeBuilder::FormTransitInstruction(
   instruction = dictionary_.transit_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(
+      instruction,
+      kTransitNameTag,
+      FormTransitName(maneuver,
+                      dictionary_.transit_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
@@ -2801,7 +2805,11 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
   instruction = dictionary_.transit_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(
+      instruction,
+      kTransitNameTag,
+      FormTransitName(maneuver,
+                      dictionary_.transit_verbal_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
 
   return instruction;
@@ -2827,7 +2835,12 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   instruction = dictionary_.transit_remain_on_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(
+      instruction,
+      kTransitNameTag,
+      FormTransitName(
+          maneuver,
+          dictionary_.transit_remain_on_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
@@ -2854,7 +2867,12 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
   instruction = dictionary_.transit_remain_on_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(
+      instruction,
+      kTransitNameTag,
+      FormTransitName(
+          maneuver,
+          dictionary_.transit_remain_on_verbal_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
 
   return instruction;
@@ -2880,7 +2898,12 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   instruction = dictionary_.transit_transfer_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(
+      instruction,
+      kTransitNameTag,
+      FormTransitName(
+          maneuver,
+          dictionary_.transit_transfer_subset.empty_transit_name_labels));  //TODO: need generic names in dictionary
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
@@ -2907,7 +2930,12 @@ std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
   instruction = dictionary_.transit_transfer_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitNameTag, FormTransitName(maneuver)); //TODO: need generic names in dictionary
+  boost::replace_all(
+      instruction,
+      kTransitNameTag,
+      FormTransitName(
+          maneuver,
+          dictionary_.transit_transfer_verbal_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
 
   return instruction;
@@ -3238,16 +3266,15 @@ std::string NarrativeBuilder::FormRelativeThreeDirection(
   }
 }
 
-// TODO: handle bus/train
-std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormTransitName(
+    const Maneuver& maneuver,
+    const std::vector<std::string>& empty_transit_name_labels) {
   if (!maneuver.transit_info().short_name.empty()) {
     return maneuver.transit_info().short_name;
   } else if (!maneuver.transit_info().long_name.empty()) {
     return (maneuver.transit_info().long_name);
-  } else if (maneuver.bus()) {
-    return "bus";
   }
-  return "train";
+  return empty_transit_name_labels.at(maneuver.transit_type());
 }
 
 // NOTE: Tried to use 'contains' instead of 'ends_with'
