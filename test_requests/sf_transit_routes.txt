@@ -34,3 +34,5 @@
 -j '{"locations":[{"lat":37.743,"lon":-122.427},{"lat":37.764,"lon":-122.461}],"costing":"multimodal","date_time":{"type":1,"value":"2016-05-17T08:00"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":37.764,"lon":-122.461},{"lat":37.743,"lon":-122.427}],"costing":"multimodal","date_time":{"type":1,"value":"2016-05-17T17:30"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":37.743,"lon":-122.427},{"lat":37.764,"lon":-122.461}],"costing":"multimodal","date_time":{"type":1,"value":"2016-05-17T17:30"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":37.805172,"lon":-122.420181,"street":"Hyde Street"},{"lat":37.797153,"lon":-122.418571,"street":"Hyde Street"}],"costing":"multimodal","date_time":{"type":1,"value":"2016-05-17T08:00"},"directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":37.797153,"lon":-122.418571,"street":"Hyde Street"},{"lat":37.805172,"lon":-122.420181,"street":"Hyde Street"}],"costing":"multimodal","date_time":{"type":1,"value":"2016-05-17T08:00"},"directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
