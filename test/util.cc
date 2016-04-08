@@ -56,6 +56,15 @@ namespace {
     try_get_formatted_time("2014-01-02T15:00","15:00",locale);
     try_get_formatted_time("2014-01-02T24:00","00:00",locale);
     try_get_formatted_time("2014-01-02T12:00","12:00",locale);
+
+    locale = "cs_CZ.utf8";
+    try_get_formatted_time("20140101","",locale);
+    try_get_formatted_time("Blah","",locale);
+    try_get_formatted_time("2014-01-02T23:59","23:59",locale);
+    try_get_formatted_time("2014-01-01T07:01","07:01",locale);
+    try_get_formatted_time("2014-01-02T15:00","15:00",locale);
+    try_get_formatted_time("2014-01-02T24:00","00:00",locale);
+    try_get_formatted_time("2014-01-02T12:00","12:00",locale);
   }
 
   void test_date() {
@@ -74,6 +83,14 @@ namespace {
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","01.01.2014",locale);
     try_get_formatted_date("2015-07-05T15:00","05.07.2015",locale);
+
+    locale = "cs_CZ.utf8";
+    try_get_formatted_date("20140101","",locale);
+    try_get_formatted_date("Blah","",locale);
+    try_get_formatted_date("2014-01-01T07:01","1.1.2014",locale);
+    try_get_formatted_date("2015-07-05T15:00","5.7.2015",locale);
+    try_get_formatted_date("2015-12-13T15:00","13.12.2015",locale);
+
   }
 
   void test_supported_locales() {
@@ -102,14 +119,16 @@ namespace {
         const auto& other_inst = other.get_child("instructions." + instruction.first);
         //check the number of things in each thing
         for(const auto& sub : instruction.second) {
-          const auto& other_sub = other_inst.get_child(sub.first);
-          if(sub.second.size() != other_sub.size())
+          auto other_sub = other_inst.get_child_optional(sub.first);
+          if(!other_sub)
+            throw std::runtime_error("Missing: " + locale.first + "::" + instruction.first + "." + sub.first);
+          if(sub.second.size() != other_sub->size())
             throw std::runtime_error("Wrong number of elements in " +
               locale.first + "::" + instruction.first + "." + sub.first);
           //check the keys
           std::set<std::string> keys, other_keys;
           for(const auto& kv : sub.second) keys.insert(kv.first);
-          for(const auto& kv : other_sub) other_keys.insert(kv.first);
+          for(const auto& kv : *other_sub) other_keys.insert(kv.first);
           if(keys != other_keys)
             throw std::runtime_error("Wrong keys in " +
               locale.first + "::" + instruction.first + "." + sub.first);
@@ -135,10 +154,10 @@ namespace {
 int main() {
   test::suite suite("util");
 
+  suite.test(TEST_CASE(test_supported_locales));
   suite.test(TEST_CASE(test_get_locales));
   suite.test(TEST_CASE(test_time));
   suite.test(TEST_CASE(test_date));
-  suite.test(TEST_CASE(test_supported_locales));
 
   return suite.tear_down();
 }
