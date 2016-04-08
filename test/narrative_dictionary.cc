@@ -22,6 +22,7 @@ const std::vector<std::string> kExpectedRelativeThreeDirections = { "left", "str
 const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th" };
 const std::string kExpectedFerryLabel = "Ferry";
 const std::string kExpectedStationLabel = "Station";
+const std::vector<std::string> kExpectedEmptyTransitNameLabels = { "tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular" };
 const std::vector<std::string> kExpectedTransitStopCountLabels = { "stop", "stops" };
 
 // Expected phrases
@@ -1279,6 +1280,10 @@ void test_en_US_transit() {
   const auto& phrase_1 = dictionary.transit_subset.phrases.at("1");
   validate(phrase_1, "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
 
+  // empty_transit_name_labels
+  const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
+  validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
+
   // transit_stop_count_labels
   const auto& transit_stop_count_labels = dictionary.transit_subset.transit_stop_count_labels;
   validate(transit_stop_count_labels, kExpectedTransitStopCountLabels);
@@ -1294,6 +1299,10 @@ void test_en_US_transit_verbal() {
   const auto& phrase_1 = dictionary.transit_verbal_subset.phrases.at("1");
   validate(phrase_1, "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.");
 
+  // empty_transit_name_labels
+  const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
+  validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
+
 }
 
 void test_en_US_transit_remain_on() {
@@ -1304,6 +1313,10 @@ void test_en_US_transit_remain_on() {
 
   const auto& phrase_1 = dictionary.transit_remain_on_subset.phrases.at("1");
   validate(phrase_1, "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  // empty_transit_name_labels
+  const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
+  validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
 
   // transit_stop_count_labels
   const auto& transit_stop_count_labels = dictionary.transit_remain_on_subset.transit_stop_count_labels;
@@ -1320,6 +1333,10 @@ void test_en_US_transit_remain_on_verbal() {
   const auto& phrase_1 = dictionary.transit_remain_on_verbal_subset.phrases.at("1");
   validate(phrase_1, "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.");
 
+  // empty_transit_name_labels
+  const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
+  validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
+
 }
 
 void test_en_US_transit_transfer() {
@@ -1330,6 +1347,10 @@ void test_en_US_transit_transfer() {
 
   const auto& phrase_1 = dictionary.transit_transfer_subset.phrases.at("1");
   validate(phrase_1, "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+
+  // empty_transit_name_labels
+  const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
+  validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
 
   // transit_stop_count_labels
   const auto& transit_stop_count_labels = dictionary.transit_transfer_subset.transit_stop_count_labels;
@@ -1345,6 +1366,10 @@ void test_en_US_transit_transfer_verbal() {
 
   const auto& phrase_1 = dictionary.transit_transfer_verbal_subset.phrases.at("1");
   validate(phrase_1, "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>.");
+
+  // empty_transit_name_labels
+  const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
+  validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
 
 }
 

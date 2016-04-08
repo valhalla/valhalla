@@ -83,6 +83,7 @@ constexpr auto kMetricLengthsKey = "metric_lengths";
 constexpr auto kUsCustomaryLengthsKey = "us_customary_lengths";
 constexpr auto kFerryLabelKey = "ferry_label";
 constexpr auto kStationLabelKey = "station_label";
+constexpr auto kEmptyTransitNameLabelsKey = "empty_transit_name_labels";
 constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
 
 // Empty street names label indexes
@@ -186,12 +187,6 @@ struct EnterFerrySubset : PhraseSet {
   std::string ferry_label;
 };
 
-struct PostTransitionVerbalSubset : PhraseSet {
-  std::vector<std::string> metric_lengths;
-  std::vector<std::string> us_customary_lengths;
-  std::vector<std::string> empty_street_name_labels;
-};
-
 struct EnterRoundaboutSubset : PhraseSet {
   std::vector<std::string> ordinal_values;
 };
@@ -200,7 +195,21 @@ struct TransitConnectionSubset : PhraseSet {
   std::string station_label;
 };
 
-struct TransitStopSubset : PhraseSet {
+struct TransitSubset : PhraseSet {
+  std::vector<std::string> empty_transit_name_labels;
+};
+
+struct TransitStopSubset : TransitSubset {
+  std::vector<std::string> transit_stop_count_labels;
+};
+
+struct PostTransitionVerbalSubset : PhraseSet {
+  std::vector<std::string> metric_lengths;
+  std::vector<std::string> us_customary_lengths;
+  std::vector<std::string> empty_street_name_labels;
+};
+
+struct PostTransitionTransitVerbalSubset : PhraseSet {
   std::vector<std::string> transit_stop_count_labels;
 };
 
@@ -310,15 +319,15 @@ class NarrativeDictionary {
 
   // Transit
   TransitStopSubset transit_subset;
-  PhraseSet transit_verbal_subset;
+  TransitSubset transit_verbal_subset;
 
   // TransitRemainOn
   TransitStopSubset transit_remain_on_subset;
-  PhraseSet transit_remain_on_verbal_subset;
+  TransitSubset transit_remain_on_verbal_subset;
 
   // TransitTransfer
   TransitStopSubset transit_transfer_subset;
-  PhraseSet transit_transfer_verbal_subset;
+  TransitSubset transit_transfer_verbal_subset;
 
   // PostTransitConnectionDestination
   StartSubset post_transit_connection_destination_subset;
@@ -326,7 +335,9 @@ class NarrativeDictionary {
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
-  TransitStopSubset post_transition_transit_verbal_subset;
+
+  // Post transition transit verbal
+  PostTransitionTransitVerbalSubset post_transition_transit_verbal_subset;
 
   // Verbal miulti-cue
   PhraseSet verbal_multi_cue_subset;
@@ -454,6 +465,36 @@ class NarrativeDictionary {
             const boost::property_tree::ptree& enter_ferry_subset_pt);
 
   /**
+    * Loads the specified 'transit_connection' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  transit_connection_handle  The 'transit_connection' structure to populate.
+    * @param  transit_connection_subset_pt  The 'transit_connection' property tree.
+    */
+  void Load(TransitConnectionSubset& transit_connection_handle,
+            const boost::property_tree::ptree& transit_connection_subset_pt);
+
+  /**
+    * Loads the specified 'transit' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  transit_handle  The 'transit' structure to populate.
+    * @param  transit_subset_pt  The 'transit' property tree.
+    */
+  void Load(TransitSubset& transit_handle,
+            const boost::property_tree::ptree& transit_subset_pt);
+
+  /**
+    * Loads the specified 'transit_stop' instruction subset with the localized
+    * narrative instructions contained in the specified property tree.
+    *
+    * @param  transit_stop_handle  The 'transit_stop' structure to populate.
+    * @param  transit_stop_subset_pt  The 'transit_stop' property tree.
+    */
+  void Load(TransitStopSubset& transit_stop_handle,
+            const boost::property_tree::ptree& transit_stop_subset_pt);
+
+  /**
     * Loads the specified 'post transition verbal' instruction subset with the
     * localized narrative instructions contained in the specified property tree.
     *
@@ -466,24 +507,17 @@ class NarrativeDictionary {
             const boost::property_tree::ptree& post_transition_verbal_subset_pt);
 
   /**
-    * Loads the specified 'transit_connection' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  transit_connection_handle  The 'transit_connection' structure to populate.
-    * @param  transit_connection_subset_pt  The 'transit_connection' property tree.
-    */
-  void Load(TransitConnectionSubset& transit_connection_handle,
-            const boost::property_tree::ptree& transit_connection_subset_pt);
-
-  /**
-    * Loads the specified 'transit_stop' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  transit_stop_handle  The 'transit_stop' structure to populate.
-    * @param  transit_stop_subset_pt  The 'transit_stop' property tree.
-    */
-  void Load(TransitStopSubset& transit_stop_handle,
-            const boost::property_tree::ptree& transit_stop_subset_pt);
+   * Loads the specified 'post transition_transit verbal' instruction subset with the
+   * localized narrative instructions contained in the specified property tree.
+   *
+   * @param  post_transition_transit_verbal_handle  The 'post transition_transit verbal'
+   *                                                structure to populate.
+   * @param  post_transition_transit_verbal_subset_pt  The 'post transition_transit verbal'
+   *                                                   property tree.
+   */
+  void Load(
+      PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
+      const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt);
 
 };
 

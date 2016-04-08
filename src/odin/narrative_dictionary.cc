@@ -294,6 +294,7 @@ void NarrativeDictionary::Load(
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
 
+  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_transit_verbal_subset...");
   // Populate post_transition_transit_verbal_subset
   Load(post_transition_transit_verbal_subset, narrative_pt.get_child(kPostTransitTransitionVerbalKey));
@@ -464,6 +465,45 @@ void NarrativeDictionary::Load(
 }
 
 void NarrativeDictionary::Load(
+    TransitConnectionSubset& transit_connection_handle,
+    const boost::property_tree::ptree& transit_connection_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(transit_connection_handle), transit_connection_subset_pt);
+
+  // Populate station_label
+  transit_connection_handle.station_label = transit_connection_subset_pt.get<std::string>(
+      kStationLabelKey);
+
+}
+
+void NarrativeDictionary::Load(
+    TransitSubset& transit_handle,
+    const boost::property_tree::ptree& transit_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(transit_handle), transit_subset_pt);
+
+  // Populate transit_count_labels
+  transit_handle.empty_transit_name_labels = as_vector<std::string>(
+      transit_subset_pt, kEmptyTransitNameLabelsKey);
+
+}
+
+void NarrativeDictionary::Load(
+    TransitStopSubset& transit_stop_handle,
+    const boost::property_tree::ptree& transit_stop_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<TransitSubset&>(transit_stop_handle), transit_stop_subset_pt);
+
+  // Populate transit_stop_count_labels
+  transit_stop_handle.transit_stop_count_labels = as_vector<std::string>(
+      transit_stop_subset_pt, kTransitStopCountLabelsKey);
+
+}
+
+void NarrativeDictionary::Load(
     PostTransitionVerbalSubset& post_transition_verbal_handle,
     const boost::property_tree::ptree& post_transition_verbal_subset_pt) {
 
@@ -485,28 +525,17 @@ void NarrativeDictionary::Load(
 }
 
 void NarrativeDictionary::Load(
-    TransitConnectionSubset& transit_connection_handle,
-    const boost::property_tree::ptree& transit_connection_subset_pt) {
+    PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
+    const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt) {
 
   // Populate phrases
-  Load(static_cast<PhraseSet&>(transit_connection_handle), transit_connection_subset_pt);
-
-  // Populate station_label
-  transit_connection_handle.station_label = transit_connection_subset_pt.get<std::string>(
-      kStationLabelKey);
-
-}
-
-void NarrativeDictionary::Load(
-    TransitStopSubset& transit_stop_handle,
-    const boost::property_tree::ptree& transit_stop_subset_pt) {
-
-  // Populate phrases
-  Load(static_cast<PhraseSet&>(transit_stop_handle), transit_stop_subset_pt);
+  Load(static_cast<PhraseSet&>(post_transition_transit_verbal_handle),
+       post_transition_transit_verbal_subset_pt);
 
   // Populate transit_stop_count_labels
-  transit_stop_handle.transit_stop_count_labels = as_vector<std::string>(
-      transit_stop_subset_pt, kTransitStopCountLabelsKey);
+  post_transition_transit_verbal_handle.transit_stop_count_labels = as_vector<
+      std::string>(post_transition_transit_verbal_subset_pt,
+                   kTransitStopCountLabelsKey);
 
 }
 

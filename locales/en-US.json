@@ -792,10 +792,11 @@
         "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "transit_stop_count_labels": ["stop", "stops"],
       "example_phrases": {
-        "0": ["Take the New Haven. (1 stop)"],
-        "1": ["Take the F toward JAMAICA - 179 ST. (10 stops)"]
+        "0": ["Take the New Haven. (1 stop)", "Take the metro. (2 stops)", "Take the bus. (12 stops)"],
+        "1": ["Take the F toward JAMAICA - 179 ST. (10 stops)", "Take the ferry toward Staten Island. (1 stop)"]
       }
     },
     "transit_verbal": {
@@ -803,6 +804,7 @@
         "0": "Take the <TRANSIT_NAME>.",
         "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "example_phrases": {
         "0": ["Take the New Haven."],
         "1": ["Take the F toward JAMAICA - 179 ST."]
@@ -813,9 +815,10 @@
         "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "transit_stop_count_labels": ["stop", "stops"],
       "example_phrases": {
-        "0": ["Remain on the New Haven. (1 stop)"],
+        "0": ["Remain on the New Haven. (1 stop)", "Remain on the train. (3 stops)"],
         "1": ["Remain on the F toward JAMAICA - 179 ST. (10 stops)"]
       }
     },
@@ -824,6 +827,7 @@
         "0": "Remain on the <TRANSIT_NAME>.",
         "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "example_phrases": {
         "0": ["Remain on the New Haven."],
         "1": ["Remain on the F toward JAMAICA - 179 ST."]
@@ -834,9 +838,10 @@
         "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "transit_stop_count_labels": ["stop", "stops"],
       "example_phrases": {
-        "0": ["Transfer to take the New Haven. (1 stop)"],
+        "0": ["Transfer to take the New Haven. (1 stop)", "Transfer to take the tram. (4 stops)"],
         "1": ["Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"]
       }
     },
@@ -845,6 +850,7 @@
         "0": "Transfer to take the <TRANSIT_NAME>.",
         "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "example_phrases": {
         "0": ["Transfer to take the New Haven."],
         "1": ["Transfer to take the F toward JAMAICA - 179 ST."]

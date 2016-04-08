@@ -390,7 +390,20 @@ class NarrativeBuilder {
       const std::vector<std::string>& relative_directions);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormTransitName(Maneuver& maneuver);
+  /**
+   * Returns the transit name in this precedence - depending on which one exists:
+   *    1) Short name
+   * or 2) Long name
+   * or 3) Generic name based on transit travel type
+   *
+   * @param maneuver The maneuver with the transit names to process.
+   * @param empty_transit_name_labels A list of empty transit name labels.
+   *
+   * @return the transit name.
+   */
+  std::string FormTransitName(
+      const Maneuver& maneuver,
+      const std::vector<std::string>& empty_transit_name_labels);
 
   /////////////////////////////////////////////////////////////////////////////
   // TODO make virtual

@@ -792,10 +792,11 @@
         "0": "Nastupte na <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Nastupte na <TRANSIT_NAME> směr <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "transit_stop_count_labels": ["zastávka", "zastávek"],
       "example_phrases": {
-        "0": ["Nastupte na New Haven. (1 zastávka)"],
-        "1": ["Nastupte na F směr JAMAICA - 179 ST. (10 zastávek)"]
+        "0": ["Nastupte na New Haven. (1 zastávka)", "Take the metro. (2 stops)", "Take the bus. (12 stops)"],
+        "1": ["Nastupte na F směr JAMAICA - 179 ST. (10 zastávek)", "Take the ferry toward Staten Island. (1 stop)"]
       }
     },
     "transit_verbal": {
@@ -803,6 +804,7 @@
         "0": "Nastupte na <TRANSIT_NAME>.",
         "1": "Nastupte na <TRANSIT_NAME> směr <TRANSIT_HEADSIGN>."
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "example_phrases": {
         "0": ["Nastupte na New Haven."],
         "1": ["Nastupte na F směr JAMAICA - 179 ST."]
@@ -813,9 +815,10 @@
         "0": "Zůstaňte v <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Zůstaňte v <TRANSIT_NAME> směr <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "transit_stop_count_labels": ["zastávka", "zastávek"],
       "example_phrases": {
-        "0": ["Zůstaňte v New Haven. (1 zastávka)"],
+        "0": ["Zůstaňte v New Haven. (1 zastávka)", "Remain on the train. (3 stops)"],
         "1": ["Zůstaňte v F směr JAMAICA - 179 ST. (10 zastávek)"]
       }
     },
@@ -824,6 +827,7 @@
         "0": "Zůstaňte v <TRANSIT_NAME>.",
         "1": "Zůstaňte v <TRANSIT_NAME> směr <TRANSIT_HEADSIGN>."
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "example_phrases": {
         "0": ["Zůstaňte v New Haven."],
         "1": ["Zůstaňte v F směr JAMAICA - 179 ST."]
@@ -834,9 +838,10 @@
         "0": "Přestupte na <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Přestupte na <TRANSIT_NAME> směr <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "transit_stop_count_labels": ["zastávka", "zastávek"],
       "example_phrases": {
-        "0": ["Přestupte na New Haven. (1 zastávka)"],
+        "0": ["Přestupte na New Haven. (1 zastávka)", "Transfer to take the tram. (4 stops)"],
         "1": ["Přestupte na F směr JAMAICA - 179 ST. (10 zastávek)"]
       }
     },
@@ -845,6 +850,7 @@
         "0": "Přestupte na <TRANSIT_NAME>.",
         "1": "Přestupte na <TRANSIT_NAME> směr <TRANSIT_HEADSIGN>."
       },
+      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
       "example_phrases": {
         "0": ["Přestupte na New Haven."],
         "1": ["Přestupte na F směr JAMAICA - 179 ST."]
