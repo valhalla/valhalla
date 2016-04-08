@@ -4,6 +4,9 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
+#include "mjolnir/adminconstants.h"
+#include <valhalla/baldr/graphconstants.h>
+
 #include "config.h"
 
 #include <sqlite3.h>
@@ -32,6 +35,7 @@ using namespace geos::operation::linemerge;
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
+using namespace valhalla::baldr;
 
 #include <ostream>
 #include <boost/program_options.hpp>
@@ -289,16 +293,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
-  // Turn on foreign keys
-   sql = "PRAGMA foreign_keys = ON";
-   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-   if (ret != SQLITE_OK) {
-     LOG_ERROR("Error on foreign_keys: " + std::string(err_msg));
-     sqlite3_free(err_msg);
-     sqlite3_close(db_handle);
-     return;
-   }
-
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
   sql += "admin_level INTEGER NOT NULL,";
@@ -315,6 +309,54 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_close(db_handle);
     return;
   }
+
+  /* creating an admin access table */
+  sql = "CREATE TABLE admin_access (";
+  sql += "admin_id INTEGER NOT NULL,";
+  sql += "motorway INTEGER DEFAULT NULL,";
+  sql += "motorway_link INTEGER DEFAULT NULL,";
+  sql += "trunk INTEGER DEFAULT NULL,";
+  sql += "trunk_link INTEGER DEFAULT NULL,";
+  sql += "prim_ary INTEGER DEFAULT NULL,";
+  sql += "prim_ary_link INTEGER DEFAULT NULL,";
+  sql += "secondary INTEGER DEFAULT NULL,";
+  sql += "secondary_link INTEGER DEFAULT NULL,";
+  sql += "residential INTEGER DEFAULT NULL,";
+  sql += "residential_link INTEGER DEFAULT NULL,";
+  sql += "service INTEGER DEFAULT NULL,";
+  sql += "tertiary INTEGER DEFAULT NULL,";
+  sql += "tertiary_link INTEGER DEFAULT NULL,";
+  sql += "road INTEGER DEFAULT NULL,";
+  sql += "track INTEGER DEFAULT NULL,";
+  sql += "unclassified INTEGER DEFAULT NULL,";
+  sql += "undefined INTEGER DEFAULT NULL,";
+  sql += "unknown INTEGER DEFAULT NULL,";
+  sql += "living_street INTEGER DEFAULT NULL,";
+  sql += "footway INTEGER DEFAULT NULL,";
+  sql += "pedestrian INTEGER DEFAULT NULL,";
+  sql += "steps INTEGER DEFAULT NULL,";
+  sql += "bridleway INTEGER DEFAULT NULL,";
+  sql += "construction INTEGER DEFAULT NULL,";
+  sql += "cycleway INTEGER DEFAULT NULL,";
+  sql += "path INTEGER DEFAULT NULL,";
+  sql += "bus_guideway INTEGER DEFAULT NULL)";
+  //really we should have this for admin_id:
+  //"FOREIGN KEY (admin_id) REFERENCES admins(row_id))";
+  //but it seems worthless as we will just have to
+  //create another column row_id which is equal to rowid.
+  //That would just bloat the data and we can just create
+  //an index on admin_id.
+
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
+  LOG_INFO("Created admin access table.");
+
   /* creating a MULTIPOLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
   sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
@@ -327,29 +369,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Created admin table.");
-
-  /* creating an admin access table */
-  sql = "CREATE TABLE admin_access (";
-  sql += "admin_id INTEGER NOT NULL,";
-  sql += "trunk INTEGER NOT NULL,";
-  sql += "trunk_link INTEGER NOT NULL,";
-  sql += "track INTEGER NOT NULL,";
-  sql += "footway INTEGER NOT NULL,";
-  sql += "pedestrian INTEGER NOT NULL,";
-  sql += "bridleway INTEGER NOT NULL,";
-  sql += "cycleway INTEGER NOT NULL,";
-  sql += "path INTEGER NOT NULL,";
-  sql += "FOREIGN KEY (admin_id) REFERENCES admin(rowid))";
-
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  LOG_INFO("Created admin access table.");
 
   /*
    * inserting some MULTIPOLYGONs
@@ -543,11 +562,59 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating Parent admin");
 
- /* sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
-  sql += "drive_on_right, trunk, trunk_link, track, footway, pedestrian, bridleway, ";
-  sql += "cycleway, path, geom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ";
-  sql += "CastToMulti(GeomFromText(?, 4326)))";
-  */
+  sql  = "INSERT into admin_access (admin_id, trunk, trunk_link, track, footway, ";
+  sql += "pedestrian, bridleway, cycleway, path) VALUES (";
+  sql += "(select rowid from admins where (name = ? or name_en = ?)), ";
+  sql += "?, ?, ?, ?, ?, ?, ?, ?)";
+
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("SQL error: " + sql);
+    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+  }
+  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
+  for (const auto access : kCountryAccess) {
+
+    const std::vector<int> column_values = access.second;
+
+    sqlite3_reset (stmt);
+    sqlite3_clear_bindings (stmt);
+    sqlite3_bind_text (stmt, 1, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text (stmt, 2, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+
+    for (uint32_t col = 0; col != column_values.size(); ++col) {
+      int val = column_values.at(col);
+      if (val != -1)
+        sqlite3_bind_int (stmt,  col+3, val);
+      else
+        sqlite3_bind_null(stmt,col+3);
+    }
+
+    /* performing INSERT INTO */
+    ret = sqlite3_step (stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+      continue;
+    }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
+              ".  Ignore if not using a planet extract.");
+  }
+
+  sqlite3_finalize (stmt);
+  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+
   sqlite3_close (db_handle);
 }
 
