@@ -89,12 +89,6 @@ class StateIterator:
   const T* operator->() const
   { return &(vs_->state(id_)); }
 
-  StateId id() const
-  { return id_; }
-
-  Time time() const
-  { return time_; }
-
   // Invalid iterator can't be dereferenced. Invalid iterator can be
   // used to indicate that no state has been found at a time
 
