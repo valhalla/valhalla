@@ -232,7 +232,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     } else {
       edgelabel = nullptr;
     }
-    const midgard::DistanceApproximator approximator(right.candidate().vertex());
+    const midgard::DistanceApproximator approximator(measurement(right).lnglat());
     left.route(unreached_states_[right.time()], graphreader_,
                MaxRouteDistance(left, right),
                approximator, search_radius_,
