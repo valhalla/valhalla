@@ -10,14 +10,13 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include "rapidjson/stringbuffer.h"
-#include <rapidjson/error/en.h>
+#include <rapidjson/stringbuffer.h>
 
 #include "mmp/measurement.h"
 #include "mmp/universal_cost.h"
 #include "mmp/map_matching.h"
+#include "mmp/geojson_reader.h"
+#include "mmp/geojson_writer.h"
 
 using namespace prime_server;
 using namespace valhalla;
@@ -109,429 +108,6 @@ void init_http_status_codes()
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
 const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
-
-class SequenceParseError: public std::runtime_error {
-  // Need its constructor
-  using std::runtime_error::runtime_error;
-};
-
-
-void parse_json(rapidjson::Document& document, const char* text)
-{
-  document.Parse(text);
-
-  if (document.HasParseError()) {
-    std::string message(GetParseError_En(document.GetParseError()));
-    throw SequenceParseError("Unable to parse JSON body: " + message);
-  }
-}
-
-
-inline bool
-is_geojson_geometry(const rapidjson::Value& geometry)
-{
-  return geometry.IsObject() && geometry.HasMember("coordinates");
-}
-
-
-std::vector<PointLL>
-read_geojson_geometry(const rapidjson::Value& geometry)
-{
-  if (!is_geojson_geometry(geometry)) {
-    throw SequenceParseError("Invalid GeoJSON geometry");
-  }
-
-  // Parse coordinates
-  if (!geometry.HasMember("coordinates")) {
-    throw SequenceParseError("Invalid GeoJSON geometry: coordinates not found");
-  }
-
-  const auto& coordinates = geometry["coordinates"];
-  if (!coordinates.IsArray()) {
-    throw SequenceParseError("Invalid GeoJSON geometry: coordindates is not an array of coordinates");
-  }
-
-  std::vector<midgard::PointLL> coords;
-  for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
-    const auto& coordinate = coordinates[i];
-    if (!coordinate.IsArray()
-        || coordinate.Size() != 2
-        || !coordinate[0].IsNumber()
-        || !coordinate[1].IsNumber()) {
-      throw SequenceParseError("Invalid GeoJSON geometry: coordindate at "
-                               + std::to_string(i)
-                               + " is not a valid coordinate (a array of two numbers)");
-    }
-    auto lng = coordinate[0].GetDouble(),
-         lat = coordinate[1].GetDouble();
-    coords.emplace_back(lng, lat);
-  }
-
-  return coords;
-}
-
-
-inline bool
-is_geojson_feature(const rapidjson::Value& object)
-{
-  // Strictly speak a GeoJSON feature must have "id" and "properties",
-  // but in our case they are optional. A full example is as folllows:
-  // {"id": 1, "type": "Feature", "geometry": GEOMETRY, "properties": {"times": [], "radius": []}}
-
-  // We follow Postel's Law: be liberal in what you accept
-  return object.IsObject()
-      // && object.HasMember("type")
-      // && std::string(object["type"].GetString()) == "Feature"
-      && object.HasMember("geometry");
-}
-
-
-std::vector<Measurement>
-read_geojson_feature(const rapidjson::Value& feature,
-                     float default_gps_accuracy,
-                     float default_search_radius)
-{
-  if (!is_geojson_feature(feature)) {
-    throw SequenceParseError("Invalid GeoJSON feature");
-  }
-
-  const auto& coords = read_geojson_geometry(feature["geometry"]);
-
-  // TODO: add timestamp
-  // TODO: limit gps_accuracy and search_radius
-  std::vector<float> gps_accuracy, search_radius;
-  if (feature.HasMember("properties")) {
-    const auto& properties = feature["properties"];
-
-    if (properties.HasMember("gps_accuracy")) {
-      const auto& gps_accuracy_value = properties["gps_accuracy"];
-      if (gps_accuracy_value.IsArray()) {
-        for (rapidjson::SizeType i = 0; i < gps_accuracy_value.Size(); i++) {
-          // TODO: check overflow
-          gps_accuracy.emplace_back(gps_accuracy_value[i].GetDouble());
-        }
-      } else if (gps_accuracy_value.IsNumber()) {
-        // TODO: check overflow
-        default_gps_accuracy = gps_accuracy_value.GetDouble();
-      }
-    }
-
-    if (properties.HasMember("search_radius")) {
-      const auto& search_radius_value = properties["search_radius"];
-      if (search_radius_value.IsArray()) {
-        for (rapidjson::SizeType i = 0; i < search_radius_value.Size(); i++) {
-          // TODO: check overflow
-          search_radius.emplace_back(search_radius_value[i].GetDouble());
-        }
-      } else if (search_radius_value.IsNumber()) {
-        // TODO: check overflow
-        default_search_radius = search_radius_value.GetDouble();
-      }
-    }
-  }
-
-  std::vector<Measurement> measurements;
-  size_t i = 0;
-  for (const auto& coord: coords) {
-    measurements.emplace_back(coords[i],
-                              i < gps_accuracy.size()? gps_accuracy[i] : default_gps_accuracy,
-                              i < search_radius.size()? search_radius[i] : default_search_radius);
-    i++;
-  }
-
-  return measurements;
-}
-
-
-std::vector<Measurement> read_geojson(const rapidjson::Value& object,
-                                      float default_gps_accuracy,
-                                      float default_search_radius)
-{
-  if (is_geojson_feature(object)) {
-    return read_geojson_feature(object, default_gps_accuracy, default_search_radius);
-  } else if (is_geojson_geometry(object)) {
-    const auto& coords = read_geojson_geometry(object);
-    std::vector<Measurement> measurements;
-    for (const auto& coord: coords) {
-      measurements.emplace_back(coord, default_gps_accuracy, default_search_radius);
-    }
-    return measurements;
-  } else {
-    throw SequenceParseError("Invalid GeoJSON object: expect either Feature or Geometry");
-  }
-}
-
-
-template <typename buffer_t>
-void serialize_coordinate(const midgard::PointLL& coord,
-                          rapidjson::Writer<buffer_t>& writer)
-{
-  writer.StartArray();
-  // TODO lower precision
-  writer.Double(coord.lng());
-  writer.Double(coord.lat());
-  writer.EndArray();
-}
-
-
-template <typename buffer_t>
-void serialize_graphid(const baldr::GraphId& graphid,
-                       rapidjson::Writer<buffer_t>& writer)
-{
-  if (graphid.Is_Valid()) {
-    writer.StartObject();
-
-    writer.String("id");
-    writer.Uint(graphid.id());
-
-    writer.String("level");
-    writer.Uint(graphid.level());
-
-    writer.String("tileid");
-    writer.Uint(graphid.tileid());
-
-    writer.EndObject();
-  } else {
-    writer.Null();
-  }
-}
-
-
-template <typename buffer_t>
-void serialize_geometry_matched_coordinates(const std::vector<MatchResult>& results,
-                                            rapidjson::Writer<buffer_t>& writer)
-{
-  writer.StartObject();
-
-  writer.String("type");
-  writer.String("MultiPoint");
-
-  writer.String("coordinates");
-  writer.StartArray();
-  for (const auto& result : results) {
-    serialize_coordinate(result.lnglat(), writer);
-  }
-  writer.EndArray();
-
-  writer.EndObject();
-}
-
-
-template <typename buffer_t>
-void serialize_geometry_route(const std::vector<MatchResult>& results,
-                              const MapMatching& mm,
-                              rapidjson::Writer<buffer_t>& writer)
-{
-  writer.StartObject();
-
-  writer.String("type");
-  writer.String("MultiLineString");
-
-  writer.String("coordinates");
-  writer.StartArray();
-  const auto& route = ConstructRoute(mm.graphreader(), results.cbegin(), results.cend());
-  bool open = false;
-  for (auto segment = route.cbegin(), prev_segment = route.cend();
-       segment != route.cend(); segment++) {
-    assert(segment->edgeid.Is_Valid());
-    const auto& shape = segment->Shape(mm.graphreader());
-    if (!shape.empty()) {
-      assert(shape.size() >= 2);
-      if (prev_segment != route.cend()
-          && prev_segment->Adjoined(mm.graphreader(), *segment)) {
-        for (auto vertex = std::next(shape.begin()); vertex != shape.end(); vertex++) {
-          serialize_coordinate(*vertex, writer);
-        }
-      } else {
-        if (open) {
-          writer.EndArray();
-          open = false;
-        }
-        writer.StartArray();
-        open = true;
-        for (auto vertex = shape.begin(); vertex != shape.end(); vertex++) {
-          serialize_coordinate(*vertex, writer);
-        }
-      }
-    }
-    prev_segment = segment;
-  }
-  if (open) {
-    writer.EndArray();
-    open = false;
-  }
-  writer.EndArray();
-
-  writer.EndObject();
-}
-
-
-template <typename buffer_t>
-void serialize_routes(const State& state,
-                      const MapMatching& mm,
-                      rapidjson::Writer<buffer_t>& writer)
-{
-  if (!state.routed()) {
-    writer.Null();
-    return;
-  }
-
-  writer.StartArray();
-  if (state.time() + 1 < mm.size()) {
-    for (const auto& next_state : mm.states(state.time() + 1)) {
-      auto label = state.RouteBegin(*next_state);
-      if (label != state.RouteEnd()) {
-        writer.StartObject();
-
-        writer.String("next_state");
-        writer.Uint(next_state->id());
-
-        writer.String("edgeid");
-        serialize_graphid(label->edgeid, writer);
-
-        const auto label = state.last_label(*next_state);
-        writer.String("route_distance");
-        writer.Double(label->cost);
-
-        writer.String("route_turn_cost");
-        writer.Double(label->turn_cost);
-
-        writer.String("route");
-        writer.StartArray();
-        for (auto label = state.RouteBegin(*next_state);
-             label != state.RouteEnd();
-             label++) {
-          writer.StartObject();
-
-          writer.String("edgeid");
-          serialize_graphid(label->edgeid, writer);
-
-          writer.String("nodeid");
-          serialize_graphid(label->nodeid, writer);
-
-          writer.String("source");
-          writer.Double(label->source);
-
-          writer.String("target");
-          writer.Double(label->target);
-
-          writer.String("route_distance");
-          writer.Double(label->cost);
-
-          writer.String("turn_cost");
-          writer.Double(label->turn_cost);
-
-          writer.EndObject();
-        }
-        writer.EndArray();
-
-        writer.EndObject();
-      }
-    }
-  }
-  writer.EndArray();
-}
-
-
-template <typename buffer_t>
-void serialize_state(const State& state,
-                     const MapMatching& mm,
-                     rapidjson::Writer<buffer_t>& writer)
-{
-  writer.StartObject();
-
-  writer.String("id");
-  writer.Uint(state.id());
-
-  writer.String("time");
-  writer.Uint(state.time());
-
-  writer.String("distance");
-  writer.Double(state.candidate().distance());
-
-  writer.String("coordinate");
-  serialize_coordinate(state.candidate().vertex(), writer);
-
-  writer.String("routes");
-  serialize_routes(state, mm, writer);
-
-  writer.EndObject();
-}
-
-
-template <typename buffer_t>
-void serialize_properties(const std::vector<MatchResult>& results,
-                          const MapMatching& mm,
-                          rapidjson::Writer<buffer_t>& writer,
-                          bool verbose)
-{
-  writer.StartObject();
-
-  writer.String("matched_coordinates");
-  writer.StartArray();
-  for (const auto& result : results) {
-    serialize_coordinate(result.lnglat(), writer);
-  }
-  writer.EndArray();
-
-  if (verbose) {
-    writer.String("distances");
-    writer.StartArray();
-    for (const auto& result : results) {
-      writer.Double(result.distance());
-    }
-    writer.EndArray();
-
-    writer.String("graphids");
-    writer.StartArray();
-    for (const auto& result : results) {
-      writer.Uint64(result.graphid().id());
-    }
-    writer.EndArray();
-
-    writer.String("states");
-    writer.StartArray();
-    for (const auto& result : results) {
-      writer.StartArray();
-      if (result.state()) {
-        for (const auto state : mm.states(result.state()->time())) {
-          serialize_state(*state, mm, writer);
-        }
-      }
-      writer.EndArray();
-    }
-    writer.EndArray();
-  }
-
-  writer.EndObject();
-}
-
-
-template <typename buffer_t>
-void serialize_results_as_feature(const std::vector<MatchResult>& results,
-                                  const MapMatching& mm,
-                                  rapidjson::Writer<buffer_t>& writer,
-                                  bool route,
-                                  bool verbose)
-{
-  writer.StartObject();
-
-  writer.String("type");
-  writer.String("Feature");
-
-  writer.String("geometry");
-  if (route) {
-    serialize_geometry_route(results, mm, writer);
-  } else {
-    serialize_geometry_matched_coordinates(results, writer);
-  }
-
-  writer.String("properties");
-  serialize_properties(results, mm, writer, verbose);
-
-  writer.EndObject();
-}
 
 
 template <typename buffer_t>
@@ -638,8 +214,7 @@ class mm_worker_t {
         matcher_factory_(config_),
         customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("mm.customizable"))),
         verbose_(config_.get<bool>("mm.verbose")),
-        default_gps_accuracy_(config_.get<float>("mm.gps_accuracy")),
-        default_search_radius_(config_.get<float>("mm.search_radius")) {}
+        geojson_reader_(config_.get<float>("mm.gps_accuracy"), config_.get<float>("mm.search_radius")) {}
 
   boost::property_tree::ptree&
   read_preferences_from_request(const http_request_t& request,
@@ -701,15 +276,18 @@ class mm_worker_t {
     }
 
     if (request.method == method_t::POST) {
-      std::vector<Measurement> measurements;
-      rapidjson::Document json;
+      std::vector<std::vector<Measurement>> sequences;
+      bool is_collection;
 
-      // Parse sequence
+      // Parse sequences
       try {
-        parse_json(json, request.body.c_str());
-        measurements = read_geojson(json, default_gps_accuracy_, default_search_radius_);
+        is_collection = geojson_reader_.Read(request.body, sequences);
       } catch (const SequenceParseError& ex) {
         return jsonify_error(ex.what(), info);
+      }
+
+      if (!is_collection) {
+        assert(sequences.size() == 1);
       }
 
       // Read preferences
@@ -726,12 +304,23 @@ class mm_worker_t {
       MapMatcher* matcher;
       try {
         matcher = matcher_factory_.Create(preferences);
+        // TODO: invalid_argument is ambiguous
       } catch (const std::invalid_argument& ex) {
         return jsonify_error(ex.what(), info);
       }
 
+      std::vector<MatchResult> results;
+
       // Match
-      const auto& results = matcher->OfflineMatch(measurements);
+      if (is_collection) {
+        // TODO: handle result lists
+        std::vector<std::vector<MatchResult>> result_lists;
+        for (const auto& sequence: sequences) {
+          result_lists.push_back(matcher->OfflineMatch(sequence));
+        }
+      } else {
+        results = matcher->OfflineMatch(sequences.front());
+      }
 
       // Serialize results
       rapidjson::StringBuffer sb;
@@ -759,8 +348,7 @@ class mm_worker_t {
   MapMatcherFactory matcher_factory_;
   std::unordered_set<std::string> customizable_;
   bool verbose_;
-  float default_gps_accuracy_;
-  float default_search_radius_;
+  GeoJSONReader geojson_reader_;
 };
 
 
