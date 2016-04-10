@@ -149,15 +149,18 @@ void serialize_response(buffer_t& sb,
   writer.String(status.c_str());
 
   writer.String("data");
-  if (geometry) {
-    if (route) {
-      serialize_geometry_route(results, matcher->mapmatching(), writer);
-    } else {
-      serialize_geometry_matched_coordinates(results, writer);
-    }
+  GeoJSONWriter<buffer_t>* geojson_writer;
+  if (route) {
+    geojson_writer = new GeoJSONRouteWriter<buffer_t>(verbose);
   } else {
-    serialize_results_as_feature(results, matcher->mapmatching(), writer, route, verbose);
+    geojson_writer = new GeoJSONMatchedPointsWriter<buffer_t>(verbose);
   }
+  if (geometry) {
+    geojson_writer->WriteGeometry(writer, *matcher, results);
+  } else {
+    geojson_writer->WriteFeature(writer, *matcher, results);
+  }
+  delete geojson_writer;
 
   if (verbose) {
     writer.String("config");

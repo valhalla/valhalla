@@ -13,13 +13,14 @@
 #include <valhalla/baldr/graphid.h>
 
 
-namespace mmp {
+namespace {
 
 using namespace valhalla;
 
+
 template <typename buffer_t>
-void serialize_coordinate(const midgard::PointLL& coord,
-                          rapidjson::Writer<buffer_t>& writer)
+void serialize_coordinate(rapidjson::Writer<buffer_t>& writer,
+                          const midgard::PointLL& coord)
 {
   writer.StartArray();
   // TODO lower precision
@@ -30,8 +31,8 @@ void serialize_coordinate(const midgard::PointLL& coord,
 
 
 template <typename buffer_t>
-void serialize_graphid(const baldr::GraphId& graphid,
-                       rapidjson::Writer<buffer_t>& writer)
+void serialize_graphid(rapidjson::Writer<buffer_t>& writer,
+                       const baldr::GraphId& graphid)
 {
   if (graphid.Is_Valid()) {
     writer.StartObject();
@@ -53,78 +54,9 @@ void serialize_graphid(const baldr::GraphId& graphid,
 
 
 template <typename buffer_t>
-void serialize_geometry_matched_coordinates(const std::vector<MatchResult>& results,
-                                            rapidjson::Writer<buffer_t>& writer)
-{
-  writer.StartObject();
-
-  writer.String("type");
-  writer.String("MultiPoint");
-
-  writer.String("coordinates");
-  writer.StartArray();
-  for (const auto& result : results) {
-    serialize_coordinate(result.lnglat(), writer);
-  }
-  writer.EndArray();
-
-  writer.EndObject();
-}
-
-
-template <typename buffer_t>
-void serialize_geometry_route(const std::vector<MatchResult>& results,
-                              const MapMatching& mm,
-                              rapidjson::Writer<buffer_t>& writer)
-{
-  writer.StartObject();
-
-  writer.String("type");
-  writer.String("MultiLineString");
-
-  writer.String("coordinates");
-  writer.StartArray();
-  const auto& route = ConstructRoute(mm.graphreader(), results.cbegin(), results.cend());
-  bool open = false;
-  for (auto segment = route.cbegin(), prev_segment = route.cend();
-       segment != route.cend(); segment++) {
-    assert(segment->edgeid.Is_Valid());
-    const auto& shape = segment->Shape(mm.graphreader());
-    if (!shape.empty()) {
-      assert(shape.size() >= 2);
-      if (prev_segment != route.cend()
-          && prev_segment->Adjoined(mm.graphreader(), *segment)) {
-        for (auto vertex = std::next(shape.begin()); vertex != shape.end(); vertex++) {
-          serialize_coordinate(*vertex, writer);
-        }
-      } else {
-        if (open) {
-          writer.EndArray();
-          open = false;
-        }
-        writer.StartArray();
-        open = true;
-        for (auto vertex = shape.begin(); vertex != shape.end(); vertex++) {
-          serialize_coordinate(*vertex, writer);
-        }
-      }
-    }
-    prev_segment = segment;
-  }
-  if (open) {
-    writer.EndArray();
-    open = false;
-  }
-  writer.EndArray();
-
-  writer.EndObject();
-}
-
-
-template <typename buffer_t>
-void serialize_routes(const State& state,
-                      const MapMatching& mm,
-                      rapidjson::Writer<buffer_t>& writer)
+void serialize_routes(rapidjson::Writer<buffer_t>& writer,
+                      const mmp::MapMatching& mm,
+                      const mmp::State& state)
 {
   if (!state.routed()) {
     writer.Null();
@@ -142,7 +74,7 @@ void serialize_routes(const State& state,
         writer.Uint(next_state->id());
 
         writer.String("edgeid");
-        serialize_graphid(label->edgeid, writer);
+        serialize_graphid(writer, label->edgeid);
 
         const auto label = state.last_label(*next_state);
         writer.String("route_distance");
@@ -159,10 +91,10 @@ void serialize_routes(const State& state,
           writer.StartObject();
 
           writer.String("edgeid");
-          serialize_graphid(label->edgeid, writer);
+          serialize_graphid(writer, label->edgeid);
 
           writer.String("nodeid");
-          serialize_graphid(label->nodeid, writer);
+          serialize_graphid(writer, label->nodeid);
 
           writer.String("source");
           writer.Double(label->source);
@@ -189,9 +121,9 @@ void serialize_routes(const State& state,
 
 
 template <typename buffer_t>
-void serialize_state(const State& state,
-                     const MapMatching& mm,
-                     rapidjson::Writer<buffer_t>& writer)
+void serialize_state(rapidjson::Writer<buffer_t>& writer,
+                     const mmp::State& state,
+                     const mmp::MapMatching& mm)
 {
   writer.StartObject();
 
@@ -205,69 +137,113 @@ void serialize_state(const State& state,
   writer.Double(state.candidate().distance());
 
   writer.String("coordinate");
-  serialize_coordinate(state.candidate().vertex(), writer);
+  serialize_coordinate(writer, state.candidate().vertex());
 
   writer.String("routes");
-  serialize_routes(state, mm, writer);
+  serialize_routes(writer, mm, state);
 
   writer.EndObject();
 }
 
 
 template <typename buffer_t>
-void serialize_properties(const std::vector<MatchResult>& results,
-                          const MapMatching& mm,
-                          rapidjson::Writer<buffer_t>& writer,
-                          bool verbose)
+void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
+                       mmp::MapMatcher& matcher,
+                       const std::vector<mmp::MatchResult>& results)
 {
-  writer.StartObject();
+  const auto& mm = matcher.mapmatching();
 
-  writer.String("matched_coordinates");
+  writer.String("distances");
   writer.StartArray();
   for (const auto& result : results) {
-    serialize_coordinate(result.lnglat(), writer);
+    writer.Double(result.distance());
   }
   writer.EndArray();
 
-  if (verbose) {
-    writer.String("distances");
-    writer.StartArray();
-    for (const auto& result : results) {
-      writer.Double(result.distance());
-    }
-    writer.EndArray();
+  writer.String("graphids");
+  writer.StartArray();
+  for (const auto& result : results) {
+    writer.Uint64(result.graphid().id());
+  }
+  writer.EndArray();
 
-    writer.String("graphids");
+  writer.String("states");
+  writer.StartArray();
+  for (const auto& result : results) {
     writer.StartArray();
-    for (const auto& result : results) {
-      writer.Uint64(result.graphid().id());
-    }
-    writer.EndArray();
-
-    writer.String("states");
-    writer.StartArray();
-    for (const auto& result : results) {
-      writer.StartArray();
-      if (result.state()) {
-        for (const auto state : mm.states(result.state()->time())) {
-          serialize_state(*state, mm, writer);
-        }
+    if (result.state()) {
+      for (const auto state : mm.states(result.state()->time())) {
+        serialize_state(writer, *state, mm);
       }
-      writer.EndArray();
     }
     writer.EndArray();
   }
+  writer.EndArray();
+}
 
+
+}
+
+
+namespace mmp {
+
+using namespace valhalla;
+
+
+template <typename buffer_t>
+class GeoJSONWriter
+{
+ public:
+  virtual ~GeoJSONWriter();
+
+  virtual void WriteGeometry(rapidjson::Writer<buffer_t>& writer,
+                             MapMatcher& matcher,
+                             const std::vector<MatchResult>& results) const = 0;
+
+  virtual void WriteGeometryCollection(rapidjson::Writer<buffer_t>& writer,
+                                       MapMatcher& matcher,
+                                       const std::vector<std::vector<MatchResult>>& result_lists) const;
+
+  virtual void WriteProperties(rapidjson::Writer<buffer_t>& writer,
+                               MapMatcher& matcher,
+                               const std::vector<MatchResult>& results) const = 0;
+
+  virtual void WriteFeature(rapidjson::Writer<buffer_t>& writer,
+                            MapMatcher& matcher,
+                            const std::vector<MatchResult>& results) const;
+
+  virtual void WriteFeatureCollection(rapidjson::Writer<buffer_t>& writer,
+                                      MapMatcher& matcher,
+                                      const std::vector<std::vector<MatchResult>>& result_lists) const;
+};
+
+
+template <typename buffer_t>
+GeoJSONWriter<buffer_t>::~GeoJSONWriter() {}
+
+
+template <typename buffer_t>
+void GeoJSONWriter<buffer_t>::WriteGeometryCollection(rapidjson::Writer<buffer_t>& writer,
+                                                      MapMatcher& matcher,
+                                                      const std::vector<std::vector<MatchResult>>& result_lists) const
+{
+  writer.StartObject();
+  writer.String("type");
+  writer.String("GeometryCollection");
+  writer.String("geometries");
+  writer.StartArray();
+  for (const auto& results: result_lists) {
+    WriteGeometry(writer, matcher, results);
+  }
+  writer.EndArray();
   writer.EndObject();
 }
 
 
 template <typename buffer_t>
-void serialize_results_as_feature(const std::vector<MatchResult>& results,
-                                  const MapMatching& mm,
-                                  rapidjson::Writer<buffer_t>& writer,
-                                  bool route,
-                                  bool verbose)
+void GeoJSONWriter<buffer_t>::WriteFeature(rapidjson::Writer<buffer_t>& writer,
+                                           MapMatcher& matcher,
+                                           const std::vector<MatchResult>& results) const
 {
   writer.StartObject();
 
@@ -275,17 +251,182 @@ void serialize_results_as_feature(const std::vector<MatchResult>& results,
   writer.String("Feature");
 
   writer.String("geometry");
-  if (route) {
-    serialize_geometry_route(results, mm, writer);
-  } else {
-    serialize_geometry_matched_coordinates(results, writer);
-  }
+  WriteGeometry(writer, matcher, results);
 
   writer.String("properties");
-  serialize_properties(results, mm, writer, verbose);
+  WriteProperties(writer, matcher, results);
 
   writer.EndObject();
 }
+
+
+template <typename buffer_t>
+void GeoJSONWriter<buffer_t>::WriteFeatureCollection(rapidjson::Writer<buffer_t>& writer,
+                                                     MapMatcher& matcher,
+                                                     const std::vector<std::vector<MatchResult>>& result_lists) const
+{
+  writer.StartObject();
+  writer.String("type");
+  writer.String("FeatureCollection");
+  writer.String("features");
+  writer.StartArray();
+  for (const auto& results: result_lists) {
+    WriteFeature(writer, matcher, results);
+  }
+  writer.EndArray();
+  writer.EndObject();
+}
+
+
+template <typename buffer_t>
+class GeoJSONRouteWriter: public GeoJSONWriter<buffer_t>
+{
+ public:
+  GeoJSONRouteWriter(bool verbose);
+
+  void WriteGeometry(rapidjson::Writer<buffer_t>& writer,
+                     MapMatcher& matcher,
+                     const std::vector<MatchResult>& results) const override;
+
+  void WriteProperties(rapidjson::Writer<buffer_t>& writer,
+                       MapMatcher& matcher,
+                       const std::vector<MatchResult>& results) const override;
+
+ private:
+  bool verbose_;
+};
+
+
+template <typename buffer_t>
+GeoJSONRouteWriter<buffer_t>::GeoJSONRouteWriter(bool verbose)
+    :verbose_(verbose) {}
+
+
+template <typename buffer_t>
+void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& writer,
+                                                 MapMatcher& matcher,
+                                                 const std::vector<MatchResult>& results) const
+{
+  writer.StartObject();
+
+  writer.String("type");
+  writer.String("MultiLineString");
+
+  writer.String("coordinates");
+  writer.StartArray();
+  const auto& route = ConstructRoute(matcher.graphreader(), results.cbegin(), results.cend());
+  bool open = false;
+  for (auto segment = route.cbegin(), prev_segment = route.cend();
+       segment != route.cend(); segment++) {
+    assert(segment->edgeid.Is_Valid());
+    const auto& shape = segment->Shape(matcher.graphreader());
+    if (!shape.empty()) {
+      assert(shape.size() >= 2);
+      if (prev_segment != route.cend()
+          && prev_segment->Adjoined(matcher.graphreader(), *segment)) {
+        for (auto vertex = std::next(shape.begin()); vertex != shape.end(); vertex++) {
+          serialize_coordinate(writer, *vertex);
+        }
+      } else {
+        if (open) {
+          writer.EndArray();
+          open = false;
+        }
+        writer.StartArray();
+        open = true;
+        for (auto vertex = shape.begin(); vertex != shape.end(); vertex++) {
+          serialize_coordinate(writer, *vertex);
+        }
+      }
+    }
+    prev_segment = segment;
+  }
+  if (open) {
+    writer.EndArray();
+    open = false;
+  }
+  writer.EndArray();
+
+  writer.EndObject();
+}
+
+
+template <typename buffer_t>
+void GeoJSONRouteWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& writer,
+                                                   MapMatcher& matcher,
+                                                   const std::vector<MatchResult>& results) const
+{
+  writer.StartObject();
+  writer.String("matched_coordinates");
+  writer.StartArray();
+  for (const auto& result : results) {
+    serialize_coordinate(writer, result.lnglat());
+  }
+  writer.EndArray();
+  if (verbose_) {
+    serialize_verbose(writer, matcher, results);
+  }
+  writer.EndObject();
+}
+
+
+template <typename buffer_t>
+class GeoJSONMatchedPointsWriter: public GeoJSONWriter<buffer_t>
+{
+ public:
+  GeoJSONMatchedPointsWriter(bool verbose);
+
+  void WriteGeometry(rapidjson::Writer<buffer_t>& writer,
+                     MapMatcher& matcher,
+                     const std::vector<MatchResult>& results) const override;
+
+  void WriteProperties(rapidjson::Writer<buffer_t>& writer,
+                       MapMatcher& matcher,
+                       const std::vector<MatchResult>& results) const override;
+
+ private:
+  bool verbose_;
+};
+
+
+template <typename buffer_t>
+GeoJSONMatchedPointsWriter<buffer_t>::GeoJSONMatchedPointsWriter(bool verbose)
+    :verbose_(verbose) {}
+
+
+template <typename buffer_t>
+void GeoJSONMatchedPointsWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& writer,
+                                                         MapMatcher& matcher,
+                                                         const std::vector<MatchResult>& results) const
+{
+  writer.StartObject();
+
+  writer.String("type");
+  writer.String("MultiPoint");
+
+  writer.String("coordinates");
+  writer.StartArray();
+  for (const auto& result : results) {
+    serialize_coordinate(writer, result.lnglat());
+  }
+  writer.EndArray();
+
+  writer.EndObject();
+}
+
+
+template <typename buffer_t>
+void GeoJSONMatchedPointsWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& writer,
+                                                           MapMatcher& matcher,
+                                                           const std::vector<MatchResult>& results) const
+{
+  writer.StartObject();
+  if (verbose_) {
+    serialize_verbose(writer, matcher, results);
+  }
+  writer.EndObject();
+}
+
 
 }
 
