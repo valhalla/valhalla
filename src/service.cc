@@ -129,7 +129,8 @@ void serialize_config(MapMatcher& matcher,
 
 
 std::string serialize_response(MapMatcher& matcher,
-                               const std::vector<MatchResult>& results,
+                               const std::vector<std::vector<MatchResult>>& result_lists,
+                               bool is_collection,
                                bool verbose)
 {
   bool route = matcher.config().get<bool>("route"),
@@ -158,9 +159,17 @@ std::string serialize_response(MapMatcher& matcher,
     geojson_writer = new GeoJSONMatchedPointsWriter<buffer_t>(verbose);
   }
   if (geometry) {
-    geojson_writer->WriteGeometry(writer, matcher, results);
+    if (is_collection) {
+      geojson_writer->WriteGeometryCollection(writer, matcher, result_lists);
+    } else {
+      geojson_writer->WriteGeometry(writer, matcher, result_lists.front());
+    }
   } else {
-    geojson_writer->WriteFeature(writer, matcher, results);
+    if (is_collection) {
+      geojson_writer->WriteFeatureCollection(writer, matcher, result_lists);
+    } else {
+      geojson_writer->WriteFeature(writer, matcher, result_lists.front());
+    }
   }
   delete geojson_writer;
 
@@ -327,22 +336,19 @@ class mm_worker_t {
         return jsonify_error(ex.what(), info);
       }
 
-      std::vector<MatchResult> results;
-
       // Match
+      std::vector<std::vector<MatchResult>> result_lists;
       if (is_collection) {
-        // TODO: handle result lists
-        std::vector<std::vector<MatchResult>> result_lists;
         for (const auto& sequence: sequences) {
           result_lists.push_back(matcher->OfflineMatch(sequence));
         }
       } else {
-        results = matcher->OfflineMatch(sequences.front());
+        result_lists.push_back(matcher->OfflineMatch(sequences.front()));
       }
 
       // Serialize results
       bool verbose = preferences.get<bool>("verbose", verbose_);
-      const auto& content = serialize_response(*matcher, results, verbose);
+      const auto& content = serialize_response(*matcher, result_lists, is_collection, verbose);
 
       delete matcher;
 
