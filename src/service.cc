@@ -15,6 +15,7 @@
 #include "rapidjson/stringbuffer.h"
 #include <rapidjson/error/en.h>
 
+#include "mmp/measurement.h"
 #include "mmp/universal_cost.h"
 #include "mmp/map_matching.h"
 
@@ -134,7 +135,7 @@ is_geojson_geometry(const rapidjson::Value& geometry)
 }
 
 
-std::vector<Measurement>
+std::vector<PointLL>
 read_geojson_geometry(const rapidjson::Value& geometry)
 {
   if (!is_geojson_geometry(geometry)) {
@@ -151,7 +152,7 @@ read_geojson_geometry(const rapidjson::Value& geometry)
     throw SequenceParseError("Invalid GeoJSON geometry: coordindates is not an array of coordinates");
   }
 
-  std::vector<Measurement> measurements;
+  std::vector<midgard::PointLL> coords;
   for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
     const auto& coordinate = coordinates[i];
     if (!coordinate.IsArray()
@@ -164,10 +165,10 @@ read_geojson_geometry(const rapidjson::Value& geometry)
     }
     auto lng = coordinate[0].GetDouble(),
          lat = coordinate[1].GetDouble();
-    measurements.emplace_back(midgard::PointLL(lng, lat));
+    coords.emplace_back(lng, lat);
   }
 
-  return measurements;
+  return coords;
 }
 
 
@@ -187,28 +188,75 @@ is_geojson_feature(const rapidjson::Value& object)
 
 
 std::vector<Measurement>
-read_geojson_feature(const rapidjson::Value& feature)
+read_geojson_feature(const rapidjson::Value& feature,
+                     float default_gps_accuracy,
+                     float default_search_radius)
 {
   if (!is_geojson_feature(feature)) {
     throw SequenceParseError("Invalid GeoJSON feature");
   }
 
-  auto measurements = read_geojson_geometry(feature["geometry"]);
+  const auto& coords = read_geojson_geometry(feature["geometry"]);
 
+  // TODO: add timestamp
+  // TODO: limit gps_accuracy and search_radius
+  std::vector<float> gps_accuracy, search_radius;
   if (feature.HasMember("properties")) {
-    // TODO add time and accuracy
+    const auto& properties = feature["properties"];
+
+    if (properties.HasMember("gps_accuracy")) {
+      const auto& gps_accuracy_value = properties["gps_accuracy"];
+      if (gps_accuracy_value.IsArray()) {
+        for (rapidjson::SizeType i = 0; i < gps_accuracy_value.Size(); i++) {
+          // TODO: check overflow
+          gps_accuracy.emplace_back(gps_accuracy_value[i].GetDouble());
+        }
+      } else if (gps_accuracy_value.IsNumber()) {
+        // TODO: check overflow
+        default_gps_accuracy = gps_accuracy_value.GetDouble();
+      }
+    }
+
+    if (properties.HasMember("search_radius")) {
+      const auto& search_radius_value = properties["search_radius"];
+      if (search_radius_value.IsArray()) {
+        for (rapidjson::SizeType i = 0; i < search_radius_value.Size(); i++) {
+          // TODO: check overflow
+          search_radius.emplace_back(search_radius_value[i].GetDouble());
+        }
+      } else if (search_radius_value.IsNumber()) {
+        // TODO: check overflow
+        default_search_radius = search_radius_value.GetDouble();
+      }
+    }
+  }
+
+  std::vector<Measurement> measurements;
+  size_t i = 0;
+  for (const auto& coord: coords) {
+    measurements.emplace_back(coords[i],
+                              i < gps_accuracy.size()? gps_accuracy[i] : default_gps_accuracy,
+                              i < search_radius.size()? search_radius[i] : default_search_radius);
+    i++;
   }
 
   return measurements;
 }
 
 
-std::vector<Measurement> read_geojson(const rapidjson::Value& object)
+std::vector<Measurement> read_geojson(const rapidjson::Value& object,
+                                      float default_gps_accuracy,
+                                      float default_search_radius)
 {
   if (is_geojson_feature(object)) {
-    return read_geojson_feature(object);
+    return read_geojson_feature(object, default_gps_accuracy, default_search_radius);
   } else if (is_geojson_geometry(object)) {
-    return read_geojson_geometry(object);
+    const auto& coords = read_geojson_geometry(object);
+    std::vector<Measurement> measurements;
+    for (const auto& coord: coords) {
+      measurements.emplace_back(coord, default_gps_accuracy, default_search_radius);
+    }
+    return measurements;
   } else {
     throw SequenceParseError("Invalid GeoJSON object: expect either Feature or Geometry");
   }
@@ -589,7 +637,9 @@ class mm_worker_t {
       : config_(config),
         matcher_factory_(config_),
         customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("mm.customizable"))),
-        verbose_(config_.get<bool>("mm.verbose")) {}
+        verbose_(config_.get<bool>("mm.verbose")),
+        default_gps_accuracy_(config_.get<float>("mm.gps_accuracy")),
+        default_search_radius_(config_.get<float>("mm.search_radius")) {}
 
   boost::property_tree::ptree&
   read_preferences_from_request(const http_request_t& request,
@@ -657,7 +707,7 @@ class mm_worker_t {
       // Parse sequence
       try {
         parse_json(json, request.body.c_str());
-        measurements = read_geojson(json);
+        measurements = read_geojson(json, default_gps_accuracy_, default_search_radius_);
       } catch (const SequenceParseError& ex) {
         return jsonify_error(ex.what(), info);
       }
@@ -709,6 +759,8 @@ class mm_worker_t {
   MapMatcherFactory matcher_factory_;
   std::unordered_set<std::string> customizable_;
   bool verbose_;
+  float default_gps_accuracy_;
+  float default_search_radius_;
 };
 
 

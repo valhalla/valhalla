@@ -10,6 +10,7 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/costconstants.h>
 
+#include <mmp/measurement.h>
 #include <mmp/candidate.h>
 #include <mmp/candidate_search.h>
 #include <mmp/viterbi_search.h>
@@ -19,20 +20,6 @@
 namespace mmp {
 
 using namespace valhalla;
-
-
-class Measurement
-{
- public:
-  Measurement(const midgard::PointLL& lnglat)
-      : lnglat_(lnglat) {}
-
-  const midgard::PointLL& lnglat() const
-  { return lnglat_; }
-
- private:
-  midgard::PointLL lnglat_;
-};
 
 
 class State
@@ -100,7 +87,6 @@ class MapMatching: public ViterbiSearch<State>
               float beta,
               float breakage_distance,
               float max_route_distance_factor,
-              float search_radius,
               float turn_penalty_factor);
 
   MapMatching(baldr::GraphReader& graphreader,
@@ -166,8 +152,6 @@ class MapMatching: public ViterbiSearch<State>
   float breakage_distance_;
 
   float max_route_distance_factor_;
-
-  float search_radius_;
 
   float turn_penalty_factor_;
 

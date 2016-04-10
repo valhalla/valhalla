@@ -1,10 +1,16 @@
 {
     "mm": {
-        "mode": "multimodal",
-
         "customizable": ["mode", "search_radius"],
 
+        "mode": "multimodal",
+
         "verbose": false,
+
+        "gps_accuracy": 10,
+
+        "search_radius": 40,
+
+        "max_search_radius": 100,
 
         "default": {
             "sigma_z": 4.07,
@@ -12,21 +18,17 @@
             "max_route_distance_factor": 3,
             "breakage_distance": 2000,
             "interpolation_distance": 10,
-            "search_radius": 40,
-            "max_search_radius": 100,
             "geometry": false,
             "route": true,
             "turn_penalty_factor": 0
         },
 
         "auto": {
-            "turn_penalty_factor": 200,
-            "search_radius": 50
+            "turn_penalty_factor": 200
         },
 
         "pedestrian": {
-            "turn_penalty_factor": 100,
-            "search_radius": 25
+            "turn_penalty_factor": 100
         },
 
         "bicycle": {

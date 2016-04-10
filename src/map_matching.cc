@@ -5,6 +5,7 @@
 
 using namespace valhalla;
 
+#include <mmp/measurement.h>
 #include "mmp/candidate_search.h"
 #include "mmp/universal_cost.h"
 #include "mmp/routing.h"
@@ -25,7 +26,6 @@ State::State(const StateId id,
       candidate_(candidate),
       labelset_(nullptr),
       label_idx_() {}
-
 
 void
 State::route(const std::vector<const State*>& states,
@@ -116,7 +116,6 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
                          float beta,
                          float breakage_distance,
                          float max_route_distance_factor,
-                         float search_radius,
                          float turn_penalty_factor)
     : graphreader_(graphreader),
       mode_costing_(mode_costing),
@@ -129,7 +128,6 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
       inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance),
       max_route_distance_factor_(max_route_distance_factor),
-      search_radius_(search_radius),
       turn_penalty_factor_(turn_penalty_factor),
       turn_cost_table_{0.f}
 {
@@ -139,10 +137,6 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
 
   if (beta_ <= 0.f) {
     throw std::invalid_argument("Expect beta to be positive");
-  }
-
-  if (search_radius_ < 0.f) {
-    throw std::invalid_argument("Expect search radius to be nonnegative");
   }
 
 #ifndef NDEBUG
@@ -170,7 +164,6 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
                   config.get<float>("beta"),
                   config.get<float>("breakage_distance"),
                   config.get<float>("max_route_distance_factor"),
-                  config.get<float>("search_radius"),
                   config.get<float>("turn_penalty_factor")) {}
 
 
@@ -232,10 +225,11 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     } else {
       edgelabel = nullptr;
     }
-    const midgard::DistanceApproximator approximator(measurement(right).lnglat());
+    const auto& right_measurement = measurement(right);
+    const midgard::DistanceApproximator approximator(right_measurement.lnglat());
     left.route(unreached_states_[right.time()], graphreader_,
                MaxRouteDistance(left, right),
-               approximator, search_radius_,
+               approximator, right_measurement.search_radius(),
                costing(), edgelabel, turn_cost_table_);
   }
   assert(left.routed());
@@ -483,7 +477,6 @@ std::vector<MatchResult>
 OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
-             float sq_search_radius,
              float interpolation_distance)
 {
   mm.Clear();
@@ -507,7 +500,7 @@ OfflineMatch(MapMatching& mm,
     // Always match the first and the last measurement
     if (sq_interpolation_distance <= sq_distance || idx == 0 || idx == end_idx) {
       const auto& candidates = cq.Query(measurement.lnglat(),
-                                        sq_search_radius,
+                                        measurement.sq_search_radius(),
                                         mm.costing()->GetFilter());
       time = mm.AppendState(measurement, candidates.begin(), candidates.end());
       last_idx = idx;
@@ -546,7 +539,7 @@ OfflineMatch(MapMatching& mm,
       const auto& graphset = collect_graphset(mm.graphreader(), source_state, target_state);
       for (const auto idx : it->second) {
         const auto& candidates = cq.Query(measurements[idx].lnglat(),
-                                          sq_search_radius,
+                                          measurements[idx].sq_search_radius(),
                                           mm.costing()->GetFilter());
         results.push_back(interpolate(mm.graphreader(), graphset,
                                       candidates.begin(), candidates.end(),
@@ -581,11 +574,8 @@ MapMatcher::~MapMatcher() {}
 std::vector<MatchResult>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
-  float search_radius = std::min(config_.get<float>("search_radius"),
-                                 config_.get<float>("max_search_radius"));
   float interpolation_distance = config_.get<float>("interpolation_distance");
   return mmp::OfflineMatch(mapmatching_, rangequery_, measurements,
-                           search_radius * search_radius,
                            interpolation_distance);
 }
 
