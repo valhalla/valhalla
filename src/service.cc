@@ -201,6 +201,17 @@ worker_t::result_t jsonify_error(const std::string& message,
 }
 
 
+worker_t::result_t jsonify_success(const std::string& content,
+                                   http_request_t::info_t& info)
+{
+  worker_t::result_t result{false};
+  http_response_t response(200, http_status_code(200), content, headers_t{CORS, JS_MIME});
+  response.from_info(info);
+  result.messages.emplace_back(response.to_string());
+  return result;
+}
+
+
 template <typename T>
 inline std::unordered_set<T>
 ptree_array_to_unordered_set(const boost::property_tree::ptree& ptree)
@@ -331,15 +342,11 @@ class mm_worker_t {
 
       // Serialize results
       bool verbose = preferences.get<bool>("verbose", verbose_);
-      const auto& response_content = serialize_response(*matcher, results, verbose);
+      const auto& content = serialize_response(*matcher, results, verbose);
 
       delete matcher;
 
-      worker_t::result_t result{false};
-      http_response_t response(200, http_status_code(200), response_content, headers_t{CORS, JS_MIME});
-      response.from_info(info);
-      result.messages.emplace_back(response.to_string());
-      return result;
+      return jsonify_success(content, info);
     } else {
       // Method not support
       return jsonify_error(http_status_code(405), info, 405);
