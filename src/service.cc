@@ -111,12 +111,12 @@ const headers_t::value_type JS_MIME{"Content-type", "application/javascript;char
 
 
 template <typename buffer_t>
-void serialize_config(MapMatcher* matcher,
+void serialize_config(MapMatcher& matcher,
                       rapidjson::Writer<buffer_t>& writer)
 {
   // Property tree -> string
   std::stringstream ss;
-  boost::property_tree::json_parser::write_json(ss, matcher->config());
+  boost::property_tree::json_parser::write_json(ss, matcher.config());
   const auto& str = ss.str();
 
   // String -> JSON document
@@ -128,15 +128,17 @@ void serialize_config(MapMatcher* matcher,
 }
 
 
-template <typename buffer_t>
-void serialize_response(buffer_t& sb,
-                        const std::vector<MatchResult>& results,
-                        MapMatcher* matcher,
-                        bool verbose)
+std::string serialize_response(MapMatcher& matcher,
+                               const std::vector<MatchResult>& results,
+                               bool verbose)
 {
+  bool route = matcher.config().get<bool>("route"),
+    geometry = matcher.config().get<bool>("geometry");
+
+  using buffer_t = rapidjson::StringBuffer;
+  buffer_t sb;
   rapidjson::Writer<buffer_t> writer(sb);
-  bool route = matcher->config().get<bool>("route"),
-    geometry = matcher->config().get<bool>("geometry");
+
   writer.StartObject();
 
   writer.String("status");
@@ -156,9 +158,9 @@ void serialize_response(buffer_t& sb,
     geojson_writer = new GeoJSONMatchedPointsWriter<buffer_t>(verbose);
   }
   if (geometry) {
-    geojson_writer->WriteGeometry(writer, *matcher, results);
+    geojson_writer->WriteGeometry(writer, matcher, results);
   } else {
-    geojson_writer->WriteFeature(writer, *matcher, results);
+    geojson_writer->WriteFeature(writer, matcher, results);
   }
   delete geojson_writer;
 
@@ -168,6 +170,8 @@ void serialize_response(buffer_t& sb,
   }
 
   writer.EndObject();
+
+  return sb.GetString();
 }
 
 
@@ -326,14 +330,13 @@ class mm_worker_t {
       }
 
       // Serialize results
-      rapidjson::StringBuffer sb;
       bool verbose = preferences.get<bool>("verbose", verbose_);
-      serialize_response(sb, results, matcher, verbose);
+      const auto& response_content = serialize_response(*matcher, results, verbose);
 
       delete matcher;
 
       worker_t::result_t result{false};
-      http_response_t response(200, http_status_code(200), sb.GetString(), headers_t{CORS, JS_MIME});
+      http_response_t response(200, http_status_code(200), response_content, headers_t{CORS, JS_MIME});
       response.from_info(info);
       result.messages.emplace_back(response.to_string());
       return result;
