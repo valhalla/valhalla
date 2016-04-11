@@ -120,7 +120,8 @@ bin_PROGRAMS = \
 	pbfgraphbuilder \
 	pbfadminbuilder \
 	transit_fetcher \
-        transit_stop_query
+        transit_stop_query \
+        ways_to_edges
 
 adminbenchmark_SOURCES = src/mjolnir/adminbenchmark.cc
 adminbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
@@ -145,6 +146,10 @@ transit_fetcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST
 transit_stop_query_SOURCES = src/mjolnir/transit_stop_query.cc
 transit_stop_query_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 transit_stop_query_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+
+ways_to_edges_SOURCES = src/mjolnir/ways_to_edges.cc
+ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+ways_to_edges_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
 
 # tests
 check_PROGRAMS = \
