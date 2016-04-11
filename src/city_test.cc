@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
         // transitions
         if (cost->AllowMultiPass()) {
           pathalgorithm.Clear();
-          cost->RelaxHierarchyLimits(16.0f);
+          cost->RelaxHierarchyLimits(16.0f, 4.0f);
           pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
           np++;
           if (pathedges.size() == 0) {
