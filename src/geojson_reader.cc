@@ -7,29 +7,47 @@
 namespace mmp {
 
 inline bool
-is_geojson_geometry(const rapidjson::Value& geometry)
-{ return geometry.IsObject() && geometry.HasMember("coordinates"); }
+is_geometry(const rapidjson::Value& value)
+{ return value.IsObject() && value.HasMember("coordinates"); }
 
 
 inline bool
-is_geojson_feature(const rapidjson::Value& object)
+is_feature(const rapidjson::Value& value)
 {
   // Strictly speak a GeoJSON feature must have "id" and "properties",
   // but in our case they are optional. A full example is as folllows:
   // {"id": 1, "type": "Feature", "geometry": GEOMETRY, "properties": {"times": [], "radius": []}}
 
   // We follow Postel's Law: be liberal in what you accept
-  return object.IsObject()
+  return value.IsObject()
       // && object.HasMember("type")
       // && std::string(object["type"].GetString()) == "Feature"
-      && object.HasMember("geometry");
+      && value.HasMember("geometry");
+}
+
+
+inline bool
+is_feature_collection(const rapidjson::Value& value)
+{
+  return value.IsObject()
+      && value.HasMember("type") && value["type"] == "FeatureCollection"
+      && value.HasMember("features") && value["features"].IsArray();
+}
+
+
+inline bool
+is_geometry_collection(const rapidjson::Value& value)
+{
+  return value.IsObject()
+      && value.HasMember("type") && value["type"] == "GeometryCollection"
+      && value.HasMember("geometries") && value["geometries"].IsArray();
 }
 
 
 std::vector<midgard::PointLL>
-read_geojson_geometry(const rapidjson::Value& geometry)
+read_coordinates(const rapidjson::Value& geometry)
 {
-  if (!is_geojson_geometry(geometry)) {
+  if (!is_geometry(geometry)) {
     throw SequenceParseError("Invalid GeoJSON geometry");
   }
 
@@ -54,8 +72,8 @@ read_geojson_geometry(const rapidjson::Value& geometry)
                                + std::to_string(i)
                                + " is not a valid coordinate (a array of two numbers)");
     }
-    auto lng = coordinate[0].GetDouble(),
-         lat = coordinate[1].GetDouble();
+    const auto lng = coordinate[0].GetDouble(),
+               lat = coordinate[1].GetDouble();
     coords.emplace_back(lng, lat);
   }
 
@@ -63,22 +81,54 @@ read_geojson_geometry(const rapidjson::Value& geometry)
 }
 
 
-std::vector<Measurement>
-read_geojson_feature(const rapidjson::Value& feature,
-                     float default_gps_accuracy,
-                     float default_search_radius)
+rapidjson::Document
+parse_json(const char* text)
 {
-  if (!is_geojson_feature(feature)) {
+  rapidjson::Document document;
+
+  document.Parse(text);
+  if (document.HasParseError()) {
+    std::string message(GetParseError_En(document.GetParseError()));
+    throw SequenceParseError("Unable to parse JSON body: " + message);
+  }
+
+  return document;
+}
+
+
+GeoJSONReader::GeoJSONReader(float default_gps_accuracy, float default_search_radius)
+    : default_gps_accuracy_(default_gps_accuracy),
+      default_search_radius_(default_search_radius) {}
+
+
+std::vector<Measurement>
+GeoJSONReader::ReadGeometry(const rapidjson::Value& value) const
+{
+  std::vector<Measurement> sequence;
+  const auto& coords = read_coordinates(value);
+  for (const auto& coord: coords) {
+    sequence.emplace_back(coord, default_gps_accuracy_, default_search_radius_);
+  }
+  return sequence;
+}
+
+
+std::vector<Measurement>
+GeoJSONReader::ReadFeature(const rapidjson::Value& value) const
+{
+  if (!is_feature(value)) {
     throw SequenceParseError("Invalid GeoJSON feature");
   }
 
-  const auto& coords = read_geojson_geometry(feature["geometry"]);
+  float default_gps_accuracy = default_gps_accuracy_,
+       default_search_radius = default_search_radius_;
+  const auto& coords = read_coordinates(value["geometry"]);
 
   // TODO: add timestamp
   // TODO: limit gps_accuracy and search_radius
   std::vector<float> gps_accuracy, search_radius;
-  if (feature.HasMember("properties")) {
-    const auto& properties = feature["properties"];
+  if (value.HasMember("properties")) {
+    const auto& properties = value["properties"];
 
     if (properties.HasMember("gps_accuracy")) {
       const auto& gps_accuracy_value = properties["gps_accuracy"];
@@ -120,46 +170,37 @@ read_geojson_feature(const rapidjson::Value& feature,
 }
 
 
-rapidjson::Document
-parse_json(const char* text)
-{
-  rapidjson::Document document;
-
-  document.Parse(text);
-  if (document.HasParseError()) {
-    std::string message(GetParseError_En(document.GetParseError()));
-    throw SequenceParseError("Unable to parse JSON body: " + message);
-  }
-
-  return document;
-}
-
-
-GeoJSONReader::GeoJSONReader(float default_gps_accuracy, float default_search_radius)
-    : default_gps_accuracy_(default_gps_accuracy),
-      default_search_radius_(default_search_radius) {}
-
-
 bool GeoJSONReader::Read(const std::string& string,
                          std::vector<std::vector<Measurement>>& sequences) const
 {
   bool is_collection;
   const auto& document = parse_json(string.c_str());
 
-  if (is_geojson_feature(document)) {
-    sequences.push_back(read_geojson_feature(document, default_gps_accuracy_, default_search_radius_));
+  if (is_geometry(document)) {
+    sequences.push_back(ReadGeometry(document));
     is_collection = false;
-  } else if (is_geojson_geometry(document)) {
-    sequences.emplace_back();
-    const auto& coords = read_geojson_geometry(document);
-    for (const auto& coord: coords) {
-      sequences.back().emplace_back(coord, default_gps_accuracy_, default_search_radius_);
+
+  } else if (is_geometry_collection(document)) {
+    const auto& geometries = document["geometries"];
+    for (size_t i = 0; i < geometries.Size(); i++) {
+      sequences.push_back(ReadGeometry(geometries[i]));
     }
+    is_collection = true;
+
+  } else if (is_feature(document)) {
+    sequences.push_back(ReadFeature(document));
     is_collection = false;
+
+  } else if (is_feature_collection(document)) {
+    const auto& features = document["features"];
+    for (size_t i = 0; i < features.Size(); i++) {
+      sequences.push_back(ReadFeature(features[i]));
+    }
+    is_collection = true;
+
   } else {
     throw SequenceParseError("Invalid GeoJSON object: expect either Feature or Geometry");
   }
-  // TODO: read collection
 
   return is_collection;
 }

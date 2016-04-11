@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <rapidjson/document.h>
+
 #include <mmp/measurement.h>
 
 namespace mmp {
@@ -22,10 +24,23 @@ class GeoJSONReader
 {
  public:
   GeoJSONReader(float default_search_radius, float default_gps_accuracy);
+
   bool Read(const std::string& string, std::vector<std::vector<Measurement>>& sequences) const;
+
+  float default_gps_accuracy() const
+  { return default_gps_accuracy_; }
+
+  float default_search_radius() const
+  { return default_search_radius_; }
+
+ protected:
+  std::vector<Measurement> ReadGeometry(const rapidjson::Value& value) const;
+
+  std::vector<Measurement> ReadFeature(const rapidjson::Value& value) const;
 
  private:
   float default_gps_accuracy_;
+
   float default_search_radius_;
 };
 
