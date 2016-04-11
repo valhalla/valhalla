@@ -159,7 +159,8 @@ namespace valhalla {
           path_algorithm->Clear();
           bool using_astar = (path_algorithm == &astar);
           float relax_factor = using_astar ? 16.0f : 8.0f;
-          cost->RelaxHierarchyLimits(relax_factor);
+          float expansion_within_factor = using_astar ? 4.0f : 2.0f;
+          cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
           midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
           path_edges = path_algorithm->GetBestPath(origin, destination,
                                     reader, mode_costing, mode);
