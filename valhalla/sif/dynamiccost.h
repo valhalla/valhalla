@@ -259,7 +259,7 @@ class DynamicCost {
   /**
    * Relax hierarchy limits.
    */
-  void RelaxHierarchyLimits(const float factor);
+  void RelaxHierarchyLimits(const float factor, const float expansion_within_factor);
 
   /**
    * Do not transition up to highway level - remain on arterial. Used as last

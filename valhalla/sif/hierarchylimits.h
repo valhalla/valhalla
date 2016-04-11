@@ -125,12 +125,12 @@ struct HierarchyLimits {
     return dist < downward_within_dist;
   }
 
-  void Relax(const float factor) {
+  void Relax(const float factor, const float expansion_within_factor) {
     up_transition_count *= factor;
     max_up_transitions *= factor;
-    expansion_within_dist *= factor;
     upward_until_dist *= factor;
     downward_within_dist *= factor;
+    expansion_within_dist *= expansion_within_factor;
   }
 
   void DisableHighwayTransitions() {

@@ -116,9 +116,10 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
 }
 
 // Relax hierarchy limits.
-void DynamicCost::RelaxHierarchyLimits(const float factor) {
+void DynamicCost::RelaxHierarchyLimits(const float factor,
+                                       const float expansion_within_factor) {
   for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(factor);
+    hierarchy.Relax(factor, expansion_within_factor);
   }
 }
 
