@@ -2,11 +2,13 @@ ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
 AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
-VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ @VALHALLA_BALDR_LDFLAGS@ @VALHALLA_BALDR_LIB@
-VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@ @VALHALLA_BALDR_CPPFLAGS@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
+
+# things for versioning
+pkgconfig_DATA = libvalhalla_sif.pc
+EXTRA_DIST = version.sh
 
 # conditional test coverage
 if ENABLE_COVERAGE
@@ -56,22 +58,22 @@ libvalhalla_sif_la_SOURCES = \
 	src/sif/truckcost.cc \
 	src/sif/dynamiccost.cc \
 	src/sif/edgelabel.cc
-libvalhalla_sif_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_sif_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+libvalhalla_sif_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_sif_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
 #bin_PROGRAMS = model_validator 
 #model_validator_SOURCES = \
 #        src/sif/model_validaotr.cc
-#model_validator_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-#model_validator_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ libvalhalla_sif.la
+#model_validator_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+#model_validator_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ libvalhalla_sif.la
 
 # tests
 check_PROGRAMS = \
 	test/factory
 test_factory_SOURCES = test/factory.cc test/test.cc
-test_factory_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_factory_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_sif.la
+test_factory_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_factory_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_sif.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
