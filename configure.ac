@@ -1,7 +1,7 @@
 AC_INIT([midgard],
-	[0.0.1],
+	[m4_esyscmd([./version.sh])],
 	[https://github.com/valhalla/midgard/issues],
-	[midgard-0.0.1],
+	[valhalla_midgard-[m4_esyscmd([./version.sh])]],
 	[https://github.com/valhalla/midgard])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -11,6 +11,13 @@ AC_SUBST([LIBTOOL_DEPS])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([valhalla/config.h])
 AC_CONFIG_MACRO_DIR([m4])
+
+# set pkgconfigdir, allow override
+AC_ARG_WITH([pkgconfigdir],
+            AS_HELP_STRING([--with-pkgconfigdir=PATH], [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+            [pkgconfigdir="$withval"],
+            [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
 
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -25,7 +32,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libvalhalla_midgard.pc])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a
