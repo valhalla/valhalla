@@ -26,6 +26,7 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
+libvalhalla_thor.pc
 
 # built objects
 thor_service
