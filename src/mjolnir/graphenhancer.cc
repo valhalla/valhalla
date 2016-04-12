@@ -341,10 +341,10 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
       // Do not allow use of the start edge or any transit edges
       // TODO - seems to be an issue with transit routes if we skip
       // transit connections. Investigate
-      if ((n == 0 && diredge->endnode() == startnode) ||
+      /*if ((n == 0 && diredge->endnode() == startnode) ||
           diredge->IsTransitLine()) {
         continue;
-      }
+      }*/
 
       // Return false if we get back to the start node or hit an
       // edge with higher classification
@@ -1199,9 +1199,9 @@ void enhance(const boost::property_tree::ptree& pt,
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         // Skip transit lines (don't need opposing local index)
-        if (directededge.IsTransitLine()) {
-          continue;
-        }
+        //if (directededge.IsTransitLine()) {
+        //  continue;
+        //}
 
         // Get the tile at the end node
         const GraphTile* endnodetile = nullptr;
@@ -1312,10 +1312,11 @@ void enhance(const boost::property_tree::ptree& pt,
 
             // Set name consistency to false going from transit connection to
             // transit connection
-            if (fromedge.use()     == Use::kTransitConnection ||
+            /*if (fromedge.use()     == Use::kTransitConnection ||
                 directededge.use() == Use::kTransitConnection) {
               nodeinfo.set_name_consistency(j, k, false);
-            } else if (directededge.link() ||
+            } else */
+            if (directededge.link() ||
                 ConsistentNames(country_code,
                     tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
                     tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
