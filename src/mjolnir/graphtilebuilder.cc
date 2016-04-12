@@ -243,8 +243,8 @@ void GraphTileBuilder::StoreTileData() {
 
     LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6%" )
       % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_).str());
-    LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% trips %4% routes = %5%" )
-      % admins_builder_.size() % departure_builder_.size() % stop_builder_.size() % trip_builder_.size() % route_builder_.size()).str());
+    LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% routes = %5%" )
+      % admins_builder_.size() % departure_builder_.size() % stop_builder_.size() % route_builder_.size()).str());
 
     size_ = file.tellp();
     file.close();
