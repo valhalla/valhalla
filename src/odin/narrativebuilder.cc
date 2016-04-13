@@ -1211,11 +1211,11 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
 std::string NarrativeBuilder::FormRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
-  //  "0": "Stay straight to take the ramp.",
-  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  //  "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-  //  "4": "Stay straight to take the <NAME_SIGN> ramp."
+  // "0": "Stay straight to take the ramp.",
+  // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  // "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -1264,7 +1264,7 @@ std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
   // "0": "Stay straight to take the ramp.",
   // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
   // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  // "3": "Stay straight to take the <NAME_SIGN> ramp."
+  // "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -1286,37 +1286,26 @@ std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitNameSign()) {
-    phrase_id = 3;
+    phrase_id = 4;
     // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.ramp_straight_verbal_alert_subset.phrases.at(
-      std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
-  boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
-  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
-
-  return instruction;
+  return FormVerbalRampStraightInstruction(phrase_id, exit_branch_sign,
+                                           exit_toward_sign, exit_name_sign);
 
 }
 
 std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, const std::string& delim) {
-  //  "0": "Stay straight to take the ramp.",
-  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  //  "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-  //  "4": "Stay straight to take the <NAME_SIGN> ramp."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
+  // "0": "Stay straight to take the ramp.",
+  // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  // "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -1345,6 +1334,18 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
+
+  return FormVerbalRampStraightInstruction(phrase_id, exit_branch_sign,
+                                           exit_toward_sign, exit_name_sign);
+
+}
+
+std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
+    uint8_t phrase_id, const std::string& exit_branch_sign,
+    const std::string& exit_toward_sign, const std::string& exit_name_sign) {
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.ramp_straight_verbal_subset.phrases.at(

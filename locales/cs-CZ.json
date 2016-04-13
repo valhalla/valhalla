@@ -295,20 +295,6 @@
         "4": ["Pokračujte rovně na nájezd Gettysburg Pike."]
       }
     },
-    "ramp_straight_verbal_alert": {
-      "phrases": {
-        "0": "Pokračujte rovně na nájezd.",
-        "1": "Pokračujte rovně na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně na nájezd směr <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně na nájezd <NAME_SIGN>."
-      },
-      "example_phrases": {
-        "0": ["Pokračujte rovně na nájezd."],
-        "1": ["Pokračujte rovně na nájezd US 322 East."],
-        "2": ["Pokračujte rovně na nájezd směr Hershey."],
-        "3": ["Pokračujte rovně na nájezd Gettysburg Pike."]
-      }
-    },
     "ramp_straight_verbal": {
       "phrases": {
         "0": "Pokračujte rovně na nájezd.",

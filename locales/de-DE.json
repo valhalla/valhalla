@@ -295,20 +295,6 @@
         "4": ["Stay straight to take the Gettysburg Pike ramp."]
       }
     },
-    "ramp_straight_verbal_alert": {
-      "phrases": {
-        "0": "Geradeaus über die Auffahrt fahren.",
-        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.",
-        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.",
-        "3": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
-      },
-      "example_phrases": {
-        "0": ["Stay straight to take the ramp."],
-        "1": ["Stay straight to take the U.S. 3 22 East ramp."],
-        "2": ["Stay straight to take the ramp toward Hershey."],
-        "3": ["Stay straight to take the Gettysburg Pike ramp."]
-      }
-    },
     "ramp_straight_verbal": {
       "phrases": {
         "0": "Geradeaus über die Auffahrt fahren.",

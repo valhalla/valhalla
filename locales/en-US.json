@@ -295,20 +295,6 @@
         "4": ["Stay straight to take the Gettysburg Pike ramp."]
       }
     },
-    "ramp_straight_verbal_alert": {
-      "phrases": {
-        "0": "Stay straight to take the ramp.",
-        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-        "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-        "3": "Stay straight to take the <NAME_SIGN> ramp."
-      },
-      "example_phrases": {
-        "0": ["Stay straight to take the ramp."],
-        "1": ["Stay straight to take the U.S. 3 22 East ramp."],
-        "2": ["Stay straight to take the ramp toward Hershey."],
-        "3": ["Stay straight to take the Gettysburg Pike ramp."]
-      }
-    },
     "ramp_straight_verbal": {
       "phrases": {
         "0": "Stay straight to take the ramp.",

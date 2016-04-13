@@ -119,10 +119,6 @@ void NarrativeDictionary::Load(
   // Populate ramp_straight_subset
   Load(ramp_straight_subset, narrative_pt.get_child(kRampStraightKey));
 
-  LOG_TRACE("Populate ramp_straight_verbal_alert_subset...");
-  // Populate ramp_straight_verbal_alert_subset
-  Load(ramp_straight_verbal_alert_subset, narrative_pt.get_child(kRampStraightVerbalAlertKey));
-
   LOG_TRACE("Populate ramp_straight_verbal_subset...");
   // Populate ramp_straight_verbal_subset
   Load(ramp_straight_verbal_subset, narrative_pt.get_child(kRampStraightVerbalKey));

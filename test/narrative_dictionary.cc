@@ -779,27 +779,6 @@ void test_en_US_ramp_straight() {
 
 }
 
-void test_en_US_ramp_straight_verbal_alert() {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  //  "0": "Stay straight to take the ramp.",
-  const auto& phrase_0 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("0");
-  validate(phrase_0, "Stay straight to take the ramp.");
-
-  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-  const auto& phrase_1 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("1");
-  validate(phrase_1, "Stay straight to take the <BRANCH_SIGN> ramp.");
-
-  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  const auto& phrase_2 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("2");
-  validate(phrase_2, "Stay straight to take the ramp toward <TOWARD_SIGN>.");
-
-  //  "3": "Stay straight to take the <NAME_SIGN> ramp."
-  const auto& phrase_3 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("3");
-  validate(phrase_3, "Stay straight to take the <NAME_SIGN> ramp.");
-
-}
-
 void test_en_US_ramp_straight_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1517,9 +1496,6 @@ int main() {
 
   // test the en-US ramp_straight phrases
   suite.test(TEST_CASE(test_en_US_ramp_straight));
-
-  // test the en-US ramp_straight verbal alert_phrases
-  suite.test(TEST_CASE(test_en_US_ramp_straight_verbal_alert));
 
   // test the en-US ramp_straight verbal phrases
   suite.test(TEST_CASE(test_en_US_ramp_straight_verbal));
