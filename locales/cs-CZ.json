@@ -243,22 +243,6 @@
         "5": ["Otočte se vlevo přes Devonshire Road a zůstaňte na Jonestown Road/US 22."]
       }
     },
-    "uturn_verbal_alert": {
-      "phrases": {
-        "0": "Otočte se <RELATIVE_DIRECTION>.",
-        "1": "Otočte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "2": "Otočte se <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>.",
-        "3": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES>."
-      },
-      "relative_directions": ["vlevo", "vpravo"],
-      "empty_street_name_labels": ["chodník", "cyklostezku", "stezku pro horská kola"],
-      "example_phrases": {
-        "0": ["Otočte se vlevo."],
-        "1": ["Otočte se vpravo na Bunker Hill Road."],
-        "2": ["Otočte se vlevo a zůstaňte na Bunker Hill Road."],
-        "3": ["Otočte se vlevo přes Devonshire Road."]
-      }
-    },
     "uturn_verbal": {
       "phrases": {
         "0": "Otočte se <RELATIVE_DIRECTION>.",
@@ -293,20 +277,6 @@
         "2": ["Pokračujte rovně na nájezd směr Hershey."],
         "3": ["Pokračujte rovně na nájezd US 322 East/US 422 East/US 522 East/US 622 East směr Hershey/Palmdale/Palmyra/Campbelltown."],
         "4": ["Pokračujte rovně na nájezd Gettysburg Pike."]
-      }
-    },
-    "ramp_straight_verbal_alert": {
-      "phrases": {
-        "0": "Pokračujte rovně na nájezd.",
-        "1": "Pokračujte rovně na nájezd <BRANCH_SIGN>.",
-        "2": "Pokračujte rovně na nájezd směr <TOWARD_SIGN>.",
-        "3": "Pokračujte rovně na nájezd <NAME_SIGN>."
-      },
-      "example_phrases": {
-        "0": ["Pokračujte rovně na nájezd."],
-        "1": ["Pokračujte rovně na nájezd US 322 East."],
-        "2": ["Pokračujte rovně na nájezd směr Hershey."],
-        "3": ["Pokračujte rovně na nájezd Gettysburg Pike."]
       }
     },
     "ramp_straight_verbal": {

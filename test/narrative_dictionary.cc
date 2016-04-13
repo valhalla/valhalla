@@ -688,35 +688,6 @@ void test_en_US_uturn() {
 
 }
 
-void test_en_US_uturn_verbal_alert() {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-  const auto& phrase_0 = dictionary.uturn_verbal_alert_subset.phrases.at("0");
-  validate(phrase_0, "Make a <RELATIVE_DIRECTION> U-turn.");
-
-  // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.uturn_verbal_alert_subset.phrases.at("1");
-  validate(phrase_1, "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.");
-
-  // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.uturn_verbal_alert_subset.phrases.at("2");
-  validate(phrase_2, "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.");
-
-  // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
-  const auto& phrase_3 = dictionary.uturn_verbal_alert_subset.phrases.at("3");
-  validate(phrase_3, "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.");
-
-  // relative_directions
-  const auto& relative_directions = dictionary.uturn_verbal_subset.relative_directions;
-  validate(relative_directions, kExpectedRelativeTwoDirections);
-
-  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels = dictionary.uturn_verbal_alert_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
-
-}
-
 void test_en_US_uturn_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -776,27 +747,6 @@ void test_en_US_ramp_straight() {
   //  "4": "Stay straight to take the <NAME_SIGN> ramp."
   const auto& phrase_4 = dictionary.ramp_straight_subset.phrases.at("4");
   validate(phrase_4, "Stay straight to take the <NAME_SIGN> ramp.");
-
-}
-
-void test_en_US_ramp_straight_verbal_alert() {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  //  "0": "Stay straight to take the ramp.",
-  const auto& phrase_0 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("0");
-  validate(phrase_0, "Stay straight to take the ramp.");
-
-  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-  const auto& phrase_1 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("1");
-  validate(phrase_1, "Stay straight to take the <BRANCH_SIGN> ramp.");
-
-  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  const auto& phrase_2 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("2");
-  validate(phrase_2, "Stay straight to take the ramp toward <TOWARD_SIGN>.");
-
-  //  "3": "Stay straight to take the <NAME_SIGN> ramp."
-  const auto& phrase_3 = dictionary.ramp_straight_verbal_alert_subset.phrases.at("3");
-  validate(phrase_3, "Stay straight to take the <NAME_SIGN> ramp.");
 
 }
 
@@ -1509,17 +1459,11 @@ int main() {
   // test the en-US uturn phrases
   suite.test(TEST_CASE(test_en_US_uturn));
 
-  // test the en-US uturn verbal alert_phrases
-  suite.test(TEST_CASE(test_en_US_uturn_verbal_alert));
-
   // test the en-US uturn verbal phrases
   suite.test(TEST_CASE(test_en_US_uturn_verbal));
 
   // test the en-US ramp_straight phrases
   suite.test(TEST_CASE(test_en_US_ramp_straight));
-
-  // test the en-US ramp_straight verbal alert_phrases
-  suite.test(TEST_CASE(test_en_US_ramp_straight_verbal_alert));
 
   // test the en-US ramp_straight verbal phrases
   suite.test(TEST_CASE(test_en_US_ramp_straight_verbal));

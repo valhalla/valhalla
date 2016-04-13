@@ -1118,13 +1118,13 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
   // Assign the street names
   std::string street_names = FormStreetNames(
       maneuver, maneuver.street_names(),
-      &dictionary_.uturn_verbal_alert_subset.empty_street_name_labels, true,
+      &dictionary_.uturn_verbal_subset.empty_street_name_labels, true,
       element_max_count, delim, maneuver.verbal_formatter());
 
   // Assign the cross street names
   std::string cross_street_names = FormStreetNames(
       maneuver, maneuver.cross_street_names(),
-      &dictionary_.uturn_verbal_alert_subset.empty_street_name_labels, false,
+      &dictionary_.uturn_verbal_subset.empty_street_name_labels, false,
       element_max_count, delim, maneuver.verbal_formatter());
 
   // Determine which phrase to use
@@ -1139,19 +1139,11 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
     phrase_id = 3;
   }
 
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.uturn_verbal_alert_subset.phrases.at(
-      std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
+  return FormVerbalUturnInstruction(
+      phrase_id,
       FormRelativeTwoDirection(
-          maneuver.type(),
-          dictionary_.uturn_verbal_alert_subset.relative_directions));
-  boost::replace_all(instruction, kStreetNamesTag, street_names);
-  boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
-
-  return instruction;
+          maneuver.type(), dictionary_.uturn_verbal_subset.relative_directions),
+      street_names, cross_street_names);
 
 }
 
@@ -1164,9 +1156,6 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
   // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
   // "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
   // "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
 
   // Assign the street names
   std::string street_names = FormStreetNames(
@@ -1192,15 +1181,27 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
     phrase_id += 3;
   }
 
+  return FormVerbalUturnInstruction(
+      phrase_id,
+      FormRelativeTwoDirection(
+          maneuver.type(), dictionary_.uturn_verbal_subset.relative_directions),
+      street_names, cross_street_names);
+
+}
+
+std::string NarrativeBuilder::FormVerbalUturnInstruction(
+    uint8_t phrase_id, const std::string& relative_dir,
+    const std::string& street_names, const std::string& cross_street_names) {
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.uturn_verbal_subset.phrases.at(
       std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kRelativeDirectionTag,
-      FormRelativeTwoDirection(
-          maneuver.type(),
-          dictionary_.uturn_verbal_subset.relative_directions));
+  boost::replace_all(instruction, kRelativeDirectionTag, relative_dir);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
 
@@ -1208,14 +1209,14 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
 
 }
 
-std::string NarrativeBuilder::FormRampStraightInstruction(
+    std::string NarrativeBuilder::FormRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count) {
-  //  "0": "Stay straight to take the ramp.",
-  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  //  "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-  //  "4": "Stay straight to take the <NAME_SIGN> ramp."
+  // "0": "Stay straight to take the ramp.",
+  // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  // "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -1264,7 +1265,7 @@ std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
   // "0": "Stay straight to take the ramp.",
   // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
   // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  // "3": "Stay straight to take the <NAME_SIGN> ramp."
+  // "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -1286,37 +1287,26 @@ std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   } else if (maneuver.HasExitNameSign()) {
-    phrase_id = 3;
+    phrase_id = 4;
     // Assign name sign
     exit_name_sign = maneuver.signs().GetExitNameString(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
 
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.ramp_straight_verbal_alert_subset.phrases.at(
-      std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
-  boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
-  boost::replace_all(instruction, kNameSignTag, exit_name_sign);
-
-  return instruction;
+  return FormVerbalRampStraightInstruction(phrase_id, exit_branch_sign,
+                                           exit_toward_sign, exit_name_sign);
 
 }
 
 std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
     Maneuver& maneuver, bool limit_by_consecutive_count,
     uint32_t element_max_count, const std::string& delim) {
-  //  "0": "Stay straight to take the ramp.",
-  //  "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
-  //  "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
-  //  "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
-  //  "4": "Stay straight to take the <NAME_SIGN> ramp."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
+  // "0": "Stay straight to take the ramp.",
+  // "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+  // "2": "Stay straight to take the ramp toward <TOWARD_SIGN>.",
+  // "3": "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>.",
+  // "4": "Stay straight to take the <NAME_SIGN> ramp."
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -1345,6 +1335,18 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
         element_max_count, limit_by_consecutive_count, delim,
         maneuver.verbal_formatter());
   }
+
+  return FormVerbalRampStraightInstruction(phrase_id, exit_branch_sign,
+                                           exit_toward_sign, exit_name_sign);
+
+}
+
+std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
+    uint8_t phrase_id, const std::string& exit_branch_sign,
+    const std::string& exit_toward_sign, const std::string& exit_name_sign) {
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.ramp_straight_verbal_subset.phrases.at(
