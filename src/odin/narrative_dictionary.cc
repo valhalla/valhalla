@@ -106,10 +106,6 @@ void NarrativeDictionary::Load(
   // Populate uturn_subset
   Load(uturn_subset, narrative_pt.get_child(kUturnKey));
 
-  LOG_TRACE("Populate uturn_verbal_alert_subset...");
-  // Populate uturn_verbal_alert_subset
-  Load(uturn_verbal_alert_subset, narrative_pt.get_child(kUturnVerbalAlertKey));
-
   LOG_TRACE("Populate uturn_verbal_subset...");
   // Populate uturn_verbal_subset
   Load(uturn_verbal_subset, narrative_pt.get_child(kUturnVerbalKey));

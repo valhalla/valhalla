@@ -102,6 +102,11 @@ class NarrativeBuilder {
                                              kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
+  std::string FormVerbalUturnInstruction(uint8_t phrase_id,
+                                         const std::string& relative_dir,
+                                         const std::string& street_names,
+                                         const std::string& cross_street_names);
+
   /////////////////////////////////////////////////////////////////////////////
   std::string FormRampStraightInstruction(Maneuver& maneuver,
                                           bool limit_by_consecutive_count =

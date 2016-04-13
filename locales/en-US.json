@@ -243,22 +243,6 @@
         "5": ["Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."]
       }
     },
-    "uturn_verbal_alert": {
-      "phrases": {
-        "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-        "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-        "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-        "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."
-      },
-      "relative_directions": ["left", "right"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
-      "example_phrases": {
-        "0": ["Make a left U-turn."],
-        "1": ["Make a right U-turn onto Bunker Hill Road."],
-        "2": ["Make a left U-turn to stay on Bunker Hill Road."],
-        "3": ["Make a left U-turn at Devonshire Road."]
-      }
-    },
     "uturn_verbal": {
       "phrases": {
         "0": "Make a <RELATIVE_DIRECTION> U-turn.",
