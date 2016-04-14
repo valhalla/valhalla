@@ -472,7 +472,7 @@ GraphId GetGraphId(const GraphId& nodeid,
   if (t == tile_node_counts.end()) {
     return GraphId();  // Invalid graph Id
   } else {
-    return { nodeid.tileid(), nodeid.level(), nodeid.id() + t->second };
+    return { nodeid.tileid(), nodeid.level()+1, nodeid.id()};
   }
 }
 
@@ -501,6 +501,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
                 GraphTileBuilder& tilebuilder_transit,
                 const TileHierarchy& hierarchy_transit,
                 const std::string& transit_dir,
+                const GraphTile* tile,
                 const std::unordered_map<GraphId, size_t>& tile_node_counts,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::unordered_map<GraphId, bool>& stop_access,
@@ -668,6 +669,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
     node.set_edge_index(tilebuilder_transit.directededges().size());
     node.set_timezone(stop.timezone());
 
+    bool admin_set = false;
+
     // Add connections from the stop to the OSM network
     // level 3
     // TODO - change from linear search for better performance
@@ -691,6 +694,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(added);
+
+        // set the admin index from the first de.
+        if (!admin_set) {
+          const NodeInfo* stop_node = tile->node(conn.osm_node);
+          const auto& admin = tile->admininfo(stop_node->admin_index());
+          node.set_admin_index(tilebuilder_transit.AddAdmin(admin.country_text(), admin.state_text(),
+                                                            admin.country_iso(), admin.state_iso()));
+          admin_set = true;
+        }
 
         // Add to list of directed edges
         tilebuilder_transit.directededges().emplace_back(std::move(directededge));
@@ -845,14 +857,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
   }
 
   // Log the number of added nodes and edges
-  uint32_t addednodes = nodecount;
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tilebuilder_local.header()->graphid().tileid())
           + ": added " + std::to_string(connedges) + " connection edges, "
           + std::to_string(transitedges) + " transit edges, and "
-          + std::to_string(addednodes) + " nodes. time = "
+          + std::to_string(nodecount) + " nodes. time = "
           + std::to_string(msecs) + " ms");
 }
 
@@ -1079,7 +1090,7 @@ void build(const std::string& transit_dir,
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level()+1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder_transit(hierarchy_transit_level, transit_tile_id, false);//false?
+    GraphTileBuilder tilebuilder_transit(hierarchy_transit_level, transit_tile_id, false);
     tilebuilder_transit.AddTileCreationDate(local_tile->header()->date_created());
 
     lock.unlock();
@@ -1267,7 +1278,7 @@ void build(const std::string& transit_dir,
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_local, hierarchy_local_level, tilebuilder_transit,
-               hierarchy_transit_level, transit_dir, tiles, stop_edge_map,
+               hierarchy_transit_level, transit_dir, local_tile, tiles, stop_edge_map,
                stop_access, connection_edges, shapes, distances, route_types);
 
     // Write the new file
