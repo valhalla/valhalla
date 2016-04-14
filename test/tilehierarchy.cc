@@ -27,7 +27,7 @@ namespace {
       throw runtime_error("Bottom hierarchy should have tile size of .25f");
     if(h.HasLevel(5))
       throw runtime_error("There should only be levels 0, 1, 2, 3");
-    if(h.HasLevel(3))
+    if(!h.HasLevel(3))
       throw runtime_error("There should be a level 3");
     if(!h.HasLevel(2))
       throw runtime_error("There should be a level 2");
