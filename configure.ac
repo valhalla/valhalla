@@ -1,7 +1,7 @@
 AC_INIT([baldr],
-	[0.0.1],
+	[m4_esyscmd([./version.sh])],
 	[https://github.com/valhalla/baldr/issues],
-	[baldr-0.0.1],
+	[valhalla_baldr-[m4_esyscmd([./version.sh])]],
 	[https://github.com/valhalla/baldr])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -11,6 +11,13 @@ AC_SUBST([LIBTOOL_DEPS])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([valhalla/config.h])
 AC_CONFIG_MACRO_DIR([m4])
+
+# set pkgconfigdir, allow override
+AC_ARG_WITH([pkgconfigdir],
+            AS_HELP_STRING([--with-pkgconfigdir=PATH], [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+            [pkgconfigdir="$withval"],
+            [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
 
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -23,7 +30,7 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # require other valhalla dependencies
-CHECK_VALHALLA_MIDGARD
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = 1.0.0])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
@@ -36,7 +43,7 @@ AX_BOOST_DATE_TIME
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libvalhalla_baldr.pc])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a
