@@ -52,14 +52,6 @@ class TileHierarchy {
   const std::string& tile_dir() const;
 
   /**
-   * Returns true if the level exists in the hierarchy
-   *
-   * @param level  the level to check
-   * @return boolean  whether the level is in the hierarchy or not
-   */
-  bool HasLevel(const uint8_t level) const;
-
-  /**
    * Returns the graphid of the requested tile based on a lat,lng and a level
    * if the level is not supported an invalid id will be returned
    *
