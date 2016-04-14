@@ -484,7 +484,7 @@ void validate(const boost::property_tree::ptree& pt,
                    ((bb.maxx() - bb.minx()) *
                        DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
       float density = (roadlength * 0.0005f) / area;
-      stats.add_density(density, l);
+      stats.add_density(density, level);
       stats.add_tile_area(tileid, area);
       stats.add_tile_geom(tileid, tiles.TileBounds(tileid));
 
@@ -520,7 +520,7 @@ void validate(const boost::property_tree::ptree& pt,
       lock.unlock();
 
       // Add possible duplicates to return class
-      stats.add_dup(dupcount, l);
+      stats.add_dup(dupcount, level);
     }
 
     // Fill promise with statistics
