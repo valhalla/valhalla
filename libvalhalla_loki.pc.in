@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libvalhalla_loki
+Description: valhalla_loki c++ library
+Version: @VERSION@
+Libs: -L${libdir} -lvalhalla_loki
+Cflags: -I${includedir}
