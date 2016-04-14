@@ -40,6 +40,7 @@ endif
 # libvalhalla_midgard compilation etc
 lib_LTLIBRARIES = libvalhalla_midgard.la
 nobase_include_HEADERS = \
+	valhalla/version.h \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
 	valhalla/midgard/gridded_data.h \
