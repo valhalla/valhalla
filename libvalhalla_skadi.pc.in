@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libvalhalla_skadi
+Description: valhalla_skadi c++ library
+Version: @VERSION@
+Libs: -L${libdir} -lvalhalla_skadi
+Cflags: -I${includedir}
