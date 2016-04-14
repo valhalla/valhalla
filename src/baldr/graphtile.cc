@@ -172,8 +172,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   //figure the largest id for this level
   auto level = hierarchy.levels().find(graphid.level());
   if(level == hierarchy.levels().end() &&
-     graphid.level() == (hierarchy.levels().rbegin())->second.level + 1)
-    level = hierarchy.levels().end()--;
+     graphid.level() == ((hierarchy.levels().rbegin())->second.level + 1))
+    level = hierarchy.levels().begin();
 
   if(level == hierarchy.levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
@@ -242,8 +242,8 @@ AABB2<PointLL> GraphTile::BoundingBox(const TileHierarchy& hierarchy) const {
   //figure the largest id for this level
   auto level = hierarchy.levels().find(header_->graphid().level());
   if(level == hierarchy.levels().end() &&
-      header_->graphid().level() == (hierarchy.levels().rbegin())->second.level+1)
-    level = hierarchy.levels().end()--;
+      header_->graphid().level() == ((hierarchy.levels().rbegin())->second.level+1))
+    level = hierarchy.levels().begin();
 
   auto tiles = level->second.tiles;
   return tiles.TileBounds(header_->graphid().tileid());
