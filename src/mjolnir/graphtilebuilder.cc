@@ -10,17 +10,6 @@
 
 using namespace valhalla::baldr;
 
-namespace {
-
-  AABB2<PointLL> get_tile_bbox(const TileHierarchy& h, const GraphId g) {
-    auto level = h.levels().find(g.fields.level);
-    if(level == h.levels().cend())
-      throw std::runtime_error("GraphTileBuilder for unsupported level");
-    return level->second.tiles.TileBounds(g.fields.tileid);
-  }
-
-}
-
 namespace valhalla {
 namespace mjolnir {
 
