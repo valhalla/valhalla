@@ -45,7 +45,7 @@ PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.3.1])
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile libvalhalla_tools.pc])
+AC_CONFIG_FILES([Makefile])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

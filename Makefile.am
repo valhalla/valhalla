@@ -6,10 +6,6 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
-# things for versioning
-pkgconfig_DATA = libvalhalla_tools.pc
-EXTRA_DIST = version.sh
-
 #config files for tools, you can put a commit hash here if you are ahead of master
 CONF=master
 conf:
