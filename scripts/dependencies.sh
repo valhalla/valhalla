@@ -33,8 +33,8 @@ for dep in midgard baldr; do
 	pushd $dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-	make pkg-config -j4
-	sudo make pkg-config install
+	make -j4
+	sudo make install
 	popd
 done
 wait
@@ -44,8 +44,8 @@ for dep in odin; do
         pushd $dep
         ./autogen.sh
         ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-        make pkg-config -j4
-        sudo make pkg-config install
+        make -j4
+        sudo make install
         popd
 done
 
