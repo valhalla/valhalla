@@ -337,12 +337,12 @@ void validate(const boost::property_tree::ptree& pt,
       lock.unlock();
 
       // Point tiles to the set we need for current level
-      auto l = tile_id.level();
-      if (hierarchy.levels().rbegin()->second.level < l)
-        l = hierarchy.levels().rbegin()->second.level;
+      auto level = tile_id.level();
+      if (hierarchy.levels().rbegin()->second.level+1 == level)
+        level = hierarchy.levels().rbegin()->second.level;
 
-      const auto& tiles = hierarchy.levels().find(l)->second.tiles;
-      l = tile_id.level();
+      const auto& tiles = hierarchy.levels().find(level)->second.tiles;
+      level = tile_id.level();
       auto tileid = tile_id.tileid();
 
       uint32_t dupcount = 0;
