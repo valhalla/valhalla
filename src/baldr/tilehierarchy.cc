@@ -25,7 +25,8 @@ const std::string& TileHierarchy::tile_dir() const {
 }
 
 bool TileHierarchy::HasLevel(const unsigned char level) const {
-  return levels_.find(level) != levels_.end() ? true : level == '3';
+  return levels_.find(level) != levels_.end() ? true :
+      static_cast<int32_t>(level) == ((levels_.rbegin())->second.level+1);
 }
 
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const unsigned char level) const {

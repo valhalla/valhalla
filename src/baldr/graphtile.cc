@@ -170,13 +170,14 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   */
 
   //figure the largest id for this level
-  auto l = graphid.level();
-  if (hierarchy.levels().rbegin()->second.level < l)
-    l = hierarchy.levels().rbegin()->second.level;
+  auto level = hierarchy.levels().find(graphid.level());
+  if(level == hierarchy.levels().end() &&
+     graphid.level() == (hierarchy.levels().rbegin())->second.level + 1)
+    level = hierarchy.levels().end()--;
 
-  const auto level = hierarchy.levels().find(l);
   if(level == hierarchy.levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
+
   const uint32_t max_id = Tiles<PointLL>::MaxTileId(world_box, level->second.tiles.TileSize());
 
   //figure out how many digits
@@ -238,11 +239,13 @@ GraphId GraphTile::GetTileId(const std::string& fname, const TileHierarchy& hier
 // Get the bounding box of this graph tile.
 AABB2<PointLL> GraphTile::BoundingBox(const TileHierarchy& hierarchy) const {
 
-  auto l = header_->graphid().level();
-  if (hierarchy.levels().rbegin()->second.level < l)
-    l = hierarchy.levels().rbegin()->second.level;
+  //figure the largest id for this level
+  auto level = hierarchy.levels().find(header_->graphid().level());
+  if(level == hierarchy.levels().end() &&
+      header_->graphid().level() == (hierarchy.levels().rbegin())->second.level+1)
+    level = hierarchy.levels().end()--;
 
-  auto tiles = hierarchy.levels().find(l)->second.tiles;
+  auto tiles = level->second.tiles;
   return tiles.TileBounds(header_->graphid().tileid());
 }
 
