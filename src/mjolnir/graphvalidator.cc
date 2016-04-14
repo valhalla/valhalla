@@ -557,10 +557,13 @@ void validate(const boost::property_tree::ptree& pt,
       const auto& tile_bin = *start;
       ++start;
       lock.unlock();
-      //if there is nothing there we need to make something
-      GraphTile tile(hierarchy, tile_bin.first);
 
-      if (tile.id().level() <= hierarchy.levels().rbegin()->second.level) {
+      //ignore transit tiles.
+      if (tile_bin.first.level() <= hierarchy.levels().rbegin()->second.level) {
+
+        //if there is nothing there we need to make something
+        GraphTile tile(hierarchy, tile_bin.first);
+
         if(tile.size() == 0) {
           GraphTileBuilder empty(hierarchy, tile_bin.first, false);
           empty.StoreTileData();
