@@ -103,8 +103,8 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
   tile = GetGraphTile(edgeid);
   const auto* directededge = tile->directededge(edgeid);
 
-  // For now return an invalid Id if this is a transit edge
-  if (directededge->IsTransitLine()) {
+  // For now return an invalid Id if this is a transit edge or is a transit connection
+  if (directededge->IsTransitLine() || directededge->use() == Use::kTransitConnection) {
     return {};
   }
 
