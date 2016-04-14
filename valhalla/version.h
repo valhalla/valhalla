@@ -1,0 +1,9 @@
+#ifndef __VALHALLA_VERSION_H__
+#define __VALHALLA_VERSION_H__
+
+//some version info
+#define VALHALLA_VERSION_MAJOR 1
+#define VALHALLA_VERSION_MINOR 0
+#define VALHALLA_VERSION_PATCH 0
+
+#endif //__VALHALLA_VERSION_H__
