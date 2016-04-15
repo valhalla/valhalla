@@ -2663,6 +2663,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_0(
       TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
       17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
       "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_1(
@@ -2678,6 +2679,7 @@ void PopulatePostTransitConnectionDestinationManeuverList_1(
       TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
       17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
       "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_2(
@@ -2694,6 +2696,151 @@ void PopulatePostTransitConnectionDestinationManeuverList_2(
       TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
       17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
       "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_4(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, { }, { },
+      { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_5(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
+          "6th Avenue", "Avenue of the Americas" },
+      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_6(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
+          "6th Avenue" },
+      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+      Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_8(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, { }, { },
+      { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_9(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
+          "6th Avenue", "Avenue of the Americas" },
+      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_10(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
+          "6th Avenue" },
+      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+      Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_16(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, { }, { },
+      { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_17(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
+          "6th Avenue", "Avenue of the Americas" },
+      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulatePostTransitConnectionDestinationManeuverList_18(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(
+      maneuver, country_code, state_code,
+      TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
+          "6th Avenue" },
+      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+      Maneuver::RelativeDirection::kKeepStraight,
+      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+      "", "", 0, 0, 0, 0, 62, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
 }
 
 void PopulateVerbalMultiCueManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -6641,6 +6788,276 @@ void TestBuildPostTransitConnectionDestination_2_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "4": "Drive <CARDINAL_DIRECTION>.",
+// no verbal alert
+// "4": "Drive <CARDINAL_DIRECTION>.",
+void TestBuildPostTransitConnectionDestination_4_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive southwest.",
+                                  "",
+                                  "Drive southwest.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// no verbal alert
+// "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+void TestBuildPostTransitConnectionDestination_5_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_5(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_5(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive southwest on 6th Avenue/Avenue of the Americas.",
+                                  "",
+                                  "Drive southwest on 6th Avenue, Avenue of the Americas.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// no verbal alert
+// "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildPostTransitConnectionDestination_6_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_6(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_6(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.",
+                                  "",
+                                  "Drive southwest on 6th Avenue, Avenue of the Americas.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "8": "Walk <CARDINAL_DIRECTION>.",
+// no verbal alert
+// "8": "Walk <CARDINAL_DIRECTION>.",
+void TestBuildPostTransitConnectionDestination_8_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_8(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_8(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk southwest.",
+                                  "",
+                                  "Walk southwest.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// no verbal alert
+// "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+void TestBuildPostTransitConnectionDestination_9_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_9(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_9(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk southwest on 6th Avenue/Avenue of the Americas.",
+                                  "",
+                                  "Walk southwest on 6th Avenue, Avenue of the Americas.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// no verbal alert
+// "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildPostTransitConnectionDestination_10_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_10(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_10(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.",
+                                  "",
+                                  "Walk southwest on 6th Avenue, Avenue of the Americas.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "16": "Bike <CARDINAL_DIRECTION>.",
+// no verbal alert
+// "16": "Bike <CARDINAL_DIRECTION>.",
+void TestBuildPostTransitConnectionDestination_16_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_16(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_16(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike southwest.",
+                                  "",
+                                  "Bike southwest.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// no verbal alert
+// "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+void TestBuildPostTransitConnectionDestination_17_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_17(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_17(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike southwest on 6th Avenue/Avenue of the Americas.",
+                                  "",
+                                  "Bike southwest on 6th Avenue, Avenue of the Americas.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormPostTransitConnectionDestinationInstruction
+// "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// no verbal alert
+// "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildPostTransitConnectionDestination_18_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_18(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulatePostTransitConnectionDestinationManeuverList_18(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.",
+                                  "",
+                                  "Bike southwest on 6th Avenue, Avenue of the Americas.",
+                                  "Continue for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormVerbalMultiCue
 // 0 "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
 void TestBuildVerbalMultiCue_0_miles_en_US() {
@@ -8103,6 +8520,33 @@ int main() {
 
   // BuildPostTransitConnectionDestination_2_miles_en_US
   suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_2_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_4_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_4_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_5_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_5_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_6_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_6_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_8_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_8_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_9_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_9_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_10_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_10_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_16_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_16_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_17_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_17_miles_en_US));
+
+  // BuildPostTransitConnectionDestination_18_miles_en_US
+  suite.test(TEST_CASE(TestBuildPostTransitConnectionDestination_18_miles_en_US));
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));

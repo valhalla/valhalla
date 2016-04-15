@@ -3013,6 +3013,15 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
   // "0": "Head <CARDINAL_DIRECTION>.",
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  // "4": "Drive <CARDINAL_DIRECTION>.",
+  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  // "8": "Walk <CARDINAL_DIRECTION>.",
+  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  // "16": "Bike <CARDINAL_DIRECTION>.",
+  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -3038,6 +3047,13 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
   } else if (!street_names.empty()) {
     phrase_id = 1;
   }
+  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+    phrase_id += 4;
+  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+    phrase_id += 8;
+  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+    phrase_id += 16;
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.post_transit_connection_destination_subset.
@@ -3058,6 +3074,15 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
   // 0 "Head <FormCardinalDirection>."
   // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
   // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
+  // "4": "Drive <CARDINAL_DIRECTION>.",
+  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "8": "Walk <CARDINAL_DIRECTION>.",
+  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "16": "Bike <CARDINAL_DIRECTION>.",
+  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -3084,6 +3109,13 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
     phrase_id = 2;
   } else if (!street_names.empty()) {
     phrase_id = 1;
+  }
+  if (maneuver.travel_mode() == TripPath_TravelMode_kDrive) {
+    phrase_id += 4;
+  } else if (maneuver.travel_mode() == TripPath_TravelMode_kPedestrian) {
+    phrase_id += 8;
+  } else if (maneuver.travel_mode() == TripPath_TravelMode_kBicycle) {
+    phrase_id += 16;
   }
 
   // Set instruction to the determined tagged phrase
