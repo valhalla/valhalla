@@ -32,9 +32,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-uint32_t forward_shortcutedges = 0;
-uint32_t reverse_shortcutedges = 0;
-
 //how many meters to resample shape to when checking elevations
 constexpr double POSTING_INTERVAL = 60.0;
 
@@ -352,7 +349,7 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
 // Should never combine 2 directed edges with different exit information so
 // no need to worry about it here.
 // TODO - need to add access restrictions?
-void AddShortcutEdges(
+std::pair<uint32_t, uint32_t> AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info,
@@ -362,6 +359,7 @@ void AddShortcutEdges(
 
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
+  std::pair<uint32_t, uint32_t> shortcut_info;
   GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(), baseni->edge_index());
   for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, base_edge_id++) {
     // Skip if > road class cutoff or a transition edge or shortcut in
@@ -464,9 +462,9 @@ void AddShortcutEdges(
       // reverse (should be equal)
       if (nodea.tileid() == nodeb.tileid()) {
         if (forward) {
-          forward_shortcutedges++;
+          shortcut_info.first++;
         } else {
-          reverse_shortcutedges++;
+          shortcut_info.second++;
         }
       }
 
@@ -510,10 +508,11 @@ if (nodea.level() == 0) {
       shortcut++;
     }
   }
+  return shortcut_info;
 }
 
 // Form tiles in the new level.
-void FormTilesInNewLevel(
+std::pair<uint32_t, uint32_t> FormTilesInNewLevel(
     const TileHierarchy::TileLevel& base_level,
     const TileHierarchy::TileLevel& new_level, hierarchy_info& info,
     const std::unique_ptr<const valhalla::skadi::sample>& sample) {
@@ -526,7 +525,7 @@ void FormTilesInNewLevel(
   RoadClass rcc = new_level.importance;
 
   info.graphreader_.Clear();
-
+  std::pair<uint32_t, uint32_t> shortcut_info;
   for (const auto& newtile : info.tilednodes_) {
     // Skip if no nodes in the tile at the new level
     if (newtile.size() == 0) {
@@ -569,8 +568,10 @@ void FormTilesInNewLevel(
 
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
-                       shortcuts, info, sample);
+      auto sh = AddShortcutEdges(newnode, nodea, &baseni, tile, rcc,
+                               tilebuilder, shortcuts, info, sample);
+      shortcut_info.first  += sh.first;
+      shortcut_info.second += sh.second;
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -661,6 +662,7 @@ void FormTilesInNewLevel(
     // Increment tileid
     tileid++;
   }
+  return shortcut_info;
 }
 
 // Add connections to the base tile. Rewrites the base tile with updated
@@ -934,9 +936,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_DEBUG((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
 
     // Form all tiles in new level
-    forward_shortcutedges = 0;
-    reverse_shortcutedges = 0;
-    FormTilesInNewLevel(base_level->second, new_level->second, info, sample);
+    auto shortcut_info = FormTilesInNewLevel(base_level->second,
+                            new_level->second, info, sample);
 
     // Form connections (directed edges) in the base level tiles to
     // the new level. Note that the new tiles are created before adding
@@ -944,8 +945,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
     // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second, info);
     LOG_INFO("Finished with " + std::to_string(info.shortcutcount_) + " shortcuts");
-    LOG_INFO("Forward Shortcut EdgeInfo = " + std::to_string(forward_shortcutedges) +
-            " Reverse Shortcut EdgeInfo = " + std::to_string(reverse_shortcutedges));
+    LOG_INFO("Forward Shortcut EdgeInfo = " + std::to_string(shortcut_info.first) +
+            " Reverse Shortcut EdgeInfo = " + std::to_string(shortcut_info.second));
   }
 }
 
