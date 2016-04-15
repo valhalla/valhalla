@@ -893,10 +893,10 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   RoadClass bestrc = RoadClass::kUnclassified;
   for (uint32_t i = 0; i < count; i++, edge++) {
     // Check the road if it is driveable TO the intersection and is neither
-    // the "to" nor "from" edge. Treat roundabout edges and link edges as two
-    // levels lower classification (higher value) to reduce the stop impact.
+    // the "to" nor "from" edge. Treat roundabout edges as two levels lower
+    // classification (higher value) to reduce the stop impact.
     if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
-      if (edge->roundabout() | edge->link()) {
+      if (edge->roundabout()) {
         uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
         if (c  < static_cast<uint32_t>(bestrc)) {
           bestrc = static_cast<RoadClass>(c);
@@ -937,7 +937,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     stop_impact /= 2;
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
-    stop_impact += 2;
+    stop_impact += 1;
   }
 
   // Clamp to kMaxStopImpact
