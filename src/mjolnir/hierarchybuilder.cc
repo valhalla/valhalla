@@ -32,6 +32,9 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+uint32_t forward_shortcutedges = 0;
+uint32_t reverse_shortcutedges = 0;
+
 //how many meters to resample shape to when checking elevations
 constexpr double POSTING_INTERVAL = 60.0;
 
@@ -446,13 +449,26 @@ void AddShortcutEdges(
         length += ConnectEdges(basenode, next_edge_id, shape, nodeb, opp_local_idx, info);
       }
 
-      // Add the edge info. Use length to match edge in case multiple edges
-      // exist between the 2 nodes. Test whether this shape is forward or
-      // reverse (in case an existing edge exists).
+      // Add the edge info. Use length and number of shape points to match an
+      // edge in case multiple shortcut edges exist between the 2 nodes.
+      // Test whether this shape is forward or reverse (in case an existing
+      // edge exists).
       // TODO - what should the wayId be?
       bool forward = true;
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb, -1, shape, names, forward);
+      uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
+      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(idx, nodea, nodeb,
+                                    -1, shape, names, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
+
+      // Count how many shortcut edges fully inside a tile are forward vs.
+      // reverse (should be equal)
+      if (nodea.tileid() == nodeb.tileid()) {
+        if (forward) {
+          forward_shortcutedges++;
+        } else {
+          reverse_shortcutedges++;
+        }
+      }
 
       // Set the forward flag on this directed edge. If a new edge was added
       // the direction is forward otherwise the prior edge was the one stored
@@ -918,6 +934,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_DEBUG((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
 
     // Form all tiles in new level
+    forward_shortcutedges = 0;
+    reverse_shortcutedges = 0;
     FormTilesInNewLevel(base_level->second, new_level->second, info, sample);
 
     // Form connections (directed edges) in the base level tiles to
@@ -926,6 +944,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
     // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second, info);
     LOG_INFO("Finished with " + std::to_string(info.shortcutcount_) + " shortcuts");
+    LOG_INFO("Forward Shortcut EdgeInfo = " + std::to_string(forward_shortcutedges) +
+            " Reverse Shortcut EdgeInfo = " + std::to_string(reverse_shortcutedges));
   }
 }
 
