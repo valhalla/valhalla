@@ -7,7 +7,7 @@ fi
 
 # grab the latest zmq library:
 rm -rf libzmq
-git clone --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
+git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
 pushd libzmq
 git checkout b3f2acf7d625daef65d37ffa00dfed753cf2387b
 ./autogen.sh
@@ -18,7 +18,7 @@ popd
 
 # grab experimental zmq-based server API:
 rm -rf prime_server
-git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/kevinkreiser/prime_server.git
+git clone --depth=1 --single-branch --branch 0.3.2 --recursive https://github.com/kevinkreiser/prime_server.git
 pushd prime_server
 ./autogen.sh
 ./configure
