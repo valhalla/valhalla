@@ -1776,6 +1776,7 @@ void PopulateExitFerryManeuverList_0(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 144,
                    94, 4, 5, 30, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                    { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateExitFerryManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1790,6 +1791,7 @@ void PopulateExitFerryManeuverList_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6,
                    13, 9, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
                    0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateExitFerryManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1805,6 +1807,142 @@ void PopulateExitFerryManeuverList_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
                    23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                    { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+}
+
+void PopulateExitFerryManeuverList_4(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { }, { }, { }, "",
+                   0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 144,
+                   94, 4, 5, 30, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulateExitFerryManeuverList_5(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { "Ferry Lane" },
+                   { }, { }, "", 0.578000, 81, 7,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6,
+                   13, 9, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulateExitFerryManeuverList_6(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
+                       "Cape May-Lewes Ferry Entrance", "US 9" },
+                   { }, "", 0.099000, 7, 356,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulateExitFerryManeuverList_8(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { }, { }, { }, "",
+                   0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 144,
+                   94, 4, 5, 30, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateExitFerryManeuverList_9(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { "Ferry Lane" },
+                   { }, { }, "", 0.578000, 81, 7,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6,
+                   13, 9, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateExitFerryManeuverList_10(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
+                       "Cape May-Lewes Ferry Entrance", "US 9" },
+                   { }, "", 0.099000, 7, 356,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateExitFerryManeuverList_16(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { }, { }, { }, "",
+                   0.065000, 11, 2, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 144,
+                   94, 4, 5, 30, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 12, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulateExitFerryManeuverList_17(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { "Ferry Lane" },
+                   { }, { }, "", 0.578000, 81, 7,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 287, 262, 6,
+                   13, 9, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 70, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulateExitFerryManeuverList_18(std::list<Maneuver>& maneuvers,
+                                     const std::string& country_code,
+                                     const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
+                       "Cape May-Lewes Ferry Entrance", "US 9" },
+                   { }, "", 0.099000, 7, 356,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
 }
 
 void PopulateTransitConnectionStartManeuverList_0(
@@ -5536,6 +5674,276 @@ void TestBuildExitFerry_2_miles_en_US() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "4": "Drive <CARDINAL_DIRECTION>.",
+// "4": "Drive <CARDINAL_DIRECTION>.",
+// "4": "Drive <CARDINAL_DIRECTION>.",
+void TestBuildExitFerry_4_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive southeast.",
+                                  "Drive southeast.",
+                                  "Drive southeast.",
+                                  "Continue for 200 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+void TestBuildExitFerry_5_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_5(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_5(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive west on Ferry Lane.",
+                                  "Drive west on Ferry Lane.",
+                                  "Drive west on Ferry Lane.",
+                                  "Continue for 4 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+// "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildExitFerry_6_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_6(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_6(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+                                  "Drive northeast on Cape May-Lewes Ferry Entrance.",
+                                  "Drive northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+                                  "Continue on U.S. 9 for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "8": "Walk <CARDINAL_DIRECTION>.",
+// "8": "Walk <CARDINAL_DIRECTION>.",
+// "8": "Walk <CARDINAL_DIRECTION>.",
+void TestBuildExitFerry_8_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_8(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_8(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk southeast.",
+                                  "Walk southeast.",
+                                  "Walk southeast.",
+                                  "Continue for 200 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+void TestBuildExitFerry_9_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_9(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_9(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk west on Ferry Lane.",
+                                  "Walk west on Ferry Lane.",
+                                  "Walk west on Ferry Lane.",
+                                  "Continue for 4 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+// "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildExitFerry_10_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_10(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_10(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+                                  "Walk northeast on Cape May-Lewes Ferry Entrance.",
+                                  "Walk northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+                                  "Continue on U.S. 9 for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "16": "Bike <CARDINAL_DIRECTION>.",
+// "16": "Bike <CARDINAL_DIRECTION>.",
+// "16": "Bike <CARDINAL_DIRECTION>.",
+void TestBuildExitFerry_16_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_16(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_16(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike southeast.",
+                                  "Bike southeast.",
+                                  "Bike southeast.",
+                                  "Continue for 200 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+// "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+void TestBuildExitFerry_17_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_17(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_17(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike west on Ferry Lane.",
+                                  "Bike west on Ferry Lane.",
+                                  "Bike west on Ferry Lane.",
+                                  "Continue for 4 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormExitFerryInstruction
+// "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+// "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+void TestBuildExitFerry_18_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateExitFerryManeuverList_18(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateExitFerryManeuverList_18(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
+                                  "Bike northeast on Cape May-Lewes Ferry Entrance.",
+                                  "Bike northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+                                  "Continue on U.S. 9 for 300 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // FormTransitConnectionStartInstruction
 // "0": "Enter the station.",
 // No verbal alert
@@ -7602,6 +8010,33 @@ int main() {
 
   // BuildExitFerry_2_miles_en_US
   suite.test(TEST_CASE(TestBuildExitFerry_2_miles_en_US));
+
+  // BuildExitFerry_4_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_4_miles_en_US));
+
+  // BuildExitFerry_5_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_5_miles_en_US));
+
+  // BuildExitFerry_6_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_6_miles_en_US));
+
+  // BuildExitFerry_8_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_8_miles_en_US));
+
+  // BuildExitFerry_9_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_9_miles_en_US));
+
+  // BuildExitFerry_10_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_10_miles_en_US));
+
+  // BuildExitFerry_16_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_16_miles_en_US));
+
+  // BuildExitFerry_17_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_17_miles_en_US));
+
+  // BuildExitFerry_18_miles_en_US
+  suite.test(TEST_CASE(TestBuildExitFerry_18_miles_en_US));
 
   // BuildTransitConnectionStart_0_miles_en_US
   suite.test(TEST_CASE(TestBuildTransitConnectionStart_0_miles_en_US));
