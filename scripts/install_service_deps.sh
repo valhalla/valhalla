@@ -5,6 +5,7 @@ set -e
 rm -rf libzmq
 git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
 pushd libzmq
+git checkout b3f2acf7d625daef65d37ffa00dfed753cf2387b
 ./autogen.sh
 ./configure --without-libsodium --without-documentation --without-vmci
 make -j4
