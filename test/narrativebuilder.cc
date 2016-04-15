@@ -319,7 +319,7 @@ void PopulateStartManeuverList_0(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0,
                    1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
                    0, 0, 1, 0, "", "", "", 0);
-
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateStartManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -333,52 +333,7 @@ void PopulateStartManeuverList_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 209,
                    209, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                    { }, 0, 0, 0, 0, 1, 0, "", "", "", 0);
-
-}
-
-void PopulateStartManeuverList_1_unnamed_walkway(
-    std::list<Maneuver>& maneuvers, const std::string& country_code,
-    const std::string& state_code) {
-  maneuvers.emplace_back();
-  Maneuver& maneuver = maneuvers.back();
-  PopulateManeuver(maneuver, country_code, state_code,
-                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
-                   0.050737, 35, 0, Maneuver::RelativeDirection::kNone,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
-                   209, 0, 3, 0, 4, 0, 0, 0, 0, 0, 0, 1, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 1, 0, 0, 36, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
-
-}
-
-void PopulateStartManeuverList_1_unnamed_cycleway(
-    std::list<Maneuver>& maneuvers, const std::string& country_code,
-    const std::string& state_code) {
-  maneuvers.emplace_back();
-  Maneuver& maneuver = maneuvers.back();
-  PopulateManeuver(maneuver, country_code, state_code,
-                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
-                   2.675882, 386, 0, Maneuver::RelativeDirection::kNone,
-                   TripDirections_Maneuver_CardinalDirection_kEast, 84, 70, 0,
-                   2, 0, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
-                   0, 0, 0, 0, 0, "", "", "", 0, 0, 1, 0, 482, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
-
-}
-
-void PopulateStartManeuverList_1_unnamed_mountain_bike_trail(
-    std::list<Maneuver>& maneuvers, const std::string& country_code,
-    const std::string& state_code) {
-  maneuvers.emplace_back();
-  Maneuver& maneuver = maneuvers.back();
-  PopulateManeuver(maneuver, country_code, state_code,
-                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
-                   0.200000, 29, 0, Maneuver::RelativeDirection::kNone,
-                   TripDirections_Maneuver_CardinalDirection_kWest, 269, 221, 0,
-                   2, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
-                   0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 1, 36, 0);
-  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
-
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
 void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -393,6 +348,178 @@ void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143,
                    0, 45, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
                    0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
+}
+
+void PopulateStartManeuverList_4(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0,
+                   1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                   0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulateStartManeuverList_5(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "5th Avenue" }, { },
+                   { }, "", 0.224001, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 209,
+                   209, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulateStartManeuverList_6(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "US 222", "PA 272" },
+                   { "North Prince Street", "US 222", "PA 272" }, { }, "",
+                   5.098166, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143,
+                   0, 45, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
+}
+
+void PopulateStartManeuverList_8(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0,
+                   1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                   0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateStartManeuverList_9(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "5th Avenue" }, { },
+                   { }, "", 0.224001, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 209,
+                   209, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateStartManeuverList_9_unnamed_walkway(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.050737, 35, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
+                   209, 0, 3, 0, 4, 0, 0, 0, 0, 0, 0, 1, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 1, 0, 0, 36, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateStartManeuverList_10(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "US 222", "PA 272" },
+                   { "North Prince Street", "US 222", "PA 272" }, { }, "",
+                   5.098166, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143,
+                   0, 45, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
+}
+
+void PopulateStartManeuverList_16(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0,
+                   1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                   0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulateStartManeuverList_17(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "5th Avenue" }, { },
+                   { }, "", 0.224001, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 209,
+                   209, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulateStartManeuverList_17_unnamed_cycleway(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   2.675882, 386, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 84, 70, 0,
+                   2, 0, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 1, 0, 482, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulateStartManeuverList_17_unnamed_mountain_bike_trail(
+    std::list<Maneuver>& maneuvers, const std::string& country_code,
+    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.200000, 29, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 269, 221, 0,
+                   2, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 1, 36, 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
+}
+
+void PopulateStartManeuverList_18(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "US 222", "PA 272" },
+                   { "North Prince Street", "US 222", "PA 272" }, { }, "",
+                   5.098166, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143,
+                   0, 45, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0);
+  maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
 }
 
 void PopulateDestinationManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -2541,87 +2668,6 @@ void TestBuildStartInstructions_1_miles_en_US() {
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_1_unnamed_walkway_miles_en_US() {
-  std::string country_code = "US";
-  std::string state_code = "NY";
-
-  // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
-  directions_options.set_language("en-US");
-
-  // Configure maneuvers
-  std::list<Maneuver> maneuvers;
-  PopulateStartManeuverList_1_unnamed_walkway(maneuvers, country_code,
-                                              state_code);
-
-  // Configure expected maneuvers based on directions options
-  std::list<Maneuver> expected_maneuvers;
-  PopulateStartManeuverList_1_unnamed_walkway(expected_maneuvers, country_code,
-                                              state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Head southwest on the walkway.",
-                                  "",
-                                  "Head southwest on the walkway for 200 feet.",
-                                  "");
-
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
-}
-
-void TestBuildStartInstructions_1_unnamed_cycleway_miles_en_US() {
-  std::string country_code = "US";
-  std::string state_code = "NY";
-
-  // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
-  directions_options.set_language("en-US");
-
-  // Configure maneuvers
-  std::list<Maneuver> maneuvers;
-  PopulateStartManeuverList_1_unnamed_cycleway(maneuvers, country_code,
-                                              state_code);
-
-  // Configure expected maneuvers based on directions options
-  std::list<Maneuver> expected_maneuvers;
-  PopulateStartManeuverList_1_unnamed_cycleway(expected_maneuvers, country_code,
-                                              state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Head east on the cycleway.",
-                                  "",
-                                  "Head east on the cycleway for 1.7 miles.",
-                                  "");
-
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
-}
-
-void TestBuildStartInstructions_1_unnamed_mountain_bike_trail_miles_en_US() {
-  std::string country_code = "US";
-  std::string state_code = "NY";
-
-  // Configure directions options
-  DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
-  directions_options.set_language("en-US");
-
-  // Configure maneuvers
-  std::list<Maneuver> maneuvers;
-  PopulateStartManeuverList_1_unnamed_mountain_bike_trail(maneuvers, country_code,
-                                              state_code);
-
-  // Configure expected maneuvers based on directions options
-  std::list<Maneuver> expected_maneuvers;
-  PopulateStartManeuverList_1_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
-                                              state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Head west on the mountain bike trail.",
-                                  "",
-                                  "Head west on the mountain bike trail for 1 tenth of a mile.",
-                                  "");
-
-  TryBuild(directions_options, maneuvers, expected_maneuvers);
-}
-
 void TestBuildStartInstructions_2_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "PA";
@@ -2642,6 +2688,318 @@ void TestBuildStartInstructions_2_miles_en_US() {
       expected_maneuvers,
       "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
       "", "Head south on North Prince Street, U.S. 2 22.",
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_4_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Drive east.",
+                                  "",
+                                  "Drive east for a half mile.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_5_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_5(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_5(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Drive southwest on 5th Avenue.",
+      "",
+      "Drive southwest on 5th Avenue for 1 tenth of a mile.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_6_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_6(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_6(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "",
+      "Drive south on North Prince Street, U.S. 2 22.",
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_8_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_8(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_8(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk east.",
+                                  "",
+                                  "Walk east for a half mile.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_9_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_9(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_9(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Walk southwest on 5th Avenue.",
+      "",
+      "Walk southwest on 5th Avenue for 1 tenth of a mile.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_9_unnamed_walkway(maneuvers, country_code,
+                                              state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_9_unnamed_walkway(expected_maneuvers, country_code,
+                                              state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Walk southwest on the walkway.",
+                                  "",
+                                  "Walk southwest on the walkway for 200 feet.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_10_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_10(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_10(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "",
+      "Walk south on North Prince Street, U.S. 2 22.",
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_16_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_16(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_16(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike east.",
+                                  "",
+                                  "Bike east for a half mile.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_17_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_17(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_17(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Bike southwest on 5th Avenue.",
+      "",
+      "Bike southwest on 5th Avenue for 1 tenth of a mile.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_17_unnamed_cycleway(maneuvers, country_code,
+                                              state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_17_unnamed_cycleway(expected_maneuvers, country_code,
+                                              state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike east on the cycleway.",
+                                  "",
+                                  "Bike east on the cycleway for 1.7 miles.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_17_unnamed_mountain_bike_trail(maneuvers, country_code,
+                                              state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_17_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
+                                              state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Bike west on the mountain bike trail.",
+                                  "",
+                                  "Bike west on the mountain bike trail for 1 tenth of a mile.",
+                                  "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_18_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_18(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_18(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "",
+      "Bike south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -3531,9 +3889,9 @@ void TestBuildUturnInstructions_5_miles_en_US() {
   PopulateUturnManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers,
-      "Head northeast on Jonestown Road/US 22.",
+      "Drive northeast on Jonestown Road/US 22.",
       "",
-      "Head northeast on Jonestown Road, U.S. 22 for 200 feet. Then Make a left U-turn at Devonshire Road.",
+      "Drive northeast on Jonestown Road, U.S. 22 for 200 feet. Then Make a left U-turn at Devonshire Road.",
       "");
   SetExpectedManeuverInstructions(
       expected_maneuvers,
@@ -6954,23 +7312,53 @@ int main() {
   // FormVerbalPostTransitionInstruction
   suite.test(TEST_CASE(TestFormVerbalPostTransitionInstruction));
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Begin of the build phrase tests
+
   // BuildStartInstructions_0_miles_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_0_miles_en_US));
 
   // BuildStartInstructions_1_miles_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_1_miles_en_US));
 
-  // BuildStartInstructions_1_unnamed_walkway_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_1_unnamed_walkway_miles_en_US));
-
-  // BuildStartInstructions_1_unnamed_cycleway_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_1_unnamed_cycleway_miles_en_US));
-
-  // BuildStartInstructions_1_unnamed_mountain_bike_trail_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_1_unnamed_mountain_bike_trail_miles_en_US));
-
   // BuildStartInstructions_2_miles_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_2_miles_en_US));
+
+  // BuildStartInstructions_4_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_4_miles_en_US));
+
+  // BuildStartInstructions_5_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_5_miles_en_US));
+
+  // BuildStartInstructions_6_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_6_miles_en_US));
+
+  // BuildStartInstructions_8_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_8_miles_en_US));
+
+  // BuildStartInstructions_9_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_9_miles_en_US));
+
+  // BuildStartInstructions_9_unnamed_walkway_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_9_unnamed_walkway_miles_en_US));
+
+  // BuildStartInstructions_10_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_10_miles_en_US));
+
+  // BuildStartInstructions_16_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_16_miles_en_US));
+
+  // BuildStartInstructions_17_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_17_miles_en_US));
+
+  // BuildStartInstructions_17_unnamed_cycleway_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US));
+
+  // BuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US));
+
+  // BuildStartInstructions_18_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_18_miles_en_US));
 
   // BuildStartInstructions_0_kilometers_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_0_kilometers_en_US));
@@ -7283,6 +7671,9 @@ int main() {
 
   // BuildVerbalMultiCue_0_miles_en_US
   suite.test(TEST_CASE(TestBuildVerbalMultiCue_0_miles_en_US));
+
+  // End of the build phrase tests
+  /////////////////////////////////////////////////////////////////////////////
 
   return suite.tear_down();
 }
