@@ -24,20 +24,12 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
     throw std::runtime_error("Invalid language tag.");
   }
 
-  // TODO determine if we want to handle differently
-  if ((directions_options.language() == "en-US")
-      || (directions_options.language() == "cs-CZ")
-      || (directions_options.language() == "de-DE")) {
-    return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
-                                                  phrase_dictionary->second);
-  }
   // TODO: add in other locale specific builders
-  else {
-    throw std::runtime_error(
-        "Narrative builder not found for language: "
-            + directions_options.language());
-  }
-
+  // if a NarrativeBuilder is derived with specific code for a particular language
+  // then check here and return derived NarrativeBuilder
+  // otherwise just return pointer to NarrativeBuilder
+  return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
+                                                phrase_dictionary->second);
 }
 
 }
