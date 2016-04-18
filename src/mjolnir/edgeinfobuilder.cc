@@ -101,9 +101,9 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Pad to an 8 byte boundary
   std::size_t n = (eib.BaseSizeOf() % 8);
   if (n != 0) {
-	for (std::size_t i = 0; i < 8 - n; i++) {
-	  os << static_cast<char>(0);
-	}
+    for (std::size_t i = 0; i < 8 - n; i++) {
+      os << static_cast<char>(0);
+    }
   }
   return os;
 }
