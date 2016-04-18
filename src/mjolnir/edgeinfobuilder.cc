@@ -66,7 +66,7 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
   // Add padding to get to 8 byte boundaries
   size_t n = size % 8;
   if (n != 0) {
-	  size += 8 - n;
+    size += 8 - n;
   }
   return size;
 }
