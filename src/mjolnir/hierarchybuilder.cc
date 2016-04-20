@@ -158,8 +158,8 @@ GraphId GetOpposingEdge(const GraphId& node,
       i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
         directededge->classification() == edge->classification() &&
-        directededge->use() == edge->use() &&
-        directededge->length() == edge->length()) {
+        directededge->length() == edge->length() &&
+      ((directededge->link() && edge->link()) || (directededge->use() == edge->use()))) {
       return edgeid;
     }
   }

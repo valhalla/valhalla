@@ -165,7 +165,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       // Shortcut - must match length and use
       if (edge.is_shortcut()) {
         if (directededge->is_shortcut() &&
-            edge.use() == directededge->use() &&
+           ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) &&
             edge.length() == directededge->length()) {
           if (opp_index != absurd_index) {
             dupcount++;
