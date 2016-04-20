@@ -28,6 +28,14 @@ class NarrativeBuilder {
                    const EnhancedTripPath* trip_path,
                    const NarrativeDictionary& dictionary);
 
+  virtual ~NarrativeBuilder() = default;
+
+  NarrativeBuilder(NarrativeBuilder&&) = default;
+  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
+
+  NarrativeBuilder(const NarrativeBuilder&) = default;
+  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
+
   void Build(const DirectionsOptions& directions_options,
              const EnhancedTripPath* etp, std::list<Maneuver>& maneuvers);
 
@@ -377,7 +385,7 @@ class NarrativeBuilder {
    * @return the plural category based on the value of the specified
    * count and the language rules.
    */
-  std::string GetPluralCategory(size_t count);
+  virtual std::string GetPluralCategory(size_t count);
 
 
   /////////////////////////////////////////////////////////////////////////////
