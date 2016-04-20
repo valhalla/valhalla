@@ -24,9 +24,13 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
     throw std::runtime_error("Invalid language tag.");
   }
 
-  // TODO: add in other locale specific builders
-  // if a NarrativeBuilder is derived with specific code for a particular language
-  // then check here and return derived NarrativeBuilder
+  // if a NarrativeBuilder is derived with specific code for a particular
+  // language then add logic here and return derived NarrativeBuilder
+  if (directions_options.language() == "cs-CZ") {
+    return midgard::make_unique<NarrativeBuilder_csCZ>(
+        directions_options, trip_path, phrase_dictionary->second);
+  }
+
   // otherwise just return pointer to NarrativeBuilder
   return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
                                                 phrase_dictionary->second);

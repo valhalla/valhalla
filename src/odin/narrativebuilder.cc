@@ -3539,6 +3539,17 @@ bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver,
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+std::string NarrativeBuilder_csCZ::GetPluralCategory(size_t count) {
+  if (count == 1) {
+    return kPluralCategoryOneKey;
+  } else if ((count > 1) && (count < 5)) {
+    return kPluralCategoryFewKey;
+  }
+  return kPluralCategoryOtherKey;
+}
+
+
 }
 }
 

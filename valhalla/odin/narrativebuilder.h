@@ -549,6 +549,31 @@ class NarrativeBuilder {
 
 };
 
+///////////////////////////////////////////////////////////////////////////////
+class NarrativeBuilder_csCZ : public NarrativeBuilder {
+
+ public:
+  NarrativeBuilder_csCZ(const DirectionsOptions& directions_options,
+                        const EnhancedTripPath* trip_path,
+                        const NarrativeDictionary& dictionary)
+      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+  }
+
+ protected:
+
+  /**
+   * Returns the plural category based on the value of the specified
+   * count and the language rules.
+   *
+   * @param count Specified value to determine plural category.
+   *
+   * @return the plural category based on the value of the specified
+   * count and the language rules.
+   */
+  std::string GetPluralCategory(size_t count) override;
+
+};
+
 }
 }
 
