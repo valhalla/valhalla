@@ -23,7 +23,10 @@ const std::vector<std::string> kExpectedOrdinalValues = { "1st", "2nd", "3rd", "
 const std::string kExpectedFerryLabel = "Ferry";
 const std::string kExpectedStationLabel = "Station";
 const std::vector<std::string> kExpectedEmptyTransitNameLabels = { "tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular" };
-const std::vector<std::string> kExpectedTransitStopCountLabels = { "stop", "stops" };
+const std::map<std::string, std::string> kExpectedTransitStopCountLabels = {
+    {"one", "stop"},
+    {"other", "stops"}
+};
 
 // Expected phrases
 const std::map<std::string, std::string> kExpectedStartPhrases = {
@@ -321,14 +324,15 @@ void validate(const std::vector<std::string>& test_target,
   }
 }
 
-void validate(const PhraseSet& phrase_handle,
+void validate(const std::unordered_map<std::string, std::string>& test_target,
               const std::map<std::string, std::string>& expected) {
 
   for (const auto& expected_phrase : expected) {
-    const auto& phrase = phrase_handle.phrases.at(expected_phrase.first);
-    if (phrase != expected_phrase.second) {
+    const auto& test_target_item = test_target.at(expected_phrase.first);
+    if (test_target_item != expected_phrase.second) {
       throw std::runtime_error(
-          "Invalid entry: " + phrase + "  |  expected: " + expected_phrase.second);
+          "Invalid entry: " + test_target_item + "  |  expected: "
+              + expected_phrase.second);
     }
   }
 }
@@ -337,7 +341,7 @@ void test_en_US_start() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate start phrases
-  validate(static_cast<const PhraseSet&>(dictionary.start_subset), kExpectedStartPhrases);
+  validate(dictionary.start_subset.phrases, kExpectedStartPhrases);
 
   // cardinal_directions
   const auto& cardinal_directions = dictionary.start_subset.cardinal_directions;
@@ -353,7 +357,7 @@ void test_en_US_start_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate start phrases
-  validate(static_cast<const PhraseSet&>(dictionary.start_verbal_subset), kExpectedStartVerbalPhrases);
+  validate(dictionary.start_verbal_subset.phrases, kExpectedStartVerbalPhrases);
 
   // cardinal_directions
   const auto& cardinal_directions = dictionary.start_verbal_subset.cardinal_directions;
@@ -925,8 +929,7 @@ void test_en_US_exit() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit phrases
-  validate(static_cast<const PhraseSet&>(dictionary.exit_subset),
-           kExpectedExitPhrases);
+  validate(dictionary.exit_subset.phrases, kExpectedExitPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.exit_subset.relative_directions;
@@ -938,8 +941,7 @@ void test_en_US_exit_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.exit_verbal_subset),
-           kExpectedExitVerbalPhrases);
+  validate(dictionary.exit_verbal_subset.phrases, kExpectedExitVerbalPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.exit_subset.relative_directions;
@@ -951,8 +953,7 @@ void test_en_US_keep() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep phrases
-  validate(static_cast<const PhraseSet&>(dictionary.keep_subset),
-           kExpectedKeepPhrases);
+  validate(dictionary.keep_subset.phrases, kExpectedKeepPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.keep_subset.relative_directions;
@@ -968,8 +969,7 @@ void test_en_US_keep_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.keep_verbal_subset),
-           kExpectedKeepVerbalPhrases);
+  validate(dictionary.keep_verbal_subset.phrases, kExpectedKeepVerbalPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.keep_verbal_subset.relative_directions;
@@ -985,7 +985,7 @@ void test_en_US_keep_to_stay_on() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep_to_stay_on phrases
-  validate(static_cast<const PhraseSet&>(dictionary.keep_to_stay_on_subset),
+  validate(dictionary.keep_to_stay_on_subset.phrases,
            kExpectedKeepToStayOnPhrases);
 
   // relative_directions
@@ -1002,7 +1002,7 @@ void test_en_US_keep_to_stay_on_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate keep_to_stay_on_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.keep_to_stay_on_verbal_subset),
+  validate(dictionary.keep_to_stay_on_verbal_subset.phrases,
            kExpectedKeepToStayOnVerbalPhrases);
 
   // relative_directions
@@ -1019,8 +1019,7 @@ void test_en_US_merge() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate merge phrases
-  validate(static_cast<const PhraseSet&>(dictionary.merge_subset),
-           kExpectedMergePhrases);
+  validate(dictionary.merge_subset.phrases, kExpectedMergePhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.merge_subset.empty_street_name_labels;
@@ -1032,8 +1031,7 @@ void test_en_US_merge_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate merge_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.merge_verbal_subset),
-           kExpectedMergeVerbalPhrases);
+  validate(dictionary.merge_verbal_subset.phrases, kExpectedMergeVerbalPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.merge_verbal_subset.empty_street_name_labels;
@@ -1045,7 +1043,7 @@ void test_en_US_enter_roundabout() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_roundabout phrases
-  validate(static_cast<const PhraseSet&>(dictionary.enter_roundabout_subset),
+  validate(dictionary.enter_roundabout_subset.phrases,
            kExpectedEnterRoundaboutPhrases);
 
   // ordinal_values: "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"
@@ -1058,7 +1056,7 @@ void test_en_US_enter_roundabout_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_roundabout_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.enter_roundabout_verbal_subset),
+  validate(dictionary.enter_roundabout_verbal_subset.phrases,
            kExpectedEnterRoundaboutVerbalPhrases);
 
   // ordinal_values: "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"
@@ -1071,7 +1069,7 @@ void test_en_US_exit_roundabout() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_roundabout phrases
-  validate(static_cast<const PhraseSet&>(dictionary.exit_roundabout_subset),
+  validate(dictionary.exit_roundabout_subset.phrases,
            kExpectedExitRoundaboutPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
@@ -1084,7 +1082,7 @@ void test_en_US_exit_roundabout_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_roundabout_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.exit_roundabout_verbal_subset),
+  validate(dictionary.exit_roundabout_verbal_subset.phrases,
            kExpectedExitRoundaboutVerbalPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
@@ -1097,7 +1095,7 @@ void test_en_US_enter_ferry() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_ferry phrases
-  validate(static_cast<const PhraseSet&>(dictionary.enter_ferry_subset),
+  validate(dictionary.enter_ferry_subset.phrases,
            kExpectedEnterFerryPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
@@ -1113,7 +1111,7 @@ void test_en_US_enter_ferry_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_ferry_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.enter_ferry_verbal_subset),
+  validate(dictionary.enter_ferry_verbal_subset.phrases,
            kExpectedEnterFerryVerbalPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
@@ -1129,7 +1127,7 @@ void test_en_US_exit_ferry() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_ferry phrases
-  validate(static_cast<const PhraseSet&>(dictionary.exit_ferry_subset), kExpectedExitFerryPhrases);
+  validate(dictionary.exit_ferry_subset.phrases, kExpectedExitFerryPhrases);
 
   // cardinal_directions
   const auto& cardinal_directions = dictionary.exit_ferry_subset.cardinal_directions;
@@ -1145,7 +1143,7 @@ void test_en_US_exit_ferry_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate exit_ferry_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.exit_ferry_verbal_subset), kExpectedExitFerryVerbalPhrases);
+  validate(dictionary.exit_ferry_verbal_subset.phrases, kExpectedExitFerryVerbalPhrases);
 
   // cardinal_directions
   const auto& cardinal_directions = dictionary.exit_ferry_verbal_subset.cardinal_directions;
@@ -1161,7 +1159,7 @@ void test_en_US_transit_connection_start() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start phrases
-  validate(dictionary.transit_connection_start_subset,
+  validate(dictionary.transit_connection_start_subset.phrases,
            kExpectedTransitConnectionStartPhrases);
 
   // Station label
@@ -1174,7 +1172,7 @@ void test_en_US_transit_connection_start_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start_verbal phrases
-  validate(dictionary.transit_connection_start_verbal_subset,
+  validate(dictionary.transit_connection_start_verbal_subset.phrases,
            kExpectedTransitConnectionStartVerbalPhrases);
 
   // Station label
@@ -1187,7 +1185,7 @@ void test_en_US_transit_connection_transfer() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start phrases
-  validate(dictionary.transit_connection_transfer_subset,
+  validate(dictionary.transit_connection_transfer_subset.phrases,
            kExpectedTransitConnectionTransferPhrases);
 
   // Station label
@@ -1200,7 +1198,7 @@ void test_en_US_transit_connection_transfer_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_connection_start_verbal phrases
-  validate(dictionary.transit_connection_transfer_verbal_subset,
+  validate(dictionary.transit_connection_transfer_verbal_subset.phrases,
            kExpectedTransitConnectionTransferVerbalPhrases);
 
   // Station label
@@ -1213,7 +1211,7 @@ void test_en_US_transit_connection_destination() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_destination_start phrases
-  validate(dictionary.transit_connection_destination_subset,
+  validate(dictionary.transit_connection_destination_subset.phrases,
            kExpectedTransitConnectionDestinationPhrases);
 
   // Station label
@@ -1226,7 +1224,7 @@ void test_en_US_transit_connection_destination_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate transit_destination_start_verbal phrases
-  validate(dictionary.transit_connection_destination_verbal_subset,
+  validate(dictionary.transit_connection_destination_verbal_subset.phrases,
            kExpectedTransitConnectionDestinationVerbalPhrases);
 
   // Station label
@@ -1239,7 +1237,7 @@ void test_en_US_depart() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate depart phrases
-  validate(dictionary.depart_subset, kExpectedDepartPhrases);
+  validate(dictionary.depart_subset.phrases, kExpectedDepartPhrases);
 
 }
 
@@ -1247,7 +1245,7 @@ void test_en_US_depart_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate depart_verbal phrases
-  validate(dictionary.depart_verbal_subset, kExpectedDepartVerbalPhrases);
+  validate(dictionary.depart_verbal_subset.phrases, kExpectedDepartVerbalPhrases);
 
 }
 
@@ -1255,7 +1253,7 @@ void test_en_US_arrive() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate arrive phrases
-  validate(dictionary.arrive_subset, kExpectedArrivePhrases);
+  validate(dictionary.arrive_subset.phrases, kExpectedArrivePhrases);
 
 }
 
@@ -1263,7 +1261,7 @@ void test_en_US_arrive_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate arrive_verbal phrases
-  validate(dictionary.arrive_verbal_subset, kExpectedArriveVerbalPhrases);
+  validate(dictionary.arrive_verbal_subset.phrases, kExpectedArriveVerbalPhrases);
 
 }
 
@@ -1373,7 +1371,7 @@ void test_en_US_post_transit_connection_destination() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate post_transit_connection_destination phrases
-  validate(static_cast<const PhraseSet&>(dictionary.post_transit_connection_destination_subset),
+  validate(dictionary.post_transit_connection_destination_subset.phrases,
            kExpectedPostTransitConnectionDestinationPhrases);
 
   // cardinal_directions
@@ -1390,7 +1388,7 @@ void test_en_US_post_transit_connection_destination_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate post_transit_connection_destination_verbal phrases
-  validate(static_cast<const PhraseSet&>(dictionary.post_transit_connection_destination_verbal_subset),
+  validate(dictionary.post_transit_connection_destination_verbal_subset.phrases,
            kExpectedPostTransitConnectionDestinationVerbalPhrases);
 
   // cardinal_directions

@@ -6,13 +6,25 @@
 
 namespace {
 
-// Read array as vector
+// Read array and return as a vector
 template<typename T>
 std::vector<T> as_vector(boost::property_tree::ptree const& pt,
                          boost::property_tree::ptree::key_type const& key) {
   std::vector<T> items;
   for (const auto& item : pt.get_child(key)) {
     items.push_back(item.second.get_value<T>());
+  }
+  return items;
+}
+
+// Read key/values and return as an unordered_map
+template<typename K, typename V>
+std::unordered_map<K, V> as_unordered_map(
+    boost::property_tree::ptree const& pt,
+    boost::property_tree::ptree::key_type const& key) {
+  std::unordered_map<K, V> items;
+  for (const auto& item : pt.get_child(key)) {
+    items.emplace(item.first, item.second.get_value<V>());
   }
   return items;
 }
@@ -306,10 +318,8 @@ void NarrativeDictionary::Load(
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
                                const boost::property_tree::ptree& phrase_pt) {
 
-  for (const auto& item : phrase_pt.get_child(kPhrasesKey)) {
-    phrase_handle.phrases.emplace(item.first,
-                                  item.second.get_value<std::string>());
-  }
+  phrase_handle.phrases = as_unordered_map<std::string, std::string>(
+      phrase_pt, kPhrasesKey);
 }
 
 void NarrativeDictionary::Load(
@@ -490,8 +500,8 @@ void NarrativeDictionary::Load(
   Load(static_cast<TransitSubset&>(transit_stop_handle), transit_stop_subset_pt);
 
   // Populate transit_stop_count_labels
-  transit_stop_handle.transit_stop_count_labels = as_vector<std::string>(
-      transit_stop_subset_pt, kTransitStopCountLabelsKey);
+  transit_stop_handle.transit_stop_count_labels = as_unordered_map<std::string,
+      std::string>(transit_stop_subset_pt, kTransitStopCountLabelsKey);
 
 }
 
@@ -525,9 +535,9 @@ void NarrativeDictionary::Load(
        post_transition_transit_verbal_subset_pt);
 
   // Populate transit_stop_count_labels
-  post_transition_transit_verbal_handle.transit_stop_count_labels = as_vector<
-      std::string>(post_transition_transit_verbal_subset_pt,
-                   kTransitStopCountLabelsKey);
+  post_transition_transit_verbal_handle.transit_stop_count_labels =
+      as_unordered_map<std::string, std::string>(
+          post_transition_transit_verbal_subset_pt, kTransitStopCountLabelsKey);
 
 }
 
