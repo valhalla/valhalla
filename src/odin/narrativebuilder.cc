@@ -3193,12 +3193,20 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
 std::string NarrativeBuilder::FormTransitStopCountLabel(
     size_t stop_count,
     const std::unordered_map<std::string, std::string>& transit_stop_count_labels) {
-  if (stop_count == 1) {
-    const auto item = transit_stop_count_labels.find(kPluralCategoryOneKey);
-    if (item != transit_stop_count_labels.end())
-      return item->second;
+  const auto plural_category = GetPluralCategory(stop_count);
+  const auto item = transit_stop_count_labels.find(plural_category);
+  if (item != transit_stop_count_labels.end()) {
+    return item->second;
   }
+  // Return "other" label by default
   return transit_stop_count_labels.at(kPluralCategoryOtherKey);
+}
+
+std::string NarrativeBuilder::GetPluralCategory(size_t count) {
+  if (count == 1) {
+    return kPluralCategoryOneKey;
+  }
+  return kPluralCategoryOtherKey;
 }
 
 std::string NarrativeBuilder::FormLength(

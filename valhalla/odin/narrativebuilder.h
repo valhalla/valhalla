@@ -368,6 +368,18 @@ class NarrativeBuilder {
       size_t stop_count,
       const std::unordered_map<std::string, std::string>& transit_stop_count_labels);
 
+  /**
+   * Returns the plural category based on the value of the specified
+   * count and the language rules.
+   *
+   * @param count Specified value to determine plural category.
+   *
+   * @return the plural category based on the value of the specified
+   * count and the language rules.
+   */
+  std::string GetPluralCategory(size_t count);
+
+
   /////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the length string of the specified maneuver.
