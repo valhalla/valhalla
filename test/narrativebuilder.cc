@@ -6638,7 +6638,7 @@ void TestBuildTransit_1_cable_car_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 void TestBuildTransit_1_stop_count_1_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "PA";
+  std::string state_code = "NY";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -6672,7 +6672,7 @@ void TestBuildTransit_1_stop_count_1_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 void TestBuildTransit_1_stop_count_2_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "PA";
+  std::string state_code = "NY";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -6706,7 +6706,7 @@ void TestBuildTransit_1_stop_count_2_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 void TestBuildTransit_1_stop_count_4_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "PA";
+  std::string state_code = "NY";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -6740,7 +6740,7 @@ void TestBuildTransit_1_stop_count_4_miles_en_US() {
 // "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
 void TestBuildTransit_1_stop_count_8_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "PA";
+  std::string state_code = "NY";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -6763,6 +6763,142 @@ void TestBuildTransit_1_stop_count_8_miles_en_US() {
                                   "Depart at 8:11 AM from Flushing Av.",
                                   "Arrive: 8:32 AM at 23 St.",
                                   "Arrive at 8:32 AM at 23 St.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitInstruction
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("cs-CZ");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitManeuverList_1_stop_count_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitManeuverList_1_stop_count_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Nastupte na R směr FOREST HILLS - 71 AV. (1 zastávka)",
+                                  "",
+                                  "Nastupte na R směr FOREST HILLS - 71 AV.",
+                                  "Jeďte 1 zastávka.",
+                                  "Odjezd: 08:06 z Union St.",
+                                  "Odjíždíte v 08:06 z Union St.",
+                                  "Příjezd: 08:08 na Atlantic Av - Barclays Ctr.",
+                                  "Přijedete v 08:08 na Atlantic Av - Barclays Ctr.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitInstruction
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("cs-CZ");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitManeuverList_1_stop_count_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitManeuverList_1_stop_count_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Nastupte na R směr BAY RIDGE - 95 ST. (2 zastávky)",
+                                  "",
+                                  "Nastupte na R směr BAY RIDGE - 95 ST.",
+                                  "Jeďte 2 zastávky.",
+                                  "Odjezd: 08:05 z 28 St.",
+                                  "Odjíždíte v 08:05 z 28 St.",
+                                  "Příjezd: 08:08 na 14 St - Union Sq.",
+                                  "Přijedete v 08:08 na 14 St - Union Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitInstruction
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("cs-CZ");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitManeuverList_1_stop_count_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitManeuverList_1_stop_count_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Nastupte na R směr FOREST HILLS - 71 AV. (4 zastávky)",
+                                  "",
+                                  "Nastupte na R směr FOREST HILLS - 71 AV.",
+                                  "Jeďte 4 zastávky.",
+                                  "Odjezd: 08:02 z 8 St - NYU.",
+                                  "Odjíždíte v 08:02 z 8 St - NYU.",
+                                  "Příjezd: 08:08 na 34 St - Herald Sq.",
+                                  "Přijedete v 08:08 na 34 St - Herald Sq.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTransitInstruction
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+// No verbal alert
+// "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("cs-CZ");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTransitManeuverList_1_stop_count_8(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTransitManeuverList_1_stop_count_8(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Nastupte na M směr FOREST HILLS - 71 AV. (8 zastávek)",
+                                  "",
+                                  "Nastupte na M směr FOREST HILLS - 71 AV.",
+                                  "Jeďte 8 zastávek.",
+                                  "Odjezd: 08:11 z Flushing Av.",
+                                  "Odjíždíte v 08:11 z Flushing Av.",
+                                  "Příjezd: 08:32 na 23 St.",
+                                  "Přijedete v 08:32 na 23 St.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -8774,6 +8910,18 @@ int main() {
 
   // BuildTransit_1_stop_count_8_miles_en_US
   suite.test(TEST_CASE(TestBuildTransit_1_stop_count_8_miles_en_US));
+
+  // BuildTransit_1_stop_count_1_miles_cs_CZ
+  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_1_miles_cs_CZ));
+
+  // BuildTransit_1_stop_count_2_miles_cs_CZ
+  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_2_miles_cs_CZ));
+
+  // BuildTransit_1_stop_count_4_miles_cs_CZ
+  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_4_miles_cs_CZ));
+
+  // BuildTransit_1_stop_count_8_miles_cs_CZ
+  suite.test(TEST_CASE(TestBuildTransit_1_stop_count_8_miles_cs_CZ));
 
   // BuildTransitTransfer_0_no_name_miles_en_US
   suite.test(TEST_CASE(TestBuildTransitTransfer_0_no_name_miles_en_US));
