@@ -455,8 +455,12 @@ void validate(const boost::property_tree::ptree& pt,
           std::string end_node_iso;
           uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
                  0 : tile->edgeinfo(directededge.edgeinfo_offset())->wayid();
-          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                         wayid, tile, endnode_tile, dupcount, end_node_iso));
+          uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
+                                                    wayid, tile, endnode_tile, dupcount, end_node_iso);
+          directededge.set_opp_index(opp_index);
+
+          if (directededge.use() == Use::kTransitConnection)
+              directededge.set_opp_local_idx(opp_index);
 
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
