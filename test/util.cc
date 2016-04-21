@@ -122,6 +122,13 @@ namespace {
           auto other_sub = other_inst.get_child_optional(sub.first);
           if(!other_sub)
             throw std::runtime_error("Missing: " + locale.first + "::" + instruction.first + "." + sub.first);
+          // Check for "transit_stop_count_labels.other" - it must be present for all
+          if (sub.first == "transit_stop_count_labels") {
+            auto transit_stop_count_label_other = other_sub->get_child_optional("other");
+            if (!transit_stop_count_label_other)
+              throw std::runtime_error("Missing: " + locale.first + "::" + instruction.first + "." + sub.first + ".other");
+            continue;  // Skip the other checks
+          }
           if(sub.second.size() != other_sub->size())
             throw std::runtime_error("Wrong number of elements in " +
               locale.first + "::" + instruction.first + "." + sub.first);

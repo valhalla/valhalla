@@ -28,6 +28,14 @@ class NarrativeBuilder {
                    const EnhancedTripPath* trip_path,
                    const NarrativeDictionary& dictionary);
 
+  virtual ~NarrativeBuilder() = default;
+
+  NarrativeBuilder(NarrativeBuilder&&) = default;
+  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
+
+  NarrativeBuilder(const NarrativeBuilder&) = default;
+  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
+
   void Build(const DirectionsOptions& directions_options,
              const EnhancedTripPath* etp, std::list<Maneuver>& maneuvers);
 
@@ -355,6 +363,33 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   /**
+   * Returns the transit stop count label based on the value of the specified
+   * stop count and language rules.
+   *
+   * @param stop_count Specified stop count of transit line.
+   * @param transit_stop_count_labels Map of stop count labels.
+   *
+   * @return the transit stop count label based on the value of the specified
+   * stop count and language rules.
+   */
+  std::string FormTransitStopCountLabel(
+      size_t stop_count,
+      const std::unordered_map<std::string, std::string>& transit_stop_count_labels);
+
+  /**
+   * Returns the plural category based on the value of the specified
+   * count and the language rules.
+   *
+   * @param count Specified value to determine plural category.
+   *
+   * @return the plural category based on the value of the specified
+   * count and the language rules.
+   */
+  virtual std::string GetPluralCategory(size_t count);
+
+
+  /////////////////////////////////////////////////////////////////////////////
+  /**
    * Returns the length string of the specified maneuver.
    *
    * @param maneuver The maneuver to process.
@@ -511,6 +546,31 @@ class NarrativeBuilder {
   const DirectionsOptions& directions_options_;
   const EnhancedTripPath* trip_path_;
   const NarrativeDictionary& dictionary_;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class NarrativeBuilder_csCZ : public NarrativeBuilder {
+
+ public:
+  NarrativeBuilder_csCZ(const DirectionsOptions& directions_options,
+                        const EnhancedTripPath* trip_path,
+                        const NarrativeDictionary& dictionary)
+      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+  }
+
+ protected:
+
+  /**
+   * Returns the plural category based on the value of the specified
+   * count and the language rules.
+   *
+   * @param count Specified value to determine plural category.
+   *
+   * @return the plural category based on the value of the specified
+   * count and the language rules.
+   */
+  std::string GetPluralCategory(size_t count) override;
 
 };
 

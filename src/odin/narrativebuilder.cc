@@ -2832,7 +2832,8 @@ std::string NarrativeBuilder::FormTransitInstruction(
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = dictionary_.transit_subset.transit_stop_count_labels.at(stop_count != 1);
+  auto stop_count_label = FormTransitStopCountLabel(
+      stop_count, dictionary_.transit_subset.transit_stop_count_labels);
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2891,7 +2892,8 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = dictionary_.transit_remain_on_subset.transit_stop_count_labels.at(stop_count != 1);
+  auto stop_count_label = FormTransitStopCountLabel(
+      stop_count, dictionary_.transit_remain_on_subset.transit_stop_count_labels);
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2954,7 +2956,8 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = dictionary_.transit_transfer_subset.transit_stop_count_labels.at(stop_count != 1);
+  auto stop_count_label = FormTransitStopCountLabel(
+      stop_count, dictionary_.transit_transfer_subset.transit_stop_count_labels);
 
   if (!transit_headsign.empty()) {
     phrase_id = 1;
@@ -2969,7 +2972,7 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
       kTransitNameTag,
       FormTransitName(
           maneuver,
-          dictionary_.transit_transfer_subset.empty_transit_name_labels));  //TODO: need generic names in dictionary
+          dictionary_.transit_transfer_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
@@ -3172,8 +3175,10 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = dictionary_.post_transition_transit_verbal_subset.
-      transit_stop_count_labels.at(stop_count != 1);
+  auto stop_count_label = FormTransitStopCountLabel(
+      stop_count,
+      dictionary_.post_transition_transit_verbal_subset
+          .transit_stop_count_labels);
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.post_transition_transit_verbal_subset.phrases.at(std::to_string(phrase_id));
@@ -3183,6 +3188,25 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
   return instruction;
+}
+
+std::string NarrativeBuilder::FormTransitStopCountLabel(
+    size_t stop_count,
+    const std::unordered_map<std::string, std::string>& transit_stop_count_labels) {
+  const auto plural_category = GetPluralCategory(stop_count);
+  const auto item = transit_stop_count_labels.find(plural_category);
+  if (item != transit_stop_count_labels.end()) {
+    return item->second;
+  }
+  // Return "other" label by default
+  return transit_stop_count_labels.at(kPluralCategoryOtherKey);
+}
+
+std::string NarrativeBuilder::GetPluralCategory(size_t count) {
+  if (count == 1) {
+    return kPluralCategoryOneKey;
+  }
+  return kPluralCategoryOtherKey;
 }
 
 std::string NarrativeBuilder::FormLength(
@@ -3249,7 +3273,7 @@ std::string NarrativeBuilder::FormMetricLength(
       (kilometer_tenths == kilometer_tenths_floor) ?
           (boost::format("%.0f") % kilometer_tenths_floor).str() :
           (boost::format("%.1f") % kilometer_tenths).str());
-  boost::replace_all(length_string, kMetersTag, std::to_string(meters));  //TODO: locale specific numerals
+  boost::replace_all(length_string, kMetersTag, std::to_string(meters));  //: locale specific numerals
 
 
   return length_string;
@@ -3514,6 +3538,17 @@ bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver,
   }
   return false;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+std::string NarrativeBuilder_csCZ::GetPluralCategory(size_t count) {
+  if (count == 1) {
+    return kPluralCategoryOneKey;
+  } else if ((count > 1) && (count < 5)) {
+    return kPluralCategoryFewKey;
+  }
+  return kPluralCategoryOtherKey;
+}
+
 
 }
 }

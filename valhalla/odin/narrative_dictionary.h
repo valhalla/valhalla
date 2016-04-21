@@ -84,6 +84,13 @@ constexpr auto kStationLabelKey = "station_label";
 constexpr auto kEmptyTransitNameLabelsKey = "empty_transit_name_labels";
 constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
 
+constexpr auto kPluralCategoryZeroKey = "zero";
+constexpr auto kPluralCategoryOneKey = "one";
+constexpr auto kPluralCategoryTwoKey = "two";
+constexpr auto kPluralCategoryFewKey = "few";
+constexpr auto kPluralCategoryManyKey = "many";
+constexpr auto kPluralCategoryOtherKey = "other";
+
 // Empty street names label indexes
 constexpr auto kWalkwayIndex = 0;
 constexpr auto kCyclewayIndex = 1;
@@ -198,7 +205,7 @@ struct TransitSubset : PhraseSet {
 };
 
 struct TransitStopSubset : TransitSubset {
-  std::vector<std::string> transit_stop_count_labels;
+  std::unordered_map<std::string, std::string> transit_stop_count_labels;
 };
 
 struct PostTransitionVerbalSubset : PhraseSet {
@@ -208,7 +215,7 @@ struct PostTransitionVerbalSubset : PhraseSet {
 };
 
 struct PostTransitionTransitVerbalSubset : PhraseSet {
-  std::vector<std::string> transit_stop_count_labels;
+  std::unordered_map<std::string, std::string> transit_stop_count_labels;
 };
 
 
