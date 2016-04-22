@@ -983,6 +983,9 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>"
+      },
+      "example_phrases": {
+        "0": ["Bear right onto East Fayette Street. Then Turn right onto North Gay Street."]
       }
     }
     
