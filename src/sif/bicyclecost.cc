@@ -189,8 +189,6 @@ class BicycleCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor.
    * @param  tile           current tile
    * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
@@ -198,7 +196,6 @@ class BicycleCost : public DynamicCost {
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
                  const baldr::GraphId& edgeid) const;
 
@@ -505,7 +502,6 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
 bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
@@ -515,7 +511,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // since the search is heading out of any not_thru regions)
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
-       (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx()))) {
+       (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) {
     return false;
   }
 
