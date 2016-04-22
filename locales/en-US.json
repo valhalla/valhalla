@@ -969,7 +969,11 @@
       },
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"]
+      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "example_phrases": {
+        "0": ["Continue for 300 feet.", "Continue for 9 miles."],
+        "1": ["Continue on Pennsylvania 7 43 for 6.2 miles.", "Continue on Main Street, Vermont 30 for 1 tenth of a mile."]
+      }
     },
     "post_transition_transit_verbal": {
       "phrases": {

@@ -969,7 +969,11 @@
       },
       "metric_lengths": ["<KILOMETERS> kilometrů", "1 kilometr", "půl kilometru", "<METERS> metrů", "méně než 10 metrů"],
       "us_customary_lengths": ["<MILES> mil", "1 míli", "půl míle", "<TENTHS_OF_MILE> desetiny míle", "1 desetinu míle", "<FEET> stop", "méně než 10 stop"],
-      "empty_street_name_labels": ["chodníku", "cyklostezce", "stezce pro horská kola"]
+      "empty_street_name_labels": ["chodníku", "cyklostezce", "stezce pro horská kola"],
+      "example_phrases": {
+        "0": ["Continue for 300 feet.", "Continue for 9 miles."],
+        "1": ["Continue on Pennsylvania 7 43 for 6.2 miles.", "Continue on Main Street, Vermont 30 for 1 tenth of a mile."]
+      }
     },
     "post_transition_transit_verbal": {
       "phrases": {
