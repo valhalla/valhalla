@@ -16,6 +16,14 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 /*
+ * to regenerate the test tile you'll want to:
+ *  add -I../mjolnir to the compile line
+ *  add ../mjolnir/libvalhalla_mjolnir.la to the link line
+ *  uncomment the commented sections in this file
+ *  and delete the test tile: test/tiles/2/000/519/120.gph
+ */
+
+/*
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 */
