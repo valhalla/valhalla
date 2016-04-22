@@ -98,6 +98,10 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
+    // Set a pointer access restriction list
+    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+    ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
+
     // Set a pointer to the transit departure list
     departures_ = reinterpret_cast<TransitDeparture*>(ptr);
     ptr += header_->departurecount() * sizeof(TransitDeparture);
@@ -113,10 +117,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     // Set a pointer to the transit schedule list
     transit_schedules_ = reinterpret_cast<TransitSchedule*>(ptr);
     ptr += header_->schedulecount() * sizeof(TransitSchedule);
-
-    // Set a pointer access restriction list
-    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
-    ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
 
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
