@@ -210,44 +210,36 @@ void UpdateLinkUse(const GraphTile* tile,
     return;
   }
 
-  // Both end nodes have to connect to a non-link edge and only 1 link
-  // edge (assumed to be this edge). If either end node connects only
-  // to "links" this likely indicates a split or fork, which are not so
-  // prevalent in turn channels.
-  uint32_t nonlinkcount = 0;
-  uint32_t linkcount = 0;
+  // Both end nodes have to connect to a non-link edge.
+  bool non_link = false;
   const DirectedEdge* edge = tile->directededge(nodeinfo.edge_index());
-  for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++, edge++) {
-    if (edge->link()) {
-      linkcount++;
-    } else {
-      nonlinkcount++;
+  for (uint32_t j = 0; j < nodeinfo.edge_count(); j++, edge++) {
+    if (!edge->link()) {
+      non_link = true;
+      break;
     }
   }
-  if (nonlinkcount == 0 || linkcount > 1) {
+  if (!non_link) {
     directededge.set_use(Use::kRamp);
     return;
   }
 
-  // Get node info at the end node
   // Get the tile at the end node and get the node info
-  nonlinkcount = 0;
-  linkcount = 0;
+  non_link = false;
   GraphId endnode = directededge.endnode();
   const NodeInfo* node = endnodetile->node(endnode.id());
   edge = endnodetile->directededge(node->edge_index());
-  for (uint32_t j = 0; j <  node->edge_count(); j++, edge++) {
-    if (edge->link()) {
-      linkcount++;
-    } else {
-      nonlinkcount++;
+  for (uint32_t j = 0; j < node->edge_count(); j++, edge++) {
+    if (!edge->link()) {
+      non_link = true;
+      break;
     }
   }
-  if (nonlinkcount == 0 || linkcount > 1) {
+  if (!non_link) {
     directededge.set_use(Use::kRamp);
-    return;
+  } else {
+    directededge.set_use(Use::kTurnChannel);
   }
-  directededge.set_use(Use::kTurnChannel);
 }
 
 /**
@@ -890,10 +882,10 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   RoadClass bestrc = RoadClass::kUnclassified;
   for (uint32_t i = 0; i < count; i++, edge++) {
     // Check the road if it is driveable TO the intersection and is neither
-    // the "to" nor "from" edge. Treat roundabout edges and link edges as two
-    // levels lower classification (higher value) to reduce the stop impact.
+    // the "to" nor "from" edge. Treat roundabout edges as two levels lower
+    // classification (higher value) to reduce the stop impact.
     if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
-      if (edge->roundabout() | edge->link()) {
+      if (edge->roundabout()) {
         uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
         if (c  < static_cast<uint32_t>(bestrc)) {
           bestrc = static_cast<RoadClass>(c);
@@ -914,6 +906,14 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   RoadClass from_rc = edges[from].classification();
   if (from_rc > RoadClass::kUnclassified)
     from_rc = RoadClass::kUnclassified;
+
+  // High stop impact from a turn channel onto a turn channel unless the other
+  // edge a low class road
+  if (edges[from].use() == Use::kTurnChannel &&
+      edges[to].use()   == Use::kTurnChannel &&
+      bestrc < RoadClass::kUnclassified) {
+    return 7;
+  }
 
   // Set stop impact to the difference in road class (make it non-negative)
   int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
