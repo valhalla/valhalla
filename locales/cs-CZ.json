@@ -837,7 +837,7 @@
       "empty_transit_name_labels": ["tramvaj", "metro", "vlak", "autobus", "přívoz", "lanovku", "lanovku", "lanovku"],
       "transit_stop_count_labels": {"one": "zastávka", "few": "zastávky", "other": "zastávek"},
       "example_phrases": {
-        "0": ["Nastupte na New Haven. (1 zastávka)", "Nastupte na metro. (2 zastávek)", "Nastupte na autobus. (12 zastávek)"],
+        "0": ["Nastupte na New Haven. (1 zastávka)", "Nastupte na metro. (2 zastávky)", "Nastupte na autobus. (12 zastávek)"],
         "1": ["Nastupte na F směr JAMAICA - 179 ST. (10 zastávek)", "Nastupte na přívoz směr Staten Island. (1 zastávka)"]
       }
     },
@@ -860,7 +860,7 @@
       "empty_transit_name_labels": ["tramvaji", "metru", "vlaku", "autobusu", "přívozu", "lanovce", "lanovce", "lanovce"],
       "transit_stop_count_labels": {"one": "zastávka", "few": "zastávky", "other": "zastávek"},
       "example_phrases": {
-        "0": ["Zůstaňte v New Haven. (1 zastávka)", "Zůstaňte v vlaku. (3 zastávek)"],
+        "0": ["Zůstaňte v New Haven. (1 zastávka)", "Zůstaňte v vlaku. (3 zastávky)"],
         "1": ["Zůstaňte v F směr JAMAICA - 179 ST. (10 zastávek)"]
       }
     },
@@ -883,7 +883,7 @@
       "empty_transit_name_labels": ["tramvaj", "metro", "vlak", "autobus", "přívoz", "lanovku", "lanovku", "lanovku"],
       "transit_stop_count_labels": {"one": "zastávka", "few": "zastávky", "other": "zastávek"},
       "example_phrases": {
-        "0": ["Přestupte na New Haven. (1 zastávka)", "Přestupte na tramvaj. (4 zastávek)"],
+        "0": ["Přestupte na New Haven. (1 zastávka)", "Přestupte na tramvaj. (4 zastávky)"],
         "1": ["Přestupte na F směr JAMAICA - 179 ST. (10 zastávek)"]
       }
     },
@@ -975,9 +975,9 @@
       "phrases": {
         "0": "Jeďte <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
-      "transit_stop_count_labels": {"one": "zastávka", "few": "zastávky", "other": "zastávek"},
+      "transit_stop_count_labels": {"one": "zastávku", "few": "zastávky", "other": "zastávek"},
       "example_phrases": {
-        "0": ["Jeďte 1 zastávku.", "Jedťe 3 zastávek."]
+        "0": ["Jeďte 1 zastávku.", "Jeďte 3 zastávky."]
       }
     },
     "verbal_multi_cue": {
