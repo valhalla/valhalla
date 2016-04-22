@@ -104,16 +104,18 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
   const auto* directededge = tile->directededge(edgeid);
 
   // For now return an invalid Id if this is a transit edge or is a transit connection
-  if (directededge->IsTransitLine() || directededge->use() == Use::kTransitConnection) {
+  if (directededge->IsTransitLine()) {
     return {};
   }
 
   // Get the opposing edge, if edge leaves the tile get the end node's tile
   GraphId id = directededge->endnode();
+
   if (directededge->leaves_tile()) {
     // Get tile at the end node
     tile = GetGraphTile(id);
   }
+
   if (tile != nullptr) {
     id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
     return id;
