@@ -605,7 +605,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
       uint32_t edge_info_offset = tilebuilder_local.AddEdgeInfo(0, conn.osm_node,
                      endnode, 0, conn.shape, conn.names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
-      directededge.set_forward(added);
+      directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
 
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
@@ -689,11 +689,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
         std::vector<std::string> names;
+        std::list<PointLL> r_shape = conn.shape;
+        std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, origin_node,
-                       conn.osm_node, 0, conn.shape, names, added);
+                       conn.osm_node, 0, r_shape, names, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
-        directededge.set_forward(added);
+        directededge.set_forward(true);
 
         // set the admin index from the first de.
         if (!admin_set) {
