@@ -123,7 +123,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       if (predindex != kInvalidLabel) {
         pred = edgelabels_[predindex];
       } else {
-        LOG_ERROR("Bi-directional route failure - forward search exhausted");
+        LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
+                  std::to_string(edgelabels_.size()) + "," +
+                  std::to_string(edgelabels_reverse_.size()));
         return { };
       }
     }
@@ -132,7 +134,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       if (predindex2 != kInvalidLabel) {
         pred2 = edgelabels_reverse_[predindex2];
       } else {
-        LOG_ERROR("Bi-directional route failure - reverse search exhausted");
+        LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
+                  std::to_string(edgelabels_reverse_.size()) + "," +
+                  std::to_string(edgelabels_.size()));
         return { };
       }
     }
@@ -355,7 +359,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
         if (directededge->not_thru() ||
             !costing->AllowedReverse(directededge, pred2, opp_edge,
-                                     opp_pred_edge, tile, edgeid)) {
+                                     tile, edgeid)) {
           continue;
         }
 
