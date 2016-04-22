@@ -101,8 +101,6 @@ class AutoCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor.
    * @param  tile           current tile
    * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
@@ -110,7 +108,6 @@ class AutoCost : public DynamicCost {
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
                  const baldr::GraphId& edgeid) const;
 
@@ -297,7 +294,6 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
 bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
@@ -305,8 +301,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
-       (pred.opp_local_idx() == edge->localedgeidx()) ||
-       (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
+        pred.opp_local_idx() == edge->localedgeidx() ||
+       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable) {
     return false;
   }
@@ -564,16 +560,15 @@ class BusCost : public AutoCost {
    * (from destination towards origin). Both opposing edges are
    * provided.
    * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor.
    * @param  tile           current tile
    * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
                  const baldr::GraphId& edgeid) const;
 
@@ -626,18 +621,18 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
 bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
-               const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge,
-               const baldr::GraphTile*& tile,
-               const baldr::GraphId& edgeid) const {
+                             const EdgeLabel& pred,
+                             const baldr::DirectedEdge* opp_edge,
+                             const baldr::GraphTile*& tile,
+                             const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
-      (opp_pred_edge->opp_local_idx() == opp_edge->opp_local_idx()) ||
-      (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
-       opp_edge->surface() == Surface::kImpassable) {
+        pred.opp_local_idx() == edge->localedgeidx() ||
+       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+        opp_edge->surface() == Surface::kImpassable) {
     return false;
   }
   return true;

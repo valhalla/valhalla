@@ -100,8 +100,6 @@ class PedestrianCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor.
    * @param  tile           current tile
    * @param  edgeid         edgeid that we care about
    * @return  Returns true if access is allowed, false if not.
@@ -109,7 +107,6 @@ class PedestrianCost : public DynamicCost {
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge,
                  const baldr::GraphTile*& tile,
                  const baldr::GraphId& edgeid) const;
 
@@ -317,7 +314,6 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
 bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
