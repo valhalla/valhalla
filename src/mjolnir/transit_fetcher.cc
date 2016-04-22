@@ -293,7 +293,7 @@ void get_stop_patterns(Transit& tile, std::unordered_map<std::string, uint64_t>&
       trip_shape.emplace_back(PointLL(lon,lat));
     }
     // encode the points to reduce size
-    shape->set_encoded_shape(encode(trip_shape));
+    shape->set_encoded_shape(encode7(trip_shape));
 
     // shapes.size()+1 because we can't have a shape id of 0.
     // 0 means shape id is not set in the transit builder.

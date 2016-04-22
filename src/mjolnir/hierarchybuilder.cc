@@ -299,7 +299,7 @@ uint32_t ConnectEdges(const GraphId& basenode,
 
   // Get the shape for this edge and append to the shortcut's shape
   auto encoded = tile->edgeinfo(directededge->edgeinfo_offset())->encoded_shape();
-  std::list<PointLL> edgeshape = valhalla::midgard::decode<std::list<PointLL> >(encoded);
+  std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL> >(encoded);
   // Need to flip it
   if (!directededge->forward())
     std::reverse(edgeshape.begin(), edgeshape.end());
@@ -397,7 +397,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-      std::list<PointLL> shape = valhalla::midgard::decode<std::list<PointLL> >(edgeinfo->encoded_shape());
+      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo->encoded_shape());
       if (!directededge->forward())
         std::reverse(shape.begin(), shape.end());
 
