@@ -1128,7 +1128,7 @@ void build(const std::string& transit_dir,
     std::vector<float> distances;
     for (uint32_t i = 0; i < transit.shapes_size(); i++) {
       const Transit_Shape& shape = transit.shapes(i);
-      const std::vector<PointLL> trip_shape = decode<std::vector<PointLL> >(shape.encoded_shape());
+      const std::vector<PointLL> trip_shape = decode7<std::vector<PointLL> >(shape.encoded_shape());
 
       float distance = 0.0f;
       Shape shape_data;
