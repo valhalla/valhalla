@@ -49,6 +49,11 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   directededges_builder_.resize(n);
   memcpy(&directededges_builder_[0], directededges_, n * sizeof(DirectedEdge));
 
+  // Create access restriction list
+  for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
+    access_restriction_builder_.emplace_back(std::move(access_restrictions_[i]));
+  }
+
   // Create transit builders and add any text offsets to the set
   for (uint32_t i = 0; i < header_->departurecount(); i++) {
     departure_builder_.emplace_back(std::move(departures_[i]));
@@ -71,11 +76,6 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   }
   for (uint32_t i = 0; i < header_->schedulecount(); i++) {
     schedule_builder_.emplace_back(std::move(transit_schedules_[i]));
-  }
-
-  // Create access restriction list
-  for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
-    access_restriction_builder_.emplace_back(std::move(access_restrictions_[i]));
   }
 
   // Create sign builders
@@ -157,23 +157,23 @@ void GraphTileBuilder::StoreTileData() {
     // Configure the header
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
+    header_builder_.set_access_restriction_count(
+                access_restriction_builder_.size());
     header_builder_.set_departurecount(departure_builder_.size());
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_schedulecount(schedule_builder_.size());
-    header_builder_.set_access_restriction_count(
-                access_restriction_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeader))
             + (nodes_builder_.size() * sizeof(NodeInfo))
             + (directededges_builder_.size() * sizeof(DirectedEdge))
+            + (access_restriction_builder_.size() * sizeof(AccessRestriction))
             + (departure_builder_.size() * sizeof(TransitDeparture))
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
             + (schedule_builder_.size() * sizeof(TransitSchedule))
-            + (access_restriction_builder_.size() * sizeof(AccessRestriction))
             + (signs_builder_.size() * sizeof(Sign))
             + (admins_builder_.size() * sizeof(Admin)));
 
@@ -192,6 +192,11 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdge));
 
+    // Sort and write the access restrictions
+    std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
+    file.write(reinterpret_cast<const char*>(&access_restriction_builder_[0]),
+               access_restriction_builder_.size() * sizeof(AccessRestriction));
+
     // Sort and write the transit departures
     std::sort(departure_builder_.begin(), departure_builder_.end());
     file.write(reinterpret_cast<const char*>(&departure_builder_[0]),
@@ -208,11 +213,6 @@ void GraphTileBuilder::StoreTileData() {
     // Write transit schedules
     file.write(reinterpret_cast<const char*>(&schedule_builder_[0]),
                schedule_builder_.size() * sizeof(TransitSchedule));
-
-    // Sort and write the access restrictions
-    std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
-    file.write(reinterpret_cast<const char*>(&access_restriction_builder_[0]),
-               access_restriction_builder_.size() * sizeof(AccessRestriction));
 
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
@@ -272,6 +272,10 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdge));
 
+    // Write the existing access restrictions
+    file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
+        header_->access_restriction_count() * sizeof(AccessRestriction));
+
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
         header_->departurecount() * sizeof(TransitDeparture));
@@ -287,10 +291,6 @@ void GraphTileBuilder::Update(
     // Write the existing transit schedules
     file.write(reinterpret_cast<const char*>(&transit_schedules_[0]),
         header_->schedulecount() * sizeof(TransitSchedule));
-
-    // Write the existing access restrictions
-    file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
-        header_->access_restriction_count() * sizeof(AccessRestriction));
 
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
@@ -347,6 +347,10 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdge));
 
+    // Write the updated access restrictions
+    file.write(reinterpret_cast<const char*>(&restrictions[0]),
+               restrictions.size() * sizeof(AccessRestriction));
+
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
                hdr.departurecount() * sizeof(TransitDeparture));
@@ -362,10 +366,6 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     // Write the existing transit schedules
     file.write(reinterpret_cast<const char*>(&transit_schedules_[0]),
                hdr.schedulecount() * sizeof(TransitSchedule));
-
-    // Write the updated access restrictions
-    file.write(reinterpret_cast<const char*>(&restrictions[0]),
-               restrictions.size() * sizeof(AccessRestriction));
 
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
