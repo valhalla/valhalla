@@ -9,23 +9,23 @@ namespace {
 
 json::MapPtr bike_network_json(uint8_t mask) {
   return json::map({
-    {"national", static_cast<bool>(mask && kNcn)},
-    {"regional", static_cast<bool>(mask && kRcn)},
-    {"local", static_cast<bool>(mask && kLcn)},
-    {"mountain", static_cast<bool>(mask && kMcn)},
+    {"national", static_cast<bool>(mask & kNcn)},
+    {"regional", static_cast<bool>(mask & kRcn)},
+    {"local", static_cast<bool>(mask & kLcn)},
+    {"mountain", static_cast<bool>(mask & kMcn)},
   });
 }
 
 json::MapPtr access_json(uint32_t access) {
   return json::map({
-    {"bicycle", static_cast<bool>(access && kBicycleAccess)},
-    {"bus", static_cast<bool>(access && kBusAccess)},
-    {"car", static_cast<bool>(access && kAutoAccess)},
-    {"emergency", static_cast<bool>(access && kEmergencyAccess)},
-    {"HOV", static_cast<bool>(access && kHOVAccess)},
-    {"pedestrian", static_cast<bool>(access && kPedestrianAccess)},
-    {"taxi", static_cast<bool>(access && kTaxiAccess)},
-    {"truck", static_cast<bool>(access && kTruckAccess)},
+    {"bicycle", static_cast<bool>(access & kBicycleAccess)},
+    {"bus", static_cast<bool>(access & kBusAccess)},
+    {"car", static_cast<bool>(access & kAutoAccess)},
+    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
+    {"HOV", static_cast<bool>(access & kHOVAccess)},
+    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
+    {"taxi", static_cast<bool>(access & kTaxiAccess)},
+    {"truck", static_cast<bool>(access & kTruckAccess)},
   });
 }
 

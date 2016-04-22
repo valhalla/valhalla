@@ -82,7 +82,7 @@ const std::vector<std::string> EdgeInfo::GetNames() const {
 const std::vector<PointLL>& EdgeInfo::shape() const {
   //if we haven't yet decoded the shape, do so
   if(encoded_shape_ != nullptr) {
-    shape_ = midgard::decode<std::vector<PointLL> >(std::string(encoded_shape_,
+    shape_ = midgard::decode7<std::vector<PointLL> >(std::string(encoded_shape_,
                                   item_->encoded_shape_size));
     encoded_shape_ = nullptr;
   }
@@ -93,18 +93,17 @@ const std::vector<PointLL>& EdgeInfo::shape() const {
 
 // Returns the encoded shape string
 std::string EdgeInfo::encoded_shape() const {
-  if (encoded_shape_ == nullptr) {
-    return midgard::encode(shape_);
-  } else {
-    return std::string(encoded_shape_, item_->encoded_shape_size);
-  }
+  return encoded_shape_ == nullptr ? midgard::encode7(shape_) : std::string(encoded_shape_, item_->encoded_shape_size);
 }
 
 json::MapPtr EdgeInfo::json() const {
+  auto encoded =
+    encoded_shape_ == nullptr ? midgard::encode(shape_) : std::string(encoded_shape_, item_->encoded_shape_size);
+
   return json::map({
     {"way_id", static_cast<uint64_t>(wayid_)},
     {"names", names_json(GetNames())},
-    {"shape", encoded_shape()},
+    {"shape", encoded},
   });
 }
 
