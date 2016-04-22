@@ -64,7 +64,7 @@ message Transit {
   
   message Shape {
     optional uint32 shape_id = 1; 
-    optional string encoded_shape = 2;
+    optional bytes encoded_shape = 2;
   }
  
   repeated Stop stops = 1;
