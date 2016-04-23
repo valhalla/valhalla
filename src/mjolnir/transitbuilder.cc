@@ -536,6 +536,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_local,
   GraphId tileid = tilebuilder_local.header()->graphid().Tile_Base();
   Transit transit = read_pbf(tileid, hierarchy_local, transit_dir);
 
+  tilebuilder_transit.AddAdmin("None","None","","");
+
   // Iterate through the nodes - add back any stored edges and insert any
   // connections from a node to a transit stop. Update each nodes edge index.
   uint32_t nodeid = 0;
