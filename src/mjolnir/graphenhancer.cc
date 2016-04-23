@@ -330,11 +330,8 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-      // Do not allow use of the start edge or any transit edges
-      // TODO - seems to be an issue with transit routes if we skip
-      // transit connections. Investigate
-      if ((n == 0 && diredge->endnode() == startnode) ||
-          diredge->IsTransitLine()) {
+      // Do not allow use of the start edge
+      if ((n == 0 && diredge->endnode() == startnode)) {
         continue;
       }
 
@@ -1198,11 +1195,6 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        // Skip transit lines (don't need opposing local index)
-        if (directededge.IsTransitLine()) {
-          continue;
-        }
-
         // Get the tile at the end node
         const GraphTile* endnodetile = nullptr;
         if (tile->id() == directededge.endnode().Tile_Base()) {
@@ -1309,13 +1301,7 @@ void enhance(const boost::property_tree::ptree& pt,
           for (uint32_t k = (j + 1); k < ntrans; k++) {
             DirectedEdge& fromedge = tilebuilder.directededge(
                       nodeinfo.edge_index() + k);
-
-            // Set name consistency to false going from transit connection to
-            // transit connection
-            if (fromedge.use()     == Use::kTransitConnection ||
-                directededge.use() == Use::kTransitConnection) {
-              nodeinfo.set_name_consistency(j, k, false);
-            } else if (directededge.link() ||
+            if (directededge.link() ||
                 ConsistentNames(country_code,
                     tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
                     tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
@@ -1328,7 +1314,6 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags. Do not do this for transit edges.
-        // TODO - investigate TransitConnection use
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
