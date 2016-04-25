@@ -969,7 +969,11 @@
       },
       "metric_lengths": ["<KILOMETERS> Kilometer", "einen Kilometer", "einen halben Kilometer", "<METERS> Meter", "weniger als 10 Meter"],
       "us_customary_lengths": ["<MILES> Milen", "eine Meile", "eine halbe Meile", "<TENTHS_OF_MILE> zehntel der Meile", "eine zehntel der Miele", "<FEET> Füße", "weniger als 10 Füße"],
-      "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"]
+      "empty_street_name_labels": ["Fußweg", "Radweg", "Mountainbike Strecke"],
+      "example_phrases": {
+        "0": ["Continue for 300 feet.", "Continue for 9 miles."],
+        "1": ["Continue on Pennsylvania 7 43 for 6.2 miles.", "Continue on Main Street, Vermont 30 for 1 tenth of a mile."]
+      }
     },
     "post_transition_transit_verbal": {
       "phrases": {
@@ -983,6 +987,9 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>"
+      },
+      "example_phrases": {
+        "0": ["Bear right onto East Fayette Street. Then Turn right onto North Gay Street."]
       }
     }
     
