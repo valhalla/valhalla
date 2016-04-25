@@ -12,10 +12,10 @@ Czech/Czech Republic example:
 cs_CZ.utf8
 
 3. Do not translate the JSON keys or phrase tags, for example:  
-![Alt text](/img/do_not_translate.png)
+![Alt text](/locales/img/do_not_translate.png)
 
 4. Please translate the JSON values. As needed, reorder the phrases words and tags - the tags must remain in the phrase.  
-![Alt text](/img/translate.png)
+![Alt text](/locales/img/translate.png)
 
 ### Instruction descriptions
 TBD
