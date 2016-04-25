@@ -17,6 +17,10 @@ Czech/Czech Republic example:
 4. Please translate the JSON values. As needed, reorder the phrase words and tags - the tags must remain in the phrase. An example using the ramp instruction:  
 ![Alt text](/locales/img/translate.png)
 
+5. Run `make check` on the odin repo to verfiy the tests pass.
+
+6. Submit a pull request for review.
+
 #### Instruction descriptions
 `TBD`
 
