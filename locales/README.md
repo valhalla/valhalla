@@ -6,7 +6,7 @@ Using [IETF BCP 47](https://tools.ietf.org/html/bcp47) as reference - the typica
 Czech/Czech Republic example:  
 `cs-CZ`
 
-2. Update the `posix_locale` value - typical format is:  
+2. Update the `posix_locale` value. The character encoding must be utf8. The typical format is:  
 <[ISO 639 two-letter language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)>_<[ISO 3166 two-letter country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)>.utf8  
 Czech/Czech Republic example:  
 `cs_CZ.utf8`
