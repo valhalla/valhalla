@@ -971,8 +971,8 @@
       "us_customary_lengths": ["<MILES> mil", "1 míli", "půl míle", "<TENTHS_OF_MILE> desetiny míle", "1 desetinu míle", "<FEET> stop", "méně než 10 stop"],
       "empty_street_name_labels": ["chodníku", "cyklostezce", "stezce pro horská kola"],
       "example_phrases": {
-        "0": ["Continue for 300 feet.", "Continue for 9 miles."],
-        "1": ["Continue on Pennsylvania 7 43 for 6.2 miles.", "Continue on Main Street, Vermont 30 for 1 tenth of a mile."]
+        "0": ["Pokračujte 300 stop.", "Pokračujte 9 mil."],
+        "1": ["Pokračujte po Pennsylvania 7 43 6,2 mil.", "Pokračujte po Main Street, Vermont 30 po 1 desetinu míle."]
       }
     },
     "post_transition_transit_verbal": {
@@ -986,10 +986,10 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> a pak <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Potom <NEXT_VERBAL_CUE>"
       },
       "example_phrases": {
-        "0": ["Bear right onto East Fayette Street. Then Turn right onto North Gay Street."]
+        "0": ["Odbočte mírně vpravo na East Fayette Street. Potom Odbočte vpravo na North Gay Street."]
       }
     }
 
