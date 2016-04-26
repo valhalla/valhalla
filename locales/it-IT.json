@@ -165,9 +165,9 @@
     },
     "bear": {
       "phrases": {
-        "0": "Procedi leggermente <RELATIVE_DIRECTION>.",
-        "1": "Procedi leggermente <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
-        "2": "Procedi leggermente <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
+        "0": "Procedi leggermente a <RELATIVE_DIRECTION>.",
+        "1": "Procedi leggermente a <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
+        "2": "Procedi leggermente a <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
         "3": "Procedi leggermente <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>."
       },
       "relative_directions": ["sinistra", "destra"],
