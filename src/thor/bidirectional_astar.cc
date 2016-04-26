@@ -531,18 +531,13 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     }
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
-    // Get the tile at the end node. Skip if tile not found as we won't be
-    // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (endtile == nullptr) {
-      continue;
-    }
-
     // Get cost and sort cost (based on distance from endnode of this edge
-    // to the origin. Make sure we use the reverse A* heuristic.
+    // to the origin. Make sure we use the reverse A* heuristic. Note that
+    // the end node of the opposing edge is in the same tile as the directed
+    // edge.
     Cost cost = costing->EdgeCost(opp_dir_edge,
                     graphreader.GetEdgeDensity(opp_edge_id)) * edge.dist;
-    float dist = astarheuristic_reverse_.GetDistance(endtile->node(
+    float dist = astarheuristic_reverse_.GetDistance(tile->node(
                     opp_dir_edge->endnode())->latlng());
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
