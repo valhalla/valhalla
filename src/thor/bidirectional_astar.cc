@@ -359,7 +359,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
         if (directededge->not_thru() ||
             !costing->AllowedReverse(directededge, pred2, opp_edge,
-                                     tile, edgeid)) {
+                                     tile2, edgeid)) {
           continue;
         }
 
