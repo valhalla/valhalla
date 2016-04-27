@@ -1,10 +1,13 @@
-#include "test.h"
-#include "odin/util.h"
-
 #include <set>
 #include <locale>
 #include <regex>
 #include <boost/property_tree/json_parser.hpp>
+
+#include <valhalla/midgard/logging.h>
+
+#include "odin/util.h"
+
+#include "test.h"
 
 using namespace valhalla::odin;
 
@@ -130,7 +133,9 @@ namespace {
       boost::property_tree::read_json(other_ss, other);
 
       //check the locale is supported
-      std::locale l(other.get<std::string>("posix_locale").c_str());
+      std::string posix_locale = other.get<std::string>("posix_locale");
+      LOG_TRACE("Verify supported locale for posix_locale=" + posix_locale);
+      std::locale l(posix_locale.c_str());
 
       //check each instruction
       for(const auto& instruction : en_us.get_child("instructions")) {
