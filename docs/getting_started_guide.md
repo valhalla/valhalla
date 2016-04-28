@@ -34,7 +34,7 @@ Build the repositories in this order: Midgard, Baldr, Sif, Skadi, Mjolnir
 ```
 ./autogen.sh
 ./configure --enable-coverage --with-valhalla-midgard=../midgard --with-valhalla-baldr=../baldr --with-valhalla-sif=../sif --with-valhalla-skadi=../skadi CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-make test -j$(nproc)
+make test -j4
 ```
 
 ### Creating Data
