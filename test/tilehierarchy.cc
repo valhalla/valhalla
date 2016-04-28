@@ -25,9 +25,9 @@ namespace {
       throw runtime_error("Top hierarchy should have level 0");
     if(h.levels().rbegin()->second.tiles.TileSize() != .25f)
       throw runtime_error("Bottom hierarchy should have tile size of .25f");
-    if(h.HasLevel(5))
+    if(h.levels().find(5) != h.levels().end())
       throw runtime_error("There should only be levels 0, 1, 2");
-    if(!h.HasLevel(2))
+    if(h.levels().find(2) == h.levels().end())
       throw runtime_error("There should be a level 2");
     GraphId id = h.GetGraphId(PointLL(0,0), 34);
     if(id.Is_Valid())

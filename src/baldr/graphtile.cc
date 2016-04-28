@@ -98,6 +98,10 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
+    // Set a pointer access restriction list
+    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+    ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
+
     // Set a pointer to the transit departure list
     departures_ = reinterpret_cast<TransitDeparture*>(ptr);
     ptr += header_->departurecount() * sizeof(TransitDeparture);
@@ -113,10 +117,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     // Set a pointer to the transit schedule list
     transit_schedules_ = reinterpret_cast<TransitSchedule*>(ptr);
     ptr += header_->schedulecount() * sizeof(TransitSchedule);
-
-    // Set a pointer access restriction list
-    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
-    ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
 
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
@@ -170,9 +170,14 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   */
 
   //figure the largest id for this level
-  const auto level = hierarchy.levels().find(graphid.level());
+  auto level = hierarchy.levels().find(graphid.level());
+  if(level == hierarchy.levels().end() &&
+     graphid.level() == ((hierarchy.levels().rbegin())->second.level + 1))
+    level = hierarchy.levels().begin();
+
   if(level == hierarchy.levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
+
   const uint32_t max_id = Tiles<PointLL>::MaxTileId(world_box, level->second.tiles.TileSize());
 
   //figure out how many digits
@@ -233,7 +238,14 @@ GraphId GraphTile::GetTileId(const std::string& fname, const TileHierarchy& hier
 
 // Get the bounding box of this graph tile.
 AABB2<PointLL> GraphTile::BoundingBox(const TileHierarchy& hierarchy) const {
-  auto tiles = hierarchy.levels().find(header_->graphid().level())->second.tiles;
+
+  //figure the largest id for this level
+  auto level = hierarchy.levels().find(header_->graphid().level());
+  if(level == hierarchy.levels().end() &&
+      header_->graphid().level() == ((hierarchy.levels().rbegin())->second.level+1))
+    level = hierarchy.levels().begin();
+
+  auto tiles = level->second.tiles;
   return tiles.TileBounds(header_->graphid().tileid());
 }
 
