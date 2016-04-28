@@ -24,7 +24,7 @@ for dep in midgard baldr; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-	make -j4
+	make -j$(nproc)
 	sudo make install
 	popd
 done
