@@ -1,5 +1,6 @@
 #include <set>
 #include <locale>
+#include <stdexcept>
 #include <regex>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -117,7 +118,13 @@ namespace {
       //check the locale is supported
       std::string posix_locale = other.get<std::string>("posix_locale");
       LOG_TRACE("Verify supported locale for posix_locale=" + posix_locale);
-      std::locale l(posix_locale.c_str());
+      std::locale l;
+      try {
+        l = std::locale(posix_locale.c_str());
+      }
+      catch (std::runtime_error& rte) {
+        throw std::runtime_error("Locale not found for: " + posix_locale);;
+      }
 
       //check each instruction
       for(const auto& instruction : en_us.get_child("instructions")) {

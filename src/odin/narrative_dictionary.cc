@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/midgard/logging.h>
@@ -41,6 +43,17 @@ NarrativeDictionary::NarrativeDictionary(
 
 void NarrativeDictionary::Load(
     const boost::property_tree::ptree& narrative_pt) {
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate posix_locale...");
+  // Populate posix locale
+  posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.utf8");
+  try {
+    locale = std::locale(posix_locale.c_str());
+  }
+  catch (std::runtime_error& rte) {
+    LOG_TRACE("Using the default locale because a locale was not found for: " + posix_locale);
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate start_subset...");
@@ -308,11 +321,6 @@ void NarrativeDictionary::Load(
   // Populate verbal_multi_cue_subset
   Load(verbal_multi_cue_subset, narrative_pt.get_child(kVerbalMultiCueKey));
 
-  /////////////////////////////////////////////////////////////////////////////
-  LOG_TRACE("Populate posix_locale...");
-  // Populate posix locale
-  posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.utf8"); //TODO: more appropriate default?
-
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
@@ -539,6 +547,10 @@ void NarrativeDictionary::Load(
       as_unordered_map<std::string, std::string>(
           post_transition_transit_verbal_subset_pt, kTransitStopCountLabelsKey);
 
+}
+
+const std::locale& NarrativeDictionary::GetLocale() const {
+  return locale;
 }
 
 }

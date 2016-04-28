@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <locale>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -348,6 +349,13 @@ class NarrativeDictionary {
   // Posix locale
   std::string posix_locale;
 
+  /**
+   * Returns the locale based on the posix_locale string from language file.
+   *
+   * @return the locale based on the posix_locale string from language file.
+   */
+  const std::locale& GetLocale() const;
+
  protected:
 
   /**
@@ -522,6 +530,8 @@ class NarrativeDictionary {
       PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
       const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt);
 
+  // Locale
+  std::locale locale;
 };
 
 }

@@ -643,12 +643,12 @@ void PopulateTurnManeuverList_1(std::list<Maneuver>& maneuvers,
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
-                   TripDirections_Maneuver_Type_kRight,
-                   { "Flatbush Avenue" }, { }, { }, "", 0.192229, 44, 89,
-                   Maneuver::RelativeDirection::kRight,
-                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 322,
-                   322, 1, 4, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 1, 0, 0, 0, 1, 1, "", "", "", 0);
+                   TripDirections_Maneuver_Type_kLeft, { "Middletown Road" },
+                   { }, { }, "", 2.011000, 152, 271,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 28, 14,
+                   5, 10, 40, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 1, 0, 0, 1, 0, "", "", "", 1, 0, 0, 0, 129, 0);
 }
 
 void PopulateTurnManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -3822,7 +3822,7 @@ void TestBuildTurnInstructions_0_miles_en_US() {
 // 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
 void TestBuildTurnInstructions_1_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "NY";
+  std::string state_code = "PA";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -3837,10 +3837,100 @@ void TestBuildTurnInstructions_1_miles_en_US() {
   std::list<Maneuver> expected_maneuvers;
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Turn right onto Flatbush Avenue.",
-                                  "Turn right onto Flatbush Avenue.",
-                                  "Turn right onto Flatbush Avenue.",
-                                  "Continue for 1 tenth of a mile.");
+                                  "Turn left onto Middletown Road.",
+                                  "Turn left onto Middletown Road.",
+                                  "Turn left onto Middletown Road.",
+                                  "Continue for 1.2 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
+void TestBuildTurnInstructions_1_miles_cs_CZ() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("cs-CZ");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Odbočte vlevo na Middletown Road.",
+                                  "Odbočte vlevo na Middletown Road.",
+                                  "Odbočte vlevo na Middletown Road.",
+                                  "Pokračujte 1,2 mil.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
+void TestBuildTurnInstructions_1_miles_de_DE() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("de-DE");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Links auf Middletown Road abbiegen.",
+                                  "Links auf Middletown Road abbiegen.",
+                                  "Links auf Middletown Road abbiegen.",
+                                  "1,2 Milen weiter.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(1)>."
+// 1 "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES(2)>."
+void TestBuildTurnInstructions_1_miles_it_IT() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("it-IT");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(expected_maneuvers,
+                                  "Svolta a sinistra e prendi Middletown Road.",
+                                  "Svolta a sinistra e prendi Middletown Road.",
+                                  "Svolta a sinistra e prendi Middletown Road.",
+                                  "Continua per 1,2 miglia.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -8628,6 +8718,15 @@ int main() {
 
   // BuildTurnInstructions_1_miles_en_US
   suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_en_US));
+
+  // BuildTurnInstructions_1_miles_cs_CZ
+  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_cs_CZ));
+
+  // BuildTurnInstructions_1_miles_de_DE
+  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_de_DE));
+
+  // BuildTurnInstructions_1_miles_it_IT
+  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_it_IT));
 
   // BuildTurnInstructions_2_miles_en_US
   suite.test(TEST_CASE(TestBuildTurnInstructions_2_miles_en_US));
