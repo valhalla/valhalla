@@ -668,9 +668,13 @@ int main(int argc, char *argv[]) {
     bool using_astar = (pathalgorithm == &astar);
 
     // Get the best path
-    trip_path = PathTest(reader, path_location[i], path_location[i+1],
-                         pathalgorithm, mode_costing, mode, data,
-                         multi_run, iterations, using_astar);
+    try {
+      trip_path = PathTest(reader, path_location[i], path_location[i + 1],
+                           pathalgorithm, mode_costing, mode, data, multi_run,
+                           iterations, using_astar);
+    } catch (std::runtime_error& rte) {
+      LOG_ERROR("trip_path not found");
+    }
 
     // If successful get directions
     if (trip_path.node().size() > 0) {
