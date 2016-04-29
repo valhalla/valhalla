@@ -2744,8 +2744,8 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -2768,8 +2768,8 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -2792,8 +2792,8 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -2816,8 +2816,8 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -3237,7 +3237,6 @@ std::string NarrativeBuilder::FormMetricLength(
   length_string.reserve(kLengthStringInitialCapacity);
 
   float kilometer_tenths = std::round(kilometers * 10) / 10;
-  float kilometer_tenths_floor = floor(kilometer_tenths);
   uint32_t meters = 0;
 
   if (kilometer_tenths > 1.0f) {
@@ -3268,11 +3267,13 @@ std::string NarrativeBuilder::FormMetricLength(
     }
   }
 
+  // Stream kilometers based on locale
+  std::ostringstream kilometers_stream;
+  kilometers_stream.imbue(dictionary_.GetLocale());
+  kilometers_stream << kilometer_tenths;
+
   // Replace tags with length values
-  boost::replace_all(length_string, kKilometersTag,
-      (kilometer_tenths == kilometer_tenths_floor) ?
-          (boost::format("%.0f") % kilometer_tenths_floor).str() :
-          (boost::format("%.1f") % kilometer_tenths).str());
+  boost::replace_all(length_string, kKilometersTag, kilometers_stream.str());
   boost::replace_all(length_string, kMetersTag, std::to_string(meters));  //: locale specific numerals
 
 
@@ -3293,7 +3294,6 @@ std::string NarrativeBuilder::FormUsCustomaryLength(
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
   float mile_tenths = std::round(miles * 10) / 10;
-  float mile_tenths_floor = floor(mile_tenths);
   uint32_t tenths_of_mile = 0;
   uint32_t feet = static_cast<uint32_t>(std::round(miles * 5280));
 
@@ -3328,11 +3328,13 @@ std::string NarrativeBuilder::FormUsCustomaryLength(
     }
   }
 
+  // Stream miles based on locale
+  std::ostringstream miles_stream;
+  miles_stream.imbue(dictionary_.GetLocale());
+  miles_stream << mile_tenths;
+
   // Replace tags with length values
-  boost::replace_all(length_string, kMilesTag,
-      (mile_tenths == mile_tenths_floor) ?
-          (boost::format("%.0f") % mile_tenths_floor).str() :
-          (boost::format("%.1f") % mile_tenths).str());
+  boost::replace_all(length_string, kMilesTag, miles_stream.str());
   boost::replace_all(length_string, kTenthsOfMilesTag, std::to_string(tenths_of_mile));  //TODO: locale specific numerals
   boost::replace_all(length_string, kFeetTag, std::to_string(feet));  //TODO: locale specific numerals
 

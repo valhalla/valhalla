@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <locale>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -34,7 +35,7 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt);
  * @return  Returns the formated time based on the locale.
  */
 std::string get_localized_time(const std::string& date_time,
-                               const std::string& locale);
+                               const std::locale& locale);
 
 /**
  * Get the date from the inputed date.
@@ -44,7 +45,7 @@ std::string get_localized_time(const std::string& date_time,
  * @return  Returns the formated date based on the locale.
  */
 std::string get_localized_date(const std::string& date_time,
-                               const std::string& locale);
+                               const std::locale& locale);
 
 /**
  * Returns locale strings mapped to NarrativeDictionaries containing parsed narrative information

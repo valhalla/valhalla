@@ -1,5 +1,6 @@
 #include <set>
 #include <locale>
+#include <stdexcept>
 #include <regex>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -21,28 +22,41 @@ namespace {
       throw std::runtime_error("Should find 'en-US' locales file");
   }
 
-  void try_get_formatted_time(std::string date_time, std::string expected_date_time,
-                              std::string locale) {
-    if (get_localized_time(date_time, locale) != expected_date_time) {
-      throw std::runtime_error("Incorrect Time: " + date_time + " ---> " +
-                               expected_date_time + " for locale: " + locale);
+void try_get_formatted_time(const std::string& date_time,
+                            const std::string& expected_date_time,
+                            const std::locale& locale) {
+  std::string localized_time = get_localized_time(date_time, locale);
+    if (localized_time != expected_date_time) {
+      throw std::runtime_error("Incorrect Time: " + localized_time + " ---> " +
+                               expected_date_time + " for locale: " + locale.name());
     }
   }
 
-  void try_get_formatted_date(std::string date_time, std::string expected_date_time,
-                              std::string locale) {
-    if (get_localized_date(date_time, locale) != expected_date_time) {
-      throw std::runtime_error("Incorrect Date: " + date_time + " ---> " +
-                               expected_date_time + " for locale: " + locale);
+void try_get_formatted_date(const std::string& date_time,
+                            const std::string& expected_date_time,
+                            const std::locale& locale) {
+  std::string localized_date = get_localized_date(date_time, locale);
+    if (localized_date != expected_date_time) {
+      throw std::runtime_error("Incorrect Date: " + localized_date + " ---> " +
+                               expected_date_time + " for locale: " + locale.name());
     }
+  }
+
+  std::locale create_locale(const std::string& posix_locale) {
+    std::locale locale;
+    try {
+      locale = std::locale(posix_locale.c_str());
+    }
+    catch (std::runtime_error& rte) { } // Use default
+    return locale;
   }
 
   void test_time() {
 
-    std::string locale = "blah";
-    try_get_formatted_time("2014-01-02T23:59","11:59 PM",locale);
+    std::locale locale = create_locale("blah");
+    try_get_formatted_time("2014-01-02T23:59","23:59",locale);
 
-    locale = "en_US.utf8";
+    locale = create_locale("en_US.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
     try_get_formatted_time("2014-01-02T23:59","11:59 PM",locale);
@@ -51,7 +65,7 @@ namespace {
     try_get_formatted_time("2014-01-02T24:00","12:00 AM",locale);
     try_get_formatted_time("2014-01-02T12:00","12:00 PM",locale);
 
-    locale = "de_DE.utf8";
+    locale = create_locale("de_DE.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
     try_get_formatted_time("2014-01-02T23:59","23:59",locale);
@@ -60,7 +74,7 @@ namespace {
     try_get_formatted_time("2014-01-02T24:00","00:00",locale);
     try_get_formatted_time("2014-01-02T12:00","12:00",locale);
 
-    locale = "cs_CZ.utf8";
+    locale = create_locale("cs_CZ.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
     try_get_formatted_time("2014-01-02T23:59","23:59",locale);
@@ -69,7 +83,7 @@ namespace {
     try_get_formatted_time("2014-01-02T24:00","00:00",locale);
     try_get_formatted_time("2014-01-02T12:00","12:00",locale);
 
-    locale = "it_IT.utf8";
+    locale = create_locale("it_IT.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
     try_get_formatted_time("2014-01-02T23:59","23:59",locale);
@@ -82,29 +96,29 @@ namespace {
 
   void test_date() {
 
-    std::string locale = "blah";
-    try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
+    std::locale locale = create_locale("blah");
+    try_get_formatted_date("2014-01-01T07:01","01/01/14",locale);
 
-    locale = "en_US.utf8";
+    locale = create_locale("en_US.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
     try_get_formatted_date("2015-07-05T15:00","07/05/2015",locale);
 
-    locale = "de_DE.utf8";
+    locale = create_locale("de_DE.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","01.01.2014",locale);
     try_get_formatted_date("2015-07-05T15:00","05.07.2015",locale);
 
-    locale = "cs_CZ.utf8";
+    locale = create_locale("cs_CZ.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","1.1.2014",locale);
     try_get_formatted_date("2015-07-05T15:00","5.7.2015",locale);
     try_get_formatted_date("2015-12-13T15:00","13.12.2015",locale);
 
-    locale = "it_IT.utf8";
+    locale = create_locale("it_IT.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
     try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
@@ -135,7 +149,13 @@ namespace {
       //check the locale is supported
       std::string posix_locale = other.get<std::string>("posix_locale");
       LOG_TRACE("Verify supported locale for posix_locale=" + posix_locale);
-      std::locale l(posix_locale.c_str());
+      std::locale l;
+      try {
+        l = std::locale(posix_locale.c_str());
+      }
+      catch (std::runtime_error& rte) {
+        throw std::runtime_error("Locale not found for: " + posix_locale);;
+      }
 
       //check each instruction
       for(const auto& instruction : en_us.get_child("instructions")) {
