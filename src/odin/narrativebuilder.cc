@@ -2744,8 +2744,8 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -2768,8 +2768,8 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -2792,8 +2792,8 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
@@ -2816,8 +2816,8 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
-  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitArrivalTime(),
-      dictionary_.posix_locale));
+  boost::replace_all(instruction, kTimeTag,
+      get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
   return instruction;
 }
