@@ -2,7 +2,7 @@
 set -e
 
 export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
-sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ libboost1.54-dev libboost-system1.54-dev libboost-filesystem1.54-dev libboost-thread1.54-dev libboost-date-time1.54-dev lcov
+sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ libboost1.54-all-dev lcov
 
 #clone async
 mkdir -p deps
