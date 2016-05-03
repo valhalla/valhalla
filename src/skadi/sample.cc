@@ -6,7 +6,7 @@
 #include <limits>
 #include <list>
 #include <fstream>
-#include <regex>
+#include <boost/regex.hpp>
 #include <sys/stat.h>
 
 #include <boost/filesystem.hpp>
@@ -51,9 +51,9 @@ namespace {
   }
 
   uint16_t is_hgt(const std::string& name) {
-    std::smatch m;
-    std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt$");
-    if(std::regex_search(name, m, e)) {
+    boost::smatch m;
+    boost::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt$");
+    if(boost::regex_search(name, m, e)) {
       auto lon = std::stoul(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
       auto lat = std::stoul(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
       if(lon >= 0 && lon < 360 && lat >=0 && lat < 180)

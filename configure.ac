@@ -38,9 +38,10 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
+AX_BOOST_REGEX
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server = 0.3.2])
+PKG_CHECK_MODULES([DEPS], [libprime_server = 0.3.4])
 
 # optionally enable coverage information
 CHECK_COVERAGE
