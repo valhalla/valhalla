@@ -67,7 +67,7 @@ fi
 PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
 
 # check pkg-config packaged packages.
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE
