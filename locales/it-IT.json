@@ -302,7 +302,7 @@
     "ramp_straight": {
       "phrases": {
         "0": "Mantieni dritto e prendi lo svincolo.",
-        "1": "Mantieni dritto e prendi lo svincolo <BRANCH_SIGN> ramp.",
+        "1": "Mantieni dritto e prendi lo svincolo <BRANCH_SIGN>.",
         "2": "Mantieni dritto e prendi lo svincolo verso <TOWARD_SIGN>.",
         "3": "Mantieni dritto e prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
         "4": "Mantieni dritto e prendi lo svincolo <NAME_SIGN>."
