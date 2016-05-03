@@ -2,4 +2,4 @@
 set -e
 
 export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
-sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc-4.9 g++-4.9 lcov
+sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov
