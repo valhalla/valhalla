@@ -2,7 +2,6 @@
 #include "baldr/verbal_text_formatter.h"
 #include <valhalla/midgard/util.h>
 
-#include <regex>
 #include <string>
 
 namespace valhalla {
@@ -26,7 +25,7 @@ std::string VerbalTextFormatter::Format(const std::string& text) const {
 }
 
 std::string VerbalTextFormatter::ProcessNumberSplitMatch(
-    const std::smatch& m) const {
+    const boost::smatch& m) const {
   std::string tts;
   if (m[1].matched) {
     tts += m[1].str();
@@ -52,7 +51,7 @@ std::string VerbalTextFormatter::FormNumberSplitTts(
     const std::string& source) const {
 
   std::string tts;
-  for (std::sregex_iterator it(source.begin(), source.end(), kNumberSplitRegex),
+  for (boost::sregex_iterator it(source.begin(), source.end(), kNumberSplitRegex),
       end_it; it != end_it; ++it) {
     tts += ProcessNumberSplitMatch(*it);
   }

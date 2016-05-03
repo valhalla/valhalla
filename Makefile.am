@@ -119,7 +119,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/verbal_text_formatter_factory.cc \
 	src/baldr/date_time_zonespec.h
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_DATE_TIME_LIB)
+libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB) $(BOOST_DATE_TIME_LIB)
 
 #distributed executables
 bin_PROGRAMS = 
@@ -198,17 +198,17 @@ test_json_SOURCES = test/json.cc test/test.cc
 test_json_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_json_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_baldr.la
 test_verbal_text_formatter_SOURCES = test/verbal_text_formatter.cc test/test.cc
-test_verbal_text_formatter_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
-test_verbal_text_formatter_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
+test_verbal_text_formatter_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_verbal_text_formatter_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la @BOOST_LDFLAGS@
 test_verbal_text_formatter_us_SOURCES = test/verbal_text_formatter_us.cc test/test.cc
-test_verbal_text_formatter_us_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
-test_verbal_text_formatter_us_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
+test_verbal_text_formatter_us_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_verbal_text_formatter_us_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la @BOOST_LDFLAGS@
 test_verbal_text_formatter_us_co_SOURCES = test/verbal_text_formatter_us_co.cc test/test.cc
-test_verbal_text_formatter_us_co_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
-test_verbal_text_formatter_us_co_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
+test_verbal_text_formatter_us_co_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_verbal_text_formatter_us_co_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la @BOOST_LDFLAGS@
 test_verbal_text_formatter_us_tx_SOURCES = test/verbal_text_formatter_us_tx.cc test/test.cc
-test_verbal_text_formatter_us_tx_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
-test_verbal_text_formatter_us_tx_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
+test_verbal_text_formatter_us_tx_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_verbal_text_formatter_us_tx_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la @BOOST_LDFLAGS@
 
 
 TESTS = $(check_PROGRAMS)
