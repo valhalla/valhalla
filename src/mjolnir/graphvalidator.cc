@@ -542,7 +542,7 @@ void validate(const boost::property_tree::ptree& pt,
         //so have to merge
         for(size_t c = 0; c < kBinCount; ++c) {
           auto& bin = inserted.first->second[c];
-          bin.insert(bin.cend(), t.second[c].cbegin(), t.second[c].cend());
+          bin.insert(bin.end(), t.second[c].cbegin(), t.second[c].cend());
         }
       }
     }
