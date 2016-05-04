@@ -29,7 +29,6 @@ class UniversalCost : public sif::DynamicCost {
   bool AllowedReverse(const baldr::DirectedEdge* edge,
                       const sif::EdgeLabel& pred,
                       const baldr::DirectedEdge* opp_edge,
-                      const baldr::DirectedEdge* opp_pred_edge,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid) const
   { return true; }
