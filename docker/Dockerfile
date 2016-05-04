@@ -5,7 +5,7 @@ RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt-get update -y && \
     apt-get install -y \
     autoconf automake libtool make \
     gcc-4.9 g++-4.9 \
-    libboost1.54-dev \
+    libboost1.54-all-dev \
     libboost-program-options1.54-dev \
     libboost-filesystem1.54-dev \
     libboost-system1.54-dev \
