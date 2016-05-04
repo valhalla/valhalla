@@ -89,7 +89,7 @@ RUN wget https://github.com/miloyip/rapidjson/archive/v${RAPIDJSON_VERSION}.tar.
 #     rm -rf /source/rapidjson
 
 
-RUN git clone --depth=1 --branch=development --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
+RUN git clone --depth=1 --branch=master --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
     cd map_matching_plus && \
     ./scripts/install.sh && \
     rm -rf /source/map_matching_plus
