@@ -2,14 +2,9 @@
 set -e
 
 export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
-sudo apt-get update
-sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/ubuntu-toolchain-r-test-$(lsb_release -c -s).list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
-sudo apt-get install -y autoconf automake libtool make cmake gcc-4.9 g++-4.9 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev libboost-thread1.54-dev lcov protobuf-compiler libprotobuf-dev libcurl4-openssl-dev
-update-alternatives --remove-all gcc || true
-update-alternatives --remove-all g++ || true
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
+sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/kevinkreiser-prime-server-$(lsb_release -c -s).list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+sudo apt-get install -y autoconf automake libtool make pkg-config cmake gcc g++ lcov libboost1.54-all-dev protobuf-compiler libprotobuf-dev libprime-server-dev
 
 #clone async
 mkdir -p deps
@@ -19,10 +14,6 @@ for dep in midgard baldr sif; do
 done
 wait
 
-#install the service deps in the background
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-$DIR/install_service_deps.sh &
-
 #build sync
 for dep in midgard baldr sif; do
     pushd deps/$dep
@@ -30,3 +21,21 @@ for dep in midgard baldr sif; do
     popd
 done
 wait
+
+# Grab and install RapidJSON
+RAPIDJSON_VERSION=1.0.2
+rm -rf rapidjson.tar.gz
+wget https://github.com/miloyip/rapidjson/archive/v${RAPIDJSON_VERSION}.tar.gz -O rapidjson.tar.gz
+## Or you can:
+# git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git
+rm -rf rapidjson-${RAPIDJSON_VERSION}
+tar xf rapidjson.tar.gz
+
+pushd rapidjson-${RAPIDJSON_VERSION}
+## Need if you grab by git clone
+# git submodule update --init
+mkdir build && cd build
+cmake ..
+make
+sudo make install
+popd
