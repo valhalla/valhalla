@@ -13,13 +13,13 @@ else
 fi
 
 #clone
-for dep in midgard baldr skadi sif mjolnir loki odin thor tyr; do
+for dep in midgard baldr skadi sif loki odin thor tyr; do
 	rm -rf $dep
 	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git $dep
 done
 
 #build sync
-for dep in midgard baldr sif skadi mjolnir loki odin thor tyr; do
+for dep in midgard baldr sif skadi loki odin thor tyr; do
 	pushd $dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
