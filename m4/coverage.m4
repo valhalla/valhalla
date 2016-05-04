@@ -17,10 +17,10 @@ if test "x$enable_coverage" = "xyes"; then
   AC_CHECK_PROG(GENHTML, genhtml, genhtml, [])
 
   if test "x$LCOV" = "x"; then
-    AC_MSG_ERROR([cannot find lcov in your path, but it is required for building avecado. Please install lcov.])
+    AC_MSG_ERROR([cannot find lcov in your path, but it is required for building valhalla. Please install lcov.])
   fi
   if test "x$GENHTML" = "x"; then
-    AC_MSG_ERROR([cannot find genhtml in your path, but it is required for building avecado. Please install lcov.])
+    AC_MSG_ERROR([cannot find genhtml in your path, but it is required for building valhalla. Please install lcov.])
   fi
 
   # need to not have optimisation flags, as this makes the line
