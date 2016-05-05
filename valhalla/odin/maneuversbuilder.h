@@ -74,7 +74,8 @@ class ManeuversBuilder {
   void SetManeuverType(Maneuver& maneuver);
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
-                                        EnhancedTripPath_Edge* prev_edge = nullptr);
+                                        EnhancedTripPath_Edge* prev_edge,
+                                        EnhancedTripPath_Edge* curr_edge);
 
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
       uint32_t heading);

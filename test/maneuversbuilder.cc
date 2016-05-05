@@ -36,7 +36,7 @@ class ManeuversBuilderTest : public ManeuversBuilder {
   }
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
-    ManeuversBuilder::SetSimpleDirectionalManeuverType(maneuver);
+    ManeuversBuilder::SetSimpleDirectionalManeuverType(maneuver, nullptr, nullptr);
   }
 
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
@@ -399,7 +399,7 @@ void TryCombine(ManeuversBuilderTest& mbTest, std::list<Maneuver>& maneuvers,
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
       man != maneuvers.end(); ++man, ++expected_man) {
     if (man->type() != expected_man->type())
-      throw std::runtime_error("Incorrect maneuver type");
+      throw std::runtime_error("Incorrect maneuver type: " + std::to_string(man->type()) + "  |  expected: " + std::to_string(expected_man->type()));
     if (!equal<float>(man->length(), expected_man->length())) {
       throw std::runtime_error(
           "Incorrect maneuver distance=" + std::to_string(man->length())
