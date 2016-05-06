@@ -104,6 +104,15 @@ class GraphReader {
   const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile);
 
   /**
+   * Convenience method to determine if 2 directed edges are connected.
+   * @param   edge1  GraphId of first directed edge.
+   * @param   edge2  GraphId of second directed edge.
+   * @return  Returns true if the directed edges are directly connected
+   *          at a node, false if not.
+   */
+  bool AreEdgesConnected(const GraphId& edge1, const GraphId& edge2);
+
+  /**
    * Convenience method to get the relative edge density (from the
    * begin node of an edge).
    * @param   edgeid  Graph Id of the directed edge.
