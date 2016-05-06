@@ -633,6 +633,26 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge
 
+bool EnhancedTripPath_IntersectingEdge::IsTraversable(
+    const TripPath_TravelMode travel_mode) const {
+  TripPath_Traversability t;
+
+  // Set traversability based on travel mode
+  if (travel_mode == TripPath_TravelMode_kDrive)
+    t = driveability();
+  else if (travel_mode == TripPath_TravelMode_kBicycle)
+    t = cyclability();
+  else
+    t = walkability();
+
+  if (t != TripPath_Traversability_kNone) {
+    return true;
+  }
+  return false;
+
+}
+
+
 bool EnhancedTripPath_IntersectingEdge::IsTraversableOutbound(
     const TripPath_TravelMode travel_mode) const {
   TripPath_Traversability t;

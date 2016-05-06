@@ -254,11 +254,13 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
+      LOG_TRACE("+++ Combine TOP ++++++++++++++++++++++++++++++++++++++++++++");
       // Collapse the TransitConnectionStart Maneuver
       // if the transit connection stop is a simple stop (not a station)
       if ((curr_man->type() == TripDirections_Maneuver_Type_kTransitConnectionStart)
           && next_man->IsTransit()
           && curr_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
+        LOG_TRACE("+++ Combine: Collapse the TransitConnectionStart Maneuver +++");
         curr_man = CollapseTransitConnectionStartManeuver(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
         ++next_man;
@@ -268,12 +270,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       else if ((next_man->type() == TripDirections_Maneuver_Type_kTransitConnectionDestination)
           && curr_man->IsTransit()
           && next_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
+        LOG_TRACE("+++ Combine: Collapse the TransitConnectionDestination Maneuver +++");
         next_man = CollapseTransitConnectionDestinationManeuver(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       }
       // Do not combine
       // if any transit connection maneuvers
       else if (curr_man->transit_connection() || next_man->transit_connection()) {
+        LOG_TRACE("+++ Do Not Combine: if any transit connection maneuvers +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -284,6 +288,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // OR next maneuver is destination
       else if ((curr_man->travel_mode() != next_man->travel_mode())
           || (next_man->type() == TripDirections_Maneuver_Type_kDestination)) {
+        LOG_TRACE("+++ Do Not Combine: if travel mode is different or next maneuver is destination +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -292,6 +297,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
+        LOG_TRACE("+++ Do Not Combine: if next maneuver is a fork or a tee +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -300,6 +306,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Do not combine
       // if current or next maneuver is a ferry
       else if (curr_man->ferry() || next_man->ferry()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is a ferry +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -307,6 +314,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Combine current internal maneuver with next maneuver
       else if (curr_man->internal_intersection() && (curr_man != next_man)) {
+        LOG_TRACE("+++ Combine: current internal maneuver with next maneuver +++");
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
                                            next_man,
                                            (curr_man == maneuvers.begin()));
@@ -315,6 +323,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Combine current turn channel maneuver with next maneuver
       else if (curr_man->turn_channel() && (curr_man != next_man)) {
+        LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
         curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
                                               next_man,
                                               (curr_man == maneuvers.begin()));
@@ -324,6 +333,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Do not combine
       // if next maneuver has an intersecting forward link
       else if (next_man->intersecting_forward_edge()) {
+        LOG_TRACE("+++ Do Not Combine: if next maneuver has an intersecting forward link +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -334,6 +344,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       else if ((curr_man->unnamed_walkway() != next_man->unnamed_walkway())
           || (curr_man->unnamed_cycleway() != next_man->unnamed_cycleway())
           || (curr_man->unnamed_mountain_bike_trail() != next_man->unnamed_mountain_bike_trail())) {
+        LOG_TRACE("+++ Do Not Combine: if travel type is different +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -356,6 +367,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           && !next_man->ramp() && !curr_man->roundabout()
           && !next_man->roundabout() && !common_base_names->empty()) {
 
+        LOG_TRACE("+++ Combine: Several factors +++");
         // If needed, set the begin street names
         if (!curr_man->HasBeginStreetNames() && !curr_man->portions_highway()
             && (curr_man->street_names().size() > common_base_names->size())) {
@@ -370,11 +382,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                                                    next_man);
         maneuvers_have_been_combined = true;
       } else {
+        LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
         ++next_man;
       }
+
+      LOG_TRACE("+++ Combine BOTTOM +++++++++++++++++++++++++++++++++++++++++");
     }
   }
 }
@@ -433,6 +448,18 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
   // Set relative direction
   next_man->set_begin_relative_direction(
       ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
+
+  // If the relative direction is straight
+  // and both internal left and right turns exist
+  // then update the relative direction
+  if ((next_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight)
+      && (curr_man->internal_left_turn_count() > 0)
+      && (curr_man->internal_right_turn_count() > 0)) {
+    LOG_TRACE("both left and right internal turn counts are > 0");
+    next_man->set_begin_relative_direction(
+        ManeuversBuilder::DetermineRelativeDirection(
+            GetTurnDegree(prev_man->end_heading(), curr_man->end_heading())));
+  }
 
   // Add distance
   next_man->set_length(next_man->length() + curr_man->length());
@@ -1199,14 +1226,15 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   }
   // Process simple direction
   else {
-    SetSimpleDirectionalManeuverType(maneuver, prev_edge);
     LOG_TRACE("ManeuverType=SIMPLE");
+    SetSimpleDirectionalManeuverType(maneuver, prev_edge, curr_edge);
   }
 
 }
 
 void ManeuversBuilder::SetSimpleDirectionalManeuverType(
-    Maneuver& maneuver, EnhancedTripPath_Edge* prev_edge) {
+    Maneuver& maneuver, EnhancedTripPath_Edge* prev_edge,
+    EnhancedTripPath_Edge* curr_edge) {
   switch (Turn::GetType(maneuver.turn_degree())) {
     case Turn::Type::kStraight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
@@ -1233,6 +1261,24 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
               == Maneuver::RelativeDirection::kKeepLeft) {
             maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
             LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+          }
+        }
+        ////////////////////////////////////////////////////////////////////
+        // If internal intersection at beginning of maneuver
+        else if (curr_edge && curr_edge->internal_intersection()) {
+          ////////////////////////////////////////////////////////////////////
+          // Straight turn type but left relative direction
+          if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
+              || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft)) {
+            maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+            LOG_TRACE("ManeuverType=SLIGHT_LEFT");
+          }
+          ////////////////////////////////////////////////////////////////////
+          // Straight turn type but right relative direction
+          else if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
+              || (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight)){
+            maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+            LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
           }
         }
         ////////////////////////////////////////////////////////////////////
@@ -1616,6 +1662,11 @@ bool ManeuversBuilder::IsTee(int node_index, EnhancedTripPath_Edge* prev_edge,
     Turn::Type xturn_type = Turn::GetType(
         GetTurnDegree(prev_edge->end_heading(),
                       node->intersecting_edge(0).begin_heading()));
+
+    // Intersecting edge must be traversable
+    if (!(node->GetIntersectingEdge(0)->IsTraversable(prev_edge->travel_mode()))) {
+      return false;
+    }
 
     // Determine if 'T' intersection
     if ((turn_type == Turn::Type::kRight)
