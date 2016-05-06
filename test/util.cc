@@ -1,7 +1,7 @@
 #include <set>
 #include <locale>
 #include <stdexcept>
-#include <regex>
+#include <boost/regex.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 #include <valhalla/midgard/logging.h>
@@ -187,9 +187,9 @@ void try_get_formatted_date(const std::string& date_time,
         for(const auto& phrase : instruction.second.get_child("phrases")) {
           const auto& other_phrase = other_inst.get<std::string>("phrases." + phrase.first);
           //parse out tags from phrase, and check for them
-          std::smatch m;
-          std::regex e("(<[A-Z_0-9]+>)");
-          if(std::regex_search(phrase.second.get_value<std::string>(), m, e))
+          boost::smatch m;
+          boost::regex e("(<[A-Z_0-9]+>)");
+          if(boost::regex_search(phrase.second.get_value<std::string>(), m, e))
             for(const auto& tag : m)
               if(other_phrase.find(tag.str()) == std::string::npos)
                 throw std::runtime_error("Couldn't find " + tag.str() + " in " +

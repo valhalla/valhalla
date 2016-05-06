@@ -87,7 +87,7 @@ libvalhalla_odin_la_SOURCES = \
 	src/odin/transitstop.cc \
 	src/odin/locales.h
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB)
 
 #distributed executables
 bin_PROGRAMS = odin_service
