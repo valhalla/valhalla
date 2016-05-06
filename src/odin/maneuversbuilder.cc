@@ -1663,6 +1663,11 @@ bool ManeuversBuilder::IsTee(int node_index, EnhancedTripPath_Edge* prev_edge,
         GetTurnDegree(prev_edge->end_heading(),
                       node->intersecting_edge(0).begin_heading()));
 
+    // Intersecting edge must be traversable
+    if (!(node->GetIntersectingEdge(0)->IsTraversable(prev_edge->travel_mode()))) {
+      return false;
+    }
+
     // Determine if 'T' intersection
     if ((turn_type == Turn::Type::kRight)
         && (xturn_type == Turn::Type::kLeft)) {

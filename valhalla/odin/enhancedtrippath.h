@@ -92,6 +92,8 @@ class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
 
   EnhancedTripPath_IntersectingEdge() = delete;
 
+  bool IsTraversable(const TripPath_TravelMode travel_mode) const;
+
   bool IsTraversableOutbound(const TripPath_TravelMode travel_mode) const;
 
   std::string ToString() const;
