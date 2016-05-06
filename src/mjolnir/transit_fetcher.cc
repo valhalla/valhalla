@@ -1281,10 +1281,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     node.set_edge_index(tilebuilder_transit.directededges().size());
     node.set_timezone(stop.timezone());
 
-    bool admin_set = false;
-
-//TODO - admin lookup
-
  /** TODO - future when we get egress, station, platform hierarchy
     // Add any intra-station connections - these are always in the same tile?
     for (const auto& endstopid : stop_edges.second.intrastation) {
