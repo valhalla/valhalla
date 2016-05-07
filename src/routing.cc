@@ -394,7 +394,9 @@ find_shortest_path(baldr::GraphReader& reader,
         break;
       }
 
+      // The tile will be guaranteed to be nodeid's tile in this block
       const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
+
       if (!nodeinfo || nodeinfo->edge_count() <= 0) continue;
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
@@ -481,7 +483,9 @@ find_shortest_path(baldr::GraphReader& reader,
       // at the same edge to the queue
       if (dest == origin_idx) {
         for (const auto& origin_edge : destinations[origin_idx].edges()) {
+          // The tile will be guaranteed to be directededge's tile in this loop
           const auto directededge = helpers::edge_directededge(reader, origin_edge.id, tile);
+
           if (!directededge) continue;
 
           if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter, tile)) continue;

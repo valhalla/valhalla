@@ -24,6 +24,7 @@ edge_directededge(baldr::GraphReader& graphreader,
       && tile->id().level() == edgeid.level()) {
     return tile->directededge(edgeid);
   } else {
+    // Update tile to be edgeid's tile
     tile = graphreader.GetGraphTile(edgeid);
     return tile? tile->directededge(edgeid) : nullptr;
   }
@@ -51,7 +52,10 @@ edge_opp_edgeid(baldr::GraphReader& graphreader,
       return {};
     }
     auto id = directededge->endnode();
-    if (!tile || directededge->leaves_tile()) {
+    if (!(tile
+          && tile->id().tileid() == id.tileid()
+          && tile->id().level() == id.level())) {
+      // Update tile to be endnode's tile
       tile = graphreader.GetGraphTile(id);
     }
     if (tile) {
@@ -103,6 +107,7 @@ edge_nodeinfo(baldr::GraphReader& graphreader,
       && tile->id().level() == nodeid.level()) {
     return tile->node(nodeid);
   } else {
+    // Update tile to be nodeid's tile
     tile = graphreader.GetGraphTile(nodeid);
     return tile? tile->node(nodeid) : nullptr;
   }
