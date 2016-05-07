@@ -19,7 +19,9 @@ edge_directededge(baldr::GraphReader& graphreader,
                   // A reference to a pointer to a const tile
                   const baldr::GraphTile*& tile)
 {
-  if (tile && tile->id().tileid() == edgeid.tileid()) {
+  if (tile
+      && tile->id().tileid() == edgeid.tileid()
+      && tile->id().level() == edgeid.level()) {
     return tile->directededge(edgeid);
   } else {
     tile = graphreader.GetGraphTile(edgeid);
@@ -49,7 +51,7 @@ edge_opp_edgeid(baldr::GraphReader& graphreader,
       return {};
     }
     auto id = directededge->endnode();
-    if (!tile || tile->id().tileid() != id.tileid()) {
+    if (!tile || directededge->leaves_tile()) {
       tile = graphreader.GetGraphTile(id);
     }
     if (tile) {
@@ -96,7 +98,9 @@ edge_nodeinfo(baldr::GraphReader& graphreader,
               // A reference to a pointer to a const tile
               const baldr::GraphTile*& tile)
 {
-  if (tile && tile->id().tileid() == nodeid.tileid()) {
+  if (tile
+      && tile->id().tileid() == nodeid.tileid()
+      && tile->id().level() == nodeid.level()) {
     return tile->node(nodeid);
   } else {
     tile = graphreader.GetGraphTile(nodeid);

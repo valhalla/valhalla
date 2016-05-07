@@ -445,7 +445,7 @@ find_shortest_path(baldr::GraphReader& reader,
         }
 
         const baldr::GraphTile* endtile = tile;
-        if (other_edge->endnode().tileid() != tile->id().tileid()) {
+        if (other_edge->leaves_tile()) {
           endtile = reader.GetGraphTile(other_edge->endnode());
         }
         const auto other_nodeinfo = endtile->node(other_edge->endnode());
@@ -513,7 +513,7 @@ find_shortest_path(baldr::GraphReader& reader,
           }
 
           const baldr::GraphTile* endtile = tile;
-          if (directededge->endnode().tileid() != tile->id().tileid()) {
+          if (directededge->leaves_tile()) {
             endtile = reader.GetGraphTile(directededge->endnode());
           }
           const auto nodeinfo = endtile->node(directededge->endnode());
