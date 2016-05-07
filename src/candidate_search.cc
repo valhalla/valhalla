@@ -157,6 +157,7 @@ void IndexTile(const baldr::GraphTile& tile, GridRangeQuery<baldr::GraphId>& gri
   auto edgeid = tile.header()->graphid();
   auto directededge = tile.directededge(0);
   for (size_t idx = 0; idx < edgecount; edgeid++, directededge++, idx++) {
+    if (directededge->trans_up() || directededge->trans_down()) continue;
     const auto offset = directededge->edgeinfo_offset();
     if (visited.insert(offset).second) {
       const auto edgeinfo = tile.edgeinfo(offset);
