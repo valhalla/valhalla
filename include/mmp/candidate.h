@@ -2,6 +2,8 @@
 #ifndef MMP_CANDIDATE_H_
 #define MMP_CANDIDATE_H_
 
+#include <cmath>
+
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/pathlocation.h>
 
