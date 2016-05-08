@@ -53,7 +53,7 @@ RUN wget https://github.com/miloyip/rapidjson/archive/v${RAPIDJSON_VERSION}.tar.
     cd rapidjson-${RAPIDJSON_VERSION} && \
     mkdir -p build && cd build && \
     cmake .. && make && sudo make install && \
-    rm -rf /source/rapidjson-${RAPID_VERSION} /source/rapidjson.tar.gz
+    rm -rf /source/rapidjson-${RAPIDJSON_VERSION} /source/rapidjson.tar.gz
 
 
 # RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git && \
