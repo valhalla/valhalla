@@ -408,7 +408,6 @@ find_shortest_path(baldr::GraphReader& reader,
       // Expand current node
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
-      assert(other_edge);
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
         if (other_edge->trans_up() || other_edge->trans_down()) continue;
         assert(nodeid.level() == other_edge->endnode().level());
