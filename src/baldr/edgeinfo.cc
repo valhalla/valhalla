@@ -98,7 +98,8 @@ std::string EdgeInfo::encoded_shape() const {
 
 json::MapPtr EdgeInfo::json() const {
   auto encoded =
-    encoded_shape_ == nullptr ? midgard::encode(shape_) : std::string(encoded_shape_, item_->encoded_shape_size);
+    encoded_shape_ == midgard::encode(nullptr ? shape_ :
+      midgard::decode7<std::vector<PointLL> >(std::string(encoded_shape_, item_->encoded_shape_size)));
 
   return json::map({
     {"way_id", static_cast<uint64_t>(wayid_)},
