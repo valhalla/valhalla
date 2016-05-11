@@ -53,7 +53,7 @@ test/encode
 test/tiles
 test/aabbll
 test/tilehierarchy
-test/util
+test/util_midgard
 test/logging
 test/sequence
 test/grid
