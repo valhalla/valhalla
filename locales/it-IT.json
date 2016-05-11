@@ -302,7 +302,7 @@
     "ramp_straight": {
       "phrases": {
         "0": "Mantieni dritto e prendi lo svincolo.",
-        "1": "Mantieni dritto e prendi lo svincolo <BRANCH_SIGN> ramp.",
+        "1": "Mantieni dritto e prendi lo svincolo <BRANCH_SIGN>.",
         "2": "Mantieni dritto e prendi lo svincolo verso <TOWARD_SIGN>.",
         "3": "Mantieni dritto e prendi lo svincolo <BRANCH_SIGN> verso <TOWARD_SIGN>.",
         "4": "Mantieni dritto e prendi lo svincolo <NAME_SIGN>."
@@ -662,7 +662,7 @@
         "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
         "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>."
       },
-      "cardinal_directions": ["nord", "nordest", "est", "sudest", "sud", "sudovest", "sudovest", "nordovest"],
+      "cardinal_directions": ["nord", "nordest", "est", "sudest", "sud", "sudovest", "ovest", "nordovest"],
       "empty_street_name_labels": ["il marciapiedi", "la pista ciclismo", "la pista mountain bike"],
       "example_phrases": {
         "0": ["Procedi in direzione sudest."],
@@ -694,7 +694,7 @@
         "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
         "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>."
       },
-      "cardinal_directions": ["nord", "nordest", "est", "sudest", "sud", "sudovest", "sudovest", "nordovest"],
+      "cardinal_directions": ["nord", "nordest", "est", "sudest", "sud", "sudovest", "ovest", "nordovest"],
       "empty_street_name_labels": ["il marciapiedi", "la pista ciclismo", "la pista mountain bike"],
       "example_phrases": {
         "0": ["Procedi in direzione sudest."],
@@ -913,7 +913,7 @@
         "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
         "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>."
       },
-      "cardinal_directions": ["nord", "nordest", "est", "sudest", "sud", "sudovest", "sudovest", "nordovest"],
+      "cardinal_directions": ["nord", "nordest", "est", "sudest", "sud", "sudovest", "ovest", "nordovest"],
       "empty_street_name_labels": ["il marciapiedi", "la pista ciclismo", "la pista mountain bike"],
       "example_phrases": {
         "0": ["Procedi in direzione ovest."],
