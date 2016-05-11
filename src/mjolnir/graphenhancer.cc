@@ -625,7 +625,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
-      sql = "SELECT rowid, name, "", iso_code, "", drive_on_right, st_astext(geom) from ";
+      sql = "SELECT rowid, name, \"\", iso_code, \"\", drive_on_right, st_astext(geom) from ";
       sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
