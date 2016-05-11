@@ -394,7 +394,9 @@ find_shortest_path(baldr::GraphReader& reader,
         break;
       }
 
+      // The tile will be guaranteed to be nodeid's tile in this block
       const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
+
       if (!nodeinfo || nodeinfo->edge_count() <= 0) continue;
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
@@ -406,12 +408,9 @@ find_shortest_path(baldr::GraphReader& reader,
       // Expand current node
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
-      assert(other_edge);
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
-        // Disable shortcut TODO perhaps we should use
-        // other_edge->is_shortcut()? but it failed to guarantee same
-        // level
-        if (nodeid.level() != other_edge->endnode().level()) continue;
+        if (other_edge->trans_up() || other_edge->trans_down()) continue;
+        assert(nodeid.level() == other_edge->endnode().level());
 
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
 
@@ -445,7 +444,7 @@ find_shortest_path(baldr::GraphReader& reader,
         }
 
         const baldr::GraphTile* endtile = tile;
-        if (other_edge->endnode().tileid() != tile->id().tileid()) {
+        if (other_edge->leaves_tile()) {
           endtile = reader.GetGraphTile(other_edge->endnode());
         }
         const auto other_nodeinfo = endtile->node(other_edge->endnode());
@@ -483,7 +482,9 @@ find_shortest_path(baldr::GraphReader& reader,
       // at the same edge to the queue
       if (dest == origin_idx) {
         for (const auto& origin_edge : destinations[origin_idx].edges()) {
+          // The tile will be guaranteed to be directededge's tile in this loop
           const auto directededge = helpers::edge_directededge(reader, origin_edge.id, tile);
+
           if (!directededge) continue;
 
           if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter, tile)) continue;
@@ -513,7 +514,7 @@ find_shortest_path(baldr::GraphReader& reader,
           }
 
           const baldr::GraphTile* endtile = tile;
-          if (directededge->endnode().tileid() != tile->id().tileid()) {
+          if (directededge->leaves_tile()) {
             endtile = reader.GetGraphTile(directededge->endnode());
           }
           const auto nodeinfo = endtile->node(directededge->endnode());

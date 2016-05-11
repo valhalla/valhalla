@@ -73,13 +73,8 @@ simple_matcher_SOURCES = tools/simple_matcher.cc
 simple_matcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 simple_matcher_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
 
-EXTRA_PROGRAMS += mmp_candidate_search
-mmp_candidate_search_SOURCES = tools/mmp_candidate_search.cc
-mmp_candidate_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-mmp_candidate_search_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
-
 .PHONY: tools
-tools: simple_matcher mmp_candidate_search
+tools: simple_matcher
 
 CLEANFILES = $(EXTRA_PROGRAMS)
 
