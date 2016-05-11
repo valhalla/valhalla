@@ -41,8 +41,8 @@ namespace {
 struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;
-  uint64_t wayid;
   float length;
+  uint64_t wayid;
   std::vector<std::string> names;
   std::list<PointLL> shape;
 
@@ -268,9 +268,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       tilebuilder_transit.directededges().emplace_back(std::move(currentedges[idx]));
     }
 
-    // Add directed edges for any connections from the OSM node
-    // to a transit stop
-    // level 2
+    // Add directed edges for any connections from the transit stop
+    // to the osm node
+    // level 3
     bool admin_set = false;
     for (const auto& conn : connection_edges) {
       if (conn.stop_node.id() == nb.stop_index()) {
@@ -537,6 +537,10 @@ void build(const std::string& transit_dir,
     // Get the next tile Id from the queue and get a tile builder
     if(reader_local_level.OverCommitted())
       reader_local_level.Clear();
+
+    if (reader_transit_level.OverCommitted())
+      reader_transit_level.Clear();
+
     GraphId tile_id = tile_start->Tile_Base();
 
     // Get transit pbf tile
