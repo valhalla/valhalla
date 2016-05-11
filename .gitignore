@@ -49,7 +49,7 @@ test/narrativebuilder
 test/enhancedtrippath
 test/sign
 test/signs
-test/util
+test/util_odin
 test/narrative_dictionary
 test/*.log
 test/*.trs
