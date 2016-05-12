@@ -484,12 +484,10 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Check bicycle access and turn restrictions. Bicycles should obey
-  // vehicular turn restrictions. Disallow Uturns. Do not allow entering
-  // not-thru edges except near the destination. Skip impassable edges.
+  // vehicular turn restrictions. Disallow Uturns. Skip impassable edges.
   if (!(edge->forwardaccess() & kBicycleAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
-      (edge->not_thru() && pred.distance() > not_thru_distance_)) {
+      (pred.restrictions() & (1 << edge->localedgeidx()))) {
     return false;
   }
 

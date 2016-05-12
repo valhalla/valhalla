@@ -8,8 +8,7 @@ namespace sif {
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
                          const TravelMode mode)
     : allow_transit_connections_(false),
-      travelmode_(mode),
-      not_thru_distance_(5000.0f) {
+      travelmode_(mode) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) /
@@ -137,11 +136,6 @@ void DynamicCost::set_travelmode(const TravelMode mode) {
 // Get the current travel mode.
 TravelMode DynamicCost::travelmode() const {
   return travelmode_;
-}
-
-// Set the distance from the destination where "not_thru" edges are allowed.
-void DynamicCost::set_not_thru_distance(const float d) {
-  not_thru_distance_ = d;
 }
 
 }

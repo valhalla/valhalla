@@ -287,11 +287,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Disallow if no pedestrian access, surface marked as impassible,
-  // edge is not-thru and we are far from destination, or if max
-  // walking distance is exceeded.
+  // or if max walking distance is exceeded.
   if (!(edge->forwardaccess() & kPedestrianAccess) ||
        (edge->surface() == Surface::kImpassable) ||
-       (edge->not_thru() && pred.distance() > not_thru_distance_) ||
       ((pred.walking_distance() + edge->length()) > max_distance_)) {
     return false;
   }
