@@ -580,7 +580,6 @@ void build(const std::string& transit_dir,
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level()+1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(hierarchy_transit_level, transit_tile_id, true);
-    tilebuilder_transit.AddTileCreationDate(local_tile->header()->date_created());
 
     lock.unlock();
 
