@@ -16,6 +16,13 @@ GraphId GetOpposingEdgeId(const DirectedEdge* edge, const GraphTile* tile) {
            tile->node(endnode.id())->edge_index() + edge->opp_index() };
 }
 
+// Find a threshold to continue the search - should be based on
+// the max edge cost in the adjacency set?
+int GetThreshold(const TravelMode mode, const int n) {
+  return (mode == TravelMode::kDrive) ?
+          std::min(2500, std::max(100, n / 3)) : 500;
+}
+
 }
 
 namespace valhalla {
@@ -46,8 +53,9 @@ void BidirectionalAStar::Clear() {
 void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
                               const std::shared_ptr<DynamicCost>& costing) {
   // Initialize the A* heuristics
-  astarheuristic_.Init(destll, costing->AStarCostFactor());
-  astarheuristic_reverse_.Init(origll, costing->AStarCostFactor());
+  float factor = costing->AStarCostFactor();
+  astarheuristic_.Init(destll, factor);
+  astarheuristic_reverse_.Init(origll, factor);
 
   // Construct adjacency list, edge status, and done set
   // Set bucket size and cost range based on DynamicCost.
@@ -63,28 +71,13 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
 
   // Initialize best connection with max cost
   best_connection_ = { GraphId(), GraphId(),
-		                   std::numeric_limits<float>::max() };
-
-  // Since the search is bidirectional never enter not-thru edges (if
-  // destination is within such a region the other search direction will
-  // exit the not-thru region)
-  costing->set_not_thru_distance(0.0f);
+                       std::numeric_limits<float>::max() };
 
   // Support for hierarchy transitions
   allow_transitions_ = costing->AllowTransitions();
   hierarchy_limits_  = costing->GetHierarchyLimits();
   hierarchy_limits_reverse_ = costing->GetHierarchyLimits();
 }
-
-// Test if the edge and its opposing edge is the best connection.
-bool BidirectionalAStar::IsBestConnection(const GraphId& edge,
-                                         const GraphId& oppedge) const {
-  return ((best_connection_.edgeid == edge &&
-           best_connection_.opp_edgeid == oppedge) ||
-          (best_connection_.edgeid == oppedge &&
-           best_connection_.opp_edgeid == edge));
-}
-
 
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
@@ -107,7 +100,8 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   // direction search based on the current costs. Alternating like this
   // prevents one tree from expanding much more quickly (if in a sparser
   // portion of the graph) rather than strictly alternating.
-  uint32_t n = 0;
+  int n = 0;
+  int threshold = 0;
   uint32_t predindex, predindex2;
   float dist = 0.0f;
   EdgeLabel pred, pred2;
@@ -141,29 +135,55 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       }
     }
 
-    // Expand from the search direction with lower cost. Using sort_cost seems
-    // to give inconsistent results, so use the true cost.
-    if (pred.cost().cost < pred2.cost().cost) {
+    // Terminate some number of iterations after an initial connection
+    // has been found. This is not ideal, probably needs to be based on
+    // the max edge cost but that has performance limitations,
+    // so for now we use this bit of a hack...stay tuned.
+    if (best_connection_.cost < std::numeric_limits<float>::max()) {
+      if (n++ > threshold) {
+        uint32_t idx1 = edgestatus_->Get(best_connection_.edgeid).status.index;
+        uint32_t idx2 = edgestatus_reverse_->Get(best_connection_.opp_edgeid).status.index;
+        return FormPath(idx1, idx2, graphreader);
+      }
+    }
+
+
+    // Expand from the search direction with lower cost.
+    if (pred.sortcost() < pred2.sortcost()) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
       expand_reverse = false;
 
-      // Mark edge as done - copy the EdgeLabel for use in costing
-      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
-
-      // Get the opposing edge - if permanently labeled in reverse search
-      // and this is the best connection candidate then we have the
-      // shortest path. An invalid opposing edge occurs for
-      // transition edges - skip them.
+      // Get the opposing edge - if this edge has been reached then a shortest
+      // path has been found to the end node of this directed edge.
+      // An invalid opposing edge occurs for transition edges - skip them.
       GraphId oppedge = pred.opp_edgeid();
       if (oppedge.Is_Valid()) {
         EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
-        if (oppedgestatus.set() == EdgeSet::kPermanent &&
-            IsBestConnection(pred.edgeid(), oppedge)) {
-          return FormPath(predindex, oppedgestatus.status.index, graphreader);
+        if (oppedgestatus.set() != EdgeSet::kUnreached) {
+          if (threshold == 0) {
+            threshold = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
+          }
+          uint32_t predindex = edgelabels_reverse_[oppedgestatus.status.index].predecessor();
+          float c = pred.cost().cost + edgelabels_reverse_[predindex].cost().cost +
+                edgelabels_reverse_[predindex].transition_cost();
+          if (c < best_connection_.cost) {
+            best_connection_ = { pred.edgeid(), oppedge, c };
+LOG_TRACE("New best connection: forward: c = " + std::to_string(c) +
+         " n = " + std::to_string(edgelabels_.size() + edgelabels_reverse_.size()));
+LOG_TRACE("   Pred cost = " + std::to_string(pred.cost().cost) +
+         "   sortcost  = " + std::to_string(pred.sortcost())  +
+         "   dist = " + std::to_string(pred.distance()));
+LOG_TRACE("OppPred cost = " + std::to_string(edgelabels_reverse_[predindex].cost().cost) +
+         "   sortcost  = " + std::to_string(edgelabels_reverse_[predindex].sortcost()));
+LOG_TRACE("");
+          }
         }
       }
+
+      // Mark edge as done - copy the EdgeLabel for use in costing
+      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
       // Get the end node of the prior directed edge. Skip if tile not found
       // (can happen with regional data sets).
@@ -195,7 +215,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       uint32_t shortcuts = 0;
       GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
       const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-      for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
+      for (uint32_t i = 0; i < nodeinfo->edge_count();
                   i++, directededge++, edgeid++) {
         // Handle upward transition edges they either get skipped or
         // added to the adjacency list using the predecessor info
@@ -226,9 +246,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
         // Get cost
         Cost newcost = pred.cost() +
-                       costing->EdgeCost(directededge, nodeinfo->density());
+                      costing->EdgeCost(directededge, nodeinfo->density());
         Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
-        newcost += tc;
+        newcost.cost += tc.cost;
 
         // Check if edge is temporarily labeled and this path has less cost. If
         // less cost the predecessor is updated and the sort cost is decremented
@@ -246,6 +266,18 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
         GraphId oppedge = GetOpposingEdgeId(directededge, t2);
 
+        // If this edge is not through, do not add to adjacency list,
+        // basically prune entry but mark the edge
+        if (directededge->not_thru()) {
+          // Add this so path can be recovered if both origin and
+          // destination are in a not through region
+          edgestatus_->Set(edgeid, EdgeSet::kPermanent, edgelabels_.size());
+          edgelabels_.emplace_back(predindex, edgeid, oppedge, directededge,
+             newcost, newcost.cost, dist, directededge->restrictions(),
+             directededge->opp_local_idx(), mode_, 0);
+          continue;
+        }
+
         // Find the sort cost (with A* heuristic) using the lat,lng at the
         // end node of the directed edge.
         float sortcost = newcost.cost + astarheuristic_.Get(
@@ -256,17 +288,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         edgelabels_.emplace_back(predindex, edgeid, oppedge, directededge,
                       newcost, sortcost, dist, directededge->restrictions(),
                       directededge->opp_local_idx(), mode_, 0);
-
-        // Check if the opposing edge is in the reverse adjacency list or
-        // already settled. If so check if it is least cost candidate.
-        EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
-        if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          float c = pred.cost().cost + tc.cost +
-              edgelabels_reverse_[oppedgestatus.status.index].cost().cost;
-          if (c < best_connection_.cost) {
-            best_connection_ = { edgeid, oppedge, c };
-          }
-        }
       }
     } else {
       // Expand reverse - set to get next edge from reverse adj. list
@@ -274,20 +295,37 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       expand_forward = false;
       expand_reverse = true;
 
-      // Mark edge as done - copy the EdgeLabel for use in costing
-      edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
-
-      // Get the opposing edge - if permanently labeled in forward search set
-      // we have the shortest path. An invalid opposing edge occurs for
-      // transition edges - skip them.
+      // Get the opposing edge - if this edge has been reached then a shortest
+      // path has been found to the end node of this directed edge.
+      // An invalid opposing edge occurs for transition edges - skip them.
       GraphId oppedge = pred2.opp_edgeid();
       if (oppedge.Is_Valid()) {
         EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
-        if (oppedgestatus.set() == EdgeSet::kPermanent &&
-            IsBestConnection(pred2.edgeid(), oppedge)) {
-          return FormPath(oppedgestatus.status.index, predindex2, graphreader);
+        if (oppedgestatus.set() != EdgeSet::kUnreached) {
+          // Set a threshold to extend search
+          if (threshold == 0) {
+            threshold = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
+          }
+          uint32_t predindex = edgelabels_[oppedgestatus.status.index].predecessor();
+          float c = pred2.cost().cost + edgelabels_[predindex].cost().cost +
+                edgelabels_[predindex].transition_cost();
+          if (c < best_connection_.cost) {
+            best_connection_ = { oppedge, pred2.edgeid(), c };
+
+LOG_TRACE("New best connection: reverse: c = " + std::to_string(c) +
+         " n = " + std::to_string(edgelabels_.size() + edgelabels_reverse_.size()));
+LOG_TRACE("   Pred cost = " + std::to_string(pred2.cost().cost) +
+         "   sortcost  = " + std::to_string(pred2.sortcost()) +
+         "   dist = " + std::to_string(pred2.distance()));
+LOG_TRACE("OppPred cost = " + std::to_string(edgelabels_[predindex].cost().cost) +
+         "   sortcost  = " + std::to_string(edgelabels_[predindex].sortcost()));
+LOG_TRACE("");
+          }
         }
       }
+
+      // Mark edge as done - copy the EdgeLabel for use in costing
+      edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
 
       // Get the end node of the prior directed edge. Skip if tile not found
       // (can happen with regional data sets).
@@ -354,11 +392,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
         GraphId oppedge = GetOpposingEdgeId(directededge, t2);
 
-        // Get opposing directed edge and check if allowed. Do not enter
-        // not_thru edges
+        // Get opposing directed edge and check if allowed.
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
-        if (directededge->not_thru() ||
-            !costing->AllowedReverse(directededge, pred2, opp_edge,
+        if (!costing->AllowedReverse(directededge, pred2, opp_edge,
                                      tile2, edgeid)) {
           continue;
         }
@@ -368,7 +404,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
         // Get cost. Use opposing edge for EdgeCost.
         Cost newcost = pred2.cost() +
-              costing->EdgeCost(opp_edge, nodeinfo->density());
+                       costing->EdgeCost(opp_edge, nodeinfo->density());
         Cost tc = costing->TransitionCostReverse(directededge->localedgeidx(),
                             nodeinfo, opp_edge, opp_pred_edge);
         newcost.cost += tc.cost;
@@ -379,6 +415,18 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         if (edgestatus.set() != EdgeSet::kUnreached) {
           CheckIfLowerCostPathReverse(edgestatus.status.index, predindex2,
                                       newcost, tc);
+          continue;
+        }
+
+        // If this edge is not through, do not add to adjacency list,
+        // basically prune this region
+        if (directededge->not_thru()) {
+          // Add this so path can be recovered
+          edgestatus_reverse_->Set(edgeid, EdgeSet::kPermanent, edgelabels_reverse_.size());
+          edgelabels_reverse_.emplace_back(predindex2, edgeid, oppedge,
+                                directededge, newcost, newcost.cost, dist,
+                                directededge->restrictions(),
+                                directededge->opp_local_idx(), mode_, tc.secs);
           continue;
         }
 
@@ -393,17 +441,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
                       directededge, newcost, sortcost, dist,
                       directededge->restrictions(),
                       directededge->opp_local_idx(), mode_, tc.secs);
-
-        // Check if the opposing edge is in the forward adjacency list or
-        // already settled. If so check if it is least cost candidate.
-        EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
-        if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          float c = pred2.cost().cost + tc.cost +
-              edgelabels_[oppedgestatus.status.index].cost().cost;
-          if (c < best_connection_.cost) {
-            best_connection_ = { edgeid, oppedge, c };
-          }
-        }
       }
     }
   }
@@ -553,7 +590,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
 // Form the path from the adjacency list.
 std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
-              const uint32_t idx2, GraphReader& graphreader) {
+                const uint32_t idx2, GraphReader& graphreader) {
   // Metrics (TODO - more accurate cost)
   uint32_t pathcost = edgelabels_[idx1].cost().cost +
                       edgelabels_reverse_[idx2].cost().cost;

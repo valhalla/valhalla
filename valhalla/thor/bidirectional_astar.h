@@ -82,15 +82,6 @@ class BidirectionalAStar : public PathAlgorithm {
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
-   * Test if the edge and its opposing edge is the best connection.
-   * @param  edge     Graph ID of the directed edge.
-   * @param  oppedge  GraphId of the opposing directed edge.
-   * @return Returns true if this edge pair is the best connection.
-   */
-  bool IsBestConnection(const baldr::GraphId& edge,
-                       const baldr::GraphId& oppedge) const;
-
-  /**
    * Add edges at the origin to the forward adjacency list.
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the destination
