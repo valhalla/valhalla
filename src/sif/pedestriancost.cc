@@ -370,15 +370,6 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     return { step_penalty_, 0.0f };
   }
 
-  // Prevent going from one transit connection directly to another
-  // at a transit stop - this is like entering a station and exiting
-  // without getting on transit
-  if (node->type() == NodeType::kMultiUseTransitStop &&
-      pred.use()   == Use::kTransitConnection &&
-      edge->use()  == Use::kTransitConnection) {
-    return { 300.0f, 0.0f };
-  }
-
   // Penalty through gates and border control.
   float seconds = 0.0f;
   float penalty = 0.0f;
