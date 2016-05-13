@@ -141,21 +141,6 @@ class BidirectionalAStar : public PathAlgorithm {
                            const sif::Cost& newcost,
                            const sif::Cost& tc);
 
-  /**
-   * Handle transition edges. Will add any that are allowed to the
-   * adjacency list.
-   * @param level      Current hierarchy level.
-   * @param edge       Directed edge (a transition edge).
-   * @param pred       Predecessor information.
-   * @param predindex  Predecessor index in the edge labels.
-   * @param dist       Distance to the destination.
-   */
-  void HandleTransitionEdgeReverse(const uint32_t level,
-                     const baldr::GraphId& edgeid,
-                     const baldr::DirectedEdge* edge,
-                     const sif::EdgeLabel& pred, const uint32_t predindex,
-                     const float dist);
-
    /**
     * Form the path from the adjacency lists. Recovers the path from the
     * where the paths meet back towards the origin then reverses this path.

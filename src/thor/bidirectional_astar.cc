@@ -196,11 +196,18 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count();
                   i++, directededge++, edgeid++) {
-        // Handle upward transition edges they either get skipped or
-        // added to the adjacency list using the predecessor info
+        // Handle upward transition edges
         if (directededge->trans_up()) {
-          HandleTransitionEdge(level, edgeid, directededge, pred,
-                 predindex, pred.distance());
+           if (allow_transitions_ &&
+               hierarchy_limits_[level].AllowUpwardTransition(dist)) {
+             // Allow the transition edge. Add it to the adjacency list and
+             // edge labels using the predecessor information. Transition
+             // edges have no length.
+             AddToAdjacencyList(edgeid, pred.sortcost());
+             edgelabels_.emplace_back(predindex, edgeid, directededge,
+                           pred.cost(), pred.sortcost(), pred.distance(),
+                           pred.restrictions(), pred.opp_local_idx(), mode_);
+          }
           continue;
         }
 
@@ -316,11 +323,18 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       const DirectedEdge* directededge = tile2->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count();
               i++, directededge++, edgeid++) {
-        // Handle upward transition edges they either get skipped or added
-        // to the adjacency list using the predecessor info
+        // Handle upward transition edges.
         if (directededge->trans_up()) {
-          HandleTransitionEdgeReverse(level, edgeid, directededge, pred2,
-                                      predindex2, pred2.distance());
+          if (allow_transitions_ &&
+              hierarchy_limits_reverse_[level].AllowUpwardTransition(dist)) {
+            // Allow the transition edge. Add it to the adjacency list and
+            // edge labels using the predecessor information. Transition
+            // edges have no length.
+            AddToAdjacencyListReverse(edgeid, pred2.sortcost());
+            edgelabels_reverse_.emplace_back(predindex2, edgeid, pred2.opp_edgeid(),
+                      directededge, pred2.cost(), pred2.sortcost(), pred2.distance(),
+                      pred2.restrictions(), pred2.opp_local_idx(), mode_, 0);
+            }
           continue;
         }
 
@@ -398,28 +412,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     }
   }
   return {};    // If we are here the route failed
-}
-
-// Handle a transition edge between hierarchies.
-void BidirectionalAStar::HandleTransitionEdgeReverse(const uint32_t level,
-                    const GraphId& edgeid, const DirectedEdge* edge,
-                    const EdgeLabel& pred, const uint32_t predindex,
-                    const float dist) {
-  // Skip any transition edges that are not allowed.
-  if (!allow_transitions_ ||
-      (edge->trans_up() &&
-       !hierarchy_limits_reverse_[level].AllowUpwardTransition(dist)) ||
-      (edge->trans_down() &&
-       !hierarchy_limits_reverse_[level].AllowDownwardTransition(dist))) {
-    return;
-  }
-
-  // Allow the transition edge. Add it to the adjacency list and edge labels
-  // using the predecessor information. Transition edges have no length.
-  AddToAdjacencyListReverse(edgeid, pred.sortcost());
-  edgelabels_reverse_.emplace_back(predindex, edgeid, pred.opp_edgeid(),
-                edge, pred.cost(), pred.sortcost(), dist,
-                pred.restrictions(), pred.opp_local_idx(), mode_, 0);
 }
 
 // Convenience method to add an edge to the reverse adjacency list and
