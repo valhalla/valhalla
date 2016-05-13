@@ -55,7 +55,14 @@ class EdgeInfoBuilder {
   void set_encoded_shape(const std::string& encoded_shape);
 
   /**
-   * Get the size of this edge info.
+   * Get the size of this edge info (without padding).
+   * @return  Returns the size in bytes of this object.
+   */
+  std::size_t BaseSizeOf() const;
+
+  /**
+   * Get the size of this edge info. Includes padding to align to
+   * 8-byte boundaries.
    * @return  Returns the size in bytes of this object.
    */
   std::size_t SizeOf() const;

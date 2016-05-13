@@ -38,7 +38,7 @@ validator_stats::validator_stats()
     tile_width(), country_width(), tile_length(), country_length(),
     tile_weight(), country_weight(), tile_axle_load(), country_axle_load(),
     tile_areas(), tile_geometries(),iso_codes(), tile_ids(),
-    dupcounts(3), densities(3) { }
+    dupcounts(4), densities(4) { }
 
 void validator_stats::add_tile_road(const uint32_t& tile_id, const RoadClass& rclass, float length) {
   tile_ids.insert(tile_id);

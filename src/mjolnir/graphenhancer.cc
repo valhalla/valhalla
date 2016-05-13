@@ -210,44 +210,36 @@ void UpdateLinkUse(const GraphTile* tile,
     return;
   }
 
-  // Both end nodes have to connect to a non-link edge and only 1 link
-  // edge (assumed to be this edge). If either end node connects only
-  // to "links" this likely indicates a split or fork, which are not so
-  // prevalent in turn channels.
-  uint32_t nonlinkcount = 0;
-  uint32_t linkcount = 0;
+  // Both end nodes have to connect to a non-link edge.
+  bool non_link = false;
   const DirectedEdge* edge = tile->directededge(nodeinfo.edge_index());
-  for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++, edge++) {
-    if (edge->link()) {
-      linkcount++;
-    } else {
-      nonlinkcount++;
+  for (uint32_t j = 0; j < nodeinfo.edge_count(); j++, edge++) {
+    if (!edge->link()) {
+      non_link = true;
+      break;
     }
   }
-  if (nonlinkcount == 0 || linkcount > 1) {
+  if (!non_link) {
     directededge.set_use(Use::kRamp);
     return;
   }
 
-  // Get node info at the end node
   // Get the tile at the end node and get the node info
-  nonlinkcount = 0;
-  linkcount = 0;
+  non_link = false;
   GraphId endnode = directededge.endnode();
   const NodeInfo* node = endnodetile->node(endnode.id());
   edge = endnodetile->directededge(node->edge_index());
-  for (uint32_t j = 0; j <  node->edge_count(); j++, edge++) {
-    if (edge->link()) {
-      linkcount++;
-    } else {
-      nonlinkcount++;
+  for (uint32_t j = 0; j < node->edge_count(); j++, edge++) {
+    if (!edge->link()) {
+      non_link = true;
+      break;
     }
   }
-  if (nonlinkcount == 0 || linkcount > 1) {
+  if (!non_link) {
     directededge.set_use(Use::kRamp);
-    return;
+  } else {
+    directededge.set_use(Use::kTurnChannel);
   }
-  directededge.set_use(Use::kTurnChannel);
 }
 
 /**
@@ -338,11 +330,8 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-      // Do not allow use of the start edge or any transit edges
-      // TODO - seems to be an issue with transit routes if we skip
-      // transit connections. Investigate
-      if ((n == 0 && diredge->endnode() == startnode) ||
-          diredge->IsTransitLine()) {
+      // Do not allow use of the start edge
+      if ((n == 0 && diredge->endnode() == startnode)) {
         continue;
       }
 
@@ -636,7 +625,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
-      sql = "SELECT rowid, name, "", iso_code, "", drive_on_right, st_astext(geom) from ";
+      sql = "SELECT rowid, name, \"\", iso_code, \"\", drive_on_right, st_astext(geom) from ";
       sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
@@ -893,8 +882,8 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   RoadClass bestrc = RoadClass::kUnclassified;
   for (uint32_t i = 0; i < count; i++, edge++) {
     // Check the road if it is driveable TO the intersection and is neither
-    // the "to" nor "from" edge. Treat roundabout edges as two levels
-    // lower classification (higher value) to reduce the stop impact.
+    // the "to" nor "from" edge. Treat roundabout edges as two levels lower
+    // classification (higher value) to reduce the stop impact.
     if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
       if (edge->roundabout()) {
         uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
@@ -918,6 +907,14 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   if (from_rc > RoadClass::kUnclassified)
     from_rc = RoadClass::kUnclassified;
 
+  // High stop impact from a turn channel onto a turn channel unless the other
+  // edge a low class road
+  if (edges[from].use() == Use::kTurnChannel &&
+      edges[to].use()   == Use::kTurnChannel &&
+      bestrc < RoadClass::kUnclassified) {
+    return 7;
+  }
+
   // Set stop impact to the difference in road class (make it non-negative)
   int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
@@ -937,7 +934,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     stop_impact /= 2;
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
-    stop_impact += 1;
+    stop_impact += 2;
   }
 
   // Clamp to kMaxStopImpact
@@ -1198,11 +1195,6 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        // Skip transit lines (don't need opposing local index)
-        if (directededge.IsTransitLine()) {
-          continue;
-        }
-
         // Get the tile at the end node
         const GraphTile* endnodetile = nullptr;
         if (tile->id() == directededge.endnode().Tile_Base()) {
@@ -1309,13 +1301,7 @@ void enhance(const boost::property_tree::ptree& pt,
           for (uint32_t k = (j + 1); k < ntrans; k++) {
             DirectedEdge& fromedge = tilebuilder.directededge(
                       nodeinfo.edge_index() + k);
-
-            // Set name consistency to false going from transit connection to
-            // transit connection
-            if (fromedge.use()     == Use::kTransitConnection ||
-                directededge.use() == Use::kTransitConnection) {
-              nodeinfo.set_name_consistency(j, k, false);
-            } else if (directededge.link() ||
+            if (directededge.link() ||
                 ConsistentNames(country_code,
                     tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
                     tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
@@ -1328,7 +1314,6 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags. Do not do this for transit edges.
-        // TODO - investigate TransitConnection use
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {

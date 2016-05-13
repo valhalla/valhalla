@@ -113,6 +113,14 @@ int main(int argc, char** argv) {
       boost::filesystem::remove_all(level_dir);
     }
   }
+
+  //check for transit level.
+  auto level_dir = tile_dir + "/" + std::to_string(hierarchy.levels().rbegin()->second.level+1);
+  if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+    LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
+    boost::filesystem::remove_all(level_dir);
+  }
+
   boost::filesystem::create_directories(tile_dir);
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
@@ -122,13 +130,13 @@ int main(int argc, char** argv) {
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin");
 
-  // Add transit
-  TransitBuilder::Build(pt);
-
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   GraphEnhancer::Enhance(pt);
+
+  // Add transit
+  TransitBuilder::Build(pt);
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.

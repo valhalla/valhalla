@@ -158,8 +158,8 @@ GraphId GetOpposingEdge(const GraphId& node,
       i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
         directededge->classification() == edge->classification() &&
-        directededge->use() == edge->use() &&
-        directededge->length() == edge->length()) {
+        directededge->length() == edge->length() &&
+      ((directededge->link() && edge->link()) || (directededge->use() == edge->use()))) {
       return edgeid;
     }
   }
@@ -299,7 +299,7 @@ uint32_t ConnectEdges(const GraphId& basenode,
 
   // Get the shape for this edge and append to the shortcut's shape
   auto encoded = tile->edgeinfo(directededge->edgeinfo_offset())->encoded_shape();
-  std::list<PointLL> edgeshape = valhalla::midgard::decode<std::list<PointLL> >(encoded);
+  std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL> >(encoded);
   // Need to flip it
   if (!directededge->forward())
     std::reverse(edgeshape.begin(), edgeshape.end());
@@ -349,7 +349,7 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
 // Should never combine 2 directed edges with different exit information so
 // no need to worry about it here.
 // TODO - need to add access restrictions?
-void AddShortcutEdges(
+std::pair<uint32_t, uint32_t> AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info,
@@ -359,6 +359,7 @@ void AddShortcutEdges(
 
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
+  std::pair<uint32_t, uint32_t> shortcut_info;
   GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(), baseni->edge_index());
   for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, base_edge_id++) {
     // Skip if > road class cutoff or a transition edge or shortcut in
@@ -396,7 +397,7 @@ void AddShortcutEdges(
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-      std::list<PointLL> shape = valhalla::midgard::decode<std::list<PointLL> >(edgeinfo->encoded_shape());
+      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo->encoded_shape());
       if (!directededge->forward())
         std::reverse(shape.begin(), shape.end());
 
@@ -446,13 +447,26 @@ void AddShortcutEdges(
         length += ConnectEdges(basenode, next_edge_id, shape, nodeb, opp_local_idx, info);
       }
 
-      // Add the edge info. Use length to match edge in case multiple edges
-      // exist between the 2 nodes. Test whether this shape is forward or
-      // reverse (in case an existing edge exists).
+      // Add the edge info. Use length and number of shape points to match an
+      // edge in case multiple shortcut edges exist between the 2 nodes.
+      // Test whether this shape is forward or reverse (in case an existing
+      // edge exists).
       // TODO - what should the wayId be?
       bool forward = true;
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb, -1, shape, names, forward);
+      uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
+      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(idx, nodea, nodeb,
+                                    -1, shape, names, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
+
+      // Count how many shortcut edges fully inside a tile are forward vs.
+      // reverse (should be equal)
+      if (nodea.tileid() == nodeb.tileid()) {
+        if (forward) {
+          shortcut_info.first++;
+        } else {
+          shortcut_info.second++;
+        }
+      }
 
       // Set the forward flag on this directed edge. If a new edge was added
       // the direction is forward otherwise the prior edge was the one stored
@@ -494,10 +508,11 @@ if (nodea.level() == 0) {
       shortcut++;
     }
   }
+  return shortcut_info;
 }
 
 // Form tiles in the new level.
-void FormTilesInNewLevel(
+std::pair<uint32_t, uint32_t> FormTilesInNewLevel(
     const TileHierarchy::TileLevel& base_level,
     const TileHierarchy::TileLevel& new_level, hierarchy_info& info,
     const std::unique_ptr<const valhalla::skadi::sample>& sample) {
@@ -510,7 +525,7 @@ void FormTilesInNewLevel(
   RoadClass rcc = new_level.importance;
 
   info.graphreader_.Clear();
-
+  std::pair<uint32_t, uint32_t> shortcut_info;
   for (const auto& newtile : info.tilednodes_) {
     // Skip if no nodes in the tile at the new level
     if (newtile.size() == 0) {
@@ -553,8 +568,10 @@ void FormTilesInNewLevel(
 
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
-                       shortcuts, info, sample);
+      auto sh = AddShortcutEdges(newnode, nodea, &baseni, tile, rcc,
+                               tilebuilder, shortcuts, info, sample);
+      shortcut_info.first  += sh.first;
+      shortcut_info.second += sh.second;
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -645,6 +662,7 @@ void FormTilesInNewLevel(
     // Increment tileid
     tileid++;
   }
+  return shortcut_info;
 }
 
 // Add connections to the base tile. Rewrites the base tile with updated
@@ -918,7 +936,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_DEBUG((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
 
     // Form all tiles in new level
-    FormTilesInNewLevel(base_level->second, new_level->second, info, sample);
+    auto shortcut_info = FormTilesInNewLevel(base_level->second,
+                            new_level->second, info, sample);
 
     // Form connections (directed edges) in the base level tiles to
     // the new level. Note that the new tiles are created before adding
@@ -926,6 +945,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
     // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second, info);
     LOG_INFO("Finished with " + std::to_string(info.shortcutcount_) + " shortcuts");
+    LOG_INFO("Forward Shortcut EdgeInfo = " + std::to_string(shortcut_info.first) +
+            " Reverse Shortcut EdgeInfo = " + std::to_string(shortcut_info.second));
   }
 }
 

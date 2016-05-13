@@ -106,17 +106,12 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     // If on the local level the logic for matching needs to include
     // transit edges and wayid matching
     if (startnode.level() == 2) {
-      if (edge.IsTransitLine() && directededge->IsTransitLine()) {
-        // For a transit edge the line Id must match
+      if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection) {
         if (edge.lineid() == directededge->lineid()) {
-          if (opp_index != absurd_index) {
-            LOG_ERROR("Multiple transit edges have the same line Id = " +
-                        std::to_string(edge.lineid()));
-            dupcount++;
-          }
           opp_index = i;
         }
-      } else if (!edge.IsTransitLine() && !directededge->IsTransitLine()) {
+      }
+      else if (!edge.IsTransitLine() && !directededge->IsTransitLine()) {
         // Non transit lines - length, shortcut flag, and wayids must match
         bool match = false;
         uint64_t wayid2 = 0;
@@ -159,13 +154,31 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
           opp_index = i;
         }
       }
-    } else {
+    }else if (startnode.level() == 3) {
+      if (edge.IsTransitLine() && directededge->IsTransitLine()) {
+        // For a transit edge the line Id must match
+        if (edge.lineid() == directededge->lineid()) {
+
+          if (opp_index != absurd_index) {
+            LOG_ERROR("Multiple transit edges have the same line Id = " +
+                      std::to_string(edge.lineid()));
+            dupcount++;
+          }
+          opp_index = i;
+        }
+      }
+      if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection) {
+        if (edge.lineid() == directededge->lineid()) {
+          opp_index = i;
+        }
+      }
+   } else {
       // Edge is not on the local level (no transit edges should occur).
 
       // Shortcut - must match length and use
       if (edge.is_shortcut()) {
         if (directededge->is_shortcut() &&
-            edge.use() == directededge->use() &&
+           ((directededge->link() && edge.link()) || (directededge->use() == edge.use())) &&
             edge.length() == directededge->length()) {
           if (opp_index != absurd_index) {
             dupcount++;
@@ -189,17 +202,17 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 
   if (opp_index == absurd_index) {
     if (edge.use() == Use::kTransitConnection) {
-      // Log error - no opposing edge for a transit connection
-      LOG_ERROR("No opposing transit connection edge: endstop = " +
-                std::to_string(nodeinfo->stop_index()) + " has " +
-                std::to_string(nodeinfo->edge_count()));
+        // Log error - no opposing edge for a transit connection
+        LOG_ERROR("No opposing transit connection edge: endstop = " +
+                  std::to_string(nodeinfo->stop_index()) + " has " +
+                  std::to_string(nodeinfo->edge_count()))
     } else if (edge.IsTransitLine()) {
       // TODO - add this when opposing transit edges with unique line Ids
       // are present
       ; /*LOG_ERROR("No opposing transit edge: endstop = " +
                std::to_string(nodeinfo->stop_index()) + " has " +
                std::to_string(nodeinfo->edge_count())); */
-    } else {
+    } else if (startnode.level() != 3) {
       bool sc = edge.shortcut();
       LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
           % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
@@ -324,8 +337,12 @@ void validate(const boost::property_tree::ptree& pt,
       lock.unlock();
 
       // Point tiles to the set we need for current level
-      size_t level = tile_id.level();
+      auto level = tile_id.level();
+      if (hierarchy.levels().rbegin()->second.level+1 == level)
+        level = hierarchy.levels().rbegin()->second.level;
+
       const auto& tiles = hierarchy.levels().find(level)->second.tiles;
+      level = tile_id.level();
       auto tileid = tile_id.tileid();
 
       uint32_t dupcount = 0;
@@ -438,8 +455,12 @@ void validate(const boost::property_tree::ptree& pt,
           std::string end_node_iso;
           uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
                  0 : tile->edgeinfo(directededge.edgeinfo_offset())->wayid();
-          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                         wayid, tile, endnode_tile, dupcount, end_node_iso));
+          uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
+                                                    wayid, tile, endnode_tile, dupcount, end_node_iso);
+          directededge.set_opp_index(opp_index);
+
+          if (directededge.use() == Use::kTransitConnection)
+              directededge.set_opp_local_idx(opp_index);
 
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
@@ -491,6 +512,7 @@ void validate(const boost::property_tree::ptree& pt,
 
       // Write the bins to it
       if (tile->header()->graphid().level() == hierarchy.levels().rbegin()->first) {
+
         // TODO: we could just also make tilebuilder::Update write the bins
         auto reloaded = GraphTile(hierarchy, tile_id);
         GraphTileBuilder::AddBins(hierarchy, &reloaded, bins);
@@ -520,7 +542,7 @@ void validate(const boost::property_tree::ptree& pt,
         //so have to merge
         for(size_t c = 0; c < kBinCount; ++c) {
           auto& bin = inserted.first->second[c];
-          bin.insert(bin.cend(), t.second[c].cbegin(), t.second[c].cend());
+          bin.insert(bin.end(), t.second[c].cbegin(), t.second[c].cend());
         }
       }
     }
@@ -539,17 +561,23 @@ void validate(const boost::property_tree::ptree& pt,
       const auto& tile_bin = *start;
       ++start;
       lock.unlock();
-      //if there is nothing there we need to make something
-      GraphTile tile(hierarchy, tile_bin.first);
-      if(tile.size() == 0) {
-        GraphTileBuilder empty(hierarchy, tile_bin.first, false);
-        empty.StoreTileData();
-        tile = GraphTile(hierarchy, tile_bin.first);
+
+      //ignore transit tiles.
+      if (tile_bin.first.level() <= hierarchy.levels().rbegin()->second.level) {
+
+        //if there is nothing there we need to make something
+        GraphTile tile(hierarchy, tile_bin.first);
+
+        if(tile.size() == 0) {
+          GraphTileBuilder empty(hierarchy, tile_bin.first, false);
+          empty.StoreTileData();
+          tile = GraphTile(hierarchy, tile_bin.first);
+        }
+        //keep the extra binned edges
+        GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
       }
-      //keep the extra binned edges
-      GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
     }
-   }
+  }
 }
 
 namespace valhalla {
@@ -575,6 +603,18 @@ namespace mjolnir {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }
+
+      //transit level
+      if (level == hierarchy.levels().rbegin()->second.level) {
+        level += 1;
+        for (uint32_t id = 0; id < tiles.TileCount(); id++) {
+          // If tile exists add it to the queue
+          GraphId tile_id(id, level, 0);
+          if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
+            tilequeue.emplace_back(std::move(tile_id));
+          }
+        }
+      }
     }
     std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
@@ -597,6 +637,7 @@ namespace mjolnir {
       thread.reset(new std::thread(validate, std::cref(pt), std::ref(tilequeue),
                                    std::ref(lock), std::ref(results.back())));
     }
+
     // Wait for threads to finish
     for (auto& thread : threads)
       thread->join();

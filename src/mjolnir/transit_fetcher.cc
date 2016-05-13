@@ -121,6 +121,10 @@ struct weighted_tile_t { GraphId t; size_t w; bool operator<(const weighted_tile
 std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   //now real need to catch exceptions since we can't really proceed without this stuff
   LOG_INFO("Fetching transit feeds");
+
+  auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
+      pt.get<std::string>("import_level") : "";
+
   TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   std::set<GraphId> tiles;
   const auto& tile_level = hierarchy.levels().rbegin()->second;
@@ -168,6 +172,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     //stop count
     auto request = url((boost::format("/api/v1/stops?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
+    request += import_level;
+
     auto stops_total = curler(request, "meta.total").get<size_t>("meta.total");
     /*
     //route count
@@ -293,7 +299,7 @@ void get_stop_patterns(Transit& tile, std::unordered_map<std::string, uint64_t>&
       trip_shape.emplace_back(PointLL(lon,lat));
     }
     // encode the points to reduce size
-    shape->set_encoded_shape(encode(trip_shape));
+    shape->set_encoded_shape(encode7(trip_shape));
 
     // shapes.size()+1 because we can't have a shape id of 0.
     // 0 means shape id is not set in the transit builder.
@@ -516,6 +522,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::unordered_map<std::string, uint64_t> stops;
     boost::optional<std::string> request = url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
+    request = *request + import_level;
+
     do {
       //grab some stuff
       response = curler(*request, "stops");
@@ -523,6 +531,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       get_stops(tile, stops, current, response, filter);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
+
     } while(request && (request = *request + api_key));
     //um yeah.. we need these
     if(stops.size() == 0) {
@@ -533,6 +542,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     //pull out all operator WEBSITES
     request = url((boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
+    request = *request + import_level;
+
     std::unordered_map<std::string, std::string> websites;
     std::unordered_map<std::string, std::string> short_names;
     do {
@@ -557,6 +568,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     request = url((boost::format("/api/v1/routes?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
+    request = *request + import_level;
+
     do {
       //grab some stuff
       uniques.lock.lock();
