@@ -15,9 +15,7 @@
 #include <spatialite.h>
 #include <fstream>
 #include <iostream>
-#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem/operations.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
