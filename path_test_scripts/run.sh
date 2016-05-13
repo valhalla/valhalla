@@ -1,9 +1,9 @@
 #!/bin/bash
 
 function usage() {
-	echo "Usage: $0 path_test_request_file [diff_dir]"
+	echo "Usage: $0 path_test_request_file [conf=../../conf/valhalla.json]"
         echo "Example: $0 demo_routes.txt"
-	echo "Example: $0 demo_routes.txt 20160104_160939_demo_routes"
+	echo "Example: $0 demo_routes.txt ~/valhalla.json"
 	exit 1
 }
 
@@ -17,7 +17,11 @@ else
 fi
 
 #diffing or not, default to not
-DIFF="${2}"
+if [ -z "${2}" ]; then
+	CONF="../../conf/valhalla.json"
+else
+	CONF="${2}"
+fi
 
-PATH=../:$PATH ./batch.sh ${INPUT} ${DIFF}
+PATH=../:$PATH ./batch.sh ${INPUT} ${CONF}
 
