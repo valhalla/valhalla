@@ -133,6 +133,33 @@ const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid, const Gr
   return oppedgeid.Is_Valid() ? tile->directededge(oppedgeid) : nullptr;
 }
 
+// Convenience method to determine if 2 directed edges are connected.
+bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) {
+  // Get both directed edges
+  const GraphTile* t1 = GetGraphTile(edge1);
+  const DirectedEdge* de1 = t1->directededge(edge1);
+  const GraphTile* t2 = (edge2.Tile_Base() == edge1.Tile_Base()) ?
+                          t1 : GetGraphTile(edge2);
+  const DirectedEdge* de2 = t2->directededge(edge2);
+  if (de1->endnode() == de2->endnode()) {
+    return true;
+  }
+
+  // Get opposing edge to de1
+  const DirectedEdge* de1_opp = GetOpposingEdge(edge1, t1);
+  if (de1_opp->endnode() == de2->endnode()) {
+    return true;
+  }
+
+  // Get opposing edge to de2 and compare to both edge1 endnodes
+  const DirectedEdge* de2_opp = GetOpposingEdge(edge2, t2);
+  if (de2_opp->endnode() == de1->endnode() ||
+      de2_opp->endnode() == de1_opp->endnode()) {
+    return true;
+  }
+  return false;
+}
+
 // Convenience method to get the relative edge density (from the
 // begin node of an edge).
 uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
