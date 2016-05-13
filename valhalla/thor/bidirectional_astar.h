@@ -68,7 +68,8 @@ class BidirectionalAStar : public PathAlgorithm {
   std::shared_ptr<AdjacencyList> adjacencylist_reverse_;
   std::shared_ptr<EdgeStatus> edgestatus_reverse_;
 
-  // Best candidate connection
+  // Best candidate connection and threshold to extend search.
+  uint32_t threshold_;
   CandidateConnection best_connection_;
 
   /**
@@ -101,6 +102,20 @@ class BidirectionalAStar : public PathAlgorithm {
                        const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
+   * Check if the edge on the forward search connects to a reached edge
+   * on the reverse search tree.
+   * @param  pred  Edge label of the predecessor.
+   */
+  void CheckForwardConnection(const sif::EdgeLabel& pred);
+
+  /**
+   * Check if the edge on the reverse search connects to a reached edge
+   * on the forward search tree.
+   * @param  pred  Edge label of the predecessor.
+   */
+  void CheckReverseConnection(const sif::EdgeLabel& pred);
+
+  /**
    * Convenience method to add an edge to the adjacency list and temporarily
    * label it. This must be called before adding the edge label (so it uses
    * the correct index). Adds to the reverse path from destination towards
@@ -112,46 +127,47 @@ class BidirectionalAStar : public PathAlgorithm {
                                  const float sortcost);
 
   /**
-    * Check if edge is temporarily labeled and this path has less cost. If
-    * less cost the predecessor is updated and the sort cost is decremented
-    * by the difference in real cost (A* heuristic doesn't change). This
-    * method applies to the reverse path portion of the bidirectional search.
-    * @param  idx        Index into the edge status list.
-    * @param  predindex  Index of the predecessor edge.
-    * @param  newcost    Cost of the new path.
-    * @param  tc         Turn cost for this transition.
-    */
-   void CheckIfLowerCostPathReverse(const uint32_t idx,
-                             const uint32_t predindex,
-                             const sif::Cost& newcost,
-                             const sif::Cost& tc);
+   * Check if edge is temporarily labeled and this path has less cost. If
+   * less cost the predecessor is updated and the sort cost is decremented
+   * by the difference in real cost (A* heuristic doesn't change). This
+   * method applies to the reverse path portion of the bidirectional search.
+   * @param  idx        Index into the edge status list.
+   * @param  predindex  Index of the predecessor edge.
+   * @param  newcost    Cost of the new path.
+   * @param  tc         Turn cost for this transition.
+   */
+  void CheckIfLowerCostPathReverse(const uint32_t idx,
+                           const uint32_t predindex,
+                           const sif::Cost& newcost,
+                           const sif::Cost& tc);
+
+  /**
+   * Handle transition edges. Will add any that are allowed to the
+   * adjacency list.
+   * @param level      Current hierarchy level.
+   * @param edge       Directed edge (a transition edge).
+   * @param pred       Predecessor information.
+   * @param predindex  Predecessor index in the edge labels.
+   * @param dist       Distance to the destination.
+   */
+  void HandleTransitionEdgeReverse(const uint32_t level,
+                     const baldr::GraphId& edgeid,
+                     const baldr::DirectedEdge* edge,
+                     const sif::EdgeLabel& pred, const uint32_t predindex,
+                     const float dist);
 
    /**
-    * Handle transition edges. Will add any that are allowed to the
-    * adjacency list.
-    * @param level      Current hierarchy level
-    * @param edge       Directed edge (a transition edge)
-    * @param pred       Predecessor information
-    * @param predindex  Predecessor index in the edge labels.
-    * @param dist       Distance to the destination.
+    * Form the path from the adjacency lists. Recovers the path from the
+    * where the paths meet back towards the origin then reverses this path.
+    * The path from where the paths meet to the destination is then appended
+    * using the opposing edges (so the path is traversed forward).
+    * @param   idx1  Index in the forward search where the paths meet.
+    * @param   idx2  Index in the reverse search where the paths meet.
+    * @param   graphreader  Graph tile reader (for getting opposing edges).
+    * @return  Returns the path info, a list of GraphIds representing the
+    *          directed edges along the path - ordered from origin to
+    *          destination - along with travel modes and elapsed time.
     */
-   void HandleTransitionEdgeReverse(const uint32_t level,const baldr::GraphId& edgeid,
-                       const baldr::DirectedEdge* edge,
-                       const sif::EdgeLabel& pred, const uint32_t predindex,
-                       const float dist);
-
-   /**
-     * Form the path from the adjacency lists. Recovers the path from the
-     * where the paths meet back towards the origin then reverses this path.
-     * The path from where the paths meet to the destination is then appended
-     * using the opposing edges (so the path is traversed forward).
-     * @param   idx1  Index in the forward search where the paths meet.
-     * @param   idx2  Index in the reverse search where the paths meet.
-     * @param   graphreader  Graph tile reader (for getting opposing edges).
-     * @return  Returns the path info, a list of GraphIds representing the
-     *          directed edges along the path - ordered from origin to
-     *          destination - along with travel modes and elapsed time.
-     */
   std::vector<PathInfo> FormPath(const uint32_t idx1, const uint32_t idx2,
              baldr::GraphReader& graphreader);
 };

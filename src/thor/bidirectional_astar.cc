@@ -96,12 +96,15 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   SetOrigin(graphreader, origin, costing);
   SetDestination(graphreader, destination, costing);
 
+  // Set the threshold to 0 (used to extend search once an initial connection
+  // has been found.
+  threshold_ = 0;
+
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
   // prevents one tree from expanding much more quickly (if in a sparser
   // portion of the graph) rather than strictly alternating.
   int n = 0;
-  int threshold = 0;
   uint32_t predindex, predindex2;
   float dist = 0.0f;
   EdgeLabel pred, pred2;
@@ -140,49 +143,23 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     // the max edge cost but that has performance limitations,
     // so for now we use this bit of a hack...stay tuned.
     if (best_connection_.cost < std::numeric_limits<float>::max()) {
-      if (n++ > threshold) {
+      if (n++ > threshold_) {
         uint32_t idx1 = edgestatus_->Get(best_connection_.edgeid).status.index;
         uint32_t idx2 = edgestatus_reverse_->Get(best_connection_.opp_edgeid).status.index;
         return FormPath(idx1, idx2, graphreader);
       }
     }
 
-
-    // Expand from the search direction with lower cost.
+    // Expand from the search direction with lower sort cost.
     if (pred.sortcost() < pred2.sortcost()) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
       expand_reverse = false;
 
-      // Get the opposing edge - if this edge has been reached then a shortest
-      // path has been found to the end node of this directed edge.
-      // An invalid opposing edge occurs for transition edges - skip them.
-      GraphId oppedge = pred.opp_edgeid();
-      if (oppedge.Is_Valid()) {
-        EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
-        if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          if (threshold == 0) {
-            threshold = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
-          }
-          uint32_t predidx = edgelabels_reverse_[oppedgestatus.status.index].predecessor();
-          float oppcost = (predidx == kInvalidLabel) ?
-              0 : edgelabels_reverse_[predidx].cost().cost;
-          float c = pred.cost().cost + oppcost +
-              edgelabels_reverse_[oppedgestatus.status.index].transition_cost();
-          if (c < best_connection_.cost) {
-            best_connection_ = { pred.edgeid(), oppedge, c };
-LOG_TRACE("New best connection: forward: c = " + std::to_string(c) +
-         " n = " + std::to_string(edgelabels_.size() + edgelabels_reverse_.size()));
-LOG_TRACE("   Pred cost = " + std::to_string(pred.cost().cost) +
-         "   sortcost  = " + std::to_string(pred.sortcost())  +
-         "   dist = " + std::to_string(pred.distance()));
-LOG_TRACE("OppPred cost = " + std::to_string(edgelabels_reverse_[predindex].cost().cost) +
-         "   sortcost  = " + std::to_string(edgelabels_reverse_[predindex].sortcost()));
-LOG_TRACE("");
-          }
-        }
-      }
+      // Check if the edge on the forward search connects to a reached edge
+      // on the reverse search tree.
+      CheckForwardConnection(pred);
 
       // Mark edge as done - copy the EdgeLabel for use in costing
       edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
@@ -296,36 +273,9 @@ LOG_TRACE("");
       expand_forward = false;
       expand_reverse = true;
 
-      // Get the opposing edge - if this edge has been reached then a shortest
-      // path has been found to the end node of this directed edge.
-      // An invalid opposing edge occurs for transition edges - skip them.
-      GraphId oppedge = pred2.opp_edgeid();
-      if (oppedge.Is_Valid()) {
-        EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
-        if (oppedgestatus.set() != EdgeSet::kUnreached) {
-          // Set a threshold to extend search
-          if (threshold == 0) {
-            threshold = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
-          }
-          uint32_t predidx = edgelabels_[oppedgestatus.status.index].predecessor();
-          float oppcost = (predidx == kInvalidLabel) ?
-                0 : edgelabels_[predidx].cost().cost;
-          float c = pred2.cost().cost + oppcost +
-                edgelabels_[oppedgestatus.status.index].transition_cost();
-          if (c < best_connection_.cost) {
-            best_connection_ = { oppedge, pred2.edgeid(), c };
-
-LOG_TRACE("New best connection: reverse: c = " + std::to_string(c) +
-         " n = " + std::to_string(edgelabels_.size() + edgelabels_reverse_.size()));
-LOG_TRACE("   Pred cost = " + std::to_string(pred2.cost().cost) +
-         "   sortcost  = " + std::to_string(pred2.sortcost()) +
-         "   dist = " + std::to_string(pred2.distance()));
-LOG_TRACE("OppPred cost = " + std::to_string(edgelabels_[predindex].cost().cost) +
-         "   sortcost  = " + std::to_string(edgelabels_[predindex].sortcost()));
-LOG_TRACE("");
-          }
-        }
-      }
+      // Check if the edge on the reverse search connects to a reached edge
+      // on the forward search tree.
+      CheckReverseConnection(pred2);
 
       // Mark edge as done - copy the EdgeLabel for use in costing
       edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
@@ -496,6 +446,57 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
     edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost);
     edgelabels_reverse_[idx].set_transition_cost(tc.secs);
     adjacencylist_reverse_->DecreaseCost(idx, newsortcost, oldsortcost);
+  }
+}
+
+// Check if the edge on the forward search connects to a reached edge
+// on the reverse search tree.
+void BidirectionalAStar::CheckForwardConnection(const sif::EdgeLabel& pred) {
+  // Get the opposing edge - if this edge has been reached then a shortest
+  // path has been found to the end node of this directed edge.
+  // An invalid opposing edge occurs for transition edges - skip them.
+  GraphId oppedge = pred.opp_edgeid();
+  if (oppedge.Is_Valid()) {
+    EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
+    if (oppedgestatus.set() != EdgeSet::kUnreached) {
+      if (threshold_ == 0) {
+        threshold_ = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
+      }
+      uint32_t predidx = edgelabels_reverse_[oppedgestatus.status.index].predecessor();
+      float oppcost = (predidx == kInvalidLabel) ?
+            0 : edgelabels_reverse_[predidx].cost().cost;
+      float c = pred.cost().cost + oppcost +
+          edgelabels_reverse_[oppedgestatus.status.index].transition_cost();
+      if (c < best_connection_.cost) {
+        best_connection_ = { pred.edgeid(), oppedge, c };
+      }
+    }
+  }
+}
+
+// Check if the edge on the reverse search connects to a reached edge
+// on the forward search tree.
+void BidirectionalAStar::CheckReverseConnection(const sif::EdgeLabel& pred) {
+  // Get the opposing edge - if this edge has been reached then a shortest
+  // path has been found to the end node of this directed edge.
+  // An invalid opposing edge occurs for transition edges - skip them.
+  GraphId oppedge = pred.opp_edgeid();
+  if (oppedge.Is_Valid()) {
+    EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
+    if (oppedgestatus.set() != EdgeSet::kUnreached) {
+      // Set a threshold to extend search
+      if (threshold_ == 0) {
+        threshold_ = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
+      }
+      uint32_t predidx = edgelabels_[oppedgestatus.status.index].predecessor();
+      float oppcost = (predidx == kInvalidLabel) ?
+            0 : edgelabels_[predidx].cost().cost;
+      float c = pred.cost().cost + oppcost +
+            edgelabels_[oppedgestatus.status.index].transition_cost();
+      if (c < best_connection_.cost) {
+        best_connection_ = { oppedge, pred.edgeid(), c };
+      }
+    }
   }
 }
 
