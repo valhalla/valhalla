@@ -291,21 +291,28 @@ uint32_t ConnectEdges(const GraphId& basenode,
                                      const GraphId& edgeid,
                                      std::list<PointLL>& shape,
                                      GraphId& nodeb,
-                                     uint32_t& opp_local_idx, hierarchy_info& info) {
+                                     uint32_t& opp_local_idx,
+                                     uint32_t& restrictions,
+                                     hierarchy_info& info) {
   // Get the tile and directed edge. Set the opp_local_idx
   const GraphTile* tile = info.graphreader_.GetGraphTile(basenode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   opp_local_idx = directededge->opp_local_idx();
 
-  // Get the shape for this edge and append to the shortcut's shape
+  // Copy the restrictions - we want to set the shortcut edge's restrictions
+  // to the last directed edge in the chain
+  restrictions = directededge->restrictions();
+
+  // Get the shape for this edge. Reverse if directed edge is not forward.
   auto encoded = tile->edgeinfo(directededge->edgeinfo_offset())->encoded_shape();
   std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL> >(encoded);
-  // Need to flip it
-  if (!directededge->forward())
+  if (!directededge->forward()) {
     std::reverse(edgeshape.begin(), edgeshape.end());
-  // Don't need this one
+  }
+
+  // Append shape to the shortcut's shape. Skip first point since it
+  // should equal the last of the prior edge.
   edgeshape.pop_front();
-  // We'll take the rest though
   shape.splice(shape.end(), edgeshape);
 
   // Update the end node and return the length
@@ -418,6 +425,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
+      uint32_t rst = 0;
       uint32_t opp_local_idx = 0;
       GraphId next_edge_id = base_edge_id;
       while (info.tilednodes_[nodeb.tileid()][nodeb.id()].contract) {
@@ -443,8 +451,11 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
         }
 
         // Connect the matching outbound directed edge (updates the next
-        // end node in the new level).
-        length += ConnectEdges(basenode, next_edge_id, shape, nodeb, opp_local_idx, info);
+        // end node in the new level). Keep track of the last restriction
+        // on the connected shortcut - need to set that so turn restrictions
+        // off of shortcuts work properly
+        length += ConnectEdges(basenode, next_edge_id, shape, nodeb,
+                               opp_local_idx, rst, info);
       }
 
       // Add the edge info. Use length and number of shape points to match an
@@ -477,11 +488,12 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
       // the shortcut chain
       newedge.set_opp_local_idx(opp_local_idx);
 
-      // Update the length, elevation, curvature and end node
+      // Update the length, elevation, curvature, restriction, and end node
       newedge.set_length(length);
       newedge.set_weighted_grade(sample ? GetGrade(sample, shape, length, forward) : 6); //6 is flat
       newedge.set_curvature(0); //TODO:
       newedge.set_endnode(nodeb);
+      newedge.set_restrictions(rst);
 
       if (newedge.exitsign()) {
         LOG_ERROR("Shortcut edge with exit signs");
