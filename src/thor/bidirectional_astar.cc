@@ -165,9 +165,11 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
           if (threshold == 0) {
             threshold = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
           }
-          uint32_t predindex = edgelabels_reverse_[oppedgestatus.status.index].predecessor();
-          float c = pred.cost().cost + edgelabels_reverse_[predindex].cost().cost +
-                edgelabels_reverse_[predindex].transition_cost();
+          uint32_t predidx = edgelabels_reverse_[oppedgestatus.status.index].predecessor();
+          float oppcost = (predidx == kInvalidLabel) ?
+              0 : edgelabels_reverse_[predidx].cost().cost;
+          float c = pred.cost().cost + oppcost +
+              edgelabels_reverse_[oppedgestatus.status.index].transition_cost();
           if (c < best_connection_.cost) {
             best_connection_ = { pred.edgeid(), oppedge, c };
 LOG_TRACE("New best connection: forward: c = " + std::to_string(c) +
@@ -246,9 +248,8 @@ LOG_TRACE("");
 
         // Get cost
         Cost newcost = pred.cost() +
-                      costing->EdgeCost(directededge, nodeinfo->density());
-        Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
-        newcost.cost += tc.cost;
+                      costing->EdgeCost(directededge, nodeinfo->density()) +
+                      costing->TransitionCost(directededge, nodeinfo, pred);
 
         // Check if edge is temporarily labeled and this path has less cost. If
         // less cost the predecessor is updated and the sort cost is decremented
@@ -306,9 +307,11 @@ LOG_TRACE("");
           if (threshold == 0) {
             threshold = GetThreshold(mode_, edgelabels_.size() + edgelabels_reverse_.size());
           }
-          uint32_t predindex = edgelabels_[oppedgestatus.status.index].predecessor();
-          float c = pred2.cost().cost + edgelabels_[predindex].cost().cost +
-                edgelabels_[predindex].transition_cost();
+          uint32_t predidx = edgelabels_[oppedgestatus.status.index].predecessor();
+          float oppcost = (predidx == kInvalidLabel) ?
+                0 : edgelabels_[predidx].cost().cost;
+          float c = pred2.cost().cost + oppcost +
+                edgelabels_[oppedgestatus.status.index].transition_cost();
           if (c < best_connection_.cost) {
             best_connection_ = { oppedge, pred2.edgeid(), c };
 
