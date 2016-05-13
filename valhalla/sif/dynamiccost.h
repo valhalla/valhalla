@@ -236,12 +236,6 @@ class DynamicCost {
   TravelMode travelmode() const;
 
   /**
-   * Set the distance from the destination where "not_thru" edges are allowed.
-   * @param  d  Distance in meters.
-   */
-  void set_not_thru_distance(const float d);
-
-  /**
    * Returns a function/functor to be used in location searching which will
    * exclude results from the search by looking at each edges attribution
    */
@@ -278,11 +272,6 @@ class DynamicCost {
 
   // Hierarchy limits.
   std::vector<HierarchyLimits> hierarchy_limits_;
-
-  // Distance from the destination within which "not_thru" roads are
-  // considered. All costing methods exclude such roads except when close
-  // to the destination
-  float not_thru_distance_;
 };
 
 typedef std::shared_ptr<DynamicCost> cost_ptr_t;
