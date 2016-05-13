@@ -22,7 +22,7 @@ done
 for dep in midgard baldr sif skadi loki odin thor tyr; do
 	pushd $dep
 	./autogen.sh
-	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
+	./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
 	make -j$(nproc)
 	sudo make install
 	popd
