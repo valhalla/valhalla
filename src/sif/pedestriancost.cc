@@ -287,11 +287,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Disallow if no pedestrian access, surface marked as impassible,
-  // edge is not-thru and we are far from destination, or if max
-  // walking distance is exceeded.
+  // or if max walking distance is exceeded.
   if (!(edge->forwardaccess() & kPedestrianAccess) ||
        (edge->surface() == Surface::kImpassable) ||
-       (edge->not_thru() && pred.distance() > not_thru_distance_) ||
       ((pred.walking_distance() + edge->length()) > max_distance_)) {
     return false;
   }
@@ -368,15 +366,6 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return { step_penalty_, 0.0f };
-  }
-
-  // Prevent going from one transit connection directly to another
-  // at a transit stop - this is like entering a station and exiting
-  // without getting on transit
-  if (node->type() == NodeType::kMultiUseTransitStop &&
-      pred.use()   == Use::kTransitConnection &&
-      edge->use()  == Use::kTransitConnection) {
-    return { 300.0f, 0.0f };
   }
 
   // Penalty through gates and border control.
