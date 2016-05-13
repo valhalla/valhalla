@@ -111,14 +111,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // Set route start time (seconds from midnight), date, and day of week
     start_time = DateTime::seconds_from_midnight(*origin.date_time_);
     localtime = start_time;
-    date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
-    dow  = DateTime::day_of_week_mask(*origin.date_time_);
-    if (date < tile_creation_date_)
-      date_before_tile = true;
-    else
-      day = date - tile_creation_date_;
   }
 
+  bool date_set = false;
   // Find shortest path
   uint32_t blockid, tripid;
   uint32_t nc = 0;       // Count of iterations with no convergence
@@ -206,6 +201,20 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
       // Update prior stop. TODO - parent/child stop info?
       prior_stop = nodeinfo->stop_index();
+
+      // we must get the date from level 3 transit tiles and not level 2.  The level 3 date is
+      // set when the fetcher grabbed the transit data and created the schedules.
+      if (!date_set) {
+        date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+        dow  = DateTime::day_of_week_mask(*origin.date_time_);
+        uint32_t date_created = tile->header()->date_created();
+        if (date < date_created)
+          date_before_tile = true;
+        else
+          day = date - date_created;
+
+        date_set = true;
+      }
     }
 
     // Allow mode changes at special nodes
@@ -340,6 +349,14 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         // Add to walking distance
         if (mode_ == TravelMode::kPedestrian) {
           walking_distance_ += directededge->length();
+
+          // Prevent going from one transit connection directly to another
+          // at a transit stop - this is like entering a station and exiting
+          // without getting on transit
+          if (nodeinfo->type() == NodeType::kMultiUseTransitStop &&
+              pred.use()   == Use::kTransitConnection &&
+              directededge->use()  == Use::kTransitConnection)
+                continue;
         }
       }
 
