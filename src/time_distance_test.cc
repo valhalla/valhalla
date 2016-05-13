@@ -7,6 +7,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 #include <boost/format.hpp>
+#include <cstdlib>
 
 #include "config.h"
 
@@ -62,6 +63,19 @@ valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
    }
  }
  return factory.Create(costing, *config_costing);
+}
+
+float random_unit_float() {
+  // Create a random integer between -1000 - +1000,
+  // then scale to be between -1 and 1
+  int r = rand() % 2000 - 1000;
+  return static_cast<float>(r) * 0.001f;
+}
+
+// Jitter lat,lng by up to about 1km
+PointLL JitterLatLng(const PointLL& latlng, const float delta) {
+  return { latlng.lng() + random_unit_float() * delta,
+           latlng.lat() + random_unit_float() * delta };
 }
 
 // Main method for testing time and distance matrix methods
@@ -127,8 +141,6 @@ int main(int argc, char *argv[]) {
   try {
     for (const auto& location : json_ptree.get_child("locations"))
       locations.emplace_back(std::move(Location::FromPtree(location.second)));
-    if (locations.size() < 2)
-      throw;
   } catch (...) {
     throw std::runtime_error(
         "insufficiently specified required parameter 'locations'");
@@ -157,7 +169,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
+  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
   CostFactory<DynamicCost> factory;
@@ -201,6 +213,25 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
   };
+
+  // If only one location is provided we create a set of random locations
+  // around this location
+  if (locations.size() == 1) {
+    LOG_INFO("Create random locations");
+    PointLL ll = locations.front().latlng_;
+    LOG_INFO("Location 0 = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+    uint32_t n = 100;
+    float delta = 0.15f;  // Should keep all locations inside a 35 mile radius
+    for (uint32_t i = 0; i < n; i++) {
+      ll = JitterLatLng(ll, delta);
+      locations.push_back(Location(ll));
+      LOG_INFO("Location " + std::to_string(i+1) + " = " +
+               std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+    }
+  } else if (locations.size() == 0) {
+    LOG_ERROR("No locations provided");
+    exit(EXIT_FAILURE);
+  }
 
   // Get path locations (Loki) for all locations.
   auto t0 = std::chrono::high_resolution_clock::now();
@@ -254,6 +285,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Optimize the path
+    auto t10 = std::chrono::high_resolution_clock::now();
     std::vector<float> costs;
     for (auto& td : res) {
       costs.push_back(static_cast<float>(td.time));
@@ -265,6 +297,10 @@ int main(int argc, char *argv[]) {
     for (auto& loc : tour) {
       LOG_INFO("   : " + std::to_string(loc));
     }
+    auto t11 = std::chrono::high_resolution_clock::now();
+    uint32_t ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(t11-t10).count();
+    LOG_INFO("Optimization took " + std::to_string(ms1) + " ms");
+
   } else {
     uint32_t idx = 0;
     for (auto& td : res) {
