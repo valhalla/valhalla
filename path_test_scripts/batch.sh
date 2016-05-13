@@ -9,23 +9,23 @@ fi
 
 function usage() {
         echo "Usage: $0 path_test_request_file conf [concurrency] [outDir]"
-        echo "Example: $0 demo_routes.txt"
-        echo "Example: $0 demo_routes.txt ~/valhalla.json"
-        echo "Example: $0 demo_routes.txt ~/valhalla.json 8"
-        echo "Example: $0 demo_routes.txt ~/valhalla.json 8 my_special_dir"
+        echo "Example: $0 requests/demo_routes.txt"
+        echo "Example: $0 requests/demo_routes.txt ~/valhalla.json"
+        echo "Example: $0 requests/demo_routes.txt ~/valhalla.json 8"
+        echo "Example: $0 requests/demo_routes.txt ~/valhalla.json 8 my_special_dir"
         exit 1
 }
 
-#get the input file
-if [ -z "requests/${1}" ]; then
+#set the input file
+if [ -z "${1}" ]; then
 	usage
-elif [ ! -f "requests/${1}" ]; then
+elif [ ! -f "${1}" ]; then
 	usage
 else
 	INPUT="${1}"
 fi
 
-#CONF directory or not, default
+#set config file
 CONF="${2}"
 
 #how many threads do you want, default to max
@@ -44,7 +44,7 @@ mkdir -p "${RESULTS_OUTDIR}"
 
 #turn the nice input into something parallel can parse for args
 TMP="$(mktemp)"
-cp -rp "requests/${INPUT}" "${TMP}"
+cp -rp "${INPUT}" "${TMP}"
 for arg in $(path_test --help | grep -o '\-[a-z\-]\+' | sort | uniq); do
 	sed -i -e "s/[ ]\?${arg}[ ]\+/|${arg}|/g" "${TMP}"
 done
