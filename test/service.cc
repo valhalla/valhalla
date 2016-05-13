@@ -5,10 +5,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <thread>
 #include <unistd.h>
-#include <fstream>
 
 #include "skadi/service.h"
-#include "test/pixels.h"
 
 using namespace valhalla;
 using namespace prime_server;
