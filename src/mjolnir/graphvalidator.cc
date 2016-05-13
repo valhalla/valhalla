@@ -107,7 +107,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     // transit edges and wayid matching
     if (startnode.level() == 2) {
       if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection) {
-        if (edge.lineid() == directededge->lineid()) {
+        if (tile->edgeinfo(edge.edgeinfo_offset())->wayid() == end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid()) {
           opp_index = i;
         }
       }
@@ -168,7 +168,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
         }
       }
       if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection) {
-        if (edge.lineid() == directededge->lineid()) {
+        if (tile->edgeinfo(edge.edgeinfo_offset())->wayid() == end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid()) {
           opp_index = i;
         }
       }

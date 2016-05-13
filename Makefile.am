@@ -122,8 +122,8 @@ bin_PROGRAMS = \
 	pbfgraphbuilder \
 	pbfadminbuilder \
 	transit_fetcher \
-        transit_stop_query \
-        ways_to_edges
+	transit_stop_query \
+	ways_to_edges
 
 adminbenchmark_SOURCES = src/mjolnir/adminbenchmark.cc
 adminbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
@@ -155,14 +155,14 @@ ways_to_edges_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST
 
 # tests
 check_PROGRAMS = \
-        test/utrecht\
+	test/utrecht \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
 	test/graphtilebuilder \
 	test/graphbuilder \
 	test/graphparser \
-        test/names \
+	test/names \
 	test/refs \
 	test/signinfo
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
