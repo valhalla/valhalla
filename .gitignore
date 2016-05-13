@@ -42,10 +42,11 @@ test-suite.log
 test-driver
 test/*.log
 test/*.trs
-test/data/*.hgt
+test/*.hgt
 test/sample
+test/create_tile
 test/service
-test/util
+test/util_skadi
 
 # test coverage stuff
 *.gcno

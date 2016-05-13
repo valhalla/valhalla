@@ -56,25 +56,22 @@ skadi_service_SOURCES = src/skadi/skadi_service.cc
 skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 skadi_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
 
-#data for tests
-test/data/N40W077.hgt:
-	-mkdir -p test/data
-	-wget -q -O - http://s3.amazonaws.com/mapzen.valhalla/elevation/N40/N40W077.hgt.gz | gunzip > test/data/N40W077.hgt
-CLEANFILES = test/data/N40W077.hgt
-
 # tests
-check_PROGRAMS = test/sample test/service test/util
+check_PROGRAMS = test/sample test/create_tile test/service test/util_skadi
 test_sample_SOURCES = test/sample.cc test/test.cc
 test_sample_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_sample_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
-test_sample_DEPENDENCIES = test/data/N40W077.hgt
+test_create_tile_SOURCES = test/create_tile.cc test/test.cc
+test_create_tile_CPPFLAGS = $(DEPS_CFLAGS)
+test_create_tile_LDADD = $(DEPS_LIBS)
 test_service_SOURCES = test/service.cc test/test.cc
 test_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
-test_util_DEPENDENCIES = test/data/N40W077.hgt
-test_util_SOURCES = test/util.cc test/test.cc
-test_util_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_util_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
+test_service_DEPENDENCIES = test/create_tile
+test_util_skadi_SOURCES = test/util_skadi.cc test/test.cc
+test_util_skadi_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_util_skadi_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
+test_util_skadi_DEPENDENCIES = test/create_tile
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

@@ -120,10 +120,15 @@ namespace skadi {
 
     //first part of the bilinear interpolation
     auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite;
+    //LOG_INFO('{' + std::to_string(y * HGT_DIM + x) + ',' + std::to_string(t[y * HGT_DIM + x]) + '}');
+    //LOG_INFO('{' + std::to_string(y * HGT_DIM + x + 1) + ',' + std::to_string(t[y * HGT_DIM + x + 1]) + '}');
     //only need the second part if you aren't right on the row
     //this also protects from a corner case where you sample past the end of the image
-    if(y < HGT_DIM - 1)
+    if(y < HGT_DIM - 1) {
+      //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x) + ',' + std::to_string(t[(y + 1) * HGT_DIM + x]) + '}');
+      //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x + 1) + ',' + std::to_string(t[(y + 1) * HGT_DIM + x + 1]) + '}');
       return value + (flip(t[(y + 1) * HGT_DIM + x]) * u_opposite + flip(t[(y + 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
+    }
     return value;
   }
 
