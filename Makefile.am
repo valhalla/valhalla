@@ -85,7 +85,8 @@ check_PROGRAMS = \
 	test/map_matching \
 	test/queue \
 	test/routing \
-	test/viterbi_search
+	test/viterbi_search \
+	test_geojson_reader
 
 test_geometry_helpers_SOURCES = test/geometry_helpers.cc
 test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
@@ -110,6 +111,10 @@ test_routing_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.l
 test_viterbi_search_SOURCES = test/viterbi_search.cc
 test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+
+test_geojson_reader_SOURCES = test/geojson_reader.cc
+test_geojson_reader_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_geojson_reader_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
