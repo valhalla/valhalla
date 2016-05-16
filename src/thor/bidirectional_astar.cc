@@ -231,9 +231,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         shortcuts |= directededge->shortcut();
 
         // Get cost
+        Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
         Cost newcost = pred.cost() +
-                      costing->EdgeCost(directededge, nodeinfo->density()) +
-                      costing->TransitionCost(directededge, nodeinfo, pred);
+                      costing->EdgeCost(directededge, nodeinfo->density()) + tc;
 
         // Check if edge is temporarily labeled and this path has less cost. If
         // less cost the predecessor is updated and the sort cost is decremented
@@ -259,7 +259,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
           edgestatus_->Set(edgeid, EdgeSet::kPermanent, edgelabels_.size());
           edgelabels_.emplace_back(predindex, edgeid, oppedge, directededge,
              newcost, newcost.cost, dist, directededge->restrictions(),
-             directededge->opp_local_idx(), mode_, 0);
+             directededge->opp_local_idx(), mode_, tc.secs);
           continue;
         }
 
@@ -272,7 +272,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         AddToAdjacencyList(edgeid, sortcost);
         edgelabels_.emplace_back(predindex, edgeid, oppedge, directededge,
                       newcost, sortcost, dist, directededge->restrictions(),
-                      directededge->opp_local_idx(), mode_, 0);
+                      directededge->opp_local_idx(), mode_, tc.secs);
       }
     } else {
       // Expand reverse - set to get next edge from reverse adj. list
@@ -313,9 +313,15 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
       }
 
-      // Get the opposing predecessor directed edge
-      const DirectedEdge* opp_pred_edge = tile2->directededge(
-              nodeinfo->edge_index() + pred2.opp_index());
+      // Get the opposing predecessor directed edge. Need to make sure we get
+      // the correct one if a transition occurred
+      const DirectedEdge* opp_pred_edge;
+      if (pred2.opp_edgeid().Tile_Base() == tile2->id().Tile_Base()) {
+        opp_pred_edge = tile2->directededge(pred2.opp_edgeid().id());
+      } else {
+        opp_pred_edge = graphreader.GetGraphTile(pred2.opp_edgeid().
+                         Tile_Base())->directededge(pred2.opp_edgeid());
+      }
 
       // Expand from end node in forward direction.
       uint32_t shortcuts = 0;
