@@ -9,7 +9,7 @@ dependencies:
 
 test:
   override:
-    - scripts/install.sh
+    - scripts/install.sh --enable-coverage
 
 general:
   artifacts:
