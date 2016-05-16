@@ -381,6 +381,21 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
                                                    next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine unnamed straight maneuvers
+      else if ((next_man->begin_relative_direction()
+          == Maneuver::RelativeDirection::kKeepStraight)
+          && !curr_man->HasStreetNames() && !next_man->HasStreetNames()
+          && !curr_man->IsTransit() && !next_man->IsTransit()
+          && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
+          && !next_man->internal_intersection() && !curr_man->ramp()
+          && !next_man->ramp() && !curr_man->roundabout()
+          && !next_man->roundabout()) {
+
+        LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
+        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
+                                                   next_man);
+        maneuvers_have_been_combined = true;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
