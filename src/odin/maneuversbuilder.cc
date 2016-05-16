@@ -87,6 +87,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Calculate the consecutive exit sign count and then sort
   CountAndSortExitSigns(maneuvers);
 
+  // Conform maneuver type assignment
+  ConfirmManeuverTypeAssignment(maneuvers);
+
 #ifdef LOGGING_LEVEL_TRACE
   int combined_man_id = 1;
   LOG_TRACE("############################################");
@@ -658,6 +661,14 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
 
 }
 
+void ManeuversBuilder::ConfirmManeuverTypeAssignment(
+    std::list<Maneuver>& maneuvers) {
+
+  for (auto& maneuver : maneuvers) {
+    SetManeuverType(maneuver, false);
+  }
+}
+
 void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   int node_index = trip_path_->GetLastNodeIndex();
 
@@ -1086,7 +1097,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
 }
 
-void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
+void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowed) {
   // If the type is already set then just return
   if (maneuver.type() != TripDirections_Maneuver_Type_kNone) {
     return;
@@ -1157,12 +1168,12 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     }
   }
   // Process Internal Intersection
-  else if (maneuver.internal_intersection()) {
+  else if (none_type_allowed && maneuver.internal_intersection()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
     LOG_TRACE("ManeuverType=INTERNAL_INTERSECTION");
   }
   // Process Turn Channel
-  else if (maneuver.turn_channel()) {
+  else if (none_type_allowed && maneuver.turn_channel()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
     LOG_TRACE("ManeuverType=TURN_CHANNNEL");
   }
