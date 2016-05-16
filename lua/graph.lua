@@ -902,27 +902,33 @@ function filter_tags_generic(kv)
 
   local use = use[kv["service"]]
 
-  if kv["highway"] == "steps" then
-    use = 26 --steps/stairs
-  elseif kv["highway"] == "track" then
-    use = 3 
-  elseif kv["highway"] == nil then 
-    use = 0
-  elseif kv["highway"] then
+  if kv["highway"] then
+    if kv["highway"] == "track" then
+       use = 3
     --favor bicycles
-    if kv["highway"] == "cycleway" then
-        use = 20
+    else if kv["highway"] == "cycleway" then
+       use = 20
     elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
        use = 20
     --favor pedestrians
-    elseif kv["highway"] == "footway" or kv["highway"] == "pedestrian" then 
+    elseif kv["highway"] == "footway" then
        use = 25
+    elseif kv["highway"] == "pedestrian" then
+       use = 26
     elseif kv["pedestrian"] == "true" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
-       use = 25
+       use = 26
+    elseif kv["highway"] == "path" then
+       use = 27
+    elseif kv["highway"] == "steps" then
+       use = 28 --steps/stairs
+    elseif kv["highway"] == "bridleway" then
+       use = 29
     end
-  elseif use == nil and kv["service"] then
+  end
+
+  if use == nil and kv["service"] then
     use = 40 --other
-  else 
+  elseif use == nil then
     use = 0 --general road, no special use
   end
 
