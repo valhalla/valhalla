@@ -116,7 +116,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles";
   LOG_DEBUG(
       (boost::format(
-              "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}' --config ../conf/valhalla.json")
+              "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}'")
           % orig.ll().lat() % orig.ll().lng() % first_name
           % dest.ll().lat() % dest.ll().lng() % last_name
           % units).str());
@@ -378,6 +378,21 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
 
+        next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
+                                                   next_man);
+        maneuvers_have_been_combined = true;
+      }
+      // Combine unnamed straight maneuvers
+      else if ((next_man->begin_relative_direction()
+          == Maneuver::RelativeDirection::kKeepStraight)
+          && !curr_man->HasStreetNames() && !next_man->HasStreetNames()
+          && !curr_man->IsTransit() && !next_man->IsTransit()
+          && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
+          && !next_man->internal_intersection() && !curr_man->ramp()
+          && !next_man->ramp() && !curr_man->roundabout()
+          && !next_man->roundabout()) {
+
+        LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
                                                    next_man);
         maneuvers_have_been_combined = true;
