@@ -1431,7 +1431,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
-  LOG_INFO("Tile " + std::to_string(tileid)
+  LOG_INFO("Tile " + std::to_string(tileid.id())
           + ": added " + std::to_string(transitedges) + " transit edges, and "
           + std::to_string(tilebuilder_transit.nodes().size()) + " nodes. time = "
           + std::to_string(msecs) + " ms");
