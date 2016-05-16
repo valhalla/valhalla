@@ -616,6 +616,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   sqlite3_close (db_handle);
+
+  LOG_INFO("Finished.");
+
 }
 
 int main(int argc, char** argv) {
