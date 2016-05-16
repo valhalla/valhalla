@@ -116,7 +116,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles";
   LOG_DEBUG(
       (boost::format(
-              "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}' --config ../conf/valhalla.json")
+              "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}'")
           % orig.ll().lat() % orig.ll().lng() % first_name
           % dest.ll().lat() % dest.ll().lng() % last_name
           % units).str());
