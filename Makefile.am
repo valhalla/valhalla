@@ -37,20 +37,21 @@ clean-gcno:
 clean-local: clean-coverage clean-gcno
 endif
 
+##UNUSUAL_TARGET##
 #timezone info from boost
 src/baldr/date_time_zonespec.h:
 	-xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c) date_time/zonespec.csv > src/baldr/date_time_zonespec.h
 BUILT_SOURCES = src/baldr/date_time_zonespec.h
 nodist_libvalhalla_baldr_la_SOURCES = src/baldr/date_time_zonespec.h
 CLEANFILES = src/baldr/date_time_zonespec.h
-
+##UNUSUAL_TARGET##
 
 # libvalhalla-baldr compilation etc
 lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
-        valhalla/baldr/accessrestriction.h \
+	valhalla/baldr/accessrestriction.h \
 	valhalla/baldr/admin.h \
-        valhalla/baldr/admininfo.h \
+	valhalla/baldr/admininfo.h \
 	valhalla/baldr/connectivity_map.h \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
@@ -65,7 +66,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/location.h \
 	valhalla/baldr/pathlocation.h \
 	valhalla/baldr/sign.h \
-        valhalla/baldr/signinfo.h \
+	valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
@@ -84,8 +85,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_us_tx.h \
 	valhalla/baldr/verbal_text_formatter_factory.h 
 libvalhalla_baldr_la_SOURCES = \
-        src/baldr/accessrestriction.cc \
-        src/baldr/admin.cc \
+	src/baldr/accessrestriction.cc \
+	src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
@@ -99,7 +100,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
 	src/baldr/sign.cc \
-        src/baldr/signinfo.cc \
+	src/baldr/signinfo.cc \
 	src/baldr/tilehierarchy.cc \
 	src/baldr/turn.cc \
 	src/baldr/streetname.cc \
@@ -120,12 +121,6 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/date_time_zonespec.h
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB) $(BOOST_DATE_TIME_LIB)
-
-#distributed executables
-bin_PROGRAMS = 
-#_SOURCES = 
-#_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-#_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@  $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_baldr.la
 
 # tests
 check_PROGRAMS = \
