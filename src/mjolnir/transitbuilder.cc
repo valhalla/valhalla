@@ -393,8 +393,10 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
 
           const NodeInfo* closest_node = endnode_tile->node(end_node.id());
           end_distance = closest_node->latlng().Distance(stop_ll);
-          if (start_distance <= end_distance)
+          if (start_distance <= end_distance) {
             closest_node = node;
+            endnode_tile = tile;
+          }
 
           // loop until we hopefully find an edge with pedestrian access.
           for (uint32_t x = 0, count = closest_node->edge_count(); x < count; x++) {
