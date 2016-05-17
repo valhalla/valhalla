@@ -55,13 +55,13 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/astarheuristic.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/edgestatus.cc \
-        src/thor/matrix.cc \
+	src/thor/matrix.cc \
 	src/thor/multimodal.cc \
-        src/thor/optimized_path.cc \
+	src/thor/optimized_path.cc \
 	src/thor/optimizer.cc \
 	src/thor/pathalgorithm.cc \
 	src/thor/timedistancematrix.cc \
-        src/thor/trip_path.cc \
+	src/thor/trip_path.cc \
 	src/thor/trippathbuilder.cc \
 	src/thor/service.cc
 libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
