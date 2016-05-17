@@ -43,7 +43,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       prior_stopid_(0),
       blockid_(0),
       transit_operator_(0),
-      transition_cost_(0) {
+      transition_cost_(0),
+      transition_secs_(0) {
 }
 
 // Constructor with values - used in bidirectional A*
@@ -52,7 +53,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const Cost& cost, const float sortcost, const float dist,
                      const uint32_t restrictions,
                      const uint32_t opp_local_idx,
-                     const TravelMode mode, const uint32_t tc)
+                     const TravelMode mode, const Cost& tc)
     : edgeid_(edgeid),
       opp_edgeid_(oppedgeid),
       endnode_(edge->endnode()),
@@ -77,7 +78,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       prior_stopid_(0),
       blockid_(0),
       transit_operator_(0),
-      transition_cost_(tc)  {
+      transition_cost_(tc.cost),
+      transition_secs_(tc.secs) {
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -113,7 +115,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
       prior_stopid_(prior_stopid),
       blockid_(blockid),
       transit_operator_(transit_operator),
-      transition_cost_(0)  {
+      transition_cost_(0),
+      transition_secs_(0) {
 }
 
 // Update predecessor and cost values in the label.
@@ -272,14 +275,24 @@ uint32_t EdgeLabel::transit_operator() const {
   return transit_operator_;
 }
 
-// Get the turn cost.
+// Get the transition cost in seconds. This is used in the bidirectional A*
+// to determine the cost at the connection.
 uint32_t EdgeLabel::transition_cost() const {
   return transition_cost_;
 }
 
-// Set the turn cost.
-void EdgeLabel::set_transition_cost(uint32_t tc) {
-  transition_cost_ = tc;
+// Get the transition cost in seconds. This is used in the bidirectional A*
+// reverse path search to allow the recovery of the true elapsed time along
+// the path. This is needed since the transition cost is applied at a different
+// node than the forward search.
+uint32_t EdgeLabel::transition_secs() const {
+  return transition_secs_;
+}
+
+// Set the transition cost.
+void EdgeLabel::set_transition_cost(const Cost& tc) {
+  transition_cost_ = tc.cost;
+  transition_secs_ = tc.secs;
 }
 
 // Operator for sorting.
