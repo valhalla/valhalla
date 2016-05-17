@@ -61,6 +61,8 @@ class ManeuversBuilder {
 
   void CountAndSortExitSigns(std::list<Maneuver>& maneuvers);
 
+  void ConfirmManeuverTypeAssignment(std::list<Maneuver>& maneuvers);
+
   void CreateDestinationManeuver(Maneuver& maneuver);
 
   void CreateStartManeuver(Maneuver& maneuver);
@@ -71,7 +73,7 @@ class ManeuversBuilder {
 
   void FinalizeManeuver(Maneuver& maneuver, int node_index);
 
-  void SetManeuverType(Maneuver& maneuver);
+  void SetManeuverType(Maneuver& maneuver, bool none_type_allowed = true);
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                         EnhancedTripPath_Edge* prev_edge,
