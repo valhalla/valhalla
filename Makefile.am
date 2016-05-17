@@ -47,7 +47,6 @@ src/mjolnir/graph_lua_proc.h:
 	-xxd -i lua/graph.lua > src/mjolnir/graph_lua_proc.h
 src/mjolnir/admin_lua_proc.h:
 	-xxd -i lua/admin.lua > src/mjolnir/admin_lua_proc.h
-
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
 nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
