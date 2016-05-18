@@ -61,13 +61,6 @@ libvalhalla_sif_la_SOURCES = \
 libvalhalla_sif_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_sif_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
-#distributed executables
-#bin_PROGRAMS = model_validator 
-#model_validator_SOURCES = \
-#        src/sif/model_validaotr.cc
-#model_validator_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-#model_validator_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ libvalhalla_sif.la
-
 # tests
 check_PROGRAMS = \
 	test/factory
