@@ -44,7 +44,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       blockid_(0),
       transit_operator_(0),
       transition_cost_(0),
-      transition_secs_(0) {
+      transition_secs_(0),
+      not_thru_(edge->not_thru())  {
 }
 
 // Constructor with values - used in bidirectional A*
@@ -79,7 +80,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       blockid_(0),
       transit_operator_(0),
       transition_cost_(tc.cost),
-      transition_secs_(tc.secs) {
+      transition_secs_(tc.secs),
+      not_thru_(edge->not_thru())  {
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -116,7 +118,46 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
       blockid_(blockid),
       transit_operator_(transit_operator),
       transition_cost_(0),
-      transition_secs_(0) {
+      transition_secs_(0),
+      not_thru_(edge->not_thru()) {
+}
+
+// Constructor with values - used in time distance matrix (needs the
+// accumulated distance as well as opposing edge information). Sets
+// sortcost to the true cost.
+EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+                const baldr::GraphId& oppedgeid,
+                const baldr::DirectedEdge* edge, const Cost& cost,
+                const uint32_t restrictions, const uint32_t opp_local_idx,
+                const TravelMode mode, const Cost& tc,
+                const uint32_t distance)
+    :  edgeid_(edgeid),
+       opp_edgeid_(oppedgeid),
+       endnode_(edge->endnode()),
+       cost_(cost),
+       sortcost_(cost.cost),
+       distance_(0.0f),
+       walking_distance_(distance),
+       use_(static_cast<uint32_t>(edge->use())),
+       opp_index_(edge->opp_index()),
+       opp_local_idx_(opp_local_idx),
+       restrictions_(restrictions),
+       trans_up_(edge->trans_up()),
+       trans_down_(edge->trans_down()),
+       shortcut_(edge->shortcut()),
+       mode_(static_cast<uint32_t>(mode)),
+       dest_only_(edge->destonly()),
+       has_transit_(0),
+       origin_(0),
+       toll_(edge->toll()),
+       predecessor_(predecessor) ,
+       tripid_(0),
+       prior_stopid_(0),
+       blockid_(0),
+       transit_operator_(0),
+       transition_cost_(tc.cost),
+       transition_secs_(tc.secs),
+       not_thru_(edge->not_thru()) {
 }
 
 // Update predecessor and cost values in the label.
@@ -125,6 +166,19 @@ void EdgeLabel::Update(const uint32_t predecessor, const Cost& cost,
   predecessor_ = predecessor;
   cost_ = cost;
   sortcost_ = sortcost;
+}
+
+// Update an existing edge label with new predecessor and cost information.
+// Update distance as well (used in time distance matrix)
+void EdgeLabel::Update(const uint32_t predecessor, const Cost& cost,
+                       const float sortcost, const Cost& tc,
+                       const uint32_t distance) {
+  predecessor_ = predecessor;
+  cost_ = cost;
+  sortcost_ = sortcost;
+  transition_cost_  = tc.cost;
+  transition_secs_  = tc.secs;
+  walking_distance_ = distance;
 }
 
 // Update an existing edge label with new predecessor and cost information.
@@ -294,6 +348,12 @@ void EdgeLabel::set_transition_cost(const Cost& tc) {
   transition_cost_ = tc.cost;
   transition_secs_ = tc.secs;
 }
+
+// Is this edge not-through
+bool EdgeLabel::not_thru() const {
+  return not_thru_;
+}
+
 
 // Operator for sorting.
 bool EdgeLabel::operator < (const EdgeLabel& other) const {

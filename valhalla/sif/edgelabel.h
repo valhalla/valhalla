@@ -59,15 +59,14 @@ class EdgeLabel {
    *                  if edge is a transition edge. This allows restrictions
    *                  to be carried across different hierarchy levels.
    * @param mode      Mode of travel along this edge.
-   * @param tc        Real transition cost (separated from Cost for the
-   *                  reverse path logic.
+   * @param tc        Transition cost entering this edge.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& oppedgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
             const uint32_t restrictions, const uint32_t opp_local_idx,
-            const TravelMode mode, const uint32_t tc);
+            const TravelMode mode, const Cost& tc);
 
   /**
    * Constructor with values.  Used for multi-modal path.
@@ -99,6 +98,30 @@ class EdgeLabel {
             const bool has_transit);
 
   /**
+   * Constructor with values - used in time distance matrix (needs the
+   * accumulated distance as well as opposing edge information). Sets
+   * sortcost to the true cost.
+   * @param predecessor Index into the edge label list for the predecessor
+   *                       directed edge in the shortest path.
+   * @param edgeid    Directed edge.
+   * @param oppedgeid Opposing directed edge Id.
+   * @param endnode   End node of the directed edge.
+   * @param cost      True cost (cost and elapsed time in seconds) to the edge.
+   * @param restrictions Restriction mask from prior edge - this is used
+   *                  if edge is a transition edge. This allows restrictions
+   *                  to be carried across different hierarchy levels.
+   * @param mode      Mode of travel along this edge.
+   * @param tc        Transition cost entering this edge.
+   * @param distance  Accumulated distance.
+   */
+  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+            const baldr::GraphId& oppedgeid,
+            const baldr::DirectedEdge* edge, const Cost& cost,
+            const uint32_t restrictions, const uint32_t opp_local_idx,
+            const TravelMode mode, const Cost& tc,
+            const uint32_t distance);
+
+  /**
    * Update an existing edge label with new predecessor and cost information.
    * The mode, edge Id, and end node remain the same.
    * @param predecessor Predecessor directed edge in the shortest path.
@@ -108,6 +131,18 @@ class EdgeLabel {
    */
   void Update(const uint32_t predecessor, const Cost& cost,
               const float sortcost);
+
+  /**
+   * Update an existing edge label with new predecessor and cost information.
+   * Update distance as well (used in time distance matrix)
+   * @param predecessor Predecessor directed edge in the shortest path.
+   * @param cost        True cost (and elapsed time in seconds) to the edge.
+   * @param sortcost    Cost for sorting (includes A* heuristic).
+   * @param tc          Transition cost onto the edge.
+   * @param distance    Accumulated distance.
+   */
+  void Update(const uint32_t predecessor, const Cost& cost,
+            const float sortcost, const Cost& tc, const uint32_t distance);
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -297,18 +332,31 @@ class EdgeLabel {
 
   /**
    * Get the transition cost in seconds. This is used in the bidirectional A*
-   * reverse path search to allow the recovery of the true elapsed time along
-   * the path. This is needed since the turn cost is applied at a different
-   * node than the forward search.
-   * @return  Returns the true transition cost (without penalties) in seconds.
+   * to determine the cost at the connection.
+   * @return  Returns the transition cost (including penalties) in seconds.
    */
   uint32_t transition_cost() const;
 
   /**
-   * Set the transition cost.
-   * @param  tc  True transition cost in seconds.
+   * Get the transition cost in seconds. This is used in the bidirectional A*
+   * reverse path search to allow the recovery of the true elapsed time along
+   * the path. This is needed since the transition cost is applied at a
+   * different node than the forward search.
+   * @return  Returns the transition cost (without penalties) in seconds.
    */
-  void set_transition_cost(uint32_t tc);
+  uint32_t transition_secs() const;
+
+  /**
+   * Set the transition cost.
+   * @param  tc  Transition cost.
+   */
+  void set_transition_cost(const Cost& tc);
+
+  /**
+   * Is this edge not-through
+   * @return  Returns true if the edge is not thru.
+   */
+  bool not_thru() const;
 
  private:
   // Graph Id of the edge.
@@ -378,9 +426,10 @@ class EdgeLabel {
   // Prior operator (index in an internal mapping). 0 indicates no prior
   uint32_t transit_operator_;
 
-  // Real transition cost in seconds (used in bidirectional reverse
-  // path search).
-  uint32_t transition_cost_;
+  // Transition cost (used in bidirectional path search).
+  uint32_t transition_cost_ : 16;
+  uint32_t transition_secs_ : 15;
+  uint32_t not_thru_        : 1;
 };
 
 }
