@@ -379,22 +379,24 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
         if (directededge->use() == Use::kFerry || directededge->use() == Use::kRailFerry) {
           float start_distance = node->latlng().Distance(stop_ll);
 
-          const DirectedEdge* opp_de = tile->directededge(node->edge_index() + directededge->opp_index());
-          GraphId end_node = opp_de->endnode();
-          float end_distance = 0.0f;
-
           const GraphTile* endnode_tile = tile;
-          if ( directededge->endnode().Tile_Base() != end_node.Tile_Base()) {
+          if ( directededge->endnode().Tile_Base() != tile->id()) {
               // Get the end node tile
               lock.lock();
-              endnode_tile = reader.GetGraphTile(end_node);
+              endnode_tile = reader.GetGraphTile(directededge->endnode());
               lock.unlock();
           }
 
+          const DirectedEdge* opp_de = endnode_tile->directededge(node->edge_index() + directededge->opp_index());
+          GraphId end_node = opp_de->endnode();
+          float end_distance = 0.0f;
+
           const NodeInfo* closest_node = endnode_tile->node(end_node.id());
           end_distance = closest_node->latlng().Distance(stop_ll);
-          if (start_distance <= end_distance)
+          if (start_distance <= end_distance) {
             closest_node = node;
+            endnode_tile = tile;
+          }
 
           // loop until we hopefully find an edge with pedestrian access.
           for (uint32_t x = 0, count = closest_node->edge_count(); x < count; x++) {

@@ -42,8 +42,6 @@ PROTO_FILES = proto/osmformat.proto proto/fileformat.proto proto/transit.proto
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
-
-##UNUSUAL_TARGET##
 #lua code for parsing
 src/mjolnir/graph_lua_proc.h:
 	-xxd -i lua/graph.lua > src/mjolnir/graph_lua_proc.h
@@ -52,7 +50,6 @@ src/mjolnir/admin_lua_proc.h:
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
 nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
-##UNUSUAL_TARGET##
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
