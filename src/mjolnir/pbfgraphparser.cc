@@ -328,6 +328,18 @@ struct graph_callback : public OSMPBF::Callback {
           case Use::kFootway:
             w.set_use(Use::kFootway);
             break;
+          case Use::kPedestrian:
+            w.set_use(Use::kPedestrian);
+            break;
+          case Use::kPath:
+            w.set_use(Use::kPath);
+            break;
+          case Use::kSteps:
+            w.set_use(Use::kSteps);
+            break;
+          case Use::kBridleway:
+            w.set_use(Use::kBridleway);
+            break;
           case Use::kParkingAisle:
             w.set_destination_only(true);
             w.set_use(Use::kParkingAisle);
@@ -345,9 +357,6 @@ struct graph_callback : public OSMPBF::Callback {
           case Use::kDriveThru:
             w.set_use(Use::kDriveThru);
             break;
-          case Use::kSteps:
-            w.set_use(Use::kSteps);
-            break;
           case Use::kTrack:
             w.set_use(Use::kTrack);
             break;
@@ -360,7 +369,6 @@ struct graph_callback : public OSMPBF::Callback {
             break;
         }
       }
-
       else if (tag.first == "no_thru_traffic")
         w.set_no_thru_traffic(tag.second == "true" ? true : false);
       else if (tag.first == "oneway")
@@ -586,6 +594,9 @@ struct graph_callback : public OSMPBF::Callback {
         default:
           switch (w.use()) {
           case Use::kFootway:
+          case Use::kPedestrian:
+          case Use::kPath:
+          case Use::kBridleway:
             w.set_surface(Surface::kCompacted);
             break;
           case Use::kTrack:
