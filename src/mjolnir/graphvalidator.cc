@@ -80,7 +80,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 		uint32_t& dupcount, std::string& endnodeiso) {
 
   if (!end_tile) {
-    LOG_ERROR("End tile invalid.")
+    LOG_WARN("End tile invalid.")
     return kMaxEdgesPerNode;
   }
   // Get the tile at the end node and get the node info
