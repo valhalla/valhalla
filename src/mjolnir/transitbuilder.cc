@@ -254,8 +254,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   rescount = tilebuilder_transit.header()->access_restriction_count();
 
   // Iterate through the nodes - add back any stored edges and insert any
-  // connections from a node to a transit stop. Update each nodes edge index.
-  nodeid = 0;
+  // connections from a transit stop to a node.. Update each nodes edge index.
   added_edges = 0;
   connedges = 0;
   for (auto& nb : currentnodes) {
@@ -331,7 +330,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     nb.set_edge_index(edge_index);
     nb.set_edge_count(tilebuilder_transit.directededges().size() - edge_index);
     tilebuilder_transit.nodes().emplace_back(std::move(nb));
-    nodeid++;
   }
 
   // Some validation here...
@@ -614,6 +612,10 @@ void build(const std::string& transit_dir,
         children.emplace(stop.parent, stop.pbf_graphid);
       }       **/
     }
+
+    // this happens when you are running against small extracts...no work to be done.
+    if (connection_edges.size() == 0)
+      continue;
 
     // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
