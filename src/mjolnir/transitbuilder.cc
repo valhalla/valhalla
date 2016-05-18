@@ -380,16 +380,26 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
           float start_distance = node->latlng().Distance(stop_ll);
 
           const GraphTile* endnode_tile = tile;
-          if ( directededge->endnode().Tile_Base() != tile->id()) {
+          if ( directededge->endnode().Tile_Base() != endnode_tile->id()) {
               // Get the end node tile
               lock.lock();
               endnode_tile = reader.GetGraphTile(directededge->endnode());
               lock.unlock();
           }
 
-          const DirectedEdge* opp_de = endnode_tile->directededge(node->edge_index() + directededge->opp_index());
+          GraphId id = directededge->endnode();
+          const DirectedEdge* opp_de = endnode_tile->directededge(endnode_tile->node(id)->edge_index() +
+                                                                  directededge->opp_index());
           GraphId end_node = opp_de->endnode();
           float end_distance = 0.0f;
+
+          //it is possible that the opp DE endnode could be in another tile.
+          if ( end_node.Tile_Base() != endnode_tile->id()) {
+            // Get the end node tile
+            lock.lock();
+            endnode_tile = reader.GetGraphTile(end_node);
+            lock.unlock();
+          }
 
           const NodeInfo* closest_node = endnode_tile->node(end_node.id());
           end_distance = closest_node->latlng().Distance(stop_ll);
