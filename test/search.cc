@@ -20,7 +20,7 @@ using namespace valhalla::baldr;
  *  add -I../mjolnir to the compile line
  *  add ../mjolnir/libvalhalla_mjolnir.la to the link line
  *  uncomment the commented sections in this file
- *  and delete the test tile: test/tiles/2/000/519/120.gph
+ *  and delete the test tile: test/fake_tiles/2/000/519/120.gph
  */
 
 /*
@@ -44,7 +44,7 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-TileHierarchy h("test/tiles");
+TileHierarchy h("test/fake_tiles");
 GraphId tile_id = h.GetGraphId({.125,.125}, 2);
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
@@ -146,7 +146,7 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
   const std::vector<PathLocation::PathEdge>& expected_edges){
 
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/tiles\" }";
+  std::stringstream json; json << "{ \"tile_dir\": \"test/fake_tiles\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
