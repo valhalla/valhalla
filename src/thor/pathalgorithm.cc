@@ -445,18 +445,13 @@ std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest) {
   LOG_INFO("path_iterations::" + std::to_string(edgelabels_.size()));
 
   // Work backwards from the destination
-  uint32_t n = 0;
   std::vector<PathInfo> path;
   for(auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
                       edgelabel.edgeid(), edgelabel.tripid());
-    if (edgelabel.blockid() > 0) {
-      n++;
-    }
   }
-  LOG_INFO(std::to_string(n) + " edges out of " + std::to_string(path.size()) + " have RTS");
 
   // Reverse the list and return
   std:reverse(path.begin(), path.end());
