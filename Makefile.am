@@ -43,6 +43,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/adjacencylist.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/bidirectional_astar.h \
+	valhalla/thor/costmatrix.h \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/optimizer.h \
 	valhalla/thor/pathalgorithm.h \
@@ -54,6 +55,7 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/bidirectional_astar.cc \
+	src/thor/costmatrix.cc \
 	src/thor/edgestatus.cc \
 	src/thor/matrix.cc \
 	src/thor/multimodal.cc \
