@@ -126,10 +126,14 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
           CheckForwardConnection(pred);
         }
       } else {
-        LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
+        if (best_connection_.cost < std::numeric_limits<float>::max()) {
+          return FormPath(graphreader);
+        } else {
+          LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
                   std::to_string(edgelabels_.size()) + "," +
                   std::to_string(edgelabels_reverse_.size()));
-        return { };
+          return { };
+        }
       }
     }
     if (expand_reverse) {
@@ -142,10 +146,14 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
           CheckReverseConnection(pred2);
         }
       } else {
-        LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
+        if (best_connection_.cost < std::numeric_limits<float>::max()) {
+          return FormPath(graphreader);
+        } else {
+          LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
                   std::to_string(edgelabels_reverse_.size()) + "," +
                   std::to_string(edgelabels_.size()));
-        return { };
+          return { };
+        }
       }
     }
 
@@ -541,6 +549,10 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_);
+
+    // Set the initial not_thru flag to false. There is an issue with not_thru
+    // flags on small loops. Set this to false here to override this for now.
+    edgelabels_.back().set_not_thru(false);
   }
 
   // Set the origin timezone
@@ -593,6 +605,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
              opp_dir_edge, cost, sortcost, dist, opp_dir_edge->restrictions(),
              opp_dir_edge->opp_local_idx(), mode_, c);
+
+    // Set the initial not_thru flag to false. There is an issue with not_thru
+    // flags on small loops. Set this to false here to override this for now.
+    edgelabels_reverse_.back().set_not_thru(false);
   }
 }
 
