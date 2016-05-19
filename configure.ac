@@ -30,7 +30,8 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # require other valhalla dependencies
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = 1.0.0 libvalhalla_baldr = 1.0.0])
+VVER=$(./version.sh)
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = [$VVER] libvalhalla_baldr = [$VVER]])
 
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
