@@ -6,19 +6,15 @@ sudo add-apt-repository -y ppa:kevinkreiser/prime-server
 sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/kevinkreiser-prime-server-$(lsb_release -c -s).list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
 sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov libboost1.54-all-dev libprotobuf-dev libprime-server-dev prime-server-bin
 
-if [ -n "$1" ] && [ -d "$1" ]; then
-        pushd "$1"
-else
-        pushd .
-fi
-
-#clone
+#clone async
+mkdir -p deps
 for dep in midgard baldr skadi sif loki odin thor tyr; do
 	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep && \
 	pushd deps/$dep && \
 	git fetch --depth=1 origin 'refs/tags/*:refs/tags/*' && \
 	popd &
 done
+wait
 
 #build sync
 for dep in midgard baldr sif skadi loki odin thor tyr; do
@@ -29,5 +25,3 @@ for dep in midgard baldr sif skadi loki odin thor tyr; do
 	sudo make install
 	popd
 done
-
-popd
