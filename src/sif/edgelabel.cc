@@ -354,6 +354,10 @@ bool EdgeLabel::not_thru() const {
   return not_thru_;
 }
 
+// Set the not-through flag for this edge.
+void EdgeLabel::set_not_thru(const bool not_thru) {
+  not_thru_ = not_thru;
+}
 
 // Operator for sorting.
 bool EdgeLabel::operator < (const EdgeLabel& other) const {

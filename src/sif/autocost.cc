@@ -270,8 +270,7 @@ bool AutoCost::AllowMultiPass() const {
   return true;
 }
 
-// Check if access is allowed on the specified edge. Not worth checking
-// not_thru due to hierarchy transitions
+// Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
@@ -599,8 +598,7 @@ BusCost::BusCost(const boost::property_tree::ptree& pt)
 BusCost::~BusCost() {
 }
 
-// Check if access is allowed on the specified edge. Not worth checking
-// not_thru due to hierarchy transitions
+// Check if access is allowed on the specified edge.
 bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,

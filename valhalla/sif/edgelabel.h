@@ -358,6 +358,12 @@ class EdgeLabel {
    */
   bool not_thru() const;
 
+  /**
+   * Set the not-through flag for this edge.
+   * @param  not_thru  True if the edge is not thru.
+   */
+  void set_not_thru(const bool not_thru);
+
  private:
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
