@@ -6,6 +6,8 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <streambuf>
 using namespace std;
 using namespace valhalla::mjolnir;
 
@@ -99,7 +101,7 @@ void TestDuplicateEdgeInfo() {
     throw std::runtime_error("Why on earth would it be found but then insert just fine");
 
   //load a test builder
-  test_graph_tile_builder test(TileHierarchy("test/data/tiles"), GraphId(0,2,0), false);
+  test_graph_tile_builder test(TileHierarchy("test/data/builder_tiles"), GraphId(0,2,0), false);
   //add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0,2,0), GraphId(0,2,1), 1234, std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, added);
@@ -122,10 +124,10 @@ void TestAddBins() {
 
     //load a tile
     GraphId id(test_tile.second,2,0);
-    GraphTile t(TileHierarchy("test/data/tiles/no_bin"), id);
+    GraphTile t(TileHierarchy("test/data/bin_tiles/no_bin"), id);
 
     //alter the config to point to another dir
-    TileHierarchy h("test/data/tiles/bin");
+    TileHierarchy h("test/data/bin_tiles/bin");
 
     //send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
@@ -133,11 +135,15 @@ void TestAddBins() {
 
     //check the new tile is the same as the old one
     {
-      ifstream o("test/tile/no_bin/2/000/" + test_tile.first, std::ios::binary);
-      ifstream n("test/tile/bin/2/000/" + test_tile.first, std::ios::binary);
-      char o_c, n_c;
-      while(o.read(&o_c, 1) && n.read(&n_c, 1) && !o.eof() && !o.fail() && !n.eof() && !n.fail() && o_c == n_c);
-      if(o.eof() != n.eof() || o.fail() != n.fail())
+      ifstream o;
+      o.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+      o.open("test/data/bin_tiles/no_bin/2/000/" + test_tile.first, std::ios::binary);
+      std::string obytes((std::istreambuf_iterator<char>(o)), std::istreambuf_iterator<char>());
+      ifstream n;
+      n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+      n.open("test/data/bin_tiles/bin/2/000/" + test_tile.first, std::ios::binary);
+      std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
+      if(obytes != nbytes)
         throw std::logic_error("Old tile and new tile should be the same if not adding any bins");
     }
 
@@ -162,7 +168,7 @@ void TestAddBins() {
       throw std::logic_error("New tiles edgeinfo or names arent matching up");
 
     //check that appending works
-    t = GraphTile(TileHierarchy("test/data/tiles/bin"), id);
+    t = GraphTile(TileHierarchy("test/data/bin_tiles/bin"), id);
     GraphTileBuilder::AddBins(h, &t, bins);
     for(auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
