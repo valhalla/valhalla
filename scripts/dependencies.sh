@@ -7,12 +7,6 @@ sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/kevinkreiser-prime-s
 sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov libboost1.54-all-dev libprime-server-dev
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-if [ -n "$1" ] && [ -d "$1" ]; then
-        pushd "$1"
-else
-        pushd .
-fi
-
 #clone async
 mkdir -p deps
 for dep in midgard baldr; do
@@ -33,5 +27,3 @@ for dep in midgard baldr; do
 	popd
 done
 wait
-
-popd
