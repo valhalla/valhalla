@@ -282,8 +282,7 @@ bool TruckCost::AllowMultiPass() const {
   return true;
 }
 
-// Check if access is allowed on the specified edge. Not worth checking
-// not_thru due to hierarchy transitions
+// Check if access is allowed on the specified edge.
 bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,

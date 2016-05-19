@@ -316,11 +316,10 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
-  // Disallow if no pedestrian access, surface marked as impassible, Uturn,
-  // or edge is not-thru (no need to check distance from destination since
-  // the search is heading out of any not_thru regions). Do not check max
-  // walking distance and assume we are not allowing transit connections.
-  // Assume this method is never used in multimodal routes).
+  // Disallow if no pedestrian access, surface marked as impassible, or
+  // is a Uturn. Do not check max walking distance and assume we are not
+  // allowing transit connections. Assume this method is never used in
+  // multimodal routes).
   if (!(opp_edge->forwardaccess() & kPedestrianAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
         opp_edge->surface() == Surface::kImpassable ||

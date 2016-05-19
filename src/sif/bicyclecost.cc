@@ -505,8 +505,6 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
-  // Check if edge is not-thru (no need to check distance from destination
-  // since the search is heading out of any not_thru regions)
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) {
