@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-
 export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
 sudo add-apt-repository -y ppa:kevinkreiser/prime-server
 sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/kevinkreiser-prime-server-$(lsb_release -c -s).list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
