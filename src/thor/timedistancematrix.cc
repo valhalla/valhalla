@@ -591,9 +591,9 @@ bool TimeDistanceMatrix::UpdateDestinations(const uint32_t origin_index,
   }
 
   // Update cost threshold for early termination if at least one path has
-  // been found to each destination (do not exceed the initial cost threshold)
+  // been found to each destination
   if (allfound) {
-    cost_threshold_ = std::min(maxcost, initial_cost_threshold_);
+    cost_threshold_ = maxcost;
   }
   return settled_count_ == destinations_.size();
 }
