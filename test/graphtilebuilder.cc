@@ -99,7 +99,7 @@ void TestDuplicateEdgeInfo() {
     throw std::runtime_error("Why on earth would it be found but then insert just fine");
 
   //load a test builder
-  test_graph_tile_builder test(TileHierarchy("test/tiles"), GraphId(0,2,0), false);
+  test_graph_tile_builder test(TileHierarchy("test/data/tiles"), GraphId(0,2,0), false);
   //add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0,2,0), GraphId(0,2,1), 1234, std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, added);
@@ -122,10 +122,10 @@ void TestAddBins() {
 
     //load a tile
     GraphId id(test_tile.second,2,0);
-    GraphTile t(TileHierarchy("test/tiles/no_bin"), id);
+    GraphTile t(TileHierarchy("test/data/tiles/no_bin"), id);
 
     //alter the config to point to another dir
-    TileHierarchy h("test/tiles/bin");
+    TileHierarchy h("test/data/tiles/bin");
 
     //send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
@@ -162,7 +162,7 @@ void TestAddBins() {
       throw std::logic_error("New tiles edgeinfo or names arent matching up");
 
     //check that appending works
-    t = GraphTile(TileHierarchy("test/tiles/bin"), id);
+    t = GraphTile(TileHierarchy("test/data/tiles/bin"), id);
     GraphTileBuilder::AddBins(h, &t, bins);
     for(auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
