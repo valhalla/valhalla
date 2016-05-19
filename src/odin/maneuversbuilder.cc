@@ -1807,7 +1807,7 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
                                        curr_edge->begin_heading());
 
   if (node->HasIntersectingEdges() && !node->motorway_junction()
-      && !node->fork() && !curr_edge->IsHighway()) {
+      && !node->fork() && !(curr_edge->IsHighway() && prev_edge->IsHighway())) {
     // if path edge is not forward
     // and forward traversable intersecting edge exists
     // then return true
