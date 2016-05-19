@@ -17,7 +17,10 @@ fi
 mkdir -p deps
 for dep in midgard baldr; do
 	rm -rf $dep
-	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git $dep &
+	(
+		git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep
+		git fetch origin 'refs/tags/*:refs/tags/*'
+	) &
 done
 wait
 
