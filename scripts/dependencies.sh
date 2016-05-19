@@ -14,7 +14,6 @@ fi
 
 #clone
 for dep in midgard baldr skadi sif loki odin thor tyr; do
-	rm -rf $dep
 	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep && \
 	pushd deps/$dep && \
 	git fetch --depth=1 origin 'refs/tags/*:refs/tags/*' && \
