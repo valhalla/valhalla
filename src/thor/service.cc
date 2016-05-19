@@ -273,6 +273,7 @@ namespace valhalla {
 
     void thor_worker_t::cleanup() {
       astar.Clear();
+      traffic_astar.Clear();
       bidir_astar.Clear();
       multi_modal_astar.Clear();
       locations.clear();

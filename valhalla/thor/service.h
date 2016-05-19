@@ -57,6 +57,7 @@ namespace valhalla {
       valhalla::baldr::GraphReader reader;
       // Path algorithms (TODO - perhaps use a map?))
       PathAlgorithm astar;
+      TrafficAlgorithm traffic_astar;
       BidirectionalAStar bidir_astar;
       MultiModalPathAlgorithm multi_modal_astar;
       float long_request_route;

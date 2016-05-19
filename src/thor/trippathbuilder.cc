@@ -413,7 +413,71 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
       continue;
     }
+/*
+    if (directededge->use() != Use::kRail && directededge->use() != Use::kBus) {
+    uint32_t c = static_cast<uint32_t>(directededge->classification());
+    const GraphTile* tl = graphreader.GetGraphTile(directededge->endnode());
+    const NodeInfo* ni = tl->node(directededge->endnode());
+    std::unique_ptr<const EdgeInfo> ei = graphtile->edgeinfo(
+        directededge->edgeinfo_offset());
+    uint64_t wayid = ei->wayid();
+    if (directededge->link()) {
+        if (directededge->use() == Use::kRamp) {
+    LOG_INFO("ramp: Class = " + std::to_string(c) + " speed = " + std::to_string(directededge->speed()) +
+         " density = " + std::to_string(ni->density()) + " internal: " + std::to_string(directededge->internal()) +
+         " length= " + std::to_string(directededge->length()) + " wayid= " + std::to_string(wayid) + " has exit = "
+         + std::to_string(directededge->exitsign()));
+        } else if (directededge->use() == Use::kTurnChannel) {
+          LOG_INFO("turn channel: Class = " + std::to_string(c) + " speed = " + std::to_string(directededge->speed()) +
+               " density = " + std::to_string(ni->density()) + " internal: " + std::to_string(directededge->internal()) +
+               " length= " + std::to_string(directededge->length()) + " wayid= " + std::to_string(wayid) + " has exit = "
+               + std::to_string(directededge->exitsign()));
+        }
+    } else {
+    std::vector<std::string> names = ei->GetNames();
+    if (names.size() > 0) {
+    LOG_INFO(names[0] + " Class = " + std::to_string(c) + " speed = " + std::to_string(directededge->speed()) +
+           " density = " + std::to_string(ni->density()) + " internal: " + std::to_string(directededge->internal()) +
+           " length= " + std::to_string(directededge->length()) + " wayid= " + std::to_string(wayid) +
+           " dest_only = " + std::to_string(directededge->destonly()) +
+           " use = " + std::to_string(static_cast<uint32_t>(directededge->use()))  +
+           " CycleLane = " + std::to_string(static_cast<uint32_t>(directededge->cyclelane())));
+ //   LOG_INFO("Edge: " + std::to_string(edge.tileid()) + "," + std::to_string(edge.level()) +
+ //            "," + std::to_string(edge.id()) + " opp_local_index= " + std::to_string(directededge->opp_local_idx()));
 
+    // Get the opposing edge restrictions
+//    GraphId oppedge = graphreader.GetOpposingEdgeId(edge);
+//    LOG_INFO("Opp Edge: " + std::to_string(oppedge.tileid()) + "," +
+//             std::to_string(oppedge.level()) + "," + std::to_string(oppedge.id()));
+    uint32_t restrictions = directededge->restrictions();
+    if (restrictions) {
+      LOG_INFO("Restrictions = " + std::to_string(restrictions));
+    }
+  LOG_INFO("Not thru = " + std::to_string(directededge->not_thru()) + " grade= " + std::to_string(directededge->weighted_grade()));
+    } else {
+    LOG_INFO("unnamed:  Class = " + std::to_string(c) + " speed = " + std::to_string(directededge->speed()) +
+           " density = " + std::to_string(ni->density())  + " internal: " + std::to_string(directededge->internal()) +
+           " length= " + std::to_string(directededge->length()) + " wayid= " + std::to_string(wayid)  +
+           " dest_only = " + std::to_string(directededge->destonly()) +
+           " use = " + std::to_string(static_cast<uint32_t>(directededge->use())) +
+           " CycleLane = " + std::to_string(static_cast<uint32_t>(directededge->cyclelane())));
+LOG_INFO("Not thru = " + std::to_string(directededge->not_thru()) + " grade= " + std::to_string(directededge->weighted_grade()));
+    }
+    }
+    LOG_INFO("Edge: " + std::to_string(edge.tileid()) + "," + std::to_string(edge.level()) +
+                 "," + std::to_string(edge.id()) + " opp_local_index= " + std::to_string(directededge->opp_local_idx()));
+
+    if (directededge->shortcut()) {
+    PointLL ll = ni->latlng();
+//    LOG_INFO("Shortcut: " + std::to_string(edge.tileid()) +  "," + std::to_string(edge.level()) +
+//             "," + std::to_string(edge.id()) + " End LL: " + std::to_string(ll.lat()) + ","
+//             + std::to_string(ll.lng()));
+//    LOG_INFO("Forward access= " + std::to_string(directededge->forwardaccess()) + " reverse= " +
+//             std::to_string(directededge->reverseaccess()));
+//    LOG_INFO("Node has " + std::to_string(ni->edge_count()) + " edges");
+    }
+    }
+*/
     // Add a node to the trip path and set its attributes.
     TripPath_Node* trip_node = trip_path.add_node();
 
