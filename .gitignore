@@ -65,7 +65,7 @@ test/signinfo
 test/utrecht
 test/*.log
 test/*.trs
-test/tiles/bin/*
+test/data/tiles/bin/*
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 
