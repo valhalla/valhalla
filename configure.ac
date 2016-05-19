@@ -29,8 +29,9 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
-# require other valhalla dependencies
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = 1.0.0])
+# require other valhalla dependencies with matching version based on tag
+VVER=$(./version.sh)
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = [$VVER]])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
