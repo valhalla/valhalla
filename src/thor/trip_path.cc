@@ -59,15 +59,16 @@ namespace valhalla {
     } else if (routetype == "bus") {
       return &astar;
     } else {
-      bool same_edge = false;
+      // Use A* if any origin and destination edges are the same or connect
+      // at a common node - otherwise use bidirectional A*
       for (auto& edge1 : origin.edges()) {
         for (auto& edge2 : destination.edges()) {
           if (edge1.id == edge2.id) {
-            same_edge = true;
+            return &astar;
           }
         }
       }
-      return (same_edge) ? &astar : &bidir_astar;
+      return &bidir_astar;
     }
   }
 

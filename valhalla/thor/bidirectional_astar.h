@@ -129,12 +129,27 @@ class BidirectionalAStar : public PathAlgorithm {
   /**
    * Check if edge is temporarily labeled and this path has less cost. If
    * less cost the predecessor is updated and the sort cost is decremented
+   * by the difference in real cost (A* heuristic doesn't change).
+   * @param  idx        Index into the edge status list.
+   * @param  predindex  Index of the predecessor edge.
+   * @param  newcost    Cost of the new path.
+   * @param  tc         Transition cost onto this edge.
+   */
+  void CheckIfLowerCostPath(const uint32_t idx,
+                            const uint32_t predindex,
+                            const sif::Cost& newcost,
+                            const sif::Cost& tc);
+
+
+  /**
+   * Check if edge is temporarily labeled and this path has less cost. If
+   * less cost the predecessor is updated and the sort cost is decremented
    * by the difference in real cost (A* heuristic doesn't change). This
    * method applies to the reverse path portion of the bidirectional search.
    * @param  idx        Index into the edge status list.
    * @param  predindex  Index of the predecessor edge.
    * @param  newcost    Cost of the new path.
-   * @param  tc         Turn cost for this transition.
+   * @param  tc         Transition cost onto this edge.
    */
   void CheckIfLowerCostPathReverse(const uint32_t idx,
                            const uint32_t predindex,
@@ -146,15 +161,12 @@ class BidirectionalAStar : public PathAlgorithm {
     * where the paths meet back towards the origin then reverses this path.
     * The path from where the paths meet to the destination is then appended
     * using the opposing edges (so the path is traversed forward).
-    * @param   idx1  Index in the forward search where the paths meet.
-    * @param   idx2  Index in the reverse search where the paths meet.
     * @param   graphreader  Graph tile reader (for getting opposing edges).
     * @return  Returns the path info, a list of GraphIds representing the
     *          directed edges along the path - ordered from origin to
     *          destination - along with travel modes and elapsed time.
     */
-  std::vector<PathInfo> FormPath(const uint32_t idx1, const uint32_t idx2,
-             baldr::GraphReader& graphreader);
+  std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader);
 };
 
 }
