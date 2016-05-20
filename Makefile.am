@@ -89,12 +89,6 @@ libvalhalla_odin_la_SOURCES = \
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB)
 
-#distributed executables
-bin_PROGRAMS = odin_service
-odin_service_SOURCES = src/odin/odin_service.cc
-odin_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-odin_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_odin.la
-
 # tests
 check_PROGRAMS = \
 	test/maneuversbuilder \
