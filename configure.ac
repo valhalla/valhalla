@@ -1,7 +1,7 @@
 AC_INIT([midgard],
-	[m4_esyscmd([./version.sh])],
+	[unstable],
 	[https://github.com/valhalla/midgard/issues],
-	[valhalla_midgard-[m4_esyscmd([./version.sh])]],
+	[valhalla_midgard-[unstable]],
 	[https://github.com/valhalla/midgard])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
