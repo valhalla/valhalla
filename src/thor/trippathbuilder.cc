@@ -376,6 +376,34 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                 admin_info_map, admin_info_list));
     }
 
+    uint32_t elapsedtime = node->elapsed_time();
+
+    auto* last_tile = graphreader.GetGraphTile(startnode);
+    if (dest.date_time_) {
+
+      uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
+                                                   DateTime::get_tz_db().
+                                                   from_index(last_tile->node(startnode)->timezone()));
+      tp_orig->set_date_time(DateTime::seconds_to_date(sec - elapsedtime,
+                                                       DateTime::get_tz_db().
+                                                       from_index(first_node->timezone())));
+      origin.date_time_ = tp_orig->date_time();
+      tp_dest->set_date_time(DateTime::seconds_to_date(sec,DateTime::get_tz_db().
+                                                       from_index(last_tile->node(startnode)->timezone())));
+
+    } else if (origin.date_time_) {
+      uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
+                                                   DateTime::get_tz_db().
+                                                   from_index(first_node->timezone()));
+
+      tp_dest->set_date_time(DateTime::seconds_to_date(sec + elapsedtime,
+                                                       DateTime::get_tz_db().
+                                                       from_index(last_tile->node(startnode)->timezone())));
+      dest.date_time_ = tp_dest->date_time();
+      tp_orig->set_date_time(DateTime::seconds_to_date(sec, DateTime::get_tz_db().
+                                                       from_index(first_node->timezone())));
+    }
+
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
     // Assign the trip path admins
     AssignAdmins(trip_path, admin_info_list);
