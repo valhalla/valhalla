@@ -17,7 +17,7 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include "valhalla/midgard/aabb2.h"
+#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
