@@ -1,7 +1,7 @@
 AC_INIT([thor],
-	[m4_esyscmd([./version.sh])],
+	[unstable],
 	[https://github.com/valhalla/thor/issues],
-	[valhalla_thor-[m4_esyscmd([./version.sh])]],
+	[valhalla_thor-[unstable]],
 	[https://github.com/valhalla/thor])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -33,8 +33,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 REQUIRE_PROTOC
 
 # require other valhalla dependencies
-VVER=$(./version.sh)
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = [$VVER] libvalhalla_baldr = [$VVER] libvalhalla_sif = [$VVER] libvalhalla_odin = [$VVER]])
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable libvalhalla_odin = unstable])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building thor. Please install libboost-dev.])])
