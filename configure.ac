@@ -1,7 +1,7 @@
 AC_INIT([loki],
-	[m4_esyscmd([./version.sh])],
+	[unstable],
 	[https://github.com/valhalla/loki/issues],
-	[valhalla_loki-[m4_esyscmd([./version.sh])]],
+	[valhalla_loki-[unstable]],
 	[https://github.com/valhalla/loki])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -30,8 +30,7 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # require other valhalla dependencies
-VVER=$(./version.sh)
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = [$VVER] libvalhalla_baldr = [$VVER] libvalhalla_sif = [$VVER]])
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building loki. Please install libboost-dev.])])
