@@ -51,16 +51,10 @@ libvalhalla_skadi_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CP
 libvalhalla_skadi_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB)
 
 #distributed executables
-bin_PROGRAMS = skadi_service
-skadi_service_SOURCES = src/skadi/skadi_service.cc
-skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-skadi_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
+dist_bin_SCRIPTS = scripts/valhalla_build_elevation
 
 # tests
 check_PROGRAMS = test/util_skadi test/sample test/skadi_service
-test_create_tile_SOURCES = test/create_tile.cc test/test.cc
-test_create_tile_CPPFLAGS = $(DEPS_CFLAGS)
-test_create_tile_LDADD = $(DEPS_LIBS)
 test_util_skadi_SOURCES = test/util_skadi.cc test/test.cc
 test_util_skadi_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_util_skadi_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
