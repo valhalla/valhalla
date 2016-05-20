@@ -1,7 +1,7 @@
 AC_INIT([mjolnir],
-	[m4_esyscmd([./version.sh])],
+	[unstable],
 	[https://github.com/valhalla/mjolnir/issues],
-	[valhalla_mjolnir-[m4_esyscmd([./version.sh])]],
+	[valhalla_mjolnir-[unstable]],
 	[https://github.com/valhalla/mjolnir])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -30,8 +30,7 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # require other valhalla dependencies
-VVER=$(./version.sh)
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = [$VVER] libvalhalla_baldr = [$VVER] libvalhalla_skadi = [$VVER]])
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_skadi = unstable])
 
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
