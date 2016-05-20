@@ -1,6 +1,7 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 #include "mjolnir/osmpbfparser.h"
+#include "mjolnir/osmaccess.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
 #include "graph_lua_proc.h"
@@ -248,6 +249,9 @@ struct graph_callback : public OSMPBF::Callback {
     OSMWay w{osmid};
     w.set_node_count(nodes.size());
 
+    OSMAccess access{osmid};
+    bool has_user_tags = false;
+
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
 
@@ -260,6 +264,9 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
+
+      if (tag.first == "auto_tag")
+      std::cout << "here" << std::endl;
 
       if (tag.first == "road_class") {
 
@@ -292,6 +299,31 @@ struct graph_callback : public OSMPBF::Callback {
             w.set_road_class(RoadClass::kServiceOther);
             break;
         }
+      }
+      //these flags indicate if a user set the access tags on this way.
+      else if (tag.first == "emergency_tag") {
+        access.set_emergency_tag(tag.second == "true" ? true : false);
+        has_user_tags = true;
+      }
+      else if (tag.first == "auto_tag") {
+        access.set_auto_tag(tag.second == "true" ? true : false);
+        has_user_tags = true;
+      }
+      else if (tag.first == "truck_tag") {
+        access.set_truck_tag(tag.second == "true" ? true : false);
+        has_user_tags = true;
+      }
+      else if (tag.first == "bus_tag") {
+        access.set_bus_tag(tag.second == "true" ? true : false);
+        has_user_tags = true;
+      }
+      else if (tag.first == "foot_tag") {
+        access.set_foot_tag(tag.second == "true" ? true : false);
+        has_user_tags = true;
+      }
+      else if (tag.first == "bike_tag") {
+        access.set_bike_tag(tag.second == "true" ? true : false);
+        has_user_tags = true;
       }
 
       else if (tag.first == "auto_forward")
@@ -666,6 +698,11 @@ struct graph_callback : public OSMPBF::Callback {
     if(loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad && w.road_class() > RoadClass::kTertiary)
       w.set_use(Use::kCuldesac);
 
+    if (has_user_tags) {
+      std::cout << "here" << std::endl;
+      access_->push_back(access);
+    }
+
     // Add the way to the list
     ways_->push_back(w);
   }
@@ -855,10 +892,11 @@ struct graph_callback : public OSMPBF::Callback {
   }
 
   //lets the sequences be set and reset
-  void reset(sequence<OSMWay>* ways, sequence<OSMWayNode>* way_nodes){
+  void reset(sequence<OSMWay>* ways, sequence<OSMWayNode>* way_nodes, sequence<OSMAccess>* access){
     //reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
+    access_.reset(access);
   }
 
   // Output list of wayids that have loops
@@ -901,6 +939,9 @@ struct graph_callback : public OSMPBF::Callback {
 
   // List of wayids with loops
   std::vector<uint64_t> loops_;
+
+  std::unique_ptr<sequence<OSMAccess> > access_;
+
 };
 
 }
@@ -909,7 +950,7 @@ namespace valhalla {
 namespace mjolnir {
 
 OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::vector<std::string>& input_files,
-    const std::string& ways_file, const std::string& way_nodes_file) {
+    const std::string& ways_file, const std::string& way_nodes_file, const std::string& access_file) {
   //TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   //option 2: synchronize around adding things to a single osmdata. will have to test to see
   //which is the least expensive (memory and speed). leaning towards option 2
@@ -919,7 +960,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   OSMData osmdata{};
   graph_callback callback(pt, osmdata);
   callback.reset(new sequence<OSMWay>(ways_file, true),
-    new sequence<OSMWayNode>(way_nodes_file, true));
+    new sequence<OSMWayNode>(way_nodes_file, true),
+    new sequence<OSMAccess>(access_file, true));
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
   //hold open all the files so that if something else (like diff application)
@@ -939,7 +981,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
   }
   callback.output_loops();
-  callback.reset(nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
 
   // Parse relations.
@@ -971,11 +1013,11 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   for (auto& file_handle : file_handles) {
     //each time we parse nodes we have to run through the way nodes file from the beginning because
     //because osm node ids are only sorted at the single pbf file level
-    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false));
+    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::NODES, callback);
   }
-  callback.reset(nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");
 
   //done with pbf
