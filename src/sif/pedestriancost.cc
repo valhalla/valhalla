@@ -27,7 +27,7 @@ constexpr uint32_t kMaxDistance        = 100000; // 100 km
 
 constexpr float kModeWeight             = 1.5f;   // Favor this mode?
 constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
-constexpr float kDefaultGatePenalty     = 300.0f; // Seconds
+constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
 constexpr float kDefaultWalkingSpeed    = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
