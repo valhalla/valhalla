@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_TIMEDISTANCEMATRIX2_H_
-#define VALHALLA_THOR_TIMEDISTANCEMATRIX2_H_
+#ifndef VALHALLA_THOR_COSTMATRIX_H_
+#define VALHALLA_THOR_COSTMATRIX_H_
 
 #include <vector>
 #include <map>
@@ -20,13 +20,17 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Status of a location.
+ * Status of a location. Tracks remaining locations to be found
+ * and a threshold or iterations. When threshold goes to 0 expansion
+ * stops for this location.
  */
 struct LocationStatus {
-  bool     expand;
-  bool     exhausted;
-  uint32_t targets_remaining;
-  uint32_t threshold;
+  int  threshold;
+  std::set<uint32_t> remaining_locations;
+
+  LocationStatus(const int t)
+      : threshold(t) {
+  }
 };
 
 /**
@@ -37,10 +41,10 @@ struct CandidateConnection {
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
   sif::Cost      cost;
-  float          distance;
+  uint32_t       distance;
 
   CandidateConnection(const baldr::GraphId& e1, baldr::GraphId& e2,
-                      const sif::Cost& c, const float d)
+                      const sif::Cost& c, const uint32_t d)
       : edgeid(e1),
         opp_edgeid(e2),
         cost(c),
@@ -87,8 +91,11 @@ class CostMatrix {
   // Current travel mode
   sif::TravelMode mode_;
 
-  // Number of source locations
+  // Number of source and target locations that can be expanded
   uint32_t source_count_;
+  uint32_t remaining_sources_;
+  uint32_t target_count_;
+  uint32_t remaining_targets_;
 
   // Cost threshold - stop searches when this is reached.
   float cost_threshold_;
@@ -140,11 +147,18 @@ class CostMatrix {
   /**
    * Check if the edge on the forward search connects to a reached edge
    * on the reverse search tree.
-   * @param  index Source index.
-   * @param  pred  Edge label of the predecessor.
+   * @param  source  Source index.
+   * @param  pred    Edge label of the predecessor.
    */
-  void CheckForwardConnections(const uint32_t index,
+  void CheckForwardConnections(const uint32_t source,
                                const sif::EdgeLabel& pred);
+
+  /**
+   * Update status when a connection is found.
+   * @param  source  Source index
+   * @param  target  Target index
+   */
+  void UpdateStatus(const uint32_t source_, const uint32_t target);
 
   /**
    * Iterate the backward search from the target/destination location.
@@ -207,4 +221,4 @@ class CostMatrix {
 }
 }
 
-#endif  // VALHALLA_THOR_TIMEDISTANCEMATRIX2_H_
+#endif  // VALHALLA_THOR_COSTMATRIX_H_
