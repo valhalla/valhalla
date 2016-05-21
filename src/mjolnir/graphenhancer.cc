@@ -574,8 +574,8 @@ std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
 
       uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
       if (idx == 0) {
-        polys.clear();
-        break;
+        result = sqlite3_step(stmt);
+        continue;
       }
 
       multi_polygon_type multi_poly;

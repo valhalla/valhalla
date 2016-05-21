@@ -22,7 +22,7 @@ void write_config(const std::string& filename) {
     file.open(filename, std::ios_base::trunc);
     file << "{ \
       \"mjolnir\": { \
-       \"tile_dir\": \"test/tiles\" \
+       \"tile_dir\": \"test/data/utrecht_tiles\" \
       } \
     }";
   }
