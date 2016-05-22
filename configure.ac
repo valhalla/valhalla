@@ -1,7 +1,7 @@
 AC_INIT([map_matching_plus],
-	[0.0.1],
+	[unstable],
 	[https://github.com/mapillary/map_matching_plus/issues],
-	[map_matching_plus-0.0.1],
+	[map_matching_plus-[unstable]],
 	[https://github.com/mapillary/map_matching_plus])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -23,7 +23,7 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # require other valhalla dependencies
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = 1.0.0 libvalhalla_baldr = 1.0.0 libvalhalla_sif = 1.0.0])
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building MMP. Please install libboost-dev.])])
@@ -33,7 +33,7 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.3.2])
+PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.3.4])
 
 # optionally enable coverage information
 CHECK_COVERAGE
