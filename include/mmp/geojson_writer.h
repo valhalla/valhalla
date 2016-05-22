@@ -282,7 +282,7 @@ template <typename buffer_t>
 class GeoJSONRouteWriter: public GeoJSONWriter<buffer_t>
 {
  public:
-  GeoJSONRouteWriter(bool verbose);
+  GeoJSONRouteWriter(bool verbose=false);
 
   void WriteGeometry(rapidjson::Writer<buffer_t>& writer,
                      MapMatcher& matcher,
@@ -374,7 +374,7 @@ template <typename buffer_t>
 class GeoJSONMatchedPointsWriter: public GeoJSONWriter<buffer_t>
 {
  public:
-  GeoJSONMatchedPointsWriter(bool verbose);
+  GeoJSONMatchedPointsWriter(bool verbose=false);
 
   void WriteGeometry(rapidjson::Writer<buffer_t>& writer,
                      MapMatcher& matcher,
