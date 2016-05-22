@@ -12,6 +12,8 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
+#include "mmp/map_matching.h"
+
 
 namespace {
 
