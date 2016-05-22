@@ -305,7 +305,7 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
       type = Transit_VehicleType::Transit_VehicleType_kMetro;
     else if (vehicle_type == "rail")
       type = Transit_VehicleType::Transit_VehicleType_kRail;
-    else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" )
+    else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" || vehicle_type == "express_bus_service")
       type = Transit_VehicleType::Transit_VehicleType_kBus;
     else if (vehicle_type == "ferry")
       type = Transit_VehicleType::Transit_VehicleType_kFerry;
