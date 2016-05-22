@@ -7,6 +7,10 @@ road network. It's built upon the awesome
 
 ![Map](docs/figures/cover.png)
 
+## Build Status
+
+[![CircleCI](https://circleci.com/gh/valhalla/meili.svg?style=svg)](https://circleci.com/gh/valhalla/meili)
+
 ## Building
 
 `map_matching_plus ` uses
