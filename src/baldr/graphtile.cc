@@ -540,7 +540,7 @@ const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
 
 // Get the transit route given its index within the tile.
 const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
-  uint32_t count = header_->stopcount();
+  uint32_t count = header_->routecount();
   if (count == 0)
     return nullptr;
 

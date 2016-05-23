@@ -1,7 +1,7 @@
 AC_INIT([baldr],
-	[m4_esyscmd([./version.sh])],
+	[unstable],
 	[https://github.com/valhalla/baldr/issues],
-	[valhalla_baldr-[m4_esyscmd([./version.sh])]],
+	[valhalla_baldr-[unstable]],
 	[https://github.com/valhalla/baldr])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -29,8 +29,8 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
-# require other valhalla dependencies
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = 1.0.0])
+# require other valhalla dependencies with matching version based on tag
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
