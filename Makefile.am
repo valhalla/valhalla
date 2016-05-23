@@ -33,47 +33,38 @@ clean-gcno:
 clean-local: clean-coverage clean-gcno
 endif
 
-libmmpincludedir=$(includedir)/mmp
-
-# libmmp compilation etc
-lib_LTLIBRARIES = libmmp.la
-libmmpinclude_HEADERS = \
-	include/mmp/candidate.h \
-	include/mmp/universal_cost.h \
-	include/mmp/candidate_search.h \
-	include/mmp/geometry_helpers.h \
-	include/mmp/graph_helpers.h \
-	include/mmp/grid_range_query.h \
-	include/mmp/map_matching.h \
-	include/mmp/priority_queue.h \
-	include/mmp/service.h \
-	include/mmp/routing.h \
-	include/mmp/viterbi_search.h
-libmmp_la_SOURCES = \
-	src/universal_cost.cc \
-	src/routing.cc \
-	src/candidate_search.cc \
-	src/map_matching.cc \
-	src/service.cc
-libmmp_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-libmmp_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+# libvalhalla_meili compilation etc
+lib_LTLIBRARIES = libvalhalla_meili.la
+libvalhalla_meiliinclude_HEADERS = \
+	valhalla/meili/candidate.h \
+	valhalla/meili/universal_cost.h \
+	valhalla/meili/candidate_search.h \
+	valhalla/meili/geometry_helpers.h \
+	valhalla/meili/graph_helpers.h \
+	valhalla/meili/grid_range_query.h \
+	valhalla/meili/map_matching.h \
+	valhalla/meili/priority_queue.h \
+	valhalla/meili/service.h \
+	valhalla/meili/routing.h \
+	valhalla/meili/viterbi_search.h
+libvalhalla_meili_la_SOURCES = \
+	src/meili/universal_cost.cc \
+	src/meili/routing.cc \
+	src/meili/candidate_search.cc \
+	src/meili/map_matching.cc \
+	src/meili/service.cc
+libvalhalla_meili_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_meili_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = mmp_service
+bin_PROGRAMS = valhalla_map_match_service, valhalla_run_map_match
 
-mmp_service_SOURCES = src/mmp_service.cc
-mmp_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-mmp_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
-
-EXTRA_PROGRAMS = simple_matcher
-simple_matcher_SOURCES = tools/simple_matcher.cc
-simple_matcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-simple_matcher_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libmmp.la
-
-.PHONY: tools
-tools: simple_matcher
-
-CLEANFILES = $(EXTRA_PROGRAMS)
+valhalla_map_match_service_SOURCES = src/valhalla_map_match_service.cc
+valhalla_map_match_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_map_match_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libvalhalla_meili.la
+valhalla_run_map_match_SOURCES = src/valhalla_run_map_match.cc
+valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_run_map_match_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libvalhalla_meili.la
 
 # tests
 check_PROGRAMS = \
@@ -86,27 +77,27 @@ check_PROGRAMS = \
 
 test_geometry_helpers_SOURCES = test/geometry_helpers.cc
 test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_geometry_helpers_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+test_geometry_helpers_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_grid_range_query_SOURCES = test/grid_range_query.cc
 test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_grid_range_query_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+test_grid_range_query_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_map_matching_SOURCES = test/map_matching.cc
 test_map_matching_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_map_matching_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+test_map_matching_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_queue_SOURCES = test/queue.cc
 test_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+test_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_routing_SOURCES = test/routing.cc
 test_routing_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_routing_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+test_routing_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_viterbi_search_SOURCES = test/viterbi_search.cc
 test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libmmp.la
+test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
