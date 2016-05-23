@@ -6,10 +6,3 @@ The tyr library is essentially a set of various data structures and alogrithms w
 
 What follows are some notable components of the tyr library.
 
-### RouteHandler ###
-
-TODO:
-
-### PythonModule ###
-
-TODO:
