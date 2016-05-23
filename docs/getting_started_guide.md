@@ -33,30 +33,31 @@ Build the repositories in this order: Midgard, Baldr, Sif, Skadi, Mjolnir
 
 ```
 ./autogen.sh
-./configure --enable-coverage --with-valhalla-midgard=../midgard --with-valhalla-baldr=../baldr --with-valhalla-sif=../sif --with-valhalla-skadi=../skadi CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-make test -j4
+./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
+make test -j($nproc)
+sudo make install
 ```
 
 ### Creating Data
 
-Run the pbfgraphbuilder under the mjolnir directory.  If needed, update the values under mjolnir in your valhalla.json config.
+Run `valhalla_build_tiles` under the mjolnir directory.  If needed, update the values under mjolnir in your `valhalla.json` config.
 
-./pbfgraphbuilder --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf
+./valhalla_build_tiles --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf
 
 ## Optional Prerequisites
 
 ### Administrative Areas
 
-An administrative database is created via pbfadminbuilder and is used to flag country crossings on edges during the building of the graph data.  Moreover, we also use admins to determine if we drive on the right or left (default: right).  In the future, we will use admins to set the default access restrictions per country.  
+An administrative database is created via `valhalla_build_admins` and is used to flag country crossings on edges during the building of the graph data.  Moreover, we also use admins to determine if we drive on the right or left (default: right).  In the future, we will use admins to set the default access restrictions per country.  
 
-We recommend running the pbfadminbuilder on the planet; otherwise, parent admin information maybe lost or not all admins will get saved to the database.  This usually happens when a way is missing from the extract, but is part of the admin relation.  Most likely the extract polygon does not cover the entire admin relation.
+We recommend running the `valhalla_build_admins` on the planet; otherwise, parent admin information maybe lost or not all admins will get saved to the database.  This usually happens when a way is missing from the extract, but is part of the admin relation.  Most likely the extract polygon does not cover the entire admin relation.
 
 If you would like administrative information within the route graph, please follow the following steps:
 
 1. Download your osm data.
 2. If needed, update the admin value under mjolnir in your valhalla.json config.  Default filename and directory is /data/valhalla/admin.sqlite.
-3. Run the pbfadminbuilder under the mjolnir directory.  ./pbfadminbuilder --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf
-4. The next time you run pbfgraphbuilder, admin information will be added to the route graph.  
+3. Run the valhalla_build_admins under the mjolnir directory.  ./valhalla_build_admins --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf
+4. The next time you run valhalla_build_admins, admin information will be added to the route graph.  
 
 ### Timezones
 
@@ -66,5 +67,5 @@ If you would like timezone information within the route graph, please follow the
 
 1. If needed, update the timezone value under mjolnir in your valhalla.json config.  Default filename and directory is /data/valhalla/tz_world.sqlite.
 2. Go to your_mjolnir_directory/scripts.
-3. Run ./create_tz_db.sh /path_to_your_config/valhalla.json
-4. The next time you run pbfgraphbuilder, timezone information will be added to the route graph.  
+3. Run valhalla_build_timezones /path_to_your_config/valhalla.json
+4. The next time you run valhalla_build_tiles, timezone information will be added to the route graph.  
