@@ -1,7 +1,7 @@
 AC_INIT([meili],
 	[unstable],
 	[https://github.com/valhalla/meili/issues],
-	[map_matching_plus-[unstable]],
+	[valhalla_meili-[unstable]],
 	[https://github.com/valhalla/meili])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
@@ -45,7 +45,7 @@ PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.3.4])
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libvalhalla_meili.pc])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

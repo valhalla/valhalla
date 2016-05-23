@@ -1,12 +1,11 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/sif/dynamiccost.h>
 
-using namespace valhalla;
+#include "meili/universal_cost.h"
 
-#include "mmp/universal_cost.h"
+namespace valhalla {
 
-
-namespace mmp {
+namespace meili {
 
 
 class UniversalCost : public sif::DynamicCost {
@@ -60,5 +59,6 @@ class UniversalCost : public sif::DynamicCost {
 sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config)
 { return std::make_shared<UniversalCost>(config); }
 
+}
 
 }

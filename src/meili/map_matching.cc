@@ -3,19 +3,19 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/midgard/logging.h>
 
-using namespace valhalla;
-
-#include "mmp/candidate_search.h"
-#include "mmp/universal_cost.h"
-#include "mmp/routing.h"
-#include "mmp/graph_helpers.h"
-#include "mmp/geometry_helpers.h"
-#include "mmp/map_matching.h"
+#include "meili/candidate_search.h"
+#include "meili/universal_cost.h"
+#include "meili/routing.h"
+#include "meili/graph_helpers.h"
+#include "meili/geometry_helpers.h"
+#include "meili/map_matching.h"
 
 using ptree = boost::property_tree::ptree;
 
 
-namespace mmp {
+namespace valhalla {
+
+namespace meili {
 
 State::State(const StateId id,
              const Time time,
@@ -584,7 +584,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
   float search_radius = std::min(config_.get<float>("search_radius"),
                                  config_.get<float>("max_search_radius"));
   float interpolation_distance = config_.get<float>("interpolation_distance");
-  return mmp::OfflineMatch(mapmatching_, rangequery_, measurements,
+  return meili::OfflineMatch(mapmatching_, rangequery_, measurements,
                            search_radius * search_radius,
                            interpolation_distance);
 }
@@ -755,5 +755,6 @@ void MapMatcherFactory::ClearCache()
   rangequery_.Clear();
 }
 
+}
 
 }

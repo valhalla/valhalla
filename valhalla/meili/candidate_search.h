@@ -17,15 +17,15 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include <mmp/candidate.h>
-#include <mmp/grid_range_query.h>
-#include <mmp/graph_helpers.h>
-#include <mmp/geometry_helpers.h>
+#include <meili/candidate.h>
+#include <meili/grid_range_query.h>
+#include <meili/graph_helpers.h>
+#include <meili/geometry_helpers.h>
 
 
-namespace mmp {
+namespace valhalla{
 
-using namespace valhalla;
+namespace meili {
 
 
 class CandidateQuery
@@ -88,6 +88,8 @@ class CandidateGridQuery final: public CandidateQuery
 
   mutable std::unordered_map<baldr::GraphId, GridRangeQuery<baldr::GraphId>> grid_cache_;
 };
+
+}
 
 }
 

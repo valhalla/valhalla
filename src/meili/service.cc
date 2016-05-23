@@ -10,17 +10,17 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include <rapidjson/error/en.h>
+#include "rapidjson/error/en.h"
 
-#include "universal_cost.h"
-#include "map_matching.h"
+#include "meili/universal_cost.h"
+#include "meili/map_matching.h"
 
 using namespace prime_server;
 using namespace valhalla;
-
+using namespace meili;
 
 namespace {
 
@@ -91,8 +91,9 @@ const std::unordered_map<size_t, std::string> kHttpStatusCodes {
   {510,"Not Extended"},
 };
 
-inline const std::string http_status_code(unsigned code) {
-  return code < kHttpStatusCodeSize? kHttpStatusCodes[code] : "";
+inline std::string http_status_code(unsigned code) {
+  auto code_itr = kHttpStatusCodes.find(code);
+  return code_itr == kHttpStatusCodes.cend() ? "" : code_itr->second;
 }
 
 
@@ -702,27 +703,29 @@ class mm_worker_t {
   bool verbose_;
 };
 
-
 }
-
 
 namespace valhalla {
 
-void run_service(const boost::property_tree::ptree& config)
-{
+namespace meili {
 
+void run_service(const boost::property_tree::ptree& config) {
+  //gets requests from the http server
+  auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
+  //or returns just location information back to the server
+  auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+
+  //listen for requests
   zmq::context_t context;
-
-  // Listen for requests
-  mm_worker_t mm_worker(config);
-  auto work = std::bind(&mm_worker_t::work, std::ref(mm_worker), std::placeholders::_1, std::placeholders::_2);
-  auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(mm_worker));
-  prime_server::worker_t worker(context,
-                                proxy_downstream_endpoint, "ipc:///dev/null", loopback_endpoint,
-                                work, cleanup);
+  mm_worker_t meili_worker(config);
+  auto work = std::bind(&mm_worker_t::work, std::ref(meili_worker), std::placeholders::_1, std::placeholders::_2);
+  auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(meili_worker));
+  prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, work, cleanup);
   worker.work();
 
-  //TODO should we listen for SIGINT and terminate gracefully/exit(0)?
+  //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+}
+
 }
 
 }

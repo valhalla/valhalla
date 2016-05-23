@@ -23,10 +23,11 @@ normalize(float num, float den)
 }
 
 
-namespace mmp {
-namespace helpers {
+namespace valhalla{
 
-using namespace valhalla;
+namespace meili {
+
+namespace helpers {
 
 
 template <typename coord_t>
@@ -253,6 +254,9 @@ Project(const coord_t& p,
 }
 
 }
+
+}
+
 }
 
 
