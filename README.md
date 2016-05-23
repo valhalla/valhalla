@@ -26,15 +26,15 @@ build process.
 ## Getting Started
 
 Follow this
-[tutorial](https://github.com/mapillary/map_matching_plus/blob/master/docs/run_service_in_docker.md)
+[tutorial](https://github.com/valhalla/meili/blob/master/docs/run_service_in_docker.md)
 to get the service run in Docker.
 
 ## Documentation
 
-1. [Service API](https://github.com/mapillary/map_matching_plus/blob/master/docs/service_api.md)
-2. [Library API](https://github.com/mapillary/map_matching_plus/blob/master/docs/library_api.md)
-3. [Configuration](https://github.com/mapillary/map_matching_plus/blob/master/docs/configuration.md)
-4. [The Algorithms](https://github.com/mapillary/map_matching_plus/blob/master/docs/algorithms.md)
+1. [Service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
+2. [Library API](https://github.com/valhalla/meili/blob/master/docs/library_api.md)
+3. [Configuration](https://github.com/valhalla/meili/blob/master/docs/configuration.md)
+4. [The Algorithms](https://github.com/valhalla/meili/blob/master/docs/algorithms.md)
 
 ## License
 
