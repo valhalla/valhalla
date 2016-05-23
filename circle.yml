@@ -1,0 +1,18 @@
+checkout:
+  post:
+    - git submodule sync
+    - git submodule update --init
+
+dependencies:
+  override:
+    - scripts/dependencies.sh
+
+test:
+  override:
+    - scripts/install.sh
+
+general:
+  artifacts:
+    - config.log
+    - test/*.log
+    - Makefile

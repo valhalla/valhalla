@@ -1,5 +1,6 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cassert>
@@ -7,9 +8,9 @@
 #include <chrono>
 #include <random>
 
-#include "mmp/viterbi_search.h"
+#include "meili/viterbi_search.h"
 
-using namespace mmp;
+using namespace valhalla::meili;
 
 
 using ObjectId = uint32_t;

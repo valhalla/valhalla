@@ -1,13 +1,14 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cassert>
 #include <iostream>
 
-#include "mmp/grid_range_query.h"
+#include "meili/grid_range_query.h"
 
-using namespace mmp;
+using namespace valhalla::meili;
 
 
 void TestGridTools()

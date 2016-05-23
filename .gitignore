@@ -32,6 +32,12 @@ libvalhalla_meili.pc
 valhalla_run_map_match
 valhalla_map_match_service
 valhalla_meili_worker
+test/geometry_helpers
+test/grid_range_query
+test/map_matching
+test/queue
+test/routing
+test/viterbi_search
 *.o
 .deps/
 .dirstamp
