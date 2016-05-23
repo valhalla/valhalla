@@ -121,7 +121,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     for (uint32_t i = 0; i < source_location_list.size(); i++) {
       if (source_status_[i].threshold > 0) {
         source_status_[i].threshold--;
-        ForwardSearch(i, graphreader, costing);
+        ForwardSearch(i, n, graphreader, costing);
       }
       if (source_status_[i].threshold == 0) {
         source_status_[i].threshold = -1;
@@ -172,6 +172,7 @@ void CostMatrix::Initialize(
     for (uint32_t j = 0; j < target_count_; j++) {
       if (source_locations[i].latlng_ == target_locations[j].latlng_) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
+        best_connection_.back().found = true;
       } else {
         best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);
         source_status_[i].remaining_locations.insert(j);
@@ -187,7 +188,7 @@ void CostMatrix::Initialize(
 }
 
 // Iterate the forward search from the source/origin location.
-void CostMatrix::ForwardSearch(const uint32_t index,
+void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
                   baldr::GraphReader& graphreader,
                   const std::shared_ptr<sif::DynamicCost>& costing) {
   // Get the adjacency list, edge label list, and edge status
@@ -217,7 +218,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Check for connections to backwards search.
-  CheckForwardConnections(index, pred);
+  CheckForwardConnections(index, pred, n);
 
   // Prune path if predecessor is not a through edge
   if (pred.not_thru()) {
@@ -330,7 +331,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
 // Check if the edge on the forward search connects to a reached edge
 // on the reverse search trees.
 void CostMatrix::CheckForwardConnections(const uint32_t source,
-                              const EdgeLabel& pred) {
+                              const EdgeLabel& pred, const uint32_t n) {
   // Get the opposing edge. An invalid opposing edge occurs for transition
   // edges - skip them.
   GraphId oppedge = pred.opp_edgeid();
@@ -344,18 +345,17 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
     // Iterate through the targets
     for (auto target : targets->second) {
+      uint32_t idx = source * source_count_ + target;
+      if (best_connection_[idx].found) {
+        continue;
+      }
+
       const auto& edgestate = target_edgestatus_[target];
 
       // If this edge has been reached then a shortest path has been found
       // to the end node of this directed edge.
       EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
       if (oppedgestatus.set() != EdgeSet::kUnreached) {
-        uint32_t idx = source * source_count_ + target;
-
-        // No need to update if locations are at same lat,lng
-        if (best_connection_[idx].distance == 0.0f) {
-          continue;
-        }
         const auto& edgelabels = target_edgelabel_[target];
         uint32_t predidx = edgelabels[oppedgestatus.status.index].predecessor();
         const EdgeLabel& opp_el = edgelabels[oppedgestatus.status.index];
@@ -365,11 +365,13 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
           float s = std::abs(pred.cost().secs + opp_el.cost().secs -
                              opp_el.transition_cost());
 
-          // This only works with the casts
+          // Update best connection and set found = true.
+          // distance computation only works with the casts.
           uint32_t d = std::abs(static_cast<int>(pred.walking_distance())   +
                                 static_cast<int>(opp_el.walking_distance()) -
                                 static_cast<int>(opp_el.transition_secs()));
-          best_connection_[idx] = { pred.edgeid(), oppedge, Cost(s, s), d };
+          best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
+          best_connection_[idx].found = true;
 
           // Update status and update threshold if this is the last location
           // to find for this source or target
@@ -387,7 +389,14 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
                           0 : edgelabels[predidx].walking_distance();
             float s = pred.cost().secs + oppsec + opp_el.transition_secs();
             uint32_t d = pred.walking_distance() + oppdist;
-            best_connection_[idx] = { pred.edgeid(), oppedge, Cost(c, s), d };
+
+            // Update best connection and set a threshold
+            best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
+            if (best_connection_[idx].threshold == 0) {
+              best_connection_[idx].threshold = n + kExtendSearchThreshold;
+            } else if (n > best_connection_[idx].threshold) {
+              best_connection_[idx].found = true;
+            }
 
             // Update status and update threshold if this is the last location
             // to find for this source or target
@@ -551,7 +560,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
     }
 
     // Get cost and accumulated distance. Use opposing edge for EdgeCost.
-    // Update the shortcut masek
+    // Update the shortcut mask
     shortcuts |= directededge->shortcut();
     Cost tc = costing->TransitionCostReverse(directededge->localedgeidx(),
                    nodeinfo, opp_edge, opp_pred_edge);
@@ -656,7 +665,6 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   target_edgestatus_.resize(targets.size());
   target_adjacency_.resize(targets.size());
   target_hierarchy_limits_.resize(targets.size());
-
 
   // Go through each target location
   uint32_t index = 0;

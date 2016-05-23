@@ -34,21 +34,33 @@ struct LocationStatus {
 };
 
 /**
- * Candidate connections - a directed edge and its opposing directed edge
- * are both temporarily labeled. Store the edge Ids and its cost.
+ * Best connection. Information about the best connection found between
+ * a source and target pair.
  */
-struct CandidateConnection {
+struct BestCandidate {
+  bool found;
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
-  sif::Cost      cost;
-  uint32_t       distance;
+  sif::Cost cost;
+  uint32_t distance;
+  uint32_t threshold;
 
-  CandidateConnection(const baldr::GraphId& e1, baldr::GraphId& e2,
+  BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2,
                       const sif::Cost& c, const uint32_t d)
-      : edgeid(e1),
+      : found(false),
+        edgeid(e1),
         opp_edgeid(e2),
         cost(c),
-        distance(d) {
+        distance(d),
+        threshold(0) {
+  }
+
+  void Update(const baldr::GraphId& e1, baldr::GraphId& e2,
+              const sif::Cost& c, const uint32_t d) {
+    edgeid = e1;
+    opp_edgeid = e2;
+    cost = c;
+    distance = d;
   }
 };
 
@@ -122,7 +134,7 @@ class CostMatrix {
   std::unordered_map<baldr::GraphId, std::vector<uint32_t>> targets_;
 
   // List of best connections found so far
-  std::vector<CandidateConnection> best_connection_;
+  std::vector<BestCandidate> best_connection_;
 
   /**
    * Form the initial time distance matrix given the sources
@@ -138,9 +150,11 @@ class CostMatrix {
   /**
    * Iterate the forward search from the source/origin location.
    * @param  index        Index of the source location.
+   * @param  n            Iteration counter.
    * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  costing      Costing methods.
    */
-  void ForwardSearch(const uint32_t index,
+  void ForwardSearch(const uint32_t index, const uint32_t n,
                      baldr::GraphReader& graphreader,
                      const std::shared_ptr<sif::DynamicCost>& costing);
 
@@ -149,9 +163,10 @@ class CostMatrix {
    * on the reverse search tree.
    * @param  source  Source index.
    * @param  pred    Edge label of the predecessor.
+   * @param  n            Iteration counter.
    */
   void CheckForwardConnections(const uint32_t source,
-                               const sif::EdgeLabel& pred);
+                               const sif::EdgeLabel& pred, const uint32_t n);
 
   /**
    * Update status when a connection is found.
