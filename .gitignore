@@ -26,20 +26,18 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
+libvalhalla_meili.pc
 
 # built objects
-mmp_service
-mmp_attacher
-mmp_edge_search
-mmp_psqlmatcher
-mmp_stat
-simple_matcher
+valhalla_run_map_match
+valhalla_map_match_service
+valhalla_meili_worker
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
-libmmp.la
+libvalhalla_meili.la
 
 # tests
 test-suite.log

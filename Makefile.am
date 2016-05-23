@@ -57,7 +57,7 @@ libvalhalla_meili_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CP
 libvalhalla_meili_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = valhalla_map_match_service valhalla_run_map_match
+bin_PROGRAMS = valhalla_map_match_service valhalla_run_map_match valhalla_meili_worker
  
 valhalla_map_match_service_SOURCES = src/meili/valhalla_map_match_service.cc
 valhalla_map_match_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
@@ -66,6 +66,10 @@ valhalla_map_match_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDF
 valhalla_run_map_match_SOURCES = src/meili/valhalla_run_map_match.cc
 valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_run_map_match_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_meili.la
+
+valhalla_meili_worker_SOURCES = src/meili/valhalla_meili_worker.cc
+valhalla_meili_worker_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_meili_worker_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_meili.la
 
 # tests
 check_PROGRAMS = \
