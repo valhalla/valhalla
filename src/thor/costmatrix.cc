@@ -634,6 +634,11 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
       EdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
                            directededge->restrictions(),
                            directededge->opp_local_idx(), mode_, ec, d);
+
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
+      edge_label.set_not_thru(false);
+
       source_edgelabel_[index].push_back(std::move(edge_label));
     }
     index++;
@@ -701,6 +706,11 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       EdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
               opp_dir_edge->restrictions(), opp_dir_edge->opp_local_idx(),
               mode_, ec, d);
+
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
+      edge_label.set_not_thru(false);
+
       target_edgelabel_[index].push_back(std::move(edge_label));
       targets_[opp_edge_id].push_back(index);
     }
