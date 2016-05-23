@@ -86,8 +86,8 @@ check_PROGRAMS = \
 	test/queue \
 	test/routing \
 	test/viterbi_search \
-	test_geojson_reader \
-	test_geojson_writer
+	test/geojson_reader \
+	test/geojson_writer
 
 test_geometry_helpers_SOURCES = test/geometry_helpers.cc
 test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
