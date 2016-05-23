@@ -1356,27 +1356,33 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
       if (maneuver.internal_left_turn_count()
           > maneuver.internal_right_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
-        LOG_TRACE("ManeuverType=UTURN_LEFT");
+        LOG_TRACE("kReverse: 1 ManeuverType=UTURN_LEFT");
       } else if (maneuver.internal_right_turn_count()
           > maneuver.internal_left_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-        LOG_TRACE("ManeuverType=UTURN_RIGHT");
+        LOG_TRACE("kReverse: 1 ManeuverType=UTURN_RIGHT");
+      } else if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        LOG_TRACE("kReverse: 2 ManeuverType=UTURN_LEFT");
+      } else if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        LOG_TRACE("kReverse: 2 ManeuverType=UTURN_RIGHT");
       } else if (trip_path_->GetCurrEdge(maneuver.begin_node_index())
           ->drive_on_right()) {
         if (maneuver.turn_degree() < 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-          LOG_TRACE("ManeuverType=UTURN_RIGHT");
+          LOG_TRACE("kReverse: 3 ManeuverType=UTURN_RIGHT");
         } else {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
-          LOG_TRACE("ManeuverType=UTURN_LEFT");
+          LOG_TRACE("kReverse: 3 ManeuverType=UTURN_LEFT");
         }
       } else {
         if (maneuver.turn_degree() > 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
-          LOG_TRACE("ManeuverType=UTURN_LEFT");
+          LOG_TRACE("kReverse: 4 ManeuverType=UTURN_LEFT");
         } else {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-          LOG_TRACE("ManeuverType=UTURN_RIGHT");
+          LOG_TRACE("kReverse: 4 ManeuverType=UTURN_RIGHT");
         }
       }
       break;
