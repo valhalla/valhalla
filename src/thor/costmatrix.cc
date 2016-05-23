@@ -131,7 +131,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 
     // Break out when remaining sources and targets to expand are both 0
     if (remaining_sources_ == 0 && remaining_targets_ == 0) {
-      LOG_INFO("Terminate: n = " + std::to_string(n));
+      LOG_INFO("SourceToTarget iterations: n = " + std::to_string(n));
       break;
     }
     n++;
@@ -210,7 +210,12 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
       return;
     }
   } else {
+    // Forward search is exhausted - mark this and update so we don't
+    // extend searches more than we need to
     source_status_[index].threshold = 0;
+    for (uint32_t target = 0; target < target_count_; target++) {
+      UpdateStatus(index, target);
+    }
     return;
   }
 
@@ -453,13 +458,16 @@ void CostMatrix::BackwardSearch(const uint32_t index,
 
     // Check cost threshold
     if (pred.cost().secs > cost_threshold_) {
-      LOG_INFO("Exceeded cost threshold");
       target_status_[index].threshold = 0;
       return;
     }
   } else {
-    // Mark this location - since cannot expand anymore
+    // Backward search is exhausted - mark this and update so we don't
+    // extend searches more than we need to
     target_status_[index].threshold = 0;
+    for (uint32_t source = 0; source < target_count_; source++) {
+      UpdateStatus(source, index);
+    }
     return;
   }
 
