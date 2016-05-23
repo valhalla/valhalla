@@ -191,25 +191,11 @@ void CostMatrix::Initialize(
 void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
                   baldr::GraphReader& graphreader,
                   const std::shared_ptr<sif::DynamicCost>& costing) {
-  // Get the adjacency list, edge label list, and edge status
-  // for this source location
+  // Get the next edge from the adjacency list for this source location
   auto* adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
-  auto& edgestate = source_edgestatus_[index];
-  auto& hierarchy_limits = source_hierarchy_limits_[index];
-
-  // Get the next edge from the adjacency list
-  EdgeLabel pred;
   uint32_t predindex = adj->Remove(edgelabels);
-  if (predindex != kInvalidLabel) {
-    pred = edgelabels[predindex];
-
-    // Check cost threshold
-    if (pred.cost().secs > cost_threshold_) {
-      source_status_[index].threshold = 0;
-      return;
-    }
-  } else {
+  if (predindex == kInvalidLabel) {
     // Forward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
     source_status_[index].threshold = 0;
@@ -219,7 +205,15 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
     return;
   }
 
+  // Get edge label and check cost threshold
+  EdgeLabel pred = edgelabels[predindex];
+  if (pred.cost().secs > cost_threshold_) {
+    source_status_[index].threshold = 0;
+    return;
+  }
+
   // Settle this edge
+  auto& edgestate = source_edgestatus_[index];
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Check for connections to backwards search.
@@ -247,6 +241,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
   // Check hierarchy. Count upward transitions (counted on the level
   // transitioned from). Do not expand based on hierarchy level based on
   // number of upward transitions.
+  auto& hierarchy_limits = source_hierarchy_limits_[index];
   if (allow_transitions_) {
     uint32_t level = node.level();
     if (pred.trans_up()) {
@@ -444,24 +439,11 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 void CostMatrix::BackwardSearch(const uint32_t index,
                  baldr::GraphReader& graphreader,
                  const std::shared_ptr<sif::DynamicCost>& costing) {
-  // Get the adjacency list and edge label list for this target location
+  // Get the next edge from the adjacency list for this target location
   auto* adj = target_adjacency_[index];
   auto& edgelabels = target_edgelabel_[index];
-  auto& edgestate = target_edgestatus_[index];
-  auto& hierarchy_limits = target_hierarchy_limits_[index];
-
-  // Get the next edge from the adjacency list
-  EdgeLabel pred;
   uint32_t predindex = adj->Remove(edgelabels);
-  if (predindex != kInvalidLabel) {
-    pred = edgelabels[predindex];
-
-    // Check cost threshold
-    if (pred.cost().secs > cost_threshold_) {
-      target_status_[index].threshold = 0;
-      return;
-    }
-  } else {
+  if (predindex == kInvalidLabel) {
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
     target_status_[index].threshold = 0;
@@ -471,7 +453,15 @@ void CostMatrix::BackwardSearch(const uint32_t index,
     return;
   }
 
+  // Copy predecessor, check cost threshold
+  EdgeLabel pred = edgelabels[predindex];
+  if (pred.cost().secs > cost_threshold_) {
+    target_status_[index].threshold = 0;
+    return;
+  }
+
   // Settle this edge
+  auto& edgestate = target_edgestatus_[index];
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Prune path if predecessor is not a through edge
@@ -496,6 +486,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
   // Check hierarchy. Count upward transitions (counted on the level
   // transitioned from). Do not expand based on hierarchy level based on
   // number of upward transitions and distance to the destination
+  auto& hierarchy_limits = target_hierarchy_limits_[index];
   if (allow_transitions_) {
     uint32_t level = node.level();
     if (pred.trans_up()) {
