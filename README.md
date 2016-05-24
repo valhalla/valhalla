@@ -48,87 +48,62 @@ Building and Running Valhalla
 
 To build, install and run valhalla on Ubuntu (or other Debian based systems) try the following bash commands:
 
-    #add ppa for newer compiler
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/ubuntu-toolchain-r-test-$(lsb_release -c -s).list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
-    
-    #grab all of the dependencies
-    sudo apt-get install autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev libboost-thread1.54-dev  protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev
-    
-    #use newer compiler
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
-    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
-    
-    #grab the latest zmq library:
-    rm -rf libzmq
-    git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
-    pushd libzmq
-    ./autogen.sh
-    ./configure --without-libsodium --without-documentation
-    make -j
-    sudo make install
-    popd
-    
-    #grab prime_server API:
-    rm -rf prime_server
-    git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/kevinkreiser/prime_server.git
-    pushd prime_server
-    ./autogen.sh
-    ./configure
-    make -j
-    sudo make install
-    popd
+```console
+#grab all of the dependencies
+sudo add-apt-repository ppa:kevinkreiser/prime-server
+sudo apt-get update
+sudo apt-get install autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server-dev
 
-    #build and install all valhalla includes, libraries and binaries
-    for repo in midgard baldr sif skadi mjolnir loki odin thor tyr tools; do
-      git clone --recurse-submodules https://github.com/valhalla/$repo.git
-      pushd $repo
-      ./autogen.sh
-      ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-      make -j
-      sudo make install
-      popd
-    done
+#build and install all valhalla includes, libraries and binaries
+for repo in midgard baldr sif skadi mjolnir loki odin thor tyr tools; do
+  git clone --recurse-submodules https://github.com/valhalla/$repo.git
+  pushd $repo
+  ./autogen.sh
+  ./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
+  make -j$(nproc)
+  sudo make install
+  popd
+done
+git clone --recurse-submodules https://github.com/valhalla/conf.git
 
-    #download some data and make tiles out of it
-    #note: you can feed multiple extracts into pbfgraphbuilder
-    pushd mjolnir
-    wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
-    sudo mkdir -p /data/valhalla
-    sudo chown `whoami` /data/valhalla
-    rm -rf /data/valhalla/*
-    #TODO: run pbfadminbuilder?
-    LD_LIBRARY_PATH=/usr/lib:/usr/local/lib pbfgraphbuilder -c conf/valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
-    popd
+#download some data and make tiles out of it
+#note: you can feed multiple extracts into pbfgraphbuilder
+wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+sudo mkdir -p /data/valhalla
+sudo chown `whoami` /data/valhalla
+rm -rf /data/valhalla/*
+#TODO: run valhalla_build_addmins?
+LD_LIBRARY_PATH=/usr/lib:/usr/local/lib valhalla_build_tiles -c conf/valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 
-    #grab the demos repo and open up the point and click routing sample
-    git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
-    firefox demos/routing/index.html &
-    #NOTE: set the environment pulldown to 'localhost' to point it at your own server
+#grab the demos repo and open up the point and click routing sample
+git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
+firefox demos/routing/index.html &
+#NOTE: set the environment pulldown to 'localhost' to point it at your own server
 
-    #start up the server
-    LD_LIBRARY_PATH=/usr/lib:/usr/local/lib tools/tyr_simple_service tools/conf/valhalla.json
+#start up the server
+LD_LIBRARY_PATH=/usr/lib:/usr/local/lib valhalla_route_service conf/valhalla.json
 
-    #HAVE FUN!
+#HAVE FUN!
+```
 
 Command Line Tools
 ------------------
-####path_test
+####valhalla_run_route
 A C++ application that will create a route path with guidance instructions for the specified route request.
 ```
 #Usage:
-./path_test -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
+./valhalla_run_route -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
 #Example:
-./path_test -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config conf/valhalla.json
+./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config conf/valhalla.json
 ```
 
-####tyr_simple_service
+####valhalla_route_service
 A C++ service that can be used to test Valhalla locally.
 ```
 #Usage:
-./tyr_simple_service <CONFIG_FILE>
+./valhalla_route_service <CONFIG_FILE>
 #Example:
-./tyr_simple_service conf/valhalla.json
+./valhalla_route_service conf/valhalla.json
 #Localhost URL
 http://localhost:8002/route?json={"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}
 ```

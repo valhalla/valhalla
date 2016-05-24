@@ -6,10 +6,3 @@ The tools repository is essentially a set command line executables testing the v
 
 What follows are some notable tools.
 
-### Skadi Benchmark ###
-
-TODO:
-
-### Loki Benchmark ###
-
-TODO:
