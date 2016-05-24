@@ -330,9 +330,17 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-      // Do not allow use of the start edge
-      if ((n == 0 && diredge->endnode() == startnode)) {
-        continue;
+      // Do not allow use of the opposing start edge. Check more than just
+      // endnode since many simple, 2-edge loops would have 2 edges coming
+      // back to the same endnode
+      if (n == 0 && diredge->endnode() == startnode &&
+          diredge->forwardaccess() == directededge.reverseaccess() &&
+          diredge->reverseaccess() == directededge.forwardaccess() &&
+          diredge->length() == directededge.length()) {
+        if ((startnode.tileid() == expandnode.tileid()) &&
+            diredge->edgeinfo_offset() == directededge.edgeinfo_offset()) {
+          continue;
+        }
       }
 
       // Return false if we get back to the start node or hit an
