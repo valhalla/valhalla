@@ -6,6 +6,8 @@
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
+#include <valhalla/baldr/json.h>
+
 using dataPair = std::pair<std::vector<std::string>*, std::vector<std::vector<float>>*>;
 
 /*
@@ -35,6 +37,23 @@ static int classCallback (void *data, int argc, char **argv, char **colName) {
   }
   cat->push_back("total");
   return 0;
+}
+
+/*
+ * Queries the database to get road class types
+ * Params
+ *  *db - sqlite3 database connection object
+ *  classes - a vector of strings representing the road types
+ *
+ * Post
+ *  The array containing the road classes is filled
+ */
+void fillClasses(sqlite3 *db, std::vector<std::string>& classes) {
+  
+  std::string sql = "SELECT * FROM countrydata LIMIT 1";
+  char *errMsg = 0;
+  int rc = sqlite3_exec(db, sql.c_str(), classCallback, (void*) &classes, &errMsg);
+  checkDBResponse(rc, errMsg);
 }
 
 /*
@@ -73,24 +92,6 @@ static int countryDataCallback (void *data_pair, int argc, char **argv, char **c
 }
 
 /*
- * Queries the database to get road class types
- * Params
- *  *db - sqlite3 database connection object
- *  classes - a vector of strings representing the road types
- *
- * Post
- *  The array containing the road classes is filled
- */
-void fillClasses(sqlite3 *db, std::vector<std::string>& classes) {
-  
-  std::string sql = "SELECT * FROM countrydata LIMIT 1";
-  char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), classCallback, (void*) &classes, &errMsg);
-  checkDBResponse(rc, errMsg);
-
-}
-
-/*
  * Queries the database to get length of roads in each class per country
  * Params
  *  *db - sqlite3 database connection object
@@ -113,7 +114,7 @@ void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::vect
 }
 
 /* UNUSED
- * Callback function to reveive query results from sqlite3_exec
+ * Callback function to receive query results from sqlite3_exec
  * Params
  *  *dataPair - the pointer used to pass data structures into this function
  *  argc - # arguments
@@ -153,28 +154,32 @@ void fillMaxSpeedData(sqlite3 *db) {
  *  classes - the types of road classes
  */
 void generateJson (std::vector<std::string>& countries, std::vector<std::vector<float>>& data, std::vector<std::string>& classes) {
+	using namespace valhalla::baldr;
 
   std::ofstream out ("road_data.json");
-
-  std::stringstream str;
-  str << "{\n";
-  std::string fmt = "\"%1%\" : {\n";
-  for (size_t i = 0; i < countries.size(); ++i) {
-    if (i) fmt = ",\n\"%1%\" : {\n";
-    str << boost::format(fmt) % countries[i];
-    str << boost::format("  \"name\" : \"%1%\",\n") % countries[i];
-    str << "  \"records\": {\n";
-    std::string fmt2 = "    \"%1%\": %2$.2f";
-    for (size_t j = 0; j < classes.size(); ++j) {
-      if (j) fmt2 = ",\n    \"%1%\": %2$.2f";
-      str << boost::format(fmt2) % classes[j] % data[i][j];
-    }
-    str << "\n  }}";
-  }
-  str << "\n}";
-
-  out << str.str() << std::endl;
-
+	json::MapPtr map = json::map({});
+	for (size_t i = 0; i < countries.size(); ++i) {
+		map->emplace(
+		  countries[i], json::map
+		  ({
+		  	{"name", countries[i]},
+		  	{"records", json::map
+		  	({
+		  	 {classes[0], json::fp_t{data[i][0]}},
+		  	 {classes[1], json::fp_t{data[i][1]}},
+		  	 {classes[2], json::fp_t{data[i][2]}},
+		  	 {classes[3], json::fp_t{data[i][3]}},
+		  	 {classes[4], json::fp_t{data[i][4]}},
+		  	 {classes[5], json::fp_t{data[i][5]}},
+		  	 {classes[6], json::fp_t{data[i][6]}},
+		  	 {classes[7], json::fp_t{data[i][7]}},
+		  	 {classes[8], json::fp_t{data[i][8]}}
+		  	})}
+		  })
+		);
+	}
+	out << *map << std::endl;
+  
   out.close();
 }
 
@@ -208,4 +213,3 @@ int main (int argc, char** argv) {
   sqlite3_close(db);
   return 0;
 }
-
