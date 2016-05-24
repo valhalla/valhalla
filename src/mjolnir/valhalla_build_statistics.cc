@@ -1,4 +1,3 @@
-#include "mjolnir/valhalla_build_statistics.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -8,37 +7,6 @@
 #include <sqlite3.h>
 
 using dataPair = std::pair<std::vector<std::string>*, std::vector<std::vector<float>>*>;
-
-int main (int argc, char** argv) {
-  // If there is no input file print and error and exit
-  if (argc < 2) {
-    std::cout << "ERROR: No input file specified." << std::endl;
-    std::cout << "Usage: " << argv[0] << " statistics.sqlite" << std::endl;
-    exit(0);
-  }
-
-  // data structures
-  std::vector<std::string> classes;
-  std::vector<std::string> countries;
-  std::vector<std::vector<float>> data;
-
-  // open DB file
-  sqlite3 *db;
-  int rc = sqlite3_open(argv[1], &db);
-  if ( rc ) {
-    std::cout << "Opening DB failed: " << sqlite3_errmsg(db);
-    exit(0);
-  }
-
-  // fill data structures
-  fillClasses(db, classes);
-  fillCountryData(db, countries, data);
-  
-  generateJson(countries, data, classes);
-  
-  sqlite3_close(db);
-  return 0;
-}
 
 /*
  * Handle errors returned from the db
@@ -206,3 +174,35 @@ void generateJson (std::vector<std::string>& countries, std::vector<std::vector<
 
   out.close();
 }
+
+int main (int argc, char** argv) {
+  // If there is no input file print and error and exit
+  if (argc < 2) {
+    std::cout << "ERROR: No input file specified." << std::endl;
+    std::cout << "Usage: " << argv[0] << " statistics.sqlite" << std::endl;
+    exit(0);
+  }
+
+  // data structures
+  std::vector<std::string> classes;
+  std::vector<std::string> countries;
+  std::vector<std::vector<float>> data;
+
+  // open DB file
+  sqlite3 *db;
+  int rc = sqlite3_open(argv[1], &db);
+  if ( rc ) {
+    std::cout << "Opening DB failed: " << sqlite3_errmsg(db);
+    exit(0);
+  }
+
+  // fill data structures
+  fillClasses(db, classes);
+  fillCountryData(db, countries, data);
+  
+  generateJson(countries, data, classes);
+  
+  sqlite3_close(db);
+  return 0;
+}
+
