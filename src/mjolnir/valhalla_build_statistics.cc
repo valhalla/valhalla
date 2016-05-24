@@ -26,60 +26,8 @@ void checkDBResponse(int rc, char* errMsg) {
 }
 
 /*
- * Queries the database to get road class types
- * Params
- *  *db - sqlite3 database connection object
- *  classes - a vector of strings representing the road types
- *
- * Post
- *  The array containing the road classes is filled
+ * Callback function that gets the column names from the database
  */
-void fillClasses(sqlite3 *db, std::vector<std::string>& classes) {
-  
-  std::string sql = "SELECT * FROM countrydata LIMIT 1";
-  char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), classCallback, (void*) &classes, &errMsg);
-  checkDBResponse(rc, errMsg);
-
-}
-
-/*
- * Queries the database to get length of roads in each class per country
- * Params
- *  *db - sqlite3 database connection object
- *  countries - vector of country iso codes
- *  data - 2D vector of road lengths
- *    each column belongs to a certain country
- *    each row is a type of road
- * Post
- *  countries contains the iso codes of all countries in the database
- *  data contains the lengths of each type of road for each country
- */
-void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::vector<std::vector<float>>& data) {
-  
-  std::string sql = "SELECT * FROM countrydata WHERE isocode IS NOT \"\"";
-
-  char *errMsg = 0;
-  dataPair data_pair = {&countries, &data};
-  int rc = sqlite3_exec(db, sql.c_str(), countryDataCallback, (void*) &data_pair, &errMsg);
-  checkDBResponse(rc, errMsg);
-}
-
-/*
- * Unused / Not-Implemented yet
- */
-void fillMaxSpeedData(sqlite3 *db) {
-  
-  std::string sql = "SELECT isocode,type,maxspeed";
-  sql += " FROM rclassctrydata";
-  sql += " WHERE (type='Motorway' OR type='Trunk' OR type='Primary' OR type='Secondary')";
-  sql += " AND isocode IS NOT \"\"";
-
-  char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), maxSpeedCallback, NULL, &errMsg);
-  checkDBResponse(rc, errMsg);
-}
-
 static int classCallback (void *data, int argc, char **argv, char **colName) {
   std::vector<std::string> *cat = (std::vector<std::string>*) data;
   for (int i = 1; i < argc; ++i) {
@@ -124,6 +72,46 @@ static int countryDataCallback (void *data_pair, int argc, char **argv, char **c
   return 0;
 }
 
+/*
+ * Queries the database to get road class types
+ * Params
+ *  *db - sqlite3 database connection object
+ *  classes - a vector of strings representing the road types
+ *
+ * Post
+ *  The array containing the road classes is filled
+ */
+void fillClasses(sqlite3 *db, std::vector<std::string>& classes) {
+  
+  std::string sql = "SELECT * FROM countrydata LIMIT 1";
+  char *errMsg = 0;
+  int rc = sqlite3_exec(db, sql.c_str(), classCallback, (void*) &classes, &errMsg);
+  checkDBResponse(rc, errMsg);
+
+}
+
+/*
+ * Queries the database to get length of roads in each class per country
+ * Params
+ *  *db - sqlite3 database connection object
+ *  countries - vector of country iso codes
+ *  data - 2D vector of road lengths
+ *    each column belongs to a certain country
+ *    each row is a type of road
+ * Post
+ *  countries contains the iso codes of all countries in the database
+ *  data contains the lengths of each type of road for each country
+ */
+void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::vector<std::vector<float>>& data) {
+  
+  std::string sql = "SELECT * FROM countrydata WHERE isocode IS NOT \"\"";
+
+  char *errMsg = 0;
+  dataPair data_pair = {&countries, &data};
+  int rc = sqlite3_exec(db, sql.c_str(), countryDataCallback, (void*) &data_pair, &errMsg);
+  checkDBResponse(rc, errMsg);
+}
+
 /* UNUSED
  * Callback function to reveive query results from sqlite3_exec
  * Params
@@ -139,6 +127,21 @@ static int maxSpeedCallback (void *data, int argc, char **argv, char **colName) 
   }
   std::cout << std::endl;
   return 0;
+}
+
+/*
+ * Unused / Not-Implemented yet
+ */
+void fillMaxSpeedData(sqlite3 *db) {
+  
+  std::string sql = "SELECT isocode,type,maxspeed";
+  sql += " FROM rclassctrydata";
+  sql += " WHERE (type='Motorway' OR type='Trunk' OR type='Primary' OR type='Secondary')";
+  sql += " AND isocode IS NOT \"\"";
+
+  char *errMsg = 0;
+  int rc = sqlite3_exec(db, sql.c_str(), maxSpeedCallback, NULL, &errMsg);
+  checkDBResponse(rc, errMsg);
 }
 
 /*
