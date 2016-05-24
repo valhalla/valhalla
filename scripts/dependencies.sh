@@ -18,7 +18,7 @@ for dep in midgard baldr skadi; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
-	make -j4
+	make -j$(nproc)
 	sudo make install
 	popd
 done
