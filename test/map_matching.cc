@@ -1,5 +1,6 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cassert>
@@ -11,8 +12,8 @@
 
 #include <valhalla/sif/costconstants.h>
 
-#include "mmp/universal_cost.h"
-#include "mmp/map_matching.h"
+#include "meili/universal_cost.h"
+#include "meili/map_matching.h"
 
 using namespace valhalla;
 
@@ -27,7 +28,7 @@ void TestMapMatcherFactory(const ptree& root)
     auto config = root;
     config.put<std::string>("mm.auto.hello", "world");
     config.put<std::string>("mm.default.hello", "default world");
-    mmp::MapMatcherFactory factory(config);
+    meili::MapMatcherFactory factory(config);
     auto matcher = factory.Create("auto");
     assert(matcher->travelmode() == sif::TravelMode::kDrive);
     assert(matcher->config().get<std::string>("hello") == "world");
@@ -38,7 +39,7 @@ void TestMapMatcherFactory(const ptree& root)
   {
     auto config = root;
     config.put<std::string>("mm.default.hello", "default world");
-    mmp::MapMatcherFactory factory(config);
+    meili::MapMatcherFactory factory(config);
     auto matcher = factory.Create("bicycle");
     assert(matcher->travelmode() == sif::TravelMode::kBicycle);
     assert(matcher->config().get<std::string>("hello") == "default world");
@@ -48,7 +49,7 @@ void TestMapMatcherFactory(const ptree& root)
   // Test configuration priority
   {
     auto config = root;
-    mmp::MapMatcherFactory factory(config);
+    meili::MapMatcherFactory factory(config);
     ptree preferences;
     preferences.put<std::string>("hello", "preferred world");
     config.put<std::string>("mm.auto.hello", "world");
@@ -61,18 +62,18 @@ void TestMapMatcherFactory(const ptree& root)
 
   // Test configuration priority
   {
-    mmp::MapMatcherFactory factory(root);
+    meili::MapMatcherFactory factory(root);
     ptree preferences;
     preferences.put<std::string>("hello", "preferred world");
     auto matcher = factory.Create("multimodal", preferences);
-    assert(matcher->travelmode() == mmp::kUniversalTravelMode);
+    assert(matcher->travelmode() == meili::kUniversalTravelMode);
     assert(matcher->config().get<std::string>("hello") == "preferred world");
     delete matcher;
   }
 
   // Test default mode
   {
-    mmp::MapMatcherFactory factory(root);
+    meili::MapMatcherFactory factory(root);
     ptree preferences;
     auto matcher = factory.Create(preferences);
     assert(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("mm.mode")));
@@ -81,7 +82,7 @@ void TestMapMatcherFactory(const ptree& root)
 
   // Test preferred mode
   {
-    mmp::MapMatcherFactory factory(root);
+    meili::MapMatcherFactory factory(root);
     ptree preferences;
     preferences.put<std::string>("mode", "pedestrian");
     auto matcher = factory.Create(preferences);
@@ -96,23 +97,23 @@ void TestMapMatcherFactory(const ptree& root)
 
   // Transport names
   {
-    mmp::MapMatcherFactory factory(root);
+    meili::MapMatcherFactory factory(root);
 
     assert(factory.NameToTravelMode("auto") == sif::TravelMode::kDrive);
     assert(factory.NameToTravelMode("bicycle") == sif::TravelMode::kBicycle);
     assert(factory.NameToTravelMode("pedestrian") == sif::TravelMode::kPedestrian);
-    assert(factory.NameToTravelMode("multimodal") == mmp::kUniversalTravelMode);
+    assert(factory.NameToTravelMode("multimodal") == meili::kUniversalTravelMode);
 
     assert(factory.TravelModeToName(sif::TravelMode::kDrive) == "auto");
     assert(factory.TravelModeToName(sif::TravelMode::kBicycle) == "bicycle");
     assert(factory.TravelModeToName(sif::TravelMode::kPedestrian) == "pedestrian");
-    assert(factory.TravelModeToName(mmp::kUniversalTravelMode) == "multimodal");
+    assert(factory.TravelModeToName(meili::kUniversalTravelMode) == "multimodal");
   }
 
   // Invalid transport mode name
   {
-    mmp::MapMatcherFactory factory(root);
-    mmp::MapMatcher* matcher = nullptr;
+    meili::MapMatcherFactory factory(root);
+    meili::MapMatcher* matcher = nullptr;
     bool happen = false;
 
     try {
@@ -150,7 +151,7 @@ void TestMapMatcher(const ptree& root)
 {
   // Nothing special to test for the moment
 
-  mmp::MapMatcherFactory factory(root);
+  meili::MapMatcherFactory factory(root);
   auto auto_matcher = factory.Create("auto");
   auto pedestrian_matcher = factory.Create("pedestrian");
 

@@ -7,11 +7,9 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/pathlocation.h>
 
+namespace valhalla{
 
-namespace mmp {
-
-using namespace valhalla;
-
+namespace meili {
 
 // A thin wrapper of PathLocation
 class Candidate: public baldr::PathLocation
@@ -37,6 +35,8 @@ class Candidate: public baldr::PathLocation
  private:
   float sq_distance_;
 };
+
+}
 
 }
 

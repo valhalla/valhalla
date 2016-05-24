@@ -1,11 +1,12 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cassert>
 #include <iostream>
 
-#include "mmp/priority_queue.h"
+#include "meili/priority_queue.h"
 
 
 class Label: public LabelInterface<uint32_t>

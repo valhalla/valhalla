@@ -1,18 +1,19 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cassert>
 #include <iostream>
 
-#include "mmp/routing.h"
+#include "meili/routing.h"
 
 using namespace valhalla;
-using namespace mmp;
+using namespace valhalla::meili;
 
 constexpr uint32_t kInvalidKey = std::numeric_limits<uint16_t>::max();
 
-using AdjacencyList = mmp::BucketQueue<uint32_t, kInvalidKey>;
+using AdjacencyList = meili::BucketQueue<uint32_t, kInvalidKey>;
 
 
 void Add(AdjacencyList &adjlist, const std::vector<float>& costs)
@@ -178,7 +179,7 @@ void Benchmark()
 
 void TestRoutePathIterator()
 {
-  mmp::LabelSet labelset(100);
+  meili::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
@@ -206,7 +207,7 @@ void TestRoutePathIterator()
                0.f, 0.f, 0.f,
                3, nullptr, travelmode, nullptr);
 
-  mmp::RoutePathIterator the_end(&labelset, mmp::kInvalidLabelIndex),
+  meili::RoutePathIterator the_end(&labelset, meili::kInvalidLabelIndex),
       it0(&labelset, 0),
       it1(&labelset, 1),
       it2(&labelset, 2),
@@ -223,7 +224,7 @@ void TestRoutePathIterator()
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing");
   }
 
-  if (it0->predecessor != mmp::kInvalidLabelIndex) {
+  if (it0->predecessor != meili::kInvalidLabelIndex) {
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer");
   }
 

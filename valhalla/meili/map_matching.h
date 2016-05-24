@@ -10,15 +10,15 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/costconstants.h>
 
-#include <mmp/candidate.h>
-#include <mmp/candidate_search.h>
-#include <mmp/viterbi_search.h>
-#include <mmp/routing.h>
+#include <meili/candidate.h>
+#include <meili/candidate_search.h>
+#include <meili/viterbi_search.h>
+#include <meili/routing.h>
 
 
-namespace mmp {
+namespace valhalla{
 
-using namespace valhalla;
+namespace meili {
 
 
 class Measurement
@@ -585,6 +585,9 @@ private:
 
 
 }
+
+}
+
 
 
 #endif // MMP_MAP_MATCHING_H_

@@ -1,9 +1,8 @@
-#include "mmp/candidate_search.h"
+#include "meili/candidate_search.h"
 
-using namespace valhalla;
+namespace valhalla {
 
-
-namespace mmp {
+namespace meili {
 
 
 std::vector<Candidate>
@@ -305,5 +304,6 @@ CandidateGridQuery::Query(const midgard::PointLL& location,
                                edgeids.begin(), edgeids.end(), filter, false);
 }
 
+}
 
 }

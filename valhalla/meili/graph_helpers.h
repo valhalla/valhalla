@@ -7,11 +7,11 @@
 #include <valhalla/baldr/graphtile.h>
 
 
-namespace mmp {
+namespace valhalla{
+
+namespace meili {
+
 namespace helpers {
-
-using namespace valhalla;
-
 
 inline const baldr::DirectedEdge*
 edge_directededge(baldr::GraphReader& graphreader,
@@ -191,6 +191,9 @@ edge_edgeinfo(baldr::GraphReader& graphreader,
 
 
 }
+
+}
+
 }
 
 

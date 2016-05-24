@@ -1,9 +1,9 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "mmp/map_matching.h"
+#include "meili/map_matching.h"
 
-using namespace mmp;
+using namespace valhalla::meili;
 
 
 int main(int argc, char *argv[])

@@ -10,98 +10,90 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include <rapidjson/error/en.h>
+#include "rapidjson/error/en.h"
 
-#include "mmp/universal_cost.h"
-#include "mmp/map_matching.h"
+#include "meili/universal_cost.h"
+#include "meili/map_matching.h"
 
 using namespace prime_server;
 using namespace valhalla;
-using namespace mmp;
-
+using namespace meili;
 
 namespace {
 
-constexpr size_t kHttpStatusCodeSize = 600;
-const char* kHttpStatusCodes[kHttpStatusCodeSize];
-
-
-inline const std::string
-http_status_code(unsigned code)
-{
-  return code < kHttpStatusCodeSize? kHttpStatusCodes[code] : "";
-}
-
-
 // Credits: http://werkzeug.pocoo.org/
-void init_http_status_codes()
-{
+const std::unordered_map<size_t, std::string> kHttpStatusCodes {
   // 1xx
-  kHttpStatusCodes[100] = "Continue";
-  kHttpStatusCodes[101] = "Switching Protocols";
-  kHttpStatusCodes[102] = "Processing";
+  {100,"Continue"},
+  {101,"Switching Protocols"},
+  {102,"Processing"},
 
   // 2xx
-  kHttpStatusCodes[200] = "OK";
-  kHttpStatusCodes[201] = "Created";
-  kHttpStatusCodes[202] = "Accepted";
-  kHttpStatusCodes[203] = "Non Authoritative Information";
-  kHttpStatusCodes[204] = "No Content";
-  kHttpStatusCodes[205] = "Reset Content";
-  kHttpStatusCodes[206] = "Partial Content";
-  kHttpStatusCodes[207] = "Multi Status";
-  kHttpStatusCodes[226] = "IM Used";  // see RFC 322
+  {200,"OK"},
+  {201,"Created"},
+  {202,"Accepted"},
+  {203,"Non Authoritative Information"},
+  {204,"No Content"},
+  {205,"Reset Content"},
+  {206,"Partial Content"},
+  {207,"Multi Status"},
+  {226,"IM Used"},  // see RFC 322
 
   // 3xx
-  kHttpStatusCodes[300] = "Multiple Choices";
-  kHttpStatusCodes[301] = "Moved Permanently";
-  kHttpStatusCodes[302] = "Found";
-  kHttpStatusCodes[303] = "See Other";
-  kHttpStatusCodes[304] = "Not Modified";
-  kHttpStatusCodes[305] = "Use Proxy";
-  kHttpStatusCodes[307] = "Temporary Redirect";
+  {300,"Multiple Choices"},
+  {301,"Moved Permanently"},
+  {302,"Found"},
+  {303,"See Other"},
+  {304,"Not Modified"},
+  {305,"Use Proxy"},
+  {307,"Temporary Redirect"},
 
   // 4xx
-  kHttpStatusCodes[400] = "Bad Request";
-  kHttpStatusCodes[401] = "Unauthorized";
-  kHttpStatusCodes[402] = "Payment Required";  // unuse
-  kHttpStatusCodes[403] = "Forbidden";
-  kHttpStatusCodes[404] = "Not Found";
-  kHttpStatusCodes[405] = "Method Not Allowed";
-  kHttpStatusCodes[406] = "Not Acceptable";
-  kHttpStatusCodes[407] = "Proxy Authentication Required";
-  kHttpStatusCodes[408] = "Request Timeout";
-  kHttpStatusCodes[409] = "Conflict";
-  kHttpStatusCodes[410] = "Gone";
-  kHttpStatusCodes[411] = "Length Required";
-  kHttpStatusCodes[412] = "Precondition Failed";
-  kHttpStatusCodes[413] = "Request Entity Too Large";
-  kHttpStatusCodes[414] = "Request URI Too Long";
-  kHttpStatusCodes[415] = "Unsupported Media Type";
-  kHttpStatusCodes[416] = "Requested Range Not Satisfiable";
-  kHttpStatusCodes[417] = "Expectation Failed";
-  kHttpStatusCodes[418] = "I\'m a teapot";  // see RFC 232
-  kHttpStatusCodes[422] = "Unprocessable Entity";
-  kHttpStatusCodes[423] = "Locked";
-  kHttpStatusCodes[424] = "Failed Dependency";
-  kHttpStatusCodes[426] = "Upgrade Required";
-  kHttpStatusCodes[428] = "Precondition Required";  // see RFC 658
-  kHttpStatusCodes[429] = "Too Many Requests";
-  kHttpStatusCodes[431] = "Request Header Fields Too Large";
-  kHttpStatusCodes[449] = "Retry With";  // proprietary MS extensio
+  {400,"Bad Request"},
+  {401,"Unauthorized"},
+  {402,"Payment Required"},  // unuse
+  {403,"Forbidden"},
+  {404,"Not Found"},
+  {405,"Method Not Allowed"},
+  {406,"Not Acceptable"},
+  {407,"Proxy Authentication Required"},
+  {408,"Request Timeout"},
+  {409,"Conflict"},
+  {410,"Gone"},
+  {411,"Length Required"},
+  {412,"Precondition Failed"},
+  {413,"Request Entity Too Large"},
+  {414,"Request URI Too Long"},
+  {415,"Unsupported Media Type"},
+  {416,"Requested Range Not Satisfiable"},
+  {417,"Expectation Failed"},
+  {418,"I\'m a teapot"},  // see RFC 232
+  {422,"Unprocessable Entity"},
+  {423,"Locked"},
+  {424,"Failed Dependency"},
+  {426,"Upgrade Required"},
+  {428,"Precondition Required"},  // see RFC 658
+  {429,"Too Many Requests"},
+  {431,"Request Header Fields Too Large"},
+  {449,"Retry With"},  // proprietary MS extensio
 
   // 5xx
-  kHttpStatusCodes[500] = "Internal Server Error";
-  kHttpStatusCodes[501] = "Not Implemented";
-  kHttpStatusCodes[502] = "Bad Gateway";
-  kHttpStatusCodes[503] = "Service Unavailable";
-  kHttpStatusCodes[504] = "Gateway Timeout";
-  kHttpStatusCodes[505] = "HTTP Version Not Supported";
-  kHttpStatusCodes[507] = "Insufficient Storage";
-  kHttpStatusCodes[510] = "Not Extended";
+  {500,"Internal Server Error"},
+  {501,"Not Implemented"},
+  {502,"Bad Gateway"},
+  {503,"Service Unavailable"},
+  {504,"Gateway Timeout"},
+  {505,"HTTP Version Not Supported"},
+  {507,"Insufficient Storage"},
+  {510,"Not Extended"},
+};
+
+inline std::string http_status_code(unsigned code) {
+  auto code_itr = kHttpStatusCodes.find(code);
+  return code_itr == kHttpStatusCodes.cend() ? "" : code_itr->second;
 }
 
 
@@ -711,43 +703,29 @@ class mm_worker_t {
   bool verbose_;
 };
 
-
 }
 
+namespace valhalla {
 
-namespace mmp {
+namespace meili {
 
-void run_service(const boost::property_tree::ptree& config)
-{
-  std::string proxy_endpoint = config.get<std::string>("mm.service.proxy"),
-     proxy_upstream_endpoint = proxy_endpoint + ".upstream",
-   proxy_downstream_endpoint = proxy_endpoint + ".downstream",
-           loopback_endpoint = config.get<std::string>("mm.service.loopback"),
-             server_endpoint = config.get<std::string>("mm.service.listen");
+void run_service(const boost::property_tree::ptree& config) {
+  //gets requests from the http server
+  auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
+  //or returns just location information back to the server
+  auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
 
+  //listen for requests
   zmq::context_t context;
-
-  init_http_status_codes();
-
-  http_server_t server(context, server_endpoint, proxy_upstream_endpoint, loopback_endpoint);
-  std::thread server_thread = std::thread(std::bind(&http_server_t::serve, server));
-  server_thread.detach();
-
-  proxy_t proxy(context, proxy_upstream_endpoint, proxy_downstream_endpoint);
-  std::thread proxy_thread(std::bind(&proxy_t::forward, proxy));
-  proxy_thread.detach();
-
-  // Listen for requests
-  mm_worker_t mm_worker(config);
-  auto work = std::bind(&mm_worker_t::work, std::ref(mm_worker), std::placeholders::_1, std::placeholders::_2);
-  auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(mm_worker));
-  prime_server::worker_t worker(context,
-                                proxy_downstream_endpoint, "ipc:///dev/null", loopback_endpoint,
-                                work, cleanup);
-
+  mm_worker_t meili_worker(config);
+  auto work = std::bind(&mm_worker_t::work, std::ref(meili_worker), std::placeholders::_1, std::placeholders::_2);
+  auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(meili_worker));
+  prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, work, cleanup);
   worker.work();
 
-  //TODO should we listen for SIGINT and terminate gracefully/exit(0)?
+  //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+}
+
 }
 
 }

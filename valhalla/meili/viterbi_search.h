@@ -7,10 +7,12 @@
 #include <algorithm>
 #include <cassert>
 
-#include <mmp/priority_queue.h>
+#include <meili/priority_queue.h>
 
 
-namespace mmp {
+namespace valhalla{
+
+namespace meili {
 
 using Time = uint32_t;
 using StateId = uint32_t;
@@ -729,6 +731,7 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
   return searched_time;
 }
 
+}
 
 }
 

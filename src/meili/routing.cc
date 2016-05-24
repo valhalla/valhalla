@@ -9,15 +9,13 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/costconstants.h>
 
-#include "mmp/graph_helpers.h"
-#include "mmp/geometry_helpers.h"
-#include "mmp/routing.h"
+#include "meili/graph_helpers.h"
+#include "meili/geometry_helpers.h"
+#include "meili/routing.h"
 
-using namespace valhalla;
+namespace valhalla {
 
-
-namespace mmp
-{
+namespace meili {
 
 LabelSet::LabelSet(typename BucketQueue<uint32_t, kInvalidLabelIndex>::size_type count, float size)
     : queue_(count, size) {}
@@ -534,6 +532,8 @@ find_shortest_path(baldr::GraphReader& reader,
   labelset.clear_status();
 
   return results;
+}
+
 }
 
 }

@@ -18,9 +18,9 @@
 #include <valhalla/sif/dynamiccost.h>
 
 
-namespace mmp {
+namespace valhalla{
 
-using namespace valhalla;
+namespace meili {
 
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
@@ -405,6 +405,9 @@ class RoutePathIterator:
 };
 
 }
+
+}
+
 
 
 #endif // MMP_ROUTING_H_
