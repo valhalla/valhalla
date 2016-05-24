@@ -29,15 +29,18 @@ libtool
 libvalhalla_tools.pc
 
 # built objects
-skadi_benchmark
-skadi_simple_service
-loki_benchmark
-tyr_simple_service
-path_test
-city_test
-time_distance_test
-adjacency_list_benchmark
-unconnected_ways
+valhalla_benchmark_adjacency_list
+valhalla_benchmark_loki
+valhalla_benchmark_skadi
+valhalla_elevation_service
+valhalla_loki_worker
+valhalla_odin_worker
+valhalla_route_service
+valhalla_run_matrix
+valhalla_run_route
+valhalla_skadi_worker
+valhalla_thor_worker
+valhalla_tyr_worker
 *.o
 .deps/
 .dirstamp
