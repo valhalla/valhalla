@@ -1,16 +1,16 @@
-# Running MM service in Docker
+# Running Meili service in Docker
 
 Before we start, make sure you have `docker`, `git` and `wget`
 installed.
 
-1. Clone `map_matching_plus`:
+1. Clone `meili`:
    ```sh
-   git clone --depth=1 https://github.com/mapillary/map_matching_plus.git
+   git clone --depth=1 https://github.com/valhalla/meili.git
    ```
 
-2. Build the Docker image `mapillary/mmp`:
+2. Build the Docker image `valhalla/meili`:
    ```sh
-   sudo docker build -t mapillary/mmp map_matching_plus/docker
+   sudo docker build -t valhalla/meili meili/docker
    ```
 
 3. We need a work directory, let's say `~/tiles` (must be absolute
@@ -36,18 +36,18 @@ installed.
    sudo docker run -it \
         --volume  "${WORK_DIR}":/data \
         --workdir /data \
-        mapillary/mmp \
+        valhalla/meili \
         pbfgraphbuilder --conf conf/valhalla.json berlin-latest.osm.pbf
    ```
 
    This process takes a while, from a few minutes to a few hours,
    depending on the OSM size.
 
-7. Copy the MM configuration file to the work directory so that the
+7. Copy the Meili configuration file to the work directory so that the
    service can read it
 
    ```sh
-   cp map_matching_plus/conf/mm.json "${WORK_DIR}"
+   cp meili/conf/mm.json "${WORK_DIR}"
    ```
 
 8. Run the service:
@@ -56,13 +56,13 @@ installed.
    sudo docker run -it \
         --volume "${WORK_DIR}":/data \
         --publish 8001:8001 \
-        mapillary/mmp \
-        mmp_service /data/mm.json
+        valhalla/meili \
+        valhalla_map_match_service /data/mm.json
    ```
 
    Now the service is up. It is listening on `localhost:8001` for all
    coming coordinates in format of GeoJSON. You may refer to the
-   [service API](https://github.com/mapillary/map_matching_plus/blob/master/docs/service_api.md)
+   [service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
    documentation for details.
 
 9. If you need a web interface to play with, clone our demos:
