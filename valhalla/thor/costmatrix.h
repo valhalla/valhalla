@@ -64,7 +64,13 @@ struct BestCandidate {
   }
 };
 
-// Class to compute cost (cost + time + distance) matrices among locations.
+/**
+ * Class to compute cost (cost + time + distance) matrices among locations.
+ * This uses a bidirectional search with highway hierarchies. This is a
+ * method described by Sebastian Knopp, "Efficient Computation of Many-to-Many
+ * Shortest Paths".
+ * https://i11www.iti.uni-karlsruhe.de/_media/teaching/theses/files/da-sknopp-06.pdf
+ */
 class CostMatrix {
  public:
   /**

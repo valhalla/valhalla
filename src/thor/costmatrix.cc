@@ -612,6 +612,12 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
                                         costing->UnitSize());
     source_hierarchy_limits_[index] = costing->GetHierarchyLimits();
 
+    // Since there is no distance to destination lets increase the
+    // number of upward transitions so we expand the local and arterial
+    // longer since most cost matrices are short routes
+    source_hierarchy_limits_[index][1].max_up_transitions = 2000;
+    source_hierarchy_limits_[index][2].max_up_transitions = 100;
+
     // Iterate through edges and add to adjacency list
     for (const auto& edge : (origin.edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
@@ -674,6 +680,12 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     target_adjacency_[index] = new AdjacencyList(0, cost_threshold_,
                                           costing->UnitSize());
     target_hierarchy_limits_[index] = costing->GetHierarchyLimits();
+
+    // Since there is no distance to destination lets increase the
+    // number of upward transitions so we expand the local and arterial
+    // longer since most cost matrices are short routes
+    target_hierarchy_limits_[index][1].max_up_transitions = 2000;
+    target_hierarchy_limits_[index][2].max_up_transitions = 100;
 
     // Iterate through edges and add to adjacency list
     for (const auto& edge : (dest.edges())) {
