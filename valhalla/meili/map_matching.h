@@ -199,7 +199,7 @@ class MatchResult
         graphid_(),
         graphtype_(GraphType::kUnknown),
         state_(nullptr)
-  { assert(!graphid_.Is_Valid()); }
+  { }
 
   // Coordinate of the matched point
   const midgard::PointLL& lnglat() const

@@ -146,12 +146,6 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
     throw std::invalid_argument("Expect search radius to be nonnegative");
   }
 
-#ifndef NDEBUG
-  for (size_t i = 0; i <= 180; ++i) {
-    assert(!turn_cost_table_[i]);
-  }
-#endif
-
   if (0.f < turn_penalty_factor_) {
     for (int i = 0; i <= 180; ++i) {
       turn_cost_table_[i] = turn_penalty_factor_ * std::exp(-i/45.f);
@@ -227,7 +221,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     const auto prev_stateid = predecessor(left.id());
     if (prev_stateid != kInvalidStateId) {
       const auto& prev_state = state(prev_stateid);
-      assert(prev_state.routed());
+      //TODO: @ptpt is this worth throwing? assert(prev_state.routed());
       const auto label = prev_state.last_label(left);
       edgelabel = label? label->edgelabel : nullptr;
     } else {
@@ -239,7 +233,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
                approximator, search_radius_,
                costing(), edgelabel, turn_cost_table_);
   }
-  assert(left.routed());
+  //TODO: @ptpt is this worth throwing? assert(left.routed());
 
   const auto label = left.last_label(right);
   if (label) {
@@ -247,7 +241,6 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     return (label->turn_cost + std::abs(label->cost - mmt_distance)) * inv_beta_;
   }
 
-  assert(IsInvalidCost(-1.f));
   return -1.f;
 }
 
@@ -524,14 +517,12 @@ OfflineMatch(MapMatching& mm,
     iterpath.push_back(it);
   }
   std::reverse(iterpath.begin(), iterpath.end());
-  assert(iterpath.size() == mm.size());
 
   // Interpolate proximate measurements and merge their states into
   // the results
   std::vector<MatchResult> results;
   results.reserve(measurements.size());
   results.emplace_back(measurements.front().lnglat());
-  assert(!results.back().graphid().Is_Valid());
 
   for (Time time = 1; time < mm.size(); time++) {
     const auto &source_state = iterpath[time - 1],
@@ -557,7 +548,8 @@ OfflineMatch(MapMatching& mm,
 
     results.push_back(guess_target_result(source_state, target_state, measurements[results.size()]));
   }
-  assert(results.size() == measurements.size());
+  if(results.size() != measurements.size())
+    throw std::logic_error("The number of matched points does not match the number of input points.");
 
   return results;
 }
@@ -601,13 +593,6 @@ MapMatcherFactory::MapMatcherFactory(const ptree& root)
                   local_tile_size(graphreader_)/root.get<size_t>("grid.size")),
       max_grid_cache_size_(root.get<float>("grid.cache_size"))
       {
-#ifndef NDEBUG
-        for (size_t idx = 0; idx < kModeCostingCount; idx++) {
-          assert(!mode_costing_[idx]);
-          assert(mode_name_[idx].empty());
-        }
-#endif
-
         init_costings(root);
       }
 
