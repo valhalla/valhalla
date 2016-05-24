@@ -915,10 +915,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   if (from_rc > RoadClass::kUnclassified)
     from_rc = RoadClass::kUnclassified;
 
-  // High stop impact from a turn channel onto a turn channel or ramp unless
+  // High stop impact from a turn channel onto a turn channel unless
   // the other edge a low class road (walkways often intersect
   // turn channels)
-  if (edges[from].use() == Use::kTurnChannel && edges[to].link() &&
+  if (edges[from].use() == Use::kTurnChannel &&
+      edges[to].use() == Use::kTurnChannel  &&
       bestrc < RoadClass::kUnclassified) {
     return 7;
   }
