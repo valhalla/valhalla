@@ -122,7 +122,8 @@ bin_PROGRAMS = \
 	pbfadminbuilder \
 	transit_fetcher \
 	transit_stop_query \
-	ways_to_edges
+	ways_to_edges \
+	valhalla_build_statistics
 
 adminbenchmark_SOURCES = src/mjolnir/adminbenchmark.cc
 adminbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
@@ -195,6 +196,9 @@ test_signinfo_SOURCES = test/signinfo.cc test/test.cc
 test_signinfo_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_signinfo_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 
+valhalla_build_statistics_SOURCES = src/mjolnir/valhalla_build_statistics.cc
+valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lsqlite3 libvalhalla_mjolnir.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

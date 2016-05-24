@@ -38,6 +38,7 @@ connectivitymap
 transit_fetcher
 transit_stop_query
 ways_to_edges
+valhalla_build_statistics
 *.o
 .deps/
 .dirstamp
