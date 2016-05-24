@@ -589,9 +589,9 @@ MapMatcherFactory::MapMatcherFactory(const ptree& root)
       mode_costing_{nullptr},
       mode_name_(),
       rangequery_(graphreader_,
-                  local_tile_size(graphreader_)/root.get<size_t>("grid.size"),
-                  local_tile_size(graphreader_)/root.get<size_t>("grid.size")),
-      max_grid_cache_size_(root.get<float>("grid.cache_size"))
+                  local_tile_size(graphreader_)/root.get<size_t>("meili.grid.size"),
+                  local_tile_size(graphreader_)/root.get<size_t>("meili.grid.size")),
+      max_grid_cache_size_(root.get<float>("meili.grid.cache_size"))
       {
         init_costings(root);
       }
