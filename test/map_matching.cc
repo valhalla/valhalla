@@ -26,8 +26,8 @@ void TestMapMatcherFactory(const ptree& root)
   {
     // Copy it so we can change it
     auto config = root;
-    config.put<std::string>("mm.auto.hello", "world");
-    config.put<std::string>("mm.default.hello", "default world");
+    config.put<std::string>("meili.auto.hello", "world");
+    config.put<std::string>("meili.default.hello", "default world");
     meili::MapMatcherFactory factory(config);
     auto matcher = factory.Create("auto");
     assert(matcher->travelmode() == sif::TravelMode::kDrive);
@@ -38,7 +38,7 @@ void TestMapMatcherFactory(const ptree& root)
   // Test configuration priority
   {
     auto config = root;
-    config.put<std::string>("mm.default.hello", "default world");
+    config.put<std::string>("meili.default.hello", "default world");
     meili::MapMatcherFactory factory(config);
     auto matcher = factory.Create("bicycle");
     assert(matcher->travelmode() == sif::TravelMode::kBicycle);
@@ -52,8 +52,8 @@ void TestMapMatcherFactory(const ptree& root)
     meili::MapMatcherFactory factory(config);
     ptree preferences;
     preferences.put<std::string>("hello", "preferred world");
-    config.put<std::string>("mm.auto.hello", "world");
-    config.put<std::string>("mm.default.hello", "default world");
+    config.put<std::string>("meili.auto.hello", "world");
+    config.put<std::string>("meili.default.hello", "default world");
     auto matcher = factory.Create(sif::TravelMode::kPedestrian, preferences);
     assert(matcher->travelmode() == sif::TravelMode::kPedestrian);
     assert(matcher->config().get<std::string>("hello") == "preferred world");
@@ -76,7 +76,7 @@ void TestMapMatcherFactory(const ptree& root)
     meili::MapMatcherFactory factory(root);
     ptree preferences;
     auto matcher = factory.Create(preferences);
-    assert(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("mm.mode")));
+    assert(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("meili.mode")));
     delete matcher;
   }
 
@@ -167,7 +167,7 @@ void TestMapMatcher(const ptree& root)
 int main(int argc, char *argv[])
 {
   ptree config;
-  boost::property_tree::read_json("conf/mm.json", config);
+  boost::property_tree::read_json("test/mm.json", config);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {

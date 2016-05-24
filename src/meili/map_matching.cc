@@ -584,7 +584,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 
 
 MapMatcherFactory::MapMatcherFactory(const ptree& root)
-    : config_(root.get_child("mm")),
+    : config_(root.get_child("meili")),
       graphreader_(root.get_child("mjolnir")),
       mode_costing_{nullptr},
       mode_name_(),
