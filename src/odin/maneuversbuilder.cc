@@ -87,7 +87,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Calculate the consecutive exit sign count and then sort
   CountAndSortExitSigns(maneuvers);
 
-  // Conform maneuver type assignment
+  // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -325,7 +325,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine current turn channel maneuver with next maneuver
-      else if (curr_man->turn_channel() && (curr_man != next_man)) {
+      else if (curr_man->turn_channel() && (curr_man != next_man)
+          && !(trip_path_->GetEnhancedNode(next_man->begin_node_index())
+              ->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()))) {
         LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
         curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
                                               next_man,

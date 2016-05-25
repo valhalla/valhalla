@@ -158,6 +158,9 @@ class EnhancedTripPath_Node : public TripPath_Node {
   bool HasForwardTraversableIntersectingEdge(
       uint32_t from_heading, const TripPath_TravelMode travel_mode);
 
+  bool HasTraversableOutboundIntersectingEdge(
+      const TripPath_TravelMode travel_mode);
+
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(
