@@ -345,7 +345,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
     // Iterate through the targets
     for (auto target : targets->second) {
-      uint32_t idx = source * source_count_ + target;
+      uint32_t idx = source * target_count_ + target;
       if (best_connection_[idx].found) {
         continue;
       }
