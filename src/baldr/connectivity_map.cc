@@ -95,7 +95,7 @@ namespace valhalla {
           if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
             for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
               if (!boost::filesystem::is_directory(i->path())) {
-                GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy);
+                GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy.tile_dir());
                 level_colors.insert({id.tileid(), 0});
               }
             }
