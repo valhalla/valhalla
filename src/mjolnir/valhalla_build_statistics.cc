@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,7 +9,7 @@
 
 #include <valhalla/baldr/json.h>
 
-using dataPair = std::pair<std::vector<std::string>*, std::vector<std::vector<float>>*>;
+using dataPair = std::pair<std::vector<std::string>*, std::unordered_map<std::string, std::vector<float>>*>;
 
 /*
  * Handle errors returned from the db
@@ -86,7 +87,7 @@ static int countryDataCallback (void *data_pair, int argc, char **argv, char **c
     sum += tok;
   }
   classData->push_back(sum);
-  data->push_back(*classData);
+  data->emplace(argv[0], *classData);
 
   return 0;
 }
@@ -103,7 +104,7 @@ static int countryDataCallback (void *data_pair, int argc, char **argv, char **c
  *  countries contains the iso codes of all countries in the database
  *  data contains the lengths of each type of road for each country
  */
-void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::vector<std::vector<float>>& data) {
+void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::unordered_map<std::string, std::vector<float>>& data) {
   
   std::string sql = "SELECT * FROM countrydata WHERE isocode IS NOT \"\"";
 
@@ -122,26 +123,30 @@ void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::vect
  *  **colName - char array returned column names from the database
  */
 static int maxSpeedCallback (void *data, int argc, char **argv, char **colName) {
+	std::unordered_map<std::string, std::vector<float>>* maxSpeedInfo = 
+		(std::unordered_map<std::string, std::vector<float>>*) data;
+		
+	std::istringstream ss(argv[2]);
+	float val;
+	ss >> val;
 
-  for (int i = 0; i < argc; ++i) {
-    std::cout << argv[i] << " ";
-  }
-  std::cout << std::endl;
+	maxSpeedInfo->at(argv[0]).push_back(val);
+
   return 0;
 }
 
 /*
- * Unused / Not-Implemented yet
+ * Retrieves the maxspeed data from the database and fills the data structure
  */
-void fillMaxSpeedData(sqlite3 *db) {
+void fillMaxSpeedData(sqlite3* db, std::unordered_map<std::string, std::vector<float>>& maxSpeedInfo) {
   
   std::string sql = "SELECT isocode,type,maxspeed";
-  sql += " FROM rclassctrydata";
+	sql += " FROM rclassctrydata";
   sql += " WHERE (type='Motorway' OR type='Trunk' OR type='Primary' OR type='Secondary')";
   sql += " AND isocode IS NOT \"\"";
 
   char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), maxSpeedCallback, NULL, &errMsg);
+  int rc = sqlite3_exec(db, sql.c_str(), maxSpeedCallback, (void*) &maxSpeedInfo, &errMsg);
   checkDBResponse(rc, errMsg);
 }
 
@@ -152,8 +157,15 @@ void fillMaxSpeedData(sqlite3 *db) {
  *  countries - names of all the countries from the database
  *  data - float values for all the lengths of road per country
  *  classes - the types of road classes
+ *  maxClasses - types of road data which have corresponding maxspeed data
+ *  maxSpeedInfo - float values for each maxClass for each country
  */
-void generateJson (std::vector<std::string>& countries, std::vector<std::vector<float>>& data, std::vector<std::string>& classes) {
+void generateJson (std::vector<std::string>& countries,
+									 std::unordered_map<std::string, std::vector<float>>& data,
+									 std::vector<std::string>& classes,
+									 std::unordered_map<std::string, std::vector<float>>& maxSpeedInfo,
+									 std::vector<std::string>& maxClasses) {
+
 	using namespace valhalla::baldr;
 
   std::ofstream out ("road_data.json");
@@ -163,18 +175,25 @@ void generateJson (std::vector<std::string>& countries, std::vector<std::vector<
 		  countries[i], json::map
 		  ({
 		  	{"name", countries[i]},
-		  	{"records", json::map
+		  	{"classinfo", json::map
 		  	({
-		  	 {classes[0], json::fp_t{data[i][0]}},
-		  	 {classes[1], json::fp_t{data[i][1]}},
-		  	 {classes[2], json::fp_t{data[i][2]}},
-		  	 {classes[3], json::fp_t{data[i][3]}},
-		  	 {classes[4], json::fp_t{data[i][4]}},
-		  	 {classes[5], json::fp_t{data[i][5]}},
-		  	 {classes[6], json::fp_t{data[i][6]}},
-		  	 {classes[7], json::fp_t{data[i][7]}},
-		  	 {classes[8], json::fp_t{data[i][8]}}
-		  	})}
+		  	 {classes[0], json::fp_t{data[countries[i]][0]}},
+		  	 {classes[1], json::fp_t{data[countries[i]][1]}},
+		  	 {classes[2], json::fp_t{data[countries[i]][2]}},
+		  	 {classes[3], json::fp_t{data[countries[i]][3]}},
+		  	 {classes[4], json::fp_t{data[countries[i]][4]}},
+		  	 {classes[5], json::fp_t{data[countries[i]][5]}},
+		  	 {classes[6], json::fp_t{data[countries[i]][6]}},
+		  	 {classes[7], json::fp_t{data[countries[i]][7]}},
+		  	 {classes[8], json::fp_t{data[countries[i]][8]}}
+		  	})},
+				{"maxspeed", json::map
+				({
+				 {maxClasses[0], json::fp_t{maxSpeedInfo[countries[i]][0]}},
+				 {maxClasses[1], json::fp_t{maxSpeedInfo[countries[i]][1]}},
+				 {maxClasses[2], json::fp_t{maxSpeedInfo[countries[i]][2]}},
+				 {maxClasses[3], json::fp_t{maxSpeedInfo[countries[i]][3]}}
+				})}
 		  })
 		);
 	}
@@ -192,10 +211,12 @@ int main (int argc, char** argv) {
   }
 
   // data structures
-  std::vector<std::string> classes;
+  std::vector<std::string> roadClasses;
   std::vector<std::string> countries;
-  std::vector<std::vector<float>> data;
-
+  std::unordered_map<std::string, std::vector<float>> roadClassInfo;
+	std::vector<std::string> maxClasses = {"Motorway", "Secondary", "Primary", "Trunk"};
+	std::unordered_map<std::string, std::vector<float>> maxSpeedInfo;
+	
   // open DB file
   sqlite3 *db;
   int rc = sqlite3_open(argv[1], &db);
@@ -205,10 +226,15 @@ int main (int argc, char** argv) {
   }
 
   // fill data structures
-  fillClasses(db, classes);
-  fillCountryData(db, countries, data);
+  fillClasses(db, roadClasses);
+  fillCountryData(db, countries, roadClassInfo);
+	// create the entries in the map
+	for (auto& s : countries) {
+		maxSpeedInfo[s];
+	}
+	fillMaxSpeedData(db, maxSpeedInfo);
   
-  generateJson(countries, data, classes);
+  generateJson(countries, roadClassInfo, roadClasses, maxSpeedInfo, maxClasses);
   
   sqlite3_close(db);
   return 0;
