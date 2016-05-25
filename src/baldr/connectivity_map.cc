@@ -87,6 +87,9 @@ namespace {
 namespace valhalla {
   namespace baldr {
     connectivity_map_t::connectivity_map_t(const TileHierarchy& tile_hierarchy):tile_hierarchy(tile_hierarchy) {
+      // Set the transit level
+      transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
+
       // Populate a map for each level of the tiles that exist
       for (const auto& tile_level : tile_hierarchy.levels()) {
         try {
@@ -110,6 +113,27 @@ namespace valhalla {
         auto level = tile_hierarchy.levels().find(level_colors.first);
         level->second.tiles.ColorMap(level_colors.second);
       }
+
+      // Transit level
+      try {
+        std::string tile_dir = tile_hierarchy.tile_dir();
+        auto& level_colors = colors.insert({transit_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
+        boost::filesystem::path root_dir(tile_dir + '/' + std::to_string(transit_level) + '/');
+        if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+          for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+            if (!boost::filesystem::is_directory(i->path())) {
+              GraphId id = GraphTile::GetTileId(i->path().string(), tile_dir);
+              level_colors.insert({id.tileid(), 0});
+            }
+          }
+        }
+
+        // Use local level tile definition and assign colors to transit level
+        auto transit_colors = colors.find(transit_level);
+        tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(transit_colors->second);
+      }
+      catch(...) {
+      }
     }
     size_t connectivity_map_t::get_color(const GraphId& id) const {
       auto level = colors.find(id.level());
@@ -120,11 +144,18 @@ namespace valhalla {
         return 0;
       return color->second;
     }
+
     std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
-      //bail if we dont have the level
-      auto bbox = tile_hierarchy.levels().find(hierarchy_level);
+      // Get the color level (throw exception if we don't have it)
       auto level = colors.find(hierarchy_level);
-      if(bbox == tile_hierarchy.levels().cend() || level == colors.cend())
+      if (level == colors.cend()) {
+        throw std::runtime_error("No connectivity map for level");
+      }
+
+      // Get the tile bounding box (special case for transit tiles).
+      uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
+      auto bbox = tile_hierarchy.levels().find(tile_level);
+      if (bbox == tile_hierarchy.levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
       //make a region map (inverse mapping of color to lists of tiles)
@@ -149,10 +180,14 @@ namespace valhalla {
     }
 
     std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
-      //bail if we dont have the level
-      auto bbox = tile_hierarchy.levels().find(hierarchy_level);
       auto level = colors.find(hierarchy_level);
-      if(bbox == tile_hierarchy.levels().cend() || level == colors.cend())
+      if (level == colors.cend()) {
+        throw std::runtime_error("No connectivity map for level");
+      }
+
+      uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
+      auto bbox = tile_hierarchy.levels().find(tile_level);
+      if (bbox == tile_hierarchy.levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
       std::vector<size_t> tiles(bbox->second.tiles.nrows() * bbox->second.tiles.ncolumns(), static_cast<uint32_t>(0));
