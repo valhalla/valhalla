@@ -8,7 +8,7 @@ if [ $? != 0 ]; then
 fi
 
 function usage() {
-        echo "Usage: $0 path_test_request_file conf [concurrency] [outDir]"
+        echo "Usage: $0 route_request_file conf [concurrency] [outDir]"
         echo "Example: $0 requests/demo_routes.txt"
         echo "Example: $0 requests/demo_routes.txt ~/valhalla.json"
         echo "Example: $0 requests/demo_routes.txt ~/valhalla.json 8"
@@ -45,7 +45,7 @@ mkdir -p "${RESULTS_OUTDIR}"
 #turn the nice input into something parallel can parse for args
 TMP="$(mktemp)"
 cp -rp "${INPUT}" "${TMP}"
-for arg in $(path_test --help | grep -o '\-[a-z\-]\+' | sort | uniq); do
+for arg in $(valhalla_run_route --help | grep -o '\-[a-z\-]\+' | sort | uniq); do
 	sed -i -e "s/[ ]\?${arg}[ ]\+/|${arg}|/g" "${TMP}"
 done
 sed -i -e "s;$;|--config|${CONF};g" -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TMP}"
@@ -54,7 +54,7 @@ sed -i -e "s;$;|--config|${CONF};g" -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TM
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
-cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "path_test {} 2>&1 | tee -a ${RESULTS_OUTDIR}/{#}.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${RESULTS_OUTDIR}/{#}.txt; grep -F STATISTICS ${RESULTS_OUTDIR}/{#}.tmp | sed -e 's/^[^\[]*\[STATISTICS\] //' &>> ${RESULTS_OUTDIR}/{#}_statistics.csv; rm -f ${RESULTS_OUTDIR}/{#}.tmp"
+cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "valhalla_run_route {} 2>&1 | tee -a ${RESULTS_OUTDIR}/{#}.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${RESULTS_OUTDIR}/{#}.txt; grep -F STATISTICS ${RESULTS_OUTDIR}/{#}.tmp | sed -e 's/^[^\[]*\[STATISTICS\] //' &>> ${RESULTS_OUTDIR}/{#}_statistics.csv; rm -f ${RESULTS_OUTDIR}/{#}.tmp"
 rm -f "${TMP}"
 echo "orgLat, orgLng, destLat, destLng, result, #Passes, runtime, trip time, length, arcDistance, #Manuevers" > ${RESULTS_OUTDIR}/statistics.csv
 cat `ls -1v ${RESULTS_OUTDIR}/*_statistics.csv` >> ${RESULTS_OUTDIR}/statistics.csv

@@ -94,7 +94,7 @@ A C++ application that will create a route path with guidance instructions for t
 #Usage:
 ./valhalla_run_route -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
 #Example:
-./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config conf/valhalla.json
+./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 ```
 
 ####valhalla_route_service
@@ -110,5 +110,5 @@ http://localhost:8002/route?json={"locations":[{"lat":40.285488,"lon":-76.650597
 
 Batch Script Tool
 -----------------
-- [Batch Path Test](https://github.com/valhalla/tools/blob/master/path_test_scripts/README.md)
+- [Batch Run_Route](https://github.com/valhalla/tools/blob/master/run_route_scripts/README.md)
 
