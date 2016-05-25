@@ -447,7 +447,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
     target_status_[index].threshold = 0;
-    for (uint32_t source = 0; source < target_count_; source++) {
+    for (uint32_t source = 0; source < source_count_; source++) {
       UpdateStatus(source, index);
     }
     return;
