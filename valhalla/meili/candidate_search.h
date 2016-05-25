@@ -19,9 +19,6 @@
 
 #include <meili/candidate.h>
 #include <meili/grid_range_query.h>
-#include <meili/graph_helpers.h>
-#include <meili/geometry_helpers.h>
-
 
 namespace valhalla{
 

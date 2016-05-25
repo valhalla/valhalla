@@ -1,4 +1,6 @@
 #include "meili/candidate_search.h"
+#include "meili/graph_helpers.h"
+#include "meili/geometry_helpers.h"
 
 namespace valhalla {
 
@@ -222,16 +224,9 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
   if (tile_of_minpt == tile_of_maxpt) {
     if (tile_of_minpt) {
       auto grid = GetGrid(tile_of_minpt);
-      if (grid) {
+      if (grid)
         return grid->Query(range);
-      } else {
-        // g++-4.9 can't convert {} to empty unordered_set
-        // return {};
-        return std::unordered_set<baldr::GraphId>();
-      }
     }
-    // g++-4.9 can't convert {} to empty unordered_set
-    // return {};
     return std::unordered_set<baldr::GraphId>();
   }
 
@@ -281,7 +276,8 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
   if (tile_of_rightbottom
       && tile_of_rightbottom != tile_of_minpt
       && tile_of_rightbottom != tile_of_maxpt) {
-    assert(tile_of_rightbottom != tile_of_lefttop);
+    if(tile_of_rightbottom == tile_of_lefttop)
+      throw std::logic_error("The candidate grid range should not be in a single tile");
     auto grid = GetGrid(tile_of_rightbottom);
     if (grid) {
       const auto& set = grid->Query(range);
