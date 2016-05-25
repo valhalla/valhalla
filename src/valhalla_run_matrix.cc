@@ -272,7 +272,6 @@ int main(int argc, char *argv[]) {
   if (matrixtype == "one_to_many") {
     LOG_INFO("One to Many");
     source_locations.push_back(path_locations.front());
-    path_locations.erase(path_locations.begin());
     target_locations = path_locations;
   } else if (matrixtype == "many_to_many") {
     LOG_INFO("Many to Many");
@@ -281,7 +280,6 @@ int main(int argc, char *argv[]) {
   } else {
     LOG_INFO("Many to One");
     target_locations.push_back(path_locations.back());
-    path_locations.pop_back();
     source_locations = path_locations;
   }
 
