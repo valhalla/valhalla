@@ -40,11 +40,7 @@ namespace valhalla {
       result.messages.emplace_back(std::move(request_str));
 
       CostMatrix costmatrix;
-      std::vector<baldr::PathLocation> source;
-      std::vector<baldr::PathLocation> target;
-      source.insert(source.begin(), correlated.begin(), correlated.end());
-      target.insert(target.begin(), correlated.begin(), correlated.end());
-      std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(source, target, reader, mode_costing, mode);
+      std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode);
       std::vector<float> time_costs;
       for (size_t i = 0; i < td.size(); i++)
         time_costs.emplace_back(static_cast<float>(td[i].time));

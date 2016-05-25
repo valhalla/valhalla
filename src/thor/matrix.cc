@@ -157,25 +157,17 @@ namespace valhalla {
       //do the real work
       json::MapPtr json;
       thor::CostMatrix costmatrix;
-      std::vector<baldr::PathLocation> source; // List of source/origin locations.
-      std::vector<baldr::PathLocation> target; // List of target/destination locations.
       switch ( matrix_type) {
         case MATRIX_TYPE::ONE_TO_MANY:
-          source.push_back(correlated.front());
-          target.insert(target.begin(), correlated.begin(), correlated.end());
-          json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(source, target, reader, mode_costing, mode), units, distance_scale);
+          json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget({correlated.front()}, correlated, reader, mode_costing, mode), units, distance_scale);
           matrix_action_type = "one-to-many";
           break;
         case MATRIX_TYPE::MANY_TO_ONE:
-          source.insert(source.begin(), correlated.begin(), correlated.end());
-          target.push_back(correlated.back());
-          json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(source, target, reader, mode_costing, mode), units, distance_scale);
+          json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(correlated, {correlated.back()}, reader, mode_costing, mode), units, distance_scale);
           matrix_action_type = "many-to-one";
           break;
         case MATRIX_TYPE::MANY_TO_MANY:
-          source.insert(source.begin(), correlated.begin(), correlated.end());
-          target.insert(target.begin(), correlated.begin(), correlated.end());
-          json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(source, target, reader, mode_costing, mode), units, distance_scale);
+          json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode), units, distance_scale);
           matrix_action_type = "many-to-many";
           break;
         }
