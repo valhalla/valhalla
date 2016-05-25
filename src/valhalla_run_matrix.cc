@@ -19,7 +19,7 @@
 #include <valhalla/odin/util.h>
 #include <valhalla/midgard/logging.h>
 
-#include <valhalla/thor/timedistancematrix.h>
+#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/optimizer.h>
 
 using namespace valhalla::midgard;
@@ -76,6 +76,28 @@ float random_unit_float() {
 PointLL JitterLatLng(const PointLL& latlng, const float delta) {
   return { latlng.lng() + random_unit_float() * delta,
            latlng.lat() + random_unit_float() * delta };
+}
+
+void LogFindings(const uint32_t n, const std::vector<TimeDistance>& res) {
+  uint32_t found = 0;
+  uint32_t idx = 0;
+  uint32_t source, target;
+  for (auto& r : res) {
+    source = idx / n;
+    target = idx % n;
+    if (r.time < 9999999.0f) {
+      LOG_TRACE("Source = " + std::to_string(source) + " to target " +
+               std::to_string(target) + " time= " + std::to_string(r.time) +
+               " distance = " + std::to_string(r.dist));
+
+      found++;
+    } else {
+      LOG_INFO("Source = " + std::to_string(source) + " to target " +
+                std::to_string(target) + " not found");
+    }
+    idx++;
+  }
+  LOG_INFO("Found: " + std::to_string(found) + " of " + std::to_string(res.size()));
 }
 
 // Main method for testing time and distance matrix methods
@@ -223,10 +245,10 @@ int main(int argc, char *argv[]) {
     uint32_t n = 100;
     float delta = 0.15f;  // Should keep all locations inside a 35 mile radius
     for (uint32_t i = 0; i < n; i++) {
-      ll = JitterLatLng(ll, delta);
-      locations.push_back(Location(ll));
+      PointLL ll2 = JitterLatLng(ll, delta);
+      locations.push_back(Location(ll2));
       LOG_INFO("Location " + std::to_string(i+1) + " = " +
-               std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+               std::to_string(ll2.lat()) + "," + std::to_string(ll2.lng()));
     }
   } else if (locations.size() == 0) {
     LOG_ERROR("No locations provided");
@@ -243,24 +265,35 @@ int main(int argc, char *argv[]) {
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
-  // Compute the time+distance matrix (for now one to many).
-  // TODO - add ManyToOne and some way of computing ManyToMany
+  // Prepare source and target locations
+  uint32_t nlocs = path_locations.size();
+  std::vector<PathLocation> source_locations;
+  std::vector<PathLocation> target_locations;
+  if (matrixtype == "one_to_many") {
+    LOG_INFO("One to Many");
+    source_locations.push_back(path_locations.front());
+    path_locations.erase(path_locations.begin());
+    target_locations = path_locations;
+  } else if (matrixtype == "many_to_many") {
+    LOG_INFO("Many to Many");
+    source_locations = path_locations;
+    target_locations = path_locations;
+  } else {
+    LOG_INFO("Many to One");
+    target_locations.push_back(path_locations.back());
+    path_locations.pop_back();
+    source_locations = path_locations;
+  }
+
+  // Compute the cost matrix
   t0 = std::chrono::high_resolution_clock::now();
-  TimeDistanceMatrix tdm;
+  CostMatrix matrix;
   std::vector<TimeDistance> res;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    if (matrixtype == "one_to_many") {
-      // First location in the list is the origin
-      res = tdm.OneToMany(0, path_locations, reader, mode_costing, mode);
-    } else if (matrixtype == "many_to_many") {
-      res = tdm.ManyToMany(path_locations, reader, mode_costing, mode);
-    } else {
-      // Last location in the list is the destination of many to one
-      uint32_t idx = path_locations.size() - 1;
-      res = tdm.ManyToOne(idx, path_locations, reader, mode_costing, mode);
-    }
-    tdm.Clear();
+    res = matrix.SourceToTarget(source_locations, target_locations, reader,
+                              mode_costing, mode);
+    matrix.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
@@ -272,7 +305,6 @@ int main(int argc, char *argv[]) {
   if (matrixtype == "many_to_many") {
     uint32_t idx1 = 0;
     uint32_t idx2 = 0;
-    uint32_t nlocs = path_locations.size();
     for (auto& td : res) {
       LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
           ": Distance= " + std::to_string(td.dist) +
