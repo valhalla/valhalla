@@ -9,7 +9,7 @@ using namespace prime_server;
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/thor/optimizer.h>
-#include <valhalla/thor/timedistancematrix.h>
+#include <valhalla/thor/costmatrix.h>
 
 #include "thor/service.h"
 
@@ -39,8 +39,12 @@ namespace valhalla {
       // Forward the original request
       result.messages.emplace_back(std::move(request_str));
 
-      TimeDistanceMatrix tdmatrix;
-      std::vector<TimeDistance> td = tdmatrix.ManyToMany(correlated, reader, mode_costing, mode);
+      CostMatrix costmatrix;
+      std::vector<baldr::PathLocation> source;
+      std::vector<baldr::PathLocation> target;
+      source.insert(source.begin(), correlated.begin(), correlated.end());
+      target.insert(target.begin(), correlated.begin(), correlated.end());
+      std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(source, target, reader, mode_costing, mode);
       std::vector<float> time_costs;
       for (size_t i = 0; i < td.size(); i++)
         time_costs.emplace_back(static_cast<float>(td[i].time));
