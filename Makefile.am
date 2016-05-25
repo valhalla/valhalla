@@ -51,7 +51,7 @@ libvalhalla_skadi_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CP
 libvalhalla_skadi_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB)
 
 #distributed executables
-dist_bin_SCRIPTS = scripts/valhalla_build_elevation
+bin_SCRIPTS = scripts/valhalla_build_elevation
 
 # tests
 check_PROGRAMS = test/util_skadi test/sample test/skadi_service
