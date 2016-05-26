@@ -91,10 +91,10 @@ namespace valhalla {
       transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
 
       // Populate a map for each level of the tiles that exist
-      for (const auto& tile_level : tile_hierarchy.levels()) {
+      for (uint32_t tile_level = 0; tile_level <= transit_level; tile_level++) {
         try {
-          auto& level_colors = colors.insert({tile_level.first, std::unordered_map<uint32_t, size_t>{}}).first->second;
-          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level.first) + '/');
+          auto& level_colors = colors.insert({tile_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
+          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level) + '/');
           if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
             for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
               if (!boost::filesystem::is_directory(i->path())) {
@@ -103,38 +103,20 @@ namespace valhalla {
               }
             }
           }
+
+          // Build the color map - transit level uses local hierarchy tiles
+          auto c = colors.find(tile_level);
+          if (tile_level == transit_level) {
+            tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(c->second);
+          } else {
+            tile_hierarchy.levels().find(tile_level)->second.tiles.ColorMap(c->second);
+          }
         }
         catch(...) {
         }
       }
-
-      // All tiles have color 0 (not connected), go through each level and connect them
-      for(auto& level_colors : colors) {
-        auto level = tile_hierarchy.levels().find(level_colors.first);
-        level->second.tiles.ColorMap(level_colors.second);
-      }
-
-      // Transit level
-      try {
-        std::string tile_dir = tile_hierarchy.tile_dir();
-        auto& level_colors = colors.insert({transit_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
-        boost::filesystem::path root_dir(tile_dir + '/' + std::to_string(transit_level) + '/');
-        if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
-          for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-            if (!boost::filesystem::is_directory(i->path())) {
-              GraphId id = GraphTile::GetTileId(i->path().string(), tile_dir);
-              level_colors.insert({id.tileid(), 0});
-            }
-          }
-        }
-
-        // Use local level tile definition and assign colors to transit level
-        auto transit_colors = colors.find(transit_level);
-        tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(transit_colors->second);
-      }
-      catch(...) {
-      }
     }
+
     size_t connectivity_map_t::get_color(const GraphId& id) const {
       auto level = colors.find(id.level());
       if(level == colors.cend())
