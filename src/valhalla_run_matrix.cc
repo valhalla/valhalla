@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO("Create random locations");
     PointLL ll = locations.front().latlng_;
     LOG_INFO("Location 0 = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-    uint32_t n = 10;
+    uint32_t n = 50;
     float delta = 0.15f;  // Should keep all locations inside a 35 mile radius
     for (uint32_t i = 0; i < n; i++) {
       PointLL ll2 = JitterLatLng(ll, delta);
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
   t0 = std::chrono::high_resolution_clock::now();
 
   std::vector<TimeDistance> res;
-  for (uint32_t n = 0; n < 10; n++) {
+  for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     CostMatrix matrix;
     if (matrixtype == "one_to_many") {
