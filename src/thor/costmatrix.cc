@@ -112,7 +112,9 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
       }
       if (target_status_[i].threshold == 0) {
         target_status_[i].threshold = -1;
-        remaining_targets_--;
+        if (remaining_targets_ > 0) {
+          remaining_targets_--;
+        }
       }
     }
 
@@ -124,7 +126,9 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
       }
       if (source_status_[i].threshold == 0) {
         source_status_[i].threshold = -1;
-        remaining_sources_--;
+        if (remaining_sources_ > 0) {
+          remaining_sources_--;
+        }
       }
     }
 
@@ -410,6 +414,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 // Update status when a connection is found.
 void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
   // Remove the target from the source status
+
   auto& s = source_status_[source].remaining_locations;
   auto it = s.find(target);
   if (it != s.end()) {
