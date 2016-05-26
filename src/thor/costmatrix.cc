@@ -109,11 +109,11 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
       if (target_status_[i].threshold > 0) {
         target_status_[i].threshold--;
         BackwardSearch(i, graphreader, costing);
-      }
-      if (target_status_[i].threshold == 0) {
-        target_status_[i].threshold = -1;
-        if (remaining_targets_ > 0) {
-          remaining_targets_--;
+        if (target_status_[i].threshold == 0) {
+          target_status_[i].threshold = -1;
+          if (remaining_targets_ > 0) {
+            remaining_targets_--;
+          }
         }
       }
     }
@@ -123,11 +123,11 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
       if (source_status_[i].threshold > 0) {
         source_status_[i].threshold--;
         ForwardSearch(i, n, graphreader, costing);
-      }
-      if (source_status_[i].threshold == 0) {
-        source_status_[i].threshold = -1;
-        if (remaining_sources_ > 0) {
-          remaining_sources_--;
+        if (source_status_[i].threshold == 0) {
+          source_status_[i].threshold = -1;
+          if (remaining_sources_ > 0) {
+            remaining_sources_--;
+          }
         }
       }
     }
@@ -414,12 +414,11 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 // Update status when a connection is found.
 void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
   // Remove the target from the source status
-
   auto& s = source_status_[source].remaining_locations;
   auto it = s.find(target);
   if (it != s.end()) {
     s.erase(it);
-    if (s.empty()) {
+    if (s.empty() && source_status_[source].threshold > 0) {
       // At least 1 connection has been found to each target for this source.
       // Set a threshold to continue search for a limited number of times.
       source_status_[source].threshold = kExtendSearchThreshold;
@@ -431,7 +430,7 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
   it = t.find(source);
   if (it != t.end()) {
     t.erase(it);
-    if (t.empty()) {
+    if (t.empty() && target_status_[target].threshold > 0) {
       // At least 1 connection has been found to each source for this target.
       // Set a threshold to continue search for a limited number of times.
       target_status_[target].threshold = kExtendSearchThreshold;
