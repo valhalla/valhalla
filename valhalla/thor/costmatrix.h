@@ -125,14 +125,14 @@ class CostMatrix {
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // source location (forward traversal)
   std::vector<std::vector<sif::HierarchyLimits>> source_hierarchy_limits_;
-  std::vector<AdjacencyList*> source_adjacency_;
+  std::vector<std::shared_ptr<AdjacencyList>> source_adjacency_;
   std::vector<std::vector<sif::EdgeLabel>> source_edgelabel_;
   std::vector<EdgeStatus> source_edgestatus_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // target location (reverse traversal)
   std::vector<std::vector<sif::HierarchyLimits>> target_hierarchy_limits_;
-  std::vector<AdjacencyList*> target_adjacency_;
+  std::vector<std::shared_ptr<AdjacencyList>> target_adjacency_;
   std::vector<std::vector<sif::EdgeLabel>> target_edgelabel_;
   std::vector<EdgeStatus> target_edgestatus_;
 
