@@ -105,7 +105,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   int n = 0;
   while (true) {
     // Iterate all target locations in a backwards search
-    for (uint32_t i = 0; i < target_location_list.size(); i++) {
+    for (uint32_t i = 0; i < target_count_; i++) {
       if (target_status_[i].threshold > 0) {
         target_status_[i].threshold--;
         BackwardSearch(i, graphreader, costing);
@@ -117,7 +117,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     }
 
     // Iterate all source locations in a forward search. Mark any
-    for (uint32_t i = 0; i < source_location_list.size(); i++) {
+    for (uint32_t i = 0; i < source_count_; i++) {
       if (source_status_[i].threshold > 0) {
         source_status_[i].threshold--;
         ForwardSearch(i, n, graphreader, costing);
@@ -197,10 +197,10 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
   if (predindex == kInvalidLabel) {
     // Forward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
-    source_status_[index].threshold = 0;
     for (uint32_t target = 0; target < target_count_; target++) {
       UpdateStatus(index, target);
     }
+    source_status_[index].threshold = 0;
     return;
   }
 
@@ -445,10 +445,10 @@ void CostMatrix::BackwardSearch(const uint32_t index,
   if (predindex == kInvalidLabel) {
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
-    target_status_[index].threshold = 0;
     for (uint32_t source = 0; source < source_count_; source++) {
       UpdateStatus(source, index);
     }
+    target_status_[index].threshold = 0;
     return;
   }
 
