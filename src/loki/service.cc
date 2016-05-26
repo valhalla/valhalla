@@ -140,6 +140,7 @@ namespace valhalla {
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("truck", sif::CreateTruckCost);
+      factory.Register("transit", sif::CreateTransitCost);
 
     }
 
