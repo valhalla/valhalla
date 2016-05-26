@@ -104,7 +104,8 @@ namespace valhalla {
             }
           }
 
-          // Build the color map - transit level uses local hierarchy tiles
+          // All tiles have color 0 (not connected), go through and connect
+          // (build the ColorMap). Transit level uses local hierarchy tiles
           auto c = colors.find(tile_level);
           if (tile_level == transit_level) {
             tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(c->second);
