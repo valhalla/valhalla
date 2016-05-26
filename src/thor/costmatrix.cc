@@ -40,7 +40,7 @@ void CostMatrix::Clear() {
 
   // Clear all source adjacency lists, edge labels, and edge status
   for (auto adj : source_adjacency_) {
-    delete adj;
+    adj.reset();
   }
   source_adjacency_.clear();
 
@@ -54,11 +54,9 @@ void CostMatrix::Clear() {
   }
   source_edgestatus_.clear();
 
-  source_hierarchy_limits_.clear();
-
   // Clear all target adjacency lists, edge labels, and edge status
   for (auto adj : target_adjacency_) {
-    delete adj;
+    adj.reset();
   }
   target_adjacency_.clear();
 
@@ -72,6 +70,7 @@ void CostMatrix::Clear() {
   }
   target_edgestatus_.clear();
 
+  source_hierarchy_limits_.clear();
   target_hierarchy_limits_.clear();
   source_status_.clear();
   target_status_.clear();
@@ -192,7 +191,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
                   baldr::GraphReader& graphreader,
                   const std::shared_ptr<sif::DynamicCost>& costing) {
   // Get the next edge from the adjacency list for this source location
-  auto* adj = source_adjacency_[index];
+  auto adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
   uint32_t predindex = adj->Remove(edgelabels);
   if (predindex == kInvalidLabel) {
@@ -440,7 +439,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
                  baldr::GraphReader& graphreader,
                  const std::shared_ptr<sif::DynamicCost>& costing) {
   // Get the next edge from the adjacency list for this target location
-  auto* adj = target_adjacency_[index];
+  auto adj = target_adjacency_[index];
   auto& edgelabels = target_edgelabel_[index];
   uint32_t predindex = adj->Remove(edgelabels);
   if (predindex == kInvalidLabel) {
@@ -608,8 +607,8 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
   for (const auto& origin : sources) {
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index] = new AdjacencyList(0, cost_threshold_,
-                                        costing->UnitSize());
+    source_adjacency_[index].reset(new AdjacencyList(0, cost_threshold_,
+                                         costing->UnitSize()));
     source_hierarchy_limits_[index] = costing->GetHierarchyLimits();
 
     // Since there is no distance to destination lets increase the
@@ -677,8 +676,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   for (const auto& dest : targets) {
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index] = new AdjacencyList(0, cost_threshold_,
-                                          costing->UnitSize());
+    target_adjacency_[index].reset(new AdjacencyList(0, cost_threshold_,
+                                             costing->UnitSize()));
     target_hierarchy_limits_[index] = costing->GetHierarchyLimits();
 
     // Since there is no distance to destination lets increase the
