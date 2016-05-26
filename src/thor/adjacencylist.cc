@@ -23,7 +23,6 @@ AdjacencyList::AdjacencyList(const float mincost,
   // Allocate the low-level buckets
   bucketcount_ = (range / bucketsize_) + 1;
   buckets_.resize(bucketcount_);
-  currentbucket_ = buckets_.begin();
 
   // Set the current bucket to the lowest cost low level bucket
   currentbucket_ = buckets_.begin();
@@ -97,8 +96,12 @@ uint32_t AdjacencyList::Remove(const std::vector<EdgeLabel>& edgelabels) {
   }
 
   // Return an invalid label if no labels are in the overflow buckets
-  if (overflowbucket_.empty())
+  if (overflowbucket_.empty()) {
+    // Reset currentbucket to the last bucket - in case another access of
+    // adjacency list is done
+    currentbucket_--;
     return kInvalidLabel;
+  }
 
   // Move labels from the overflow bucket to the low level buckets. Then find
   // smallest bucket that is not empty and set it as the currentbucket
