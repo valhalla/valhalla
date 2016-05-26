@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO("Create random locations");
     PointLL ll = locations.front().latlng_;
     LOG_INFO("Location 0 = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-    uint32_t n = 100;
+    uint32_t n = 10;
     float delta = 0.15f;  // Should keep all locations inside a 35 mile radius
     for (uint32_t i = 0; i < n; i++) {
       PointLL ll2 = JitterLatLng(ll, delta);
@@ -265,35 +265,23 @@ int main(int argc, char *argv[]) {
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
-  // Prepare source and target locations
-  uint32_t nlocs = path_locations.size();
-  std::vector<PathLocation> source_locations;
-  std::vector<PathLocation> target_locations;
-  if (matrixtype == "one_to_many") {
-    LOG_INFO("One to Many");
-    source_locations.push_back(path_locations.front());
-    path_locations.erase(path_locations.begin());
-    target_locations = path_locations;
-  } else if (matrixtype == "many_to_many") {
-    LOG_INFO("Many to Many");
-    source_locations = path_locations;
-    target_locations = path_locations;
-  } else {
-    LOG_INFO("Many to One");
-    target_locations.push_back(path_locations.back());
-    path_locations.pop_back();
-    source_locations = path_locations;
-  }
-
   // Compute the cost matrix
   t0 = std::chrono::high_resolution_clock::now();
-  CostMatrix matrix;
+
   std::vector<TimeDistance> res;
-  for (uint32_t n = 0; n < iterations; n++) {
+  for (uint32_t n = 0; n < 10; n++) {
     res.clear();
-    res = matrix.SourceToTarget(source_locations, target_locations, reader,
-                              mode_costing, mode);
-    matrix.Clear();
+    CostMatrix matrix;
+    if (matrixtype == "one_to_many") {
+      res = matrix.SourceToTarget({path_locations.front()}, path_locations,
+                                  reader, mode_costing, mode);
+    } else if (matrixtype == "many_to_many") {
+      res = matrix.SourceToTarget(path_locations, path_locations, reader,
+                                  mode_costing, mode);
+    } else {
+      res = matrix.SourceToTarget(path_locations, {path_locations.back()},
+                                  reader, mode_costing, mode);
+    }
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
@@ -305,6 +293,7 @@ int main(int argc, char *argv[]) {
   if (matrixtype == "many_to_many") {
     uint32_t idx1 = 0;
     uint32_t idx2 = 0;
+    uint32_t nlocs = path_locations.size();
     for (auto& td : res) {
       LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
           ": Distance= " + std::to_string(td.dist) +
