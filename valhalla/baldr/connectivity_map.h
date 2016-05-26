@@ -43,6 +43,7 @@ namespace valhalla {
       std::vector<size_t> to_image(const uint32_t hierarchy_level) const;
 
      private:
+      uint32_t transit_level;
       std::unordered_map<uint32_t, std::unordered_map<uint32_t, size_t> > colors;
       TileHierarchy tile_hierarchy;
     };

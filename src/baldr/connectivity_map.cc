@@ -87,11 +87,14 @@ namespace {
 namespace valhalla {
   namespace baldr {
     connectivity_map_t::connectivity_map_t(const TileHierarchy& tile_hierarchy):tile_hierarchy(tile_hierarchy) {
+      // Set the transit level
+      transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
+
       // Populate a map for each level of the tiles that exist
-      for (const auto& tile_level : tile_hierarchy.levels()) {
+      for (uint32_t tile_level = 0; tile_level <= transit_level; tile_level++) {
         try {
-          auto& level_colors = colors.insert({tile_level.first, std::unordered_map<uint32_t, size_t>{}}).first->second;
-          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level.first) + '/');
+          auto& level_colors = colors.insert({tile_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
+          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level) + '/');
           if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
             for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
               if (!boost::filesystem::is_directory(i->path())) {
@@ -100,17 +103,21 @@ namespace valhalla {
               }
             }
           }
+
+          // All tiles have color 0 (not connected), go through and connect
+          // (build the ColorMap). Transit level uses local hierarchy tiles
+          auto c = colors.find(tile_level);
+          if (tile_level == transit_level) {
+            tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(c->second);
+          } else {
+            tile_hierarchy.levels().find(tile_level)->second.tiles.ColorMap(c->second);
+          }
         }
         catch(...) {
         }
       }
-
-      // All tiles have color 0 (not connected), go through each level and connect them
-      for(auto& level_colors : colors) {
-        auto level = tile_hierarchy.levels().find(level_colors.first);
-        level->second.tiles.ColorMap(level_colors.second);
-      }
     }
+
     size_t connectivity_map_t::get_color(const GraphId& id) const {
       auto level = colors.find(id.level());
       if(level == colors.cend())
@@ -120,11 +127,18 @@ namespace valhalla {
         return 0;
       return color->second;
     }
+
     std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
-      //bail if we dont have the level
-      auto bbox = tile_hierarchy.levels().find(hierarchy_level);
+      // Get the color level (throw exception if we don't have it)
       auto level = colors.find(hierarchy_level);
-      if(bbox == tile_hierarchy.levels().cend() || level == colors.cend())
+      if (level == colors.cend()) {
+        throw std::runtime_error("No connectivity map for level");
+      }
+
+      // Get the tile bounding box (special case for transit tiles).
+      uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
+      auto bbox = tile_hierarchy.levels().find(tile_level);
+      if (bbox == tile_hierarchy.levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
       //make a region map (inverse mapping of color to lists of tiles)
@@ -149,10 +163,14 @@ namespace valhalla {
     }
 
     std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
-      //bail if we dont have the level
-      auto bbox = tile_hierarchy.levels().find(hierarchy_level);
       auto level = colors.find(hierarchy_level);
-      if(bbox == tile_hierarchy.levels().cend() || level == colors.cend())
+      if (level == colors.cend()) {
+        throw std::runtime_error("No connectivity map for level");
+      }
+
+      uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
+      auto bbox = tile_hierarchy.levels().find(tile_level);
+      if (bbox == tile_hierarchy.levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
       std::vector<size_t> tiles(bbox->second.tiles.nrows() * bbox->second.tiles.ncolumns(), static_cast<uint32_t>(0));
