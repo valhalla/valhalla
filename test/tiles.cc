@@ -201,6 +201,15 @@ void test_intersect_linestring() {
   for(const auto& i : intersection)
     if(i.first != 791318)
       throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
+
+  shape = {{130.399643, 33.6005592}, {130.399994, 33.5999985}};
+  intersection = ll.Intersect(shape);
+  size_t count = 0;
+  for(const auto& i : intersection)
+    count += i.second.size();
+  if(count > 2)
+    throw std::logic_error("Should not have " + std::to_string(count) + " intersections for this shape");
+
 }
 
 void test_random_linestring() {
