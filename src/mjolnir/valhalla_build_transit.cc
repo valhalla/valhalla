@@ -89,8 +89,7 @@ GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& 
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
   boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
   graph_tile += ".gph";
-  TileHierarchy hierarchy(tile_dir);
-  return GraphTile::GetTileId(graph_tile, hierarchy);
+  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 struct logged_error_t: public std::runtime_error {
@@ -728,8 +727,7 @@ GraphId id(const boost::property_tree::ptree& pt, const std::string& transit_til
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
   boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
   graph_tile += ".gph";
-  TileHierarchy hierarchy(tile_dir);
-  return GraphTile::GetTileId(graph_tile, hierarchy);
+  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 Transit read_pbf(const std::string& file_name, std::mutex& lock) {

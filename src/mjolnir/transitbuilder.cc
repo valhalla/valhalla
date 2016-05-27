@@ -643,8 +643,7 @@ GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& 
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
-  TileHierarchy hierarchy(tile_dir);
-  return GraphTile::GetTileId(graph_tile, hierarchy);
+  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 }
