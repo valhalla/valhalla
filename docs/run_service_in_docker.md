@@ -25,8 +25,7 @@ installed.
    wget --directory-prefix "${WORK_DIR}" http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
    ```
 
-5. Clone Valhalla configuration which is needed by the tiles data
-   creator `mjolnir` later:
+5. Clone the Valhalla conf to the work directory:
    ```sh
    git clone --depth=1 https://github.com/valhalla/conf.git "${WORK_DIR}/conf"
    ```
@@ -40,32 +39,26 @@ installed.
         pbfgraphbuilder --conf conf/valhalla.json berlin-latest.osm.pbf
    ```
 
-   This process takes a while, from a few minutes to a few hours,
-   depending on the OSM size.
+   This process takes time from a few minutes to hours, depending on
+   the OSM size. It creates tiles under `${WORK_DIR}/valhalla`.
 
-7. Copy the Meili configuration file to the work directory so that the
-   service can read it
-
-   ```sh
-   cp meili/conf/mm.json "${WORK_DIR}"
-   ```
-
-8. Run the service:
+7. Run the Meili service:
 
    ```sh
    sudo docker run -it \
         --volume "${WORK_DIR}":/data \
-        --publish 8001:8001 \
+        --workdir /data \
+        --publish 8002:8002 \
         valhalla/meili \
-        valhalla_map_match_service /data/mm.json
+        valhalla_map_match_service conf/valhalla.json
    ```
 
-   Now the service is up. It is listening on `localhost:8001` for all
-   coming coordinates in format of GeoJSON. You may refer to the
+   Now the service is up and listening on `localhost:8002` for all
+   coming coordinates in GeoJSON format. You may refer to the
    [service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
    documentation for details.
 
-9. If you need a web interface to play with, clone our demos:
+8. If you need a web interface to play with, clone our demos:
    ```sh
    git clone --depth=1 --branch=gh-pages https://github.com/mapillary/demos.git
    ```
