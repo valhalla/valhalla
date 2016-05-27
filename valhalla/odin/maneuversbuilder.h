@@ -133,8 +133,10 @@ class ManeuversBuilder {
    * with the next maneuver, false otherwise.
    */
   bool IsTurnChannelManeuverCombinable(
+      std::list<Maneuver>::iterator prev_man,
       std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man) const;
+      std::list<Maneuver>::iterator next_man,
+      bool start_man) const;
 
   const DirectionsOptions& directions_options_;
   EnhancedTripPath* trip_path_;
