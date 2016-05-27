@@ -517,12 +517,16 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     auto x1 = (v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
     auto y1 = (v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
 
+    int ix0 = std::floor(x0), ix1 = std::floor(x1);
+    int iy0 = std::floor(y0), iy1 = std::floor(y1);
+    int dx = ix0 - ix1, dy = iy0 - iy1;
+    int ds = dx*dx + dy*dy;
     //its likely for our use case that its all in one cell
-    if(static_cast<int>(x0) == static_cast<int>(x1) && static_cast<int>(y0) == static_cast<int>(y1))
-      set_pixel(std::floor(x0), std::floor(y0));
+    if(ds == 0) { set_pixel(ix0, iy0); }
+    //if not the next most likley thing is adjacent cells
+    else if(ds == 1) { set_pixel(ix0, iy0); set_pixel(ix1, iy1); }
     //pretend the subdivisions are pixels and we are doing line rasterization
-    else
-      bresenham_line(x0, y0, x1, y1, set_pixel);
+    else { bresenham_line(x0, y0, x1, y1, set_pixel); }
   }
 
   //give them back
