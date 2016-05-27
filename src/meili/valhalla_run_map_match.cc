@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
   boost::property_tree::read_json(argv[1], config);
 
   MapMatcherFactory matcher_factory(config);
-  auto matcher = matcher_factory.Create(config.get<std::string>("mm.mode"));
+  auto matcher = matcher_factory.Create(config.get<std::string>("meili.mode"));
 
   std::vector<Measurement> measurements;
   std::string line;

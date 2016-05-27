@@ -580,8 +580,8 @@ class mm_worker_t {
   mm_worker_t(const boost::property_tree::ptree& config)
       : config_(config),
         matcher_factory_(config_),
-        customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("mm.customizable"))),
-        verbose_(config_.get<bool>("mm.verbose")) {}
+        customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("meili.customizable"))),
+        verbose_(config_.get<bool>("meili.verbose")) {}
 
   boost::property_tree::ptree&
   read_preferences_from_request(const http_request_t& request,
