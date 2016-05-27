@@ -325,9 +325,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine current turn channel maneuver with next maneuver
-      else if (curr_man->turn_channel() && (curr_man != next_man)
-          && !(trip_path_->GetEnhancedNode(next_man->begin_node_index())
-              ->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()))) {
+      else if (IsTurnChannelManeuverCombinable(curr_man, next_man)) {
         LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
         curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
                                               next_man,
@@ -1959,6 +1957,50 @@ float ManeuversBuilder::GetSpeed(TripPath_TravelMode travel_mode,
     return 20.0f;
   else
     return edge_speed;
+}
+
+bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man) const {
+
+  // Current maneuver must be a turn channel and not equal to the next maneuver
+  if (curr_man->turn_channel() && (curr_man != next_man)) {
+
+    auto* node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+
+    // If no traversable outbound intersecting edge then combinable
+    if (!(node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()))) {
+      return true;
+    }
+
+    // Populate intersecting edge counts at node between current and next maneuvers
+    IntersectingEdgeCounts xedge_counts;
+    node->CalculateRightLeftIntersectingEdgeCounts(curr_man->end_heading(),
+                                                   next_man->travel_mode(),
+                                                   xedge_counts);
+
+    // Process simple right turn channel
+    if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight)
+            || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight))
+        && ((next_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight)
+            || (next_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight)
+            || (next_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight))
+            && (xedge_counts.left_traversable_outbound > 0)
+            && (xedge_counts.right_traversable_outbound == 0)) {
+      return true;
+    }
+    // Process simple left turn channel
+    if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft)
+            || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+        && ((next_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight)
+            || (next_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft)
+            || (next_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+            && (xedge_counts.left_traversable_outbound == 0)
+            && (xedge_counts.right_traversable_outbound > 0)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }
