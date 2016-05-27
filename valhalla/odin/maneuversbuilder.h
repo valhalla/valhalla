@@ -122,6 +122,22 @@ class ManeuversBuilder {
    */
   float GetSpeed(TripPath_TravelMode travel_mode, float edge_speed) const;
 
+  /**
+   * Returns true if the current turn channel maneuver is able to be combined
+   * with the next maneuver, false otherwise.
+   *
+   * @param curr_man Current maneuver
+   * @param next_man Next maneuver
+   *
+   * @return true if the current turn channel maneuver is able to be combined
+   * with the next maneuver, false otherwise.
+   */
+  bool IsTurnChannelManeuverCombinable(
+      std::list<Maneuver>::iterator prev_man,
+      std::list<Maneuver>::iterator curr_man,
+      std::list<Maneuver>::iterator next_man,
+      bool start_man) const;
+
   const DirectionsOptions& directions_options_;
   EnhancedTripPath* trip_path_;
 

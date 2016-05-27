@@ -87,7 +87,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Calculate the consecutive exit sign count and then sort
   CountAndSortExitSigns(maneuvers);
 
-  // Conform maneuver type assignment
+  // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -325,7 +325,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine current turn channel maneuver with next maneuver
-      else if (curr_man->turn_channel() && (curr_man != next_man)) {
+      else if (IsTurnChannelManeuverCombinable(
+          prev_man, curr_man, next_man, (curr_man == maneuvers.begin()))) {
         LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
         curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
                                               next_man,
@@ -1866,22 +1867,32 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
           Maneuver::RelativeDirection::kKeepLeft);
     } else if ((xedge_counts.left_similar_traversable_outbound == 0)
         && (xedge_counts.left_traversable_outbound > 0)
-        && (xedge_counts.right_traversable_outbound == 0)
-        && !curr_edge->IsStraightest(
-            maneuver.turn_degree(),
-            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
-                prev_edge->end_heading(), prev_edge->travel_mode()))) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepRight);
+        && (xedge_counts.right_traversable_outbound == 0)) {
+      if (!curr_edge->IsStraightest(
+          maneuver.turn_degree(),
+          node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+              prev_edge->end_heading(), prev_edge->travel_mode()))) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepRight);
+      } else if (maneuver.turn_channel()
+        && (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepRight);
+      }
     } else if ((xedge_counts.right_similar_traversable_outbound == 0)
         && (xedge_counts.right_traversable_outbound > 0)
-        && (xedge_counts.left_traversable_outbound == 0)
-        && !curr_edge->IsStraightest(
-            maneuver.turn_degree(),
-            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
-                prev_edge->end_heading(), prev_edge->travel_mode()))) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepLeft);
+        && (xedge_counts.left_traversable_outbound == 0)) {
+      if (!curr_edge->IsStraightest(
+          maneuver.turn_degree(),
+          node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+              prev_edge->end_heading(), prev_edge->travel_mode()))) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepLeft);
+      } else if (maneuver.turn_channel()
+        && (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepLeft);
+      }
     }
   }
 }
@@ -1957,6 +1968,56 @@ float ManeuversBuilder::GetSpeed(TripPath_TravelMode travel_mode,
     return 20.0f;
   else
     return edge_speed;
+}
+
+bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
+    std::list<Maneuver>::iterator prev_man,
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man,
+    bool start_man) const {
+
+  // Current maneuver must be a turn channel and not equal to the next maneuver
+  if (curr_man->turn_channel() && (curr_man != next_man)) {
+
+    uint32_t new_turn_degree;
+    if (start_man) {
+      // Determine turn degree current maneuver and next maneuver
+      new_turn_degree = GetTurnDegree(curr_man->end_heading(),
+                                      next_man->begin_heading());
+    } else {
+      // Determine turn degree based on previous maneuver and next maneuver
+      new_turn_degree = GetTurnDegree(prev_man->end_heading(),
+                                      next_man->begin_heading());
+    }
+
+    Turn::Type new_turn_type = Turn::GetType(new_turn_degree);
+
+    // Process simple right turn channel
+    // Combineable if begin of turn channel is relative right and
+    // final turn type is right or straight (not left)
+    if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight)
+            || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight))
+        && ((new_turn_type == Turn::Type::kSlightRight)
+            || (new_turn_type == Turn::Type::kRight)
+            || (new_turn_type == Turn::Type::kSharpRight)
+            || (new_turn_type == Turn::Type::kStraight))) {
+      return true;
+    }
+
+    // Process simple left turn channel
+    // Combineable if begin of turn channel is relative left and
+    // final turn type is left or straight (not right)
+    if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft)
+            || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+        && ((new_turn_type == Turn::Type::kSlightLeft)
+            || (new_turn_type == Turn::Type::kLeft)
+            || (new_turn_type == Turn::Type::kSharpLeft)
+            || (new_turn_type == Turn::Type::kStraight))) {
+      return true;
+    }
+
+  }
+  return false;
 }
 
 }

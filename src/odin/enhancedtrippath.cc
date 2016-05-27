@@ -828,6 +828,17 @@ bool EnhancedTripPath_Node::HasForwardTraversableIntersectingEdge(
   return false;
 }
 
+bool EnhancedTripPath_Node::HasTraversableOutboundIntersectingEdge(
+    const TripPath_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 //TODO: refactor to clean up code
 uint32_t EnhancedTripPath_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading, const TripPath_TravelMode travel_mode) {
