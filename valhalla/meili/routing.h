@@ -217,8 +217,7 @@ struct Label
         predecessor(the_predecessor),
         edgelabel(the_edgelabel)
   {
-    if ((nodeid.Is_Valid() && dest == kInvalidDestination)
-        || (!nodeid.Is_Valid() && dest != kInvalidDestination)) {
+    if (!((nodeid.Is_Valid() && dest == kInvalidDestination) || (!nodeid.Is_Valid() && dest != kInvalidDestination))) {
       throw std::invalid_argument("nodeid and dest must be mutually exclusive, i.e. either nodeid is valid or dest is valid");
     }
 
