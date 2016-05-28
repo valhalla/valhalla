@@ -25,7 +25,7 @@ bool
 LabelSet::put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
               std::shared_ptr<const sif::EdgeLabel> edgelabel)
 {
-  return put(nodeid, {},         // nodeid, (invalid) edgeid
+  return put(nodeid, {},         // nodeid, (dummy) edgeid
              0.f, 0.f,           // source, target
              0.f, 0.f, 0.f,      // cost, turn cost, sort cost
              kInvalidLabelIndex, // predecessor
@@ -86,7 +86,7 @@ bool
 LabelSet::put(uint16_t dest, sif::TravelMode travelmode,
               std::shared_ptr<const sif::EdgeLabel> edgelabel)
 {
-  return put(dest, {},           // dest, (invalid) edgeid
+  return put(dest, {},           // dest, (dummy) edgeid
              0.f, 0.f,           // source, target
              0.f, 0.f, 0.f,      // cost, turn cost, sort cost
              kInvalidLabelIndex, // predecessor
@@ -227,8 +227,12 @@ void set_origin(baldr::GraphReader& reader,
 {
   const baldr::GraphTile* tile = nullptr;
 
+  // Push dummy labels (invalid edgeid, zero cost, no predecessor) to
+  // the queue for the initial expansion later. These dummy labels
+  // will also serve as roots in search trees, and sentinels to
+  // indicate it reaches the begining of a route when constructing the
+  // route
   for (const auto& edge : destinations[origin_idx].edges()) {
-    assert(edge.id.Is_Valid());
     if (!edge.id.Is_Valid()) continue;
 
     if (edge.dist == 0.f) {
@@ -253,8 +257,7 @@ void set_origin(baldr::GraphReader& reader,
 #endif
 
       labelset.put(nodeid, travelmode, edgelabel);
-    } else {
-      assert(0.f < edge.dist && edge.dist < 1.f);
+    } else if (0.f < edge.dist && edge.dist < 1.f) {
       // Will decide whether to filter out this edge later
       labelset.put(origin_idx, travelmode, edgelabel);
     }
