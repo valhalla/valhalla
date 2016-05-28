@@ -47,9 +47,11 @@ LabelSet::put(const baldr::GraphId& nodeid,
     throw std::runtime_error("invalid nodeid");
   }
   const auto it = node_status_.find(nodeid);
+
+  // Create a new label and push it to the queue
   if (it == node_status_.end()) {
-    uint32_t idx = labels_.size();
-    bool added = queue_.add(idx, sortcost);
+    const uint32_t idx = labels_.size();
+    const bool added = queue_.add(idx, sortcost);
     if (added) {
       labels_.emplace_back(nodeid, edgeid,
                            source, target,
@@ -59,8 +61,10 @@ LabelSet::put(const baldr::GraphId& nodeid,
       node_status_[nodeid] = {idx, false};
       return true;
     }
-    // !added -> rejected since queue's full
+    // !added -> rejected silently since queue's full
+
   } else {
+    // Decrease cost of the existing label
     const auto& status = it->second;
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
       // TODO check if it goes through constructor
@@ -69,8 +73,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
                                    cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool decreased = queue_.decrease(status.label_idx, sortcost);
-      assert(decreased);
+      queue_.decrease(status.label_idx, sortcost);
       return true;
     }
   }
@@ -106,9 +109,11 @@ LabelSet::put(uint16_t dest,
   }
 
   const auto it = dest_status_.find(dest);
+
+  // Create a new label and push it to the queue
   if (it == dest_status_.end()) {
-    uint32_t idx = labels_.size();
-    bool added = queue_.add(idx, sortcost);
+    const uint32_t idx = labels_.size();
+    const bool added = queue_.add(idx, sortcost);
     if (added) {
       labels_.emplace_back(dest, edgeid,
                            source, target,
@@ -118,8 +123,10 @@ LabelSet::put(uint16_t dest,
       dest_status_[dest] = {idx, false};
       return true;
     }
-    // !added -> rejected since queue's full
+    // !added -> rejected silently since queue's full
+
   } else {
+    // Decrease cost of the existing label
     const auto& status = it->second;
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
       // TODO check if it goes through constructor
@@ -128,8 +135,7 @@ LabelSet::put(uint16_t dest,
                                    cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool decreased = queue_.decrease(status.label_idx, sortcost);
-      assert(decreased);
+      queue_.decrease(status.label_idx, sortcost);
       return true;
     }
   }
@@ -143,17 +149,38 @@ LabelSet::pop()
 {
   const auto idx = queue_.pop();
 
+  // Mark the popped label as permanent (optimal)
   if (idx != kInvalidLabelIndex) {
     const auto& label = labels_[idx];
     if (label.nodeid.Is_Valid()) {
-      assert(node_status_[label.nodeid].label_idx == idx);
-      assert(!node_status_[label.nodeid].permanent);
-      node_status_[label.nodeid].permanent = true;
-    } else {
-      assert(dest_status_[label.dest].label_idx == idx);
-      assert(!dest_status_[label.dest].permanent);
-      assert(label.dest != kInvalidDestination);
-      dest_status_[label.dest].permanent = true;
+      auto& status = node_status_[label.nodeid];
+
+      // When these logic errors happen, go check LabelSet::put
+      if (status.label_idx != idx) {
+        throw std::logic_error("the index stored in the status " + std::to_string(status.label_idx) +
+                               " is not synced up with the index poped from the queue" + std::to_string(idx));
+      }
+      if (status.permanent) {
+        // For example, if the queue has popped up an index 2, and
+        // marked the label at this index as permanent, then some time
+        // later the queue pops up another index 2 (duplicated), this
+        // logic error will be thrown
+        throw std::logic_error("the indexes in the queue must be unique");
+      }
+
+      status.permanent = true;
+    } else {  // assert(label.dest != kInvalidDestination)
+      auto& status = dest_status_[label.dest];
+
+      if (status.label_idx != idx) {
+        throw std::logic_error("the index stored in the status " + std::to_string(status.label_idx) +
+                               " is not synced up with the index poped from the queue" + std::to_string(idx));
+      }
+      if (status.permanent) {
+        throw std::logic_error("the indexes in the queue must be unique");
+      }
+
+      status.permanent = true;
     }
   }
 

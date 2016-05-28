@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <algorithm>
-#include <cassert>
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/graphid.h>
@@ -45,7 +44,8 @@ class BucketQueue
     buckets_.reserve(bucket_count_);
   }
 
-  bool add(const key_t& key, float cost) {
+  bool add(const key_t& key, float cost)
+  {
     if (cost < 0.f) {
       throw std::invalid_argument("expect non-negative cost");
     }
@@ -74,7 +74,7 @@ class BucketQueue
     return false;
   }
 
-  bool decrease(const key_t& key, float cost)
+  void decrease(const key_t& key, float cost)
   {
     if (cost < 0.f) {
       throw std::invalid_argument("expect non-negative cost");
@@ -94,11 +94,12 @@ class BucketQueue
       }
       auto& keys = buckets_[old_idx];
       const auto it = std::find(keys.begin(), keys.end(), key);
-      assert(it != keys.end());
+      if (it == keys.end()) {
+        throw std::logic_error("the key " + std::to_string(key) + " in the cost map was failed to add to the bukcet");
+      }
       keys.erase(it);
 
       // Add the new one
-      assert (idx < buckets_.size());
       buckets_[idx].push_back(key);
       costmap_[key] = cost;
 
@@ -106,20 +107,22 @@ class BucketQueue
       if (idx < top_) {
         top_ = idx;
       }
-
-      return true;
+    } else {
+      throw std::runtime_error("the cost " + std::to_string(cost)
+                               + " is not less than the cost (" + std::to_string(it->second)
+                               + ") associated with the key (" + std::to_string(key)
+                               + ") you requested to decrease ");
     }
-
-    return false;
   }
 
-  float cost(const key_t& key)
+  float cost(const key_t& key) const
   {
     const auto it = costmap_.find(key);
     return it == costmap_.end()? -1.f : it->second;
   }
 
-  key_t pop() {
+  key_t pop()
+  {
     if (empty()) {
       return invalid_key;
     }
@@ -130,18 +133,19 @@ class BucketQueue
     return key;
   }
 
-  bool empty() const {
+  bool empty() const
+  {
     while (top_ < buckets_.size() && buckets_[top_].empty()) {
       top_++;
     }
     return top_ >= buckets_.size();
   }
 
-  size_type size() const {
-    return costmap_.size();
-  }
+  size_type size() const
+  { return costmap_.size(); }
 
-  void clear() {
+  void clear()
+  {
     buckets_.clear();
     costmap_.clear();
     top_ = 0;
