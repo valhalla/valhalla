@@ -377,46 +377,26 @@ NaiveViterbiSearch<T, Maximize>::InitLabels(
 }
 
 
-template <typename U, bool Maximize>
-U FindExtremeElement(U begin, U end, double invalid_cost)
-{
-  U extreme_itr = end;
-
-  for (U itr = begin; itr != end; itr++) {
-    // Filter out invalid costs
-    if (invalid_cost == itr->costsofar) {
-      continue;
-    }
-
-    // Find the first extreme element
-    if (Maximize) {
-      if (extreme_itr == end || extreme_itr->costsofar < itr->costsofar) {
-        extreme_itr = itr;
-      }
-    } else {
-      if (extreme_itr == end || itr->costsofar < extreme_itr->costsofar) {
-        extreme_itr = itr;
-      }
-    }
-  }
-
-  return extreme_itr;
-}
-
-
 template <typename T, bool Maximize>
 const T*
 NaiveViterbiSearch<T, Maximize>::FindWinner(const std::vector<label_type>& labels) const
 {
-  if (labels.empty()) {
+  auto it = labels.cend();
+  if (Maximize) {
+    it = std::max_element(labels.cbegin(), labels.cend(), [](const label_type& left, const label_type& right) {
+        return left.costsofar < right.costsofar;
+      });
+  } else {
+    it = std::min_element(labels.cbegin(), labels.cend(), [](const label_type& left, const label_type& right) {
+        return left.costsofar < right.costsofar;
+      });
+  }
+  // The max label's costsofar is invalid (-infinity), that means all
+  // labels are invalid
+  if (it == labels.cend() || it->costsofar == kInvalidCost) {
     return nullptr;
   }
-  auto itr = FindExtremeElement<decltype(labels.cbegin()), Maximize>(labels.cbegin(), labels.cend(), kInvalidCost);
-  if (itr == labels.cend()) {
-    return nullptr;
-  }
-  assert(kInvalidCost != itr->costsofar);
-  return itr->state;
+  return it->state;
 }
 
 
