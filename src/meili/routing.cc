@@ -454,8 +454,7 @@ find_shortest_path(baldr::GraphReader& reader,
                      label_idx,
                      other_edge, travelmode, nullptr);
       }
-    } else {
-      assert(label.dest != kInvalidDestination);
+    } else { // assert(label.dest != kInvalidDestination)
       const auto dest = label.dest;
 
       // Path to a destination along an edge is found: remember it and

@@ -165,6 +165,7 @@ class BucketQueue
 };
 
 
+// TODO simplify it by inheriting sif::EdgeLabel
 struct Label
 {
   Label() = delete;
@@ -195,8 +196,7 @@ struct Label
               the_source, the_target,
               the_cost, the_turn_cost, the_sortcost,
               the_predecessor,
-              the_edge, the_travelmode, the_edgelabel)
-  { assert(!nodeid.Is_Valid()); }
+              the_edge, the_travelmode, the_edgelabel) {}
 
   Label(const baldr::GraphId& the_nodeid,
         uint16_t the_dest,
@@ -213,19 +213,24 @@ struct Label
         predecessor(the_predecessor),
         edgelabel(the_edgelabel)
   {
+    if ((nodeid.Is_Valid() && dest == kInvalidDestination)
+        || (!nodeid.Is_Valid() && dest != kInvalidDestination)) {
+      throw std::invalid_argument("nodeid and dest must be mutually exclusive, i.e. either nodeid is valid or dest is valid");
+    }
+
     if (!(0.f <= source && source <= target && target <= 1.f)) {
-      throw std::runtime_error("invalid source ("
-                               + std::to_string(source)
-                               + ") or target ("
-                               + std::to_string(target) + ")");
+      throw std::invalid_argument("invalid source ("
+                                  + std::to_string(source)
+                                  + ") or target ("
+                                  + std::to_string(target) + ")");
     }
 
     if (cost < 0.f) {
-      throw std::runtime_error("invalid cost = " + std::to_string(cost));
+      throw std::invalid_argument("invalid cost = " + std::to_string(cost));
     }
 
     if (turn_cost < 0.f) {
-      throw std::runtime_error("invalid turn_cost = " + std::to_string(turn_cost));
+      throw std::invalid_argument("invalid turn_cost = " + std::to_string(turn_cost));
     }
 
     if (!edgelabel && the_edge) {
@@ -241,13 +246,14 @@ struct Label
     }
   }
 
-  // assert: nodeid.Is_Valid() XOR dest != kInvalidDestination
+  // Must be mutually exclusive, i.e. nodeid.Is_Valid() XOR dest != kInvalidDestination
   baldr::GraphId nodeid;
   uint16_t dest;
 
+  // Invalid graphid if dummy
   baldr::GraphId edgeid;
 
-  // assert: 0.f <= source <= target <= 1.f
+  // Assert: 0.f <= source <= target <= 1.f
   float source;
   float target;
 
@@ -258,8 +264,10 @@ struct Label
   // segment)
   float turn_cost;
 
+  // For ranking labels: sortcost = accumulated cost since origin + heuristic cost to the goal
   float sortcost;
 
+  // kInvalidLabelIndex if dummy
   uint32_t predecessor;
 
   // An EdgeLabel is needed here for passing to sif's filters later
