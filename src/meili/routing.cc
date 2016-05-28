@@ -274,7 +274,6 @@ void set_destinations(baldr::GraphReader& reader,
 
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges()) {
-      assert(edge.id.Is_Valid());
       if (!edge.id.Is_Valid()) continue;
 
       if (edge.dist == 0.f) {
@@ -448,14 +447,14 @@ find_shortest_path(baldr::GraphReader& reader,
 
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
                                    get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
-      assert(0 <= inbound_heading && inbound_heading < 360);
+      // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
 
       // Expand current node
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
         if (other_edge->trans_up() || other_edge->trans_down()) continue;
-        assert(nodeid.level() == other_edge->endnode().level());
+        // TODO: @kevinkreiser is it true if trans is disabled? assert(nodeid.level() == other_edge->endnode().level());
 
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
 
@@ -463,9 +462,9 @@ find_shortest_path(baldr::GraphReader& reader,
         float turn_cost = 0.f;
         if (pred_edgelabel && turn_cost_table) {
           const auto other_heading = get_outbound_edge_heading(tile, other_edge, *nodeinfo);
-          assert(0 <= other_heading && other_heading < 360);
+          // TODO: test it assert(0 <= other_heading && other_heading < 360);
           const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
-          assert(0 <= turn_degree && turn_degree <= 180);
+          // TODO: test it assert(0 <= turn_degree && turn_degree <= 180);
           turn_cost = label_turn_cost + turn_cost_table[turn_degree];
         }
 
