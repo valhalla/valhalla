@@ -286,7 +286,6 @@ StateId NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
       labels = InitLabels(column, false);
       UpdateLabels(labels, history_.back());
     }
-    assert(labels.size() == column.size());
 
     auto winner = FindWinner(labels);
     if (!winner && time > 0) {
@@ -327,27 +326,27 @@ void NaiveViterbiSearch<T, Maximize>::UpdateLabels(
     const std::vector<label_type>& prev_labels) const
 {
   for (const auto& prev_label : prev_labels) {
-    auto prev_state = prev_label.state;
+    const auto prev_state = prev_label.state;
 
-    auto prev_costsofar = prev_label.costsofar;
+    const auto prev_costsofar = prev_label.costsofar;
     if (kInvalidCost == prev_costsofar) {
       continue;
     }
 
     for (auto& label : labels) {
-      auto state = label.state;
+      const auto state = label.state;
 
-      auto emission_cost = EmissionCost(*state);
+      const auto emission_cost = EmissionCost(*state);
       if (kInvalidCost == emission_cost) {
         continue;
-      };
+      }
 
-      auto transition_cost = TransitionCost(*prev_state, *state);
+      const auto transition_cost = TransitionCost(*prev_state, *state);
       if (kInvalidCost == transition_cost) {
         continue;
       }
 
-      auto costsofar = CostSofar(prev_costsofar, transition_cost, emission_cost);
+      const auto costsofar = CostSofar(prev_costsofar, transition_cost, emission_cost);
       if (kInvalidCost == costsofar) {
         continue;
       }
@@ -370,7 +369,7 @@ NaiveViterbiSearch<T, Maximize>::InitLabels(
 {
   std::vector<label_type> labels;
   for (const auto state : column) {
-    auto initial_cost = use_emission_cost? EmissionCost(*state) : kInvalidCost;
+    const auto initial_cost = use_emission_cost? EmissionCost(*state) : kInvalidCost;
     labels.emplace_back(initial_cost, state, nullptr);
   }
   return labels;
@@ -405,15 +404,12 @@ template <typename T, bool Maximize>
 const typename NaiveViterbiSearch<T, Maximize>::label_type&
 NaiveViterbiSearch<T, Maximize>::label(const T& state) const
 {
-  auto time = state.time();
-
-  for (auto& label : history_[time]) {
+  for (const auto& label : history_[state.time()]) {
     if (label.state->id() == state.id()) {
       return label;
     }
   }
 
-  assert(false);
   throw std::runtime_error("impossible that label not found; if it happened, check SearchWinner");
 }
 
