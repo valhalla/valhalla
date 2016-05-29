@@ -228,11 +228,6 @@ MapMatching::TransitionCost(const State& left, const State& right) const
         // NaiveViterbiSearch calls this method, the previous column,
         // where the pedecessor of the left state stays, are
         // guaranteed to be all expanded (and routed).
-
-        // NOTE TransitionCost is a mutable method and will change
-        // cached routes of a state. We should be careful with it and
-        // do not use it for purposes like getting transition cost of
-        // two *arbitrary* states.
         throw std::logic_error("The predecessor of current state must have been routed."
                                " Check if you have misused the TransitionCost method");
       }
@@ -242,6 +237,11 @@ MapMatching::TransitionCost(const State& left, const State& right) const
       edgelabel = nullptr;
     }
     const midgard::DistanceApproximator approximator(measurement(right).lnglat());
+
+    // NOTE TransitionCost is a mutable method and will change
+    // cached routes of a state. We should be careful with it and
+    // do not use it for purposes like getting transition cost of
+    // two *arbitrary* states.
     left.route(unreached_states_[right.time()], graphreader_,
                MaxRouteDistance(left, right),
                approximator, search_radius_,
@@ -277,7 +277,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
       target(the_target)
 {
   if (!(0.f <= source && source <= target && target <= 1.f)) {
-    throw std::invalid_argument("Expect 0.f <= source <= source <= 1.f, but you got source = "
+    throw std::invalid_argument("Expect 0.f <= source <= target <= 1.f, but you got source = "
                                 + std::to_string(source)
                                 + " and target = "
                                 + std::to_string(target));
@@ -306,11 +306,15 @@ EdgeSegment::Shape(baldr::GraphReader& graphreader) const
 
 bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& other) const
 {
+  // Skip dummy segments
+  if (!edgeid.Is_Valid() || !other.edgeid.Is_Valid()) {
+    return false;
+  }
+
   if (edgeid != other.edgeid) {
     if (target == 1.f && other.source == 0.f) {
       const auto endnode = helpers::edge_endnodeid(graphreader, edgeid);
-      return endnode == helpers::edge_startnodeid(graphreader, other.edgeid)
-          && endnode.Is_Valid();
+      return endnode.Is_Valid() && endnode == helpers::edge_startnodeid(graphreader, other.edgeid);
     } else {
       return false;
     }
