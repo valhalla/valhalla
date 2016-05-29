@@ -699,11 +699,11 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
 
     // Remove it from its column
     auto& column = unreached_states_[time];
-    const auto it = std::find_if(column.cbegin(), column.cend(),
+    const auto it = std::find_if(column.begin(), column.end(),
                                  [id] (const T* state) {
                                    return id == state->id();
                                  });
-    if (it == column.cend()) {
+    if (it == column.end()) {
       throw std::logic_error("the state must exist in the column");
     }
     column.erase(it);
