@@ -51,22 +51,26 @@ struct StateLabel
 
 
 template <typename T>
-bool operator>(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+inline bool
+operator>(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
 { return lhs.sortcost() > rhs.sortcost(); }
 
 
 template <typename T>
-bool operator<(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+inline bool
+operator<(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
 { return lhs.sortcost() < rhs.sortcost(); }
 
 
 template <typename T>
-bool operator==(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+inline bool
+operator==(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
 { return lhs.sortcost() == rhs.sortcost(); }
 
 
 template <typename T>
-bool operator!=(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+inline bool
+operator!=(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
 { return !(lhs == rhs); }
 
 
