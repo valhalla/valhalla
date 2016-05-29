@@ -694,7 +694,8 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
     // Mark it as scanned and remember its cost and predecessor
     const auto& inserted = scanned_labels_.emplace(id, label);
     if (!inserted.second) {
-      throw std::logic_error("the principle of optimality is violated, probably negative costs occurred");
+      throw std::logic_error("the principle of optimality is violated in the viterbi search,"
+                             " probably negative costs occurred");
     }
 
     // Remove it from its column
@@ -726,6 +727,7 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
       winner_.push_back(state);
     }
 
+    // Update searched time
     searched_time = std::max(time, searched_time);
 
     // Break immediately when the winner at the target time is found.

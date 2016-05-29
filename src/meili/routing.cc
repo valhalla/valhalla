@@ -162,10 +162,11 @@ LabelSet::pop()
       }
       if (status.permanent) {
         // For example, if the queue has popped up an index 2, and
-        // marked the label at this index as permanent, then some time
-        // later the queue pops up another index 2 (duplicated), this
-        // logic error will be thrown
-        throw std::logic_error("the indexes in the queue must be unique");
+        // marked the label at this index as permanent (optimal), then
+        // some time later the queue pops up another index 2
+        // (duplicated), this logic error will be thrown
+        throw std::logic_error("the principle of optimality is violated during routing,"
+                               " probably negative costs occurred");
       }
 
       status.permanent = true;
@@ -177,7 +178,8 @@ LabelSet::pop()
                                " is not synced up with the index poped from the queue" + std::to_string(idx));
       }
       if (status.permanent) {
-        throw std::logic_error("the indexes in the queue must be unique");
+        throw std::logic_error("the principle of optimality is violated during routing,"
+                               " probably negative costs occurred");
       }
 
       status.permanent = true;
@@ -408,7 +410,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
   while (!labelset.empty()) {
     const auto label_idx = labelset.pop();
-    // NOTE this refernce is possible to be invalid when you add
+    // NOTE this reference is possible to be invalidated when you add
     // labels to the set later (which causes the label list
     // reallocated)
     const auto& label = labelset.label(label_idx);
