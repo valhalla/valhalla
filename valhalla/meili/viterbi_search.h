@@ -495,10 +495,17 @@ StateId ViterbiSearch<T>::SearchWinner(Time time)
     return kInvalidStateId;
   }
 
-  Time target = std::min(time, static_cast<Time>(unreached_states_.size()) - 1);
+  const Time max_allowed_time = unreached_states_.size() - 1;
+  const auto target = std::min(time, max_allowed_time);
+
+  // Continue last search if possible
   Time searched_time = IterativeSearch(target, false);
+
   while (searched_time < target) {
+    // searched_time < target implies that there was a breakage during
+    // last search, so we request a new start
     searched_time = IterativeSearch(target, true);
+    // Guarantee that that winner_.size() is increasing and searched_time == winner_.size() - 1
   }
 
   if (time < winner_.size() && winner_[time]) {
@@ -512,7 +519,7 @@ template <typename T>
 inline StateId
 ViterbiSearch<T>::predecessor(StateId id) const
 {
-  auto it = scanned_labels_.find(id);
+  const auto it = scanned_labels_.find(id);
   if (it != scanned_labels_.end()) {
     return (it->second).predecessor? (it->second).predecessor->id() : kInvalidStateId;
   } else {
@@ -530,11 +537,11 @@ ViterbiSearch<T>::IsInvalidCost(double cost) const
 template <typename T>
 double ViterbiSearch<T>::AccumulatedCost(const StateId id) const
 {
-  const auto itr = scanned_labels_.find(id);
-  if (itr == scanned_labels_.end()) {
+  const auto it = scanned_labels_.find(id);
+  if (it == scanned_labels_.end()) {
     return -1.f;
   } else {
-    return itr->second.costsofar;
+    return it->second.costsofar;
   }
 }
 
@@ -564,7 +571,7 @@ void ViterbiSearch<T>::InitQueue(const std::vector<const T*>& column)
 {
   queue_.clear();
   for (const auto state : column) {
-    auto emission_cost = EmissionCost(*state);
+    const auto emission_cost = EmissionCost(*state);
     if (IsInvalidCost(emission_cost)) {
       continue;
     }
@@ -576,33 +583,35 @@ void ViterbiSearch<T>::InitQueue(const std::vector<const T*>& column)
 template <typename T>
 void ViterbiSearch<T>::AddSuccessorsToQueue(const T* state)
 {
-  assert(state->time() + 1 < unreached_states_.size());
-  if (unreached_states_.size() <= state->time() + 1) {
-    return;
+  if (!(state->time() + 1 < unreached_states_.size())) {
+    throw std::logic_error("the state at time " + std::to_string(state->time()) + " is impossible to have successors");
   }
 
-  auto label_itr = scanned_labels_.find(state->id());
-  assert(label_itr != scanned_labels_.end());
-  if (label_itr == scanned_labels_.end()) {
-    return;
+  const auto it = scanned_labels_.find(state->id());
+  if (it == scanned_labels_.end()) {
+    throw std::logic_error("the state must be scanned");
   }
-  assert(label_itr->second.state == state);  // TODO remove
-  auto costsofar = label_itr->second.costsofar;
-  assert(!IsInvalidCost(costsofar));
+  const auto costsofar = it->second.costsofar;
+  if (IsInvalidCost(costsofar)) {
+    // All invalid ones should be filtered out before pushing labels
+    // into the queue
+    throw std::logic_error("impossible to get invalid cost from scanned labels");
+  }
 
-  auto next_column = unreached_states_[state->time() + 1];
-  for (const auto& next_state : next_column) {
-    auto emission_cost = EmissionCost(*next_state);
+  // Optimal states have been removed from unreached_states_ so no
+  // worry about optimality
+  for (const auto& next_state : unreached_states_[state->time() + 1]) {
+    const auto emission_cost = EmissionCost(*next_state);
     if (IsInvalidCost(emission_cost)) {
       continue;
     }
 
-    auto transition_cost = TransitionCost(*state, *next_state);
+    const auto transition_cost = TransitionCost(*state, *next_state);
     if (IsInvalidCost(transition_cost)) {
       continue;
     }
 
-    auto next_costsofar = CostSofar(costsofar, transition_cost,  emission_cost);
+    const auto next_costsofar = CostSofar(costsofar, transition_cost,  emission_cost);
     if (IsInvalidCost(next_costsofar)) {
       continue;
     }
@@ -612,40 +621,28 @@ void ViterbiSearch<T>::AddSuccessorsToQueue(const T* state)
 }
 
 
-// Remove a state from its column
-template <typename T, typename U>
-bool remove_state(const T& state, U& column)
-{
-  StateId id = state.id();
-  auto itr = std::find_if(column.begin(), column.end(),
-                          [id] (const T* state) {
-                            return id == state->id();
-                          });
-  if (itr == column.end()) {
-    return false;
-  }
-  column.erase(itr);
-  return true;
-}
-
-
 template <typename T>
 Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
 {
-  assert(!unreached_states_.empty() && target < unreached_states_.size());
-  if (unreached_states_.empty()) {
-    throw std::runtime_error("empty states");
+  if (unreached_states_.size() <= target) {
+    if (unreached_states_.empty()) {
+      throw std::runtime_error("empty states: add some states at least before searching");
+    } else {
+      throw std::runtime_error("the target time is beyond the maximum allowed time "
+                               + std::to_string(unreached_states_.size()-1));
+    }
   }
 
+  // Do nothing since the winner at the target time is already known
   if (target < winner_.size()) {
     return target;
   }
 
-  // So here we have: assert(winner_.size() <= target && target < unreached_states_.size());
+  // Clearly here we have precondition: winner_.size() <= target < unreached_states_.size()
 
   Time source;
 
-  // Initialize queue
+  // Either continue last search, or start a new search
   if (!request_new_start && !winner_.empty() && winner_.back()) {
     source = winner_.size() - 1;
     AddSuccessorsToQueue(winner_[source]);
@@ -658,55 +655,78 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
   auto searched_time = source;
 
   while (!queue_.empty()) {
-    // Pop up the state with the lowest cost
-    auto label = queue_.top();
+    // Pop up the state with the optimal cost. Note it is not
+    // necessarily to be the winner at its time yet, unless it is the
+    // first one found at the time
+    const auto label = queue_.top();
     queue_.pop();
-    auto state = label.state;
-    auto time = state->time();
+    const auto state = label.state;
+    const auto id = state->id();
+    const auto time = state->time();
 
-    // Skip labels that are earlier than the earliest time, since
-    // they are impossible to be optimal
+    // Skip labels that are earlier than the earliest time, since they
+    // are impossible to be part of the path to future winners
     if (time < earliest_time_) {
       continue;
     }
 
     // Mark it as scanned and remember its cost and predecessor
-    assert(scanned_labels_.find(state->id())==scanned_labels_.end());
-    scanned_labels_[state->id()] = label;
+    const auto& inserted = scanned_labels_.emplace(id, label);
+    if (!inserted.second) {
+      throw std::logic_error("the principle of optimality is violated, probably negative costs occurred");
+    }
 
     // Remove it from its column
-    bool removed = remove_state(*state, unreached_states_[time]);
-    assert(removed);
+    auto& column = unreached_states_[time];
+    const auto it = std::find_if(column.cbegin(), column.cend(),
+                                 [id] (const T* state) {
+                                   return id == state->id();
+                                 });
+    if (it == column.cend()) {
+      throw std::logic_error("the state must exist in the column");
+    }
+    column.erase(it);
 
-    // Earlier labels can't reach current time with better cost, so we
-    // mark time + 1 as the earliest time to skip all earlier labels
-    if (unreached_states_[time].empty()) {
+    // Since current column is empty now, earlier labels can't reach
+    // future winners in a optimal way any more, so we mark time + 1
+    // as the earliest time to skip all earlier labels
+    if (column.empty()) {
       earliest_time_ = time + 1;
     }
 
     // If it's the first state that arrives at this column, mark it as
     // the winner at this time
     if (winner_.size() <= time) {
-      assert(time == winner_.size());
+      if (!(time == winner_.size())) {
+        // Should check if states at unreached_states_[time] are all
+        // at the same TIME
+        throw std::logic_error("found a state from the future time " + std::to_string(time));
+      }
       winner_.push_back(state);
     }
 
     searched_time = std::max(time, searched_time);
 
-    if (target <= time) {
+    // Break immediately when the winner at the target time is found.
+    // We will add its successors to queue at next search
+    if (target <= searched_time) {
       break;
     }
 
     AddSuccessorsToQueue(state);
   }
 
-  // Guarantee that either winner (if found) or nullptr is saved at
-  // searched time
+  // Guarantee that either winner (if found) or nullptr (not found) is
+  // saved at searched_time
   while (winner_.size() <= searched_time) {
     winner_.push_back(nullptr);
   }
 
-  assert(searched_time < winner_.size());
+  // Postcondition: searched_time == winner_.size() - 1 && search_time <= target
+
+  // If search_time < target it implies that there is a breakage,
+  // i.e. unable to find any connection from the column at search_time
+  // to the column at search_time + 1
 
   return searched_time;
 }
