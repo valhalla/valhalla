@@ -7,48 +7,20 @@
 #include <boost/heap/fibonacci_heap.hpp>
 
 
-template <typename T>
-class LabelInterface
-{
- public:
-  virtual ~LabelInterface() {
-  }
-  using id_type = T;
-  virtual T id() const = 0;
-  virtual double sortcost() const = 0;
-};
-
-template <typename T>
-bool operator>(const LabelInterface<T>& lhs, const LabelInterface<T>& rhs) {
-  return lhs.sortcost() > rhs.sortcost();
-}
-
-template <typename T>
-bool operator<(const LabelInterface<T>& lhs, const LabelInterface<T>& rhs) {
-  return lhs.sortcost() < rhs.sortcost();
-}
-
-template <typename T>
-bool operator==(const LabelInterface<T>& lhs, const LabelInterface<T>& rhs) {
-  return lhs.sortcost() == rhs.sortcost();
-}
-
-
 // Shortest-path-specific priority queue
 // (A friendly wrapper of boost::heap::fibonacci_heap)
-template <typename T>  // T must be type of LabelInterface
+template <typename T>
 class SPQueue
 {
  public:
   // Min heap
   using Heap = boost::heap::fibonacci_heap<T, boost::heap::compare<std::greater<T>>>;
 
-  ~SPQueue() {
-    clear();
-  }
+  ~SPQueue()
+  { clear(); }
 
   void push(const T& label) {
-    typename T::id_type id = label.id();
+    const auto id = label.id();
     auto handler_itr = handlers_.find(id);
     if (handler_itr == handlers_.end()) {
       handlers_[id] = heap_.push(label);
@@ -69,21 +41,23 @@ class SPQueue
     heap_.pop();
   }
 
-  const T& top() const {
-    return heap_.top();
-  }
+  const T& top() const
+  { return heap_.top(); }
 
-  bool empty() const {
+  bool empty() const
+  {
     assert(heap_.empty() == handlers_.empty());
     return heap_.empty();
   }
 
-  void clear() {
+  void clear()
+  {
     heap_.clear();
     handlers_.clear();
   }
 
-  typename Heap::size_type size() const {
+  typename Heap::size_type size() const
+  {
     assert(handlers_.size() == heap_.size());
     return heap_.size();
   }

@@ -21,15 +21,24 @@ constexpr StateId kInvalidStateId = std::numeric_limits<StateId>::max();
 
 
 template <typename T>
-struct LabelTemplate: public LabelInterface<StateId>
+struct StateLabel
 {
-  LabelTemplate(double c, const T* a, const T* p)
-      : costsofar(c), state(a), predecessor(p) {}
+  // Required by SPQueue
+  using id_type = StateId;
 
-  StateId id() const override
+  StateLabel(double the_costsofar,
+             const T* the_state,
+             const T* the_predecessor)
+      : costsofar(the_costsofar),
+        state(the_state),
+        predecessor(the_predecessor) {}
+
+  // Required by SPQueue
+  id_type id() const
   { return state->id(); }
 
-  double sortcost() const override
+  // Required by SPQueue
+  double sortcost() const
   { return costsofar; }
 
   // Accumulated cost since time = 0
@@ -39,6 +48,26 @@ struct LabelTemplate: public LabelInterface<StateId>
 
   const T* predecessor;
 };
+
+
+template <typename T>
+bool operator>(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+{ return lhs.sortcost() > rhs.sortcost(); }
+
+
+template <typename T>
+bool operator<(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+{ return lhs.sortcost() < rhs.sortcost(); }
+
+
+template <typename T>
+bool operator==(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+{ return lhs.sortcost() == rhs.sortcost(); }
+
+
+template <typename T>
+bool operator!=(const StateLabel<T>& lhs, const StateLabel<T>& rhs)
+{ return !(lhs == rhs); }
 
 
 template <typename T>
@@ -216,19 +245,17 @@ class NaiveViterbiSearch: public IViterbiSearch<T>
   virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
 
  private:
-  using label_type = LabelTemplate<T>;
+  std::vector<std::vector<StateLabel<T>>> history_;
 
-  std::vector<std::vector<label_type>> history_;
+  void UpdateLabels(std::vector<StateLabel<T>>& labels,
+                    const std::vector<StateLabel<T>>& prev_labels) const;
 
-  void UpdateLabels(std::vector<label_type>& labels,
-                    const std::vector<label_type>& prev_labels) const;
+  std::vector<StateLabel<T>> InitLabels(const std::vector<const T*>& column,
+                                        bool use_emission_cost) const;
 
-  std::vector<label_type> InitLabels(const std::vector<const T*>& column,
-                                     bool use_emission_cost) const;
+  const T* FindWinner(const std::vector<StateLabel<T>>& labels) const;
 
-  const T* FindWinner(const std::vector<label_type>& labels) const;
-
-  const label_type& label(const T& state) const;
+  const StateLabel<T>& label(const T& state) const;
 };
 
 
@@ -276,7 +303,7 @@ StateId NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
 
   for (Time time = winner_.size(); time <= target; ++time) {
     const auto& column = states_[time];
-    std::vector<label_type> labels;
+    std::vector<StateLabel<T>> labels;
 
     // Update labels
     if (time == 0) {
@@ -321,8 +348,8 @@ NaiveViterbiSearch<T, Maximize>::state(StateId id) const
 
 template <typename T, bool Maximize>
 void NaiveViterbiSearch<T, Maximize>::UpdateLabels(
-    std::vector<label_type>& labels,
-    const std::vector<label_type>& prev_labels) const
+    std::vector<StateLabel<T>>& labels,
+    const std::vector<StateLabel<T>>& prev_labels) const
 {
   for (const auto& prev_label : prev_labels) {
     const auto prev_state = prev_label.state;
@@ -351,9 +378,9 @@ void NaiveViterbiSearch<T, Maximize>::UpdateLabels(
       }
 
       if (Maximize) {
-        label = std::max(label_type(costsofar, state, prev_state), label);
+        label = std::max(StateLabel<T>(costsofar, state, prev_state), label);
       } else {
-        label = std::min(label_type(costsofar, state, prev_state), label);
+        label = std::min(StateLabel<T>(costsofar, state, prev_state), label);
       }
     }
   }
@@ -361,12 +388,12 @@ void NaiveViterbiSearch<T, Maximize>::UpdateLabels(
 
 
 template <typename T, bool Maximize>
-std::vector<typename NaiveViterbiSearch<T, Maximize>::label_type>
+std::vector<StateLabel<T>>
 NaiveViterbiSearch<T, Maximize>::InitLabels(
     const std::vector<const T*>& column,
     bool use_emission_cost) const
 {
-  std::vector<label_type> labels;
+  std::vector<StateLabel<T>> labels;
   for (const auto state : column) {
     const auto initial_cost = use_emission_cost? EmissionCost(*state) : kInvalidCost;
     labels.emplace_back(initial_cost, state, nullptr);
@@ -377,17 +404,17 @@ NaiveViterbiSearch<T, Maximize>::InitLabels(
 
 template <typename T, bool Maximize>
 const T*
-NaiveViterbiSearch<T, Maximize>::FindWinner(const std::vector<label_type>& labels) const
+NaiveViterbiSearch<T, Maximize>::FindWinner(const std::vector<StateLabel<T>>& labels) const
 {
   auto it = labels.cend();
+  const auto cmp = [](const StateLabel<T>& left, const StateLabel<T>& right) {
+    return left.costsofar < right.costsofar;
+  };
+
   if (Maximize) {
-    it = std::max_element(labels.cbegin(), labels.cend(), [](const label_type& left, const label_type& right) {
-        return left.costsofar < right.costsofar;
-      });
+    it = std::max_element(labels.cbegin(), labels.cend(), cmp);
   } else {
-    it = std::min_element(labels.cbegin(), labels.cend(), [](const label_type& left, const label_type& right) {
-        return left.costsofar < right.costsofar;
-      });
+    it = std::min_element(labels.cbegin(), labels.cend(), cmp);
   }
   // The max label's costsofar is invalid (-infinity), that means all
   // labels are invalid
@@ -400,7 +427,7 @@ NaiveViterbiSearch<T, Maximize>::FindWinner(const std::vector<label_type>& label
 
 // Linear search a state's label
 template <typename T, bool Maximize>
-const typename NaiveViterbiSearch<T, Maximize>::label_type&
+const StateLabel<T>&
 NaiveViterbiSearch<T, Maximize>::label(const T& state) const
 {
   for (const auto& label : history_[state.time()]) {
@@ -449,18 +476,9 @@ class ViterbiSearch: public IViterbiSearch<T>
   virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
 
  private:
-  struct Label: public LabelTemplate<T> {
-    Label()
-        : LabelTemplate<T>(-1.f, nullptr, nullptr) {
-    }
-    Label(double c, const T* a, const T* p)
-        : LabelTemplate<T>(c, a, p) {
-    }
-  };
+  SPQueue<StateLabel<T>> queue_;
 
-  SPQueue<Label> queue_;
-
-  std::unordered_map<StateId, Label> scanned_labels_;
+  std::unordered_map<StateId, StateLabel<T>> scanned_labels_;
 
   // Initialize labels from a column and push them into priority queue
   void InitQueue(const std::vector<const T*>& column);
@@ -578,7 +596,7 @@ void ViterbiSearch<T>::InitQueue(const std::vector<const T*>& column)
     if (IsInvalidCost(emission_cost)) {
       continue;
     }
-    queue_.push(Label(emission_cost, state, nullptr));
+    queue_.push(StateLabel<T>(emission_cost, state, nullptr));
   }
 }
 
@@ -619,7 +637,7 @@ void ViterbiSearch<T>::AddSuccessorsToQueue(const T* state)
       continue;
     }
 
-    queue_.push(Label(next_costsofar, next_state, state));
+    queue_.push(StateLabel<T>(next_costsofar, next_state, state));
   }
 }
 
