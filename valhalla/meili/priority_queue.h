@@ -19,25 +19,21 @@ class SPQueue
   ~SPQueue()
   { clear(); }
 
-  void push(const T& label) {
-    const auto id = label.id();
-    auto handler_itr = handlers_.find(id);
-    if (handler_itr == handlers_.end()) {
-      handlers_[id] = heap_.push(label);
-    } else {
-      auto handler = handler_itr->second;
-      // Update it if it has lower cost
-      if (label < *handler) {
-        heap_.update(handler, label);
-      }
+  void push(const T& label)
+  {
+    const auto& id = label.id();
+    const auto it = handlers_.find(id);
+    if (it == handlers_.end()) {
+      handlers_.emplace(id, heap_.push(label));
+    } else if (label < *(it->second)) {
+      heap_.update(it->second, label);
     }
   }
 
-  void pop() {
-    auto top = heap_.top();
-    assert(handlers_.find(top.id()) != handlers_.end());
+  void pop()
+  {
+    const auto& top = heap_.top();
     handlers_.erase(top.id());
-    assert(handlers_.find(top.id()) == handlers_.end());
     heap_.pop();
   }
 
@@ -45,10 +41,7 @@ class SPQueue
   { return heap_.top(); }
 
   bool empty() const
-  {
-    assert(heap_.empty() == handlers_.empty());
-    return heap_.empty();
-  }
+  { return heap_.empty(); }
 
   void clear()
   {
@@ -57,13 +50,11 @@ class SPQueue
   }
 
   typename Heap::size_type size() const
-  {
-    assert(handlers_.size() == heap_.size());
-    return heap_.size();
-  }
+  { return heap_.size(); }
 
  protected:
   Heap heap_;
+
   std::unordered_map<typename T::id_type, typename Heap::handle_type> handlers_;
 };
 
