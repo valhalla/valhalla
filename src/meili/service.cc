@@ -711,7 +711,7 @@ namespace meili {
 
 void run_service(const boost::property_tree::ptree& config) {
   //gets requests from the http server
-  auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
+  auto upstream_endpoint = config.get<std::string>("meili.service.proxy") + "_out";
   //or returns just location information back to the server
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
 

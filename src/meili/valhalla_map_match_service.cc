@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   //grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
   std::string loopback = config.get<std::string>("httpd.service.loopback");
-  std::string skadi_proxy = config.get<std::string>("meili.service.proxy");
+  std::string meili_proxy = config.get<std::string>("meili.service.proxy");
 
   //check the server endpoint
   if(listen.find("tcp://") != 0) {
@@ -56,15 +56,15 @@ int main(int argc, char** argv) {
   //setup the cluster within this process
   zmq::context_t context;
   std::thread server_thread = std::thread(std::bind(&http_server_t::serve,
-    http_server_t(context, listen, skadi_proxy + "_in", loopback, true)));
+    http_server_t(context, listen, meili_proxy + "_in", loopback, true)));
 
-  //skadi layer
-  std::thread skadi_proxy_thread(std::bind(&proxy_t::forward, proxy_t(context, skadi_proxy + "_in", skadi_proxy + "_out")));
-  skadi_proxy_thread.detach();
-  std::list<std::thread> skadi_worker_threads;
+  //meili layer
+  std::thread meili_proxy_thread(std::bind(&proxy_t::forward, proxy_t(context, meili_proxy + "_in", meili_proxy + "_out")));
+  meili_proxy_thread.detach();
+  std::list<std::thread> meili_worker_threads;
   for(size_t i = 0; i < worker_concurrency; ++i) {
-    skadi_worker_threads.emplace_back(valhalla::meili::run_service, config);
-    skadi_worker_threads.back().detach();
+    meili_worker_threads.emplace_back(valhalla::meili::run_service, config);
+    meili_worker_threads.back().detach();
   }
 
   //wait forever (or for interrupt)
@@ -72,5 +72,3 @@ int main(int argc, char** argv) {
 
   return 0;
 }
-
-
