@@ -5,7 +5,6 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-#include <cassert>
 
 #include <meili/priority_queue.h>
 
@@ -46,44 +45,43 @@ template <typename T>
 class IViterbiSearch;
 
 
+// TODO test it
 template <typename T>
-class StateIterator:
-    public std::iterator<std::forward_iterator_tag, T>
+class StateIterator: public std::iterator<std::forward_iterator_tag, T>
 {
  public:
-  StateIterator(IViterbiSearch<T>* vs, StateId id, Time time)
-      : vs_(vs), id_(id), time_(time) {}
+  StateIterator(IViterbiSearch<T>* vs, StateId id)
+      : vs_(vs),
+        id_(id),
+        time_(id_ == kInvalidStateId? kInvalidTime : vs_->state(id_).time()) {}
 
-  StateIterator(IViterbiSearch<T>* vs): vs_(vs)
-  { set_end(); }
+  StateIterator(IViterbiSearch<T>* vs):
+      vs_(vs),
+      id_(kInvalidStateId),
+      time_(kInvalidTime) {}
 
   // Postfix increment
   StateIterator operator++(int)
   {
-    if (!is_end()) {
-      auto copy = *this;
-      goback();
-      return copy;
-    }
-    return *this;
+    auto copy = *this;
+    goback();
+    return copy;
   }
 
   // Prefix increment
   StateIterator<T> operator++()
   {
-    if (!is_end()) {
-      goback();
-    }
+    goback();
     return *this;
   }
 
   bool operator==(const StateIterator<T>& other) const
-  { return id_ == other.id_ && time_ == other.time_ && vs_ == other.vs_; }
+  { return vs_ == other.vs_ && id_ == other.id_; }
 
   bool operator!=(const StateIterator<T>& other) const
   { return !(*this == other); }
 
-  // Derefrencnce
+  // Derefrencnce. Note invalid iterator can't be dereferenced
   const T& operator*() const
   { return vs_->state(id_); }
 
@@ -91,41 +89,42 @@ class StateIterator:
   const T* operator->() const
   { return &(vs_->state(id_)); }
 
-  // Invalid iterator can't be dereferenced. Invalid iterator can be
-  // used to indicate that no state has been found at a time
-
-  // TODO give it a meaningful name
+  // TODO give it a meaningful name. Invalid iterator indicates that
+  // no state has been found at the time
   bool IsValid() const
   { return id_ != kInvalidStateId; }
 
  private:
   IViterbiSearch<T>* vs_;
 
+  // Invariant: (time == kInvalidTime && id_ == kInvalidStateId) || time != kInvalidTime
+  // same as: !(time == kInvalidTime && id_ != kInvalidStateId)
+  // same as: time != kInvalidTime || id_ == kInvalidStateId
   StateId id_;
 
   Time time_;
 
-  bool is_end() const
-  { return id_ == kInvalidStateId && time_ == kInvalidTime; }
-
-  void set_end()
-  {
-    id_ = kInvalidStateId;
-    time_ = kInvalidTime;
-  }
-
   void goback()
   {
-    if (time_ > 0) {
-      id_ = vs_->predecessor(id_);
+    if (time_ == kInvalidTime) {
+      if (id_ != kInvalidStateId) {
+        throw std::logic_error("state id should be invalid as well");
+      }
+      return;
+    }
+
+    if (0 < time_) {
       time_ --;
+      id_ = vs_->predecessor(id_);
       if (id_ == kInvalidStateId) {
         id_ = vs_->SearchWinner(time_);
       }
-      // If id_ is valid then assert(vs_->state(id_).time() == time_)
-      assert(id_ == kInvalidStateId || vs_->state(id_).time() == time_);
+      if (!(id_ == kInvalidStateId || vs_->state(id_).time() == time_)) {
+        std::runtime_error("a valid state's time must match the time stored in the iterator");
+      }
     } else {
-      set_end();
+      time_ = kInvalidTime;
+      id_ = kInvalidStateId;
     }
   }
 };
@@ -146,7 +145,7 @@ class IViterbiSearch
   virtual StateId SearchWinner(Time time) = 0;
 
   state_iterator SearchPath(Time time)
-  { return state_iterator(this, SearchWinner(time), time); }
+  { return state_iterator(this, SearchWinner(time)); }
 
   state_iterator PathEnd() const
   { return path_end_; }
