@@ -155,7 +155,7 @@ class IViterbiSearch
   // Get the state reference given its ID
   virtual const T& state(StateId id) const = 0;
 
-  virtual double AccumulatedCost(const StateId id) const = 0;
+  virtual double AccumulatedCost(StateId id) const = 0;
 
   virtual double AccumulatedCost(const T& state) const
   { return AccumulatedCost(state.id()); }
@@ -198,7 +198,7 @@ class NaiveViterbiSearch: public IViterbiSearch<T>
 
   const T& state(StateId id) const override;
 
-  double AccumulatedCost(const StateId id) const override;
+  double AccumulatedCost(StateId id) const override;
 
   double AccumulatedCost(const T& state) const override;
 
@@ -252,7 +252,7 @@ void NaiveViterbiSearch<T, Maximize>::Clear()
 
 template <typename T, bool Maximize>
 inline double
-NaiveViterbiSearch<T, Maximize>::AccumulatedCost(const StateId id) const
+NaiveViterbiSearch<T, Maximize>::AccumulatedCost(StateId id) const
 { return id != kInvalidStateId? AccumulatedCost(state(id)) : kInvalidCost; }
 
 
@@ -433,7 +433,7 @@ class ViterbiSearch: public IViterbiSearch<T>
 
   using IViterbiSearch<T>::AccumulatedCost;
 
-  virtual double AccumulatedCost(const StateId id) const override;
+  virtual double AccumulatedCost(StateId id) const override;
 
  protected:
   std::vector<const T*> state_;
@@ -514,7 +514,11 @@ template <typename T>
 inline StateId
 ViterbiSearch<T>::predecessor(StateId id) const
 {
-  const auto it = scanned_labels_.find(id);
+  // Let it throw out-of-bound here. This is by design to be
+  // consistent with NaiveViterbiSearch::predecessor
+  const auto& state = state_[id];
+
+  const auto it = scanned_labels_.find(state->id());
   if (it != scanned_labels_.end()) {
     return (it->second).predecessor? (it->second).predecessor->id() : kInvalidStateId;
   } else {
@@ -530,9 +534,13 @@ ViterbiSearch<T>::IsInvalidCost(double cost) const
 
 
 template <typename T>
-double ViterbiSearch<T>::AccumulatedCost(const StateId id) const
+double ViterbiSearch<T>::AccumulatedCost(StateId id) const
 {
-  const auto it = scanned_labels_.find(id);
+  // Let it throw out-of-bound here. This is by design to be
+  // consistent with NaiveViterbiSearch::AccumulatedCost
+  const auto& state = state_[id];
+
+  const auto it = scanned_labels_.find(state->id());
   if (it == scanned_labels_.end()) {
     return -1.f;
   } else {
