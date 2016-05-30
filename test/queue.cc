@@ -1,76 +1,104 @@
 // -*- mode: c++ -*-
-
-//enable asserts for this test
-#undef NDEBUG
-
-#include <cassert>
 #include <iostream>
+#include <cstdlib>
+#include <limits>
 
 #include "meili/priority_queue.h"
 
 
-class Label: public LabelInterface<uint32_t>
+class Label
 {
  public:
-  Label(uint32_t id, double cost) : id_(id), cost_(cost) {}
-  uint32_t id() const {return id_;}
-  double sortcost() const {return cost_;}
+  using id_type = uint32_t;
+
+  Label(id_type id, double cost)
+      : id_(id), cost_(cost) {}
+
+  id_type id() const
+  { return id_; }
+
+  double sortcost() const
+  { return cost_; }
 
  private:
-  uint32_t id_;
+  id_type id_;
   double cost_;
 };
 
 
+bool operator>(const Label& lhs, const Label& rhs)
+{ return lhs.sortcost() > rhs.sortcost(); }
+
+
+bool operator<(const Label& lhs, const Label& rhs)
+{ return lhs.sortcost() < rhs.sortcost(); }
+
+
 bool operator==(const Label& lhs, const Label& rhs)
-{
-  return lhs.id() == rhs.id() && lhs.sortcost() == rhs.sortcost();
-}
+{ return lhs.sortcost() == rhs.sortcost(); }
 
 
 bool operator!=(const Label& lhs, const Label& rhs)
+{ return !(lhs == rhs); }
+
+
+inline void
+simple_assert(bool assertion, const std::string& message)
 {
-  return !(lhs == rhs);
+  if (!assertion) {
+    throw std::logic_error(message);
+  }
 }
+
+
+inline void
+simple_assert(bool assertion)
+{ simple_assert(assertion, "assertion failed"); }
 
 
 void SimpleTestQueue()
 {
   SPQueue<Label> queue;
-  assert(queue.size() == 0 && queue.empty());
+  simple_assert(queue.size() == 0 && queue.empty());
 
   queue.push(Label(1, 3));
-  assert(queue.top() == Label(1, 3));
-  assert(queue.size() == 1);
+  simple_assert(queue.top() == Label(1, 3));
+  simple_assert(queue.size() == 1);
+
+  // test compressions
+  simple_assert(queue.top() == Label(2, 3));
+  simple_assert(queue.top() > Label(2, 2));
+  simple_assert(queue.top() < Label(2, 4));
+  simple_assert(queue.top() != Label(2, 4));
 
   queue.push(Label(2, 2));
-  assert(queue.top() == Label(2, 2));
-  assert(queue.size() == 2);
+  simple_assert(queue.top() == Label(2, 2));
+  simple_assert(queue.size() == 2);
 
   queue.push(Label(2, 4));
-  assert(queue.top() == Label(2, 2));
-  assert(queue.size() == 2);
+  simple_assert(queue.top() == Label(2, 2));
+  simple_assert(queue.size() == 2);
 
   queue.push(Label(2, 2));
-  assert(queue.top() == Label(2, 2));
-  assert(queue.size() == 2);
+  simple_assert(queue.top() == Label(2, 2));
+  simple_assert(queue.size() == 2);
 
   queue.push(Label(1, 1));
-  assert(queue.top() == Label(1, 1));
-  assert(queue.size() == 2);
+  simple_assert(queue.top() == Label(1, 1));
+  simple_assert(queue.size() == 2);
 
   queue.pop();
-  assert(queue.top() == Label(2, 2));
-  assert(queue.size() == 1);
+  simple_assert(queue.top() == Label(2, 2));
+  simple_assert(queue.size() == 1);
 
   queue.pop();
-  assert(queue.empty() && queue.size() == 0);
+  simple_assert(queue.empty() && queue.size() == 0);
 }
 
 
 void TestQueue()
 {
-  const int N = 100000;
+  constexpr int N = 100000;
   SPQueue<Label> queue;
 
   for (int i=0; i<N; i++) {
@@ -85,22 +113,22 @@ void TestQueue()
     }
   }
 
-  assert(queue.size() == N);
-  assert(!queue.empty());
+  simple_assert(queue.size() == N);
+  simple_assert(!queue.empty());
 
   for (int i=0; i<N; i++) {
     queue.push(Label(i, i+2));
   }
 
-  assert(queue.size() == N);
-  assert(!queue.empty());
+  simple_assert(queue.size() == N);
+  simple_assert(!queue.empty());
 
   for (int i=0; i<N; i++) {
     queue.push(Label(i, i));
   }
 
-  assert(queue.size() == N);
-  assert(!queue.empty());
+  simple_assert(queue.size() == N);
+  simple_assert(!queue.empty());
 
   std::vector<Label> labels;
   while (!queue.empty()) {
@@ -108,14 +136,14 @@ void TestQueue()
     queue.pop();
   }
 
-  assert(labels.size() == N);
-  assert(queue.size() == 0);
-  assert(queue.empty());
+  simple_assert(labels.size() == N);
+  simple_assert(queue.size() == 0);
+  simple_assert(queue.empty());
 
   uint32_t i = 0;
   for (const auto& label : labels) {
-    assert(label.id() == i);
-    assert(label.sortcost() == i);
+    simple_assert(label.id() == i);
+    simple_assert(label.sortcost() == i);
     i++;
   }
 
@@ -123,8 +151,32 @@ void TestQueue()
     queue.push(label);
   }
   queue.clear();
-  assert(queue.size()==0);
-  assert(queue.empty());
+  simple_assert(queue.size()==0);
+  simple_assert(queue.empty());
+}
+
+
+void TestSorting()
+{
+  SPQueue<Label> queue;
+  constexpr Label::id_type N = 10000;
+
+  for (Label::id_type id = 0; id < N; id++) {
+    const double cost = static_cast<double>(std::rand());
+    // id is insignificant in this test
+    queue.push(Label(id, cost));
+  }
+
+  simple_assert(queue.size() == N);
+
+  // Should be sorted
+  Label previous_label(N + 1, -std::numeric_limits<double>::infinity());
+  while (!queue.empty()) {
+    const auto label = queue.top();
+    queue.pop();
+    simple_assert(previous_label.sortcost() <= label.sortcost());
+    previous_label = label;
+  }
 }
 
 
@@ -133,6 +185,8 @@ int main(int argc, char *argv[])
   SimpleTestQueue();
 
   TestQueue();
+
+  TestSorting();
 
   std::cout << "all tests passed" << std::endl;
 
