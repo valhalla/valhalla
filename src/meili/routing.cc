@@ -456,7 +456,7 @@ find_shortest_path(baldr::GraphReader& reader,
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
         if (other_edge->trans_up() || other_edge->trans_down()) continue;
-        // TODO: @kevinkreiser is it true if trans is disabled? assert(nodeid.level() == other_edge->endnode().level());
+        // So we have nodeid.level() == other_edge->endnode().level()
 
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
 
