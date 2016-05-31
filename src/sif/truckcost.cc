@@ -197,6 +197,18 @@ class TruckCost : public DynamicCost {
     };
   }
 
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each node's attribution
+   * @return Function/functor to be used in filtering out nodes
+   */
+  virtual const NodeFilter GetNodeFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node){
+      return !(node->access() & kTruckAccess);
+    };
+  }
+
  protected:
   float speedfactor_[256];
   float density_factor_[16];        // Density factor
