@@ -8,8 +8,8 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
-
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/costfactory.h>
 
@@ -20,7 +20,7 @@ namespace valhalla {
 
     class loki_worker_t {
      public:
-      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, OPTIMIZED};
+      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, SOURCES_TO_TARGETS, OPTIMIZED};
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();
@@ -31,7 +31,9 @@ namespace valhalla {
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       boost::property_tree::ptree config;
-      std::vector<baldr::Location> locations;
+      const std::vector<baldr::Location> locations;
+      std::vector<baldr::PathLocation> sources;
+      std::vector<baldr::PathLocation> targets;
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter costing_filter;
       valhalla::baldr::GraphReader reader;

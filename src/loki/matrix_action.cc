@@ -29,6 +29,7 @@ namespace {
     {"one_to_many", loki_worker_t::ONE_TO_MANY},
     {"many_to_one", loki_worker_t::MANY_TO_ONE},
     {"many_to_many", loki_worker_t::MANY_TO_MANY},
+    {"sources_to_targets", loki_worker_t::SOURCES_TO_TARGETS},
     {"optimized", loki_worker_t::OPTIMIZED}
   };
 
@@ -36,6 +37,7 @@ namespace {
     {loki_worker_t::ONE_TO_MANY, "one_to_many"},
     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
     {loki_worker_t::MANY_TO_MANY, "many_to_many"},
+    {loki_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
     {loki_worker_t::OPTIMIZED, "optimized"}
   };
 
@@ -43,9 +45,9 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  void check_locations(const size_t location_count, const size_t max_locations) {
+  void check_locations(const size_t source_count, const size_t target_count, const size_t max_locations) {
     //check that location size does not exceed max.
-    if (location_count > max_locations)
+    if ((source_count + target_count) > max_locations)
       throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations) + ".");
   }
 
@@ -82,10 +84,12 @@ namespace valhalla {
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //we want optimized to use the same location and distance limits as many_to_many
-      auto action_str = ACTION_TO_STRING.find(action == loki_worker_t::OPTIMIZED ? loki_worker_t::MANY_TO_MANY : action)->second;
+      auto action_str = ACTION_TO_STRING.find((action == loki_worker_t::OPTIMIZED || action == loki_worker_t::SOURCES_TO_TARGETS) ? loki_worker_t::MANY_TO_MANY : action)->second;
 
       //check that location size does not exceed max.
-      check_locations(locations.size(), max_locations.find(action_str)->second);
+      check_locations(sources.size(), targets.size(), max_locations.find(action_str)->second);
+
+      //TODO: Figure out how to check distances for souces and targets??
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
@@ -97,16 +101,22 @@ namespace valhalla {
           check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, max_location_distance);
           break;
         case MANY_TO_MANY:
+        case SOURCES_TO_TARGETS:
         case OPTIMIZED:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
           break;
       }
       //correlate the various locations to the underlying graph
-      for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, costing_filter);
+
+      /*std::vector<baldr::PathLocation> locs;
+      locs.push_back(sources);
+      locs.push_back(targets);
+
+      for(size_t i = 0; i < locs.size(); ++i) {
+        auto correlated = loki::Search(locs[i], reader, costing_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
-      }
+      }*/
 
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
       //pass on to thor with type of matrix
