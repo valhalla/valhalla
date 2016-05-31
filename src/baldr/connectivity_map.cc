@@ -237,7 +237,7 @@ namespace valhalla {
       }
 
       //record the arity of each region so we can put the biggest ones first
-      auto comp = [](const size_t& a, const size_t& b){return a < b;};
+      auto comp = [](const size_t& a, const size_t& b){return a > b;};
       std::multimap<size_t, size_t, decltype(comp)> arities(comp);
       for(const auto& region : regions)
         arities.emplace(region.second.size(), region.first);
