@@ -25,7 +25,7 @@ void checkDBResponse(int rc, char* errMsg) {
     std::cout << "SQL error: " << errMsg << std::endl;
     sqlite3_free(errMsg);
     exit(0);
-  } 
+  }
 }
 
 /*
@@ -50,7 +50,7 @@ static int classCallback (void *data, int argc, char **argv, char **colName) {
  *  The array containing the road classes is filled
  */
 void fillClasses(sqlite3 *db, std::vector<std::string>& classes) {
-  
+ 
   std::string sql = "SELECT * FROM countrydata LIMIT 1";
   char *errMsg = 0;
   int rc = sqlite3_exec(db, sql.c_str(), classCallback, (void*) &classes, &errMsg);
@@ -105,7 +105,7 @@ static int countryDataCallback (void *data_pair, int argc, char **argv, char **c
  *  data contains the lengths of each type of road for each country
  */
 void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::unordered_map<std::string, std::vector<float>>& data) {
-  
+ 
   std::string sql = "SELECT * FROM countrydata WHERE isocode IS NOT \"\"";
 
   char *errMsg = 0;
@@ -114,7 +114,7 @@ void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::unor
   checkDBResponse(rc, errMsg);
 }
 
-/* UNUSED
+/* 
  * Callback function to receive query results from sqlite3_exec
  * Params
  *  *dataPair - the pointer used to pass data structures into this function
@@ -123,9 +123,9 @@ void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::unor
  *  **colName - char array returned column names from the database
  */
 static int maxSpeedCallback (void *data, int argc, char **argv, char **colName) {
-	std::unordered_map<std::string, std::vector<float>>* maxSpeedInfo = 
+	auto* maxSpeedInfo =
 		(std::unordered_map<std::string, std::vector<float>>*) data;
-		
+	
 	std::istringstream ss(argv[2]);
 	float val;
 	ss >> val;
@@ -139,10 +139,10 @@ static int maxSpeedCallback (void *data, int argc, char **argv, char **colName) 
  * Retrieves the maxspeed data from the database and fills the data structure
  */
 void fillMaxSpeedData(sqlite3* db, std::unordered_map<std::string, std::vector<float>>& maxSpeedInfo) {
-  
+ 
   std::string sql = "SELECT isocode,type,maxspeed";
 	sql += " FROM rclassctrydata";
-  sql += " WHERE (type='Motorway' OR type='Trunk' OR type='Primary' OR type='Secondary')";
+  sql += " WHERE (type='Motorway' OR type='Primary' OR type='Secondary' OR type='Trunk')";
   sql += " AND isocode IS NOT \"\"";
 
   char *errMsg = 0;
@@ -150,6 +150,41 @@ void fillMaxSpeedData(sqlite3* db, std::unordered_map<std::string, std::vector<f
   checkDBResponse(rc, errMsg);
 }
 
+/* 
+ * Callback function to receive query results from sqlite3_exec
+ * Params
+ *  *data - the pointer used to pass data structures into this function
+ *  argc - # arguments
+ *  **argv - char array of arguments
+ *  **colName - char array returned column names from the database
+ */
+static int namedCallback (void *data, int argc, char **argv, char **colName) {
+	auto* namedInfo =
+		(std::unordered_map<std::string, std::vector<float>>*) data;
+	
+	std::istringstream ss(argv[2]);
+	float val;
+	ss >> val;
+
+	namedInfo->at(argv[0]).push_back(val);
+
+  return 0;
+}
+
+/*
+ * Retrieves the named road data from the database and fills the data structure
+ */
+void fillNamedData(sqlite3* db, std::unordered_map<std::string, std::vector<float>>& namedInfo) {
+ 
+  std::string sql = "SELECT isocode,type,named";
+	sql += " FROM rclassctrydata";
+  sql += " WHERE (type='Residential' OR type='Unclassified')";
+  sql += " AND isocode IS NOT \"\"";
+
+  char *errMsg = 0;
+  int rc = sqlite3_exec(db, sql.c_str(), namedCallback, (void*) &namedInfo, &errMsg);
+  checkDBResponse(rc, errMsg);
+}
 /*
  * Generates a javascript file that has a function to return
  *  all the data queried from the database
@@ -164,7 +199,9 @@ void generateJson (std::vector<std::string>& countries,
 									 std::unordered_map<std::string, std::vector<float>>& data,
 									 std::vector<std::string>& classes,
 									 std::unordered_map<std::string, std::vector<float>>& maxSpeedInfo,
-									 std::vector<std::string>& maxClasses) {
+									 std::vector<std::string>& maxClasses,
+									 std::unordered_map<std::string, std::vector<float>>& namedInfo,
+									 std::vector<std::string>& namedClasses) {
 
 	using namespace valhalla::baldr;
 
@@ -193,12 +230,17 @@ void generateJson (std::vector<std::string>& countries,
 				 {maxClasses[1], json::fp_t{maxSpeedInfo[countries[i]][1]}},
 				 {maxClasses[2], json::fp_t{maxSpeedInfo[countries[i]][2]}},
 				 {maxClasses[3], json::fp_t{maxSpeedInfo[countries[i]][3]}}
-				})}
+				})},
+        {"named", json::map
+        ({
+				 {namedClasses[0], json::fp_t{namedInfo[countries[i]][0]}},
+				 {namedClasses[1], json::fp_t{namedInfo[countries[i]][1]}},
+        })}
 		  })
 		);
 	}
 	out << *map << std::endl;
-  
+
   out.close();
 }
 
@@ -214,9 +256,13 @@ int main (int argc, char** argv) {
   std::vector<std::string> roadClasses;
   std::vector<std::string> countries;
   std::unordered_map<std::string, std::vector<float>> roadClassInfo;
-	std::vector<std::string> maxClasses = {"Motorway", "Secondary", "Primary", "Trunk"};
+  // speed info
+	std::vector<std::string> maxClasses = {"Motorway", "Primary", "Secondary", "Trunk"};
 	std::unordered_map<std::string, std::vector<float>> maxSpeedInfo;
-	
+  // name info
+	std::vector<std::string> namedClasses = {"Residential", "Unclassified"};
+	std::unordered_map<std::string, std::vector<float>> namedInfo;
+
   // open DB file
   sqlite3 *db;
   int rc = sqlite3_open(argv[1], &db);
@@ -231,11 +277,15 @@ int main (int argc, char** argv) {
 	// create the entries in the map
 	for (auto& s : countries) {
 		maxSpeedInfo[s];
+    namedInfo[s];
 	}
 	fillMaxSpeedData(db, maxSpeedInfo);
-  
-  generateJson(countries, roadClassInfo, roadClasses, maxSpeedInfo, maxClasses);
-  
+  fillNamedData(db, namedInfo);
+ 
+  generateJson(countries, roadClassInfo, roadClasses,
+               maxSpeedInfo, maxClasses,
+               namedInfo, namedClasses);
+ 
   sqlite3_close(db);
   return 0;
 }
