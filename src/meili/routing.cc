@@ -9,15 +9,13 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/costconstants.h>
 
-#include "mmp/graph_helpers.h"
-#include "mmp/geometry_helpers.h"
-#include "mmp/routing.h"
+#include "meili/graph_helpers.h"
+#include "meili/geometry_helpers.h"
+#include "meili/routing.h"
 
-using namespace valhalla;
+namespace valhalla {
 
-
-namespace mmp
-{
+namespace meili {
 
 LabelSet::LabelSet(typename BucketQueue<uint32_t, kInvalidLabelIndex>::size_type count, float size)
     : queue_(count, size) {}
@@ -27,7 +25,7 @@ bool
 LabelSet::put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
               std::shared_ptr<const sif::EdgeLabel> edgelabel)
 {
-  return put(nodeid, {},         // nodeid, (invalid) edgeid
+  return put(nodeid, {},         // nodeid, (dummy) edgeid
              0.f, 0.f,           // source, target
              0.f, 0.f, 0.f,      // cost, turn cost, sort cost
              kInvalidLabelIndex, // predecessor
@@ -49,9 +47,11 @@ LabelSet::put(const baldr::GraphId& nodeid,
     throw std::runtime_error("invalid nodeid");
   }
   const auto it = node_status_.find(nodeid);
+
+  // Create a new label and push it to the queue
   if (it == node_status_.end()) {
-    uint32_t idx = labels_.size();
-    bool added = queue_.add(idx, sortcost);
+    const uint32_t idx = labels_.size();
+    const bool added = queue_.add(idx, sortcost);
     if (added) {
       labels_.emplace_back(nodeid, edgeid,
                            source, target,
@@ -61,8 +61,10 @@ LabelSet::put(const baldr::GraphId& nodeid,
       node_status_[nodeid] = {idx, false};
       return true;
     }
-    // !added -> rejected since queue's full
+    // !added -> rejected silently since queue's full
+
   } else {
+    // Decrease cost of the existing label
     const auto& status = it->second;
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
       // TODO check if it goes through constructor
@@ -71,8 +73,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
                                    cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool decreased = queue_.decrease(status.label_idx, sortcost);
-      assert(decreased);
+      queue_.decrease(status.label_idx, sortcost);
       return true;
     }
   }
@@ -85,7 +86,7 @@ bool
 LabelSet::put(uint16_t dest, sif::TravelMode travelmode,
               std::shared_ptr<const sif::EdgeLabel> edgelabel)
 {
-  return put(dest, {},           // dest, (invalid) edgeid
+  return put(dest, {},           // dest, (dummy) edgeid
              0.f, 0.f,           // source, target
              0.f, 0.f, 0.f,      // cost, turn cost, sort cost
              kInvalidLabelIndex, // predecessor
@@ -108,9 +109,11 @@ LabelSet::put(uint16_t dest,
   }
 
   const auto it = dest_status_.find(dest);
+
+  // Create a new label and push it to the queue
   if (it == dest_status_.end()) {
-    uint32_t idx = labels_.size();
-    bool added = queue_.add(idx, sortcost);
+    const uint32_t idx = labels_.size();
+    const bool added = queue_.add(idx, sortcost);
     if (added) {
       labels_.emplace_back(dest, edgeid,
                            source, target,
@@ -120,8 +123,10 @@ LabelSet::put(uint16_t dest,
       dest_status_[dest] = {idx, false};
       return true;
     }
-    // !added -> rejected since queue's full
+    // !added -> rejected silently since queue's full
+
   } else {
+    // Decrease cost of the existing label
     const auto& status = it->second;
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
       // TODO check if it goes through constructor
@@ -130,8 +135,7 @@ LabelSet::put(uint16_t dest,
                                    cost, turn_cost, sortcost,
                                    predecessor,
                                    edge, travelmode, edgelabel};
-      bool decreased = queue_.decrease(status.label_idx, sortcost);
-      assert(decreased);
+      queue_.decrease(status.label_idx, sortcost);
       return true;
     }
   }
@@ -145,17 +149,40 @@ LabelSet::pop()
 {
   const auto idx = queue_.pop();
 
+  // Mark the popped label as permanent (optimal)
   if (idx != kInvalidLabelIndex) {
     const auto& label = labels_[idx];
     if (label.nodeid.Is_Valid()) {
-      assert(node_status_[label.nodeid].label_idx == idx);
-      assert(!node_status_[label.nodeid].permanent);
-      node_status_[label.nodeid].permanent = true;
-    } else {
-      assert(dest_status_[label.dest].label_idx == idx);
-      assert(!dest_status_[label.dest].permanent);
-      assert(label.dest != kInvalidDestination);
-      dest_status_[label.dest].permanent = true;
+      auto& status = node_status_[label.nodeid];
+
+      // When these logic errors happen, go check LabelSet::put
+      if (status.label_idx != idx) {
+        throw std::logic_error("the index stored in the status " + std::to_string(status.label_idx) +
+                               " is not synced up with the index poped from the queue" + std::to_string(idx));
+      }
+      if (status.permanent) {
+        // For example, if the queue has popped up an index 2, and
+        // marked the label at this index as permanent (optimal), then
+        // some time later the queue pops up another index 2
+        // (duplicated), this logic error will be thrown
+        throw std::logic_error("the principle of optimality is violated during routing,"
+                               " probably negative costs occurred");
+      }
+
+      status.permanent = true;
+    } else {  // assert(label.dest != kInvalidDestination)
+      auto& status = dest_status_[label.dest];
+
+      if (status.label_idx != idx) {
+        throw std::logic_error("the index stored in the status " + std::to_string(status.label_idx) +
+                               " is not synced up with the index poped from the queue" + std::to_string(idx));
+      }
+      if (status.permanent) {
+        throw std::logic_error("the principle of optimality is violated during routing,"
+                               " probably negative costs occurred");
+      }
+
+      status.permanent = true;
     }
   }
 
@@ -202,8 +229,12 @@ void set_origin(baldr::GraphReader& reader,
 {
   const baldr::GraphTile* tile = nullptr;
 
+  // Push dummy labels (invalid edgeid, zero cost, no predecessor) to
+  // the queue for the initial expansion later. These dummy labels
+  // will also serve as roots in search trees, and sentinels to
+  // indicate it reaches the begining of a route when constructing the
+  // route
   for (const auto& edge : destinations[origin_idx].edges()) {
-    assert(edge.id.Is_Valid());
     if (!edge.id.Is_Valid()) continue;
 
     if (edge.dist == 0.f) {
@@ -228,8 +259,7 @@ void set_origin(baldr::GraphReader& reader,
 #endif
 
       labelset.put(nodeid, travelmode, edgelabel);
-    } else {
-      assert(0.f < edge.dist && edge.dist < 1.f);
+    } else if (0.f < edge.dist && edge.dist < 1.f) {
       // Will decide whether to filter out this edge later
       labelset.put(origin_idx, travelmode, edgelabel);
     }
@@ -246,7 +276,6 @@ void set_destinations(baldr::GraphReader& reader,
 
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges()) {
-      assert(edge.id.Is_Valid());
       if (!edge.id.Is_Valid()) continue;
 
       if (edge.dist == 0.f) {
@@ -321,6 +350,23 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
 }
 
 
+// This heuristic function estimates cost from current node (at
+// lnglat) to a cluster of destinations within the search radius
+// around a point (i.e. the next measurement).
+
+// To not overestimate the heuristic cost:
+
+// 1. if current node is outside the search radius, the heuristic cost
+// must be the great circle distance to the measurement minus the
+// search radius, since there might be a destination at the boundary
+// of the circle of the radius
+
+// 2. if current node is within the search radius, the heuristic cost
+// must be zero since a destination could be anywhere within the
+// radius, including the same location with current node
+
+// Therefore, the heuristic cost is max(0, distance - search_radius)
+
 inline float
 heuristic(const midgard::DistanceApproximator& approximator,
           const PointLL& lnglat,
@@ -364,7 +410,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
   while (!labelset.empty()) {
     const auto label_idx = labelset.pop();
-    // NOTE this refernce is possible to be invalid when you add
+    // NOTE this reference is possible to be invalidated when you add
     // labels to the set later (which causes the label list
     // reallocated)
     const auto& label = labelset.label(label_idx);
@@ -403,14 +449,14 @@ find_shortest_path(baldr::GraphReader& reader,
 
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
                                    get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
-      assert(0 <= inbound_heading && inbound_heading < 360);
+      // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
 
       // Expand current node
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
         if (other_edge->trans_up() || other_edge->trans_down()) continue;
-        assert(nodeid.level() == other_edge->endnode().level());
+        // So we have nodeid.level() == other_edge->endnode().level()
 
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
 
@@ -418,9 +464,9 @@ find_shortest_path(baldr::GraphReader& reader,
         float turn_cost = 0.f;
         if (pred_edgelabel && turn_cost_table) {
           const auto other_heading = get_outbound_edge_heading(tile, other_edge, *nodeinfo);
-          assert(0 <= other_heading && other_heading < 360);
+          // TODO: test it assert(0 <= other_heading && other_heading < 360);
           const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
-          assert(0 <= turn_degree && turn_degree <= 180);
+          // TODO: test it assert(0 <= turn_degree && turn_degree <= 180);
           turn_cost = label_turn_cost + turn_cost_table[turn_degree];
         }
 
@@ -432,7 +478,7 @@ find_shortest_path(baldr::GraphReader& reader,
             for (const auto& edge : destinations[dest].edges()) {
               if (edge.id == other_edgeid) {
                 const float cost = label_cost + other_edge->length() * edge.dist,
-                        sortcost = cost;
+                        sortcost = cost + 0.f;  // The heuristic cost to destinations must be 0
                 labelset.put(dest, other_edgeid,
                              0.f, edge.dist,
                              cost, turn_cost, sortcost,
@@ -456,8 +502,7 @@ find_shortest_path(baldr::GraphReader& reader,
                      label_idx,
                      other_edge, travelmode, nullptr);
       }
-    } else {
-      assert(label.dest != kInvalidDestination);
+    } else { // assert(label.dest != kInvalidDestination)
       const auto dest = label.dest;
 
       // Path to a destination along an edge is found: remember it and
@@ -503,7 +548,7 @@ find_shortest_path(baldr::GraphReader& reader,
             for (const auto& other_edge : destinations[other_dest].edges()) {
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
                 const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist),
-                        sortcost = cost;
+                        sortcost = cost + 0.f; // The heuristic cost to destinations must be 0
                 labelset.put(other_dest, origin_edge.id,
                              origin_edge.dist, other_edge.dist,
                              cost, turn_cost, sortcost,
@@ -534,6 +579,8 @@ find_shortest_path(baldr::GraphReader& reader,
   labelset.clear_status();
 
   return results;
+}
+
 }
 
 }

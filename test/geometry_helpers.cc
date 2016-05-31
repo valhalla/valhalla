@@ -1,5 +1,6 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cmath>
@@ -8,9 +9,9 @@
 
 #include <valhalla/midgard/point2.h>
 
-#include "mmp/geometry_helpers.h"
+#include "meili/geometry_helpers.h"
 
-using namespace mmp::helpers;
+using namespace valhalla::meili::helpers;
 
 
 template <typename T>

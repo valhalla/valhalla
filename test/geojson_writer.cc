@@ -6,7 +6,7 @@
 
 #include <rapidjson/stringbuffer.h>
 
-#include "mmp/geojson_writer.h"
+#include "meili/geojson_writer.h"
 
 
 void TestGeoJSONWriter()
@@ -14,8 +14,8 @@ void TestGeoJSONWriter()
   using buffer_t = rapidjson::StringBuffer;
 
   // TODO: testing is not easy here as it needs mocking tile data
-  mmp::GeoJSONRouteWriter<buffer_t> route_writer;
-  mmp::GeoJSONMatchedPointsWriter<buffer_t> matched_points_writer;
+  meili::GeoJSONRouteWriter<buffer_t> route_writer;
+  meili::GeoJSONMatchedPointsWriter<buffer_t> matched_points_writer;
 }
 
 

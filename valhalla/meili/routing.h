@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <algorithm>
-#include <cassert>
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/graphid.h>
@@ -18,9 +17,9 @@
 #include <valhalla/sif/dynamiccost.h>
 
 
-namespace mmp {
+namespace valhalla{
 
-using namespace valhalla;
+namespace meili {
 
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
@@ -45,7 +44,8 @@ class BucketQueue
     buckets_.reserve(bucket_count_);
   }
 
-  bool add(const key_t& key, float cost) {
+  bool add(const key_t& key, float cost)
+  {
     if (cost < 0.f) {
       throw std::invalid_argument("expect non-negative cost");
     }
@@ -74,7 +74,7 @@ class BucketQueue
     return false;
   }
 
-  bool decrease(const key_t& key, float cost)
+  void decrease(const key_t& key, float cost)
   {
     if (cost < 0.f) {
       throw std::invalid_argument("expect non-negative cost");
@@ -94,11 +94,12 @@ class BucketQueue
       }
       auto& keys = buckets_[old_idx];
       const auto it = std::find(keys.begin(), keys.end(), key);
-      assert(it != keys.end());
+      if (it == keys.end()) {
+        throw std::logic_error("the key " + std::to_string(key) + " in the cost map was failed to add to the bukcet");
+      }
       keys.erase(it);
 
       // Add the new one
-      assert (idx < buckets_.size());
       buckets_[idx].push_back(key);
       costmap_[key] = cost;
 
@@ -106,20 +107,22 @@ class BucketQueue
       if (idx < top_) {
         top_ = idx;
       }
-
-      return true;
+    } else {
+      throw std::runtime_error("the cost " + std::to_string(cost)
+                               + " is not less than the cost (" + std::to_string(it->second)
+                               + ") associated with the key (" + std::to_string(key)
+                               + ") you requested to decrease ");
     }
-
-    return false;
   }
 
-  float cost(const key_t& key)
+  float cost(const key_t& key) const
   {
     const auto it = costmap_.find(key);
     return it == costmap_.end()? -1.f : it->second;
   }
 
-  key_t pop() {
+  key_t pop()
+  {
     if (empty()) {
       return invalid_key;
     }
@@ -130,18 +133,19 @@ class BucketQueue
     return key;
   }
 
-  bool empty() const {
+  bool empty() const
+  {
     while (top_ < buckets_.size() && buckets_[top_].empty()) {
       top_++;
     }
     return top_ >= buckets_.size();
   }
 
-  size_type size() const {
-    return costmap_.size();
-  }
+  size_type size() const
+  { return costmap_.size(); }
 
-  void clear() {
+  void clear()
+  {
     buckets_.clear();
     costmap_.clear();
     top_ = 0;
@@ -165,6 +169,7 @@ class BucketQueue
 };
 
 
+// TODO simplify it by inheriting sif::EdgeLabel
 struct Label
 {
   Label() = delete;
@@ -195,8 +200,7 @@ struct Label
               the_source, the_target,
               the_cost, the_turn_cost, the_sortcost,
               the_predecessor,
-              the_edge, the_travelmode, the_edgelabel)
-  { assert(!nodeid.Is_Valid()); }
+              the_edge, the_travelmode, the_edgelabel) {}
 
   Label(const baldr::GraphId& the_nodeid,
         uint16_t the_dest,
@@ -213,19 +217,23 @@ struct Label
         predecessor(the_predecessor),
         edgelabel(the_edgelabel)
   {
+    if (!((nodeid.Is_Valid() && dest == kInvalidDestination) || (!nodeid.Is_Valid() && dest != kInvalidDestination))) {
+      throw std::invalid_argument("nodeid and dest must be mutually exclusive, i.e. either nodeid is valid or dest is valid");
+    }
+
     if (!(0.f <= source && source <= target && target <= 1.f)) {
-      throw std::runtime_error("invalid source ("
-                               + std::to_string(source)
-                               + ") or target ("
-                               + std::to_string(target) + ")");
+      throw std::invalid_argument("invalid source ("
+                                  + std::to_string(source)
+                                  + ") or target ("
+                                  + std::to_string(target) + ")");
     }
 
     if (cost < 0.f) {
-      throw std::runtime_error("invalid cost = " + std::to_string(cost));
+      throw std::invalid_argument("invalid cost = " + std::to_string(cost));
     }
 
     if (turn_cost < 0.f) {
-      throw std::runtime_error("invalid turn_cost = " + std::to_string(turn_cost));
+      throw std::invalid_argument("invalid turn_cost = " + std::to_string(turn_cost));
     }
 
     if (!edgelabel && the_edge) {
@@ -241,13 +249,14 @@ struct Label
     }
   }
 
-  // assert: nodeid.Is_Valid() XOR dest != kInvalidDestination
+  // Must be mutually exclusive, i.e. nodeid.Is_Valid() XOR dest != kInvalidDestination
   baldr::GraphId nodeid;
   uint16_t dest;
 
+  // Invalid graphid if dummy
   baldr::GraphId edgeid;
 
-  // assert: 0.f <= source <= target <= 1.f
+  // Assert: 0.f <= source <= target <= 1.f
   float source;
   float target;
 
@@ -258,8 +267,10 @@ struct Label
   // segment)
   float turn_cost;
 
+  // For ranking labels: sortcost = accumulated cost since origin + heuristic cost to the goal
   float sortcost;
 
+  // kInvalidLabelIndex if dummy
   uint32_t predecessor;
 
   // An EdgeLabel is needed here for passing to sif's filters later
@@ -405,6 +416,9 @@ class RoutePathIterator:
 };
 
 }
+
+}
+
 
 
 #endif // MMP_ROUTING_H_

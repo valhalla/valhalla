@@ -12,7 +12,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
-#include "mmp/map_matching.h"
+#include <meili/map_matching.h>
 
 
 namespace {
@@ -57,8 +57,8 @@ void serialize_graphid(rapidjson::Writer<buffer_t>& writer,
 
 template <typename buffer_t>
 void serialize_routes(rapidjson::Writer<buffer_t>& writer,
-                      const mmp::MapMatching& mm,
-                      const mmp::State& state)
+                      const meili::MapMatching& mm,
+                      const meili::State& state)
 {
   if (!state.routed()) {
     writer.Null();
@@ -124,8 +124,8 @@ void serialize_routes(rapidjson::Writer<buffer_t>& writer,
 
 template <typename buffer_t>
 void serialize_state(rapidjson::Writer<buffer_t>& writer,
-                     const mmp::State& state,
-                     const mmp::MapMatching& mm)
+                     const meili::State& state,
+                     const meili::MapMatching& mm)
 {
   writer.StartObject();
 
@@ -150,8 +150,8 @@ void serialize_state(rapidjson::Writer<buffer_t>& writer,
 
 template <typename buffer_t>
 void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
-                       mmp::MapMatcher& matcher,
-                       const std::vector<mmp::MatchResult>& results)
+                       meili::MapMatcher& matcher,
+                       const std::vector<meili::MatchResult>& results)
 {
   const auto& mm = matcher.mapmatching();
 
@@ -187,9 +187,9 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
 }
 
 
-namespace mmp {
+namespace valhalla {
 
-using namespace valhalla;
+namespace meili {
 
 
 template <typename buffer_t>
@@ -445,6 +445,7 @@ void GeoJSONMatchedPointsWriter<buffer_t>::WriteProperties(rapidjson::Writer<buf
   writer.EndObject();
 }
 
+}
 
 }
 

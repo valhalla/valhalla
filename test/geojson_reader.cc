@@ -6,20 +6,20 @@
 
 #include <valhalla/midgard/pointll.h>
 
-#include "mmp/measurement.h"
-#include "mmp/geojson_reader.h"
+#include "meili/measurement.h"
+#include "meili/geojson_reader.h"
 
 using namespace valhalla;
 
 void TestGeoJSONReader()
 {
-  mmp::GeoJSONReader reader(10, 40);
+  meili::GeoJSONReader reader(10, 40);
   assert(reader.default_gps_accuracy() == 10);
   assert(reader.default_search_radius() == 40);
 
   // It should read multipoint geometry
   {
-    std::vector<std::vector<mmp::Measurement>> sequences;
+    std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"MultiPoint\", \"coordinates\": [[1,2], [3,4]]}", sequences);
     assert(!is_collection);
     const auto& measurements = sequences.front();
@@ -34,7 +34,7 @@ void TestGeoJSONReader()
 
   // It should read linestring geometry
   {
-    std::vector<std::vector<mmp::Measurement>> sequences;
+    std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}", sequences);
     assert(!is_collection);
     assert(sequences.size() == 1);
@@ -50,7 +50,7 @@ void TestGeoJSONReader()
 
   // It should read geometry collection
   {
-    std::vector<std::vector<mmp::Measurement>> sequences;
+    std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"GeometryCollection\", \"geometries\": [{\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}, {\"type\": \"MultiPoint\", \"coordinates\": [[2,3], [4,5]]}]}", sequences);
     assert(is_collection);
     assert(sequences.size() == 2);
@@ -70,7 +70,7 @@ void TestGeoJSONReader()
 
   // It should read feature
   {
-    std::vector<std::vector<mmp::Measurement>> sequences;
+    std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"Feature\", \"properties\":{\"gps_accuracy\": 5, \"search_radius\": [20]}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}}", sequences);
     assert(!is_collection);
     assert(sequences.size() == 1);
@@ -86,7 +86,7 @@ void TestGeoJSONReader()
 
   // It should read feature collection
   {
-    std::vector<std::vector<mmp::Measurement>> sequences;
+    std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"FeatureCollection\", \"features\": [{\"type\": \"Feature\", \"properties\":{\"gps_accuracy\": 5, \"search_radius\": [20]}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}}, {\"type\": \"Feature\", \"properties\":{\"gps_accuracy\": [5, 6, 7], \"search_radius\": [20, 21, 22]}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[2,3], [4,5]]}}]}", sequences);
     assert(is_collection);
     assert(sequences.size() == 2);
@@ -101,10 +101,10 @@ void TestGeoJSONReader()
   // It should throw parse error
   {
     bool error = false;
-    std::vector<std::vector<mmp::Measurement>> sequences;
+    std::vector<std::vector<meili::Measurement>> sequences;
     try {
       bool is_collection = reader.Read("", sequences);
-    } catch (const mmp::SequenceParseError& ex) {
+    } catch (const meili::SequenceParseError& ex) {
       error = true;
     }
     assert(error);
@@ -112,7 +112,7 @@ void TestGeoJSONReader()
     error = false;
     try {
       bool is_collection = reader.Read("hello my friend", sequences);
-    } catch (const mmp::SequenceParseError& ex) {
+    } catch (const meili::SequenceParseError& ex) {
       error = true;
     }
     assert(error);
@@ -120,7 +120,7 @@ void TestGeoJSONReader()
     error = false;
     try {
       bool is_collection = reader.Read("[1,2,3]", sequences);
-    } catch (const mmp::SequenceParseError& ex) {
+    } catch (const meili::SequenceParseError& ex) {
       error = true;
     }
     assert(error);
@@ -128,7 +128,7 @@ void TestGeoJSONReader()
     error = false;
     try {
       bool is_collection = reader.Read("{\"type\": \"LineString\"}", sequences);
-    } catch (const mmp::SequenceParseError& ex) {
+    } catch (const meili::SequenceParseError& ex) {
       error = true;
     }
     assert(sequences.empty());
@@ -137,7 +137,7 @@ void TestGeoJSONReader()
     error = false;
     try {
       bool is_collection = reader.Read("{\"type\": \"LineString\"}", sequences);
-    } catch (const mmp::SequenceParseError& ex) {
+    } catch (const meili::SequenceParseError& ex) {
       error = true;
     }
     assert(sequences.empty());
@@ -146,7 +146,7 @@ void TestGeoJSONReader()
     error = false;
     try {
       bool is_collection = reader.Read("{\"type\": \"LineString\", \"coordinates\":[1]}", sequences);
-    } catch (const mmp::SequenceParseError& ex) {
+    } catch (const meili::SequenceParseError& ex) {
       error = true;
     }
     assert(sequences.empty());

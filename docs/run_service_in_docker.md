@@ -1,16 +1,16 @@
-# Running MM service in Docker
+# Running Meili service in Docker
 
 Before we start, make sure you have `docker`, `git` and `wget`
 installed.
 
-1. Clone `map_matching_plus`:
+1. Clone `meili`:
    ```sh
-   git clone --depth=1 https://github.com/mapillary/map_matching_plus.git
+   git clone --depth=1 https://github.com/valhalla/meili.git
    ```
 
-2. Build the Docker image `mapillary/mmp`:
+2. Build the Docker image `valhalla/meili`:
    ```sh
-   sudo docker build -t mapillary/mmp map_matching_plus/docker
+   sudo docker build -t valhalla/meili meili/docker
    ```
 
 3. We need a work directory, let's say `~/tiles` (must be absolute
@@ -25,8 +25,7 @@ installed.
    wget --directory-prefix "${WORK_DIR}" http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
    ```
 
-5. Clone Valhalla configuration which is needed by the tiles data
-   creator `mjolnir` later:
+5. Clone the Valhalla conf to the work directory:
    ```sh
    git clone --depth=1 https://github.com/valhalla/conf.git "${WORK_DIR}/conf"
    ```
@@ -36,36 +35,30 @@ installed.
    sudo docker run -it \
         --volume  "${WORK_DIR}":/data \
         --workdir /data \
-        mapillary/mmp \
+        valhalla/meili \
         pbfgraphbuilder --conf conf/valhalla.json berlin-latest.osm.pbf
    ```
 
-   This process takes a while, from a few minutes to a few hours,
-   depending on the OSM size.
+   This process takes time from a few minutes to hours, depending on
+   the OSM size. It creates tiles under `${WORK_DIR}/valhalla`.
 
-7. Copy the MM configuration file to the work directory so that the
-   service can read it
-
-   ```sh
-   cp map_matching_plus/conf/mm.json "${WORK_DIR}"
-   ```
-
-8. Run the service:
+7. Run the Meili service:
 
    ```sh
    sudo docker run -it \
         --volume "${WORK_DIR}":/data \
-        --publish 8001:8001 \
-        mapillary/mmp \
-        mmp_service /data/mm.json
+        --workdir /data \
+        --publish 8002:8002 \
+        valhalla/meili \
+        valhalla_map_match_service conf/valhalla.json
    ```
 
-   Now the service is up. It is listening on `localhost:8001` for all
-   coming coordinates in format of GeoJSON. You may refer to the
-   [service API](https://github.com/mapillary/map_matching_plus/blob/master/docs/service_api.md)
+   Now the service is up and listening on `localhost:8002` for all
+   coming coordinates in GeoJSON format. You may refer to the
+   [service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
    documentation for details.
 
-9. If you need a web interface to play with, clone our demos:
+8. If you need a web interface to play with, clone our demos:
    ```sh
    git clone --depth=1 --branch=gh-pages https://github.com/mapillary/demos.git
    ```

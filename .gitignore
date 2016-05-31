@@ -16,9 +16,9 @@ install-sh
 missing
 depcomp
 Makefile
-include/config.h
-include/config.h.in
-include/stamp-h1
+valhalla/config.h
+valhalla/config.h.in
+valhalla/stamp-h1
 ltmain.sh
 m4/libtool.m4
 m4/ltoptions.m4
@@ -26,20 +26,26 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
+libvalhalla_meili.pc
 
 # built objects
-mmp_service
-mmp_attacher
-mmp_edge_search
-mmp_psqlmatcher
-mmp_stat
-simple_matcher
+valhalla_run_map_match
+valhalla_map_match_service
+valhalla_meili_worker
+test/geometry_helpers
+test/grid_range_query
+test/map_matching
+test/queue
+test/routing
+test/viterbi_search
+test/geojson_reader
+test/geojson_writer
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
-libmmp.la
+libvalhalla_meili.la
 
 # tests
 test-suite.log

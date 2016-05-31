@@ -8,11 +8,12 @@
 
 #include <rapidjson/document.h>
 
-#include <mmp/measurement.h>
+#include <meili/measurement.h>
 
-namespace mmp {
 
-using namespace valhalla;
+namespace valhalla {
+
+namespace meili {
 
 class SequenceParseError: public std::runtime_error {
   // Need its constructor
@@ -44,6 +45,7 @@ class GeoJSONReader
   float default_search_radius_;
 };
 
+}
 
 }
 #endif // MMP_GEOJSON_READER_H_

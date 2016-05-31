@@ -6,11 +6,16 @@
 #include <boost/property_tree/ptree.hpp>
 
 
-namespace mmp {
+namespace valhalla{
+
+namespace meili {
 
 void run_service(const boost::property_tree::ptree& config);
 
 }
+
+}
+
 
 
 #endif //__MMP_SERVICE_H__

@@ -41,7 +41,7 @@ corresponding matched coordinate is `null`.
 Example request:
 
 ```sh
-curl -X POST "http://localhost:8001?search_radius=35&mode=auto"
+curl -X POST "http://localhost:8002?search_radius=35&mode=auto"
 ```
 
 Example request body:

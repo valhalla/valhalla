@@ -1,10 +1,13 @@
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
-#include "mmp/geojson_reader.h"
+#include "meili/geojson_reader.h"
 
 
-namespace mmp {
+namespace valhalla {
+
+namespace meili {
+
 
 inline bool
 is_geometry(const rapidjson::Value& value)
@@ -205,5 +208,6 @@ bool GeoJSONReader::Read(const std::string& string,
   return is_collection;
 }
 
+}
 
 }

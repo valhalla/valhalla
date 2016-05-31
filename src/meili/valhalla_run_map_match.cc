@@ -1,10 +1,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "mmp/measurement.h"
-#include "mmp/map_matching.h"
+#include "meili/map_matching.h"
 
-using namespace mmp;
+
+using namespace valhalla::meili;
 
 
 int main(int argc, char *argv[])
@@ -17,9 +17,9 @@ int main(int argc, char *argv[])
   boost::property_tree::ptree config;
   boost::property_tree::read_json(argv[1], config);
 
-  const float default_gps_accuracy = config.get<float>("mm.gps_accuracy"),
-             default_search_radius = config.get<float>("mm.search_radius");
-  const std::string modename = config.get<std::string>("mm.mode");
+  const float default_gps_accuracy = config.get<float>("meili.gps_accuracy"),
+             default_search_radius = config.get<float>("meili.search_radius");
+  const std::string modename = config.get<std::string>("meili.mode");
 
   MapMatcherFactory matcher_factory(config);
   auto matcher = matcher_factory.Create(modename);

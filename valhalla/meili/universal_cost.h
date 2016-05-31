@@ -8,14 +8,18 @@
 #include <valhalla/sif/costconstants.h>
 
 
-namespace mmp
-{
+namespace valhalla{
+
+namespace meili {
 
 constexpr valhalla::sif::TravelMode kUniversalTravelMode = static_cast<valhalla::sif::TravelMode>(4);
 
 valhalla::sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config);
 
 }
+
+}
+
 
 
 #endif // MMP_UNIVERSAL_COST_H__

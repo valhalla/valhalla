@@ -1,16 +1,23 @@
-AC_INIT([map_matching_plus],
+AC_INIT([meili],
 	[unstable],
-	[https://github.com/mapillary/map_matching_plus/issues],
-	[map_matching_plus-[unstable]],
-	[https://github.com/mapillary/map_matching_plus])
+	[https://github.com/valhalla/meili/issues],
+	[valhalla_meili-[unstable]],
+	[https://github.com/valhalla/meili])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 
 AM_SILENT_RULES([yes])
-AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_HEADERS([valhalla/config.h])
 AC_CONFIG_MACRO_DIR([m4])
+
+# set pkgconfigdir, allow override
+AC_ARG_WITH([pkgconfigdir],
+            AS_HELP_STRING([--with-pkgconfigdir=PATH], [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+            [pkgconfigdir="$withval"],
+            [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
 
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -26,7 +33,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable])
 
 # check for boost and make sure we have the program options library
-AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building MMP. Please install libboost-dev.])])
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
@@ -38,7 +45,7 @@ PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.3.4])
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libvalhalla_meili.pc])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

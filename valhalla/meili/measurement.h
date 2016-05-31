@@ -6,9 +6,9 @@
 #include <valhalla/midgard/pointll.h>
 
 
-namespace mmp {
+namespace valhalla {
 
-using namespace valhalla;
+namespace meili {
 
 class Measurement
 {
@@ -46,6 +46,7 @@ class Measurement
   float gps_accuracy_;
 };
 
+}
 
 }
 

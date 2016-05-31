@@ -16,7 +16,9 @@
 #include <valhalla/midgard/linesegment2.h>
 
 
-namespace mmp {
+namespace valhalla{
+
+namespace meili {
 
 using Point = valhalla::midgard::PointLL;
 using LineSegment = valhalla::midgard::LineSegment2<Point>;
@@ -273,6 +275,8 @@ class GridRangeQuery
   std::vector<std::vector<key_t> > items_;
 };
 
+
+}
 
 }
 

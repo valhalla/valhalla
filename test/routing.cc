@@ -1,24 +1,25 @@
 // -*- mode: c++ -*-
 
+//enable asserts for this test
 #undef NDEBUG
 
 #include <cassert>
 #include <iostream>
 
-#include "mmp/routing.h"
+#include "meili/routing.h"
 
 using namespace valhalla;
-using namespace mmp;
+using namespace valhalla::meili;
 
 constexpr uint32_t kInvalidKey = std::numeric_limits<uint16_t>::max();
 
-using AdjacencyList = mmp::BucketQueue<uint32_t, kInvalidKey>;
+using AdjacencyList = meili::BucketQueue<uint32_t, kInvalidKey>;
 
 
 void Add(AdjacencyList &adjlist, const std::vector<float>& costs)
 {
   uint32_t idx = 0;
-  for (auto cost : costs) {
+  for (const auto cost : costs) {
     adjlist.add(idx++, cost);
   }
 }
@@ -28,8 +29,8 @@ void TryRemove(AdjacencyList &adjlist, size_t num_to_remove, const std::vector<f
 {
   auto previous_cost = -std::numeric_limits<float>::infinity();
   for (size_t i = 0; i < num_to_remove && !adjlist.empty(); ++i) {
-    auto top = adjlist.pop();
-    auto cost = costs[top];
+    const auto top = adjlist.pop();
+    const auto cost = costs[top];
     if (!(previous_cost <= cost)) {
       throw std::runtime_error("TryAddRemove: expected order test failed");
     }
@@ -53,7 +54,7 @@ void TestAddRemove()
   // Test add randomly and remove
   costs.clear();
   for (size_t i = 0; i < 10000; i++) {
-    auto cost = std::floor(rand01() * 100000);
+    const auto cost = std::floor(rand01() * 100000);
     costs.push_back(cost);
   }
   AdjacencyList adjlist2(10000);
@@ -66,23 +67,34 @@ void TestAddRemove()
   AdjacencyList adjlist3(10);
   adjlist3.add(1, 100);
   if (!(adjlist3.empty() && adjlist3.cost(1) < 0.f)) {
-    throw std::runtime_error("TestAddRemove: 100 should not be added");
+    throw std::runtime_error("TestAddRemove: 100 should not be added since it is out of the queue range [0, 10)");
   }
   adjlist3.add(1, 10);
   if (!(adjlist3.empty() && adjlist3.cost(1) < 0.f)) {
-    throw std::runtime_error("TestAddRemove: 10 should not be added");
+    throw std::runtime_error("TestAddRemove: 10 should not be added since it is out of the queue range [0, 10)");
   }
   adjlist3.add(1, 9);
   if (!(!adjlist3.empty() && adjlist3.cost(1) == 9)) {
-    throw std::runtime_error("TestAddRemove: 9 should be added");
+    throw std::runtime_error("TestAddRemove: 9 should be added since it is within the queue range [0, 10)");
   }
   adjlist3.decrease(1, 3);
   if (!(!adjlist3.empty() && adjlist3.cost(1) == 3)) {
-    throw std::runtime_error("TestAddRemove: 3 should be decreased");
+    throw std::runtime_error("TestAddRemove: 3 should be decreased since it is less than the last cost 9");
   }
-  adjlist3.decrease(1, 5);
-  if (!(!adjlist3.empty() && adjlist3.cost(1) == 3)) {
-    throw std::runtime_error("TestAddRemove: 5 should not be decreased");
+
+  {
+    auto failed = false;
+    try {
+      adjlist3.decrease(1, 5);
+    } catch (const std::runtime_error& ex) {
+      failed = true;
+    }
+    if (!failed) {
+      throw std::runtime_error("TestAddRemove: it should fail to decrease cost to 5 since it is larger than last cost 3");
+    }
+    if (!(!adjlist3.empty() && adjlist3.cost(1) == 3)) {
+      throw std::runtime_error("TestAddRemove: the cost should still be 3 since it was failed to decrease to 5");
+    }
   }
 }
 
@@ -93,7 +105,7 @@ void TrySimulation(AdjacencyList& adjlist, size_t loop_count, size_t expansion_s
   // Track all label indexes in the adjlist
   std::unordered_set<uint32_t> track;
 
-  uint32_t idx = costs.size();
+  const uint32_t idx = costs.size();
   costs.push_back(10.f);
   bool inserted = adjlist.add(idx, 10.f);
   if (inserted) {
@@ -101,8 +113,8 @@ void TrySimulation(AdjacencyList& adjlist, size_t loop_count, size_t expansion_s
   }
 
   for (size_t i = 0; i < loop_count && !adjlist.empty(); i++) {
-    auto key = adjlist.pop();
-    auto min_cost = costs[key];
+    const auto key = adjlist.pop();
+    const auto min_cost = costs[key];
     // Must be the minimal one among the tracked labels
     for (auto k : track) {
       if (costs[k] < min_cost) {
@@ -112,22 +124,33 @@ void TrySimulation(AdjacencyList& adjlist, size_t loop_count, size_t expansion_s
     track.erase(key);
 
     for (size_t i = 0; i < expansion_size; i++) {
-      auto newcost = std::floor(min_cost + 1 + rand01() * max_increment_cost);
+      const auto newcost = std::floor(min_cost + 1 + rand01() * max_increment_cost);
       if (i % 2 == 0 && !track.empty()) {
         // Decrease cost
-        auto idx = *std::next(track.begin(), rand01() * track.size());
-        bool updated = adjlist.decrease(idx, newcost);
-        if (updated) {
-          if (newcost > costs[idx]) {
-            throw std::runtime_error("Simulation: wrong");
-          }
+        const auto idx = *std::next(track.begin(), rand01() * track.size());
+        if (newcost < costs[idx]) {
+          adjlist.decrease(idx, newcost);
           costs[idx] = newcost;
+          if (adjlist.cost(idx) != newcost) {
+            throw std::runtime_error("failed to decrease cost");
+          }
+        } else {
+          // Assert that it must fail to decrease since costs[idx] <= newcost
+          auto failed = false;
+          try {
+            adjlist.decrease(idx, newcost);
+          } catch (const std::runtime_error& ex) {
+            failed = true;
+          }
+          if (!failed) {
+            throw std::runtime_error("decreasing a non-less cost must fail");
+          }
         }
       } else {
         // Add new label
-        uint32_t idx = costs.size();
+        const uint32_t idx = costs.size();
         costs.push_back(newcost);
-        bool inserted = adjlist.add(idx, newcost);
+        const bool inserted = adjlist.add(idx, newcost);
         if (inserted) {
           track.insert(idx);
         }
@@ -178,7 +201,7 @@ void Benchmark()
 
 void TestRoutePathIterator()
 {
-  mmp::LabelSet labelset(100);
+  meili::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
@@ -206,7 +229,7 @@ void TestRoutePathIterator()
                0.f, 0.f, 0.f,
                3, nullptr, travelmode, nullptr);
 
-  mmp::RoutePathIterator the_end(&labelset, mmp::kInvalidLabelIndex),
+  meili::RoutePathIterator the_end(&labelset, meili::kInvalidLabelIndex),
       it0(&labelset, 0),
       it1(&labelset, 1),
       it2(&labelset, 2),
@@ -223,7 +246,7 @@ void TestRoutePathIterator()
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing");
   }
 
-  if (it0->predecessor != mmp::kInvalidLabelIndex) {
+  if (it0->predecessor != meili::kInvalidLabelIndex) {
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer");
   }
 

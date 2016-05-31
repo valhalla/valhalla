@@ -1,5 +1,6 @@
 {
-  "mm": {
+  "meili": {
+    "mode": "multimodal",
     "customizable": [
       "mode",
       "search_radius"
@@ -39,11 +40,11 @@
       "proxy": "ipc:///tmp/mm",
       "listen": "tcp://*:8001",
       "loopback": "ipc:///tmp/mm_loopback"
+    },
+    "grid": {
+      "size": 500,
+      "cache_size": 64
     }
-  },
-  "grid": {
-    "size": 500,
-    "cache_size": 64
   },
   "mjolnir": {
     "tile_dir": "/data/valhalla",
