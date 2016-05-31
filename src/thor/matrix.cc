@@ -24,7 +24,8 @@ namespace {
   const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX {
     {"one_to_many", thor_worker_t::ONE_TO_MANY},
     {"many_to_one", thor_worker_t::MANY_TO_ONE},
-    {"many_to_many", thor_worker_t::MANY_TO_MANY}
+    {"many_to_many", thor_worker_t::MANY_TO_MANY},
+    {"sources_to_targets", thor_worker_t::SOURCES_TO_TARGETS}
   };
 
   constexpr double kMilePerMeter = 0.000621371;
@@ -167,6 +168,7 @@ namespace valhalla {
           matrix_action_type = "many-to-one";
           break;
         case MATRIX_TYPE::MANY_TO_MANY:
+        case MATRIX_TYPE::SOURCES_TO_TARGETS:
           json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode), units, distance_scale);
           matrix_action_type = "many-to-many";
           break;

@@ -23,7 +23,8 @@ namespace {
     {"one_to_many", thor_worker_t::ONE_TO_MANY},
     {"many_to_one", thor_worker_t::MANY_TO_ONE},
     {"many_to_many", thor_worker_t::MANY_TO_MANY},
-    {"optimized", thor_worker_t::OPTIMIZED}
+    {"sources_to_targets", thor_worker_t::SOURCES_TO_TARGETS},
+    {"optimized_route", thor_worker_t::OPTIMIZED_ROUTE}
   };
 
   std::size_t tdindex = 0;
@@ -90,15 +91,16 @@ namespace valhalla {
         if (matrix_type) {
           auto matrix_iter = MATRIX.find(*matrix_type);
           if (matrix_iter == MATRIX.cend())
-            throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized'.");
+            throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_route'.");
 
           switch (matrix_iter->second) {
             case ONE_TO_MANY:
             case MANY_TO_ONE:
             case MANY_TO_MANY:
+            case SOURCES_TO_TARGETS:
               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
               return matrix(matrix_iter->second, costing, request, info);
-            case OPTIMIZED:
+            case OPTIMIZED_ROUTE:
               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
               return optimized_path(correlated, costing, request_str, info.do_not_track);
           }
