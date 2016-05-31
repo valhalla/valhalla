@@ -20,7 +20,7 @@ namespace valhalla {
 
     class loki_worker_t {
      public:
-      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, OPTIMIZED};
+      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, OPTIMIZED_ROUTE};
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();

@@ -32,7 +32,7 @@ namespace {
     {"/one_to_many", loki_worker_t::ONE_TO_MANY},
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
     {"/many_to_many", loki_worker_t::MANY_TO_MANY},
-    {"/optimized", loki_worker_t::OPTIMIZED}
+    {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -185,7 +185,7 @@ namespace valhalla {
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
-          case OPTIMIZED:
+          case OPTIMIZED_ROUTE:
             return matrix(action->second, request_pt, info);
         }
 
