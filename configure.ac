@@ -43,9 +43,12 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 
 # check for Lua libraries and headers
-AX_LUA_HEADERS([
-  AX_LUA_LIBS([],[AC_MSG_ERROR([Cannot find Lua libs. Please install liblua5.2-dev])])
-],[AC_MSG_ERROR([Cannot find Lua includes. Please install liblua5.2-dev])])
+AX_PROG_LUA([5.2],[],[
+    AX_LUA_HEADERS([
+        AX_LUA_LIBS([
+        ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
+    ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
+],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
 AX_LIB_SQLITE3(3.0.0)
 
