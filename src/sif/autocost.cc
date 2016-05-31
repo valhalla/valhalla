@@ -180,6 +180,18 @@ class AutoCost : public DynamicCost {
     };
   }
 
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each node's attribution
+   * @return Function/functor to be used in filtering out nodes
+   */
+  virtual const NodeFilter GetNodeFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node){
+      return !(node->access() & kAutoAccess);
+    };
+  }
+
  protected:
   float speedfactor_[256];
   float density_factor_[16];        // Density factor
@@ -584,8 +596,24 @@ class BusCost : public AutoCost {
    * exclude results from the search by looking at each edges attribution
    * @return Function/functor to be used in filtering out edges
    */
-  virtual const EdgeFilter GetFilter() const;
+  virtual const EdgeFilter GetFilter() const  {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::DirectedEdge* edge){
+      return edge->trans_up() || edge->trans_down() || !(edge->forwardaccess() & kBusAccess);
+    };
+  }
 
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each node's attribution
+   * @return Function/functor to be used in filtering out nodes
+   */
+  virtual const NodeFilter GetNodeFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node){
+      return !(node->access() & kBusAccess);
+    };
+  }
 };
 
 
@@ -639,14 +667,6 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Check if access is allowed at the specified node.
 bool BusCost::Allowed(const baldr::NodeInfo* node) const  {
   return (node->access() & kBusAccess);
-}
-
-// Function/functor to be used in filtering out edges
-const EdgeFilter BusCost::GetFilter() const {
-  //throw back a lambda that checks the access for this type of costing
-  return [](const baldr::DirectedEdge* edge){
-    return edge->trans_up() || edge->trans_down() || !(edge->forwardaccess() & kBusAccess);
-  };
 }
 
 cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {

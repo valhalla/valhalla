@@ -22,6 +22,12 @@ namespace sif {
  */
 using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
 
+/**
+ * A callable element which returns true if a node should be
+ * filtered out/ not used and false if the node is usable
+ */
+using NodeFilter = std::function<bool (const baldr::NodeInfo*)>;
+
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
 
@@ -240,6 +246,12 @@ class DynamicCost {
    * exclude results from the search by looking at each edges attribution
    */
   virtual const EdgeFilter GetFilter() const = 0;
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each node's attribution
+   */
+  virtual const NodeFilter GetNodeFilter() const = 0;
 
   /**
    * Gets the hierarchy limits.
