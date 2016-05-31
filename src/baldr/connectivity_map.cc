@@ -144,7 +144,7 @@ namespace {
     auto tile = start_tile;
     auto side = start_side;
     polygon_t polygon{{}};
-    std::list<PointLL> outer = polygon.front();
+    std::list<PointLL>& outer = polygon.front();
     std::array<std::unordered_set<uint32_t>, 4> used;
     do {
       //add this edges geometry
