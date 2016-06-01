@@ -9,6 +9,7 @@ using namespace valhalla::sif;
 namespace {
 
 constexpr int kExtendSearchThreshold = 250;
+constexpr uint32_t kMaxMatrixIterations = 2000000;
 
 // Convenience method to get opposing edge Id given a directed edge and a tile
 GraphId GetOpposingEdgeId(const DirectedEdge* edge, const GraphTile* tile) {
@@ -136,6 +137,12 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     if (remaining_sources_ == 0 && remaining_targets_ == 0) {
       LOG_INFO("SourceToTarget iterations: n = " + std::to_string(n));
       break;
+    }
+
+    // Protect against edge cases that may lead to never breaking out of
+    // this loop. This should never occur but lets make sure.
+    if (n >= kMaxMatrixIterations) {
+      throw std::runtime_error("Exceeded max iterations in CostMatrix::SourceToTarget");
     }
     n++;
   }
