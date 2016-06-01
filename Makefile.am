@@ -43,6 +43,7 @@ bin_PROGRAMS = valhalla_skadi_worker \
 	valhalla_benchmark_skadi \
 	valhalla_elevation_service \
 	valhalla_route_service \
+	valhalla_run_isochrone \
 	valhalla_run_route \
 	valhalla_benchmark_adjacency_list \
 	valhalla_run_matrix
@@ -73,6 +74,9 @@ valhalla_elevation_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PR
 valhalla_route_service_SOURCES = src/valhalla_route_service.cc
 valhalla_route_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_route_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+valhalla_run_isochrone_SOURCES =  src/valhalla_run_isochrone.cc
+valhalla_run_isochrone_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_run_isochrone_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
 valhalla_run_route_SOURCES =  src/valhalla_run_route.cc
 valhalla_run_route_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_run_route_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
