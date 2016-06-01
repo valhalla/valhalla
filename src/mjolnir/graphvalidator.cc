@@ -43,7 +43,7 @@ struct HGVRestrictionTypes {
 };
 
 bool ShapesMatch(const std::vector<PointLL>& shape1,
-		         const std::vector<PointLL>& shape2) {
+                 const std::vector<PointLL>& shape2) {
   if (shape1.size() != shape2.size()) {
     return false;
   }
@@ -76,8 +76,8 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
-		uint64_t wayid, const GraphTile* tile, const GraphTile* end_tile,
-		uint32_t& dupcount, std::string& endnodeiso) {
+                              uint64_t wayid, const GraphTile* tile, const GraphTile* end_tile,
+                              uint32_t& dupcount, std::string& endnodeiso) {
 
   if (!end_tile) {
     LOG_WARN("End tile invalid.")
@@ -213,7 +213,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     } else if (edge.IsTransitLine()) {
       // TODO - add this when opposing transit edges with unique line Ids
       // are present
-      ; /*LOG_ERROR("No opposing transit edge: endstop = " +
+      /*LOG_ERROR("No opposing transit edge: endstop = " +
                std::to_string(nodeinfo->stop_index()) + " has " +
                std::to_string(nodeinfo->edge_count())); */
     } else if (startnode.level() != 3) {
