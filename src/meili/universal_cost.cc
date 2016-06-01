@@ -53,6 +53,14 @@ class UniversalCost : public sif::DynamicCost {
       return edge->IsTransitLine();
     };
   }
+
+  virtual const sif::NodeFilter GetNodeFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node){
+      // Do not filter any nodes
+      return false;
+    };
+  }
 };
 
 
