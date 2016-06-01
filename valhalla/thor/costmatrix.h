@@ -19,6 +19,10 @@
 namespace valhalla {
 namespace thor {
 
+// Use a 4 hour cost threshold. This is in addition to the distance
+// thresholds for quick rejection
+constexpr float kCostThresholdDefault = 14400.0f;   // 4 hours
+
 /**
  * Status of a location. Tracks remaining locations to be found
  * and a threshold or iterations. When threshold goes to 0 expansion
@@ -77,7 +81,7 @@ class CostMatrix {
    * Constructor with cost threshold.
    * @param initial_cost_threshold  Cost threshold for termination.
    */
-  CostMatrix(float initial_cost_threshold = kDefaultCostThreshold);
+  CostMatrix(float initial_cost_threshold = kCostThresholdDefault);
 
   /**
    * Forms a time distance matrix from the set of source locations
