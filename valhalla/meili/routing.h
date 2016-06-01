@@ -37,7 +37,8 @@ class BucketQueue
         bucket_size_(size),
         top_(0),
         costmap_(),
-        buckets_() {
+        buckets_()
+  {
     if (bucket_size_ <= 0.f) {
       throw std::invalid_argument("expect bucket size to be positive");
     }
@@ -50,18 +51,18 @@ class BucketQueue
       throw std::invalid_argument("expect non-negative cost");
     }
 
-    if (costmap_.find(key) != costmap_.end()) {
-      throw std::invalid_argument("the key " + std::to_string(key) + " exists");
-    }
-
     const auto idx = bucket_idx(cost);
-
     if (idx < bucket_count_) {
+      const auto it = costmap_.emplace(key, cost);
+      if (!it.second) {
+        throw std::runtime_error("the key " + std::to_string(key) + " exists,"
+                                 " you probably should call the decrease method");
+      }
+
       if (buckets_.size() <= idx) {
         buckets_.resize(idx + 1);
       }
       buckets_[idx].push_back(key);
-      costmap_[key] = cost;
 
       // Update top cursor
       if (idx < top_) {
@@ -82,26 +83,29 @@ class BucketQueue
 
     const auto it = costmap_.find(key);
     if (it == costmap_.end()) {
-      throw std::runtime_error("the key " + std::to_string(key) + " to decrease doesn't exists");
+      throw std::runtime_error("the key " + std::to_string(key) + " to decrease doesn't exists,"
+                               " you probably should call the add method");
     }
 
     if (cost < it->second) {
-      // Remove the old item
       const auto old_idx = bucket_idx(it->second);
       const auto idx = bucket_idx(cost);
-      if (idx > old_idx) {
-        throw std::runtime_error("invalid cost: " + std::to_string(cost) + " (old value is " + std::to_string(it->second) + ")");
+      if (old_idx < idx) {
+        throw std::logic_error("invalid cost: " + std::to_string(cost) + " (old value is " + std::to_string(it->second) + ")");
       }
-      auto& keys = buckets_[old_idx];
-      const auto it = std::find(keys.begin(), keys.end(), key);
-      if (it == keys.end()) {
+
+      // Remove the key from the old bucket
+      auto& old_bucket = buckets_[old_idx];
+      const auto old_key = std::find(old_bucket.begin(), old_bucket.end(), key);
+      if (old_key == old_bucket.end()) {
         throw std::logic_error("the key " + std::to_string(key) + " in the cost map was failed to add to the bukcet");
       }
-      keys.erase(it);
+      old_bucket.erase(old_key);
 
-      // Add the new one
+      // Add the key to the new bucket
       buckets_[idx].push_back(key);
-      costmap_[key] = cost;
+      // Update the cost
+      it->second = cost;
 
       // Update top cursor
       if (idx < top_) {
@@ -163,9 +167,8 @@ class BucketQueue
 
   std::vector<std::vector<key_t>> buckets_;
 
-  size_type bucket_idx(float cost) const {
-    return static_cast<size_type>(cost / bucket_size_);
-  }
+  size_type bucket_idx(float cost) const
+  { return static_cast<size_type>(cost / bucket_size_); }
 };
 
 
@@ -278,9 +281,15 @@ struct Label
 };
 
 
-struct Status
-{
+struct Status{
+  Status() = delete;
+
+  Status(uint32_t idx)
+      : label_idx(idx),
+        permanent(false) {}
+
   uint32_t label_idx : 31;
+
   uint32_t permanent : 1;
 };
 

@@ -58,7 +58,7 @@ LabelSet::put(const baldr::GraphId& nodeid,
                            cost, turn_cost, sortcost,
                            predecessor,
                            edge, travelmode, edgelabel);
-      node_status_[nodeid] = {idx, false};
+      node_status_.emplace(nodeid, idx);
       return true;
     }
     // !added -> rejected silently since queue's full
@@ -120,7 +120,7 @@ LabelSet::put(uint16_t dest,
                            cost, turn_cost, sortcost,
                            predecessor,
                            edge, travelmode, edgelabel);
-      dest_status_[dest] = {idx, false};
+      dest_status_.emplace(dest, idx);
       return true;
     }
     // !added -> rejected silently since queue's full
@@ -153,9 +153,15 @@ LabelSet::pop()
   if (idx != kInvalidLabelIndex) {
     const auto& label = labels_[idx];
     if (label.nodeid.Is_Valid()) {
-      auto& status = node_status_[label.nodeid];
+      const auto it = node_status_.find(label.nodeid);
 
       // When these logic errors happen, go check LabelSet::put
+      if (it == node_status_.end()) {
+        // No exception, unless BucketQueue::put was wrong: it said it
+        // added but actually failed
+        throw std::logic_error("all nodes in the queue should have its status");
+      }
+      auto& status = it->second;
       if (status.label_idx != idx) {
         throw std::logic_error("the index stored in the status " + std::to_string(status.label_idx) +
                                " is not synced up with the index poped from the queue" + std::to_string(idx));
@@ -171,8 +177,12 @@ LabelSet::pop()
 
       status.permanent = true;
     } else {  // assert(label.dest != kInvalidDestination)
-      auto& status = dest_status_[label.dest];
+      const auto it = dest_status_.find(label.dest);
 
+      if (it == dest_status_.end()) {
+        throw std::logic_error("all dests in the queue should have its status");
+      }
+      auto& status = it->second;
       if (status.label_idx != idx) {
         throw std::logic_error("the index stored in the status " + std::to_string(status.label_idx) +
                                " is not synced up with the index poped from the queue" + std::to_string(idx));
