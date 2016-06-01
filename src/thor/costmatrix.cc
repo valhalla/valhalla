@@ -142,8 +142,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     // Protect against edge cases that may lead to never breaking out of
     // this loop. This should never occur but lets make sure.
     if (n >= kMaxMatrixIterations) {
-      LOG_ERROR("Break out of CostMatrix::SourceToTraget loop: Exceeded max iterations");
-      break;
+      throw std::runtime_error("Exceeded max iterations in CostMatrix::SourceToTarget");
     }
     n++;
   }
