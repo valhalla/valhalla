@@ -364,7 +364,10 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
+        // Update cost and use A* heuristic from the origin location rather
+        // than the end node of this edge
         cost -= p->second;
+        dist = astarheuristic_.GetDistance(origin.latlng_);
       }
     }
 
