@@ -302,7 +302,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   // or if max walking distance is exceeded.
   if (!(edge->forwardaccess() & kPedestrianAccess) ||
        (edge->surface() == Surface::kImpassable) ||
-      ((pred.walking_distance() + edge->length()) > max_distance_)) {
+      ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
   }
 
