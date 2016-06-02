@@ -10,6 +10,8 @@
 #include <sstream>
 #include <unordered_set>
 
+#include <valhalla/midgard/logging.h>
+
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
@@ -52,7 +54,10 @@ namespace {
 
   json::MapPtr to_properties(uint64_t id, const std::string& color) {
     return json::map({
-      {"fillColor", color},
+      {"fill", color},
+      {"stroke", std::string("white")},
+      {"stroke-width", std::string("1")},
+      {"fill-opacity", json::fp_t{0.8, 1}},
       {"id", id},
     });
   }
@@ -75,7 +80,7 @@ namespace {
     }
     return json::map({
       {"type", std::string("Polygon")},
-      {"coordinates", json::array({ coords })}
+      {"coordinates", coords}
     });
   }
 
@@ -109,18 +114,15 @@ namespace {
 
   polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t> >& region, const Tiles<PointLL>& tiles) {
     //get the neighbor tile giving -1 if no neighbor
-    auto neighbor = [&tiles](uint32_t tile, int side) {
+    auto neighbor = [&tiles](int32_t tile, int side) -> int32_t {
+      if(tile == -1) return -1;
       auto rc = tiles.GetRowColumn(tile);
       switch(side) {
-        case 0: return rc.first == 0 ? -1 : tile - 1;
-        case 1: return rc.second == 0 ? -1 : tile - tiles.ncolumns();
-        case 2: return rc.first == tiles.ncolumns() - 1 ? -1 : tile + 1;
-        case 3: return rc.second == tiles.nrows() - 1 ? -1 : tile + tiles.ncolumns();
+        case 0: return rc.second == 0 ? -1 : tile - 1;
+        case 1: return rc.first == 0 ? -1 : tile - tiles.ncolumns();
+        case 2: return rc.second == tiles.ncolumns() - 1 ? -1 : tile + 1;
+        case 3: return rc.first == tiles.nrows() - 1 ? -1 : tile + tiles.ncolumns();
       }
-    };
-    //is the edge of the given tile a boundary of another region
-    auto is_boundary = [&region, &tiles, &neighbor](uint32_t tile, int side) {
-      return region.second.find(neighbor(tile, side)) == region.second.cend();
     };
     //get the beginning coord of the counter clockwise winding given edge of the given tile
     auto get_coord = [&tiles](uint32_t tile, int side) {
@@ -149,17 +151,23 @@ namespace {
     do {
       //add this edges geometry
       outer.push_back(get_coord(tile, side));
-      used[side].emplace(tile);
-      //we need to move to another tile if the next edge of this one isnt a boundary
-      if(!is_boundary(tile, (side + 1) % 4)) {
-        tile = neighbor(tile, (side + 1) % 4);
-        if(!is_boundary(tile, side)) {
-          tile = neighbor(tile, side);
-          side = (side + 3) % 4;
-        }
-      }//the next edge of this tile is a boundary so move to that
-      else
+      auto inserted = used[side].insert(tile);
+      if(!inserted.second)
+        throw std::logic_error("An edge can be used only once in polygon creation");
+      //we need to go to the first existing neighbor tile following our winding
+      //starting with the one on the other side of the current side
+      auto adjc = neighbor(tile, (side + 1) % 4);
+      auto diag = neighbor(adjc, side);
+      if(region.second.find(diag) != region.second.cend()){
+        tile = diag;
+        side = (side + 3) % 4;
+      }//next one keep following winding
+      else if(region.second.find(adjc) != region.second.cend()){
+        tile = adjc;
+      }//if neither of those were there we stay on this tile and go to the next side
+      else {
         side = (side + 1) % 4;
+      }
     } while(tile != start_tile || side != start_side);
 
     //build the inners while there should still be some
@@ -167,6 +175,10 @@ namespace {
       //find an unmarked inner side
 
     //}
+
+    //close all the rings
+    for(auto& ring : polygon)
+      ring.push_back(ring.front());
 
     //give it back
     return polygon;
