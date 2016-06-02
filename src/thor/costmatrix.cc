@@ -281,7 +281,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
                         directededge, pred.cost(), pred.restrictions(),
                         pred.opp_local_idx(), mode_,
                         Cost(pred.transition_cost(), pred.transition_secs()),
-                        pred.walking_distance());
+                        pred.path_distance());
       }
       continue;
     }
@@ -307,7 +307,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
     Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost = pred.cost() + tc +
                 costing->EdgeCost(directededge, nodeinfo->density());
-    uint32_t distance = pred.walking_distance() + directededge->length();
+    uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
@@ -377,8 +377,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
           // Update best connection and set found = true.
           // distance computation only works with the casts.
-          uint32_t d = std::abs(static_cast<int>(pred.walking_distance())   +
-                                static_cast<int>(opp_el.walking_distance()) -
+          uint32_t d = std::abs(static_cast<int>(pred.path_distance())   +
+                                static_cast<int>(opp_el.path_distance()) -
                                 static_cast<int>(opp_el.transition_secs()));
           best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
           best_connection_[idx].found = true;
@@ -396,9 +396,9 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
             float oppsec = (predidx == kInvalidLabel) ?
                           0 : edgelabels[predidx].cost().secs;
             uint32_t oppdist = (predidx == kInvalidLabel) ?
-                          0 : edgelabels[predidx].walking_distance();
+                          0 : edgelabels[predidx].path_distance();
             float s = pred.cost().secs + oppsec + opp_el.transition_secs();
-            uint32_t d = pred.walking_distance() + oppdist;
+            uint32_t d = pred.path_distance() + oppdist;
 
             // Update best connection and set a threshold
             best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
@@ -535,7 +535,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
                         directededge, pred.cost(), pred.restrictions(),
                         pred.opp_local_idx(), mode_,
                         Cost(pred.transition_cost(), pred.transition_secs()),
-                        pred.walking_distance());
+                        pred.path_distance());
       }
       continue;
     }
@@ -575,7 +575,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
                    nodeinfo, opp_edge, opp_pred_edge);
     Cost newcost = pred.cost() + tc +
                    costing->EdgeCost(opp_edge, nodeinfo->density());
-    uint32_t distance = pred.walking_distance() + directededge->length();
+    uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.

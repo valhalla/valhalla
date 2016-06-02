@@ -171,7 +171,7 @@ const GriddedData<PointLL>* Isochrone::Compute(PathLocation& origin,
       AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_);
+                    directededge->opp_local_idx(), mode_, 0);
     }
   }
   return isotile_;      // Should never get here
@@ -277,7 +277,7 @@ void Isochrone::SetOrigin(GraphReader& graphreader, PathLocation& origin,
     adjacencylist_->Add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             cost.cost, 0.0f, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d, 0, 0, 0, 0, false);
+            directededge->opp_local_idx(), mode_, d);
     edge_label.set_origin();
 
     // Set the origin flag

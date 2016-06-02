@@ -39,7 +39,8 @@ namespace thor {
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
-    : PathAlgorithm() {
+    : PathAlgorithm(),
+      walking_distance_(0) {
 }
 
 // Destructor
@@ -91,6 +92,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
+
+  // Get maximum transfer distance
+  uint32_t max_transfer_distance = costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
   if (!origin.date_time_)
@@ -184,11 +188,11 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // transit has been taken at some point on the path) and mode is pedestrian
     mode_ = pred.mode();
     bool has_transit = pred.has_transit();
-    uint32_t prior_stop = pred.prior_stopid();
+    GraphId prior_stop = pred.prior_stopid();
     uint32_t operator_id = pred.transit_operator();
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       // Get the transfer penalty when changing stations
-      if (mode_ == TravelMode::kPedestrian && prior_stop > 0 && has_transit) {
+      if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
         transfer_cost = tc->TransferCost();
       }
 
@@ -200,7 +204,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       }
 
       // Update prior stop. TODO - parent/child stop info?
-      prior_stop = nodeinfo->stop_index();
+      prior_stop = node;
 
       // we must get the date from level 3 transit tiles and not level 2.  The level 3 date is
       // set when the fetcher grabbed the transit data and created the schedules.
@@ -264,7 +268,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
       // Reset cost and walking distance
       Cost newcost = pred.cost();
-      walking_distance_ = pred.walking_distance();
+      walking_distance_ = pred.path_distance();
 
       // If this is a transit edge - get the next departure. Do not check
       // if allowed by costing - assume if you get a transit edge you
@@ -377,25 +381,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         newcost -= p->second;
       }
 
-      // Get the end node, skip if the end node tile is not found
-      const GraphTile* endtile = (directededge->leaves_tile()) ?
-          graphreader.GetGraphTile(directededge->endnode()) : tile;
-      if (endtile == nullptr) {
-        continue;
-      }
-
-      // Prohibit entering the same station as the prior. Could this be done in
-      // costing?
-      const NodeInfo* endnode = endtile->node(directededge->endnode());
+      // Prohibit entering the same station as the prior.
       if (directededge->use() == Use::kTransitConnection &&
-          endnode->is_transit() &&
-          endnode->stop_index() == pred.prior_stopid()) {
+          directededge->endnode() == pred.prior_stopid()) {
         continue;
       }
 
-      if (directededge->use() == Use::kTransitConnection && pred.prior_stopid() &&
-          walking_distance_ > mode_costing[static_cast<uint32_t>(mode_)]->GetMaxTransferDistanceMM())
+      // Test if exceeding maximum transfer walking distance
+      if (directededge->use() == Use::kTransitConnection &&
+          pred.prior_stopid().Is_Valid() &&
+          walking_distance_ > max_transfer_distance) {
         continue;
+      }
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
@@ -420,6 +417,13 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       float dist = 0.0f;
       float sortcost = newcost.cost;
       if (p == destinations_.end()) {
+        // Get the end node, skip if the end node tile is not found
+        const GraphTile* endtile = (directededge->leaves_tile()) ?
+            graphreader.GetGraphTile(directededge->endnode()) : tile;
+        if (endtile == nullptr) {
+          continue;
+        }
+        const NodeInfo* endnode = endtile->node(directededge->endnode());
         dist = astarheuristic_.GetDistance(endnode->latlng());
         sortcost += astarheuristic_.Get(dist);
       }
@@ -466,8 +470,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     Cost cost = costing->EdgeCost(diredge, 0.0f) * ratio;
     edgelabels.emplace_back(kInvalidLabel, oppedge,
             diredge, cost, cost.cost, 0.0f, 0,
-            diredge->opp_local_idx(), mode_, length,
-            0, 0,  0, 0, false);
+            diredge->opp_local_idx(), mode_, length);
     adjlist.Add(label_idx, cost.cost);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
     label_idx++;
@@ -530,7 +533,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       Cost newcost = pred.cost() +
                      costing->EdgeCost(directededge, nodeinfo->density()) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
-      uint32_t walking_distance = pred.walking_distance() + directededge->length();
+      uint32_t walking_distance = pred.path_distance() + directededge->length();
 
       // Check if lower cost path
       if (es.set() == EdgeSet::kTemporary) {
@@ -549,8 +552,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       // Add edge label, add to the adjacency list and set edge status
       edgelabels.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, walking_distance,
-                    0, 0, 0, 0, false);
+                    directededge->opp_local_idx(), mode_, walking_distance);
       adjlist.Add(label_idx, newcost.cost);
       edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
       label_idx++;
