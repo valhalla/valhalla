@@ -113,6 +113,10 @@ namespace {
   }
 
   polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t> >& region, const Tiles<PointLL>& tiles) {
+    //do we have this tile in this region
+    auto member = [&region](int32_t tile) {
+      return region.second.find(tile) != region.second.cend();
+    };
     //get the neighbor tile giving -1 if no neighbor
     auto neighbor = [&tiles](int32_t tile, int side) -> int32_t {
       if(tile == -1) return -1;
@@ -125,7 +129,7 @@ namespace {
       }
     };
     //get the beginning coord of the counter clockwise winding given edge of the given tile
-    auto get_coord = [&tiles](uint32_t tile, int side) {
+    auto coord = [&tiles](uint32_t tile, int side) -> PointLL {
       auto box = tiles.TileBounds(tile);
       switch(side) {
         case 0: return PointLL(box.minx(), box.maxy());
@@ -133,6 +137,37 @@ namespace {
         case 2: return PointLL(box.maxx(), box.miny());
         case 3: return box.maxpt();
       }
+    };
+    //trace a ring of the polygon
+    polygon_t polygon;
+    std::array<std::unordered_set<uint32_t>, 4> used;
+    auto trace = [&member, &neighbor, &coord, &polygon, &used](uint32_t start_tile, int start_side) {
+      auto tile = start_tile;
+      auto side = start_side;
+      polygon.emplace_back();
+      auto& ring = polygon.back();
+      //walk until you see the starting edge again
+      do {
+        //add this edges geometry
+        ring.push_back(coord(tile, side));
+        auto inserted = used[side].insert(tile);
+        if(!inserted.second)
+          throw std::logic_error("Any tile edge can only be used once as part of the geometry");
+        //we need to go to the first existing neighbor tile following our winding
+        //starting with the one on the other side of the current side
+        auto adjc = neighbor(tile, (side + 1) % 4);
+        auto diag = neighbor(adjc, side);
+        if(member(diag)){
+          tile = diag;
+          side = (side + 3) % 4;
+        }//next one keep following winding
+        else if(member(adjc)){
+          tile = adjc;
+        }//if neither of those were there we stay on this tile and go to the next side
+        else {
+          side = (side + 1) % 4;
+        }
+      } while(tile != start_tile || side != start_side);
     };
 
     //the smallest numbered tile has a left edge on the outer ring of the polygon
@@ -142,39 +177,21 @@ namespace {
       if(tile < start_tile)
         start_tile = tile;
 
-    //walk the outer until you get back to the first tile edge you found
-    auto tile = start_tile;
-    auto side = start_side;
-    polygon_t polygon{{}};
-    std::list<PointLL>& outer = polygon.front();
-    std::array<std::unordered_set<uint32_t>, 4> used;
-    do {
-      //add this edges geometry
-      outer.push_back(get_coord(tile, side));
-      auto inserted = used[side].insert(tile);
-      if(!inserted.second)
-        throw std::logic_error("An edge can be used only once in polygon creation");
-      //we need to go to the first existing neighbor tile following our winding
-      //starting with the one on the other side of the current side
-      auto adjc = neighbor(tile, (side + 1) % 4);
-      auto diag = neighbor(adjc, side);
-      if(region.second.find(diag) != region.second.cend()){
-        tile = diag;
-        side = (side + 3) % 4;
-      }//next one keep following winding
-      else if(region.second.find(adjc) != region.second.cend()){
-        tile = adjc;
-      }//if neither of those were there we stay on this tile and go to the next side
-      else {
-        side = (side + 1) % 4;
+    //trace the outer
+    trace(start_tile, start_side);
+
+    //trace the inners
+    for(auto start_tile : region.second) {
+      //if the neighbor isnt a member and we didnt already use the side between them
+      for(start_side = 0; start_side < 4; ++start_side) {
+        if(!member(neighbor(start_tile, start_side)) &&
+            used[start_side].find(start_tile) == used[start_side].cend()) {
+          //build the inner ring
+          if(start_side != -1)
+            trace(start_tile, start_side);
+        }
       }
-    } while(tile != start_tile || side != start_side);
-
-    //build the inners while there should still be some
-    //while(region.second.size() * 4 > used[0].size() + used[1].size() + used[2].size() + used[3].size()) {
-      //find an unmarked inner side
-
-    //}
+    }
 
     //close all the rings
     for(auto& ring : polygon)
