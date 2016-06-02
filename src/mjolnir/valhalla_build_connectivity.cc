@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
       std::cout << "Unable to open output file: " << fname << std::endl;
       return EXIT_FAILURE;
     }
-    geojson_file << connectivity_map.to_geojson(tile_hierarchy.levels().rbegin()->first);
+    geojson_file << connectivity_map.to_geojson(level);
     geojson_file.close();
 
     // Make the ppm file for raster images
