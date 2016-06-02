@@ -22,7 +22,7 @@ PathAlgorithm::PathAlgorithm()
       allow_transitions_(false),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      walking_distance_(0) {
+      tile_creation_date_(0) {
   edgelabels_.reserve(kInitialEdgeLabelCount);
 }
 
@@ -271,7 +271,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
       AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_);
+                    directededge->opp_local_idx(), mode_, 0);
     }
   }
   return {};      // Should never get here
@@ -320,7 +320,8 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
   AddToAdjacencyList(edgeid, pred.sortcost());
   edgelabels_.emplace_back(predindex, edgeid,
                 edge, pred.cost(), pred.sortcost(), dist,
-                pred.restrictions(), pred.opp_local_idx(), mode_);
+                pred.restrictions(), pred.opp_local_idx(), mode_,
+                pred.path_distance());
 }
 
 // Add an edge at the origin to the adjacency list
@@ -381,7 +382,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     adjacencylist_->Add(edgelabels_.size(), sortcost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d, 0, 0, 0, 0, false);
+            directededge->opp_local_idx(), mode_, d);
     edge_label.set_origin();
 
     // Set the origin flag

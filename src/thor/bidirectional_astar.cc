@@ -28,10 +28,18 @@ int GetThreshold(const TravelMode mode, const int n) {
 namespace valhalla {
 namespace thor {
 
+constexpr uint64_t kInitialEdgeLabelCountBD = 100000;
+
 // Default constructor
-BidirectionalAStar::BidirectionalAStar()
-    : PathAlgorithm() {
+BidirectionalAStar::BidirectionalAStar() {
   threshold_ = 0;
+  mode_ = TravelMode::kDrive;
+  allow_transitions_ = false;
+  adjacencylist_ = nullptr;
+  edgestatus_ = nullptr;
+  tile_creation_date_ = 0;
+  edgelabels_.reserve(kInitialEdgeLabelCountBD);
+  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
 }
 
 // Destructor
@@ -548,7 +556,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     AddToAdjacencyList(edgeid, sortcost);
     edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_);
+            directededge->opp_local_idx(), mode_, 0);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
