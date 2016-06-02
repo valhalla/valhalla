@@ -79,9 +79,6 @@ class PathAlgorithm {
   // Tile creation date
   uint32_t tile_creation_date_;
 
-  // Current walking distance. TODO - make this distance or mode distance?
-  uint32_t walking_distance_;
-
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
 
@@ -234,6 +231,8 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
            const sif::TravelMode mode);
 
  protected:
+  // Current walking distance.
+  uint32_t walking_distance_;
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
