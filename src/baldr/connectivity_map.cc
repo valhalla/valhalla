@@ -56,7 +56,7 @@ namespace {
     return json::map({
       {"fill", color},
       {"stroke", std::string("white")},
-      {"stroke-width", std::string("1")},
+      {"stroke-width", static_cast<uint64_t>(1)},
       {"fill-opacity", json::fp_t{0.8, 1}},
       {"id", id},
     });
