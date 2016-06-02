@@ -373,11 +373,11 @@ valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
 
 // Main method for testing a single path
 int main(int argc, char *argv[]) {
-  bpo::options_description options("pathtest " VERSION "\n"
+  bpo::options_description options("valhalla_run_route " VERSION "\n"
   "\n"
-  " Usage: pathtest [options]\n"
+  " Usage: valhalla_run_route [options]\n"
   "\n"
-  "pathtest is a simple command line test tool for shortest path routing. "
+  "valhalla_run_route is a simple command line test tool for shortest path routing. "
   "\n"
   "Use the -o and -d options OR the -j option for specifying the locations. "
   "\n"
@@ -432,7 +432,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "pathtest " << VERSION << "\n";
+    std::cout << "valhalla_run_route " << VERSION << "\n";
     return EXIT_SUCCESS;
   }
 

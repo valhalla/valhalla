@@ -37,6 +37,7 @@ valhalla_loki_worker
 valhalla_odin_worker
 valhalla_route_service
 valhalla_run_matrix
+valhalla_run_isochrone
 valhalla_run_route
 valhalla_skadi_worker
 valhalla_thor_worker
