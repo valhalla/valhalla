@@ -425,11 +425,10 @@ class EdgeLabel {
   // Transit trip Id
   uint32_t tripid_;
 
-  // Block Id
-  uint32_t blockid_;
-
-  // Prior operator (index in an internal mapping). 0 indicates no prior
-  uint32_t transit_operator_;
+  // Block Id and prior operator (index to an internal mapping).
+  // 0 indicates no prior.
+  uint32_t blockid_          : 22;
+  uint32_t transit_operator_ : 10;
 
   // Transition cost (used in bidirectional path search).
   uint32_t transition_cost_ : 16;
