@@ -109,7 +109,7 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, T>
   }
 
   bool operator==(const StateIterator<T>& other) const
-  { return vs_ == other.vs_ && id_ == other.id_; }
+  { return vs_ == other.vs_ && id_ == other.id_ && time_ == other.time_; }
 
   bool operator!=(const StateIterator<T>& other) const
   { return !(*this == other); }
