@@ -630,10 +630,16 @@ function filter_tags_generic(kv)
   kv["emergency_forward"] = "false"
   kv["emergency_backward"] = "false"
 
-  if (ferry == true or kv["highway"]) and 
-     (kv["access"] == "emergency" or kv["emergency"] == "yes" or kv["service"] == "emergency_access") then
-    kv["emergency_forward"] = "true"
-    kv["emergency_tag"] = "true"
+  if (ferry == true or kv["highway"]) then 
+    
+    if (kv["access"] == "emergency" or kv["emergency"] == "yes" or kv["service"] == "emergency_access") then
+      kv["emergency_forward"] = "true"
+      kv["emergency_tag"] = "true"
+    end
+    
+    if kv["emergency"] == "no" then
+      kv["emergency_tag"] = "false"
+    end
   end
 
   if forward then
@@ -874,11 +880,13 @@ function filter_tags_generic(kv)
     kv["bus_backward"] = "true"
   end 
 
-  --if none of the modes were set we are done looking at this junker
+  --if none of the modes were set we are done looking at this  
   if kv["auto_forward"] == "false" and kv["truck_forward"] == "false" and kv["bus_forward"] == "false" and kv["bike_forward"] == "false" and kv["emergency_forward"] == "false" and 
      kv["auto_backward"] == "false" and kv["truck_backward"] == "false" and kv["bus_backward"] == "false" and kv["bike_backward"] == "false" and kv["emergency_backward"] == "false" and 
      kv["pedestrian"] == "false" then
-    return 1
+       if kv["highway"] ~= "bridleway" then --save bridleways for country access logic.
+         return 1
+       end
   end
 
    --toss actual areas
