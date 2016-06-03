@@ -8,7 +8,7 @@
 #include <cinttypes>
 #include <cstddef>
 #include <unordered_map>
-#include <vector>
+#include <list>
 #include <sstream>
 #include <iomanip>
 
@@ -41,10 +41,10 @@ class Jmap : public std::unordered_map<std::string, Value> {
 };
 
 //the array value type in json
-class Jarray : public std::vector<Value> {
+class Jarray : public std::list<Value> {
  public:
   //just specialize vector
-  using std::vector<Value>::vector;
+  using std::list<Value>::list;
  protected:
   //and be able to spit out text
   friend std::ostream& operator<<(std::ostream&, const Jarray&);
