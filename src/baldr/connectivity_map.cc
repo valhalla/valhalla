@@ -141,7 +141,7 @@ namespace {
     //trace a ring of the polygon
     polygon_t polygon;
     std::array<std::unordered_set<uint32_t>, 4> used;
-    auto trace = [&member, &neighbor, &coord, &polygon, &used](uint32_t start_tile, int start_side) {
+    auto trace = [&member, &neighbor, &coord, &polygon, &used](uint32_t start_tile, int start_side, bool ccw) {
       auto tile = start_tile;
       auto side = start_side;
       polygon.emplace_back();
@@ -149,7 +149,10 @@ namespace {
       //walk until you see the starting edge again
       do {
         //add this edges geometry
-        ring.push_back(coord(tile, side));
+        if(ccw)
+          ring.push_back(coord(tile, side));
+        else
+          ring.push_front(coord(tile, side));
         auto inserted = used[side].insert(tile);
         if(!inserted.second)
           throw std::logic_error("Any tile edge can only be used once as part of the geometry");
@@ -178,7 +181,7 @@ namespace {
         start_tile = tile;
 
     //trace the outer
-    trace(start_tile, start_side);
+    trace(start_tile, start_side, true);
 
     //trace the inners
     for(auto start_tile : region.second) {
@@ -188,7 +191,7 @@ namespace {
             used[start_side].find(start_tile) == used[start_side].cend()) {
           //build the inner ring
           if(start_side != -1)
-            trace(start_tile, start_side);
+            trace(start_tile, start_side, false);
         }
       }
     }
