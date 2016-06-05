@@ -64,19 +64,19 @@ class GridRangeQuery
     return bbox_;
   }
 
-  const int num_rows() const {
+  int num_rows() const {
     return num_rows_;
   }
 
-  const int num_cols() const {
+  int num_cols() const {
     return num_cols_;
   }
 
-  const float cell_width() const {
+  float cell_width() const {
     return cell_width_;
   }
 
-  const float cell_height() const {
+  float cell_height() const {
     return cell_height_;
   }
 

@@ -28,10 +28,10 @@ class State
         const Time time,
         const Candidate& candidate);
 
-  const StateId id() const
+  StateId id() const
   { return id_; }
 
-  const Time time() const
+  Time time() const
   { return time_; }
 
   const Candidate& candidate() const

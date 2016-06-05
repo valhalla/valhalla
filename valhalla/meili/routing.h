@@ -245,7 +245,8 @@ struct Label
                                                          the_cost, // Distance
                                                          the_edge->restrictions(),
                                                          the_edge->opp_local_idx(),
-                                                         the_travelmode);
+                                                         the_travelmode,
+                                                         0);
     }
   }
 
