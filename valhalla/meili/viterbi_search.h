@@ -90,7 +90,7 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, T>
   {
     // Hold the invariant in the beginning (see below about the
     // invariant)
-    if (!(time != kInvalidTime || id_ == kInvalidStateId)) {
+    if (!(time_ != kInvalidTime || id_ == kInvalidStateId)) {
       throw std::runtime_error("invalid pair of id and time");
     }
   }
@@ -137,9 +137,9 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, T>
  private:
   IViterbiSearch<T>* vs_;
 
-  // Invariant: (time == kInvalidTime && id_ == kInvalidStateId) || time != kInvalidTime
-  // same as: !(time == kInvalidTime && id_ != kInvalidStateId)
-  // same as: time != kInvalidTime || id_ == kInvalidStateId
+  // Invariant: (time == kInvalidTime && id == kInvalidStateId) || time != kInvalidTime
+  // same as: !(time == kInvalidTime && id != kInvalidStateId)
+  // same as: time != kInvalidTime || id == kInvalidStateId
   StateId id_;
 
   Time time_;
@@ -155,8 +155,15 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, T>
 
     if (0 < time_) {
       time_ --;
-      id_ = vs_->predecessor(id_);
-      if (id_ == kInvalidStateId) {
+      if (id_ != kInvalidStateId) {
+        id_ = vs_->predecessor(id_);
+        // Search at previous time directly if the predecessor not
+        // found
+        if (id_ == kInvalidStateId) {
+          id_ = vs_->SearchWinner(time_);
+        }
+      } else {
+        // No way go back, then search at previous time directly
         id_ = vs_->SearchWinner(time_);
       }
       if (!(id_ == kInvalidStateId || vs_->state(id_).time() == time_)) {
