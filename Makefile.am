@@ -80,27 +80,27 @@ check_PROGRAMS = \
 	test/routing \
 	test/viterbi_search
 
-test_geometry_helpers_SOURCES = test/geometry_helpers.cc
+test_geometry_helpers_SOURCES = test/geometry_helpers.cc test/test.cc
 test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_geometry_helpers_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_grid_range_query_SOURCES = test/grid_range_query.cc
+test_grid_range_query_SOURCES = test/grid_range_query.cc test/test.cc
 test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_grid_range_query_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_map_matching_SOURCES = test/map_matching.cc
+test_map_matching_SOURCES = test/map_matching.cc test/test.cc
 test_map_matching_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_map_matching_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_queue_SOURCES = test/queue.cc
+test_queue_SOURCES = test/queue.cc test/test.cc
 test_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_routing_SOURCES = test/routing.cc
+test_routing_SOURCES = test/routing.cc test/test.cc
 test_routing_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_routing_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_viterbi_search_SOURCES = test/viterbi_search.cc
+test_viterbi_search_SOURCES = test/viterbi_search.cc test/test.cc
 test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 

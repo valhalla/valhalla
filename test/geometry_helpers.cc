@@ -9,6 +9,7 @@
 
 #include <valhalla/midgard/point2.h>
 
+#include "test.h"
 #include "meili/geometry_helpers.h"
 
 using namespace valhalla::meili::helpers;
@@ -57,8 +58,9 @@ void TestClipLineString()
 
 int main(int argc, char *argv[])
 {
-  TestClipLineString();
+  test::suite suite("geometry helpers");
 
-  std::cout << "all tests passed" << std::endl;
+  suite.test(TEST_CASE(TestClipLineString));
+
   return 0;
 }

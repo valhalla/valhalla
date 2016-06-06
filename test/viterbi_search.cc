@@ -8,6 +8,7 @@
 #include <chrono>
 #include <random>
 
+#include "test.h"
 #include "meili/viterbi_search.h"
 
 using namespace valhalla::meili;
@@ -324,9 +325,10 @@ void TestViterbiSearch()
 
 int main(int argc, char *argv[])
 {
-  TestViterbiSearch();
 
-  std::cout << "all tests passed" << std::endl;
+  test::suite suite("viterbi search");
+
+  suite.test(TEST_CASE(TestViterbiSearch));
 
   return 0;
 }

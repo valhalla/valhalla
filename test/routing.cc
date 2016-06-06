@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "test.h"
 #include "meili/routing.h"
 
 using namespace valhalla;
@@ -299,15 +300,15 @@ void TestRoutePathIterator()
 
 int main(int argc, char *argv[])
 {
-  TestAddRemove();
+  test::suite suite("routing");
 
-  TestSimulation();
+  suite.test(TEST_CASE(TestAddRemove));
 
-  Benchmark();
+  suite.test(TEST_CASE(TestSimulation));
 
-  TestRoutePathIterator();
+  suite.test(TEST_CASE(Benchmark));
 
-  std::cout << "all tests passed" << std::endl;
+  suite.test(TEST_CASE(TestRoutePathIterator));
 
   return 0;
 }
