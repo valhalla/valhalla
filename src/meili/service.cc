@@ -129,8 +129,8 @@ std::string serialize_response(MapMatcher& matcher,
                                bool is_collection,
                                bool verbose)
 {
-  bool route = matcher.config().get<bool>("route"),
-    geometry = matcher.config().get<bool>("geometry");
+  const auto route = matcher.config().get<bool>("route"),
+          geometry = matcher.config().get<bool>("geometry");
 
   using buffer_t = rapidjson::StringBuffer;
   buffer_t sb;
@@ -236,8 +236,7 @@ class mm_worker_t {
       : config_(config),
         matcher_factory_(config_),
         customizable_(ptree_array_to_unordered_set<std::string>(config_.get_child("meili.customizable"))),
-        verbose_(config_.get<bool>("meili.verbose")),
-        geojson_reader_(config_.get<float>("meili.gps_accuracy"), config_.get<float>("meili.search_radius")) {}
+        verbose_(config_.get<bool>("meili.verbose")) {}
 
   boost::property_tree::ptree&
   read_preferences_from_request(const http_request_t& request,
@@ -299,20 +298,6 @@ class mm_worker_t {
     }
 
     if (request.method == method_t::POST) {
-      std::vector<std::vector<Measurement>> sequences;
-      bool is_collection;
-
-      // Parse sequences
-      try {
-        is_collection = geojson_reader_.Read(request.body, sequences);
-      } catch (const SequenceParseError& ex) {
-        return jsonify_error(ex.what(), info);
-      }
-
-      if (!is_collection) {
-        assert(sequences.size() == 1);
-      }
-
       // Read preferences
       boost::property_tree::ptree preferences;
       try {
@@ -329,6 +314,19 @@ class mm_worker_t {
         matcher = matcher_factory_.Create(preferences);
         // TODO: invalid_argument is ambiguous
       } catch (const std::invalid_argument& ex) {
+        return jsonify_error(ex.what(), info);
+      }
+
+      // Read sequences
+      bool is_collection;
+      std::vector<std::vector<Measurement>> sequences;
+      try {
+        GeoJSONReader geojson_reader(matcher->config().get<float>("gps_accuracy"),
+                                     matcher->config().get<float>("search_radius"));
+        is_collection = geojson_reader.Read(request.body, sequences);
+      } catch (const std::invalid_argument& ex) {
+        return jsonify_error(ex.what(), info);
+      } catch (const SequenceParseError& ex) {
         return jsonify_error(ex.what(), info);
       }
 
@@ -363,7 +361,6 @@ class mm_worker_t {
   MapMatcherFactory matcher_factory_;
   std::unordered_set<std::string> customizable_;
   bool verbose_;
-  GeoJSONReader geojson_reader_;
 };
 
 }
