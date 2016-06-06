@@ -55,13 +55,13 @@ namespace valhalla {
           idx++;
         }
         if (!reachable) {
-          throw std::runtime_error("Location " + std::to_string(i) + " is unreachable");
+          throw std::runtime_error("Location at index " + std::to_string(i) + " is unreachable");
         }
       }
 
       // Set time costs to send to Optimizer.
       std::vector<float> time_costs;
-      for (auto itr : td) {
+      for (auto& itr : td) {
         time_costs.emplace_back(static_cast<float>(itr.time));
       }
 
