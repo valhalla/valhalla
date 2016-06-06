@@ -83,10 +83,17 @@ template <typename T>
 class StateIterator: public std::iterator<std::forward_iterator_tag, T>
 {
  public:
-  StateIterator(IViterbiSearch<T>* vs, StateId id)
+  StateIterator(IViterbiSearch<T>* vs, StateId id, Time time)
       : vs_(vs),
         id_(id),
-        time_(id_ == kInvalidStateId? kInvalidTime : vs_->state(id_).time()) {}
+        time_(time)
+  {
+    // Hold the invariant in the beginning (see below about the
+    // invariant)
+    if (!(time != kInvalidTime || id_ == kInvalidStateId)) {
+      throw std::runtime_error("invalid pair of id and time");
+    }
+  }
 
   StateIterator(IViterbiSearch<T>* vs):
       vs_(vs),
@@ -178,7 +185,7 @@ class IViterbiSearch
   virtual StateId SearchWinner(Time time) = 0;
 
   state_iterator SearchPath(Time time)
-  { return state_iterator(this, SearchWinner(time)); }
+  { return state_iterator(this, SearchWinner(time), time); }
 
   state_iterator PathEnd() const
   { return path_end_; }
