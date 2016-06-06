@@ -638,8 +638,7 @@ MapMatcher*
 MapMatcherFactory::Create(const ptree& preferences)
 {
   const auto& name = preferences.get<std::string>("mode", config_.get<std::string>("mode"));
-  auto travelmode = NameToTravelMode(name);
-  const auto& config = MergeConfig(name, preferences);
+  const auto travelmode = NameToTravelMode(name);
   return Create(travelmode, preferences);
 }
 
