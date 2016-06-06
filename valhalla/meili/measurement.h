@@ -41,9 +41,12 @@ class Measurement
   { return gps_accuracy_; }
 
  private:
+
   midgard::PointLL lnglat_;
-  float search_radius_;
+
   float gps_accuracy_;
+
+  float search_radius_;
 };
 
 }
