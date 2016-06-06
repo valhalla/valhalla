@@ -526,6 +526,9 @@ OfflineMatch(MapMatching& mm,
     iterpath.push_back(it);
   }
   std::reverse(iterpath.begin(), iterpath.end());
+  if (!(iterpath.size() == mm.size())) {
+    std::logic_error("Every measurement should have matched a state");
+  }
 
   // Interpolate proximate measurements and merge their states into
   // the results
