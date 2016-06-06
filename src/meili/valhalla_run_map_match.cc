@@ -3,6 +3,7 @@
 
 #include "meili/map_matching.h"
 
+
 using namespace valhalla::meili;
 
 
@@ -15,9 +16,13 @@ int main(int argc, char *argv[])
 
   boost::property_tree::ptree config;
   boost::property_tree::read_json(argv[1], config);
+  const std::string modename = config.get<std::string>("meili.mode");
 
   MapMatcherFactory matcher_factory(config);
-  auto matcher = matcher_factory.Create(config.get<std::string>("meili.mode"));
+  auto matcher = matcher_factory.Create(modename);
+
+  const float default_gps_accuracy = matcher->config().get<float>("gps_accuracy"),
+             default_search_radius = matcher->config().get<float>("search_radius");
 
   std::vector<Measurement> measurements;
   std::string line;
@@ -62,7 +67,9 @@ int main(int argc, char *argv[])
     float lng, lat;
     std::stringstream stream(line);
     stream >> lng; stream >> lat;
-    measurements.emplace_back(PointLL(lng, lat));
+    measurements.emplace_back(PointLL(lng, lat),
+                              default_gps_accuracy,
+                              default_search_radius);
   }
 
   delete matcher;

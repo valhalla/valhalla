@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <limits>
 
+#include "test.h"
 #include "meili/priority_queue.h"
 
 
@@ -182,13 +183,13 @@ void TestSorting()
 
 int main(int argc, char *argv[])
 {
-  SimpleTestQueue();
+  test::suite suite("queue");
 
-  TestQueue();
+  suite.test(TEST_CASE(SimpleTestQueue));
 
-  TestSorting();
+  suite.test(TEST_CASE(TestQueue));
 
-  std::cout << "all tests passed" << std::endl;
+  suite.test(TEST_CASE(TestSorting));
 
   return 0;
 }

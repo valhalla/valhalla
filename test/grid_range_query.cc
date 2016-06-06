@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "test.h"
 #include "meili/grid_range_query.h"
 
 using namespace valhalla::meili;
@@ -112,13 +113,13 @@ void TestQuery()
 
 int main(int argc, char *argv[])
 {
-  TestGridTools();
+  test::suite suite("grid range query");
 
-  TestAddLineSegment();
+  suite.test(TEST_CASE(TestGridTools));
 
-  TestQuery();
+  suite.test(TEST_CASE(TestAddLineSegment));
 
-  std::cout << "all tests passed" << std::endl;
+  suite.test(TEST_CASE(TestQuery));
 
   return 0;
 }

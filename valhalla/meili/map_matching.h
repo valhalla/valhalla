@@ -11,6 +11,7 @@
 #include <valhalla/sif/costconstants.h>
 
 #include <meili/candidate.h>
+#include <meili/measurement.h>
 #include <meili/candidate_search.h>
 #include <meili/viterbi_search.h>
 #include <meili/routing.h>
@@ -20,20 +21,6 @@ namespace valhalla{
 namespace meili {
 
 
-class Measurement
-{
- public:
-  Measurement(const midgard::PointLL& lnglat)
-      : lnglat_(lnglat) {}
-
-  const midgard::PointLL& lnglat() const
-  { return lnglat_; }
-
- private:
-  midgard::PointLL lnglat_;
-};
-
-
 class State
 {
  public:
@@ -41,10 +28,10 @@ class State
         const Time time,
         const Candidate& candidate);
 
-  const StateId id() const
+  StateId id() const
   { return id_; }
 
-  const Time time() const
+  Time time() const
   { return time_; }
 
   const Candidate& candidate() const
@@ -99,7 +86,6 @@ class MapMatching: public ViterbiSearch<State>
               float beta,
               float breakage_distance,
               float max_route_distance_factor,
-              float search_radius,
               float turn_penalty_factor);
 
   MapMatching(baldr::GraphReader& graphreader,
@@ -165,8 +151,6 @@ class MapMatching: public ViterbiSearch<State>
   float breakage_distance_;
 
   float max_route_distance_factor_;
-
-  float search_radius_;
 
   float turn_penalty_factor_;
 
