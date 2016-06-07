@@ -265,13 +265,8 @@ struct graph_callback : public OSMPBF::Callback {
 
     for (const auto& tag : results) {
 
-      if (tag.first == "auto_tag")
-      std::cout << "here" << std::endl;
-
       if (tag.first == "road_class") {
-
         RoadClass roadclass = (RoadClass) std::stoi(tag.second);
-
         switch (roadclass) {
 
           case RoadClass::kMotorway:
@@ -301,28 +296,24 @@ struct graph_callback : public OSMPBF::Callback {
         }
       }
       //these flags indicate if a user set the access tags on this way.
-      else if (tag.first == "emergency_tag") {
-        access.set_emergency_tag(tag.second == "true" ? true : false);
-        has_user_tags = true;
-      }
       else if (tag.first == "auto_tag") {
-        access.set_auto_tag(tag.second == "true" ? true : false);
+        access.set_auto_tag(true);
         has_user_tags = true;
       }
       else if (tag.first == "truck_tag") {
-        access.set_truck_tag(tag.second == "true" ? true : false);
+        access.set_truck_tag(true);
         has_user_tags = true;
       }
       else if (tag.first == "bus_tag") {
-        access.set_bus_tag(tag.second == "true" ? true : false);
+        access.set_bus_tag(true);
         has_user_tags = true;
       }
       else if (tag.first == "foot_tag") {
-        access.set_foot_tag(tag.second == "true" ? true : false);
+        access.set_foot_tag(true);
         has_user_tags = true;
       }
       else if (tag.first == "bike_tag") {
-        access.set_bike_tag(tag.second == "true" ? true : false);
+        access.set_bike_tag(true);
         has_user_tags = true;
       }
 
@@ -699,7 +690,6 @@ struct graph_callback : public OSMPBF::Callback {
       w.set_use(Use::kCuldesac);
 
     if (has_user_tags) {
-      std::cout << "here" << std::endl;
       access_->push_back(access);
     }
 
@@ -1004,6 +994,17 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
       }
     );
   }
+  //we need to sort the access tags so that we can easily find them.
+  LOG_INFO("Sorting osm access tags by way id...");
+  {
+    sequence<OSMAccess> access(access_file, false);
+    access.sort(
+      [](const OSMAccess& a, const OSMAccess& b){
+        return a.way_id() < b.way_id();
+      }
+    );
+  }
+
   LOG_INFO("Finished");
 
   // Parse node in all the input files. Skip any that are not marked from
