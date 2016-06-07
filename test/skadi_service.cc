@@ -45,11 +45,12 @@ namespace {
     //wget -q -O - http://s3.amazonaws.com/mapzen.valhalla/elevation/N40/N40W077.hgt.gz | gunzip > test/data/N40W077.hgt
     //hack the tests to run against that and turn that into something we can build a tile out of
     //grep -E '{[0-9,]+}' test/*.log | sed -e "s/.*{/{/g" | sort -n | tr '\n' ',' | sed -e "s/^/#include<cstdint>\n#include<unordered_map>\nstd::unordered_map<size_t,int16_t> pixels {/g" -e "s/$/};/g" > test/pixels.h
-    int16_t tile[3601 * 3601];
+    std::vector<int16_t> tile(3601 * 3601, 0);
     for (const auto& p : pixels)
       tile[p.first] = p.second;
     std::ofstream file("test/data/service/N40W077.hgt", std::ios::binary | std::ios::trunc);
-    file.write(static_cast<const char*>(static_cast<void*>(&tile)), sizeof(tile));
+    file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
+      sizeof(int16_t) * tile.size());
   }
 
   void start_service(zmq::context_t& context) {
