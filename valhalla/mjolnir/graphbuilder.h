@@ -25,8 +25,8 @@ class GraphBuilder {
    * and configs
    * @param  config         properties file
    * @param  osmdata        OSM data used to build the graph.
-   * @param  ways_file      where to store the ways so they arent in memory
-   * @param  way_nodes_file where to store the nodes so they arent in memory
+   * @param  ways_file      where to store the ways so they are not in memory
+   * @param  way_nodes_file where to store the nodes so they are not in memory
    */
   static void Build(const boost::property_tree::ptree& pt, const OSMData& osmdata,
       const std::string& ways_file, const std::string& way_nodes_file);
