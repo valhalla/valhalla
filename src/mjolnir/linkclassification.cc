@@ -5,11 +5,61 @@
 #include <unordered_map>
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
+
+// Test if the set of edges can be classified as a turn channel. Total length
+// must be less than kMaxTurnChannelLength and there cannot be any exit signs.
+bool IsTurnChannel(const uint32_t count, sequence<OSMWay>& ways,
+                   sequence<Edge>& edges,
+                   sequence<OSMWayNode>& way_nodes,
+                   std::unordered_set<size_t>& linkedgeindexes,
+                   const uint32_t rc) {
+  // Method to get the shape for an edge - since LL is stored as a pair of
+  // floats we need to change into PointLL to get length of an edge
+  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+    std::list<PointLL> shape;
+    for (size_t i = 0; i < count; ++i) {
+      auto node = (*way_nodes[idx++]).node;
+      shape.emplace_back(node.lng, node.lat);
+    }
+    return shape;
+  };
+
+  // If there are more than 2 end node connections or road classes are
+  // not motorway or trunk then this is not a turn channel
+  if (count > 2 || rc <= static_cast<uint32_t>(RoadClass::kTrunk)) {
+    return false;
+  }
+
+  // Iterate through the link edges
+  bool exit_sign = false;
+  float total_length = 0.0f;
+  bool logit = false;
+  for (auto idx : linkedgeindexes) {
+    sequence<Edge>::iterator element = edges[idx];
+    auto edge = *element;
+    auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+    total_length += valhalla::midgard::length(shape);
+    if (total_length > kMaxTurnChannelLength) {
+      return false;
+    }
+    OSMWay way = *ways[edge.wayindex_];
+    if (way.junction_ref_index() != 0 ||
+        way.destination_ref_index() != 0 ||
+        way.destination_street_index() != 0 ||
+        way.destination_ref_to_index() != 0 ||
+        way.destination_street_to_index() != 0 ||
+        way.destination_index() != 0) {
+     return false;
+    }
+  }
+  return true;
+}
 
 // Get the best classification for any driveable non-link edges from a node.
 uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
@@ -32,17 +82,19 @@ uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
 void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
+                     const std::string& way_nodes_file,
                      DataQuality& stats) {
   LOG_INFO("Reclassifying link graph edges...")
 
   uint32_t count = 0;
-  std::unordered_set<size_t> visitedset;  // Set of visited nodes
-  std::unordered_set<size_t> expandset;   // Set of nodes to expand
-  std::list<size_t> linkedgeindexes;     // Edge indexes to reclassify
-  std::multiset<uint32_t> endrc;           //
+  std::unordered_set<size_t> visitedset;      // Set of visited nodes
+  std::unordered_set<size_t> expandset;       // Set of nodes to expand
+  std::unordered_set<size_t> linkedgeindexes; // Edge indexes to reclassify
+  std::multiset<uint32_t> endrc;              // Classifications at end nodes
   sequence<OSMWay> ways(ways_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
 
   //try to expand
   auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
@@ -75,7 +127,11 @@ void ReclassifyLinks(const std::string& ways_file,
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     // If the node has a both links and non links at it
+    bool has_exit = false;
     auto bundle = collect_node_edges(node_itr, nodes, edges);
+    if (bundle.node.ref() || bundle.node.exit_to()) {
+      has_exit = true;
+    }
     if (bundle.node.attributes_.link_edge &&
         bundle.node.attributes_.non_link_edge) {
       // Get the highest classification of non-link edges at this node
@@ -102,6 +158,9 @@ void ReclassifyLinks(const std::string& ways_file,
           // Expand all edges from this node and pop from expand set
           auto expand_node_itr = nodes[*expandset.begin()];
           auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
+          if (expanded.node.ref() || expanded.node.exit_to()) {
+            has_exit = true;
+          }
           visitedset.insert(expand_node_itr.position());
           expandset.erase(expandset.begin());
           for (const auto& expandededge : expanded.node_edges) {
@@ -110,6 +169,10 @@ void ReclassifyLinks(const std::string& ways_file,
                 !expandededge.first.attributes.link) {
               continue;
             }
+
+            // Add the link to the set of edges to reclassify
+            linkedgeindexes.insert(expandededge.second);
+
             // Expand from end node of this link edge
             expand(expandededge.first, expand_node_itr);
           }
@@ -129,21 +192,41 @@ void ReclassifyLinks(const std::string& ways_file,
           // connections. This protects against downgrading links
           // when branches occur.
           uint32_t rc = *(++endrc.cbegin());
+          if (rc == kAbsurdRoadClass) {
+            continue;
+          }
+
+          // If there are only 2 end road classes test if this should be
+          // a turn channel - must be no more than the max turn cost length
+          // and have no exit signs
+          bool turn_channel = (has_exit) ? false :
+                  IsTurnChannel(endrc.size(), ways, edges,
+                      way_nodes, linkedgeindexes, rc);
+
+          // Reclassify link edges
           for (auto idx : linkedgeindexes) {
             sequence<Edge>::iterator element = edges[idx];
             auto edge = *element;
+            bool update = false;
             edge.attributes.reclass_link = true;
             if (rc > edge.attributes.importance) {
               edge.attributes.importance = rc;
-              element = edge;
+              update = true;
               count++;
+            }
+            if (turn_channel) {
+              edge.attributes.turn_channel = true;
+              update = true;
+            }
+            if (update) {
+              element = edge;
             }
           }
         }
       }
     }
 
-    //go to the next node
+    // Go to the next node
     node_itr += bundle.node_count;
   }
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");

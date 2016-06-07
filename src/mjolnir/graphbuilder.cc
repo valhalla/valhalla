@@ -148,7 +148,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
 
     // Remember this node as starting this edge
     way_node.node.attributes_.link_edge = way.link();
-    way_node.node.attributes_.non_link_edge = !way.link();
+    way_node.node.attributes_.non_link_edge = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
@@ -164,7 +164,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
         edge.attributes.shortlink = (way.link() &&
                   Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.attributes_.link_edge = way.link();
-        way_node.node.attributes_.non_link_edge = !way.link();
+        way_node.node.attributes_.non_link_edge = !way.link() && (way.auto_forward() || way.auto_backward());
         nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
         edges.push_back(edge);
 
@@ -576,6 +576,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
           directededge.set_curvature(std::get<3>(found->second));
 
+          // Set use to ramp or turn channel
+          if (edge.attributes.turn_channel) {
+            directededge.set_use(Use::kTurnChannel);
+          } else if (edge.attributes.link){
+            directededge.set_use(Use::kRamp);
+          }
+
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
 
@@ -739,7 +746,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
-  ReclassifyLinks(ways_file, nodes_file, edges_file, stats);
+  ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, stats);
 
   // Reclassify ferry connection edges - use the highway classification cutoff
   RoadClass rc = RoadClass::kPrimary;
@@ -804,7 +811,6 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 
   ////////////////////////////////////////////////////////////////////////////
   // NUMBER
-
   // Exit sign number
   if (way.junction_ref_index() != 0) {
     exit_list.emplace_back(Sign::Type::kExitNumber,
@@ -878,7 +884,6 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
   // Process exit_to only if other branch or toward info does not exist
   if (!has_branch && !has_toward) {
     if (node.exit_to() && !fork) {
-
       std::string tmp;
       std::size_t pos;
       std::vector<std::string> exit_tos = GetTagTokens(
