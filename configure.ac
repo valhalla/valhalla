@@ -42,6 +42,7 @@ AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 AX_BOOST_REGEX
+AX_BOOST_DATE_TIME
 
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.3.4])
