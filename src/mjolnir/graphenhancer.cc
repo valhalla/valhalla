@@ -1,5 +1,6 @@
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/adminconstants.h"
 
 #include <memory>
 #include <future>
@@ -22,8 +23,13 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -34,10 +40,7 @@
 #include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+#include "mjolnir/osmaccess.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -592,12 +595,15 @@ std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
   return polys;
 }
 
-std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
+std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
+                                                             std::unordered_map<uint32_t,bool>& drive_on_right,
+                                                             std::unordered_map<uint32_t, std::vector<int>>& country_access,
                                                              const AABB2<PointLL>& aabb, GraphTileBuilder& tilebuilder) {
   std::unordered_map<uint32_t,multi_polygon_type> polys;
   if (!db_handle)
     return polys;
 
+  std::unordered_map<uint32_t, uint32_t> ids;
   sqlite3_stmt *stmt = 0;
   uint32_t ret;
   char *err_msg = nullptr;
@@ -607,7 +613,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   std::string geom;
   std::string country_name, state_name, country_iso, state_iso;
 
-  std::string sql = "SELECT state.rowid, country.name, state.name, country.iso_code, ";
+  std::string sql = "SELECT state.parent_admin, country.name, state.name, country.iso_code, ";
   sql += "state.iso_code, state.drive_on_right, st_astext(state.geom) ";
   sql += "from admins state, admins country where ";
   sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
@@ -646,7 +652,6 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     while (result == SQLITE_ROW) {
 
       id = sqlite3_column_int(stmt, 0);
-
       country_name = "";
       state_name = "";
       country_iso = "";
@@ -678,6 +683,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
       drive_on_right.emplace(index, dor);
+      ids.emplace(id,index);
 
       result = sqlite3_step(stmt);
     }
@@ -685,6 +691,74 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   if (stmt) {
     sqlite3_finalize(stmt);
     stmt = 0;
+  }
+
+  if (ids.size()) {
+
+    std::string sql = "SELECT admin_id, trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path from ";
+    sql += "admin_access where admin_id in (";
+    bool first = true;
+
+    for (const auto& id : ids) {
+
+      if (!first)
+        sql += ", ";
+      sql += std::to_string(id.first);
+      first = false;
+    }
+
+    sql += ")";
+    ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+    if (ret == SQLITE_OK) {
+      result = sqlite3_step(stmt);
+
+      while (result == SQLITE_ROW) {
+
+        std::vector<int> access;
+        uint32_t id = sqlite3_column_int(stmt, 0);
+
+        if (sqlite3_column_type(stmt, 1) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 1));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 2) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 2));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 3));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 4) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 4));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 5));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 6) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 6));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 7) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 7));
+        else access.push_back(-1);
+
+        if (sqlite3_column_type(stmt, 8) == SQLITE_INTEGER)
+          access.push_back(sqlite3_column_int(stmt, 8));
+        else access.push_back(-1);
+
+        const auto index = ids.find(id);
+        country_access.emplace(index->second,access);
+        result = sqlite3_step(stmt);
+      }
+    }
+    if (stmt) {
+       sqlite3_finalize(stmt);
+       stmt = 0;
+     }
   }
 
   return polys;
@@ -1047,12 +1121,73 @@ bool ConsistentNames(const std::string& country_code,
   return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
+/**
+ * Removes or adds access.
+ * @param  current_access   Current access for the DE.
+ * @param  country_access   Country specific access.
+ * @param  type             Type of access to add or remove?
+ */
+uint32_t ProcessAccess(const uint32_t current_access, const uint32_t country_access, const uint32_t type) {
+
+  uint32_t new_access = current_access;
+
+  auto current = ((type & current_access) == type);
+  auto country = ((type & country_access) == type);
+
+  if (current && !country)
+    new_access &= ~(type);
+  else if (!current && country)
+    new_access |= type;
+
+  return new_access;
+}
+
+/**
+ * Get the new access for a DE.  If a user entered tags then we will not update
+ * the access.  Also, we have to take into account if the DE is oneway or not.
+ * @param  current_access   Current access for the DE.
+ * @param  country_access   Country specific access.
+ * @param  oneway_vehicle   Is the DE oneway in the opposite direction for vehicles?
+ * @param  oneway_bicycle   Is the DE oneway in the opposite direction for bicycles?
+ * @param  target           User entered access tags.
+ */
+uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
+                   const bool oneway_vehicle, const bool oneway_bicycle, const OSMAccess target) {
+
+  uint32_t new_access = current_access;
+
+  if (!target.foot_tag())
+    new_access = ProcessAccess(new_access,country_access,kPedestrianAccess);
+
+  if (!oneway_bicycle && !target.bike_tag())
+    new_access = ProcessAccess(new_access,country_access,kBicycleAccess);
+
+  // if the reverse direction is oneway then do not add access for vehicles in the current direction.
+  if (oneway_vehicle)
+    return new_access;
+
+  if (!target.auto_tag())
+    new_access = ProcessAccess(new_access,country_access,kAutoAccess);
+
+  if (!target.bus_tag())
+    new_access = ProcessAccess(new_access,country_access,kBusAccess);
+
+  if (!target.truck_tag())
+    new_access = ProcessAccess(new_access,country_access,kTruckAccess);
+
+  return new_access;
+}
+
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
+             const std::string& access_file,
              const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue, std::mutex& lock,
              std::promise<enhancer_stats>& result) {
+
+  auto less_than = [](const OSMAccess& a, const OSMAccess& b){return a.way_id() < b.way_id();};
+  sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
@@ -1165,9 +1300,11 @@ void enhance(const boost::property_tree::ptree& pt,
     bool tile_within_one_admin = false;
     uint32_t id  = tile_id.tileid();
     std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
+    std::unordered_map<uint32_t, std::vector<int>> country_access;
     std::unordered_map<uint32_t,bool> drive_on_right;
     if (admin_db_handle) {
-      admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
+      admin_polys = GetAdminInfo(admin_db_handle, drive_on_right,
+                                 country_access, tiles.TileBounds(id),
                            tilebuilder);
       if (admin_polys.size() == 1) {
         // TODO - check if tile bounding box is entirely inside the polygon...
@@ -1260,7 +1397,104 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
+        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+
+        // country access logic.
+        // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
+        // struct, then this means that it has been set by a user of the
+        // OpenStreetMap community.  Therefore, we will not override this tag with the
+        // country defaults.  Otherwise, country specific access wins.
+        // Currently, overrides only exist for Trunk RC and Uses below.
+        OSMAccess target{e_offset->wayid()};
+
+        if (admin_index != 0 && country_access.find(admin_index) != country_access.end() &&
+            (directededge.classification() == RoadClass::kTrunk ||
+                directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
+                directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
+                directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
+
+          if (!access_tags.find(target,less_than))
+            target =  OSMAccess{e_offset->wayid()};
+
+          std::vector<int> access = country_access.at(admin_index);
+          uint32_t forward = directededge.forwardaccess();
+          uint32_t reverse = directededge.reverseaccess();
+
+          bool f_oneway_vehicle = (((forward & kAutoAccess) && !(reverse & kAutoAccess)) ||
+              ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
+              ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
+              ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
+              ((forward & kBusAccess) && !(reverse & kBusAccess)));
+
+          bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
+              (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
+              (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
+              (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
+              (!(forward & kBusAccess) && (reverse & kBusAccess)));
+
+         bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
+         bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
+
+          // access.at(X) = -1 means that no default country overrides are needed.
+          // target.<type>_tag() == true means that a user set the <type> tag.
+
+          // trunk and trunk_link
+          if (directededge.classification() == RoadClass::kTrunk) {
+            if (directededge.link() && access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)) != -1) {
+              forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
+                                  r_oneway_vehicle, r_oneway_bicycle, target);
+              reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
+                                  f_oneway_vehicle, f_oneway_bicycle, target);
+            } else if (access.at(static_cast<uint32_t>(AccessTypes::kTrunk)) != -1) {
+              forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
+                                  r_oneway_vehicle, r_oneway_bicycle, target);
+              reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
+                                  f_oneway_vehicle, f_oneway_bicycle, target);
+            }
+          }
+
+          // track, footway, pedestrian, bridleway, cycleway, and path
+          if (directededge.use() == Use::kTrack && access.at(static_cast<uint32_t>(AccessTypes::kTrack)) != -1) {
+            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
+                                r_oneway_vehicle, r_oneway_bicycle, target);
+            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
+                                f_oneway_vehicle, f_oneway_bicycle, target);
+          } else if (directededge.use() == Use::kFootway && access.at(static_cast<uint32_t>(AccessTypes::kFootway)) != -1) {
+            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
+                                r_oneway_vehicle, r_oneway_bicycle, target);
+            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
+                                f_oneway_vehicle, f_oneway_bicycle, target);
+
+          } else if (directededge.use() == Use::kPedestrian && access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)) != -1) {
+
+            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
+                                r_oneway_vehicle, r_oneway_bicycle, target);
+            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
+                                f_oneway_vehicle, f_oneway_bicycle, target);
+          } else if (directededge.use() == Use::kBridleway && access.at(static_cast<uint32_t>(AccessTypes::kBridleway)) != -1) {
+            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),
+                                r_oneway_vehicle, r_oneway_bicycle, target);
+            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),
+                                f_oneway_vehicle, f_oneway_bicycle, target);
+          } else if (directededge.use() == Use::kCycleway && access.at(static_cast<uint32_t>(AccessTypes::kCycleway)) != -1) {
+            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kCycleway)),
+                                r_oneway_vehicle, r_oneway_bicycle, target);
+            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kCycleway)),
+                                f_oneway_vehicle, f_oneway_bicycle, target);
+
+          } else if (directededge.use() == Use::kPath && access.at(static_cast<uint32_t>(AccessTypes::kPath)) != -1) {
+            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kPath)),
+                                r_oneway_vehicle, r_oneway_bicycle, target);
+            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kPath)),
+                                f_oneway_vehicle, f_oneway_bicycle, target);
+          }
+
+         directededge.set_forwardaccess(forward);
+         directededge.set_reverseaccess(reverse);
+
+        }
+
+        auto shape = e_offset->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
         heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
@@ -1414,7 +1648,8 @@ namespace valhalla {
 namespace mjolnir {
 
 // Enhance the local level of the graph
-void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
+void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
+                            const std::string& access_file) {
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(
     std::max(static_cast<unsigned int>(1),
@@ -1449,6 +1684,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
                  std::cref(pt.get_child("mjolnir")),
+                 std::cref(access_file),
                  std::ref(hierarchy_properties), std::ref(tilequeue),
                  std::ref(lock), std::ref(results.back())));
   }
