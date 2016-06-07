@@ -596,6 +596,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             directededge.set_exitsign(true);
           }
 
+          //set the number of lanes.
+          directededge.set_lanecount(w.lanes());
+
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
           if (directededge.forwardaccess() & kTruckAccess) {
