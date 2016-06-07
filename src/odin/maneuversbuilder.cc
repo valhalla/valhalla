@@ -90,6 +90,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
+  // Enhance signless interchanges
+  EnhanceSignlessInterchnages(maneuvers);
+
 #ifdef LOGGING_LEVEL_TRACE
   int combined_man_id = 1;
   LOG_TRACE("############################################");
@@ -2020,6 +2023,41 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
   return false;
 }
 
-}
+void ManeuversBuilder::EnhanceSignlessInterchnages(
+    std::list<Maneuver>& maneuvers) {
+  auto prev_man = maneuvers.begin();
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+
+  if (next_man != maneuvers.end())
+    ++next_man;
+
+  // Walk the maneuvers to find signless interchange maneuvers to enhance
+  while (next_man != maneuvers.end()) {
+
+    // If the current maneuver is a ramp OR nameless fork and does not have any signage
+    // and the previous maneuver is not a ramp or fork
+    // and the next maneuver is a 'Merge maneuver'
+    // then add the first street name from the next maneuver
+    // to the current maneuver branch sign list
+    if ((curr_man->ramp() || (curr_man->fork() && !curr_man->HasStreetNames()))
+        && !curr_man->HasExitSign()
+        && !(prev_man->ramp() || prev_man->fork())
+        && (next_man->type()
+            == TripDirections_Maneuver_Type::TripDirections_Maneuver_Type_kMerge)
+        && next_man->HasStreetNames()) {
+      curr_man->mutable_signs()->mutable_exit_branch_list()->emplace_back(
+          next_man->street_names().front()->value());
+
+    }
+
+    // on to the next maneuver...
+    prev_man = curr_man;
+    curr_man = next_man;
+    ++next_man;
+  }
+
 }
 
+}
+}
