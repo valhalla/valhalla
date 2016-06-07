@@ -2,12 +2,25 @@
 #include "mjolnir/util.h"
 
 #include <iostream>
+#include <cstring>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
+
+// Default constructor. Initialize to all 0's.
+OSMAccess::OSMAccess() {
+  osmwayid_ = 0;
+  attributes_ = {0};
+}
+
+// Default constructor. Initialize to all 0's except for the way id.
+OSMAccess::OSMAccess(const uint64_t id) {
+  set_way_id(id);
+  attributes_ = {0};
+}
 
 // Set way id.
 void OSMAccess::set_way_id(const uint64_t id) {
@@ -44,15 +57,6 @@ void OSMAccess::set_bus_tag(const bool bus_tag) {
 // Get bus tag flag.
 bool OSMAccess::bus_tag() const {
   return attributes_.fields.bus_tag;
-}
-
-// Set emergency tag flag.
-void OSMAccess::set_emergency_tag(const bool emergency_tag) {
-  attributes_.fields.emergency_tag = emergency_tag;
-}
-// Get emergency tag flag.
-bool OSMAccess::emergency_tag() const {
-  return attributes_.fields.emergency_tag;
 }
 
 // Set foot tag flag.

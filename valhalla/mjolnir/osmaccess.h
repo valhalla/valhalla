@@ -14,6 +14,17 @@ namespace mjolnir {
 struct OSMAccess {
 
   /**
+   * Constructor
+   */
+  OSMAccess();
+
+  /**
+   * Constructor with way id arg.
+   * @param   id  way id
+   */
+  OSMAccess(const uint64_t id);
+
+  /**
    * Set way id.
    * @param   id  way id
    */
@@ -62,18 +73,6 @@ struct OSMAccess {
   bool bus_tag() const;
 
   /**
-   * Sets the emergency_tag flag.
-   * @param  emergency_tag    Emergency vehicles allowed on this way?
-   */
-  void set_emergency_tag(const bool emergency_tag);
-
-  /**
-   * Get the emergency_tag flag.
-   * @return  Returns emergency_tag flag.
-   */
-  bool emergency_tag() const;
-
-  /**
    * Sets the foot_tag flag.
    * @param  foot_tag   Pedestrians allowed on this way?
    */
@@ -106,10 +105,9 @@ struct OSMAccess {
       uint8_t auto_tag      :1;
       uint8_t bike_tag      :1;
       uint8_t bus_tag       :1;
-      uint8_t emergency_tag :1;
       uint8_t foot_tag      :1;
       uint8_t truck_tag     :1;
-      uint8_t spare         :2;
+      uint8_t spare         :3;
     } fields;
     uint32_t v;
   };
