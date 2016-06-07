@@ -667,12 +667,12 @@ function filter_tags_generic(kv)
     kv["auto_tag"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for truck_forward override
-    kv["truck_forward"] = truck[kv["hgv"]] or kv["truck_forward"]
-    kv["truck_tag"] = truck[kv["hgv"]] or nil
+    kv["truck_forward"] = truck[kv["hgv"]] or motor_vehicle[kv["motor_vehicle"]] or kv["truck_forward"]
+    kv["truck_tag"] = truck[kv["hgv"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for bus_forward overrides
-    kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or kv["bus_forward"]
-    kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or nil
+    kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or kv["bus_forward"]
+    kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for ped overrides
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
@@ -707,12 +707,12 @@ function filter_tags_generic(kv)
     kv["auto_tag"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for truck_forward override
-    kv["truck_forward"] = truck[kv["hgv"]] or kv["truck_forward"] or default_val
-    kv["truck_tag"] = truck[kv["hgv"]] or nil
+    kv["truck_forward"] = truck[kv["hgv"]] or kv["truck_forward"] or motor_vehicle[kv["motor_vehicle"]] or default_val
+    kv["truck_tag"] = truck[kv["hgv"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for bus_forward overrides
-    kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or default_val
-    kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or nil
+    kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
+    kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for ped overrides
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or default_val
@@ -933,7 +933,11 @@ function filter_tags_generic(kv)
         use = 25
      elseif kv["highway"] == "pedestrian" then
         use = 26
-     elseif kv["pedestrian"] == "true" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
+     elseif kv["pedestrian"] == "true" and
+            kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
+            kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
+            kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
+            kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
         use = 26
      elseif kv["highway"] == "path" then
         use = 27
@@ -1071,16 +1075,28 @@ function nodes_proc (kv, nokeys)
   local bike_tag = bicycle_node[kv["bicycle"]]
   local truck_tag = truck_node[kv["hgv"]]
   local auto_tag = motor_vehicle_node[kv["motorcar"]]
+  local motor_vehicle_tag = motor_vehicle_node[kv["motor_vehicle"]]
   if auto_tag == nil then
-    auto_tag = motor_vehicle_node[kv["motor_vehicle"]]
+    auto_tag = motor_vehicle_tag
   end
   local bus_tag = bus_node[kv["bus"]]
   if bus_tag == nil then
     bus_tag = psv_node[kv["psv"]]
   end
-  --if bus was not set and car is 
+  --if bus was not set and car is
   if bus_tag == nil and auto_tag == 1 then
     bus_tag = 64
+  end
+
+  --if truck was not set and car is
+  if truck_tag == nil and auto_tag == 1 then
+    truck_tag = 8
+  end
+
+  --must shut these off if motor_vehicle = 0
+  if motor_vehicle_tag == 0 then
+    bus_tag = 0
+    truck_tag = 0
   end
 
   local emergency_tag --implies nil 
