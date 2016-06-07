@@ -63,6 +63,7 @@ test/refs
 test/graphparser
 test/signinfo
 test/utrecht
+test/countryaccess
 test/*.log
 test/*.trs
 test/data/bin_tiles/bin/*
