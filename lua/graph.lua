@@ -622,6 +622,11 @@ end
 
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
+
+  if (kv["highway"] == "construction" or kv["highway"] == "proposed") then
+    return 1
+  end
+
   --figure out what basic type of road it is
   local forward = highway[kv["highway"]]
   local ferry = kv["route"] == "ferry"

@@ -31,13 +31,14 @@ libvalhalla_mjolnir.pc
 # built objects
 valhalla/proto
 src/proto
-adminbenchmark
-pbfgraphbuilder
-pbfadminbuilder
-connectivitymap
-transit_fetcher
-transit_stop_query
-ways_to_edges
+valhalla_benchmark_admins
+valhalla_build_admins
+valhalla_build_connectivity
+valhalla_build_tiles
+valhalla_build_transit
+valhalla_query_transit
+valhalla_ways_to_edges
+valhalla_build_statistics
 *.o
 .deps/
 .dirstamp
@@ -82,3 +83,4 @@ coverage/
 .settings
 
 duplicateways.txt
+connectivity*

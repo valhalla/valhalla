@@ -70,6 +70,11 @@ constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
 constexpr float kDensityLatDeg  = (kDensityRadius * kMetersPerKm) /
                                       kMetersPerDegreeLat;
 
+// Factors used to adjust speed assignments
+constexpr float kTurnChannelFactor = 1.25f;
+constexpr float kRampDensityFactor = 0.8f;
+constexpr float kRampFactor        = 0.85f;
+
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
   float max_density; //(km/km2)
@@ -104,34 +109,31 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  */
 void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
+
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
     if (use == Use::kTurnChannel) {
-      speed = static_cast<uint32_t>((speed * 1.25f) + 0.5f);
-    } else if (use == Use::kRamp &&
-               directededge.speed_type() != SpeedType::kTagged) {
+      speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
+    } else if ((use == Use::kRamp)
+        && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
       // for roads of this classification
       RoadClass rc = directededge.classification();
-      if (rc == RoadClass::kMotorway) {
-        speed = (density > 8) ? 85 : 92;
-      } else if (rc == RoadClass::kTrunk) {
-        speed = (density > 8) ? 69 : 77;
-      } else if (rc == RoadClass::kPrimary) {
-        speed = (density > 8) ? 53 : 61;
-      } else if (rc == RoadClass::kSecondary) {
-        speed = 45;
-      } else if (rc == RoadClass::kTertiary) {
-        speed = 38;
-      } else if (rc == RoadClass::kUnclassified) {
-        speed = 33;
+      if ((rc == RoadClass::kMotorway)
+          || (rc == RoadClass::kTrunk)
+          || (rc == RoadClass::kPrimary)) {
+        speed = (density > 8) ?
+            static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f) :
+            static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
       } else {
-        speed = 25;
+        speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
       }
     }
     directededge.set_speed(speed);
+
+    // Done processing links so return...
     return;
   }
 
@@ -333,9 +335,17 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-      // Do not allow use of the start edge
-      if ((n == 0 && diredge->endnode() == startnode)) {
-        continue;
+      // Do not allow use of the opposing start edge. Check more than just
+      // endnode since many simple, 2-edge loops would have 2 edges coming
+      // back to the same endnode
+      if (n == 0 && diredge->endnode() == startnode &&
+          diredge->forwardaccess() == directededge.reverseaccess() &&
+          diredge->reverseaccess() == directededge.forwardaccess() &&
+          diredge->length() == directededge.length()) {
+        if ((startnode.tileid() == expandnode.tileid()) &&
+            diredge->edgeinfo_offset() == directededge.edgeinfo_offset()) {
+          continue;
+        }
       }
 
       // Return false if we get back to the start node or hit an
@@ -981,10 +991,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   if (from_rc > RoadClass::kUnclassified)
     from_rc = RoadClass::kUnclassified;
 
-  // High stop impact from a turn channel onto a turn channel unless the other
-  // edge a low class road
+  // High stop impact from a turn channel onto a turn channel unless
+  // the other edge a low class road (walkways often intersect
+  // turn channels)
   if (edges[from].use() == Use::kTurnChannel &&
-      edges[to].use()   == Use::kTurnChannel &&
+      edges[to].use() == Use::kTurnChannel  &&
       bestrc < RoadClass::kUnclassified) {
     return 7;
   }
@@ -1004,11 +1015,17 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
 
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved.
-  if (allramps || edges[from].use() == Use::kTurnChannel) {
+  if (allramps) {
     stop_impact /= 2;
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
     stop_impact += 2;
+  } else if (edges[from].use() == Use::kTurnChannel) {
+      if (edges[to].use() == Use::kRamp) {
+        stop_impact += 1;
+      } else {
+        stop_impact /= 2;
+      }
   }
 
   // Clamp to kMaxStopImpact

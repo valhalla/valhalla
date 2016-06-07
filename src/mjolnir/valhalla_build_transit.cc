@@ -89,8 +89,7 @@ GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& 
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
   boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
   graph_tile += ".gph";
-  TileHierarchy hierarchy(tile_dir);
-  return GraphTile::GetTileId(graph_tile, hierarchy);
+  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 struct logged_error_t: public std::runtime_error {
@@ -291,7 +290,7 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
   }
 }
 
-void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes,
+void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
     const std::unordered_map<std::string, std::string>& websites,
     const std::unordered_map<std::string, std::string>& short_names, const ptree& response) {
   for(const auto& route_pt : response.get_child("routes")) {
@@ -348,7 +347,7 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
   }
 }
 
-void get_stop_patterns(Transit& tile, std::unordered_map<std::string, uint64_t>& shapes, const ptree& response) {
+void get_stop_patterns(Transit& tile, std::unordered_map<std::string, size_t>& shapes, const ptree& response) {
   for(const auto& shape_pt : response.get_child("route_stop_patterns")) {
     auto* shape = tile.add_shapes();
     auto shape_id = shape_pt.second.get<std::string>("onestop_id");
@@ -728,8 +727,7 @@ GraphId id(const boost::property_tree::ptree& pt, const std::string& transit_til
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
   boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
   graph_tile += ".gph";
-  TileHierarchy hierarchy(tile_dir);
-  return GraphTile::GetTileId(graph_tile, hierarchy);
+  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 Transit read_pbf(const std::string& file_name, std::mutex& lock) {

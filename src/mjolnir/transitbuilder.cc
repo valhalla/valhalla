@@ -561,9 +561,6 @@ void build(const std::string& transit_dir,
     // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
 
-    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-             std::to_string(connection_edges.size()) + " connection edges");
-
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, hierarchy_local_level, tilebuilder_transit,
                    hierarchy_transit_level, transit_dir, local_tile,
@@ -584,8 +581,7 @@ GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& 
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
-  TileHierarchy hierarchy(tile_dir);
-  return GraphTile::GetTileId(graph_tile, hierarchy);
+  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 }

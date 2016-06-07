@@ -98,10 +98,9 @@ struct RGB {
 };
 
 
-// NOTE: a PPM image can be converted to png using ImageMagick:
-//    convert connectivity.ppm connectivity.png
-// and the image can be flipped vertically:
-//     convert -flip connectivity.png connectivity2.png
+// NOTE: a PPM image can be converted to png and flipped
+// using ImageMagick: e.g.,
+//     convert -flip connectivity2.ppm connectivity2.png
 
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
@@ -117,58 +116,66 @@ int main(int argc, char** argv) {
   valhalla::baldr::TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   valhalla::baldr::connectivity_map_t connectivity_map(tile_hierarchy);
 
-  // Make the vector representation of it
-  std::ofstream geojson_file("connectivity.geojson", std::ios::out);
-  if (!geojson_file) {
-    std::cout << "Unable to open output file: " << "connectivity.geojson" << std::endl;
-    return EXIT_FAILURE;
-  }
-  geojson_file << connectivity_map.to_geojson(tile_hierarchy.levels().rbegin()->first);
-  geojson_file.close();
-
-
-  // Make the ppm file for raster images
-  std::vector<size_t> connectivity_image = connectivity_map.to_image(tile_hierarchy.levels().rbegin()->first);
-
-  // Create output file
-  std::string fname = "connectivity.ppm";
-  std::ofstream outfile(fname, std::ios::binary | std::ios::out);
-  if (!outfile) {
-    std::cout << "Unable to open output file: " << fname << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-
-  uint32_t width  = tiles.ncolumns();
-  uint32_t height = tiles.nrows();
-
-  // Add background color: white
-  std::unordered_map<size_t, RGB> colormap;
-  RGB white(255, 255, 255);
-  colormap[0] = white;
-
-  // Create an array of RGB values
-  std::vector<RGB> ppm;
-  for (auto c : connectivity_image) {
-    auto color = colormap.find(c);
-    if (color == colormap.end()) {
-      // Add a random color to the colormap
-      RGB newcolor(rand() % 200, rand() % 200, rand() % 200);
-      ppm.push_back(newcolor);
-      colormap[c] = newcolor;
-    } else {
-      ppm.push_back(color->second);
+  uint32_t transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
+  for (uint32_t level = 0; level <= transit_level; level++) {
+    // Make the vector representation of it
+    std::string fname = "connectivity" + std::to_string(level) + ".geojson";
+    std::ofstream geojson_file(fname, std::ios::out);
+    if (!geojson_file) {
+      std::cout << "Unable to open output file: " << fname << std::endl;
+      return EXIT_FAILURE;
     }
-  }
+    geojson_file << connectivity_map.to_geojson(level);
+    geojson_file.close();
 
-  std::string tmp;
-  outfile << "P6" << std::endl; //  << “# foreground “ << std::endl;
-  outfile << std::to_string(width) << " " << std::to_string(height) << std::endl;
-  outfile << std::to_string(255) << std::endl;
-  outfile.write(reinterpret_cast<char*>(&ppm[0]), height*width*3);
-  outfile.close();
+    // Make the ppm file for raster images
+    std::vector<size_t> connectivity_image = connectivity_map.to_image(level);
+
+    // Create output file
+    fname = "connectivity" + std::to_string(level) + ".ppm";
+    std::ofstream outfile(fname, std::ios::binary | std::ios::out);
+    if (!outfile) {
+      std::cout << "Unable to open output file: " << fname << std::endl;
+      return EXIT_FAILURE;
+    }
+
+    uint32_t width, height;
+    if (level == transit_level) {
+      auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+      width  = tiles.ncolumns();
+      height = tiles.nrows();
+    } else {
+      auto tiles = tile_hierarchy.levels().find(level)->second.tiles;
+      width  = tiles.ncolumns();
+      height = tiles.nrows();
+    }
+
+    // Add background color: white
+    std::unordered_map<size_t, RGB> colormap;
+    RGB white(255, 255, 255);
+    colormap[0] = white;
+
+    // Create an array of RGB values
+    std::vector<RGB> ppm;
+    for (auto c : connectivity_image) {
+      auto color = colormap.find(c);
+      if (color == colormap.end()) {
+        // Add a random color to the colormap
+        RGB newcolor(rand() % 200, rand() % 200, rand() % 200);
+        ppm.push_back(newcolor);
+        colormap[c] = newcolor;
+      } else {
+        ppm.push_back(color->second);
+      }
+    }
+
+    std::string tmp;
+    outfile << "P6" << std::endl; //  << “# foreground “ << std::endl;
+    outfile << std::to_string(width) << " " << std::to_string(height) << std::endl;
+    outfile << std::to_string(255) << std::endl;
+    outfile.write(reinterpret_cast<char*>(&ppm[0]), height*width*3);
+    outfile.close();
+  }
 
   return EXIT_SUCCESS;
 }
