@@ -61,7 +61,9 @@ void Bike(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -108,15 +110,6 @@ void Bike(const std::string& config_file) {
   }
 
   way = GetWay(221051142, ways);
-/*
-  std::cout << "way.auto_f() " << std::to_string(way.auto_forward()) << endl;
-  std::cout << "way.auto_b() " << std::to_string(way.auto_backward()) << endl;
-  std::cout << "way.bike_f() " << std::to_string(way.bike_forward()) << endl;
-  std::cout << "way.bike_b() " << std::to_string(way.bike_backward()) << endl;
-  std::cout << "way.bus_f() " << std::to_string(way.bus_forward()) << endl;
-  std::cout << "way.bus_b() " << std::to_string(way.bus_backward()) << endl;
-  std::cout << "way.ped() " << std::to_string(way.pedestrian()) << endl;
-*/
   if (way.auto_forward() != false || way.bus_forward() != false || way.bike_forward() != true || way.pedestrian() != false ||
       way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
     throw std::runtime_error("Access is not correct for way 221051142.");
@@ -147,7 +140,9 @@ void Bus(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
