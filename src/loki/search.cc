@@ -290,11 +290,10 @@ std::unordered_set<GraphId> IsDisconnected(const PathLocation& location,
     todo.insert(edge.id);
   }
 
+  // We are done if we hit a threshold meaning it isn't an island or we ran
+  // out of edges and we determine it is an island
   uint32_t total_edge_length = 0;
   uint32_t nodes_expanded = 0;
-
-  // We are done if we hit a threshold meaning it isn't an island or we ran
-  // out of edges and we determine it iss an island
   while ((done.size() < edge_threshold || total_edge_length < length_threshold ||
           nodes_expanded < node_threshold) && todo.size()) {
     // Get the next edge
