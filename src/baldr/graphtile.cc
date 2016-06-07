@@ -204,12 +204,12 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
 }
 
 // Get the tile Id given the full path to the file.
-GraphId GraphTile::GetTileId(const std::string& fname, const TileHierarchy& hierarchy) {
+GraphId GraphTile::GetTileId(const std::string& fname, const std::string& tile_dir) {
   //strip off the unuseful part
-  auto pos = fname.find(hierarchy.tile_dir());
+  auto pos = fname.find(tile_dir);
   if(pos == std::string::npos)
     throw std::runtime_error("File name for tile does not match hierarchy root dir");
-  auto name = fname.substr(pos + hierarchy.tile_dir().size());
+  auto name = fname.substr(pos + tile_dir.size());
   boost::algorithm::trim_if(name, boost::is_any_of("/.gph"));
 
   //split on slash

@@ -56,11 +56,11 @@ class GraphTile {
 
   /**
    * Get the tile Id given the full path to the file.
-   * @param  fname  Filename with complete path.
-   * @param  hierarchy the tile hierarchy this tile is under
+   * @param  fname    Filename with complete path.
+   * @param  tile_dir Base tile directory.
    * @return  Returns the tile Id.
    */
-  static GraphId GetTileId(const std::string& fname, const TileHierarchy& hierarchy);
+  static GraphId GetTileId(const std::string& fname, const std::string& tile_dir);
 
   /**
    * Get the bounding box of this graph tile.
