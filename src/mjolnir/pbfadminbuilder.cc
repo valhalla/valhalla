@@ -310,42 +310,42 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
-  /* creating an admin access table */
+  /* creating an admin access table
+   * We could support all the commented out
+   * columns below; however, for now we only
+   * need the following ones until more people
+   * update the specs on the wiki.
+   */
+
   sql = "CREATE TABLE admin_access (";
   sql += "admin_id INTEGER NOT NULL,";
-  sql += "motorway INTEGER DEFAULT NULL,";
-  sql += "motorway_link INTEGER DEFAULT NULL,";
+  //sql += "motorway INTEGER DEFAULT NULL,";
+  //sql += "motorway_link INTEGER DEFAULT NULL,";
   sql += "trunk INTEGER DEFAULT NULL,";
   sql += "trunk_link INTEGER DEFAULT NULL,";
-  sql += "prim_ary INTEGER DEFAULT NULL,";
-  sql += "prim_ary_link INTEGER DEFAULT NULL,";
-  sql += "secondary INTEGER DEFAULT NULL,";
-  sql += "secondary_link INTEGER DEFAULT NULL,";
-  sql += "residential INTEGER DEFAULT NULL,";
-  sql += "residential_link INTEGER DEFAULT NULL,";
-  sql += "service INTEGER DEFAULT NULL,";
-  sql += "tertiary INTEGER DEFAULT NULL,";
-  sql += "tertiary_link INTEGER DEFAULT NULL,";
-  sql += "road INTEGER DEFAULT NULL,";
+  //sql += "prim_ary INTEGER DEFAULT NULL,";
+  //sql += "prim_ary_link INTEGER DEFAULT NULL,";
+  //sql += "secondary INTEGER DEFAULT NULL,";
+  //sql += "secondary_link INTEGER DEFAULT NULL,";
+  //sql += "residential INTEGER DEFAULT NULL,";
+  //sql += "residential_link INTEGER DEFAULT NULL,";
+  //sql += "service INTEGER DEFAULT NULL,";
+  //sql += "tertiary INTEGER DEFAULT NULL,";
+  //sql += "tertiary_link INTEGER DEFAULT NULL,";
+  //sql += "road INTEGER DEFAULT NULL,";
   sql += "track INTEGER DEFAULT NULL,";
-  sql += "unclassified INTEGER DEFAULT NULL,";
-  sql += "undefined INTEGER DEFAULT NULL,";
-  sql += "unknown INTEGER DEFAULT NULL,";
-  sql += "living_street INTEGER DEFAULT NULL,";
+  //sql += "unclassified INTEGER DEFAULT NULL,";
+  //sql += "undefined INTEGER DEFAULT NULL,";
+  //sql += "unknown INTEGER DEFAULT NULL,";
+  //sql += "living_street INTEGER DEFAULT NULL,";
   sql += "footway INTEGER DEFAULT NULL,";
   sql += "pedestrian INTEGER DEFAULT NULL,";
-  sql += "steps INTEGER DEFAULT NULL,";
+  //sql += "steps INTEGER DEFAULT NULL,";
   sql += "bridleway INTEGER DEFAULT NULL,";
-  sql += "construction INTEGER DEFAULT NULL,";
+  //sql += "construction INTEGER DEFAULT NULL,";
   sql += "cycleway INTEGER DEFAULT NULL,";
-  sql += "path INTEGER DEFAULT NULL,";
-  sql += "bus_guideway INTEGER DEFAULT NULL)";
-  //really we should have this for admin_id:
-  //"FOREIGN KEY (admin_id) REFERENCES admins(row_id))";
-  //but it seems worthless as we will just have to
-  //create another column row_id which is equal to rowid.
-  //That would just bloat the data and we can just create
-  //an index on admin_id.
+  //sql += "bus_guideway INTEGER DEFAULT NULL,";
+  sql += "path INTEGER DEFAULT NULL)";
 
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
