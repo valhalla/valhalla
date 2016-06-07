@@ -274,6 +274,72 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment);
 }
 
+// Test if this location is an isolated "island" without connectivity to the
+// larger routing graph. Does a breadth first search - if possible paths are
+// exhausted within some threshold this returns a set of edges within the
+// island.
+std::unordered_set<GraphId> IsDisconnected(const PathLocation& location,
+             GraphReader& reader, const NodeFilter& node_filter,
+             const EdgeFilter& edge_filter, const uint32_t edge_threshold,
+             const uint32_t length_threshold, const uint32_t node_threshold) {
+  std::unordered_set<GraphId> todo(edge_threshold);
+  std::unordered_set<GraphId> done(edge_threshold);
+
+  // Seed the list of edges to expand
+  for (const auto& edge : location.edges()) {
+    todo.insert(edge.id);
+  }
+
+  // We are done if we hit a threshold meaning it isn't an island or we ran
+  // out of edges and we determine it is an island
+  uint32_t total_edge_length = 0;
+  uint32_t nodes_expanded = 0;
+  while ((done.size() < edge_threshold || total_edge_length < length_threshold ||
+          nodes_expanded < node_threshold) && todo.size()) {
+    // Get the next edge
+    const GraphId edge = *todo.cbegin();
+    done.emplace(edge);
+
+    // Get the directed edge - filter it out if not accessible
+    const DirectedEdge* directededge = reader.GetGraphTile(edge)->directededge(edge);
+    if (edge_filter(directededge)) {
+      continue;
+    }
+    total_edge_length += directededge->length();
+
+    // Get the end node - filter it out if not accessible
+    const GraphId node = directededge->endnode();
+    const GraphTile* tile = reader.GetGraphTile(node);
+    const NodeInfo* nodeinfo = tile->node(node);
+    if (node_filter(nodeinfo)) {
+      continue;
+    }
+
+    // Expand edges from the node
+    bool expanded = false;
+    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+      // Skip transition edges and edges that are not allowed
+      if (directededge->trans_up() || directededge->trans_down() ||
+          edge_filter(directededge)) {
+        continue;
+      }
+
+      // Add to the todo list
+      todo.emplace(edgeid);
+      expanded = true;
+    }
+    nodes_expanded += expanded;
+  }
+
+  // If there are still edges to do then we broke out of the loop above due to
+  // meeting thresholds and this is not a disconnected island. If there are no
+  // more edges then this is a disconnected island and we want to know what
+  // edges constitute the island so a second pass can avoid them
+  return (todo.size() == 0) ? done : std::unordered_set<GraphId>{};
+}
+
 }
 
 namespace valhalla {
