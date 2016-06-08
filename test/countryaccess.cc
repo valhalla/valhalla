@@ -21,14 +21,16 @@ using namespace valhalla::baldr;
 
 namespace {
 
+const std::string config_file = "test/test_config_country";
+
 void write_config(const std::string& filename) {
   std::ofstream file;
   try {
     file.open(filename, std::ios_base::trunc);
     file << "{ \
       \"mjolnir\": { \
-       \"tile_dir\": \"test/data/amsterdam_tiles\", \
-        \"admin\": \"test/data/amsterdam_admin.sqlite\", \
+       \"tile_dir\": \"test/data/utrecht_tiles\", \
+        \"admin\": \"test/data/netherlands_admin.sqlite\", \
          \"timezone\": \"test/data/not_needed.sqlite\" \
       } \
     }";
@@ -66,153 +68,145 @@ void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto database = conf.get_optional<std::string>("admin");
-  //if (database && boost::filesystem::exists(*database)) {
-  {
-    std::string ways_file = "test_ways.bin";
-    std::string way_nodes_file = "test_way_nodes.bin";
-    std::string access_file = "test_access.bin";
-    auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/amsterdam.osm.pbf"}, ways_file, way_nodes_file, access_file);
-    sequence<OSMWay> ways(ways_file, false);
-    ways.sort(way_predicate);
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  // Build the graph using the OSMNodes and OSMWays from the parser
+  GraphBuilder::Build(conf, osmdata, "ways.bin", "way_nodes.bin");
 
-    // Build the graph using the OSMNodes and OSMWays from the parser
-    GraphBuilder::Build(conf, osmdata, "ways.bin", "way_nodes.bin");
+  //load a tile and test the default access.
 
-    //test the tile
-    std::pair<std::string, size_t> test_tile = {"820/099.gph", 820099};
+  GraphId id(519120,2,0);
+  GraphTile t(TileHierarchy("test/data/utrecht_tiles"), id);
 
-    //load a tile and test the default access.
+  GraphReader graph_reader(conf.get_child("mjolnir"));
+  const auto& hierarchy = graph_reader.GetTileHierarchy();
 
-    GraphId id(test_tile.second,2,0);
-    GraphTile t(TileHierarchy("test/data/amsterdam_tiles"), id);
+  GraphTileBuilder tilebuilder(hierarchy, id, true);
 
-    GraphReader graph_reader(conf.get_child("mjolnir"));
-    const auto& hierarchy = graph_reader.GetTileHierarchy();
+  for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
+    NodeInfo& nodeinfo = tilebuilder.node_builder(i);
+    uint32_t count = nodeinfo.edge_count();
+    for (uint32_t j = 0; j < count; j++) {
+      DirectedEdge& directededge =
+          tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-    GraphTileBuilder tilebuilder(hierarchy, id, true);
+      auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
 
-    for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
-      NodeInfo& nodeinfo = tilebuilder.node_builder(i);
-      uint32_t count = nodeinfo.edge_count();
-      for (uint32_t j = 0; j < count; j++) {
-        DirectedEdge& directededge =
-            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+      uint32_t forward = directededge.forwardaccess();
+      uint32_t reverse = directededge.reverseaccess();
 
-        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
-
-        uint32_t forward = directededge.forwardaccess();
-        uint32_t reverse = directededge.reverseaccess();
-
-        //cycleway (not oneway) should havekBicycleAccess
-        if (e_offset->wayid() == 7047088)
-        {
-          if (forward != kBicycleAccess || reverse != kBicycleAccess) {
-            throw std::runtime_error("Defaults:  Access is not correct for way 7047088.");
-          }
-        //trunk (is oneway) should have kPedestrianAccess and kBicycleAccess
-        } else if (e_offset->wayid() == 139155954) {
-          if (directededge.forward()) {
-            if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess)))
-              throw std::runtime_error("Defaults:  Forward access is not correct for way 139155954.");
-            if (reverse != kPedestrianAccess)
-              throw std::runtime_error("Defaults:  Reverse access is not correct for way 139155954.");
-          } else {
-            if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess)))
-              throw std::runtime_error("Defaults:  Reverse access is not correct for way 139155954.");
-            if (forward != kPedestrianAccess)
-              throw std::runtime_error("Defaults:  Forward access is not correct for way 139155954.");
-          }
-          //cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
-        } else if (e_offset->wayid() == 31976259) {
-          if (directededge.forward()) {
-            if (forward != kBicycleAccess)
-              throw std::runtime_error("Defaults:  Forward access is not correct for way 31976259.");
-            if (reverse != 0) // no access
-              throw std::runtime_error("Defaults:  Reverse access is not correct for way 31976259.");
-          } else {
-            if (reverse != kBicycleAccess)
-              throw std::runtime_error("Defaults:  Reverse access is not correct for way 31976259.");
-            if (forward != 0)  // no access
-              throw std::runtime_error("Defaults:  Forward access is not correct for way 31976259.");
-          }
+      //cycleway (not oneway) should have kBicycleAccess
+      if (e_offset->wayid() == 22635919)
+      {
+        if (forward != kBicycleAccess || reverse != kBicycleAccess) {
+          throw std::runtime_error("Defaults:  Access is not correct for way 22635919.");
+        }
+        //cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
+      } else if (e_offset->wayid() == 35600238) {
+        if (directededge.forward()) {
+          if (forward != kBicycleAccess)
+            throw std::runtime_error("Defaults:  Forward access is not correct for way 35600238.");
+          if (reverse != 0) // no access
+            throw std::runtime_error("Defaults:  Reverse access is not correct for way 35600238.");
+        } else {
+          if (reverse != kBicycleAccess)
+            throw std::runtime_error("Defaults:  Reverse access is not correct for way 35600238.");
+          if (forward != 0)  // no access
+            throw std::runtime_error("Defaults:  Forward access is not correct for way 35600238.");
+        }
+        //cycleway that has motor_vehicle access entered by the user.
+        //Do not remove motor_vehicle access even though this seems odd.
+      } else if (e_offset->wayid() == 303524712) {
+        if (directededge.forward()) {
+          if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess)))
+            throw std::runtime_error("Defaults:  Forward access is not correct for way 303524712.");
+          if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess)))
+            throw std::runtime_error("Defaults:  Reverse access is not correct for way 303524712.");
+        } else {
+          if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess)))
+            throw std::runtime_error("Defaults:  Reverse access is not correct for way 303524712.");
+          if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess)))
+            throw std::runtime_error("Defaults:  Forward access is not correct for way 303524712.");
         }
       }
     }
+  }
 
-    // Enhance the local level of the graph. This adds information to the local
-    // level that is usable across all levels (density, administrative
-    // information (and country based attribution), edge transition logic, etc.
-    GraphEnhancer::Enhance(conf, "access.bin");
+  // Enhance the local level of the graph. This adds information to the local
+  // level that is usable across all levels (density, administrative
+  // information (and country based attribution), edge transition logic, etc.
+  GraphEnhancer::Enhance(conf, "access.bin");
 
-    //load a tile and test that the country level access is set.
-    GraphId id2(test_tile.second,2,0);
-    GraphTile t2(TileHierarchy("test/data/amsterdam_tiles"), id2);
+  //load a tile and test that the country level access is set.
+  GraphId id2(519120,2,0);
+  GraphTile t2(TileHierarchy("test/data/utrecht_tiles"), id2);
 
-    GraphReader graph_reader2(conf.get_child("mjolnir"));
-    const auto& hierarchy2 = graph_reader2.GetTileHierarchy();
+  GraphReader graph_reader2(conf.get_child("mjolnir"));
+  const auto& hierarchy2 = graph_reader2.GetTileHierarchy();
 
-    GraphTileBuilder tilebuilder2(hierarchy2, id2, true);
+  GraphTileBuilder tilebuilder2(hierarchy2, id2, true);
 
-    for (uint32_t i = 0; i < tilebuilder2.header()->nodecount(); i++) {
-      NodeInfo& nodeinfo = tilebuilder2.node_builder(i);
-      uint32_t count = nodeinfo.edge_count();
-      for (uint32_t j = 0; j < count; j++) {
-        DirectedEdge& directededge =
-            tilebuilder2.directededge_builder(nodeinfo.edge_index() + j);
+  for (uint32_t i = 0; i < tilebuilder2.header()->nodecount(); i++) {
+    NodeInfo& nodeinfo = tilebuilder2.node_builder(i);
+    uint32_t count = nodeinfo.edge_count();
+    for (uint32_t j = 0; j < count; j++) {
+      DirectedEdge& directededge =
+          tilebuilder2.directededge_builder(nodeinfo.edge_index() + j);
 
-        auto e_offset = tilebuilder2.edgeinfo(directededge.edgeinfo_offset());
+      auto e_offset = tilebuilder2.edgeinfo(directededge.edgeinfo_offset());
 
-        uint32_t forward = directededge.forwardaccess();
-        uint32_t reverse = directededge.reverseaccess();
+      uint32_t forward = directededge.forwardaccess();
+      uint32_t reverse = directededge.reverseaccess();
 
-        //cycleway (not oneway) should have kPedestrianAccess and kBicycleAccess
-        if (e_offset->wayid() == 7047088)
-        {
-          if (!(forward & kPedestrianAccess) || !(forward & kBicycleAccess) ||
-              !(reverse & kPedestrianAccess) || !(reverse & kBicycleAccess)) {
-            throw std::runtime_error("Enhanced:  Access is not correct for way 7047088.");
-          }
-        //trunk (is oneway) should have no kPedestrianAccess and kBicycleAccess
-        } else if (e_offset->wayid() == 139155954) {
-          if (directededge.forward()) {
-            if (forward != (kAllAccess & ~(kPedestrianAccess | kBicycleAccess | kEmergencyAccess | kTaxiAccess | kHOVAccess)))
-              throw std::runtime_error("Enhanced:  Forward access is not correct for way 139155954.");
-            if (reverse != 0)
-              throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139155954.");
-          } else {
-            if (reverse != (kAllAccess & ~(kPedestrianAccess | kBicycleAccess | kEmergencyAccess | kTaxiAccess | kHOVAccess)))
-              throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139155954.");
-            if (forward != 0)
-              throw std::runtime_error("Enhanced:  Forward access is not correct for way 139155954.");
-          }
-          //cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
-        } else if (e_offset->wayid() == 31976259) {
-          if (directededge.forward()) {
-            if (forward != (kPedestrianAccess | kBicycleAccess))
-              throw std::runtime_error("Enhanced:  Forward access is not correct for way 31976259.");
-            if (reverse != kPedestrianAccess) // only pedestrian access because this is a oneway cycleway
-              throw std::runtime_error("Enhanced:  Reverse access is not correct for way 31976259.");
-          } else {
-            if (reverse != (kPedestrianAccess | kBicycleAccess))
-              throw std::runtime_error("Enhanced:  Reverse access is not correct for way 31976259.");
-            if (forward != kPedestrianAccess)
-              throw std::runtime_error("Enhanced:  Forward access is not correct for way 31976259.");
-          }
+      //cycleway (not oneway) should have kPedestrianAccess and kBicycleAccess
+      if (e_offset->wayid() == 22635919)
+      {
+        if (!(forward & kPedestrianAccess) || !(forward & kBicycleAccess) ||
+            !(reverse & kPedestrianAccess) || !(reverse & kBicycleAccess)) {
+          throw std::runtime_error("Enhanced:  Access is not correct for way 22635919.");
+        }
+        //cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
+      } else if (e_offset->wayid() == 35600238) {
+        if (directededge.forward()) {
+          if (forward != (kPedestrianAccess | kBicycleAccess))
+            throw std::runtime_error("Enhanced:  Forward access is not correct for way 35600238.");
+          if (reverse != kPedestrianAccess) // only pedestrian access because this is a oneway cycleway
+            throw std::runtime_error("Enhanced:  Reverse access is not correct for way 35600238.");
+        } else {
+          if (reverse != (kPedestrianAccess | kBicycleAccess))
+            throw std::runtime_error("Enhanced:  Reverse access is not correct for way 35600238.");
+          if (forward != kPedestrianAccess)
+            throw std::runtime_error("Enhanced:  Forward access is not correct for way 35600238.");
+        }
+        //cycleway that has motor_vehicle access entered by the user.
+        //Do not remove motor_vehicle access and add kPedestrianAccess.
+      } else if (e_offset->wayid() == 303524712) {
+        if (directededge.forward()) {
+          if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess | kPedestrianAccess)))
+            throw std::runtime_error("Defaults:  Forward access is not correct for way 303524712.");
+          if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess | kPedestrianAccess)))
+            throw std::runtime_error("Defaults:  Reverse access is not correct for way 303524712.");
+        } else {
+          if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess | kPedestrianAccess)))
+            throw std::runtime_error("Defaults:  Reverse access is not correct for way 303524712.");
+          if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess | kPedestrianAccess)))
+            throw std::runtime_error("Defaults:  Forward access is not correct for way 303524712.");
         }
       }
     }
-  } // no admin db....just return.
+  }
 }
 
 void TestCountryAccess() {
   //write the tiles with it
-  CountryAccess("test/test_config");
+  CountryAccess(config_file);
 }
 
 void DoConfig() {
   //make a config file
-  write_config("test/test_config");
+  write_config(config_file);
 }
 
 }
