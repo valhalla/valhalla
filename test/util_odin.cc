@@ -189,7 +189,8 @@ void try_get_formatted_date(const std::string& date_time,
           //parse out tags from phrase, and check for them
           boost::smatch m;
           boost::regex e("(<[A-Z_0-9]+>)");
-          if(boost::regex_search(phrase.second.get_value<std::string>(), m, e))
+          auto str = phrase.second.get_value<std::string>();
+          if(boost::regex_search(str, m, e))
             for(const auto& tag : m)
               if(other_phrase.find(tag.str()) == std::string::npos)
                 throw std::runtime_error("Couldn't find " + tag.str() + " in " +
