@@ -155,17 +155,16 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, T>
 
     if (0 < time_) {
       time_ --;
+
       if (id_ != kInvalidStateId) {
         id_ = vs_->predecessor(id_);
-        // Search at previous time directly if the predecessor not
-        // found
-        if (id_ == kInvalidStateId) {
-          id_ = vs_->SearchWinner(time_);
-        }
-      } else {
-        // No way go back, then search at previous time directly
+      }
+
+      // Search at previous time directly
+      if (id_ == kInvalidStateId) {
         id_ = vs_->SearchWinner(time_);
       }
+
       if (!(id_ == kInvalidStateId || vs_->state(id_).time() == time_)) {
         std::runtime_error("a valid state's time must match the time stored in the iterator");
       }
