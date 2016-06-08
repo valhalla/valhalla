@@ -280,7 +280,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   // loading SpatiaLite as an extension
   sqlite3_enable_load_extension(db_handle, 1);
-  sql = "SELECT load_extension('libspatialite.so')";
+  sql = "SELECT load_extension('libspatialite')";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("load_extension() error: " + std::string(err_msg));
