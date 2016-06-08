@@ -39,7 +39,6 @@ bool IsTurnChannel(const uint32_t count, sequence<OSMWay>& ways,
   // Iterate through the link edges
   bool exit_sign = false;
   float total_length = 0.0f;
-  bool logit = false;
   for (auto idx : linkedgeindexes) {
     sequence<Edge>::iterator element = edges[idx];
     auto edge = *element;
@@ -96,9 +95,10 @@ void ReclassifyLinks(const std::string& ways_file,
   sequence<Node> nodes(nodes_file, false);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
 
-  //try to expand
+  // Lambda to expand from the end node of an edge
   auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
-    auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
+    auto end_node_itr =  edge.sourcenode_ == node_itr.position() ?
+                          nodes[edge.targetnode_] : nodes[edge.sourcenode_];
     auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
 
     // Add the classification if there is a driveable non-link edge
@@ -140,7 +140,7 @@ void ReclassifyLinks(const std::string& ways_file,
       // Expand from all link edges
       for (const auto& startedge : bundle.node_edges) {
         // Get the edge information. Skip non-link edges and link edges
-        // already reclassified
+        // already tested for reclassification
         if (!startedge.first.attributes.link ||
              startedge.first.attributes.reclass_link) {
           continue;
@@ -164,9 +164,11 @@ void ReclassifyLinks(const std::string& ways_file,
           visitedset.insert(expand_node_itr.position());
           expandset.erase(expandset.begin());
           for (const auto& expandededge : expanded.node_edges) {
-            // Do not allow use of the start edge or any non-link edge
+            // Do not allow use of the start edge, any non-link edge, or any
+            // edge already considered for reclassification
             if (expandededge.second == startedge.second ||
-                !expandededge.first.attributes.link) {
+               !expandededge.first.attributes.link ||
+                expandededge.first.attributes.reclass_link) {
               continue;
             }
 
@@ -207,20 +209,17 @@ void ReclassifyLinks(const std::string& ways_file,
           for (auto idx : linkedgeindexes) {
             sequence<Edge>::iterator element = edges[idx];
             auto edge = *element;
-            bool update = false;
-            edge.attributes.reclass_link = true;
             if (rc > edge.attributes.importance) {
               edge.attributes.importance = rc;
-              update = true;
               count++;
             }
             if (turn_channel) {
               edge.attributes.turn_channel = true;
-              update = true;
             }
-            if (update) {
-              element = edge;
-            }
+
+            // Mark the edge so we don't try to reclassify it again
+            edge.attributes.reclass_link = true;
+            element = edge;
           }
         }
       }
