@@ -613,7 +613,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   if (!db_handle)
     return polys;
 
-  std::unordered_map<uint32_t, uint32_t> ids;
+  std::unordered_map<uint32_t, uint32_t> indexes;
   sqlite3_stmt *stmt = 0;
   uint32_t ret;
   char *err_msg = nullptr;
@@ -693,7 +693,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
       drive_on_right.emplace(index, dor);
-      ids.emplace(id,index);
+      indexes.emplace(index,id);
 
       result = sqlite3_step(stmt);
     }
@@ -703,17 +703,17 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     stmt = 0;
   }
 
-  if (ids.size()) {
+  if (indexes.size()) {
 
     std::string sql = "SELECT admin_id, trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path from ";
     sql += "admin_access where admin_id in (";
     bool first = true;
 
-    for (const auto& id : ids) {
+    for (const auto& index : indexes) {
 
       if (!first)
         sql += ", ";
-      sql += std::to_string(id.first);
+      sql += std::to_string(index.second);
       first = false;
     }
 
@@ -760,8 +760,10 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
           access.push_back(sqlite3_column_int(stmt, 8));
         else access.push_back(-1);
 
-        const auto index = ids.find(id);
-        country_access.emplace(index->second,access);
+        for (const auto& index : indexes) {
+          if (index.second == id)
+            country_access.emplace(index.first,access);
+        }
         result = sqlite3_step(stmt);
       }
     }
@@ -1322,7 +1324,7 @@ void enhance(const boost::property_tree::ptree& pt,
     if (admin_db_handle) {
       admin_polys = GetAdminInfo(admin_db_handle, drive_on_right,
                                  country_access, tiles.TileBounds(id),
-                           tilebuilder);
+                                 tilebuilder);
       if (admin_polys.size() == 1) {
         // TODO - check if tile bounding box is entirely inside the polygon...
         tile_within_one_admin = true;
@@ -1449,8 +1451,8 @@ void enhance(const boost::property_tree::ptree& pt,
               (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
               (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
-         bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
-         bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
+          bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
+          bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
 
           // access.at(X) = -1 means that no default country overrides are needed.
           // target.<type>_tag() == true means that a user set the <type> tag.
@@ -1506,8 +1508,8 @@ void enhance(const boost::property_tree::ptree& pt,
                                 f_oneway_vehicle, f_oneway_bicycle, target);
           }
 
-         directededge.set_forwardaccess(forward);
-         directededge.set_reverseaccess(reverse);
+          directededge.set_forwardaccess(forward);
+          directededge.set_reverseaccess(reverse);
 
         }
 
