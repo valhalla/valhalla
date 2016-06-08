@@ -138,6 +138,14 @@ class ManeuversBuilder {
       std::list<Maneuver>::iterator next_man,
       bool start_man) const;
 
+  /**
+   * Enhance a signless interchange maneuver by adding the subsquent street name
+   * as a branch name.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void EnhanceSignlessInterchnages(std::list<Maneuver>& maneuvers);
+
   const DirectionsOptions& directions_options_;
   EnhancedTripPath* trip_path_;
 
