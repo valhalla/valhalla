@@ -32,6 +32,7 @@ libvalhalla_odin.pc
 valhalla/proto
 src/proto
 src/odin/locales.h
+locales/*.utf8
 odin_service
 *.o
 .deps/
