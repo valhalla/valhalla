@@ -620,9 +620,6 @@ void build(const std::string& transit_dir,
     // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
 
-    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-             std::to_string(connection_edges.size()) + " connection edges");
-
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, hierarchy_local_level, tilebuilder_transit,
                    hierarchy_transit_level, transit_dir, local_tile,
