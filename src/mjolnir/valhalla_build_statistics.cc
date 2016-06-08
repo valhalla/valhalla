@@ -211,7 +211,7 @@ void generateJson (std::vector<std::string>& countries,
     map->emplace(
       countries[i], json::map
       ({
-        {"name", countries[i]},
+        {"iso2", countries[i]},
         {"classinfo", json::map
         ({
          {classes[0], json::fp_t{data[countries[i]][0]}},

@@ -23,9 +23,9 @@ namespace {
     };
   const std::vector<RoadClass> rclasses =
     { RoadClass::kMotorway, RoadClass::kPrimary,
-      RoadClass::kResidential, RoadClass::kSecondary,
-      RoadClass::kServiceOther, RoadClass::kTertiary,
-      RoadClass::kTrunk, RoadClass::kUnclassified
+      RoadClass::kSecondary, RoadClass::kTertiary,
+      RoadClass::kTrunk, RoadClass::kResidential,
+      RoadClass::kServiceOther, RoadClass::kUnclassified
     };
 }
 namespace valhalla {
@@ -90,7 +90,6 @@ class validator_stats {
   std::unordered_map<uint32_t, AABB2<PointLL>> tile_geometries;
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
-
 
 public:
 
