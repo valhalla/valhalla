@@ -13,10 +13,6 @@ for dep in midgard baldr; do
 done
 wait
 
-#install locales
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-$DIR/install_locales.sh $(grep -F posix_locale $DIR/../locales/*.json | sed -e "s/.*locale[^a-z^A-Z]\+//g" -e "s/[^a-z^A-Z^0-9^.^_]\+//g")
-
 #build sync
 for dep in midgard baldr; do
 	pushd deps/$dep

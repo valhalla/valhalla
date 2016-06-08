@@ -1,4 +1,10 @@
 #!/bin/bash
+set -e
+
+#install locales locally for testing
+for loc in $(grep -F posix_locale *.json | sed -e "s/.*locale[^a-z^A-Z]\+//g" -e "s/[^a-z^A-Z^0-9^.^_]\+//g"); do
+	localedef -i ${loc%.*} -f UTF-8 ./${loc}
+done
 
 #throw all the text into one big header
 code=
@@ -14,6 +20,7 @@ for key in $(echo "${map}" | grep -F '_json"' | sed -e "s/.*{\"//g" -e "s/\",.*/
 	map="$(echo "${map}" | sed -e "s/\"${key}\"/\"${k}\"/g")"
 done
 
+#output the code
 echo "#include <unordered_map>"
 echo "${code}"
 echo "const std::unordered_map<std::string, std::string> locales_json = {";
