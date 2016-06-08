@@ -16,21 +16,8 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void write_config(const std::string& filename) {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-      \"tile_dir\": \"test/data/parser_tiles\" \
-      } \
-    }";
-  }
-  catch(...) {
+const std::string config_file = "test/test_config_gp";
 
-  }
-  file.close();
-}
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
   return a.node.osmid < b.node.osmid;
@@ -406,43 +393,54 @@ void BicycleTrafficSignals(const std::string& config_file) {
 }
 
 void DoConfig() {
-  //make a config file
-  write_config("test/test_config");
+  std::ofstream file;
+  try {
+    file.open(config_file, std::ios_base::trunc);
+    file << "{ \
+      \"mjolnir\": { \
+      \"tile_dir\": \"test/data/parser_tiles\" \
+      } \
+    }";
+  }
+  catch(...) {
+
+  }
+  file.close();
 }
 
 void TestBollardsGatesAndAccess() {
   //write the tiles with it
-  BollardsGatesAndAccess("test/test_config");
+  BollardsGatesAndAccess(config_file);
 }
 
 void TestRemovableBollards() {
   //write the tiles with it
-  RemovableBollards("test/test_config");
+  RemovableBollards(config_file);
 }
 
 void TestBicycleTrafficSignals() {
   //write the tiles with it
-  BicycleTrafficSignals("test/test_config");
+  BicycleTrafficSignals(config_file);
 }
 
 void TestExits() {
   //write the tiles with it
-  Exits("test/test_config");
+  Exits(config_file);
 }
 
 void TestBaltimoreArea() {
   //write the tiles with it
-  Baltimore("test/test_config");
+  Baltimore(config_file);
 }
 
 void TestBike() {
   //write the tiles with it
-  Bike("test/test_config");
+  Bike(config_file);
 }
 
 void TestBus() {
   //write the tiles with it
-  Bus("test/test_config");
+  Bus(config_file);
 }
 
 }

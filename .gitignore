@@ -53,7 +53,7 @@ src/mjolnir/graph_lua_proc.h
 # tests
 test-suite.log
 test-driver
-test/test_config
+test/test_config*
 test/edgeinfobuilder
 test/uniquenames
 test/idtable

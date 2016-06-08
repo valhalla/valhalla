@@ -16,21 +16,7 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void write_config(const std::string& filename) {
-  std::ofstream file;
-  try {
-    file.open(filename, std::ios_base::trunc);
-    file << "{ \
-      \"mjolnir\": { \
-       \"tile_dir\": \"test/data/utrecht_tiles\" \
-      } \
-    }";
-  }
-  catch(...) {
-
-  }
-  file.close();
-}
+const std::string config_file = "test/test_config_ut";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
   return a.node.osmid < b.node.osmid;
@@ -155,17 +141,28 @@ void Bus(const std::string& config_file) {
 
 void TestBike() {
   //write the tiles with it
-  Bike("test/test_config");
+  Bike(config_file);
 }
 
 void TestBus() {
   //write the tiles with it
-  Bus("test/test_config");
+  Bus(config_file);
 }
 
 void DoConfig() {
-  //make a config file
-  write_config("test/test_config");
+  std::ofstream file;
+  try {
+    file.open(config_file, std::ios_base::trunc);
+    file << "{ \
+      \"mjolnir\": { \
+      \"tile_dir\": \"test/data/parser_tiles\" \
+      } \
+    }";
+  }
+  catch(...) {
+
+  }
+  file.close();
 }
 
 }
