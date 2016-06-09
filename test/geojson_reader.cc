@@ -1,34 +1,40 @@
 // -*- mode: c++ -*-
-#undef NDEBUG
-
-#include <iostream>
-#include <cassert>
+#include <string>
 
 #include <valhalla/midgard/pointll.h>
 
 #include "meili/measurement.h"
 #include "meili/geojson_reader.h"
+#include "test.h"
+
 
 using namespace valhalla;
 
 void TestGeoJSONReader()
 {
   meili::GeoJSONReader reader(10, 40);
-  assert(reader.default_gps_accuracy() == 10);
-  assert(reader.default_search_radius() == 40);
+  test::assert_bool(reader.default_gps_accuracy() == 10,
+                    "gps should be read correctly");
+  test::assert_bool(reader.default_search_radius() == 40,
+                    "radius should be read correctly");
 
   // It should read multipoint geometry
   {
     std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"MultiPoint\", \"coordinates\": [[1,2], [3,4]]}", sequences);
-    assert(!is_collection);
+    test::assert_bool(!is_collection, "should not be collection");
     const auto& measurements = sequences.front();
-    assert(measurements.size() == 2);
-    assert(measurements[0].lnglat() == midgard::PointLL(1,2));
-    assert(measurements[1].lnglat() == midgard::PointLL(3,4));
+    test::assert_bool(measurements.size() == 2,
+                      "measurement size should be 2");
+    test::assert_bool(measurements[0].lnglat() == midgard::PointLL(1,2),
+                      "coordinates should be correct");
+    test::assert_bool(measurements[1].lnglat() == midgard::PointLL(3,4),
+                      "coordinates should be correct");
     for (const auto& measurement: measurements) {
-      assert(measurement.gps_accuracy() == reader.default_gps_accuracy());
-      assert(measurement.search_radius() == reader.default_search_radius());
+      test::assert_bool(measurement.gps_accuracy() == reader.default_gps_accuracy(),
+                        "gps should be correct");
+      test::assert_bool(measurement.search_radius() == reader.default_search_radius(),
+                        "radius should be correct");
     }
   }
 
@@ -36,15 +42,22 @@ void TestGeoJSONReader()
   {
     std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}", sequences);
-    assert(!is_collection);
-    assert(sequences.size() == 1);
+    test::assert_bool(!is_collection,
+                      "should nbot be collection");
+    test::assert_bool(sequences.size() == 1,
+                      "should be 1 sequence");
     const auto& measurements = sequences.front();
-    assert(measurements.size() == 2);
-    assert(measurements[0].lnglat() == midgard::PointLL(1,2));
-    assert(measurements[1].lnglat() == midgard::PointLL(3,4));
+    test::assert_bool(measurements.size() == 2,
+                      "should be 2 measurements");
+    test::assert_bool(measurements[0].lnglat() == midgard::PointLL(1,2),
+                      "coordinates should be correct");
+    test::assert_bool(measurements[1].lnglat() == midgard::PointLL(3,4),
+                      "coordinates should be correct");
     for (const auto& measurement: measurements) {
-      assert(measurement.gps_accuracy() == reader.default_gps_accuracy());
-      assert(measurement.search_radius() == reader.default_search_radius());
+      test::assert_bool(measurement.gps_accuracy() == reader.default_gps_accuracy(),
+                        "gps should be correct");
+      test::assert_bool(measurement.search_radius() == reader.default_search_radius(),
+                        "radius should be correct");
     }
   }
 
@@ -52,18 +65,26 @@ void TestGeoJSONReader()
   {
     std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"GeometryCollection\", \"geometries\": [{\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}, {\"type\": \"MultiPoint\", \"coordinates\": [[2,3], [4,5]]}]}", sequences);
-    assert(is_collection);
-    assert(sequences.size() == 2);
-    assert(sequences[0].size() == 2);
-    assert(sequences[0][0].lnglat() == midgard::PointLL(1,2));
-    assert(sequences[0][1].lnglat() == midgard::PointLL(3,4));
-    assert(sequences[1].size() == 2);
-    assert(sequences[1][0].lnglat() == midgard::PointLL(2,3));
-    assert(sequences[1][1].lnglat() == midgard::PointLL(4,5));
+    test::assert_bool(is_collection,
+                      "should be collection");
+    test::assert_bool(sequences.size() == 2, "should be 2 sequences");
+    test::assert_bool(sequences[0].size() == 2, "should be 2 measurements");
+    test::assert_bool(sequences[0][0].lnglat() == midgard::PointLL(1,2),
+                      "coordinates should be correct");
+    test::assert_bool(sequences[0][1].lnglat() == midgard::PointLL(3,4),
+                      "coordinates should be correct");
+    test::assert_bool(sequences[1].size() == 2,
+                      "should be 2 measurements");
+    test::assert_bool(sequences[1][0].lnglat() == midgard::PointLL(2,3),
+                      "coordinates should be correct");
+    test::assert_bool(sequences[1][1].lnglat() == midgard::PointLL(4,5),
+                      "coordinates should be correct");
     for (const auto& sequence: sequences) {
       for (const auto& measurement: sequence) {
-        assert(measurement.gps_accuracy() == reader.default_gps_accuracy());
-        assert(measurement.search_radius() == reader.default_search_radius());
+        test::assert_bool(measurement.gps_accuracy() == reader.default_gps_accuracy(),
+                          "gps should be correct");
+        test::assert_bool(measurement.search_radius() == reader.default_search_radius(),
+                          "radius should be correct");
       }
     }
   }
@@ -72,93 +93,83 @@ void TestGeoJSONReader()
   {
     std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"Feature\", \"properties\":{\"gps_accuracy\": 5, \"search_radius\": [20]}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}}", sequences);
-    assert(!is_collection);
-    assert(sequences.size() == 1);
+    test::assert_bool(!is_collection,
+                      "should not be collection");
+    test::assert_bool(sequences.size() == 1,
+                      "should be 1 sequence");
     const auto& measurements = sequences.front();
-    assert(measurements.size() == 2);
-    assert(measurements[0].lnglat() == midgard::PointLL(1,2));
-    assert(measurements[1].lnglat() == midgard::PointLL(3,4));
-    assert(measurements[0].gps_accuracy() == 5);
-    assert(measurements[1].gps_accuracy() == 5);
-    assert(measurements[0].search_radius() == 20);
-    assert(measurements[1].search_radius() == reader.default_search_radius());
+    test::assert_bool(measurements.size() == 2,
+                      "shuold be 2 measurements");
+    test::assert_bool(measurements[0].lnglat() == midgard::PointLL(1,2),
+                      "coordinates should be correct");
+    test::assert_bool(measurements[1].lnglat() == midgard::PointLL(3,4),
+                      "coordinates should be correct");
+    test::assert_bool(measurements[0].gps_accuracy() == 5,
+                      "gps should be correct");
+    test::assert_bool(measurements[1].gps_accuracy() == 5,
+                      "gps should be correct");
+    test::assert_bool(measurements[0].search_radius() == 20,
+                      "search radius should be correct");
+    test::assert_bool(measurements[1].search_radius() == reader.default_search_radius(),
+                      "radius should be default");
   }
 
   // It should read feature collection
   {
     std::vector<std::vector<meili::Measurement>> sequences;
     bool is_collection = reader.Read("{\"type\": \"FeatureCollection\", \"features\": [{\"type\": \"Feature\", \"properties\":{\"gps_accuracy\": 5, \"search_radius\": [20]}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[1,2], [3,4]]}}, {\"type\": \"Feature\", \"properties\":{\"gps_accuracy\": [5, 6, 7], \"search_radius\": [20, 21, 22]}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[2,3], [4,5]]}}]}", sequences);
-    assert(is_collection);
-    assert(sequences.size() == 2);
-    assert(sequences[0].size() == 2);
-    assert(sequences[0][0].lnglat() == midgard::PointLL(1,2));
-    assert(sequences[0][1].lnglat() == midgard::PointLL(3,4));
-    assert(sequences[1].size() == 2);
-    assert(sequences[1][0].lnglat() == midgard::PointLL(2,3));
-    assert(sequences[1][1].lnglat() == midgard::PointLL(4,5));
+    test::assert_bool(is_collection, "should be collection");
+    test::assert_bool(sequences.size() == 2, "should be 2 sequences");
+    test::assert_bool(sequences[0].size() == 2, "should be 2 measurements");
+    test::assert_bool(sequences[0][0].lnglat() == midgard::PointLL(1,2),
+                      "coordinates should be correct");
+    test::assert_bool(sequences[0][1].lnglat() == midgard::PointLL(3,4),
+                      "coordinates should be correct");
+    test::assert_bool(sequences[1].size() == 2,
+                      "should be 2 measurements");
+    test::assert_bool(sequences[1][0].lnglat() == midgard::PointLL(2,3),
+                      "coordinates should be correct");
+    test::assert_bool(sequences[1][1].lnglat() == midgard::PointLL(4,5),
+                      "coordinates should be correct");
   }
 
   // It should throw parse error
   {
-    bool error = false;
     std::vector<std::vector<meili::Measurement>> sequences;
-    try {
-      bool is_collection = reader.Read("", sequences);
-    } catch (const meili::SequenceParseError& ex) {
-      error = true;
-    }
-    assert(error);
 
-    error = false;
-    try {
-      bool is_collection = reader.Read("hello my friend", sequences);
-    } catch (const meili::SequenceParseError& ex) {
-      error = true;
-    }
-    assert(error);
+    test::assert_throw<meili::SequenceParseError>([&reader, &sequences]() {
+        reader.Read("", sequences);
+        test::assert_bool(sequences.empty(), "sequences should be empty");
+      }, "empty json can not be parsed");
 
-    error = false;
-    try {
-      bool is_collection = reader.Read("[1,2,3]", sequences);
-    } catch (const meili::SequenceParseError& ex) {
-      error = true;
-    }
-    assert(error);
+    test::assert_throw<meili::SequenceParseError>([&reader, &sequences]() {
+        reader.Read("hello my friend", sequences);
+        test::assert_bool(sequences.empty(), "sequences should be empty");
+      }, "your friend can not be parsed");
 
-    error = false;
-    try {
-      bool is_collection = reader.Read("{\"type\": \"LineString\"}", sequences);
-    } catch (const meili::SequenceParseError& ex) {
-      error = true;
-    }
-    assert(sequences.empty());
-    assert(error);
+    test::assert_throw<meili::SequenceParseError>([&reader, &sequences]() {
+        reader.Read("[1,2,3]", sequences);
+        test::assert_bool(sequences.empty(), "sequences should be empty");
+      }, "[1,2,3] is not a valid GeoJSON");
 
-    error = false;
-    try {
-      bool is_collection = reader.Read("{\"type\": \"LineString\"}", sequences);
-    } catch (const meili::SequenceParseError& ex) {
-      error = true;
-    }
-    assert(sequences.empty());
-    assert(error);
+    test::assert_throw<meili::SequenceParseError>([&reader, &sequences]() {
+        reader.Read("{\"type\": \"LineString\"}", sequences);
+        test::assert_bool(sequences.empty(), "sequences should be empty");
+      }, "{\"type\": \"LineString\"} is not a valid GeoJSON");
 
-    error = false;
-    try {
-      bool is_collection = reader.Read("{\"type\": \"LineString\", \"coordinates\":[1]}", sequences);
-    } catch (const meili::SequenceParseError& ex) {
-      error = true;
-    }
-    assert(sequences.empty());
-    assert(error);
+    test::assert_throw<meili::SequenceParseError>([&reader, &sequences]() {
+        reader.Read("{\"type\": \"LineString\", \"coordinates\":[1]}", sequences);
+        test::assert_bool(sequences.empty(), "sequences should be empty");
+      }, "invalid coordinates");
   }
 }
 
 
 int main(int argc, char *argv[])
 {
-  TestGeoJSONReader();
+  test::suite suite("geojson reader");
 
-  std::cout << "all tests passed" << std::endl;
+  suite.test(TEST_CASE(TestGeoJSONReader));
+
   return 0;
 }
