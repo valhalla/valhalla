@@ -328,7 +328,7 @@ class BicycleCost : public DynamicCost {
    * exclude results from the search by looking at each edges attribution
    * @return Function to be used in filtering out edges
    */
-  virtual const EdgeFilter GetFilter() const {
+  virtual const EdgeFilter GetEdgeFilter() const {
     //throw back a lambda that checks the access for this type of costing
     BicycleType b = bicycletype_;
     return [b](const baldr::DirectedEdge* edge){
