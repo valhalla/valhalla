@@ -1307,7 +1307,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // If this edge is a link, update its use (potentially change short
         // links to turn channels)
         if (directededge.link()) {
-          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
+//          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
           if (directededge.use() == Use::kTurnChannel) {
             stats.turnchannelcount++;
           } else {
