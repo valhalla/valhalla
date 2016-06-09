@@ -33,7 +33,8 @@ namespace valhalla {
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
       sif::CostFactory<sif::DynamicCost> factory;
-      sif::EdgeFilter costing_filter;
+      sif::EdgeFilter edge_filter;
+      sif::NodeFilter node_filter;
       valhalla::baldr::GraphReader reader;
       std::string action_str;
       std::unordered_map<std::string, size_t> max_locations;
