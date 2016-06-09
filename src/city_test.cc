@@ -264,8 +264,8 @@ int main(int argc, char *argv[]) {
       Location destloc(cities[l1].latlng);
 
       // Use Loki to get location information
-      PathLocation origin = Search(originloc, reader, cost->GetFilter());
-      PathLocation dest   = Search(destloc, reader, cost->GetFilter());
+      PathLocation origin = Search(originloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+      PathLocation dest   = Search(destloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
 
       // TODO - maybe later use different path algorithms
       uint32_t np = 0;

@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   auto getPathLoc = [&reader, &cost] (Location& loc) {
     try {
-      return Search(loc, reader, cost->GetFilter());
+      return Search(loc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
     } catch (...) {
       exit(EXIT_FAILURE);
     }
