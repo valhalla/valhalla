@@ -46,9 +46,9 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_bollards.bin";
-  std::string way_nodes_file = "test_way_nodes_bollards.bin";
-  std::string access_file = "test_access_bollards.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
@@ -167,9 +167,9 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_removable.bin";
-  std::string way_nodes_file = "test_way_nodes_removable.bin";
-  std::string access_file = "test_access_removable.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
@@ -190,9 +190,9 @@ void Exits(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_exits.bin";
-  std::string way_nodes_file = "test_way_nodes_exits.bin";
-  std::string access_file = "test_access_exits.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
@@ -227,9 +227,9 @@ void Baltimore(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_bal.bin";
-  std::string way_nodes_file = "test_way_nodes_bal.bin";
-  std::string access_file = "test_access_bal.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
@@ -302,9 +302,9 @@ void Bike(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_bike.bin";
-  std::string way_nodes_file = "test_way_nodes_bike.bin";
-  std::string access_file = "test_access_bike.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bike.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
@@ -351,9 +351,9 @@ void Bus(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_bus.bin";
-  std::string way_nodes_file = "test_way_nodes_bus.bin";
-  std::string access_file = "test_access_bus.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bus.osm.pbf"}, ways_file, way_nodes_file, access_file);
@@ -393,9 +393,9 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_sig.bin";
-  std::string way_nodes_file = "test_way_nodes_sig.bin";
-  std::string access_file = "test_access_sig.bin";
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  std::string access_file = "test_access.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);

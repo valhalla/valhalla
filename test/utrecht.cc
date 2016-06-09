@@ -46,9 +46,9 @@ void Bike(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_utrecht_bike.bin";
-  std::string way_nodes_file = "test_way_nodes_utrecht_bike.bin";
-  std::string access_file = "test_access_utrecht_bike.bin";
+  std::string ways_file = "test_ways_utrecht.bin";
+  std::string way_nodes_file = "test_way_nodes_utrecht.bin";
+  std::string access_file = "test_access_utrecht.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
@@ -129,9 +129,9 @@ void Bus(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways_utrecht_bus.bin";
-  std::string way_nodes_file = "test_way_nodes_utrecht_bus.bin";
-  std::string access_file = "test_access_utrecht_bus.bin";
+  std::string ways_file = "test_ways_utrecht.bin";
+  std::string way_nodes_file = "test_way_nodes_utrecht.bin";
+  std::string access_file = "test_access_utrecht.bin";
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
