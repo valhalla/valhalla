@@ -1,6 +1,6 @@
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/adminconstants.h"
+#include "mjolnir/countryaccess.h"
 
 #include <memory>
 #include <future>
@@ -637,7 +637,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
-  if (ret == SQLITE_OK) {
+  if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
     result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
@@ -1140,63 +1140,6 @@ bool ConsistentNames(const std::string& country_code,
   return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
-/**
- * Removes or adds access.
- * @param  current_access   Current access for the DE.
- * @param  country_access   Country specific access.
- * @param  type             Type of access to add or remove?
- */
-uint32_t ProcessAccess(const uint32_t current_access, const uint32_t country_access, const uint32_t type) {
-
-  uint32_t new_access = current_access;
-
-  auto current = ((type & current_access) == type);
-  auto country = ((type & country_access) == type);
-
-  if (current && !country)
-    new_access &= ~(type);
-  else if (!current && country)
-    new_access |= type;
-
-  return new_access;
-}
-
-/**
- * Get the new access for a DE.  If a user entered tags then we will not update
- * the access.  Also, we have to take into account if the DE is oneway or not.
- * @param  current_access   Current access for the DE.
- * @param  country_access   Country specific access.
- * @param  oneway_vehicle   Is the DE oneway in the opposite direction for vehicles?
- * @param  oneway_bicycle   Is the DE oneway in the opposite direction for bicycles?
- * @param  target           User entered access tags.
- */
-uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
-                   const bool oneway_vehicle, const bool oneway_bicycle, const OSMAccess target) {
-
-  uint32_t new_access = current_access;
-
-  if (!target.foot_tag())
-    new_access = ProcessAccess(new_access,country_access,kPedestrianAccess);
-
-  if (!oneway_bicycle && !target.bike_tag())
-    new_access = ProcessAccess(new_access,country_access,kBicycleAccess);
-
-  // if the reverse direction is oneway then do not add access for vehicles in the current direction.
-  if (oneway_vehicle)
-    return new_access;
-
-  if (!target.auto_tag())
-    new_access = ProcessAccess(new_access,country_access,kAutoAccess);
-
-  if (!target.bus_tag())
-    new_access = ProcessAccess(new_access,country_access,kBusAccess);
-
-  if (!target.truck_tag())
-    new_access = ProcessAccess(new_access,country_access,kTruckAccess);
-
-  return new_access;
-}
-
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
@@ -1432,86 +1375,17 @@ void enhance(const boost::property_tree::ptree& pt,
                 directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
                 directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
-          if (!access_tags.find(target,less_than))
-            target =  OSMAccess{e_offset->wayid()};
+          if (directededge.leaves_tile())
+            access_tags.find(target,less_than);
+          else target = OSMAccess{e_offset->wayid()};
 
           std::vector<int> access = country_access.at(admin_index);
-          uint32_t forward = directededge.forwardaccess();
-          uint32_t reverse = directededge.reverseaccess();
-
-          bool f_oneway_vehicle = (((forward & kAutoAccess) && !(reverse & kAutoAccess)) ||
-              ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
-              ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
-              ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
-              ((forward & kBusAccess) && !(reverse & kBusAccess)));
-
-          bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
-              (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
-              (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
-              (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
-              (!(forward & kBusAccess) && (reverse & kBusAccess)));
-
-          bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
-          bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
-
-          // access.at(X) = -1 means that no default country overrides are needed.
-          // target.<type>_tag() == true means that a user set the <type> tag.
-
-          // trunk and trunk_link
-          if (directededge.classification() == RoadClass::kTrunk) {
-            if (directededge.link() && access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)) != -1) {
-              forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
-                                  r_oneway_vehicle, r_oneway_bicycle, target);
-              reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
-                                  f_oneway_vehicle, f_oneway_bicycle, target);
-            } else if (access.at(static_cast<uint32_t>(AccessTypes::kTrunk)) != -1) {
-              forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
-                                  r_oneway_vehicle, r_oneway_bicycle, target);
-              reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
-                                  f_oneway_vehicle, f_oneway_bicycle, target);
-            }
-          }
-
-          // track, footway, pedestrian, bridleway, cycleway, and path
-          if (directededge.use() == Use::kTrack && access.at(static_cast<uint32_t>(AccessTypes::kTrack)) != -1) {
-            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
-                                r_oneway_vehicle, r_oneway_bicycle, target);
-            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
-                                f_oneway_vehicle, f_oneway_bicycle, target);
-          } else if (directededge.use() == Use::kFootway && access.at(static_cast<uint32_t>(AccessTypes::kFootway)) != -1) {
-            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
-                                r_oneway_vehicle, r_oneway_bicycle, target);
-            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
-                                f_oneway_vehicle, f_oneway_bicycle, target);
-
-          } else if (directededge.use() == Use::kPedestrian && access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)) != -1) {
-
-            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
-                                r_oneway_vehicle, r_oneway_bicycle, target);
-            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kPedestrian)),
-                                f_oneway_vehicle, f_oneway_bicycle, target);
-          } else if (directededge.use() == Use::kBridleway && access.at(static_cast<uint32_t>(AccessTypes::kBridleway)) != -1) {
-            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),
-                                r_oneway_vehicle, r_oneway_bicycle, target);
-            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kBridleway)),
-                                f_oneway_vehicle, f_oneway_bicycle, target);
-          } else if (directededge.use() == Use::kCycleway && access.at(static_cast<uint32_t>(AccessTypes::kCycleway)) != -1) {
-            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kCycleway)),
-                                r_oneway_vehicle, r_oneway_bicycle, target);
-            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kCycleway)),
-                                f_oneway_vehicle, f_oneway_bicycle, target);
-
-          } else if (directededge.use() == Use::kPath && access.at(static_cast<uint32_t>(AccessTypes::kPath)) != -1) {
-            forward = GetAccess(forward, access.at(static_cast<uint32_t>(AccessTypes::kPath)),
-                                r_oneway_vehicle, r_oneway_bicycle, target);
-            reverse = GetAccess(reverse, access.at(static_cast<uint32_t>(AccessTypes::kPath)),
-                                f_oneway_vehicle, f_oneway_bicycle, target);
-          }
-
-          directededge.set_forwardaccess(forward);
-          directededge.set_reverseaccess(reverse);
-
+          CountryAccess(directededge, access, target);
         }
+
+        // Use::kPedestrian is really a kFootway
+        if (directededge.use() == Use::kPedestrian)
+          directededge.set_use(Use::kFootway);
 
         auto shape = e_offset->shape();
         if (!directededge.forward())
