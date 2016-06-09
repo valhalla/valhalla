@@ -73,7 +73,7 @@ void CountryAccess(const std::string& config_file) {
   std::string access_file = "access.bin";
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/amsterdam.osm.pbf"}, ways_file, way_nodes_file, access_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(conf, osmdata, "ways.bin", "way_nodes.bin");
+  GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file);
 
   //load a tile and test the default access.
   GraphId id(820099,2,0);
