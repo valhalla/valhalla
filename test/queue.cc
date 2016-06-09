@@ -1,5 +1,4 @@
 // -*- mode: c++ -*-
-#include <iostream>
 #include <cstdlib>
 #include <limits>
 
@@ -43,57 +42,61 @@ bool operator!=(const Label& lhs, const Label& rhs)
 { return !(lhs == rhs); }
 
 
-inline void
-simple_assert(bool assertion, const std::string& message)
-{
-  if (!assertion) {
-    throw std::logic_error(message);
-  }
-}
-
-
-inline void
-simple_assert(bool assertion)
-{ simple_assert(assertion, "assertion failed"); }
-
-
 void SimpleTestQueue()
 {
   SPQueue<Label> queue;
-  simple_assert(queue.size() == 0 && queue.empty());
+  test::assert_bool(queue.size() == 0 && queue.empty(),
+                    "intial queue should be empty");
 
   queue.push(Label(1, 3));
-  simple_assert(queue.top() == Label(1, 3));
-  simple_assert(queue.size() == 1);
+  test::assert_bool(queue.top() == Label(1, 3),
+                    "top should be <1 3>");
+  test::assert_bool(queue.size() == 1,
+                    "queue should have one label");
 
   // test compressions
-  simple_assert(queue.top() == Label(2, 3));
-  simple_assert(queue.top() > Label(2, 2));
-  simple_assert(queue.top() < Label(2, 4));
-  simple_assert(queue.top() != Label(2, 4));
+  test::assert_bool(queue.top() == Label(2, 3),
+                    "should be equal");
+  test::assert_bool(queue.top() > Label(2, 2),
+                    "should be larger");
+  test::assert_bool(queue.top() < Label(2, 4),
+                    "should be smaller");
+  test::assert_bool(queue.top() != Label(2, 4),
+                    "should not be equal");
 
   queue.push(Label(2, 2));
-  simple_assert(queue.top() == Label(2, 2));
-  simple_assert(queue.size() == 2);
+  test::assert_bool(queue.top() == Label(2, 2),
+                    "top should be <2, 2>");
+  test::assert_bool(queue.size() == 2,
+                    "queue should have 2 labels now");
 
   queue.push(Label(2, 4));
-  simple_assert(queue.top() == Label(2, 2));
-  simple_assert(queue.size() == 2);
+  test::assert_bool(queue.top() == Label(2, 2),
+                    "top should still be <2, 2>");
+  test::assert_bool(queue.size() == 2,
+                    "queue size should not change");
 
   queue.push(Label(2, 2));
-  simple_assert(queue.top() == Label(2, 2));
-  simple_assert(queue.size() == 2);
+  test::assert_bool(queue.top() == Label(2, 2),
+                    "top should still be <2, 2>");
+  test::assert_bool(queue.size() == 2,
+                    "nothing should change");
 
   queue.push(Label(1, 1));
-  simple_assert(queue.top() == Label(1, 1));
-  simple_assert(queue.size() == 2);
+  test::assert_bool(queue.top() == Label(1, 1),
+                    "top should be changed now");
+  test::assert_bool(queue.size() == 2,
+                    "the old lable 1 should be replaced so size should be 2");
 
   queue.pop();
-  simple_assert(queue.top() == Label(2, 2));
-  simple_assert(queue.size() == 1);
+  test::assert_bool(queue.top() == Label(2, 2),
+                    "<2, 2> should be popped");
+  test::assert_bool(queue.size() == 1,
+                    "now there should be only one label");
 
   queue.pop();
-  simple_assert(queue.empty() && queue.size() == 0);
+  test::assert_bool(queue.empty() && queue.size() == 0,
+                    "nothing should be left");
 }
 
 
@@ -114,22 +117,19 @@ void TestQueue()
     }
   }
 
-  simple_assert(queue.size() == N);
-  simple_assert(!queue.empty());
+  test::assert_bool(queue.size() == N,
+                    "all should be pushed");
+  test::assert_bool(!queue.empty(),
+                    "definately should be non-empty");
 
   for (int i=0; i<N; i++) {
     queue.push(Label(i, i+2));
   }
 
-  simple_assert(queue.size() == N);
-  simple_assert(!queue.empty());
-
-  for (int i=0; i<N; i++) {
-    queue.push(Label(i, i));
-  }
-
-  simple_assert(queue.size() == N);
-  simple_assert(!queue.empty());
+  test::assert_bool(queue.size() == N,
+                    "size should not be changes since no new id introduced");
+  test::assert_bool(!queue.empty(),
+                    "definately should be non-empty");
 
   std::vector<Label> labels;
   while (!queue.empty()) {
@@ -137,14 +137,19 @@ void TestQueue()
     queue.pop();
   }
 
-  simple_assert(labels.size() == N);
-  simple_assert(queue.size() == 0);
-  simple_assert(queue.empty());
+  test::assert_bool(labels.size() == N,
+                    "all labels should be popped");
+  test::assert_bool(queue.size() == 0,
+                    "now queue should be empty");
+  test::assert_bool(queue.empty(),
+                    "now queue should be empty");
 
   uint32_t i = 0;
   for (const auto& label : labels) {
-    simple_assert(label.id() == i);
-    simple_assert(label.sortcost() == i);
+    test::assert_bool(label.id() == i,
+                      "id should be matched");
+    test::assert_bool(label.sortcost() == i,
+                      "sortcost should be matched");
     i++;
   }
 
@@ -152,8 +157,10 @@ void TestQueue()
     queue.push(label);
   }
   queue.clear();
-  simple_assert(queue.size()==0);
-  simple_assert(queue.empty());
+  test::assert_bool(queue.size()==0,
+                    "nothing should be left");
+  test::assert_bool(queue.empty(),
+                    "should be empty");
 }
 
 
@@ -168,14 +175,16 @@ void TestSorting()
     queue.push(Label(id, cost));
   }
 
-  simple_assert(queue.size() == N);
+  test::assert_bool(queue.size() == N,
+                    "all labels should be pushed");
 
   // Should be sorted
   Label previous_label(N + 1, -std::numeric_limits<double>::infinity());
   while (!queue.empty()) {
     const auto label = queue.top();
     queue.pop();
-    simple_assert(previous_label.sortcost() <= label.sortcost());
+    test::assert_bool(previous_label.sortcost() <= label.sortcost(),
+                      "should be sorted");
     previous_label = label;
   }
 }
