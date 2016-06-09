@@ -511,7 +511,7 @@ OfflineMatch(MapMatching& mm,
     if (sq_interpolation_distance <= sq_distance || idx == 0 || idx == end_idx) {
       const auto& candidates = cq.Query(measurement.lnglat(),
                                         measurement.sq_search_radius(),
-                                        mm.costing()->GetFilter());
+                                        mm.costing()->GetEdgeFilter());
       time = mm.AppendState(measurement, candidates.begin(), candidates.end());
       last_idx = idx;
     } else {
@@ -551,7 +551,7 @@ OfflineMatch(MapMatching& mm,
       for (const auto idx : it->second) {
         const auto& candidates = cq.Query(measurements[idx].lnglat(),
                                           measurements[idx].sq_search_radius(),
-                                          mm.costing()->GetFilter());
+                                          mm.costing()->GetEdgeFilter());
         results.push_back(interpolate(mm.graphreader(), graphset,
                                       candidates.begin(), candidates.end(),
                                       measurements[idx]));

@@ -404,7 +404,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
   std::unordered_map<uint16_t, uint32_t> results;
 
-  const auto edgefilter = costing? costing->GetFilter() : nullptr;
+  const auto edgefilter = costing? costing->GetEdgeFilter() : nullptr;
 
   const baldr::GraphTile* tile = nullptr;
 
