@@ -127,7 +127,7 @@ namespace valhalla {
 
       for(const auto& location : locations) {
         try {
-          auto correlated = loki::Search(location, reader, costing_filter);
+          auto correlated = loki::Search(location, reader, edge_filter, node_filter);
           json->emplace_back(serialize(request.get_optional<std::string>("id"), correlated, reader, verbose));
         }
         catch(const std::exception& e) {

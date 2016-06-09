@@ -120,7 +120,7 @@ namespace valhalla {
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, costing_filter);
+        auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 

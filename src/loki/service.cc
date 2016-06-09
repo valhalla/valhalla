@@ -245,7 +245,8 @@ namespace valhalla {
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {
-          costing_filter = loki::PassThroughFilter;
+          edge_filter = loki::PassThroughEdgeFilter;
+          node_filter = loki::PassThroughNodeFilter;
           return;
         }//but everything else does
         else
@@ -271,10 +272,15 @@ namespace valhalla {
         boost::property_tree::ptree overridden = *config_costing;
         for(const auto& r : *request_costing)
           overridden.put_child(r.first, r.second);
-        costing_filter = factory.Create(*costing, overridden)->GetFilter();
+        auto c = factory.Create(*costing, overridden);
+        edge_filter = c->GetEdgeFilter();
+        node_filter = c->GetNodeFilter();
       }// No options to override so use the config options verbatim
-      else
-        costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
+      else {
+        auto c = factory.Create(*costing, *config_costing);
+        edge_filter = c->GetEdgeFilter();
+        node_filter = c->GetNodeFilter();
+      }
     }
 
     void loki_worker_t::cleanup() {

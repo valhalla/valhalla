@@ -278,7 +278,7 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
 // larger routing graph. Does a breadth first search - if possible paths are
 // exhausted within some threshold this returns a set of edges within the
 // island.
-std::unordered_set<GraphId> IsDisconnected(const PathLocation& location,
+std::unordered_set<GraphId> island(const PathLocation& location,
              GraphReader& reader, const NodeFilter& node_filter,
              const EdgeFilter& edge_filter, const uint32_t edge_threshold,
              const uint32_t length_threshold, const uint32_t node_threshold) {
@@ -340,12 +340,7 @@ std::unordered_set<GraphId> IsDisconnected(const PathLocation& location,
   return (todo.size() == 0) ? done : std::unordered_set<GraphId>{};
 }
 
-}
-
-namespace valhalla {
-namespace loki {
-
-PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter& filter) {
+PathLocation search(const Location& location, GraphReader& reader, const EdgeFilter& edge_filter) {
   //iterate over bins in a closest first manner
   const auto& tiles = reader.GetTileHierarchy().levels().rbegin()->second.tiles;
   const auto level = reader.GetTileHierarchy().levels().rbegin()->first;
@@ -388,8 +383,8 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
           tile = reader.GetGraphTile(e);
         const auto* edge = tile->directededge(e);
         //no thanks on this one or it evil twin
-        if(filter(edge) && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
-          filter(edge = tile->directededge(e)))) {
+        if(edge_filter(edge) && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
+          edge_filter(edge = tile->directededge(e)))) {
           continue;
         }
         //get some info about the edge
@@ -424,15 +419,25 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
   if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
     const GraphTile* other_tile;
     auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
-    return correlate_node(reader, location, filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
+    return correlate_node(reader, location, edge_filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
   }
   //it was the end node
   if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
     const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
-    return correlate_node(reader, location, filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
+    return correlate_node(reader, location, edge_filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
   }
   //it was along the edge
-  return correlate_edge(reader, location, filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
+  return correlate_edge(reader, location, edge_filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
+}
+
+}
+
+namespace valhalla {
+namespace loki {
+
+PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
+  //TODO: check if its an island and then search again
+  return search(location, reader, edge_filter);
 }
 
 }
