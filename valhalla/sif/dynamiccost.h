@@ -245,7 +245,7 @@ class DynamicCost {
    * Returns a function/functor to be used in location searching which will
    * exclude results from the search by looking at each edges attribution
    */
-  virtual const EdgeFilter GetFilter() const = 0;
+  virtual const EdgeFilter GetEdgeFilter() const = 0;
 
   /**
    * Returns a function/functor to be used in location searching which will

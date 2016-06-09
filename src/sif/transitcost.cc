@@ -164,7 +164,7 @@ class TransitCost : public DynamicCost {
    * include ferries.
    * @return Function/functor to be used in filtering out edges
    */
-  virtual const EdgeFilter GetFilter() const {
+  virtual const EdgeFilter GetEdgeFilter() const {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge){
       return edge->trans_up() || edge->trans_down() ||
