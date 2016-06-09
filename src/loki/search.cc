@@ -436,6 +436,7 @@ namespace valhalla {
 namespace loki {
 
 PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
+  //TODO: check if its an island and then search again
   return search(location, reader, edge_filter);
 }
 
