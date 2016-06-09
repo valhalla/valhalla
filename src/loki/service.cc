@@ -273,12 +273,12 @@ namespace valhalla {
         for(const auto& r : *request_costing)
           overridden.put_child(r.first, r.second);
         auto c = factory.Create(*costing, overridden);
-        edge_filter = c->GetFilter();
+        edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }// No options to override so use the config options verbatim
       else {
         auto c = factory.Create(*costing, *config_costing);
-        edge_filter = c->GetFilter();
+        edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }
     }
