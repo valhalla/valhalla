@@ -205,7 +205,10 @@ enum class Use : uint8_t {
 
   // Pedestrian specific uses
   kFootway = 25,
-  kSteps   = 26,           // Stairs
+  kSteps = 26,             // Stairs
+  kPath = 27,
+  kPedestrian = 28,
+  kBridleway = 29,
 
   // Other...
   kOther = 40,
