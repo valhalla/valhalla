@@ -571,6 +571,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
                         n, has_signal, restrictions, bike_network);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
+
+          //temporarily set the leaves tile flag to indicate when we need to search the access.bin file.
+          directededge.set_leaves_tile(w.has_user_tags());
+
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must use the second one
           directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
