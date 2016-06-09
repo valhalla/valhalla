@@ -1038,9 +1038,6 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
       }
     }
   }
-  LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-           std::to_string(departures.size()) + " departures" +
-           " schedules: " + std::to_string(schedules.size()));
   return departures;
 }
 
@@ -1526,10 +1523,6 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
       shapes[shape.shape_id()] = shape_data;
     }
 
-    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-             std::to_string(transit.stops_size()) + " stops and " +
-             std::to_string(transit.shapes_size()) + " shapes");
-
     // Get all scheduled departures from the stops within this tile.
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
@@ -1602,13 +1595,17 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 
     // Add routes to the tile. Get vector of route types.
     std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder_transit);
-    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) +
-             ": added " + std::to_string(route_types.size()) + " routes");
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, hierarchy_transit_level, tile_id, file, transit_dir,
                lock, all_tiles, stop_edge_map, stop_access, shapes, distances,
                route_types, no_dir_edge_count);
+
+    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
+             std::to_string(transit.stops_size()) + " stops, " +
+             std::to_string(transit.shapes_size()) + " shapes, " +
+             std::to_string(route_types.size()) + " routes, and " +
+             std::to_string(departures.size()) + " departures");
 
     // Write the new file
     lock.lock();
