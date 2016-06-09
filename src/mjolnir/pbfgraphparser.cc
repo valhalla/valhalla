@@ -690,6 +690,7 @@ struct graph_callback : public OSMPBF::Callback {
       w.set_use(Use::kCuldesac);
 
     if (has_user_tags) {
+      w.set_has_user_tags(true);
       access_->push_back(access);
     }
 
