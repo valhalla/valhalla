@@ -68,9 +68,9 @@ void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  std::string ways_file = "test_ways.bin";
-  std::string way_nodes_file = "test_way_nodes.bin";
-  std::string access_file = "test_access.bin";
+  std::string ways_file = "ways.bin";
+  std::string way_nodes_file = "way_nodes.bin";
+  std::string access_file = "access.bin";
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/amsterdam.osm.pbf"}, ways_file, way_nodes_file, access_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, "ways.bin", "way_nodes.bin");
