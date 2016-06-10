@@ -249,6 +249,29 @@ namespace valhalla {
       return color->second;
     }
 
+    std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_level,
+      const baldr::PathLocation& location, float radius) const {
+
+      std::unordered_set<size_t> result;
+      auto level = colors.find(hierarchy_level);
+      if(level == colors.cend())
+        return result;
+      const auto& tiles = tile_hierarchy.levels().find(hierarchy_level)->second.tiles;
+      for(const auto& edge : location.edges) {
+        //TODO: generate more ids by intersecting this circle with the tiles object
+        //take the edge.projected and subtract radius in the x and y dimensions
+        //convert that into a tileid and get its col,row tile coords that will start the for loop
+        //add radius in the x and y to edge.projected to get the ending tile col,row for the for loop
+        //then while iterating create a tile for each tile col,row pair, get its aabb2 and call
+        //aabb2::intersects(edge.projected, radius), if it returns true, get the color as below
+        auto id = tiles.TileId(edge.projected);
+        auto color = level->second.find(id);
+        if(color != level->second.cend())
+          result.emplace(color->second);
+      }
+      return result;
+    }
+
     std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
       //bail if we dont have the level
       auto bbox = tile_hierarchy.levels().find(

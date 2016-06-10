@@ -37,16 +37,6 @@ bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const Graph
   return stat(file_location.c_str(), &buffer) == 0;
 }
 
-bool GraphReader::AreConnected(const GraphId& first, const GraphId& second) const {
-  //singleton is efficient here but does mean we cant reconfigure the tiles on the fly
-  static const connectivity_map_t connectivity_map(this->tile_hierarchy_);
-
-  //both must be the same color but also neither must be 0
-  auto first_color = connectivity_map.get_color(first.Tile_Base());
-  auto second_color = connectivity_map.get_color(second.Tile_Base());
-  return first_color == second_color && first_color != 0;
-}
-
 // Get a pointer to a graph tile object given a GraphId.
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   //TODO: clear the cache automatically once we become overcommitted by a certain amount

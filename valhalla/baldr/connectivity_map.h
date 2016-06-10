@@ -2,9 +2,11 @@
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/pathlocation.h>
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdint>
 
 namespace valhalla {
@@ -25,6 +27,16 @@ namespace valhalla {
        * @return color  the color
        */
       size_t get_color(const GraphId& id) const;
+
+      /**
+       * Returns the colors for the given level,point,radius
+       *
+       * @param hierarchy_level  the hierarchy level whos connectivity you are querying
+       * @param center           the center of the circle
+       * @param radius           the radius of the circle
+       * @return colors          the colors of the tiles that intersect this circle at this level
+       */
+      std::unordered_set<size_t> get_colors(uint32_t hierarchy_level, const baldr::PathLocation& location, float radius) const;
 
       /**
        * Returns the geojson representing the connectivity map
