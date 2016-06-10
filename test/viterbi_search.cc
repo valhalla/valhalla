@@ -1,9 +1,4 @@
 // -*- mode: c++ -*-
-
-//enable asserts for this test
-#undef NDEBUG
-
-#include <cassert>
 #include <iostream>
 #include <chrono>
 #include <random>
@@ -98,8 +93,9 @@ class SimpleViterbiSearch: public ViterbiSearch<State>
  protected:
   float TransitionCost(const State& left, const State& right) const
   {
-    assert(left.time() + 1 == right.time());
-    auto right_id = right.candidate().id();
+    test::assert_bool(left.time() + 1 == right.time(),
+                      "left state should be earlier than right time");
+    const auto right_id = right.candidate().id();
     return left.candidate().transition_cost(right_id);
   }
 
@@ -133,7 +129,8 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
  protected:
   float TransitionCost(const State& left, const State& right) const
   {
-    assert(left.time() + 1 == right.time());
+    test::assert_bool(left.time() + 1 == right.time(),
+                      "left time should be eariler than right time");
     auto right_id = right.candidate().id();
     auto cost = left.candidate().transition_cost(right_id);
     return cost < 0.f? kInvalidCost : cost;
@@ -149,9 +146,10 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
                    float transition_cost,
                    float emission_cost) const
   {
-    assert(prev_cost_sofar >= 0.f
-           && transition_cost >= 0.f
-           && emission_cost >= 0.f);
+    test::assert_bool(0.f <= prev_cost_sofar
+                      && 0.f <= transition_cost
+                      && 0.f <= emission_cost,
+                      "all costs should be non-negative");
     return prev_cost_sofar + transition_cost + emission_cost;
   }
 };
@@ -259,7 +257,8 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
   for (const auto& candidate_list : candidate_lists) {
     auto svs_time = svs.AppendState(candidate_list.cbegin(), candidate_list.cend()),
         snvs_time = snvs.AppendState(candidate_list.cbegin(), candidate_list.cend());
-    assert(svs_time == snvs_time);
+    test::assert_bool(svs_time == snvs_time,
+                      "time should be matched");
 
     auto snvs_id = snvs.SearchWinner(snvs_time);
     const State* snvs_winner = snvs_id == kInvalidStateId? nullptr : &snvs.state(snvs_id);
@@ -267,11 +266,14 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
     const State* svs_winner = svs_id == kInvalidStateId? nullptr : &svs.state(svs_id);
 
     if (svs_winner) {
-      assert(svs_winner->time() == svs_time && snvs_winner->time() == snvs_time);
-      // Gurantee that both costs are optimal
-      assert(svs.AccumulatedCost(*svs_winner) == snvs.AccumulatedCost(*snvs_winner));
+      test::assert_bool(svs_winner->time() == svs_time && snvs_winner->time() == snvs_time,
+                        "time should be matched");
+      // Gurantee that both costs are the same
+      test::assert_bool(svs.AccumulatedCost(*svs_winner) == snvs.AccumulatedCost(*snvs_winner),
+                        "costs should be both same");
     } else {
-      assert(!snvs_winner);
+      test::assert_bool(!snvs_winner,
+                        "both winner should not be found");
     }
   }
 }
@@ -325,7 +327,6 @@ void TestViterbiSearch()
 
 int main(int argc, char *argv[])
 {
-
   test::suite suite("viterbi search");
 
   suite.test(TEST_CASE(TestViterbiSearch));

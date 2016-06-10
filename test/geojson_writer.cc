@@ -1,11 +1,7 @@
 // -*- mode: c++ -*-
-#undef NDEBUG
-
-#include <iostream>
-#include <cassert>
-
 #include <rapidjson/stringbuffer.h>
 
+#include "test.h"
 #include "meili/geojson_writer.h"
 
 
@@ -21,9 +17,9 @@ void TestGeoJSONWriter()
 
 int main(int argc, char *argv[])
 {
-  TestGeoJSONWriter();
+  test::suite suite("geojson writer");
 
-  std::cout << "all tests passed" << std::endl;
+  suite.test(TEST_CASE(TestGeoJSONWriter));
 
   return 0;
 }
