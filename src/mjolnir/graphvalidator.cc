@@ -452,7 +452,8 @@ void validate(const boost::property_tree::ptree& pt,
             lock.lock();
             endnode_tile = graph_reader.GetGraphTile(directededge.endnode());
             lock.unlock();
-          }
+          //make sure this is set to false as access tag logic could of set this to true.
+          } else directededge.set_leaves_tile(false);
 
           // Set the opposing edge index and get the country ISO at the
           // end node)

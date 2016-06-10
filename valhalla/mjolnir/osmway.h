@@ -412,6 +412,18 @@ struct OSMWay {
   bool pedestrian() const;
 
   /**
+   * Sets the has_user_tags flag.
+   * @param  has_user_tags   Did a user enter the access tags?
+   */
+  void set_has_user_tags(const bool has_user_tags);
+
+  /**
+   * Get the has_user_tags flag.
+   * @return  Returns has_user_tags flag.
+   */
+  bool has_user_tags() const;
+
+  /**
    * Sets the no thru traffic flag.
    * @param  no_thru_traffic   Traffic allowed?
    */
@@ -757,7 +769,8 @@ struct OSMWay {
       uint16_t bike_backward      :1;
       uint16_t emergency_backward :1;
       uint16_t pedestrian         :1;
-      uint16_t spare              :3;
+      uint16_t has_user_tags      :1;
+      uint16_t spare              :2;
     } fields;
     uint16_t v;
   };

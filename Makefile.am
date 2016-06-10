@@ -54,6 +54,7 @@ CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.pro
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
+	valhalla/mjolnir/countryaccess.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
@@ -68,6 +69,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/linkclassification.h \
 	valhalla/mjolnir/luatagtransform.h \
 	valhalla/mjolnir/node_expander.h \
+	valhalla/mjolnir/osmaccess.h \
 	valhalla/mjolnir/osmadmin.h \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
@@ -82,6 +84,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/transit.pb.cc \
+	src/mjolnir/countryaccess.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -98,6 +101,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/linkclassification.cc \
 	src/mjolnir/luatagtransform.cc \
 	src/mjolnir/node_expander.cc \
+	src/mjolnir/osmaccess.cc \
 	src/mjolnir/osmadmin.cc \
 	src/mjolnir/osmnode.cc \
 	src/mjolnir/osmpbfparser.cc \
@@ -160,6 +164,7 @@ valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFL
 
 # tests
 check_PROGRAMS = \
+	test/countryaccess \
 	test/utrecht \
 	test/edgeinfobuilder \
 	test/uniquenames \
@@ -170,6 +175,9 @@ check_PROGRAMS = \
 	test/names \
 	test/refs \
 	test/signinfo
+test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
+test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_countryaccess_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

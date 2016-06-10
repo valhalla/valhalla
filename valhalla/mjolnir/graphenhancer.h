@@ -14,9 +14,11 @@ class GraphEnhancer {
 
   /**
    * Enhance the local level graph tile information.
-   * @param pt   property tree containing the heirarchy configuration
+   * @param pt          property tree containing the hierarchy configuration
+   * @param access_file where to store the nodes so they are not in memory
    */
-  static void Enhance(const boost::property_tree::ptree& pt);
+  static void Enhance(const boost::property_tree::ptree& pt,
+                      const std::string& access_file);
 
 };
 

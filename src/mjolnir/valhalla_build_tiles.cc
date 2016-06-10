@@ -125,7 +125,8 @@ int main(int argc, char** argv) {
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
-  auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin", "way_nodes.bin");
+  auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin",
+                                        "way_nodes.bin", "access.bin");
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin");
@@ -133,7 +134,7 @@ int main(int argc, char** argv) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(pt);
+  GraphEnhancer::Enhance(pt, "access.bin");
 
   // Add transit
   TransitBuilder::Build(pt);

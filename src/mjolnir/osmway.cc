@@ -350,6 +350,16 @@ bool OSMWay::pedestrian() const {
   return access_.fields.pedestrian;
 }
 
+// Sets the has_user_tags flag.
+void OSMWay::set_has_user_tags(const bool has_user_tags) {
+  access_.fields.has_user_tags = has_user_tags;
+}
+
+// Get the has_user_tags flag.
+bool OSMWay::has_user_tags() const {
+  return access_.fields.has_user_tags;
+}
+
 // Set no thru traffic flag.
 void OSMWay::set_no_thru_traffic(const bool no_thru_traffic) {
   attributes_.fields.no_thru_traffic = no_thru_traffic;

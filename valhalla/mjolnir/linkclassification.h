@@ -25,4 +25,4 @@ void ReclassifyLinks(const std::string& ways_file,
                      DataQuality& stats);
 }
 }
-#endif  // VALHALLA_MJOLNIR_NODE_EXPANDER_H_
+#endif  // VALHALLA_MJOLNIR_LINK_CLASSIFICATION_H_
