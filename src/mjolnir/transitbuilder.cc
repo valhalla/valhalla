@@ -27,7 +27,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/sequence.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -370,64 +369,6 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
 
       if (edgeinfo->wayid() == wayid) {
-
-        // this is a temp hack until we have some time to have loki return multiple, ranked results.
-        // if the assigned wayid is a ferry, try to find a pedestrian edge instead.
-        // use the distance to the nodes to determine who is closer and where to look for pedestrian edges
-        if (directededge->use() == Use::kFerry || directededge->use() == Use::kRailFerry) {
-          float start_distance = node->latlng().Distance(stop_ll);
-
-          const GraphTile* endnode_tile = tile;
-          if ( directededge->endnode().Tile_Base() != endnode_tile->id()) {
-              // Get the end node tile
-              lock.lock();
-              endnode_tile = reader.GetGraphTile(directededge->endnode());
-              lock.unlock();
-          }
-
-          GraphId id = directededge->endnode();
-          const DirectedEdge* opp_de = endnode_tile->directededge(endnode_tile->node(id)->edge_index() +
-                                                                  directededge->opp_index());
-          GraphId end_node = opp_de->endnode();
-          float end_distance = 0.0f;
-
-          //it is possible that the opp DE endnode could be in another tile.
-          if ( end_node.Tile_Base() != endnode_tile->id()) {
-            // Get the end node tile
-            lock.lock();
-            endnode_tile = reader.GetGraphTile(end_node);
-            lock.unlock();
-          }
-
-          const NodeInfo* closest_node = endnode_tile->node(end_node.id());
-          end_distance = closest_node->latlng().Distance(stop_ll);
-          if (start_distance <= end_distance) {
-            closest_node = node;
-            endnode_tile = tile;
-          }
-
-          // loop until we hopefully find an edge with pedestrian access.
-          for (uint32_t x = 0, count = closest_node->edge_count(); x < count; x++) {
-            const DirectedEdge* de = endnode_tile->directededge(closest_node->edge_index() + x);
-            auto edge_info = endnode_tile->edgeinfo(de->edgeinfo_offset());
-
-            if (edge_info->wayid() != wayid && (de->forwardaccess() & kPedestrianAccess) &&
-                de->use() != Use::kFerry && de->use() != Use::kRailFerry) {
-              // update the wayid
-              wayid = edge_info->wayid();
-              break;
-            }
-          }
-          if (wayid != edgeinfo->wayid()) {
-            //restart the search process with the updated wayid.
-            i = 0;
-            mindist = 10000000.0f;
-            edgelength = 0;
-            startnode = GraphId{}, endnode = GraphId{};
-            closest_shape.clear();
-            break;
-          }
-        }
 
         // Get shape and find closest point
         auto this_shape = edgeinfo->shape();

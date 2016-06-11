@@ -6,6 +6,7 @@
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/filesystem.hpp>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/directededge.h>
@@ -47,7 +48,9 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -154,6 +157,10 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
   if ((!(bike_network & kMcn) || !(bike_network & kRcn)) || way.bike_network() != 0)
     throw std::runtime_error("rcn and mtb not marked on way 75786176.");
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -162,7 +169,9 @@ void RemovableBollards(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -171,6 +180,10 @@ void RemovableBollards(const std::string& config_file) {
   if (!node.intersection() ||
     node.type() != NodeType::kGate || node.access_mask() != 95)
     throw std::runtime_error("Rising Bollard not marked as intersection.");
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
 }
 
 void Exits(const std::string& config_file) {
@@ -179,7 +192,9 @@ void Exits(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -202,6 +217,10 @@ void Exits(const std::string& config_file) {
   if (!node.intersection() || osmdata.node_exit_to[462240654] != "PA441")
     throw std::runtime_error("Ref not set correctly .");
 
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
+
 }
 
 void Baltimore(const std::string& config_file) {
@@ -210,7 +229,9 @@ void Baltimore(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -271,6 +292,10 @@ void Baltimore(const std::string& config_file) {
     }
     else throw std::runtime_error("98040438 restriction test failed.");
   }
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
 }
 
 void Bike(const std::string& config_file) {
@@ -279,7 +304,9 @@ void Bike(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bike.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bike.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -314,6 +341,10 @@ void Bike(const std::string& config_file) {
       way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
     throw std::runtime_error("Access is not correct for way 156539491.");
   }
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
 }
 
 void Bus(const std::string& config_file) {
@@ -322,7 +353,10 @@ void Bus(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bus.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bus.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -349,6 +383,10 @@ void Bus(const std::string& config_file) {
        way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
        throw std::runtime_error("Access is not correct for way 225895737.");
    }
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -357,7 +395,9 @@ void BicycleTrafficSignals(const std::string& config_file) {
 
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"}, ways_file, way_nodes_file);
+  std::string access_file = "test_access.bin";
+
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"}, ways_file, way_nodes_file, access_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -375,6 +415,11 @@ void BicycleTrafficSignals(const std::string& config_file) {
   if (node.intersection())
     throw std::runtime_error("Bike rental at a shop not marked as intersection.");
 */
+
+  boost::filesystem::remove(ways_file);
+  boost::filesystem::remove(way_nodes_file);
+  boost::filesystem::remove(access_file);
+
 }
 
 void DoConfig() {
