@@ -10,12 +10,12 @@
 #include "meili/geometry_helpers.h"
 #include "meili/map_matching.h"
 #include "meili/graph_helpers.h"
+#include "meili/match_result.h"
 
 using ptree = boost::property_tree::ptree;
 
 
 namespace valhalla {
-
 namespace meili {
 
 State::State(const StateId id,
@@ -361,9 +361,9 @@ guess_source_result(const MapMatching::state_iterator source,
       }
     }
     const auto& c = source->candidate();
-    return {c.vertex(), c.distance(), last_valid_id, last_valid_type, &(*source)};
+    return {c.vertex(), c.distance(), last_valid_id, last_valid_type, source->id()};
   } else if (source.IsValid()) {
-    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*source)};
+    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, source->id()};
   }
 
   return {source_measurement.lnglat()};
@@ -389,9 +389,9 @@ guess_target_result(const MapMatching::state_iterator source,
       }
     }
     const auto& c = target->candidate();
-    return {c.vertex(), c.distance(), graphid, graphtype, &(*target)};
+    return {c.vertex(), c.distance(), graphid, graphtype, target->id()};
   } else if (target.IsValid()) {
-    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*target)};
+    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, target->id()};
   }
 
   return {target_measurement.lnglat()};
@@ -438,7 +438,7 @@ interpolate(baldr::GraphReader& reader,
   }
 
   if (closest_candidate != end) {
-    return {closest_candidate->vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype};
+    return {closest_candidate->vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype, kInvalidStateId};
   }
 
   return {measurement.lnglat()};
@@ -928,30 +928,35 @@ void MergeRoute(std::vector<EdgeSegment>& route,
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
 ConstructRoute(baldr::GraphReader& graphreader,
+               const MapMatcher& mapmatcher,
                match_iterator_t begin,
                match_iterator_t end)
 {
   std::vector<EdgeSegment> route;
   match_iterator_t previous_match = end;
+  const auto& mapmatching = mapmatcher.mapmatching();
   const baldr::GraphTile* tile = nullptr;
 
   for (auto match = begin; match != end; match++) {
-    if (match->state()) {
-      if (previous_match != end) {
-        std::vector<EdgeSegment> segments;
-        for (auto segment = previous_match->state()->RouteBegin(*match->state()),
-                      end = previous_match->state()->RouteEnd();
-             segment != end; segment++) {
-          segments.emplace_back(segment->edgeid, segment->source, segment->target);
-        }
-        if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
-          MergeRoute(route, segments.rbegin(), segments.rend());
-        } else {
-          throw std::runtime_error("Found invalid route");
-        }
-      }
-      previous_match = match;
+    if (!match->HasState()) {
+      continue;
     }
+
+    if (previous_match != end) {
+      std::vector<EdgeSegment> segments;
+      const auto& previous_state = mapmatching.state(previous_match->stateid());
+      for (auto segment = previous_state.RouteBegin(mapmatching.state(match->stateid())),
+                    end = previous_state.RouteEnd();
+           segment != end; segment++) {
+        segments.emplace_back(segment->edgeid, segment->source, segment->target);
+      }
+      if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
+        MergeRoute(route, segments.rbegin(), segments.rend());
+      } else {
+        throw std::runtime_error("Found invalid route");
+      }
+    }
+    previous_match = match;
   }
 
   return route;
@@ -973,11 +978,18 @@ template void MergeRoute<std::vector<EdgeSegment>::iterator>(
 template void MergeRoute<std::vector<EdgeSegment>::const_iterator>(
     std::vector<EdgeSegment>&, std::vector<EdgeSegment>::const_iterator, std::vector<EdgeSegment>::const_iterator);
 
-template std::vector<EdgeSegment> ConstructRoute<std::vector<MatchResult>::iterator>(
-    baldr::GraphReader&, std::vector<MatchResult>::iterator, std::vector<MatchResult>::iterator);
-template std::vector<EdgeSegment> ConstructRoute<std::vector<MatchResult>::const_iterator>(
-    baldr::GraphReader&, std::vector<MatchResult>::const_iterator, std::vector<MatchResult>::const_iterator);
-
+template std::vector<EdgeSegment>
+ConstructRoute<std::vector<MatchResult>::iterator>(
+    baldr::GraphReader&,
+    const MapMatcher&,
+    std::vector<MatchResult>::iterator,
+    std::vector<MatchResult>::iterator);
+template std::vector<EdgeSegment>
+ConstructRoute<std::vector<MatchResult>::const_iterator>(
+    baldr::GraphReader&,
+    const MapMatcher&,
+    std::vector<MatchResult>::const_iterator,
+    std::vector<MatchResult>::const_iterator);
 }
 
 }

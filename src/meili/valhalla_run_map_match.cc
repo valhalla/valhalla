@@ -19,10 +19,10 @@ int main(int argc, char *argv[])
   const std::string modename = config.get<std::string>("meili.mode");
 
   MapMatcherFactory matcher_factory(config);
-  auto matcher = matcher_factory.Create(modename);
+  auto mapmatcher = matcher_factory.Create(modename);
 
-  const float default_gps_accuracy = matcher->config().get<float>("gps_accuracy"),
-             default_search_radius = matcher->config().get<float>("search_radius");
+  const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy"),
+             default_search_radius = mapmatcher->config().get<float>("search_radius");
 
   std::vector<Measurement> measurements;
   std::string line;
@@ -34,16 +34,16 @@ int main(int argc, char *argv[])
 
       // Offline match
       std::cout << "Sequence " << index++ << std::endl;
-      const auto& results = matcher->OfflineMatch(measurements);
+      const auto& results = mapmatcher->OfflineMatch(measurements);
 
       // Show results
       size_t mmt_id = 0, count = 0;
       for (const auto& result : results) {
-        const auto state = result.state();
-        if (state) {
+        if (result.HasState()) {
+          const auto& state = mapmatcher->mapmatching().state(result.stateid());
           std::cout << mmt_id << " ";
-          std::cout << state->id() << " ";
-          std::cout << state->candidate().distance() << std::endl;
+          std::cout << state.id() << " ";
+          std::cout << state.candidate().distance() << std::endl;
           count++;
         }
         mmt_id++;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
                               default_search_radius);
   }
 
-  delete matcher;
+  delete mapmatcher;
   matcher_factory.ClearCache();
 
   return 0;

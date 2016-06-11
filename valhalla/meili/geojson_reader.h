@@ -1,5 +1,4 @@
 // -*- mode: c++ -*-
-
 #ifndef MMP_GEOJSON_READER_H_
 #define MMP_GEOJSON_READER_H_
 
@@ -12,7 +11,6 @@
 
 
 namespace valhalla {
-
 namespace meili {
 
 class SequenceParseError: public std::runtime_error {
