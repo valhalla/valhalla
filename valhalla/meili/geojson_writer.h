@@ -1,5 +1,4 @@
 // -*- mode: c++ -*-
-
 #ifndef MMP_GEOJSON_WRITER_H_
 #define MMP_GEOJSON_WRITER_H_
 
@@ -19,7 +18,6 @@
 namespace {
 
 using namespace valhalla;
-
 
 template <typename buffer_t>
 void serialize_coordinate(rapidjson::Writer<buffer_t>& writer,
@@ -176,8 +174,8 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
     writer.StartArray();
     if (result.HasState()) {
       const auto& state = mapmatching.state(result.stateid());
-      for (const auto state : mapmatching.states(state.time())) {
-        serialize_state(writer, *state, mapmatching);
+      for (const auto& other_state : mapmatching.states(state.time())) {
+        serialize_state(writer, *other_state, mapmatching);
       }
     }
     writer.EndArray();
@@ -190,9 +188,7 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
 
 
 namespace valhalla {
-
 namespace meili {
-
 
 template <typename buffer_t>
 class GeoJSONWriter
@@ -455,8 +451,5 @@ void GeoJSONMatchedPointsWriter<buffer_t>::WriteProperties(rapidjson::Writer<buf
 }
 
 }
-
 }
-
-
 #endif // MMP_GEOJSON_WRITER_H_
