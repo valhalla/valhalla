@@ -17,8 +17,8 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include <meili/candidate.h>
-#include <meili/grid_range_query.h>
+#include <valhalla/meili/candidate.h>
+#include <valhalla/meili/grid_range_query.h>
 
 namespace valhalla{
 

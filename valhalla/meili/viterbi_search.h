@@ -6,11 +6,10 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include <meili/priority_queue.h>
+#include <valhalla/meili/priority_queue.h>
 
 
 namespace valhalla{
-
 namespace meili {
 
 using Time = uint32_t;
@@ -772,8 +771,5 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
 }
 
 }
-
 }
-
-
 #endif // MMP_VITERBI_SEARCH_H_

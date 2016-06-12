@@ -7,7 +7,7 @@
 
 #include <rapidjson/document.h>
 
-#include <meili/measurement.h>
+#include <valhalla/meili/measurement.h>
 
 
 namespace valhalla {
@@ -44,6 +44,5 @@ class GeoJSONReader
 };
 
 }
-
 }
 #endif // MMP_GEOJSON_READER_H_

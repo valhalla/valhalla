@@ -11,8 +11,8 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
-#include <meili/map_matching.h>
-#include <meili/match_result.h>
+#include <valhalla/meili/map_matching.h>
+#include <valhalla/meili/match_result.h>
 
 
 namespace {
