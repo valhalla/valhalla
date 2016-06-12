@@ -5,7 +5,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
-#include <meili/viterbi_search.h>
+#include <valhalla/meili/viterbi_search.h>
 
 
 namespace valhalla {
