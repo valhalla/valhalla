@@ -6,6 +6,10 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
+# things for versioning
+pkgconfig_DATA = libvalhalla_meili.pc
+EXTRA_DIST = version.sh
+
 # conditional test coverage
 if ENABLE_COVERAGE
 .PHONY: clean-coverage
