@@ -12,7 +12,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
-#include <meili/map_matching.h>
+#include <valhalla/meili/map_matching.h>
 
 
 namespace {

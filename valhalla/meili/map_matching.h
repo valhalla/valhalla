@@ -10,11 +10,11 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/costconstants.h>
 
-#include <meili/candidate.h>
-#include <meili/measurement.h>
-#include <meili/candidate_search.h>
-#include <meili/viterbi_search.h>
-#include <meili/routing.h>
+#include <valhalla/meili/candidate.h>
+#include <valhalla/meili/measurement.h>
+#include <valhalla/meili/candidate_search.h>
+#include <valhalla/meili/viterbi_search.h>
+#include <valhalla/meili/routing.h>
 
 namespace valhalla{
 
