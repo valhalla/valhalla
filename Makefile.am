@@ -49,7 +49,8 @@ nobase_include_HEADERS = \
 	valhalla/meili/viterbi_search.h \
 	valhalla/meili/geojson_reader.h \
 	valhalla/meili/geojson_writer.h \
-	valhalla/meili/measurement.h
+	valhalla/meili/measurement.h \
+	valhalla/meili/match_result.h
 libvalhalla_meili_la_SOURCES = \
 	src/meili/universal_cost.cc \
 	src/meili/routing.cc \
