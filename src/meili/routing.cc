@@ -307,8 +307,7 @@ void set_destinations(baldr::GraphReader& reader,
 
 
 inline uint16_t
-get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
-                              const baldr::GraphTile* tile,
+get_inbound_edgelabel_heading(const baldr::GraphTile* tile,
                               const sif::EdgeLabel& edgelabel,
                               const baldr::NodeInfo& nodeinfo)
 {
@@ -316,7 +315,7 @@ get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
   if (idx < 8) {
     return nodeinfo.heading(idx);
   } else {
-    const auto directededge = helpers::edge_directededge(graphreader, edgelabel.edgeid(), tile);
+    const auto directededge = tile->directededge(edgelabel.edgeid());
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
     const auto& shape = edgeinfo->shape();
     if (shape.size() >= 2) {
@@ -360,22 +359,23 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
 }
 
 
-// This heuristic function estimates cost from current node (at
-// lnglat) to a cluster of destinations within the search radius
-// around a point (i.e. the next measurement).
+// This heuristic function estimates cost from current node
+// (incorporated in the approximator) to a cluster of destinations
+// within a circle formed by the search radius around the lnglat (the
+// location of next measurement).
 
 // To not overestimate the heuristic cost:
 
-// 1. if current node is outside the search radius, the heuristic cost
-// must be the great circle distance to the measurement minus the
-// search radius, since there might be a destination at the boundary
-// of the circle of the radius
+// 1. if current node is outside the circle, the heuristic cost must
+// be the great circle distance to the measurement minus the search
+// radius, since there might be a destination at the boundary of the
+// circle
 
-// 2. if current node is within the search radius, the heuristic cost
-// must be zero since a destination could be anywhere within the
-// radius, including the same location with current node
+// 2. if current node is within the circle, the heuristic cost must be
+// zero since a destination could be anywhere within the circle,
+// including the same location with current node
 
-// Therefore, the heuristic cost is max(0, distance - search_radius)
+// Therefore, the heuristic cost is max(0, distance_to_lnglat - search_radius)
 
 inline float
 heuristic(const midgard::DistanceApproximator& approximator,
@@ -414,7 +414,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
   std::unordered_map<uint16_t, uint32_t> results;
 
-  const auto edgefilter = costing? costing->GetFilter() : nullptr;
+  const auto edgefilter = costing? costing->GetEdgeFilter() : nullptr;
 
   const baldr::GraphTile* tile = nullptr;
 
@@ -458,7 +458,7 @@ find_shortest_path(baldr::GraphReader& reader,
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
-                                   get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
+                                   get_inbound_edgelabel_heading(tile, *pred_edgelabel, *nodeinfo) : 0;
       // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
 
       // Expand current node
@@ -488,7 +488,7 @@ find_shortest_path(baldr::GraphReader& reader,
             for (const auto& edge : destinations[dest].edges()) {
               if (edge.id == other_edgeid) {
                 const float cost = label_cost + other_edge->length() * edge.dist,
-                        sortcost = cost + 0.f;  // The heuristic cost to destinations must be 0
+                        sortcost = cost + 0.f;  // The heuristic cost from a destination to itself must be 0
                 labelset.put(dest, other_edgeid,
                              0.f, edge.dist,
                              cost, turn_cost, sortcost,
@@ -558,7 +558,7 @@ find_shortest_path(baldr::GraphReader& reader,
             for (const auto& other_edge : destinations[other_dest].edges()) {
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
                 const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist),
-                        sortcost = cost + 0.f; // The heuristic cost to destinations must be 0
+                        sortcost = cost + 0.f; // The heuristic cost from a destination to itself must be 0
                 labelset.put(other_dest, origin_edge.id,
                              origin_edge.dist, other_edge.dist,
                              cost, turn_cost, sortcost,

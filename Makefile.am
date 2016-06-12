@@ -98,24 +98,24 @@ test_map_matching_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFL
 test_map_matching_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_queue_SOURCES = test/queue.cc test/test.cc
-test_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
+test_queue_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_queue_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_routing_SOURCES = test/routing.cc test/test.cc
 test_routing_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_routing_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_viterbi_search_SOURCES = test/viterbi_search.cc test/test.cc
-test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
+test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_viterbi_search_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_geojson_reader_SOURCES = test/geojson_reader.cc
-test_geojson_reader_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_geojson_reader_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
+test_geojson_reader_SOURCES = test/geojson_reader.cc test/test.cc
+test_geojson_reader_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_geojson_reader_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_geojson_writer_SOURCES = test/geojson_writer.cc
-test_geojson_writer_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_geojson_writer_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
+test_geojson_writer_SOURCES = test/geojson_writer.cc test/test.cc
+test_geojson_writer_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_geojson_writer_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

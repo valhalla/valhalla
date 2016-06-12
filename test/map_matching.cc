@@ -1,10 +1,4 @@
 // -*- mode: c++ -*-
-
-//enable asserts for this test
-#undef NDEBUG
-
-#include <cassert>
-#include <iostream>
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
@@ -37,8 +31,10 @@ void TestMapMatcherFactory()
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
       auto matcher = factory.Create("auto");
-      assert(matcher->travelmode() == sif::TravelMode::kDrive);
-      assert(matcher->config().get<std::string>("hello") == "world");
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kDrive,
+                        "travel mode should be drive");
+      test::assert_bool(matcher->config().get<std::string>("hello") == "world",
+                        "config for auto should override default");
       delete matcher;
     }
 
@@ -48,8 +44,10 @@ void TestMapMatcherFactory()
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
       auto matcher = factory.Create("bicycle");
-      assert(matcher->travelmode() == sif::TravelMode::kBicycle);
-      assert(matcher->config().get<std::string>("hello") == "default world");
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
+                        "travel mode must be bicycle");
+      test::assert_bool(matcher->config().get<std::string>("hello") == "default world",
+                        "config for drive should override default");
       delete matcher;
     }
 
@@ -62,8 +60,10 @@ void TestMapMatcherFactory()
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
       auto matcher = factory.Create(sif::TravelMode::kPedestrian, preferences);
-      assert(matcher->travelmode() == sif::TravelMode::kPedestrian);
-      assert(matcher->config().get<std::string>("hello") == "preferred world");
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
+                        "travel mode should be pedestrian");
+      test::assert_bool(matcher->config().get<std::string>("hello") == "preferred world",
+                        "preference for pedestrian should override pedestrian config");
       delete matcher;
     }
 
@@ -73,8 +73,10 @@ void TestMapMatcherFactory()
       ptree preferences;
       preferences.put<std::string>("hello", "preferred world");
       auto matcher = factory.Create("multimodal", preferences);
-      assert(matcher->travelmode() == meili::kUniversalTravelMode);
-      assert(matcher->config().get<std::string>("hello") == "preferred world");
+      test::assert_bool(matcher->travelmode() == meili::kUniversalTravelMode,
+                        "travel mode should be universal");
+      test::assert_bool(matcher->config().get<std::string>("hello") == "preferred world",
+                        "preference for universal should override config");
       delete matcher;
     }
 
@@ -83,7 +85,8 @@ void TestMapMatcherFactory()
       meili::MapMatcherFactory factory(root);
       ptree preferences;
       auto matcher = factory.Create(preferences);
-      assert(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("meili.mode")));
+      test::assert_bool(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("meili.mode")),
+                        "should read default mode in the meili.mode correctly");
       delete matcher;
     }
 
@@ -93,12 +96,14 @@ void TestMapMatcherFactory()
       ptree preferences;
       preferences.put<std::string>("mode", "pedestrian");
       auto matcher = factory.Create(preferences);
-      assert(matcher->travelmode() == sif::TravelMode::kPedestrian);
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
+                        "should read mode in preferences correctly");
       delete matcher;
 
       preferences.put<std::string>("mode", "bicycle");
       matcher = factory.Create(preferences);
-      assert(matcher->travelmode() == sif::TravelMode::kBicycle);
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
+                        "should read mode in preferences correctly again");
       delete matcher;
     }
 
@@ -106,50 +111,41 @@ void TestMapMatcherFactory()
     {
       meili::MapMatcherFactory factory(root);
 
-      assert(factory.NameToTravelMode("auto") == sif::TravelMode::kDrive);
-      assert(factory.NameToTravelMode("bicycle") == sif::TravelMode::kBicycle);
-      assert(factory.NameToTravelMode("pedestrian") == sif::TravelMode::kPedestrian);
-      assert(factory.NameToTravelMode("multimodal") == meili::kUniversalTravelMode);
+      test::assert_bool(factory.NameToTravelMode("auto") == sif::TravelMode::kDrive,
+                        "NameToTravelMode auto should be fine");
+      test::assert_bool(factory.NameToTravelMode("bicycle") == sif::TravelMode::kBicycle,
+                        "NameToTravelMode bicycle should be fine");
+      test::assert_bool(factory.NameToTravelMode("pedestrian") == sif::TravelMode::kPedestrian,
+                        "NameToTravelMode pedestrian should be fine");
+      test::assert_bool(factory.NameToTravelMode("multimodal") == meili::kUniversalTravelMode,
+                        "NameToTravelMode universal should found");
 
-      assert(factory.TravelModeToName(sif::TravelMode::kDrive) == "auto");
-      assert(factory.TravelModeToName(sif::TravelMode::kBicycle) == "bicycle");
-      assert(factory.TravelModeToName(sif::TravelMode::kPedestrian) == "pedestrian");
-      assert(factory.TravelModeToName(meili::kUniversalTravelMode) == "multimodal");
+      test::assert_bool(factory.TravelModeToName(sif::TravelMode::kDrive) == "auto",
+                        "TravelModeToName auto should be fine");
+      test::assert_bool(factory.TravelModeToName(sif::TravelMode::kBicycle) == "bicycle",
+                        "TravelModeToName bicycle should be fine");
+      test::assert_bool(factory.TravelModeToName(sif::TravelMode::kPedestrian) == "pedestrian",
+                        "TravelModeToName pedestrian should be fine");
+      test::assert_bool(factory.TravelModeToName(meili::kUniversalTravelMode) == "multimodal",
+                        "TravelModeToName multimodal should be fine");
     }
 
     // Invalid transport mode name
     {
       meili::MapMatcherFactory factory(root);
-      meili::MapMatcher* matcher = nullptr;
-      bool happen = false;
 
-      try {
-        matcher = factory.Create("invalid_mode");
-      } catch (const std::invalid_argument& ex) {
-        happen = true;
-      }
-      assert(!matcher);
-      assert(happen);
+      test::assert_throw<std::invalid_argument>([&factory]() {
+          factory.Create("invalid_mode");
+        }, "invalid_mode shuold be invalid mode");
 
-      matcher = nullptr;
-      happen = false;
-      try {
-        matcher = factory.Create("");
-      } catch (const std::invalid_argument& ex) {
-        happen = true;
-      }
-      assert(!matcher);
-      assert(happen);
 
-      matcher = nullptr;
-      happen = false;
-      try {
-        matcher = factory.Create(static_cast<sif::TravelMode>(7));
-      } catch (const std::invalid_argument& ex) {
-        happen = true;
-      }
-      assert(!matcher);
-      assert(happen);
+      test::assert_throw<std::invalid_argument>([&factory]() {
+          factory.Create("");
+        }, "empty string should be invalid mode");
+
+      test::assert_throw<std::invalid_argument>([&factory]() {
+          factory.Create(static_cast<sif::TravelMode>(7));
+        }, "7 should be a bad number");
     }
   }
 }
@@ -167,8 +163,10 @@ void TestMapMatcher()
   auto pedestrian_matcher = factory.Create("pedestrian");
 
   // Share the same pool
-  assert(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader());
-  assert(&auto_matcher->rangequery() == &pedestrian_matcher->rangequery());
+  test::assert_bool(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader(),
+                    "graph reader shoule be shared among matchers");
+  test::assert_bool(&auto_matcher->rangequery() == &pedestrian_matcher->rangequery(),
+                    "range query should be shared among matchers");
 
   delete auto_matcher;
   delete pedestrian_matcher;

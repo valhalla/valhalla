@@ -2,8 +2,8 @@
 #ifndef MMP_GEOMETRY_HELPERS_H_
 #define MMP_GEOMETRY_HELPERS_H_
 
+#include <vector>
 #include <algorithm>
-#include <cassert>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
@@ -15,18 +15,13 @@ namespace {
 
 inline float
 normalize(float num, float den)
-{
-  assert (num >= 0.f && den >= 0.f);
-  return den > 0.f? std::min(std::max(num / den, 0.f), 1.f) : 0.f;
-}
+{ return 0.f == den? std::min(std::max(num / den, 0.f), 1.f) : 0.f; }
 
 }
 
 
 namespace valhalla{
-
 namespace meili {
-
 namespace helpers {
 
 
@@ -35,13 +30,12 @@ inline coord_t
 LocateAlong(const coord_t& start, const coord_t& end, float offset)
 {
   return {start.x() + (end.x() - start.x()) * offset,
-        start.y() + (end.y() - start.y()) * offset};
+          start.y() + (end.y() - start.y()) * offset};
 }
 
 
 template <typename iterator_t>
-float LineStringLength(const iterator_t& begin,
-                       const iterator_t& end)
+float LineStringLength(const iterator_t& begin, const iterator_t& end)
 {
   if (begin == end) {
     return 0.f;
@@ -69,28 +63,29 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
   target = std::min(std::max(target, 0.f), 1.f);
 
   std::vector<typename iterator_t::value_type> clip;
-  bool open = false;
 
   float total_length = LineStringLength(begin, end),
   prev_vertex_length = 0.f,
        source_length = total_length * source,
        target_length = total_length * target;
 
+  // An state indicating if the position of current vertex is larger
+  // than source and smaller than target
+  bool open = false;
+
   iterator_t prev_vertex = begin;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
-    auto segment_length = prev_vertex->Distance(*vertex),
-          vertex_length = prev_vertex_length + segment_length;
+    const auto segment_length = prev_vertex->Distance(*vertex),
+                vertex_length = prev_vertex_length + segment_length;
 
     if (!open && source_length < vertex_length) {
-      auto offset = normalize(source_length - prev_vertex_length, segment_length);
-      assert(0.f <= offset && offset <= 1.f);
+      const auto offset = normalize(source_length - prev_vertex_length, segment_length);
       clip.push_back(LocateAlong(*prev_vertex, *vertex, offset));
       open = true;
     }
 
     if (open && target_length < vertex_length) {
-      auto offset = normalize(target_length - prev_vertex_length, segment_length);
-      assert(0.f <= offset && offset <= 1.f);
+      const auto offset = normalize(target_length - prev_vertex_length, segment_length);
       clip.push_back(LocateAlong(*prev_vertex, *vertex, offset));
       open = false;
       break;
@@ -103,14 +98,18 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
     prev_vertex = vertex;
     prev_vertex_length = vertex_length;
   }
+  // assert(clip.size() != 1) because when opening state, the source
+  // vertex was inserted and then followed by either target vertex
+  // inserted or current vertex inserted
 
   if (clip.empty()) {
-    assert(1.f == source && 1.f == target);
+    // assert(1.f == source && 1.f == target)
     clip.push_back(*prev_vertex);
     clip.push_back(*prev_vertex);
   }
 
-  assert(clip.size() != 1);
+  // So here we have assert(1 < clip.size())
+
   return clip;
 }
 
@@ -118,16 +117,18 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
 inline uint8_t
 get_turn_degree180(uint16_t left, uint16_t right)
 {
+  if (!(left < 360 && right < 360)) {
+    throw std::invalid_argument("expect angles to be within [0, 360)");
+  }
   const auto turn = std::abs(left - right);
-  assert(0 <= turn && turn < 360);
-  return turn > 180? 360 - turn : turn;
+  return 180 < turn? 360 - turn : turn;
 }
 
 
 inline float
 TranslateLatitudeInMeters(float lat, float meters)
 {
-  float offset = meters / midgard::kMetersPerDegreeLat;
+  const float offset = meters / midgard::kMetersPerDegreeLat;
   return lat + offset;
 }
 
@@ -140,7 +141,7 @@ TranslateLatitudeInMeters(const midgard::PointLL& lnglat, float meters)
 inline float
 TranslateLongitudeInMeters(const midgard::PointLL& lnglat, float meters)
 {
-  float offset = meters / midgard::DistanceApproximator::MetersPerLngDegree(lnglat.lat());
+  const float offset = meters / midgard::DistanceApproximator::MetersPerLngDegree(lnglat.lat());
   return lnglat.lng() + offset;
 }
 
@@ -149,7 +150,7 @@ inline midgard::AABB2<midgard::PointLL>
 ExpandMeters(const midgard::AABB2<midgard::PointLL>& bbox, float meters)
 {
   if (meters < 0.f) {
-    throw std::runtime_error("Expect non-negative meters");
+    throw std::invalid_argument("expect non-negative meters");
   }
 
   midgard::PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
@@ -164,7 +165,7 @@ inline midgard::AABB2<midgard::PointLL>
 ExpandMeters(const midgard::PointLL& pt, float meters)
 {
   if (meters < 0.f) {
-    throw std::runtime_error("Expect non-negative meters");
+    throw std::invalid_argument("expect non-negative meters");
   }
 
   midgard::PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
@@ -184,7 +185,7 @@ Project(const coord_t& p,
         float snap_distance = 0.f)
 {
   if (shape.empty()) {
-    throw std::invalid_argument("Got empty shape");
+    throw std::invalid_argument("got empty shape");
   }
 
   coord_t closest_point(shape.front());
@@ -254,10 +255,6 @@ Project(const coord_t& p,
 }
 
 }
-
 }
-
 }
-
-
 #endif // MMP_GEOMETRY_HELPERS_H_

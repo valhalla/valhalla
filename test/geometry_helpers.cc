@@ -1,11 +1,5 @@
 // -*- mode: c++ -*-
-
-//enable asserts for this test
-#undef NDEBUG
-
 #include <cmath>
-#include <cassert>
-#include <iostream>
 
 #include <valhalla/midgard/point2.h>
 
@@ -17,9 +11,7 @@ using namespace valhalla::meili::helpers;
 
 template <typename T>
 bool approximate(T a, T b, T r = 0.00001)
-{
-  return std::abs(a - b) <= r;
-}
+{ return std::abs(a - b) <= r; }
 
 
 void TestClipLineString()
@@ -28,31 +20,52 @@ void TestClipLineString()
 
   std::vector<Point> line{{0,0}, {0, 0}, {20, 20}, {31, 1}, {31,1}, {12, 23}, {7, 2}, {7,2}};
   auto clip = ClipLineString(line.begin(), line.end(), 0.f, 1.f);
-  assert(LineStringLength(clip.begin(), clip.end()) == LineStringLength(line.begin(), line.end()));
+  test::assert_bool(LineStringLength(clip.begin(), clip.end()) == LineStringLength(line.begin(), line.end()),
+                    "Should not clip anything if range is [0, 1]");
 
   clip = ClipLineString(line.begin(), line.end(), 0.f, 0.1f);
-  assert(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.1f));
+  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.1f),
+                    "10% portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.5f, 1.f);
-  assert(LineStringLength(clip.begin(), clip.end()) == LineStringLength(line.begin(), line.end()) * 0.5f);
+  test::assert_bool(LineStringLength(clip.begin(), clip.end()) == LineStringLength(line.begin(), line.end()) * 0.5f,
+                    "50% portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.5f, 0.7f);
-  assert(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.2f));
+  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.2f),
+                    "0.2 portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.65f, 0.7f);
-  assert(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.05f));
+  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.05f),
+                    "5% portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.4999f, 0.5f);
-  assert(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.0001f));
+  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.0001f),
+                    "0.1% portion should be clipped");
 
-  assert(ClipLineString(line.begin(), line.end(), 0.65f, 0.5f).empty());
-  assert(ClipLineString(line.begin(), line.end(), -2.f, -1.f).empty());
-  assert(ClipLineString(line.begin(), line.end(), 0.f, 0.f).back() == Point(0, 0));
-  assert(ClipLineString(line.begin(), line.end(), -1.f, 0.f).back() == Point(0, 0));
-  assert(ClipLineString(line.begin(), line.end(), 1.f, 1.f).front() == Point(7, 2));
-  assert(ClipLineString(line.begin(), line.end(), 1.f, 2.f).front() == Point(7, 2));
-  assert(ClipLineString(line.begin(), line.end(), 1.001f, 2.f).empty());
-  assert(ClipLineString(line.begin(), line.end(), 0.5f, 0.1f).empty());
+  test::assert_bool(ClipLineString(line.begin(), line.end(), 0.65f, 0.5f).empty(),
+                    "nothing should be clipped since [0.65, 0.5]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), -2.f, -1.f).empty(),
+                    "nothing should be clipped since negative [-2, -1]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), 0.f, 0.f).back() == Point(0, 0),
+                    "nothing should be clipped since empty set [0, 0]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), -1.f, 0.f).back() == Point(0, 0),
+                    "nothing should be clipped since out of range [-1, 0]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), 1.f, 1.f).front() == Point(7, 2),
+                    "nothing should be clipped since [1, 1]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), 1.f, 2.f).front() == Point(7, 2),
+                    "nothing should be clipped since out of range [1, 2]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), 1.001f, 2.f).empty(),
+                    "nothing should be clipped since out of range [1.001, 2]");
+
+  test::assert_bool(ClipLineString(line.begin(), line.end(), 0.5f, 0.1f).empty(),
+                    "nothing should be clipped since empty set [0.5, 0.1]");
 }
 
 

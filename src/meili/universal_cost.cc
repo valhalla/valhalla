@@ -46,7 +46,7 @@ class UniversalCost : public sif::DynamicCost {
   float AStarCostFactor() const
   { return 0.f; }
 
-  virtual const sif::EdgeFilter GetFilter() const {
+  virtual const sif::EdgeFilter GetEdgeFilter() const {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge){
       // Disable transit lines

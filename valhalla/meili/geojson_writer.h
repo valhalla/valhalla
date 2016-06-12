@@ -315,11 +315,14 @@ void WriteRoute(rapidjson::Writer<buffer_t>& writer,
 
   for (auto segment = route.cbegin(), prev_segment = route.cend();
        segment != route.cend(); segment++) {
-    assert(segment->edgeid.Is_Valid());
+    // Dummy segments should have been filtered out, however we still
+    // do a check here
+    if (!segment->edgeid.Is_Valid()) {
+      continue;
+    }
+
     const auto& shape = segment->Shape(matcher.graphreader());
     if (!shape.empty()) {
-      assert(shape.size() >= 2);
-
       const auto adjoined = prev_segment != route.cend() && prev_segment->Adjoined(matcher.graphreader(), *segment);
       // If current segment and previous segment adjoin, skip the
       // first coordinate since it's been written already
