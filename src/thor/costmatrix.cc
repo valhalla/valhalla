@@ -629,9 +629,9 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
     source_hierarchy_limits_[index][2].max_up_transitions = 100;
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (origin.edges())) {
+    for (const auto& edge : (origin.edges)) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (origin.IsNode() && edge.dist == 1) {
+      if (edge.end_node()) {
         continue;
       }
 
@@ -698,10 +698,10 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     target_hierarchy_limits_[index][2].max_up_transitions = 100;
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (dest.edges())) {
+    for (const auto& edge : (dest.edges)) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (dest.IsNode() && edge.dist == 0.0f) {
+      if (edge.begin_node()) {
         continue;
       }
 

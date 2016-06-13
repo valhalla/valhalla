@@ -334,9 +334,9 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : (origin.edges())) {
+  for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
@@ -376,7 +376,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                       const PathLocation& dest,
                       const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add opposing edges to adjacency list
-  for (const auto& edge : dest.edges()) {
+  for (const auto& edge : dest.edges) {
     // Get the directed edge
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
@@ -435,7 +435,7 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
       settled_count_++;
     } else {
       // Set up the destination - consider each possible location edge.
-      for (const auto& edge : loc.edges()) {
+      for (const auto& edge : loc.edges) {
         // Keep the id and the partial distance for the
         // remainder of the edge.
         d.dest_edges[edge.id] = (1.0f - edge.dist);
@@ -478,7 +478,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
       settled_count_++;
     } else {
       // Set up the destination - consider each possible location edge.
-      for (const auto& edge : loc.edges()) {
+      for (const auto& edge : loc.edges) {
         // Get the opposing directed edge Id - this is the edge marked as the
         // "destination" - but the cost is based on the forward path along the
         // initial edge.

@@ -101,8 +101,11 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     return { };
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), destination.vertex(), costing);
-  float mindist = astarheuristic_.GetDistance(origin.vertex());
+  //Note: because we can correlate to more than one place for a given PathLocation
+  //using edges.front here means we are only setting the heuristics to one of them
+  //alternate paths using the other correlated points to may be harder to find
+  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
+  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
@@ -460,7 +463,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
   EdgeStatus edgestatus;
 
   // Add the opposing destination edges to the priority queue
-  for (const auto& edge : destination.edges()) {
+  for (const auto& edge : destination.edges) {
     // Keep the id and the cost to traverse the partial distance
     float ratio = (1.0f - edge.dist);
     GraphId oppedge = graphreader.GetOpposingEdgeId(edge.id);

@@ -104,7 +104,10 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Set origin and destination locations - seeds the adj. lists
-  Init(origin.vertex(), destination.vertex(), costing);
+  //Note: because we can correlate to more than one place for a given PathLocation
+  //using edges.front here means we are only setting the heuristics to one of them
+  //alternate paths using the other correlated points to may be harder to find
+  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
   SetOrigin(graphreader, origin, costing);
   SetDestination(graphreader, destination, costing);
 
@@ -525,9 +528,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : origin.edges()) {
+  for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
@@ -577,10 +580,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   Cost c;
-  for (const auto& edge : dest.edges()) {
+  for (const auto& edge : dest.edges) {
     // If the destination is at a node, skip any outbound edges (so any
     // opposing inbound edges are not considered)
-    if (dest.IsNode() && edge.dist == 0.0f) {
+    if (edge.begin_node()) {
       continue;
     }
 
