@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include "baldr/graphreader.h"
+#include "baldr/connectivity_map.h"
 
 #include <fcntl.h>
 #include <boost/filesystem.hpp>
@@ -65,13 +66,9 @@ void touch_tile(const uint32_t tile_id, const TileHierarchy& tile_hierarchy) {
 
 void TestConnectivityMap() {
   //get the hierarchy to create some tiles
-  std::stringstream json; json << "\
-  {\
-    \"tile_dir\": \"test/tiles\"\
-  }";
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(json, pt);
-  TileHierarchy th("test/tiles");
+  pt.put("tile_dir", "test/gphrdr_test");
+  TileHierarchy th("test/gphrdr_test");
   const auto& level = th.levels().find(2)->second;
   boost::filesystem::remove_all(th.tile_dir());
 
@@ -107,20 +104,20 @@ void TestConnectivityMap() {
   touch_tile(d1, th);
 
   //check that it looks right
-  GraphReader reader(pt);
-  if(!reader.AreConnected({a0, 2, 0}, {a1, 2, 0}))
+  connectivity_map_t conn(th);
+  if(conn.get_color({a0, 2, 0}) != conn.get_color({a1, 2, 0}))
     throw std::runtime_error("a's should be connected");
-  if(!reader.AreConnected({a0, 2, 0}, {a2, 2, 0}))
+  if(conn.get_color({a0, 2, 0}) != conn.get_color({a2, 2, 0}))
     throw std::runtime_error("a's should be connected");
-  if(!reader.AreConnected({a1, 2, 0}, {a2, 2, 0}))
+  if(conn.get_color({a1, 2, 0}) != conn.get_color({a2, 2, 0}))
     throw std::runtime_error("a's should be connected");
-  if(!reader.AreConnected({d0, 2, 0}, {d1, 2, 0}))
+  if(conn.get_color({d0, 2, 0}) != conn.get_color({d1, 2, 0}))
     throw std::runtime_error("d's should be connected");
-  if(reader.AreConnected({c0, 2, 0}, {a1, 2, 0}))
+  if(conn.get_color({c0, 2, 0}) == conn.get_color({a1, 2, 0}))
     throw std::runtime_error("c is disjoint");
-  if(reader.AreConnected({b0, 2, 0}, {a0, 2, 0}))
+  if(conn.get_color({b0, 2, 0}) == conn.get_color({a0, 2, 0}))
     throw std::runtime_error("b is disjoint");
-  if(reader.AreConnected({a2, 2, 0}, {d0, 2, 0}))
+  if(conn.get_color({a2, 2, 0}) == conn.get_color({d0, 2, 0}))
     throw std::runtime_error("a is disjoint from d");
 
   boost::filesystem::remove_all(th.tile_dir());
