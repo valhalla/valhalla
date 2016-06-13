@@ -22,8 +22,7 @@ PathAlgorithm::PathAlgorithm()
       allow_transitions_(false),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      tile_creation_date_(0),
-      walking_distance_(0) {
+      tile_creation_date_(0) {
 }
 
 // Destructor
