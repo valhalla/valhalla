@@ -15,7 +15,7 @@ namespace baldr{
  * The graph correlated location object providing the path finding
  * algorithm the information to actually compute a path
  */
-class PathLocation : public Location {
+struct PathLocation : public Location {
  public:
   using Location::Location;
   PathLocation(const Location& location);
@@ -25,59 +25,27 @@ class PathLocation : public Location {
    */
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
-    PathEdge(const GraphId& id, const float dist, const SideOfStreet sos = NONE);
+    PathEdge(const GraphId& id, const float dist, const midgard::PointLL& projected, const SideOfStreet sos = NONE);
     //the directed edge it appears on
     GraphId id;
     //how far along the edge it is (as a percentage  from 0 - 1)
     float dist;
+    //the projected point along the edge where the original location correlates
+    midgard::PointLL projected;
     //what side of the edge is it on
     SideOfStreet sos;
+    //whether or not this correlation point is the begin node of this edge
+    bool begin_node() const;
+    //whether or not this correlation point is the end node of this edge
+    bool end_node() const;
+
+    //a confidence interval of how good the correlation is
+    //proportional to the distance between the input point and the correlated one
+    //float correlation_quality;
   };
 
-  /**
-   * Get the edges associated with this location
-   * @return edges
-   */
-  const std::vector<PathEdge>& edges() const;
-
-  /*
-   * Get the vertex associated with this location
-   * @return vertex
-   */
-  const midgard::PointLL& vertex() const;
-
-  /**
-   * Whether or not this location is on a vertex in the graph (intersection)
-   * note: this implies all distances on edges are either 0's or 1's
-   *
-   * @return bool True if its on an intersection false if not
-   */
-  bool IsNode() const;
-
-  /**
-   * Adds a correlated edge to the path location
-   *
-   * @param the edge     the edge to correlate
-   */
-  void CorrelateEdge(const PathEdge& edge);
-  void CorrelateEdge(PathEdge&& edge);
-
-
-  /**
-   * @return true if the point has been correlated to the route network, false otherwise
-   */
-  bool IsCorrelated() const;
-
-  /**
-   * Set the route network correlation point for this location
-   * @param point the correlation point
-   */
-  void CorrelateVertex(const midgard::PointLL& correlated);
-
-  /**
-   * Clear the list of path edges.
-   */
-  void ClearEdges();
+  //list of edges this location appears on within the graph
+  std::vector<PathEdge> edges;
 
   /**
    * Equality check
@@ -96,21 +64,6 @@ class PathLocation : public Location {
    * @return PathLocation
    */
   static PathLocation FromPtree(const std::vector<Location>& locations, const boost::property_tree::ptree& path_location);
-
- protected:
-  //whether or not this location is on a vertex in the graph (intersection)
-  //note: this implies all distances on edges are either 0's or 1's
-  bool node_;
-
-  //list of edges this location appears on within the graph
-  std::vector<PathEdge> edges_;
-
-  //correlated point in the graph (along an edge or at a vertex)
-  midgard::PointLL vertex_;
-
-  //a confidence interval of how good the correlation is
-  //proportional to the distance between the input point and the correlated one
-  //float correlation_quality_;
 };
 
 }
