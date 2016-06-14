@@ -55,12 +55,6 @@ namespace {
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
     //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
     for(size_t i = start; i < end; ++i) {
-      //check connectivity
-      uint32_t a_id = lowest_level->second.tiles.TileId(locations[origin].latlng_);
-      uint32_t b_id = lowest_level->second.tiles.TileId(locations[i].latlng_);
-      if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0}))
-        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
-
       //check if distance between latlngs exceed max distance limit the chosen matrix type
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
 
@@ -72,7 +66,7 @@ namespace {
       }
 
       if (path_distance > matrix_max_distance)
-        throw std::runtime_error("Path distance exceeds the max distance limit.");
+        throw std::runtime_error("Path distance exceeds the max distance limit");
       }
   }
 }
@@ -102,11 +96,34 @@ namespace valhalla {
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
           break;
       }
+
       //correlate the various locations to the underlying graph
+      std::unordered_map<size_t, size_t> color_counts;
       for(size_t i = 0; i < locations.size(); ++i) {
         auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+        //TODO: get transit level for transit costing
+        //TODO: if transit send a non zero radius
+        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
+        for(auto color : colors){
+          auto itr = color_counts.find(color);
+          if(itr == color_counts.cend())
+            color_counts[color] = 1;
+          else
+            ++itr->second;
+        }
       }
+
+      //are all the locations in the same color regions
+      bool connected = false;
+      for(const auto& c : color_counts) {
+        if(c.second == locations.size()) {
+          connected = true;
+          break;
+        }
+      }
+      if(!connected)
+        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
 
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
       //pass on to thor with type of matrix
