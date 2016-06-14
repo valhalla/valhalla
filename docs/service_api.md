@@ -1,4 +1,4 @@
-# MMP Service API
+# Service API
 
 *The API is still in testing and will be changed any time. Any
  suggestions are welcome to share at
