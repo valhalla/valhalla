@@ -1,6 +1,8 @@
 # MMP Service API
 
-*The API is still in testing and will be changed any time. Any suggestions are welcome to share at [GitHub Issues](https://github.com/mapillary/map_matching_plus/issues).*
+*The API is still in testing and will be changed any time. Any
+ suggestions are welcome to share at
+ [GitHub Issues](https://github.com/valhalla/meili/issues).*
 
 ## Request
 
