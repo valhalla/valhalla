@@ -319,6 +319,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   sql = "CREATE TABLE admin_access (";
   sql += "admin_id INTEGER NOT NULL,";
+  sql += "iso_code TEXT,";
   //sql += "motorway INTEGER DEFAULT NULL,";
   //sql += "motorway_link INTEGER DEFAULT NULL,";
   sql += "trunk INTEGER DEFAULT NULL,";
@@ -562,9 +563,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating Parent admin");
 
-  sql  = "INSERT into admin_access (admin_id, trunk, trunk_link, track, footway, ";
+  sql  = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, ";
   sql += "pedestrian, bridleway, cycleway, path) VALUES (";
   sql += "(select rowid from admins where (name = ? or name_en = ?)), ";
+  sql += "(select iso_code from admins where (name = ? or name_en = ?)), ";
   sql += "?, ?, ?, ?, ?, ?, ?, ?)";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
@@ -588,13 +590,15 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_clear_bindings (stmt);
     sqlite3_bind_text (stmt, 1, access.first.c_str(), access.first.length(), SQLITE_STATIC);
     sqlite3_bind_text (stmt, 2, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text (stmt, 3, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text (stmt, 4, access.first.c_str(), access.first.length(), SQLITE_STATIC);
 
     for (uint32_t col = 0; col != column_values.size(); ++col) {
       int val = column_values.at(col);
       if (val != -1)
-        sqlite3_bind_int (stmt,  col+3, val);
+        sqlite3_bind_int (stmt,  col+5, val);
       else
-        sqlite3_bind_null(stmt,col+3);
+        sqlite3_bind_null(stmt,col+5);
     }
 
     /* performing INSERT INTO */
