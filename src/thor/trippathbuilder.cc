@@ -330,6 +330,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       end_pct = e.dist;
       end_sos = e.sos;
       end_vrt = e.projected;
+      break;
     }
   }
   // Set the destination side of street, if one exists
