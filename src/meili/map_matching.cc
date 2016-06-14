@@ -10,12 +10,12 @@
 #include "meili/geometry_helpers.h"
 #include "meili/map_matching.h"
 #include "meili/graph_helpers.h"
+#include "meili/match_result.h"
 
 using ptree = boost::property_tree::ptree;
 
 
 namespace valhalla {
-
 namespace meili {
 
 State::State(const StateId id,
@@ -342,9 +342,9 @@ guess_source_result(const MapMatching::state_iterator source,
     const auto& c = source->candidate();
     //Note: technically a candidate can have correlated to more than one place in the graph
     //but the way its used in meili we only correlated it to one place so .front() is safe
-    return {c.edges.front().projected, c.distance(), last_valid_id, last_valid_type, &(*source)};
+    return {c.edges.front().projected, c.distance(), last_valid_id, last_valid_type, source->id()};
   } else if (source.IsValid()) {
-    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*source)};
+    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, source->id()};
   }
 
   return {source_measurement.lnglat()};
@@ -372,9 +372,9 @@ guess_target_result(const MapMatching::state_iterator source,
     const auto& c = target->candidate();
     //Note: technically a candidate can have correlated to more than one place in the graph
     //but the way its used in meili we only correlated it to one place so .front() is safe
-    return {c.edges.front().projected, c.distance(), graphid, graphtype, &(*target)};
+    return {c.edges.front().projected, c.distance(), graphid, graphtype, target->id()};
   } else if (target.IsValid()) {
-    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*target)};
+    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, target->id()};
   }
 
   return {target_measurement.lnglat()};
@@ -425,7 +425,7 @@ interpolate(baldr::GraphReader& reader,
   if (closest_candidate != end) {
     //Note: technically a candidate can have correlated to more than one place in the graph
     //but the way its used in meili we only correlated it to one place so .front() is safe
-    return {closest_candidate->edges.front().projected, closest_candidate->distance(), closest_graphid, closest_graphtype};
+    return {closest_candidate->edges.front().projected, closest_candidate->distance(), closest_graphid, closest_graphtype, kInvalidStateId};
   }
 
   return {measurement.lnglat()};
@@ -917,30 +917,35 @@ void MergeRoute(std::vector<EdgeSegment>& route,
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
 ConstructRoute(baldr::GraphReader& graphreader,
+               const MapMatcher& mapmatcher,
                match_iterator_t begin,
                match_iterator_t end)
 {
   std::vector<EdgeSegment> route;
   match_iterator_t previous_match = end;
+  const auto& mapmatching = mapmatcher.mapmatching();
   const baldr::GraphTile* tile = nullptr;
 
   for (auto match = begin; match != end; match++) {
-    if (match->state()) {
-      if (previous_match != end) {
-        std::vector<EdgeSegment> segments;
-        for (auto segment = previous_match->state()->RouteBegin(*match->state()),
-                      end = previous_match->state()->RouteEnd();
-             segment != end; segment++) {
-          segments.emplace_back(segment->edgeid, segment->source, segment->target);
-        }
-        if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
-          MergeRoute(route, segments.rbegin(), segments.rend());
-        } else {
-          throw std::runtime_error("Found invalid route");
-        }
-      }
-      previous_match = match;
+    if (!match->HasState()) {
+      continue;
     }
+
+    if (previous_match != end) {
+      std::vector<EdgeSegment> segments;
+      const auto& previous_state = mapmatching.state(previous_match->stateid());
+      for (auto segment = previous_state.RouteBegin(mapmatching.state(match->stateid())),
+                    end = previous_state.RouteEnd();
+           segment != end; segment++) {
+        segments.emplace_back(segment->edgeid, segment->source, segment->target);
+      }
+      if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
+        MergeRoute(route, segments.rbegin(), segments.rend());
+      } else {
+        throw std::runtime_error("Found invalid route");
+      }
+    }
+    previous_match = match;
   }
 
   return route;
@@ -962,11 +967,18 @@ template void MergeRoute<std::vector<EdgeSegment>::iterator>(
 template void MergeRoute<std::vector<EdgeSegment>::const_iterator>(
     std::vector<EdgeSegment>&, std::vector<EdgeSegment>::const_iterator, std::vector<EdgeSegment>::const_iterator);
 
-template std::vector<EdgeSegment> ConstructRoute<std::vector<MatchResult>::iterator>(
-    baldr::GraphReader&, std::vector<MatchResult>::iterator, std::vector<MatchResult>::iterator);
-template std::vector<EdgeSegment> ConstructRoute<std::vector<MatchResult>::const_iterator>(
-    baldr::GraphReader&, std::vector<MatchResult>::const_iterator, std::vector<MatchResult>::const_iterator);
-
+template std::vector<EdgeSegment>
+ConstructRoute<std::vector<MatchResult>::iterator>(
+    baldr::GraphReader&,
+    const MapMatcher&,
+    std::vector<MatchResult>::iterator,
+    std::vector<MatchResult>::iterator);
+template std::vector<EdgeSegment>
+ConstructRoute<std::vector<MatchResult>::const_iterator>(
+    baldr::GraphReader&,
+    const MapMatcher&,
+    std::vector<MatchResult>::const_iterator,
+    std::vector<MatchResult>::const_iterator);
 }
 
 }

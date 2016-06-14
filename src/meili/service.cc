@@ -19,6 +19,7 @@
 #include "meili/map_matching.h"
 #include "meili/geojson_reader.h"
 #include "meili/geojson_writer.h"
+#include "meili/match_result.h"
 
 
 using namespace prime_server;
