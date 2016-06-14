@@ -3,7 +3,6 @@
 #define MMP_ROUTING_H_
 
 #include <vector>
-#include <unordered_set>
 #include <unordered_map>
 #include <stdexcept>
 #include <algorithm>
@@ -16,6 +15,8 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/dynamiccost.h>
 
+#include <meili/bucket_queue.h>
+
 
 namespace valhalla{
 
@@ -24,149 +25,6 @@ namespace meili {
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
 constexpr uint32_t kInvalidLabelIndex = std::numeric_limits<uint32_t>::max();
-
-
-template<typename key_t, key_t invalid_key>
-class BucketQueue
-{
- public:
-  using size_type = typename std::vector<std::vector<key_t>>::size_type;
-
-  BucketQueue(size_type count, float size = 1.f)
-      : bucket_count_(count),
-        bucket_size_(size),
-        top_(0),
-        costmap_(),
-        buckets_() {
-    if (bucket_size_ <= 0.f) {
-      throw std::invalid_argument("expect bucket size to be positive");
-    }
-    buckets_.reserve(bucket_count_);
-  }
-
-  bool add(const key_t& key, float cost)
-  {
-    if (cost < 0.f) {
-      throw std::invalid_argument("expect non-negative cost");
-    }
-
-    if (costmap_.find(key) != costmap_.end()) {
-      throw std::invalid_argument("the key " + std::to_string(key) + " exists");
-    }
-
-    const auto idx = bucket_idx(cost);
-
-    if (idx < bucket_count_) {
-      if (buckets_.size() <= idx) {
-        buckets_.resize(idx + 1);
-      }
-      buckets_[idx].push_back(key);
-      costmap_[key] = cost;
-
-      // Update top cursor
-      if (idx < top_) {
-        top_ = idx;
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  void decrease(const key_t& key, float cost)
-  {
-    if (cost < 0.f) {
-      throw std::invalid_argument("expect non-negative cost");
-    }
-
-    const auto it = costmap_.find(key);
-    if (it == costmap_.end()) {
-      throw std::runtime_error("the key " + std::to_string(key) + " to decrease doesn't exists");
-    }
-
-    if (cost < it->second) {
-      // Remove the old item
-      const auto old_idx = bucket_idx(it->second);
-      const auto idx = bucket_idx(cost);
-      if (idx > old_idx) {
-        throw std::runtime_error("invalid cost: " + std::to_string(cost) + " (old value is " + std::to_string(it->second) + ")");
-      }
-      auto& keys = buckets_[old_idx];
-      const auto it = std::find(keys.begin(), keys.end(), key);
-      if (it == keys.end()) {
-        throw std::logic_error("the key " + std::to_string(key) + " in the cost map was failed to add to the bukcet");
-      }
-      keys.erase(it);
-
-      // Add the new one
-      buckets_[idx].push_back(key);
-      costmap_[key] = cost;
-
-      // Update top cursor
-      if (idx < top_) {
-        top_ = idx;
-      }
-    } else {
-      throw std::runtime_error("the cost " + std::to_string(cost)
-                               + " is not less than the cost (" + std::to_string(it->second)
-                               + ") associated with the key (" + std::to_string(key)
-                               + ") you requested to decrease ");
-    }
-  }
-
-  float cost(const key_t& key) const
-  {
-    const auto it = costmap_.find(key);
-    return it == costmap_.end()? -1.f : it->second;
-  }
-
-  key_t pop()
-  {
-    if (empty()) {
-      return invalid_key;
-    }
-
-    const auto key = buckets_[top_].back();
-    buckets_[top_].pop_back();
-    costmap_.erase(key);
-    return key;
-  }
-
-  bool empty() const
-  {
-    while (top_ < buckets_.size() && buckets_[top_].empty()) {
-      top_++;
-    }
-    return top_ >= buckets_.size();
-  }
-
-  size_type size() const
-  { return costmap_.size(); }
-
-  void clear()
-  {
-    buckets_.clear();
-    costmap_.clear();
-    top_ = 0;
-  }
-
- private:
-
-  size_type bucket_count_;
-
-  float bucket_size_;
-
-  mutable size_type top_;
-
-  std::unordered_map<key_t, float> costmap_;
-
-  std::vector<std::vector<key_t>> buckets_;
-
-  size_type bucket_idx(float cost) const {
-    return static_cast<size_type>(cost / bucket_size_);
-  }
-};
 
 
 // TODO simplify it by inheriting sif::EdgeLabel
@@ -279,9 +137,15 @@ struct Label
 };
 
 
-struct Status
-{
+struct Status{
+  Status() = delete;
+
+  Status(uint32_t idx)
+      : label_idx(idx),
+        permanent(false) {}
+
   uint32_t label_idx : 31;
+
   uint32_t permanent : 1;
 };
 
