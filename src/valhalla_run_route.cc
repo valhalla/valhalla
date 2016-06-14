@@ -14,6 +14,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/odin/directionsbuilder.h>
@@ -559,31 +560,6 @@ int main(int argc, char *argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
-  // If we are testing connectivity
-  if (connectivity) {
-    auto t10 = std::chrono::high_resolution_clock::now();
-    auto tile_hierarchy = reader.GetTileHierarchy();
-    auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-    auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-    for (uint32_t i = 0; i < n; i++) {
-      uint32_t orig_tile = tiles.TileId(locations[i].latlng_);
-      uint32_t dest_tile = tiles.TileId(locations[i+1].latlng_);
-      if (!reader.AreConnected({orig_tile, local_level, 0},
-                               {dest_tile, local_level, 0})) {
-        LOG_INFO("No tile connectivity between locations " + std::to_string(i)
-                 + " and " + std::to_string(i+1));
-        data.setSuccess("fail_no_connectivity");
-        data.log();
-        return EXIT_SUCCESS;
-      }
-    }
-    auto t20 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs1 =
-           std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
-    LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
-    data.addRuntime(msecs1);
-  }
-
   auto t0 = std::chrono::high_resolution_clock::now();
 
   // Construct costing
@@ -625,18 +601,44 @@ int main(int argc, char *argv[]) {
   // Find locations
   auto t1 = std::chrono::high_resolution_clock::now();
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  auto getPathLoc = [&reader, &cost, &data] (Location& loc, std::string status) {
-    try {
-      return Search(loc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-    } catch (...) {
-      data.setSuccess(status);
-      data.log();
-      exit(EXIT_FAILURE);
-    }
-  };
+  std::unordered_map<size_t, size_t> color_counts;
+  connectivity_map_t connectivity_map(reader.GetTileHierarchy());
   std::vector<PathLocation> path_location;
   for (auto loc : locations) {
-    path_location.push_back(getPathLoc(loc, "fail_invalid_origin"));
+    try {
+      path_location.push_back(Search(loc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter()));
+      //TODO: get transit level for transit costing
+      //TODO: if transit send a non zero radius
+      auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, path_location.back(), 0);
+      for(auto color : colors){
+        auto itr = color_counts.find(color);
+        if(itr == color_counts.cend())
+          color_counts[color] = 1;
+        else
+          ++itr->second;
+      }
+    } catch (...) {
+      data.setSuccess("fail_invalid_origin");
+      data.log();
+      return EXIT_FAILURE;
+    }
+  }
+  // If we are testing connectivity
+  if (connectivity) {
+    //are all the locations in the same color regions
+    bool connected = false;
+    for(const auto& c : color_counts) {
+      if(c.second == locations.size()) {
+        connected = true;
+        break;
+      }
+    }
+    if(!connected) {
+      LOG_INFO("No tile connectivity between locations");
+      data.setSuccess("fail_no_connectivity");
+      data.log();
+      return EXIT_FAILURE;
+    }
   }
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -656,8 +658,8 @@ int main(int argc, char *argv[]) {
       pathalgorithm = &astar;
     } else {
       bool same_edge = false;
-      for (auto& edge1 : path_location[i].edges()) {
-        for (auto& edge2 : path_location[i+1].edges()) {
+      for (auto& edge1 : path_location[i].edges) {
+        for (auto& edge2 : path_location[i+1].edges) {
           if (edge1.id == edge2.id) {
             same_edge = true;
           }
@@ -694,7 +696,7 @@ int main(int argc, char *argv[]) {
     } else {
       // Check if origins are unreachable
       bool unreachable_origin = false;
-      for (auto& edge : path_location[i].edges()) {
+      for (auto& edge : path_location[i].edges) {
         const GraphTile* tile = reader.GetGraphTile(edge.id);
         const DirectedEdge* directededge = tile->directededge(edge.id);
         std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
@@ -708,7 +710,7 @@ int main(int argc, char *argv[]) {
 
       // Check if destinations are unreachable
       bool unreachable_dest = false;
-      for (auto& edge : path_location[i+1].edges()) {
+      for (auto& edge : path_location[i+1].edges) {
         const GraphTile* tile = reader.GetGraphTile(edge.id);
         const DirectedEdge* directededge = tile->directededge(edge.id);
         std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
