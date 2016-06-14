@@ -75,7 +75,7 @@ Here are some attributes:
 ```C++
 // Matched coordinate
 const valhalla::midgard::PointLL&
-mmp::MatchResult::matched_coordinate();
+mmp::MatchResult::lnglat();
 
 // Distance from measurement to the matched coordinate
 float mmp::MatchResult::distance();

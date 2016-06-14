@@ -1,5 +1,4 @@
 // -*- mode: c++ -*-
-
 #ifndef MMP_GEOJSON_WRITER_H_
 #define MMP_GEOJSON_WRITER_H_
 
@@ -13,12 +12,12 @@
 #include <valhalla/baldr/graphid.h>
 
 #include <valhalla/meili/map_matching.h>
+#include <valhalla/meili/match_result.h>
 
 
 namespace {
 
 using namespace valhalla;
-
 
 template <typename buffer_t>
 void serialize_coordinate(rapidjson::Writer<buffer_t>& writer,
@@ -138,8 +137,10 @@ void serialize_state(rapidjson::Writer<buffer_t>& writer,
   writer.String("distance");
   writer.Double(state.candidate().distance());
 
+  //Note: technically a candidate can have correlated to more than one place in the graph
+  //but the way its used in meili we only correlated it to one place so .front() is safe
   writer.String("coordinate");
-  serialize_coordinate(writer, state.candidate().vertex());
+  serialize_coordinate(writer, state.candidate().edges.front().projected);
 
   writer.String("routes");
   serialize_routes(writer, mm, state);
@@ -150,10 +151,10 @@ void serialize_state(rapidjson::Writer<buffer_t>& writer,
 
 template <typename buffer_t>
 void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
-                       meili::MapMatcher& matcher,
+                       const meili::MapMatcher& mapmatcher,
                        const std::vector<meili::MatchResult>& results)
 {
-  const auto& mm = matcher.mapmatching();
+  const auto& mapmatching = mapmatcher.mapmatching();
 
   writer.String("distances");
   writer.StartArray();
@@ -173,9 +174,10 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
   writer.StartArray();
   for (const auto& result : results) {
     writer.StartArray();
-    if (result.state()) {
-      for (const auto state : mm.states(result.state()->time())) {
-        serialize_state(writer, *state, mm);
+    if (result.HasState()) {
+      const auto& state = mapmatching.state(result.stateid());
+      for (const auto& other_state : mapmatching.states(state.time())) {
+        serialize_state(writer, *other_state, mapmatching);
       }
     }
     writer.EndArray();
@@ -188,9 +190,7 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
 
 
 namespace valhalla {
-
 namespace meili {
-
 
 template <typename buffer_t>
 class GeoJSONWriter
@@ -355,7 +355,7 @@ void WriteRoute(rapidjson::Writer<buffer_t>& writer,
 
 template <typename buffer_t>
 void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& writer,
-                                                 MapMatcher& matcher,
+                                                 MapMatcher& mapmatcher,
                                                  const std::vector<MatchResult>& results) const
 {
   writer.StartObject();
@@ -365,7 +365,11 @@ void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& wr
 
   writer.String("coordinates");
   writer.StartArray();
-  WriteRoute(writer, matcher, ConstructRoute(matcher.graphreader(), results.cbegin(), results.cend()));
+  const auto& segments = ConstructRoute(mapmatcher.graphreader(),
+                                        mapmatcher,
+                                        results.cbegin(),
+                                        results.cend());
+  WriteRoute(writer, mapmatcher, segments);
   writer.EndArray();
 
   writer.EndObject();
@@ -449,8 +453,5 @@ void GeoJSONMatchedPointsWriter<buffer_t>::WriteProperties(rapidjson::Writer<buf
 }
 
 }
-
 }
-
-
 #endif // MMP_GEOJSON_WRITER_H_

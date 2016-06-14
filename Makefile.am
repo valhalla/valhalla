@@ -6,6 +6,10 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
+# things for versioning
+pkgconfig_DATA = libvalhalla_meili.pc
+EXTRA_DIST = version.sh
+
 # conditional test coverage
 if ENABLE_COVERAGE
 .PHONY: clean-coverage
@@ -49,7 +53,8 @@ nobase_include_HEADERS = \
 	valhalla/meili/viterbi_search.h \
 	valhalla/meili/geojson_reader.h \
 	valhalla/meili/geojson_writer.h \
-	valhalla/meili/measurement.h
+	valhalla/meili/measurement.h \
+	valhalla/meili/match_result.h
 libvalhalla_meili_la_SOURCES = \
 	src/meili/universal_cost.cc \
 	src/meili/routing.cc \

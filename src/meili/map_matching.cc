@@ -10,12 +10,12 @@
 #include "meili/geometry_helpers.h"
 #include "meili/map_matching.h"
 #include "meili/graph_helpers.h"
+#include "meili/match_result.h"
 
 using ptree = boost::property_tree::ptree;
 
 
 namespace valhalla {
-
 namespace meili {
 
 State::State(const StateId id,
@@ -75,27 +75,6 @@ State::last_label(const State& state) const
   }
   return nullptr;
 }
-
-
-inline float
-GreatCircleDistance(const State& left,
-                    const State& right)
-{
-  const auto &left_pt = left.candidate().vertex(),
-            &right_pt = right.candidate().vertex();
-  return left_pt.Distance(right_pt);
-}
-
-
-inline float
-GreatCircleDistanceSquared(const State& left,
-                           const State& right)
-{
-  const auto &left_pt = left.candidate().vertex(),
-            &right_pt = right.candidate().vertex();
-  return left_pt.DistanceSquared(right_pt);
-}
-
 
 inline float
 GreatCircleDistance(const Measurement& left,
@@ -323,7 +302,7 @@ collect_nodes(baldr::GraphReader& graphreader, const Candidate& location)
   std::unordered_set<baldr::GraphId> results;
   const baldr::GraphTile* tile = nullptr;
 
-  for (const auto& edge : location.edges()) {
+  for (const auto& edge : location.edges) {
     if (!edge.id.Is_Valid()) continue;
     if (edge.dist == 0.f) {
       const auto& startnodeid = helpers::edge_startnodeid(graphreader, edge.id, tile);
@@ -361,9 +340,11 @@ guess_source_result(const MapMatching::state_iterator source,
       }
     }
     const auto& c = source->candidate();
-    return {c.vertex(), c.distance(), last_valid_id, last_valid_type, &(*source)};
+    //Note: technically a candidate can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    return {c.edges.front().projected, c.distance(), last_valid_id, last_valid_type, source->id()};
   } else if (source.IsValid()) {
-    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*source)};
+    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, source->id()};
   }
 
   return {source_measurement.lnglat()};
@@ -389,9 +370,11 @@ guess_target_result(const MapMatching::state_iterator source,
       }
     }
     const auto& c = target->candidate();
-    return {c.vertex(), c.distance(), graphid, graphtype, &(*target)};
+    //Note: technically a candidate can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    return {c.edges.front().projected, c.distance(), graphid, graphtype, target->id()};
   } else if (target.IsValid()) {
-    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*target)};
+    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, target->id()};
   }
 
   return {target_measurement.lnglat()};
@@ -413,8 +396,10 @@ interpolate(baldr::GraphReader& reader,
 
   for (auto candidate = begin; candidate != end; candidate++) {
     if (candidate->sq_distance() < closest_sq_distance) {
-      if (!candidate->IsNode()) {
-        for (const auto& edge : candidate->edges()) {
+      //Note: technically a candidate can have correlated to more than one place in the graph
+      //but the way its used in meili we only correlated it to one place so .front() is safe
+      if (!candidate->edges.front().begin_node() && !candidate->edges.front().end_node()) {
+        for (const auto& edge : candidate->edges) {
           const auto it = graphset.find(edge.id);
           if (it != graphset.end()) {
             closest_candidate = candidate;
@@ -438,7 +423,9 @@ interpolate(baldr::GraphReader& reader,
   }
 
   if (closest_candidate != end) {
-    return {closest_candidate->vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype};
+    //Note: technically a candidate can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    return {closest_candidate->edges.front().projected, closest_candidate->distance(), closest_graphid, closest_graphtype, kInvalidStateId};
   }
 
   return {measurement.lnglat()};
@@ -464,8 +451,10 @@ collect_graphset(baldr::GraphReader& reader,
     }
   } else if (source.IsValid()) {
     const auto& location = source->candidate();
-    if (!location.IsNode()) {
-      for (const auto& edge : location.edges()) {
+    //Note: technically a location can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    if (!location.edges.front().begin_node() && !location.edges.front().end_node()) {
+      for (const auto& edge : location.edges) {
         if (edge.id.Is_Valid()) {
           graphset.insert(edge.id);
         }
@@ -928,30 +917,35 @@ void MergeRoute(std::vector<EdgeSegment>& route,
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
 ConstructRoute(baldr::GraphReader& graphreader,
+               const MapMatcher& mapmatcher,
                match_iterator_t begin,
                match_iterator_t end)
 {
   std::vector<EdgeSegment> route;
   match_iterator_t previous_match = end;
+  const auto& mapmatching = mapmatcher.mapmatching();
   const baldr::GraphTile* tile = nullptr;
 
   for (auto match = begin; match != end; match++) {
-    if (match->state()) {
-      if (previous_match != end) {
-        std::vector<EdgeSegment> segments;
-        for (auto segment = previous_match->state()->RouteBegin(*match->state()),
-                      end = previous_match->state()->RouteEnd();
-             segment != end; segment++) {
-          segments.emplace_back(segment->edgeid, segment->source, segment->target);
-        }
-        if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
-          MergeRoute(route, segments.rbegin(), segments.rend());
-        } else {
-          throw std::runtime_error("Found invalid route");
-        }
-      }
-      previous_match = match;
+    if (!match->HasState()) {
+      continue;
     }
+
+    if (previous_match != end) {
+      std::vector<EdgeSegment> segments;
+      const auto& previous_state = mapmatching.state(previous_match->stateid());
+      for (auto segment = previous_state.RouteBegin(mapmatching.state(match->stateid())),
+                    end = previous_state.RouteEnd();
+           segment != end; segment++) {
+        segments.emplace_back(segment->edgeid, segment->source, segment->target);
+      }
+      if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
+        MergeRoute(route, segments.rbegin(), segments.rend());
+      } else {
+        throw std::runtime_error("Found invalid route");
+      }
+    }
+    previous_match = match;
   }
 
   return route;
@@ -973,11 +967,18 @@ template void MergeRoute<std::vector<EdgeSegment>::iterator>(
 template void MergeRoute<std::vector<EdgeSegment>::const_iterator>(
     std::vector<EdgeSegment>&, std::vector<EdgeSegment>::const_iterator, std::vector<EdgeSegment>::const_iterator);
 
-template std::vector<EdgeSegment> ConstructRoute<std::vector<MatchResult>::iterator>(
-    baldr::GraphReader&, std::vector<MatchResult>::iterator, std::vector<MatchResult>::iterator);
-template std::vector<EdgeSegment> ConstructRoute<std::vector<MatchResult>::const_iterator>(
-    baldr::GraphReader&, std::vector<MatchResult>::const_iterator, std::vector<MatchResult>::const_iterator);
-
+template std::vector<EdgeSegment>
+ConstructRoute<std::vector<MatchResult>::iterator>(
+    baldr::GraphReader&,
+    const MapMatcher&,
+    std::vector<MatchResult>::iterator,
+    std::vector<MatchResult>::iterator);
+template std::vector<EdgeSegment>
+ConstructRoute<std::vector<MatchResult>::const_iterator>(
+    baldr::GraphReader&,
+    const MapMatcher&,
+    std::vector<MatchResult>::const_iterator,
+    std::vector<MatchResult>::const_iterator);
 }
 
 }

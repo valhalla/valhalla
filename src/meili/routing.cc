@@ -244,10 +244,10 @@ void set_origin(baldr::GraphReader& reader,
   // will also serve as roots in search trees, and sentinels to
   // indicate it reaches the begining of a route when constructing the
   // route
-  for (const auto& edge : destinations[origin_idx].edges()) {
+  for (const auto& edge : destinations[origin_idx].edges) {
     if (!edge.id.Is_Valid()) continue;
 
-    if (edge.dist == 0.f) {
+    if (edge.begin_node()) {
       const auto nodeid = helpers::edge_startnodeid(reader, edge.id, tile);
       if (!nodeid.Is_Valid()) continue;
 
@@ -258,7 +258,7 @@ void set_origin(baldr::GraphReader& reader,
 #endif
 
       labelset.put(nodeid, travelmode, edgelabel);
-    } else if (edge.dist == 1.f) {
+    } else if (edge.end_node()) {
       const auto nodeid = helpers::edge_endnodeid(reader, edge.id, tile);
       if (!nodeid.Is_Valid()) continue;
 
@@ -269,7 +269,7 @@ void set_origin(baldr::GraphReader& reader,
 #endif
 
       labelset.put(nodeid, travelmode, edgelabel);
-    } else if (0.f < edge.dist && edge.dist < 1.f) {
+    } else {
       // Will decide whether to filter out this edge later
       labelset.put(origin_idx, travelmode, edgelabel);
     }
@@ -285,15 +285,15 @@ void set_destinations(baldr::GraphReader& reader,
   const baldr::GraphTile* tile = nullptr;
 
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
-    for (const auto& edge : destinations[dest].edges()) {
+    for (const auto& edge : destinations[dest].edges) {
       if (!edge.id.Is_Valid()) continue;
 
-      if (edge.dist == 0.f) {
+      if (edge.begin_node()) {
         const auto nodeid = helpers::edge_startnodeid(reader, edge.id, tile);
         if (!nodeid.Is_Valid()) continue;
         node_dests[nodeid].insert(dest);
 
-      } else if (edge.dist == 1.f) {
+      } else if (edge.end_node()) {
         const auto nodeid = helpers::edge_endnodeid(reader, edge.id, tile);
         if (!nodeid.Is_Valid()) continue;
         node_dests[nodeid].insert(dest);
@@ -485,7 +485,7 @@ find_shortest_path(baldr::GraphReader& reader,
         const auto it = edge_dests.find(other_edgeid);
         if (it != edge_dests.end()) {
           for (const auto dest : it->second) {
-            for (const auto& edge : destinations[dest].edges()) {
+            for (const auto& edge : destinations[dest].edges) {
               if (edge.id == other_edgeid) {
                 const float cost = label_cost + other_edge->length() * edge.dist,
                         sortcost = cost + 0.f;  // The heuristic cost from a destination to itself must be 0
@@ -518,7 +518,7 @@ find_shortest_path(baldr::GraphReader& reader,
       // Path to a destination along an edge is found: remember it and
       // remove the destination from the destination list
       results[dest] = label_idx;
-      for (const auto& edge : destinations[dest].edges()) {
+      for (const auto& edge : destinations[dest].edges) {
         const auto it = edge_dests.find(edge.id);
         if (it != edge_dests.end()) {
           it->second.erase(dest);
@@ -536,7 +536,7 @@ find_shortest_path(baldr::GraphReader& reader,
       // Expand origin: add segments from origin to destinations ahead
       // at the same edge to the queue
       if (dest == origin_idx) {
-        for (const auto& origin_edge : destinations[origin_idx].edges()) {
+        for (const auto& origin_edge : destinations[origin_idx].edges) {
           // The tile will be guaranteed to be directededge's tile in this loop
           const auto directededge = helpers::edge_directededge(reader, origin_edge.id, tile);
 
@@ -555,7 +555,7 @@ find_shortest_path(baldr::GraphReader& reader,
           // All destinations on this origin edge
           for (const auto other_dest : edge_dests[origin_edge.id]) {
             // All edges of this destination
-            for (const auto& other_edge : destinations[other_dest].edges()) {
+            for (const auto& other_edge : destinations[other_dest].edges) {
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
                 const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist),
                         sortcost = cost + 0.f; // The heuristic cost from a destination to itself must be 0

@@ -1,10 +1,8 @@
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHING_H_
 #define MMP_MAP_MATCHING_H_
-
 #include <algorithm>
 
-#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/edgelabel.h>
@@ -15,9 +13,10 @@
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/viterbi_search.h>
 #include <valhalla/meili/routing.h>
+#include <valhalla/meili/match_result.h>
+
 
 namespace valhalla{
-
 namespace meili {
 
 
@@ -159,65 +158,6 @@ class MapMatching: public ViterbiSearch<State>
 };
 
 
-enum class GraphType: uint8_t
-{ kUnknown = 0, kEdge, kNode };
-
-
-class MatchResult
-{
- public:
-  MatchResult(const midgard::PointLL& lnglat,
-              float distance,
-              const baldr::GraphId graphid,
-              GraphType graphtype,
-              const State* state = nullptr)
-      : lnglat_(lnglat),
-        distance_(distance),
-        graphid_(graphid),
-        graphtype_(graphtype),
-        state_(state) {}
-
-  MatchResult(const midgard::PointLL& lnglat)
-      : lnglat_(lnglat),
-        distance_(0.f),
-        graphid_(),
-        graphtype_(GraphType::kUnknown),
-        state_(nullptr)
-  { }
-
-  // Coordinate of the matched point
-  const midgard::PointLL& lnglat() const
-  { return lnglat_; }
-
-  // Distance from measurement to the matched point
-  float distance() const
-  { return distance_; }
-
-  // Which edge/node this matched point stays
-  const baldr::GraphId graphid() const
-  { return graphid_; }
-
-  GraphType graphtype() const
-  { return graphtype_; }
-
-  // Attach the state pointer for other information (e.g. reconstruct
-  // the route path) and debugging
-  const State* state() const
-  { return state_; }
-
- private:
-  midgard::PointLL lnglat_;
-
-  float distance_;
-
-  baldr::GraphId graphid_;
-
-  GraphType graphtype_;
-
-  const State* state_;
-};
-
-
 struct EdgeSegment
 {
   EdgeSegment(baldr::GraphId the_edgeid,
@@ -235,40 +175,6 @@ struct EdgeSegment
 
   float target;
 };
-
-
-template <typename segment_iterator_t>
-std::string
-RouteToString(baldr::GraphReader& graphreader,
-              segment_iterator_t segment_begin,
-              segment_iterator_t segment_end,
-              const baldr::GraphTile*& tile);
-
-// Validate a route. It check if all edge segments of the route are
-// valid and successive, and no loop
-template <typename segment_iterator_t>
-bool ValidateRoute(baldr::GraphReader& graphreader,
-                   segment_iterator_t segment_begin,
-                   segment_iterator_t segment_end,
-                   const baldr::GraphTile*& tile);
-
-template <typename segment_iterator_t>
-void MergeRoute(std::vector<EdgeSegment>& route,
-                segment_iterator_t segment_begin,
-                segment_iterator_t segment_end);
-
-template <typename match_iterator_t>
-std::vector<EdgeSegment>
-ConstructRoute(baldr::GraphReader& graphreader,
-               match_iterator_t begin,
-               match_iterator_t end);
-
-inline float local_tile_size(const baldr::GraphReader& graphreader)
-{
-  const auto& tile_hierarchy = graphreader.GetTileHierarchy();
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  return tiles.TileSize();
-}
 
 
 // A facade that connects everything
@@ -298,7 +204,7 @@ class MapMatcher final
   boost::property_tree::ptree config()
   { return config_; }
 
-  MapMatching& mapmatching()
+  const MapMatching& mapmatching() const
   { return mapmatching_; }
 
   std::vector<MatchResult>
@@ -384,10 +290,40 @@ private:
 };
 
 
+template <typename segment_iterator_t>
+std::string
+RouteToString(baldr::GraphReader& graphreader,
+              segment_iterator_t segment_begin,
+              segment_iterator_t segment_end,
+              const baldr::GraphTile*& tile);
+
+// Validate a route. It check if all edge segments of the route are
+// valid and successive, and no loop
+template <typename segment_iterator_t>
+bool ValidateRoute(baldr::GraphReader& graphreader,
+                   segment_iterator_t segment_begin,
+                   segment_iterator_t segment_end,
+                   const baldr::GraphTile*& tile);
+
+template <typename segment_iterator_t>
+void MergeRoute(std::vector<EdgeSegment>& route,
+                segment_iterator_t segment_begin,
+                segment_iterator_t segment_end);
+
+template <typename match_iterator_t>
+std::vector<EdgeSegment>
+ConstructRoute(baldr::GraphReader& graphreader,
+               const MapMatcher& mapmatcher,
+               match_iterator_t begin,
+               match_iterator_t end);
+
+inline float local_tile_size(const baldr::GraphReader& graphreader)
+{
+  const auto& tile_hierarchy = graphreader.GetTileHierarchy();
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  return tiles.TileSize();
 }
 
 }
-
-
-
+}
 #endif // MMP_MAP_MATCHING_H_
