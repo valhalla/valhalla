@@ -1,8 +1,42 @@
 #include "mjolnir/admin.h"
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/midgard/logging.h>
+#include <boost/filesystem/operations.hpp>
 
 namespace valhalla {
 namespace mjolnir {
+
+// Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
+sqlite3 * GetDBHandle(const std::string database) {
+
+  // Initialize the admin DB (if it exists)
+  sqlite3 *db_handle = nullptr;
+  if (!database.empty() && boost::filesystem::exists(database)) {
+    spatialite_init(0);
+    sqlite3_stmt* stmt = 0;
+    char* err_msg = nullptr;
+    std::string sql;
+    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
+                        SQLITE_OPEN_READONLY, nullptr);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("cannot open " + database);
+      sqlite3_close(db_handle);
+      db_handle = nullptr;
+      return db_handle;
+    }
+
+    // loading SpatiaLite as an extension
+    sqlite3_enable_load_extension(db_handle, 1);
+    sql = "SELECT load_extension('libspatialite.so')";
+    ret = sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("load_extension() error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db_handle);
+    }
+  }
+  return db_handle;
+}
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the poly.
 uint32_t GetMultiPolyId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {

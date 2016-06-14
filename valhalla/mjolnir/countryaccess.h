@@ -38,8 +38,8 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
  * @param  country_access   Country specific access.
  * @param  user_access      User entered access tags.
  */
-void CountryAccess(DirectedEdge& directededge, const std::vector<int> country_access,
-                   const OSMAccess user_access);
+void SetCountryAccess(DirectedEdge& directededge, const std::vector<int> country_access,
+                      const OSMAccess user_access);
 
 }
 }

@@ -27,6 +27,12 @@ typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
 /**
+ * Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
+ * @param  database   db file location.
+ */
+sqlite3 * GetDBHandle(const std::string database);
+
+/**
  * Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the poly.
  * @param  polys   unordered map of polys.
  * @param  ll      point that needs to be checked.

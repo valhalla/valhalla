@@ -11,7 +11,6 @@
 #include <set>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
@@ -351,64 +350,14 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  sqlite3 *admin_db_handle = nullptr;
-  if (database && boost::filesystem::exists(*database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
-    std::string sql;
-    uint32_t ret = sqlite3_open_v2(database->c_str(), &admin_db_handle,
-                        SQLITE_OPEN_READONLY, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + *database);
-      sqlite3_close(admin_db_handle);
-      admin_db_handle = nullptr;
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(admin_db_handle, 1);
-    sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(admin_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(admin_db_handle);
-      return;
-    }
-  }
-  else
+  sqlite3 *admin_db_handle = GetDBHandle(*database);
+  if (!admin_db_handle)
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = nullptr;
-  if (database && boost::filesystem::exists(*database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
-    std::string sql;
-    uint32_t ret = sqlite3_open_v2(database->c_str(), &tz_db_handle,
-                        SQLITE_OPEN_READONLY, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + *database);
-      sqlite3_close(tz_db_handle);
-      admin_db_handle = nullptr;
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(tz_db_handle, 1);
-    sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(tz_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(tz_db_handle);
-      return;
-    }
-  }
-  else
+  sqlite3 *tz_db_handle = GetDBHandle(*database);
+  if (!tz_db_handle)
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
 
   const auto& tl = hierarchy.levels().rbegin();
