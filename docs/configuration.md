@@ -1,21 +1,12 @@
 # Configuration
 
-To instantiate a
-[`MapMatcherFactor`](https://github.com/mapillary/map_matching_plus/blob/master/docs/library_api.md#map-matcher-factory)
-or launch a
-[MMP service](https://github.com/mapillary/map_matching_plus/blob/master/docs/service_api.md),
-you need to pass it a configuration file in JSON. MMP provides a
-default configuration file at
-[`conf/mm.json`](https://github.com/mapillary/map_matching_plus/blob/master/conf/mm.json)
-which consists of two parts: the MMP-specific configuration and the
-Valhalla-specific configuration. The MMP-specific configuration is
-located at node `mm` that is cloned from the MMP-specific
-configuration file at
-[`conf/mm.partial.json`](https://github.com/mapillary/map_matching_plus/blob/master/conf/mm.partial.json),
-while the Valhalla-specific configuration (for example nodes `mjolnir`
-and `costing_options`) is copied from the
-[Valhalla configuration](https://github.com/valhalla/conf). Here we
-only document the MMP-specific configuration.
+To launch a
+[Meili service](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
+or instantiate a
+[`MapMatcherFactor`](https://github.com/valhalla/meili/blob/master/docs/library_api.md#map-matcher-factory),
+you need to pass it the
+[Valhalla configuration file](https://github.com/valhalla/conf), which
+holds all configurations for Meili at the node `meili`.
 
 ## Map Matching Parameters
 
@@ -29,17 +20,17 @@ All transport modes can specify following parameters:
 Parameters                  | Description                                                                                                                        | Default
 ----------------------------|------------------------------------------------------------------------------------------------------------------------------------|-----
 `sigma_ z`                  | An non-negative value to specify the GPS accuracy (the variance of the normal distribution) of an incoming GPS sequence. It is also used to weight emission costs of measurements.  | 4.07
-`beta`                      | An non-negative emprical value to weight the transition cost of two successive candidates.                                                   | 3
-`max_route_distance_factor` | An non-negative value used to limit the routing search range which is the distance to next measurement multiplied by this factor.              | 3
-`breakage_distance`         | An non-negative value. If two successive measurements are far than this distance, then connectivity in between will not be considered.                                          | 2000 (meters)
-`interpolation_distance`    | If two successive measurements are closer than this distance, then the later one will be interpolated into the matched route.                 | 10 (meters)
-`search_radius`             | An non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement.                                 | 40 (meters)
+`beta`                      | An non-negative emprical value to weight the transition cost of two successive candidates.                                                      | 3
+`max_route_distance_factor` | An non-negative value used to limit the routing search range which is the distance to next measurement multiplied by this factor.               | 3
+`breakage_distance`         | An non-negative value. If two successive measurements are far than this distance, then connectivity in between will not be considered.          | 2000 (meters)
+`interpolation_distance`    | If two successive measurements are closer than this distance, then the later one will be interpolated into the matched route.                   | 10 (meters)
+`search_radius`             | An non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement.                     | 40 (meters)
 `max_search_radius`         | Specify the upper bound of `search_radius`                                                                                                      | 100 (meters)
-`turn_penalty_factor`       | An non-negative value to penalize turns from one road segment to next.                                                             | 0 (meters)
+`turn_penalty_factor`       | An non-negative value to penalize turns from one road segment to next.                                                                          | 0 (meters)
 
 ## Service Parameters
 
-The service parameters below are only used in the MMP service:
+The service parameters below are only used in the Meili service:
 
 Parameters                  | Description                                                                                                                        | Default
 ----------------------------|------------------------------------------------------------------------------------------------------------------------------------|-----
