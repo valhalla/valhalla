@@ -50,6 +50,7 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
   return new_access;
 }
 
+// Set the country access for a DE.
 void CountryAccess(DirectedEdge& directededge, const std::vector<int> country_access,
                    const OSMAccess user_access) {
 
