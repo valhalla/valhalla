@@ -107,8 +107,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.f) {
           snapped_node = opp_edge->endnode();
         }
-        correlated.CorrelateEdge(Candidate::PathEdge(edgeid, dist));
-        correlated.CorrelateVertex(point);
+        correlated.edges.emplace_back(edgeid, dist, point);
       }
     }
 
@@ -125,12 +124,11 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.f) {
           snapped_node = edge->endnode();
         }
-        correlated.CorrelateEdge(Candidate::PathEdge(opp_edgeid, dist));
-        correlated.CorrelateVertex(point);
+        correlated.edges.emplace_back(opp_edgeid, dist, point);
       }
     }
 
-    if (correlated.IsCorrelated()) {
+    if (correlated.edges.size()) {
       // Add back if it is an edge correlated or it's a node correlated
       // but it's not added yet
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {

@@ -76,27 +76,6 @@ State::last_label(const State& state) const
   return nullptr;
 }
 
-
-inline float
-GreatCircleDistance(const State& left,
-                    const State& right)
-{
-  const auto &left_pt = left.candidate().vertex(),
-            &right_pt = right.candidate().vertex();
-  return left_pt.Distance(right_pt);
-}
-
-
-inline float
-GreatCircleDistanceSquared(const State& left,
-                           const State& right)
-{
-  const auto &left_pt = left.candidate().vertex(),
-            &right_pt = right.candidate().vertex();
-  return left_pt.DistanceSquared(right_pt);
-}
-
-
 inline float
 GreatCircleDistance(const Measurement& left,
                     const Measurement& right)
@@ -323,7 +302,7 @@ collect_nodes(baldr::GraphReader& graphreader, const Candidate& location)
   std::unordered_set<baldr::GraphId> results;
   const baldr::GraphTile* tile = nullptr;
 
-  for (const auto& edge : location.edges()) {
+  for (const auto& edge : location.edges) {
     if (!edge.id.Is_Valid()) continue;
     if (edge.dist == 0.f) {
       const auto& startnodeid = helpers::edge_startnodeid(graphreader, edge.id, tile);
@@ -361,7 +340,9 @@ guess_source_result(const MapMatching::state_iterator source,
       }
     }
     const auto& c = source->candidate();
-    return {c.vertex(), c.distance(), last_valid_id, last_valid_type, &(*source)};
+    //Note: technically a candidate can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    return {c.edges.front().projected, c.distance(), last_valid_id, last_valid_type, &(*source)};
   } else if (source.IsValid()) {
     return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*source)};
   }
@@ -389,7 +370,9 @@ guess_target_result(const MapMatching::state_iterator source,
       }
     }
     const auto& c = target->candidate();
-    return {c.vertex(), c.distance(), graphid, graphtype, &(*target)};
+    //Note: technically a candidate can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    return {c.edges.front().projected, c.distance(), graphid, graphtype, &(*target)};
   } else if (target.IsValid()) {
     return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, &(*target)};
   }
@@ -413,8 +396,10 @@ interpolate(baldr::GraphReader& reader,
 
   for (auto candidate = begin; candidate != end; candidate++) {
     if (candidate->sq_distance() < closest_sq_distance) {
-      if (!candidate->IsNode()) {
-        for (const auto& edge : candidate->edges()) {
+      //Note: technically a candidate can have correlated to more than one place in the graph
+      //but the way its used in meili we only correlated it to one place so .front() is safe
+      if (!candidate->edges.front().begin_node() && !candidate->edges.front().end_node()) {
+        for (const auto& edge : candidate->edges) {
           const auto it = graphset.find(edge.id);
           if (it != graphset.end()) {
             closest_candidate = candidate;
@@ -438,7 +423,9 @@ interpolate(baldr::GraphReader& reader,
   }
 
   if (closest_candidate != end) {
-    return {closest_candidate->vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype};
+    //Note: technically a candidate can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    return {closest_candidate->edges.front().projected, closest_candidate->distance(), closest_graphid, closest_graphtype};
   }
 
   return {measurement.lnglat()};
@@ -464,8 +451,10 @@ collect_graphset(baldr::GraphReader& reader,
     }
   } else if (source.IsValid()) {
     const auto& location = source->candidate();
-    if (!location.IsNode()) {
-      for (const auto& edge : location.edges()) {
+    //Note: technically a location can have correlated to more than one place in the graph
+    //but the way its used in meili we only correlated it to one place so .front() is safe
+    if (!location.edges.front().begin_node() && !location.edges.front().end_node()) {
+      for (const auto& edge : location.edges) {
         if (edge.id.Is_Valid()) {
           graphset.insert(edge.id);
         }

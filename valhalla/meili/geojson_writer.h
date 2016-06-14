@@ -138,8 +138,10 @@ void serialize_state(rapidjson::Writer<buffer_t>& writer,
   writer.String("distance");
   writer.Double(state.candidate().distance());
 
+  //Note: technically a candidate can have correlated to more than one place in the graph
+  //but the way its used in meili we only correlated it to one place so .front() is safe
   writer.String("coordinate");
-  serialize_coordinate(writer, state.candidate().vertex());
+  serialize_coordinate(writer, state.candidate().edges.front().projected);
 
   writer.String("routes");
   serialize_routes(writer, mm, state);
