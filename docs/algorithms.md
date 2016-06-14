@@ -234,12 +234,7 @@ similarity to the Viterbi Algorithm, changing the FIFO queue in the
 `viterbi_search` procedure to a priority queue, and the probability
 calculation to the cost calculation should get you a rough Dijkstra
 based solution, a greedy, lazy but faster version of the Viterbi
-Algorithm. This transformation also enables other possible tweaks such
-as heuristic and branch pruning, which will be discussed later.
-
-### `TODO` Tweaks
-
-`TODO` need to implement first
+Algorithm.
 
 ### `TODO` Experiments
 
