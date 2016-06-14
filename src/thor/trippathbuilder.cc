@@ -306,13 +306,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       first_node->edge_index() + first_edge->opp_index())->endnode();
 
   // Partial edge at the start and side of street (sos)
-  auto start_pct = origin.edges().front().dist;
-  auto start_sos = origin.edges().front().sos;
-  auto start_vrt = origin.vertex();
-  for (size_t i = 1; i < origin.edges().size(); ++i) {
-    if (origin.edges()[i].id == path.front().edgeid) {
-      start_pct = origin.edges()[i].dist;
-      start_sos = origin.edges()[i].sos;
+  float start_pct;
+  PathLocation::SideOfStreet start_sos;
+  PointLL start_vrt;
+  for(const auto& e : origin.edges) {
+    if (e.id == path.front().edgeid) {
+      start_pct = e.dist;
+      start_sos = e.sos;
+      start_vrt = e.projected;
+      break;
     }
   }
   // Set the origin side of street, if one exists
@@ -320,23 +322,20 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_side_of_street(GetTripPathSideOfStreet(start_sos));
 
   // Partial edge at the end
-  auto end_pct = dest.edges().front().dist;
-  auto end_sos = dest.edges().front().sos;
-  auto end_vrt = dest.vertex();
-  for (size_t i = 1; i < dest.edges().size(); ++i) {
-    if (dest.edges()[i].id == path.back().edgeid) {
-      end_pct = dest.edges()[i].dist;
-      end_sos = dest.edges()[i].sos;
+  float end_pct;
+  PathLocation::SideOfStreet end_sos;
+  PointLL end_vrt;
+  for(const auto&e : dest.edges) {
+    if (e.id == path.back().edgeid) {
+      end_pct = e.dist;
+      end_sos = e.sos;
+      end_vrt = e.projected;
+      break;
     }
   }
   // Set the destination side of street, if one exists
   if (end_sos != PathLocation::SideOfStreet::NONE)
     tp_dest->set_side_of_street(GetTripPathSideOfStreet(end_sos));
-
-  // Special case - destination is at a node - end percent is 1
-  if (dest.IsNode()) {
-    end_pct = 1.0f;
-  }
 
   // Structures to process admins
   std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;

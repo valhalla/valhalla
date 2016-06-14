@@ -244,9 +244,9 @@ void Isochrone::SetOrigin(GraphReader& graphreader, PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : (origin.edges())) {
+  for (const auto& edge : (origin.edges)) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
