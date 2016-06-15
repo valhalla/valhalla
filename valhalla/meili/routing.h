@@ -15,13 +15,11 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include <meili/bucket_queue.h>
+#include <valhalla/meili/bucket_queue.h>
 
 
 namespace valhalla{
-
 namespace meili {
-
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
 constexpr uint32_t kInvalidLabelIndex = std::numeric_limits<uint32_t>::max();
@@ -281,9 +279,5 @@ class RoutePathIterator:
 };
 
 }
-
 }
-
-
-
 #endif // MMP_ROUTING_H_
