@@ -23,7 +23,6 @@ PathAlgorithm::PathAlgorithm()
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
       tile_creation_date_(0) {
-  edgelabels_.reserve(kInitialEdgeLabelCount);
 }
 
 // Destructor
@@ -62,6 +61,10 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new AdjacencyList(mincost, range, bucketsize));
   edgestatus_.reset(new EdgeStatus());
+
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_.reserve(kInitialEdgeLabelCount);
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
