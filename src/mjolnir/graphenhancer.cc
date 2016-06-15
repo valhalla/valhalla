@@ -1031,7 +1031,35 @@ void enhance(const boost::property_tree::ptree& pt,
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        auto shape = e_offset->shape();
+        if (!directededge.forward())
+          std::reverse(shape.begin(), shape.end());
+        heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
 
+        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+        // same heading - should one be "adjusted" so the relative direction
+        // is maintained.
+        nodeinfo.set_heading(j, heading[j]);
+
+        // Set traversability for autos
+        Traversability traversability;
+        if (directededge.forwardaccess() & kAutoAccess) {
+          traversability = (directededge.reverseaccess() & kAutoAccess) ?
+              Traversability::kBoth : Traversability::kForward;
+        } else {
+          traversability = (directededge.reverseaccess() & kAutoAccess) ?
+              Traversability::kBackward : Traversability::kNone;
+        }
+        nodeinfo.set_local_driveability(j, traversability);
+      }
+
+      // Go through directed edges and "enhance" directed edge attributes
+      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
+      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
+        DirectedEdge& directededge =
+            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+
+        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         std::string end_node_code = "";
         uint32_t end_admin_index = 0;
         // Get the tile at the end node
@@ -1076,34 +1104,6 @@ void enhance(const boost::property_tree::ptree& pt,
         // Use::kPedestrian is really a kFootway
         if (directededge.use() == Use::kPedestrian)
           directededge.set_use(Use::kFootway);
-
-        auto shape = e_offset->shape();
-        if (!directededge.forward())
-          std::reverse(shape.begin(), shape.end());
-        heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
-
-        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
-        // same heading - should one be "adjusted" so the relative direction
-        // is maintained.
-        nodeinfo.set_heading(j, heading[j]);
-
-        // Set traversability for autos
-        Traversability traversability;
-        if (directededge.forwardaccess() & kAutoAccess) {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ?
-              Traversability::kBoth : Traversability::kForward;
-        } else {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ?
-              Traversability::kBackward : Traversability::kNone;
-        }
-        nodeinfo.set_local_driveability(j, traversability);
-      }
-
-      // Go through directed edges and "enhance" directed edge attributes
-      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
-      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdge& directededge =
-            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         // Update speed.
         UpdateSpeed(directededge, density);
