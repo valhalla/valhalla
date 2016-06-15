@@ -30,7 +30,7 @@ uint32_t ProcessAccess(const uint32_t current_access, const uint32_t country_acc
  * @param  target           User entered access tags.
  */
 uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
-                   const bool oneway_vehicle, const bool oneway_bicycle, const OSMAccess target);
+                   const bool oneway_vehicle, const bool oneway_bicycle, const OSMAccess& target);
 
 /**
  * Set the country access for a DE.
@@ -38,8 +38,8 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
  * @param  country_access   Country specific access.
  * @param  user_access      User entered access tags.
  */
-void SetCountryAccess(DirectedEdge& directededge, const std::vector<int> country_access,
-                      const OSMAccess user_access);
+void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& country_access,
+                      const OSMAccess& user_access);
 
 }
 }

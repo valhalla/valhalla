@@ -7,7 +7,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
-sqlite3 * GetDBHandle(const std::string database) {
+sqlite3 * GetDBHandle(const std::string& database) {
 
   // Initialize the admin DB (if it exists)
   sqlite3 *db_handle = nullptr;
