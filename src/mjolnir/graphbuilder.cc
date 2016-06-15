@@ -1,4 +1,4 @@
-
+#include "mjolnir/admin.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/util.h"
 #include "mjolnir/node_expander.h"
@@ -340,12 +340,25 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
     const uint32_t tile_creation_date,
+    const boost::property_tree::ptree& pt,
     std::promise<DataQuality>& result) {
 
   sequence<OSMWay> ways(ways_file, false);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
+
+  auto database = pt.get_optional<std::string>("admin");
+  // Initialize the admin DB (if it exists)
+  sqlite3 *admin_db_handle = GetDBHandle(*database);
+  if (!admin_db_handle)
+    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+
+  database = pt.get_optional<std::string>("timezone");
+  // Initialize the tz DB (if it exists)
+  sqlite3 *tz_db_handle = GetDBHandle(*database);
+  if (!tz_db_handle)
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
 
   const auto& tl = hierarchy.levels().rbegin();
   Tiles<PointLL> tiling = tl->second.tiles;
@@ -379,6 +392,34 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
       graphtile.AddTileCreationDate(tile_creation_date);
 
+      // Create a dummy admin record at index 0. Used if admin records
+      // are not used/created or if none is found.
+      graphtile.AddAdmin("None","None","","");
+
+      // Get the admin polygons. If only one exists for the tile check if the
+      // tile is entirely inside the polygon
+      bool tile_within_one_admin = false;
+      uint32_t id  = tile_id.tileid();
+      std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
+      std::unordered_map<uint32_t,bool> drive_on_right;
+      if (admin_db_handle) {
+        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right,
+                                   tiling.TileBounds(id), graphtile);
+        if (admin_polys.size() == 1) {
+          // TODO - check if tile bounding box is entirely inside the polygon...
+          tile_within_one_admin = true;
+        }
+      }
+
+      bool tile_within_one_tz = false;
+      std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
+      if (tz_db_handle) {
+        tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
+        if (tz_polys.size() == 1) {
+          tile_within_one_tz = true;
+        }
+      }
+
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
 
@@ -396,6 +437,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         auto bundle = collect_node_edges(node_itr, nodes, edges);
         const auto& node = bundle.node;
         PointLL node_ll{node.lng, node.lat};
+
+        // Get the admin index
+        uint32_t admin_index = (tile_within_one_admin) ?
+                      admin_polys.begin()->first :
+                      GetMultiPolyId(admin_polys, node_ll);
 
         // Look for potential duplicates
         //CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -561,7 +607,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           else {
             found = geo_attribute_cache.find(edge_info_offset);
           }
-          //this cant happen
+          //this can't happen
           if(found == geo_attribute_cache.cend())
             throw std::runtime_error("GeoAttributes cached object should be there!");
 
@@ -620,6 +666,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             }
           }
 
+          // Set drive on right flag
+          if (admin_index != 0)
+            directededge.set_drive_on_right(drive_on_right[admin_index]);
+
           // Increment the directed edge index within the tile
           idx++;
           n++;
@@ -635,6 +685,15 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         if (fork) {
           graphtile.nodes().back().set_intersection(IntersectionType::kFork);
         }
+
+        // Set admin index
+        graphtile.nodes().back().set_admin_index(admin_index);
+
+        // Set the time zone index
+        uint32_t tz_index = (tile_within_one_tz) ?
+                      tz_polys.begin()->first :
+                      GetMultiPolyId(tz_polys, node_ll);
+        graphtile.nodes().back().set_timezone(tz_index);
 
         // Increment the counts in the histogram
         stats.nodecount++;
@@ -658,6 +717,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       return;
     }
   }
+
+  if (admin_db_handle)
+    sqlite3_close (admin_db_handle);
+
+  if (tz_db_handle)
+    sqlite3_close (tz_db_handle);
+
   // Let the main thread see how this thread faired
   result.set_value(stats);
 }
@@ -667,7 +733,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::string& ways_file, const std::string& way_nodes_file,
   const std::string& nodes_file, const std::string& edges_file,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
-  const std::unique_ptr<const valhalla::skadi::sample>& sample) {
+  const std::unique_ptr<const valhalla::skadi::sample>& sample, const boost::property_tree::ptree& pt) {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
@@ -698,7 +764,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
                       std::cref(osmdata), std::cref(sample), tile_start, tile_end, tile_creation_date,
-                      std::ref(results[i]))
+                      std::cref(pt.get_child("mjolnir")), std::ref(results[i]))
     );
   }
 
@@ -773,7 +839,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file,
-                  edges_file, tiles, tile_hierarchy, stats, sample);
+                  edges_file, tiles, tile_hierarchy, stats, sample, pt);
 
   stats.LogStatistics();
 }

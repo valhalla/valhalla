@@ -24,7 +24,7 @@ uint32_t ProcessAccess(const uint32_t current_access, const uint32_t country_acc
 // the access.  Also, we have to take into account if the DE is oneway or not.
 uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
                    const bool oneway_vehicle, const bool oneway_bicycle,
-                   const OSMAccess user_access) {
+                   const OSMAccess& user_access) {
 
   uint32_t new_access = current_access;
 
@@ -50,8 +50,9 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
   return new_access;
 }
 
-void CountryAccess(DirectedEdge& directededge, const std::vector<int> country_access,
-                   const OSMAccess user_access) {
+// Set the country access for a DE.
+void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& country_access,
+                      const OSMAccess& user_access) {
 
   uint32_t forward = directededge.forwardaccess();
   uint32_t reverse = directededge.reverseaccess();
