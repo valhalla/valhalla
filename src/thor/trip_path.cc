@@ -61,8 +61,8 @@ namespace valhalla {
     } else {
       // Use A* if any origin and destination edges are the same or connect
       // at a common node - otherwise use bidirectional A*
-      for (auto& edge1 : origin.edges()) {
-        for (auto& edge2 : destination.edges()) {
+      for (auto& edge1 : origin.edges) {
+        for (auto& edge2 : destination.edges) {
           if (edge1.id == edge2.id) {
             return &astar;
           }
@@ -150,7 +150,13 @@ namespace valhalla {
           through_edge = baldr::GraphId();
       } else {
           // This is a through location. Save last edge as the through_edge
-          prior_is_node = origin.IsNode();
+          prior_is_node = false;
+          for(const auto& e : origin.edges) {
+            if(e.id == path_edges.back().edgeid) {
+              prior_is_node = e.begin_node() || e.end_node();
+              break;
+            }
+          }
           through_edge = path_edges.back().edgeid;
 
           // Add to list of through locations for this leg
@@ -251,7 +257,13 @@ namespace valhalla {
           through_edge = baldr::GraphId();
       } else {
           // This is a through location. Save last edge as the through_edge
-          prior_is_node = destination.IsNode();
+          prior_is_node = false;
+          for(const auto& e : origin.edges) {
+            if(e.id == path_edges.back().edgeid) {
+              prior_is_node = e.begin_node() || e.end_node();
+              break;
+            }
+          }
           through_edge = path_edges.back().edgeid;
 
           // Add to list of through locations for this leg

@@ -111,8 +111,11 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), destination.vertex(), costing);
-  float mindist = astarheuristic_.GetDistance(origin.vertex());
+  //Note: because we can correlate to more than one place for a given PathLocation
+  //using edges.front here means we are only setting the heuristics to one of them
+  //alternate paths using the other correlated points to may be harder to find
+  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
+  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
@@ -334,9 +337,9 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : (origin.edges())) {
+  for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
@@ -406,9 +409,9 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.edges()) {
+  for (const auto& edge : dest.edges) {
     // If destination is at a node skip any outbound edges
-    if (dest.IsNode() && edge.dist == 0.0f) {
+    if (edge.begin_node()) {
       continue;
     }
 
@@ -432,9 +435,9 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
 bool PathAlgorithm::IsTrivial(const GraphId& edgeid,
                               const PathLocation& origin,
                               const PathLocation& destination) const {
-  for (const auto& destination_edge : destination.edges()) {
+  for (const auto& destination_edge : destination.edges) {
     if (destination_edge.id == edgeid) {
-      for (const auto& origin_edge : origin.edges()) {
+      for (const auto& origin_edge : origin.edges) {
         if (origin_edge.id == edgeid &&
             origin_edge.dist <= destination_edge.dist) {
           return true;
