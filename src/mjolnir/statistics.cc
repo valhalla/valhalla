@@ -11,6 +11,7 @@
 #include <spatialite.h>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -285,7 +286,7 @@ void validator_stats::add (const validator_stats& stats) {
     }
     level++;
   }
-
+  roulette_data.Add(stats.roulette_data);
 }
 
 
@@ -857,6 +858,61 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   }
   sqlite3_close(db_handle);
   LOG_INFO("Finished");
+}
+
+validator_stats::RouletteData::RouletteData ()
+  : node_locs(), way_IDs(), way_shapes() { }
+
+void validator_stats::RouletteData::AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape) {
+  auto result = way_IDs.insert(id);
+  if (result.second)
+    node_locs.insert({id, p});
+    way_shapes.insert({id, shape});
+}
+
+void validator_stats::RouletteData::Add (const RouletteData& rd) {
+  const auto new_ids = rd.way_IDs;
+  const auto new_shapes = rd.way_shapes;
+  const auto new_nodes = rd.node_locs;
+  for (auto& id : new_ids) {
+    AddTask(new_nodes.at(id), id, new_shapes.at(id));
+  }
+}
+
+void validator_stats::RouletteData::GenerateTasks () {
+  bool write_comma = false;
+  std::string json_str = "";
+  json_str += "[";
+  for (auto& id : way_IDs) {
+    if (write_comma)
+      json_str += ",";
+    json_str += "{\"geometries\": {\"features\": [";
+    json_str += "{\"geometry\": {\"coordinates\": ["
+              + std::to_string(node_locs.at(id).lng()) + "," + std::to_string(node_locs.at(id).lat())
+              + "],\"type\": \"Point\"},\"id\": null,\"properties\": {},\"type\": \"Feature\"},";
+    json_str += "{\"geometry\": {\"coordinates\": [ ";
+    bool coord_comma = false;
+    for (auto& p : way_shapes.at(id)){
+      if (coord_comma)
+        json_str += ",";
+      json_str += "[" + std::to_string(p.lng()) + "," + std::to_string(p.lat()) + "]";
+      coord_comma = true;
+    }
+    json_str += " ],\"type\": \"Linestring\" },\"id\": null,\"properties\": {\"osmid\": " + std::to_string(id) + "},\"type\": \"Feature\"}";
+    json_str += "],\"type\": \"FeatureCollection\"},";
+    json_str += "\"identifier\": \"" + std::to_string(id) + "\",";
+    json_str += "\"instruction\": \"Check to see if the one way road is logical\"}";
+    write_comma = true;
+  }
+  json_str += "]";
+  std::string file_str = "/data/valhalla/tasks.json";
+  if (boost::filesystem::exists(file_str))
+      boost::filesystem::remove(file_str);
+  std::ofstream file;
+  file.open(file_str);
+  file << json_str << std::endl;
+  file.close();
+  LOG_INFO("MapRoulette tasks saved to /data/valhalla/tasks.json");
 }
 }
 }
