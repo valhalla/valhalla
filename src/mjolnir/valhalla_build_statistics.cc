@@ -78,7 +78,7 @@ static int countryDataCallback (void *data_pair, int argc, char **argv, char **c
   }
 
   std::istringstream iss(line);
-  float tok;
+  float tok = 0;
   float sum = 0;
   std::vector<float> *classData = new std::vector<float>();
 

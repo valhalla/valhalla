@@ -289,6 +289,7 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
     auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
     // Check if one way
     if ((!fward || !bward) && (fward || bward)) {
+      edge_length *= 0.5f;
       stats.add_tile_one_way(tileid, rclass, edge_length);
       stats.add_country_one_way(begin_node_iso, rclass, edge_length);
     }
