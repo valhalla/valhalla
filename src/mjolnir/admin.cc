@@ -27,7 +27,11 @@ sqlite3 * GetDBHandle(const std::string& database) {
 
     // loading SpatiaLite as an extension
     sqlite3_enable_load_extension(db_handle, 1);
+#if SQLITE_VERSION_NUMBER > 3008002
+    sql = "SELECT load_extension('mod_spatialite')";
+#else
     sql = "SELECT load_extension('libspatialite')";
+#endif
     ret = sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
     if (ret != SQLITE_OK) {
       LOG_ERROR("load_extension() error: " + std::string(err_msg));
