@@ -68,6 +68,7 @@ test/countryaccess
 test/*.log
 test/*.trs
 test/data/bin_tiles/bin/*
+test/data/amsterdam_tiles
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 
