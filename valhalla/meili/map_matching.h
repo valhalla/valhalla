@@ -192,16 +192,13 @@ class MapMatcher final
   baldr::GraphReader& graphreader()
   { return graphreader_; }
 
-  CandidateQuery& rangequery()
+  const CandidateQuery& rangequery()
   { return rangequery_; }
 
   sif::TravelMode travelmode() const
   { return travelmode_; }
 
-  const boost::property_tree::ptree config() const
-  { return config_; }
-
-  boost::property_tree::ptree config()
+  const boost::property_tree::ptree& config() const
   { return config_; }
 
   const MapMatching& mapmatching() const

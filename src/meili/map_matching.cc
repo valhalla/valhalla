@@ -179,7 +179,7 @@ Time MapMatching::AppendState(const Measurement& measurement,
 inline float
 MapMatching::MaxRouteDistance(const State& left, const State& right) const
 {
-  auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
+  const auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
   return std::min(mmt_distance * max_route_distance_factor_, breakage_distance_);
 }
 
@@ -486,7 +486,7 @@ OfflineMatch(MapMatching& mm,
 
   using mmt_size_t = std::vector<Measurement>::size_type;
   Time time = 0;
-  float sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  const float sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<Time, std::vector<mmt_size_t>> proximate_measurements;
 
   // Load states
@@ -575,9 +575,8 @@ MapMatcher::~MapMatcher() {}
 std::vector<MatchResult>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
-  float interpolation_distance = config_.get<float>("interpolation_distance");
-  return meili::OfflineMatch(mapmatching_, rangequery_, measurements,
-                             interpolation_distance);
+  const auto interpolation_distance = config_.get<float>("interpolation_distance");
+  return meili::OfflineMatch(mapmatching_, rangequery_, measurements, interpolation_distance);
 }
 
 
