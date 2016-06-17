@@ -292,6 +292,10 @@ CandidateGridQuery::Query(const midgard::PointLL& location,
                           float sq_search_radius,
                           sif::EdgeFilter filter) const
 {
+  if (!location.IsValid()) {
+    throw std::invalid_argument("Expect a valid location");
+  }
+
   const auto& range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
   const auto& edgeids = RangeQuery(range);
   return WithinSquaredDistance(location, sq_search_radius,
