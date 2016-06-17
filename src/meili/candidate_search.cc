@@ -72,6 +72,10 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     const auto edge = helpers::edge_directededge(reader_, edgeid, tile);
     if (!edge) continue;
 
+    if (!(edgeid.level() == edge->endnode().level() && edgeid.level() == opp_edgeid.level())) {
+      throw std::logic_error("edges feed in candidate filtering should be at the same level as its endnode and opposite edge");
+    }
+
     if (directed) {
       visited_edges.insert(opp_edgeid);
     }
@@ -155,7 +159,9 @@ void IndexTile(const baldr::GraphTile& tile, GridRangeQuery<baldr::GraphId>& gri
   auto edgeid = tile.header()->graphid();
   auto directededge = tile.directededge(0);
   for (size_t idx = 0; idx < edgecount; edgeid++, directededge++, idx++) {
-    if (directededge->trans_up() || directededge->trans_down()) continue;
+    if (directededge->trans_up()
+        || directededge->trans_down()
+        || directededge->use() == baldr::Use::kTransitConnection) continue;
     const auto offset = directededge->edgeinfo_offset();
     if (visited.insert(offset).second) {
       const auto edgeinfo = tile.edgeinfo(offset);

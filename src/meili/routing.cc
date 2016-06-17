@@ -468,8 +468,12 @@ find_shortest_path(baldr::GraphReader& reader,
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
-        if (other_edge->trans_up() || other_edge->trans_down()) continue;
-        // So we have nodeid.level() == other_edge->endnode().level()
+        if (other_edge->trans_up()
+            || other_edge->trans_down()
+            || other_edge->use() == baldr::Use::kTransitConnection) continue;
+        if (nodeid.level() != other_edge->endnode().level()) {
+          throw std::logic_error("edges in expansion should be at the same level as its endnode");
+        }
 
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
 
