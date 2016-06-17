@@ -26,6 +26,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/nodeinfo.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -244,9 +245,142 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   return opp_index;
 }
 
+bool IsPedestrianTerminal(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode,
+                NodeInfo& startnodeinfo,
+                DirectedEdge& directededge,
+                validator_stats::RouletteData& rd,
+                const uint32_t idx) {
+
+  bool is_terminal = true;
+  lock.lock();
+  const GraphTile* tile = reader.GetGraphTile(startnode);
+  lock.unlock();
+  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+
+    if (i == idx)
+      continue;
+
+    if (((diredge->reverseaccess() & kPedestrianAccess) ||
+        (diredge->forwardaccess() & kPedestrianAccess)) &&
+        (!(diredge->forwardaccess() & kAutoAccess) &&
+          !(diredge->reverseaccess() & kAutoAccess))){
+      continue;
+    }
+    else {
+      is_terminal = false;
+      break;
+    }
+  }
+
+  if (is_terminal) {
+    if (startnodeinfo.edge_count() > 1) {
+      rd.AddTask(startnodeinfo.latlng(),
+                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape());      
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsLoopTerminal(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode,
+                NodeInfo& startnodeinfo,
+                DirectedEdge& directededge,
+                validator_stats::RouletteData& rd) {
+
+  lock.lock();
+  const GraphTile* tile = reader.GetGraphTile(startnode);
+  lock.unlock();
+  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  uint32_t inbound = 0, outbound = 0;
+
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+
+    if (((diredge->forwardaccess() & kAutoAccess) &&
+        !(diredge->reverseaccess() & kAutoAccess)) ||
+        ((diredge->forwardaccess() & kAutoAccess) &&
+         (diredge->reverseaccess() & kAutoAccess)))
+      outbound++;
+
+    if ((!(diredge->forwardaccess() & kAutoAccess) &&
+        (diredge->reverseaccess() & kAutoAccess)) ||
+        ((diredge->forwardaccess() & kAutoAccess) &&
+         (diredge->reverseaccess() & kAutoAccess)))
+      inbound++;
+  }
+
+  if ((outbound >= 2 && inbound == 0) || (inbound >= 2 && outbound == 0)) {
+    rd.AddTask(startnodeinfo.latlng(),
+               tilebuilder.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+               tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape());
+    return true;
+  }
+  return false;
+}
+
+bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode,
+                NodeInfo& startnodeinfo,
+                DirectedEdge& directededge,
+                validator_stats::RouletteData& rd) {
+
+  lock.lock();
+  const GraphTile* tile = reader.GetGraphTile(startnode);
+  lock.unlock();
+  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  uint32_t inbound = 0, outbound = 0;
+
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+
+    if ((diredge->forwardaccess() & kAutoAccess) &&
+        !(diredge->reverseaccess() & kAutoAccess))
+      outbound++;
+
+    if (!(diredge->forwardaccess() & kAutoAccess) &&
+        (diredge->reverseaccess() & kAutoAccess))
+      inbound++;
+  }
+
+  if (!outbound && inbound)
+  {
+    const GraphId endnode = directededge.endnode();
+    lock.lock();
+    const GraphTile* tile = reader.GetGraphTile(endnode);
+    lock.unlock();
+    const NodeInfo* nodeinfo = tile->node(endnode.id());
+
+    const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
+    uint32_t inbound = 0, outbound = 0;
+
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
+
+      if ((diredge->forwardaccess() & kAutoAccess) &&
+          !(diredge->reverseaccess() & kAutoAccess))
+        outbound++;
+
+      if (!(diredge->forwardaccess() & kAutoAccess) &&
+          (diredge->reverseaccess() & kAutoAccess))
+        inbound++;
+    }
+
+    if (!outbound && inbound) {
+      rd.AddTask(startnodeinfo.latlng(),
+                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape());
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
                    const uint32_t tileid, std::string& begin_node_iso,
-                   HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder) {
+                   HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder,
+                   GraphReader& graph_reader, std::mutex& lock, GraphId& node, NodeInfo& nodeinfo, uint32_t idx) {
   auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ?
         directededge.length() * 0.5f : directededge.length() * 0.25f;
@@ -289,6 +423,19 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
     auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
     // Check if one way
     if ((!fward || !bward) && (fward || bward)) {
+      edge_length *= 0.5f;
+      const GraphTile* tile = graph_reader.GetGraphTile(node);
+      bool found = IsPedestrianTerminal(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data,idx);
+      if (!found && directededge.endnode().id() == node.id()) {
+        lock.lock();
+        const GraphTile* end_tile = graph_reader.GetGraphTile(directededge.endnode());
+        lock.unlock();
+        if (tile->id() == end_tile->id())
+          found = IsLoopTerminal(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+      }
+      if (!found && directededge.endnode().id() != node.id()) {
+        found = IsReversedOneway(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+      }
       stats.add_tile_one_way(tileid, rclass, edge_length);
       stats.add_country_one_way(begin_node_iso, rclass, edge_length);
     }
@@ -479,7 +626,7 @@ void validate(const boost::property_tree::ptree& pt,
           // Statistics
           if (valid_length) {
             AddStatistics(stats, directededge, tileid, begin_node_iso,
-                          hgv, tilebuilder);
+                          hgv, tilebuilder, graph_reader, lock, node, nodeinfo, j);
           }
         }
 
@@ -689,6 +836,7 @@ namespace mjolnir {
                " max = " + std::to_string(max_density));
     }
     stats.build_db(pt);
+    stats.roulette_data.GenerateTasks();
   }
 }
 }
