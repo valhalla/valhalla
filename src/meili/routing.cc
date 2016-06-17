@@ -306,8 +306,10 @@ void set_destinations(baldr::GraphReader& reader,
 }
 
 
+// Need the graphreeader to get the tile of edgelabel
 inline uint16_t
-get_inbound_edgelabel_heading(const baldr::GraphTile* tile,
+get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
+                              const baldr::GraphTile* tile,
                               const sif::EdgeLabel& edgelabel,
                               const baldr::NodeInfo& nodeinfo)
 {
@@ -315,7 +317,7 @@ get_inbound_edgelabel_heading(const baldr::GraphTile* tile,
   if (idx < 8) {
     return nodeinfo.heading(idx);
   } else {
-    const auto directededge = tile->directededge(edgelabel.edgeid());
+    const auto directededge = helpers::edge_directededge(graphreader, edgelabel.edgeid(), tile);
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
     const auto& shape = edgeinfo->shape();
     if (shape.size() >= 2) {
@@ -457,8 +459,9 @@ find_shortest_path(baldr::GraphReader& reader,
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
+      // Need the graphreeader to get the tile of edgelabel
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
-                                   get_inbound_edgelabel_heading(tile, *pred_edgelabel, *nodeinfo) : 0;
+                                   get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
       // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
 
       // Expand current node
