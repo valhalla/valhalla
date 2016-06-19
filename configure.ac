@@ -38,6 +38,7 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
+AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.3.4])

@@ -1,7 +1,19 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = @BOOST_CPPFLAGS@
+
+# At most systems, PTHREAD_CFLAGS will give -pthread which is actually
+# a builtin flag of gcc (see man gcc). It seems to be ok without this
+# flag. Since both c++ and c compilers accepts this flag, so we append
+# it to AM_CPPFLAGS
+AM_CPPFLAGS = @BOOST_CPPFLAGS@ @PTHREAD_CFLAGS@
 AM_CXXFLAGS = @COVERAGE_CXXFLAGS@
+
+# PTHREAD_LIBS should give -lpthread or -pthread however it also could
+# be empty for unknown reason. Since it is required by the linker, so
+# we append PTHREAD_CFLAGS as a workaround
+
+# BTW. the order matters as linkers read libraries from left to right
+AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@ @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
+
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
