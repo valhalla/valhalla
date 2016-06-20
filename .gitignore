@@ -53,7 +53,7 @@ src/mjolnir/graph_lua_proc.h
 # tests
 test-suite.log
 test-driver
-test/test_config
+test/test_config*
 test/edgeinfobuilder
 test/uniquenames
 test/idtable
@@ -64,9 +64,11 @@ test/refs
 test/graphparser
 test/signinfo
 test/utrecht
+test/countryaccess
 test/*.log
 test/*.trs
 test/data/bin_tiles/bin/*
+test/data/amsterdam_tiles
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 

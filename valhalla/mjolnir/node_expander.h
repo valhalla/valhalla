@@ -50,7 +50,7 @@ struct Edge {
     uint32_t driveable_ferry  : 1;
     uint32_t reclass_ferry    : 1;   // Has edge been reclassified due to
                                      // ferry connection
-    uint32_t spare            : 1;
+    uint32_t turn_channel     : 1;   // Link edge should be a turn channel
   };
   EdgeAttributes attributes;
 

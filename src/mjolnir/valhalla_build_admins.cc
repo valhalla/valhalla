@@ -4,6 +4,9 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
+#include "mjolnir/adminconstants.h"
+#include <valhalla/baldr/graphconstants.h>
+
 #include "config.h"
 
 #include <sqlite3.h>
@@ -32,6 +35,7 @@ using namespace geos::operation::linemerge;
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
+using namespace valhalla::baldr;
 
 #include <ostream>
 #include <boost/program_options.hpp>
@@ -280,7 +284,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   // loading SpatiaLite as an extension
   sqlite3_enable_load_extension(db_handle, 1);
-  sql = "SELECT load_extension('libspatialite.so')";
+#if SQLITE_VERSION_NUMBER > 3008002
+    sql = "SELECT load_extension('mod_spatialite')";
+#else
+    sql = "SELECT load_extension('libspatialite')";
+#endif
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("load_extension() error: " + std::string(err_msg));
@@ -297,6 +305,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "name TEXT NOT NULL,";
   sql += "name_en TEXT,";
   sql += "drive_on_right INTEGER NOT NULL)";
+
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -304,6 +313,55 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_close(db_handle);
     return;
   }
+
+  /* creating an admin access table
+   * We could support all the commented out
+   * columns below; however, for now we only
+   * need the following ones until more people
+   * update the specs on the wiki.
+   */
+
+  sql = "CREATE TABLE admin_access (";
+  sql += "admin_id INTEGER NOT NULL,";
+  sql += "iso_code TEXT,";
+  //sql += "motorway INTEGER DEFAULT NULL,";
+  //sql += "motorway_link INTEGER DEFAULT NULL,";
+  sql += "trunk INTEGER DEFAULT NULL,";
+  sql += "trunk_link INTEGER DEFAULT NULL,";
+  //sql += "prim_ary INTEGER DEFAULT NULL,";
+  //sql += "prim_ary_link INTEGER DEFAULT NULL,";
+  //sql += "secondary INTEGER DEFAULT NULL,";
+  //sql += "secondary_link INTEGER DEFAULT NULL,";
+  //sql += "residential INTEGER DEFAULT NULL,";
+  //sql += "residential_link INTEGER DEFAULT NULL,";
+  //sql += "service INTEGER DEFAULT NULL,";
+  //sql += "tertiary INTEGER DEFAULT NULL,";
+  //sql += "tertiary_link INTEGER DEFAULT NULL,";
+  //sql += "road INTEGER DEFAULT NULL,";
+  sql += "track INTEGER DEFAULT NULL,";
+  //sql += "unclassified INTEGER DEFAULT NULL,";
+  //sql += "undefined INTEGER DEFAULT NULL,";
+  //sql += "unknown INTEGER DEFAULT NULL,";
+  //sql += "living_street INTEGER DEFAULT NULL,";
+  sql += "footway INTEGER DEFAULT NULL,";
+  sql += "pedestrian INTEGER DEFAULT NULL,";
+  //sql += "steps INTEGER DEFAULT NULL,";
+  sql += "bridleway INTEGER DEFAULT NULL,";
+  //sql += "construction INTEGER DEFAULT NULL,";
+  sql += "cycleway INTEGER DEFAULT NULL,";
+  //sql += "bus_guideway INTEGER DEFAULT NULL,";
+  sql += "path INTEGER DEFAULT NULL)";
+
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
+  LOG_INFO("Created admin access table.");
+
   /* creating a MULTIPOLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
   sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
@@ -321,8 +379,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
-  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, drive_on_right, geom) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, CastToMulti(GeomFromText(?, 4326)))";
+  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
+  sql += "drive_on_right, geom) VALUES (?, ?, ?, ?, ?, ?, ";
+  sql += "CastToMulti(GeomFromText(?, 4326)))";
+
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -413,7 +473,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           else
             sqlite3_bind_null(stmt,5);
 
-          sqlite3_bind_int (stmt, 6, admin.drive_on_right());
+          sqlite3_bind_int (stmt,  6, admin.drive_on_right());
           sqlite3_bind_text (stmt, 7, wkt.c_str(), wkt.length(), SQLITE_STATIC);
           /* performing INSERT INTO */
           ret = sqlite3_step (stmt);
@@ -507,7 +567,66 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating Parent admin");
 
+  sql  = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, ";
+  sql += "pedestrian, bridleway, cycleway, path) VALUES (";
+  sql += "(select rowid from admins where (name = ? or name_en = ?)), ";
+  sql += "(select iso_code from admins where (name = ? or name_en = ?)), ";
+  sql += "?, ?, ?, ?, ?, ?, ?, ?)";
+
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("SQL error: " + sql);
+    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+  }
+  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
+  for (const auto access : kCountryAccess) {
+
+    const std::vector<int> column_values = access.second;
+
+    sqlite3_reset (stmt);
+    sqlite3_clear_bindings (stmt);
+    sqlite3_bind_text (stmt, 1, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text (stmt, 2, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text (stmt, 3, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text (stmt, 4, access.first.c_str(), access.first.length(), SQLITE_STATIC);
+
+    for (uint32_t col = 0; col != column_values.size(); ++col) {
+      int val = column_values.at(col);
+      if (val != -1)
+        sqlite3_bind_int (stmt,  col+5, val);
+      else
+        sqlite3_bind_null(stmt,col+5);
+    }
+
+    /* performing INSERT INTO */
+    ret = sqlite3_step (stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+      continue;
+    }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
+              ".  Ignore if not using a planet extract.");
+  }
+
+  sqlite3_finalize (stmt);
+  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+
   sqlite3_close (db_handle);
+
+  LOG_INFO("Finished.");
+
 }
 
 int main(int argc, char** argv) {

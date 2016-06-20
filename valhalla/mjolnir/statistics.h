@@ -193,6 +193,20 @@ public:
   void add(const validator_stats& stats);
 
   void build_db(const boost::property_tree::ptree& pt);
+
+  struct RouletteData {
+    std::unordered_map<uint64_t, PointLL> node_locs;
+    std::unordered_map<uint64_t, std::vector<PointLL> > way_shapes;
+    std::unordered_set<uint64_t> way_IDs;
+
+    RouletteData ();
+
+    void AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape);
+
+    void Add (const RouletteData& rd);
+
+    void GenerateTasks ();
+  } roulette_data;
 };
 }
 }
