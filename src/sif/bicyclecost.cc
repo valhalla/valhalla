@@ -12,7 +12,7 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr float kDefaultManeuverPenalty         = 10.0f;  // Seconds
+constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
