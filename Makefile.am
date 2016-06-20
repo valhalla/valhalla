@@ -54,6 +54,7 @@ CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.pro
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
+	valhalla/mjolnir/admin.h \
 	valhalla/mjolnir/countryaccess.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
@@ -84,6 +85,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/transit.pb.cc \
+	src/mjolnir/admin.cc \
 	src/mjolnir/countryaccess.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
