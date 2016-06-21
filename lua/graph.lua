@@ -920,8 +920,8 @@ function filter_tags_generic(kv)
 
   kv["default_speed"] = default_speed[kv["road_class"]]
 
-  --lower the default speed for tracks and driveways
-  if kv["highway"] == "track" or kv["service"] == "driveway" then
+  --lower the default speed for driveways
+  if kv["service"] == "driveway" then
      kv["default_speed"] = math.floor(tonumber(kv["default_speed"]) * 0.5)
   end
 
@@ -993,6 +993,22 @@ function filter_tags_generic(kv)
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
   kv["surface"] = kv["surface"]
+
+  --lower the default speed for tracks
+  if kv["highway"] == "track" then
+     kv["default_speed"] = 5
+     if kv["tracktype"] then
+       if kv["tracktype"] == "grade1" then
+         kv["default_speed"] = 20
+       elseif kv["tracktype"] == "grade2" then
+         kv["default_speed"] = 15
+       elseif kv["tracktype"] == "grade3" then
+         kv["default_speed"] = 12
+       elseif kv["tracktype"] == "grade4" then
+         kv["default_speed"] = 10
+       end
+     end
+  end
 
   --use unsigned_ref if all the conditions are met.
   if ((kv["name"] == nil and kv["name:en"] == nil and kv["alt_name"] == nil and kv["official_name"] == nil and kv["ref"] == nil and kv["int_ref"] == nil) and

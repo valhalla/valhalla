@@ -623,7 +623,7 @@ struct graph_callback : public OSMPBF::Callback {
             w.set_surface(Surface::kCompacted);
             break;
           case Use::kTrack:
-            w.set_surface(Surface::kPath);
+            w.set_surface(Surface::kDirt);
             break;
           case Use::kRoad:
           case Use::kParkingAisle:
