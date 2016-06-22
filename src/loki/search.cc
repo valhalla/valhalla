@@ -325,8 +325,9 @@ std::unordered_set<GraphId> island(const PathLocation& location,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
-      // Skip transition edges and edges that are not allowed
+      // Skip transition edges, transit connection edges, and edges that are not allowed
       if (directededge->trans_up() || directededge->trans_down() ||
+          directededge->use() == Use::kTransitConnection ||
           edge_filter(directededge)) {
         continue;
       }
