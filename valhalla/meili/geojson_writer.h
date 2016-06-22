@@ -385,7 +385,11 @@ void GeoJSONRouteWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& 
   writer.String("matched_coordinates");
   writer.StartArray();
   for (const auto& result : results) {
-    serialize_coordinate(writer, result.lnglat());
+    if (result.graphid().Is_Valid()) {
+      serialize_coordinate(writer, result.lnglat());
+    } else {
+      writer.Null();
+    }
   }
   writer.EndArray();
   if (verbose_) {
