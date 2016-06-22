@@ -266,7 +266,7 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
   }
 }
 
-void validate(const boost::property_tree::ptree& pt,
+void build(const boost::property_tree::ptree& pt,
               std::deque<GraphId>& tilequeue, std::mutex& lock,
               std::promise<validator_stats>& result) {
 
@@ -320,7 +320,7 @@ void validate(const boost::property_tree::ptree& pt,
         auto ni = tile->node(i);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
-        // Go through directed edges and validate/update data
+        // Go through directed edges
         uint32_t idx = ni->edge_index();
         for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++) {
           auto de = tile->directededge(idx);
@@ -328,7 +328,7 @@ void validate(const boost::property_tree::ptree& pt,
           // HGV restriction mask (for stats)
           HGVRestrictionTypes hgv = {};
 
-          // Validate access restrictions. TODO - should check modes as well
+          // check access restrictions. TODO - should check modes as well
           uint32_t ar_modes = de->access_restriction();
           if (ar_modes) {
             //since only truck restrictions exist, we can still get all restrictions
@@ -414,7 +414,7 @@ void validate(const boost::property_tree::ptree& pt,
   }
 }
 
-void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
+void BuildStatistics(const boost::property_tree::ptree& pt) {
 
   // Graphreader
   TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
@@ -465,7 +465,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(validate, std::cref(pt), std::ref(tilequeue),
+    thread.reset(new std::thread(build, std::cref(pt), std::ref(tilequeue),
                                  std::ref(lock), std::ref(results.back())));
   }
 
@@ -539,4 +539,22 @@ int main (int argc, char** argv) {
   if (!ParseArguments(argc, argv))
     return EXIT_FAILURE;
 
+  // check the type of input
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(config_file_path.c_str(), pt);
+
+  //configure loggin
+  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
+  if (logging_subtree) {
+    auto loggin_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    valhalla::midgard::logging::Configure(loggin_config);
+  }
+
+  //set up directory
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  valhalla::baldr::TileHierarchy hierarchy(tile_dir);
+
+  BuildStatistics(pt);
+
+  return EXIT_SUCCESS;
 }
