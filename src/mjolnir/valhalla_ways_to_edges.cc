@@ -141,7 +141,8 @@ int main(int argc, char** argv) {
   }
 
   std::ofstream ways_file;
-  ways_file.open("way_edges.txt", std::ofstream::out | std::ofstream::trunc);
+  std::string fname = pt.get<std::string>("mjolnir.tile_dir") + "/way_edges.txt";
+  ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (auto way : ways_edges) {
     ways_file << way.first;
     for (auto edge : way.second) {
