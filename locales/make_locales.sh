@@ -2,9 +2,11 @@
 set -e
 
 #install locales locally for testing
-for loc in $(grep -F posix_locale *.json | sed -e "s/.*locale[^a-z^A-Z]\+//g" -e "s/[^a-z^A-Z^0-9^.^_]\+//g"); do
-	localedef -i ${loc%.*} -f UTF-8 ./${loc}
-done
+if [[ "$OSTYPE" == "linux"* ]]; then
+	for loc in $(grep -F posix_locale *.json | sed -e "s/.*locale[^a-z^A-Z]\+//g" -e "s/[^a-z^A-Z^0-9^.^_]\+//g"); do
+		localedef -i ${loc%.*} -f UTF-8 ./${loc}
+	done
+fi
 
 #throw all the text into one big header
 code=
