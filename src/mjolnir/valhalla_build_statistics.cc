@@ -1,9 +1,6 @@
 
-#include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/statistics.h"
-
-#include <valhalla/midgard/logging.h>
 
 #include <ostream>
 #include <boost/format.hpp>
@@ -21,7 +18,6 @@
 #include <thread>
 #include <future>
 #include <mutex>
-#include <numeric>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
@@ -336,12 +332,12 @@ void build(const boost::property_tree::ptree& pt,
             auto res = tile->GetAccessRestrictions(idx, kAllAccess);
             if (res.size() == 0) {
               LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
-                        std::to_string(tile_id.level()));
+                  std::to_string(tile_id.level()));
             } else {
               for (auto r : res) {
                 if (r.edgeindex() != idx) {
                   LOG_ERROR("Access restriction edge index does not match idx");
-                } else {// log stats.  currently only for truck right now
+                } else {
                   switch (r.type()) {
                     case AccessType::kHazmat:
                       hgv.hazmat = true;
@@ -368,7 +364,6 @@ void build(const boost::property_tree::ptree& pt,
               }
             }
           }
-
           // The edge we will modify
           DirectedEdge& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
 
@@ -452,7 +447,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // A mutex we can use to do the synchronization
   std::mutex lock;
 
-  LOG_INFO("Validating signs and connectivity and binning edges");
+  LOG_INFO("Gathering information about the tiles in " + pt.get<std::string>("mjolnir.tile_dir"));
 
   // Setup threads
   std::vector<std::shared_ptr<std::thread> > threads(
@@ -481,26 +476,6 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished");
 
-  // Add up total dupcount_ and find densities
-  for (uint8_t level = 0; level <= 2; level++) {
-    // Print duplicates info for level
-    std::vector<uint32_t> dups = stats.get_dups(level);
-    uint32_t dupcount = std::accumulate(dups.begin(), dups.end(), 0);
-    LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
-    % std::to_string(level) % dupcount).str());
-    // Get the average density and the max density
-    float max_density = 0.0f;
-    float sum = 0.0f;
-    for (auto density : stats.get_densities(level)) {
-      if (density > max_density) {
-        max_density = density;
-      }
-      sum += density;
-    }
-    float average_density = sum / stats.get_densities(level).size();
-    LOG_DEBUG("Average density = " + std::to_string(average_density) +
-             " max = " + std::to_string(max_density));
-  }
   stats.build_db(pt);
   stats.roulette_data.GenerateTasks();
 }
