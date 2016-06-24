@@ -771,14 +771,8 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
 
-  // if we are continuing on a cycleway, reduce the cost by half
-  if (edges[from].use() == Use::kCycleway && edges[to].use() == Use::kCycleway)
-    stop_impact *= 0.5f;
-
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
-
-  // TODO:Increase stop level based on classification of edges
 
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved.
@@ -788,11 +782,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     // Increase stop impact on merge
     stop_impact += 2;
   } else if (edges[from].use() == Use::kTurnChannel) {
-      if (edges[to].use() == Use::kRamp) {
-        stop_impact += 1;
-      } else {
-        stop_impact /= 2;
-      }
+    if (edges[to].use() == Use::kRamp) {
+      stop_impact += 1;
+    } else {
+      stop_impact /= 2;
+    }
   }
 
   // Clamp to kMaxStopImpact
