@@ -131,7 +131,7 @@ bin_PROGRAMS = \
 	valhalla_query_transit \
 	valhalla_ways_to_edges \
 	valhalla_build_speeds \
-        valhalla_build_statistics
+	valhalla_build_statistics
 
 valhalla_benchmark_admins_SOURCES = src/mjolnir/valhalla_benchmark_admins.cc
 valhalla_benchmark_admins_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
