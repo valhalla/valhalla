@@ -256,7 +256,7 @@ void validate(const boost::property_tree::ptree& pt,
     GraphReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
-    auto numLevels = heirarchy.levels().size();
+    auto numLevels = hierarchy.levels().size();
     // vector to hold densities for each level
     std::vector<std::vector<float>> densities(numLevels);
     // Array to hold duplicates
@@ -492,7 +492,7 @@ namespace mjolnir {
     // Graphreader
     TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
     // Make sure there are at least 2 levels!
-    auto numHierarchyLevels = heirarchy.levels().size();
+    auto numHierarchyLevels = hierarchy.levels().size();
     if (numHierarchyLevels < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
