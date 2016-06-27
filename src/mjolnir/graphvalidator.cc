@@ -250,16 +250,17 @@ using tweeners_t = GraphTileBuilder::tweeners_t;
 void validate(const boost::property_tree::ptree& pt,
               std::deque<GraphId>& tilequeue, std::mutex& lock,
               std::promise<std::tuple<std::vector<uint32_t>, std::vector<std::vector<float>>, tweeners_t>>& result) {
-    // vector to hold densities for each level
-    std::vector<std::vector<float>> densities(3);
-    // Array to hold duplicates
-    std::vector<uint32_t> duplicates (3, 0);
     // Our local copy of edges binned to tiles that they pass through (dont start or end in)
     tweeners_t tweeners;
     // Local Graphreader
     GraphReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
+    auto numLevels = heirarchy.levels().size();
+    // vector to hold densities for each level
+    std::vector<std::vector<float>> densities(numLevels);
+    // Array to hold duplicates
+    std::vector<uint32_t> duplicates (numLevels, 0);
 
     // Check for more tiles
     while (true) {
@@ -491,7 +492,8 @@ namespace mjolnir {
     // Graphreader
     TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
     // Make sure there are at least 2 levels!
-    if (hierarchy.levels().size() < 2)
+    auto numHierarchyLevels = heirarchy.levels().size();
+    if (numHierarchyLevels < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
     // Create a randomized queue of tiles to work from
@@ -551,7 +553,7 @@ namespace mjolnir {
     for (auto& result : results) {
       auto data = result.get_future().get();
       // Total up duplicates for each level
-      for (uint8_t i = 0; i < 3; ++i) {
+      for (uint8_t i = 0; i < numHierarchyLevels; ++i) {
         duplicates[i] += std::get<0>(data)[i];
         for (auto& d : std::get<1>(data)[i])
           densities[i].push_back(d);
@@ -572,7 +574,7 @@ namespace mjolnir {
     LOG_INFO("Finished");
 
     // print dupcount and find densities
-    for (uint8_t level = 0; level <= 2; level++) {
+    for (uint8_t level = 0; level < numHierarchyLevels; level++) {
       // Print duplicates info for level
       LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
         % std::to_string(level) % duplicates[level]).str());
