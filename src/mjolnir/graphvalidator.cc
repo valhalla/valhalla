@@ -547,7 +547,7 @@ namespace mjolnir {
     for (auto& thread : threads)
       thread->join();
     // Get the promise from the future
-    std::vector<uint32_t> duplicates(3, 0);
+    std::vector<uint32_t> duplicates(numHierarchyLevels, 0);
     std::vector<std::vector<float>> densities(3);
     tweeners_t tweeners;
     for (auto& result : results) {
