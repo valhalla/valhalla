@@ -178,6 +178,42 @@ bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::m
   return false;
 }
 
+void checkExitInfo(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode, NodeInfo& startnodeinfo,
+                DirectedEdge& directededge, validator_stats::RouletteData& rd) {
+
+  // If we are on a link
+  if (directededge.link()) {
+    // If this DE is right after a motorway junction it is an exit and should
+    // have signs
+    if (startnodeinfo.type() == NodeType::kMotorWayJunction && !directededge.exitsign()){
+      // FIXME missing signs
+      // add to db data and possibly roulette data
+    }
+
+    // Get the endnode info for this edge
+    const GraphId endnode = directededge.endnode();
+    lock.lock();
+    const GraphTile* tile = reader.GetGraphTile(endnode);
+    lock.unlock();
+    const NodeInfo* nodeinfo = tile->node(endnode.id());
+
+    //Iterate through the outgoing edges from the endnode and check for signs
+    const DirectedEdge* nextedge = tile->directededge(nodeinfo->edge_index());
+    bool isFork = true;
+    // Check to make sure all edges are links
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++nextedge) {
+      if (!nextedge->link()) {
+        isFork = false;
+        break;
+      }
+    }
+    // If it is indeed a fork, check for signs
+    if (isFork) {
+      // FIXME are there signs on all edges?
+    }
+  }
+}
 void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
                    const uint32_t tileid, std::string& begin_node_iso,
                    HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder,
@@ -240,6 +276,12 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
       stats.add_tile_one_way(tileid, rclass, edge_length);
       stats.add_country_one_way(begin_node_iso, rclass, edge_length);
     }
+
+    // Check for exit signage
+    if (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk) {
+      checkExitInfo(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+    }
+
     // Check if this edge is internal
     if (directededge.internal()) {
       stats.add_tile_int_edge(tileid, rclass);
