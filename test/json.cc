@@ -1,5 +1,8 @@
 #include "test.h"
 #include "baldr/json.h"
+#include <set>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace {
 
@@ -7,7 +10,7 @@ void TestJsonSerialize() {
 
   using namespace std;
   using namespace valhalla::baldr;
-  auto json = json::map
+  stringstream result; result << *json::map
   ({
     {"hint_data", json::map
       ({
@@ -53,12 +56,28 @@ void TestJsonSerialize() {
     {"escaped_string", string("\"\t\r\n\\")}
   });
 
-  string answer = "{\"escaped_string\":\"\\\"\\t\\r\\n\\\\\",\"hint_data\":{\"checksum\":2875622111,\"locations\":[\"_____38_SADaFQQAKwEAABEAAAAAAAAAdgAAAFfLwga4tW0C4P6W-wAARAA\",\"fzhIAP____8wFAQA1AAAAC8BAAAAAAAAAAAAAP____9Uu20CGAiX-wAAAAA\"]},\"route_name\":[\"West 26th Street\",\"Madison Avenue\"],\"found_alternative\":false,\"route_summary\":{\"total_distance\":878,\"total_time\":145,\"start_point\":\"West 26th Street\",\"end_point\":\"West 29th Street\"},\"via_points\":[[40.744,-73.990],[40.746,-73.988]],\"route_instructions\":[[\"10\",\"West 26th Street\",216,0,52,\"215m\",\"SE\",118],[\"1\",\"East 26th Street\",153,2,29,\"153m\",\"SE\",120],[\"7\",\"Madison Avenue\",237,3,25,\"236m\",\"NE\",29],[\"7\",\"East 29th Street\",155,6,29,\"154m\",\"NW\",299],[\"1\",\"West 29th Street\",118,7,21,\"117m\",\"NW\",299],[\"15\",\"\",0,8,0,\"0m\",\"N\",0]],\"route_geometry\":\"ozyulA~p_clCfc@ywApTar@li@ybBqe@c[ue@e[ue@i[ci@dcB}^rkA\",\"status_message\":\"Found route between points\",\"via_indices\":[0,9],\"status\":0}";
-  ostringstream result;
-  result << *json;
+  stringstream answer; answer << "{\"escaped_string\":\"\\\"\\t\\r\\n\\\\\",\"hint_data\":{\"checksum\":2875622111,\"locations\":[\"_____38_SADaFQQAKwEAABEAAAAAAAAAdgAAAFfLwga4tW0C4P6W-wAARAA\",\"fzhIAP____8wFAQA1AAAAC8BAAAAAAAAAAAAAP____9Uu20CGAiX-wAAAAA\"]},\"route_name\":[\"West 26th Street\",\"Madison Avenue\"],\"found_alternative\":false,\"route_summary\":{\"total_distance\":878,\"total_time\":145,\"start_point\":\"West 26th Street\",\"end_point\":\"West 29th Street\"},\"via_points\":[[40.744,-73.990],[40.746,-73.988]],\"route_instructions\":[[\"10\",\"West 26th Street\",216,0,52,\"215m\",\"SE\",118],[\"1\",\"East 26th Street\",153,2,29,\"153m\",\"SE\",120],[\"7\",\"Madison Avenue\",237,3,25,\"236m\",\"NE\",29],[\"7\",\"East 29th Street\",155,6,29,\"154m\",\"NW\",299],[\"1\",\"West 29th Street\",118,7,21,\"117m\",\"NW\",299],[\"15\",\"\",0,8,0,\"0m\",\"N\",0]],\"route_geometry\":\"ozyulA~p_clCfc@ywApTar@li@ybBqe@c[ue@e[ue@i[ci@dcB}^rkA\",\"status_message\":\"Found route between points\",\"via_indices\":[0,9],\"status\":0}";
 
-  if(answer != result.str())
-    throw std::runtime_error("Expected: " + answer + " But got: " + result.str());
+  boost::property_tree::ptree res,ans;
+  boost::property_tree::read_json(result, res);
+  boost::property_tree::read_json(answer, ans);
+
+  stringstream res_formatted,ans_formatted;
+  boost::property_tree::write_json(res_formatted, res);
+  boost::property_tree::write_json(ans_formatted, ans);
+
+  multiset<string> res_set, ans_set;
+  for(string line; getline(res_formatted, line);)
+    res_set.insert(line);
+  for(string line; getline(ans_formatted, line);)
+    ans_set.insert(line);
+  if(res_set.size() != ans_set.size())
+    throw std::logic_error("Wrong json!");
+
+  auto res_itr = res_set.cbegin(), ans_itr = ans_set.cbegin();
+  for(;res_itr != res_set.cend() && ans_itr != ans_set.cend(); ++res_itr, ++ans_itr)
+    if(*res_itr != *ans_itr)
+      throw std::runtime_error("Wrong json!");
 }
 
 }
