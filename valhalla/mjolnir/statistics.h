@@ -16,10 +16,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 namespace {
   const std::map<RoadClass, std::string> roadClassToString =
-    { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
-      {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
-      {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
-      {RoadClass::kServiceOther, "ServiceOther"}
+    { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"},
+      {RoadClass::kPrimary, "Primary"}, {RoadClass::kSecondary, "Secondary"},
+      {RoadClass::kTertiary, "Tertiary"}, {RoadClass::kUnclassified, "Unclassified"},
+      {RoadClass::kResidential, "Residential"}, {RoadClass::kServiceOther, "ServiceOther"}
     };
   const std::vector<RoadClass> rclasses =
     { RoadClass::kMotorway, RoadClass::kPrimary,
@@ -83,6 +83,9 @@ class validator_stats {
   // Count of roads with axle_load
   std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, rclassHasher>> tile_axle_load;
   std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, rclassHasher>> country_axle_load;
+  // Exit sign info for forks
+  std::unordered_map<uint64_t, bool> fork_signs;
+  std::unordered_map<uint64_t, bool> exit_signs;
 
   std::unordered_set<uint32_t> tile_ids;
   std::unordered_set<std::string> iso_codes;
@@ -134,6 +137,9 @@ public:
   void add_tile_area(const uint32_t& tile_id, const float area);
   void add_tile_geom(const uint32_t& tile_id, const AABB2<PointLL> geom);
 
+  void add_fork_exitinfo(const std::pair<uint64_t, bool>& fork_signs);
+  void add_exitinfo(const std::pair<uint64_t, bool>& exitinfo);
+
   void add_density(float density, int level);
 
   void add_dup(uint32_t newdup, int level);
@@ -177,6 +183,10 @@ public:
 
   const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& get_tile_axle_load() const;
   const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& get_country_axle_load() const;
+
+  const std::unordered_map<uint64_t, bool>& get_fork_info() const;
+
+  const std::unordered_map<uint64_t, bool>& get_exit_info() const;
 
   const std::unordered_map<uint32_t, float>& get_tile_areas() const;
 

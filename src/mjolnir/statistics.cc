@@ -27,6 +27,11 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
+namespace {
+  std::unordered_map<uint64_t, bool> merge (std::unordered_map<uint64_t, bool> a, std::unordered_map<uint64_t, bool> b) {
+    std::unordered_map<uint64_t, bool> tmp(a); tmp.insert(b.begin(), b.end()); return tmp;
+  }
+}
 
 namespace valhalla {
 namespace mjolnir {
@@ -38,6 +43,7 @@ validator_stats::validator_stats()
     tile_hazmat(), country_hazmat(), tile_height(), country_height(),
     tile_width(), country_width(), tile_length(), country_length(),
     tile_weight(), country_weight(), tile_axle_load(), country_axle_load(),
+    fork_signs(), exit_signs(),
     tile_areas(), tile_geometries(),iso_codes(), tile_ids(),
     dupcounts(4), densities(4) { }
 
@@ -139,6 +145,13 @@ void validator_stats::add_country_axle_load(const std::string& ctry_code, const 
   country_axle_load[ctry_code][rclass] += count;
 }
 
+void validator_stats::add_fork_exitinfo(const std::pair<uint64_t, bool>& forkinfo) {
+  fork_signs.insert(forkinfo);
+}
+void validator_stats::add_exitinfo(const std::pair<uint64_t, bool>& exitinfo) {
+  exit_signs.insert(exitinfo);
+}
+
 void validator_stats::add_tile_area(const uint32_t& tile_id, const float area) {
   tile_areas[tile_id] = area;
 }
@@ -199,13 +212,9 @@ const std::unordered_map<uint32_t, float>& validator_stats::get_tile_areas() con
 
 const std::unordered_map<uint32_t, AABB2<PointLL>>& validator_stats::get_tile_geometries() const { return tile_geometries; }
 
-const std::vector<uint32_t> validator_stats::get_dups(int level) const { return dupcounts[level]; }
+const std::unordered_map<uint64_t, bool>& validator_stats::get_fork_info() const { return fork_signs; }
 
-const std::vector<float> validator_stats::get_densities(int level) const { return densities[level]; }
-
-const std::vector<std::vector<uint32_t> > validator_stats::get_dups() const { return dupcounts; }
-
-const std::vector<std::vector<float> > validator_stats::get_densities() const { return densities; }
+const std::unordered_map<uint64_t, bool>& validator_stats::get_exit_info() const { return exit_signs; }
 
 void validator_stats::add (const validator_stats& stats) {
   auto newTileLengths = stats.get_tile_lengths();
@@ -222,6 +231,8 @@ void validator_stats::add (const validator_stats& stats) {
   auto newTileLength = stats.get_tile_length();
   auto newTileWeight = stats.get_tile_weight();
   auto newTileAxleLoad = stats.get_tile_axle_load();
+  auto newExitInfo = stats.get_exit_info();
+  auto newForkInfo = stats.get_fork_info();
 
   auto ids = stats.get_ids();
   auto isos = stats.get_isos();
@@ -272,20 +283,9 @@ void validator_stats::add (const validator_stats& stats) {
       add_country_axle_load(iso, rclass, newCountryAxleLoad[iso][rclass]);
     }
   }
-  uint32_t level = 0;
-  for (auto& dupvec : stats.get_dups()) {
-    for (auto& dup : dupvec) {
-      add_dup(dup, level);
-    }
-    level++;
-  }
-  level = 0;
-  for (auto& densityvec : stats.get_densities()) {
-    for (auto& density : densityvec) {
-      add_density(density, level);
-    }
-    level++;
-  }
+  fork_signs = merge(fork_signs, newForkInfo);
+  exit_signs = merge(exit_signs, newExitInfo);
+
   roulette_data.Add(stats.roulette_data);
 }
 

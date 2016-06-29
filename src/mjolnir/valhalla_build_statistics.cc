@@ -180,7 +180,7 @@ bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::m
 
 void checkExitInfo(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
                 const GraphId& startnode, NodeInfo& startnodeinfo,
-                DirectedEdge& directededge, validator_stats::RouletteData& rd) {
+                DirectedEdge& directededge, validator_stats& stats) {
   // If this DE is right after a motorway junction it is an exit and should
   // have signs
   if (startnodeinfo.type() == NodeType::kMotorWayJunction && !directededge.exitsign()){
@@ -188,7 +188,7 @@ void checkExitInfo(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mute
     // otherwise if all edges are links, it is a fork
     const GraphTile* tile = reader.GetGraphTile(startnode);
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
-    std::map<uint64_t, bool> fork_signs;
+    std::vector<std::pair<uint64_t, bool>> fork_signs;
     bool fork = true;
     for (uint32_t i = 0; i < startnodeinfo.edge_count(); ++i, ++otheredge) {
       if (!otheredge->link()) {
@@ -198,16 +198,17 @@ void checkExitInfo(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mute
       } else {
         // store exit info in case this is a fork
         auto edgeinfo = tile->edgeinfo(otheredge->edgeinfo_offset());
-        fork_signs.insert({edgeinfo->wayid(), otheredge->exitsign()});
+        fork_signs.push_back({edgeinfo->wayid(), otheredge->exitsign()});
       }
     }
     // If it was a fork, store the data appropriately
     if (fork) {
-      // TODO pass fork_signs off to the statistics class
+      for (auto& sign : fork_signs)
+        stats.add_fork_exitinfo(sign);
     } else {
       // Otherwise store original edge info as a normal exit
       auto edgeinfo = tile->edgeinfo(otheredge->edgeinfo_offset());
-      // TODO
+      stats.add_exitinfo({edgeinfo->wayid(), directededge.exitsign()});
     }
   }
 }
@@ -252,7 +253,7 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
 
   // Check for exit signage if it is a highway link
   if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
-    checkExitInfo(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+    checkExitInfo(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats);
   }
 
   // Add all other statistics
