@@ -27,9 +27,12 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
+
 namespace {
-  std::unordered_map<uint64_t, bool> merge (std::unordered_map<uint64_t, bool> a, std::unordered_map<uint64_t, bool> b) {
-    std::unordered_map<uint64_t, bool> tmp(a); tmp.insert(b.begin(), b.end()); return tmp;
+  template <class T> T merge(T a, T b) {
+    T tmp(a);
+    tmp.insert(b.begin(), b.end());
+    return tmp;
   }
 }
 
@@ -217,6 +220,7 @@ const std::unordered_map<uint64_t, bool>& validator_stats::get_fork_info() const
 const std::unordered_map<uint64_t, bool>& validator_stats::get_exit_info() const { return exit_signs; }
 
 void validator_stats::add (const validator_stats& stats) {
+  // Combine tile statistics
   auto newTileLengths = stats.get_tile_lengths();
   auto newTileAreas = stats.get_tile_areas();
   auto newTileGeom = stats.get_tile_geometries();
@@ -234,26 +238,22 @@ void validator_stats::add (const validator_stats& stats) {
   auto newExitInfo = stats.get_exit_info();
   auto newForkInfo = stats.get_fork_info();
 
-  auto ids = stats.get_ids();
-  auto isos = stats.get_isos();
-  for (auto& id : ids) {
-    add_tile_area(id, newTileAreas[id]);
-    add_tile_geom(id, newTileGeom[id]);
-    for (auto& rclass : rclasses) {
-      add_tile_road(id, rclass, newTileLengths[id][rclass]);
-      add_tile_one_way(id, rclass, newTileOneWay[id][rclass]);
-      add_tile_speed_info(id, rclass, newTileSpeed[id][rclass]);
-      add_tile_int_edge(id, rclass, newTileIntEdges[id][rclass]);
-      add_tile_named(id, rclass, newTileNamed[id][rclass]);
-      add_tile_hazmat(id, rclass, newTileHazmat[id][rclass]);
-      add_tile_truck_route(id, rclass, newTileTruckRoute[id][rclass]);
-      add_tile_height(id, rclass, newTileHeight[id][rclass]);
-      add_tile_width(id, rclass, newTileWidth[id][rclass]);
-      add_tile_length(id, rclass, newTileLength[id][rclass]);
-      add_tile_weight(id, rclass, newTileWeight[id][rclass]);
-      add_tile_axle_load(id, rclass, newTileAxleLoad[id][rclass]);
-    }
-  }
+  tile_areas = merge(tile_areas, newTileAreas);
+  tile_geometries = merge(tile_geometries, newTileGeom);
+  tile_lengths = merge(tile_lengths, newTileLengths);
+  tile_one_way = merge(tile_one_way, newTileOneWay);
+  tile_speed_info = merge(tile_speed_info, newTileSpeed);
+  tile_int_edges = merge(tile_int_edges, newTileIntEdges);
+  tile_named = merge(tile_named, newTileNamed);
+  tile_hazmat = merge(tile_hazmat, newTileHazmat);
+  tile_truck_route = merge(tile_truck_route, newTileTruckRoute);
+  tile_height = merge(tile_height, newTileHeight);
+  tile_width = merge(tile_width, newTileWidth);
+  tile_length = merge(tile_length, newTileLength);
+  tile_weight = merge(tile_weight, newTileWeight);
+  tile_axle_load = merge(tile_axle_load, newTileAxleLoad);
+
+  // Combine country statistics
   auto newCountryLengths = stats.get_country_lengths();
   auto newCountryOneWay = stats.get_country_one_way();
   auto newCountrySpeed = stats.get_country_speed_info();
@@ -267,25 +267,24 @@ void validator_stats::add (const validator_stats& stats) {
   auto newCountryWeight = stats.get_country_weight();
   auto newCountryAxleLoad = stats.get_country_axle_load();
 
-  for (auto& iso : isos) {
-    for (auto& rclass : rclasses) {
-      add_country_road(iso, rclass, newCountryLengths[iso][rclass]);
-      add_country_one_way(iso, rclass, newCountryOneWay[iso][rclass]);
-      add_country_speed_info(iso, rclass, newCountrySpeed[iso][rclass]);
-      add_country_int_edge(iso, rclass, newCountryIntEdges[iso][rclass]);
-      add_country_named(iso, rclass, newCountryNamed[iso][rclass]);
-      add_country_hazmat(iso, rclass, newCountryHazmat[iso][rclass]);
-      add_country_truck_route(iso, rclass, newCountryTruckRoute[iso][rclass]);
-      add_country_height(iso, rclass, newCountryHeight[iso][rclass]);
-      add_country_width(iso, rclass, newCountryWidth[iso][rclass]);
-      add_country_length(iso, rclass, newCountryLength[iso][rclass]);
-      add_country_weight(iso, rclass, newCountryWeight[iso][rclass]);
-      add_country_axle_load(iso, rclass, newCountryAxleLoad[iso][rclass]);
-    }
-  }
+  country_lengths = merge(country_lengths, newCountryLengths);
+  country_one_way = merge(country_one_way, newCountryOneWay);
+  country_speed_info = merge(country_speed_info, newCountrySpeed);
+  country_int_edges = merge(country_int_edges, newCountryIntEdges);
+  country_named = merge(country_named, newCountryNamed);
+  country_hazmat = merge(country_hazmat, newCountryHazmat);
+  country_truck_route = merge(country_truck_route, newCountryTruckRoute);
+  country_height = merge(country_height, newCountryHeight);
+  country_width = merge(country_width, newCountryWidth);
+  country_length = merge(country_length, newCountryLength);
+  country_weight = merge(country_weight, newCountryWeight);
+  country_axle_load = merge(country_axle_load, newCountryAxleLoad);
+
+  // Combine exit statistics
   fork_signs = merge(fork_signs, newForkInfo);
   exit_signs = merge(exit_signs, newExitInfo);
 
+  // Combine roulette data
   roulette_data.Add(stats.roulette_data);
 }
 
