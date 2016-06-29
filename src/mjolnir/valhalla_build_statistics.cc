@@ -181,46 +181,44 @@ bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::m
 void checkExitInfo(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
                 const GraphId& startnode, NodeInfo& startnodeinfo,
                 DirectedEdge& directededge, validator_stats::RouletteData& rd) {
-
-  // If we are on a link
-  if (directededge.link()) {
-    // If this DE is right after a motorway junction it is an exit and should
-    // have signs
-    if (startnodeinfo.type() == NodeType::kMotorWayJunction && !directededge.exitsign()){
-      // FIXME missing signs
-      // add to db data and possibly roulette data
-    }
-
-    // Get the endnode info for this edge
-    const GraphId endnode = directededge.endnode();
-    lock.lock();
-    const GraphTile* tile = reader.GetGraphTile(endnode);
-    lock.unlock();
-    const NodeInfo* nodeinfo = tile->node(endnode.id());
-
-    //Iterate through the outgoing edges from the endnode and check for signs
-    const DirectedEdge* nextedge = tile->directededge(nodeinfo->edge_index());
-    bool isFork = true;
-    // Check to make sure all edges are links
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++nextedge) {
-      if (!nextedge->link()) {
-        isFork = false;
+  // If this DE is right after a motorway junction it is an exit and should
+  // have signs
+  if (startnodeinfo.type() == NodeType::kMotorWayJunction && !directededge.exitsign()){
+    // Check to see if the motorway continues, if it does, this is an exit ramp,
+    // otherwise if all edges are links, it is a fork
+    const GraphTile* tile = reader.GetGraphTile(startnode);
+    const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
+    std::map<uint64_t, bool> fork_signs;
+    bool fork = true;
+    for (uint32_t i = 0; i < startnodeinfo.edge_count(); ++i, ++otheredge) {
+      if (!otheredge->link()) {
+        fork = false;
+        // no need to keep checking if it's not a fork
         break;
+      } else {
+        // store exit info in case this is a fork
+        auto edgeinfo = tile->edgeinfo(otheredge->edgeinfo_offset());
+        fork_signs.insert({edgeinfo->wayid(), otheredge->exitsign()});
       }
     }
-    // If it is indeed a fork, check for signs
-    if (isFork) {
-      // FIXME are there signs on all edges?
+    // If it was a fork, store the data appropriately
+    if (fork) {
+      // TODO pass fork_signs off to the statistics class
+    } else {
+      // Otherwise store original edge info as a normal exit
+      auto edgeinfo = tile->edgeinfo(otheredge->edgeinfo_offset());
+      // TODO
     }
   }
 }
 void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
-                   const uint32_t tileid, std::string& begin_node_iso,
-                   HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder,
-                   GraphReader& graph_reader, std::mutex& lock, GraphId& node, NodeInfo& nodeinfo, uint32_t idx) {
+    const uint32_t tileid, std::string& begin_node_iso,
+    HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder,
+    GraphReader& graph_reader, std::mutex& lock, GraphId& node,
+    NodeInfo& nodeinfo, uint32_t idx) {
   auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ?
-        directededge.length() * 0.5f : directededge.length() * 0.25f;
+    directededge.length() * 0.5f : directededge.length() * 0.25f;
 
   // Add truck stats.
   if (directededge.truck_route()) {
@@ -252,6 +250,11 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
     stats.add_country_width(begin_node_iso, rclass);
   }
 
+  // Check for exit signage if it is a highway link
+  if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
+    checkExitInfo(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+  }
+
   // Add all other statistics
   // Only consider edge if edge is good and it's not a link
   if (!directededge.link()) {
@@ -275,11 +278,6 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
       }
       stats.add_tile_one_way(tileid, rclass, edge_length);
       stats.add_country_one_way(begin_node_iso, rclass, edge_length);
-    }
-
-    // Check for exit signage
-    if (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk) {
-      checkExitInfo(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
     }
 
     // Check if this edge is internal
