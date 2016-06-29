@@ -220,6 +220,9 @@ const std::unordered_map<uint64_t, bool>& validator_stats::get_fork_info() const
 const std::unordered_map<uint64_t, bool>& validator_stats::get_exit_info() const { return exit_signs; }
 
 void validator_stats::add (const validator_stats& stats) {
+  // Combine ids and isos
+  tile_ids = merge(tile_ids, stats.get_ids());
+  iso_codes = merge(iso_codes, stats.get_isos());
   // Combine tile statistics
   auto newTileLengths = stats.get_tile_lengths();
   auto newTileAreas = stats.get_tile_areas();
