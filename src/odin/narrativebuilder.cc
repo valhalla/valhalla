@@ -1,4 +1,5 @@
-#include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <cmath>
 #include <string>
 
@@ -3236,46 +3237,42 @@ std::string NarrativeBuilder::FormMetricLength(
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
 
-  float kilometer_tenths = std::round(kilometers * 10) / 10;
-  uint32_t meters = 0;
+  // Follow locale rules turning numbers into strings
+  std::stringstream distance;
+  distance.imbue(dictionary_.GetLocale());
+  // These will determine what we say
+  int tenths = std::round(kilometers * 10);
 
-  if (kilometer_tenths > 1.0f) {
+  if (tenths > 10) {
     // 0 "<KILOMETERS> kilometers"
     length_string += metric_lengths.at(kKilometersIndex);
-  } else if (kilometer_tenths == 1.0f) {
+    distance << std::setiosflags(std::ios::fixed) << std::setprecision(tenths % 10 > 0) << kilometers;
+  } else if (tenths == 10) {
     // 1 "1 kilometer"
     length_string += metric_lengths.at(kOneKilometerIndex);
-  } else if (kilometer_tenths == 0.5f) {
+  } else if (tenths == 5) {
     // 2 "a half kilometer"
     length_string += metric_lengths.at(kHalfKilometerIndex);
   } else {
-    float kilometer_hundredths = std::round(kilometers * 100) / 100;
-    float kilometer_thousandths = std::round(kilometers * 1000) / 1000;
-
-    // Process hundred meters
-    if (kilometer_hundredths > 0.09f) {
+    int meters = std::round(kilometers * 1000);
+    if (meters > 94) {
       // 3 "<METERS> meters" (100-400 and 600-900 meters)
       length_string += metric_lengths.at(kMetersIndex);
-      meters = static_cast<uint32_t>(kilometer_tenths * 1000);
-    } else if (kilometer_thousandths > 0.009f) {
+      distance << ((meters + 50) / 100) * 100;
+    } else if (meters > 9) {
       // 3 "<METERS> meters" (10-90 meters)
       length_string += metric_lengths.at(kMetersIndex);
-      meters = static_cast<uint32_t>(kilometer_hundredths * 1000);
+      distance << ((meters + 5) / 10) * 10;
     } else {
       // 4 "less than 10 meters"
       length_string += metric_lengths.at(kSmallMetersIndex);
     }
   }
 
-  // Stream kilometers based on locale
-  std::ostringstream kilometers_stream;
-  kilometers_stream.imbue(dictionary_.GetLocale());
-  kilometers_stream << kilometer_tenths;
-
+  //TODO: why do we need separate tags for kilometers and meters?
   // Replace tags with length values
-  boost::replace_all(length_string, kKilometersTag, kilometers_stream.str());
-  boost::replace_all(length_string, kMetersTag, std::to_string(meters));  //: locale specific numerals
-
+  boost::replace_all(length_string, kKilometersTag, distance.str());
+  boost::replace_all(length_string, kMetersTag, distance.str());
 
   return length_string;
 }
@@ -3293,50 +3290,51 @@ std::string NarrativeBuilder::FormUsCustomaryLength(
 
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
-  float mile_tenths = std::round(miles * 10) / 10;
-  uint32_t tenths_of_mile = 0;
-  uint32_t feet = static_cast<uint32_t>(std::round(miles * 5280));
+  
+  // Follow locale rules turning numbers into strings
+  std::stringstream distance;
+  distance.imbue(dictionary_.GetLocale());
+  // These will determine what we say
+  int tenths = std::round(miles * 10);
 
-  if (mile_tenths > 1.0f) {
+  if (tenths > 10) {
     // 0  "<MILES> miles"
     length_string += us_customary_lengths.at(kMilesIndex);
-  } else if (mile_tenths == 1.0f) {
+    distance << std::setiosflags(std::ios::fixed) << std::setprecision(tenths % 10 > 0) << miles;
+  } else if (tenths == 10) {
     // 1  "1 mile"
     length_string += us_customary_lengths.at(kOneMileIndex);
-  } else if (mile_tenths == 0.5f) {
+  } else if (tenths == 5) {
     // 2  "a half mile"
     length_string += us_customary_lengths.at(kHalfMileIndex);
-  } else if (mile_tenths > 0.1f) {
+  } else if (tenths > 1) {
     // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
     length_string += us_customary_lengths.at(kTenthsOfMileIndex);
-    tenths_of_mile = static_cast<uint32_t>(mile_tenths * 10);
-  } else if ((miles > 0.0973f) && (mile_tenths == 0.1f)) {
+    distance << tenths;
+  } else if (miles > 0.0973f && tenths == 1) {
     // 4  "1 tenth of a mile"
     length_string += us_customary_lengths.at(kOneTenthOfMileIndex);
   } else {
+    int feet = std::round(miles * 5280);
     if (feet > 94) {
       // 5  "<FEET> feet" (100-500)
       length_string += us_customary_lengths.at(kFeetIndex);
-      feet = static_cast<uint32_t>(std::round(feet / 100.0f) * 100);
+      distance << ((feet + 50) / 100) * 100;
     } else if (feet > 9) {
       // 5  "<FEET> feet" (10-90)
       length_string += us_customary_lengths.at(kFeetIndex);
-      feet = static_cast<uint32_t>(std::round(feet / 10.0f) * 10);
+      distance << ((feet + 5) / 10) * 10;
     } else {
       // 6  "less than 10 feet"
       length_string += us_customary_lengths.at(kSmallFeetIndex);
     }
   }
 
-  // Stream miles based on locale
-  std::ostringstream miles_stream;
-  miles_stream.imbue(dictionary_.GetLocale());
-  miles_stream << mile_tenths;
-
+  //TODO: why do we need separate tags for miles, tenths and feet?
   // Replace tags with length values
-  boost::replace_all(length_string, kMilesTag, miles_stream.str());
-  boost::replace_all(length_string, kTenthsOfMilesTag, std::to_string(tenths_of_mile));  //TODO: locale specific numerals
-  boost::replace_all(length_string, kFeetTag, std::to_string(feet));  //TODO: locale specific numerals
+  boost::replace_all(length_string, kMilesTag, distance.str());
+  boost::replace_all(length_string, kTenthsOfMilesTag, distance.str());
+  boost::replace_all(length_string, kFeetTag, distance.str());
 
   return length_string;
 }

@@ -1,5 +1,5 @@
 {
-  "posix_locale": "cs_CZ.utf8",
+  "posix_locale": "cs_CZ.UTF-8",
   "instructions": {
     "start": {
       "phrases": {
