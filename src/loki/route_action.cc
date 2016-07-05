@@ -27,22 +27,16 @@ namespace {
     //see if any locations pairs are unreachable or too far apart
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
     for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
-
-      //check connectivity
-      uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
-      uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
-      if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0}))
-        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
-
       //check if distance between latlngs exceed max distance limit for each mode of travel
       auto path_distance = std::prev(location)->latlng_.Distance(location->latlng_);
       max_distance-=path_distance;
       if (max_distance < 0)
-        throw std::runtime_error("Path distance exceeds the max distance limit.");
+        throw std::runtime_error("Path distance exceeds the max distance limit");
 
       valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
   }
+
 }
 
 namespace valhalla {
@@ -55,25 +49,20 @@ namespace valhalla {
 
       // Validate walking distances (make sure they are in the accepted range)
       if (costing == "multimodal" || costing == "transit") {
-
         auto transit_start_end_max_distance =
-            request.get_optional<int>("costing_options.pedestrian.transit_start_end_max_distance");
+            request.get<int>("costing_options.pedestrian.transit_start_end_max_distance", min_transit_walking_dis);
         auto transit_transfer_max_distance =
-            request.get_optional<int>("costing_options.pedestrian.transit_transfer_max_distance");
+            request.get<int>("costing_options.pedestrian.transit_transfer_max_distance", min_transit_walking_dis);
 
-        if (transit_start_end_max_distance) {
-          if (*transit_start_end_max_distance < min_transit_walking_dis || *transit_start_end_max_distance > max_transit_walking_dis) {
-            throw std::runtime_error("Outside the valid walking distance at the beginning or end of a multimodal route.  Min: " +
-                                     std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
-                                     " (Meters)");
-          }
+        if (transit_start_end_max_distance < min_transit_walking_dis || transit_start_end_max_distance > max_transit_walking_dis) {
+          throw std::runtime_error("Outside the valid walking distance at the beginning or end of a multimodal route.  Min: " +
+                                   std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                   " (Meters)");
         }
-        if (transit_transfer_max_distance) {
-          if (*transit_transfer_max_distance < min_transit_walking_dis || *transit_transfer_max_distance > max_transit_walking_dis) {
-            throw std::runtime_error("Outside the valid walking distance between stops of a multimodal route.  Min: " +
-                                     std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
-                                     " (Meters)");
-          }
+        if (transit_transfer_max_distance < min_transit_walking_dis || transit_transfer_max_distance > max_transit_walking_dis) {
+          throw std::runtime_error("Outside the valid walking distance between stops of a multimodal route.  Min: " +
+                                   std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                   " (Meters)");
         }
       }
 
@@ -119,10 +108,32 @@ namespace valhalla {
       }
 
       //correlate the various locations to the underlying graph
+      std::unordered_map<size_t, size_t> color_counts;
       for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, costing_filter);
+        auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+        //TODO: get transit level for transit costing
+        //TODO: if transit send a non zero radius
+        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
+        for(auto color : colors){
+          auto itr = color_counts.find(color);
+          if(itr == color_counts.cend())
+            color_counts[color] = 1;
+          else
+            ++itr->second;
+        }
       }
+
+      //are all the locations in the same color regions
+      bool connected = false;
+      for(const auto& c : color_counts) {
+        if(c.second == locations.size()) {
+          connected = true;
+          break;
+        }
+      }
+      if(!connected)
+        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
 
       //let tyr know if its valhalla or osrm format
       if(action == loki_worker_t::VIAROUTE)
@@ -137,10 +148,6 @@ namespace valhalla {
       //part of thors path proto object and then get copied into odins trip object
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
-
-      /*for (auto message : result.messages){
-        LOG_INFO("SENDING TO THOR:: " + message);
-      }*/
 
       return result;
     }

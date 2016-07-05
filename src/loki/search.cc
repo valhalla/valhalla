@@ -134,7 +134,6 @@ const NodeInfo* get_end_node(GraphReader& reader, const DirectedEdge* edge) {
 
 PathLocation correlate_node(GraphReader& reader, const Location& location, const EdgeFilter& filter, const GraphTile* tile, const NodeInfo* node, const float sqdist){
   PathLocation correlated(location);
-  correlated.CorrelateVertex(node->latlng());
   std::list<PathLocation::PathEdge> heading_filtered;
   //now that we have a node we can pass back all the edges leaving and entering it
   const auto* start_edge = tile->directededge(node->edge_index());
@@ -151,32 +150,32 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
 
     //do we want this edge
     if(!filter(edge)) {
-      PathLocation::PathEdge path_edge{std::move(id), 0.f, PathLocation::NONE};
+      PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), PathLocation::NONE};
       std::get<2>(closest_point) = edge->forward() ? 0 : info->shape().size() - 2;
       if(!heading_filter(edge, info, closest_point, location.heading_))
-        correlated.CorrelateEdge(std::move(path_edge));
+        correlated.edges.push_back(std::move(path_edge));
       else
         heading_filtered.emplace_back(std::move(path_edge));
     }
 
     //do we want the evil twin
     if(!filter(other_edge)) {
-      PathLocation::PathEdge path_edge{std::move(other_id), 1.f, PathLocation::NONE};
+      PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(),PathLocation::NONE};
       std::get<2>(closest_point) = other_edge->forward() ? 0 : info->shape().size() - 2;
       if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
-        correlated.CorrelateEdge(std::move(path_edge));
+        correlated.edges.push_back(std::move(path_edge));
       else
         heading_filtered.emplace_back(std::move(path_edge));
     }
   }
 
   //if we have nothing because of heading we'll just ignore it
-  if(correlated.edges().size() == 0 && heading_filtered.size())
+  if(correlated.edges.size() == 0 && heading_filtered.size())
     for(auto& path_edge : heading_filtered)
-      correlated.CorrelateEdge(std::move(path_edge));
+      correlated.edges.push_back(std::move(path_edge));
 
   //if we still found nothing that is no good..
-  if(correlated.edges().size() == 0)
+  if(correlated.edges.size() == 0)
     throw std::runtime_error("No suitable edges near location");
 
   //give it back
@@ -188,8 +187,6 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
   //now that we have an edge we can pass back all the info about it
   PathLocation correlated(location);
   if(closest_edge != nullptr){
-    //correlate the spot
-    correlated.CorrelateVertex(std::get<0>(closest_point));
     //we need the ratio in the direction of the edge we are correlated to
     double partial_length = 0;
     for(size_t i = 0; i < std::get<2>(closest_point); ++i)
@@ -204,28 +201,28 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     //correlate the edge we found
     std::list<PathLocation::PathEdge> heading_filtered;
     if(heading_filter(closest_edge, closest_edge_info, closest_point, location.heading_))
-      heading_filtered.emplace_back(closest_edge_id, length_ratio, side);
+      heading_filtered.emplace_back(closest_edge_id, length_ratio, std::get<0>(closest_point), side);
     else
-      correlated.CorrelateEdge(PathLocation::PathEdge{closest_edge_id, length_ratio, side});
+      correlated.edges.push_back(PathLocation::PathEdge{closest_edge_id, length_ratio, std::get<0>(closest_point), side});
     //correlate its evil twin
     const GraphTile* other_tile;
     auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id, other_tile);
     const auto* other_edge = other_tile->directededge(opposing_edge_id);
     if(!filter(other_edge)) {
       if(heading_filter(other_edge, closest_edge_info, closest_point, location.heading_))
-        heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, flip_side(side));
+        heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), flip_side(side));
       else
-        correlated.CorrelateEdge(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, flip_side(side)});
+        correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), flip_side(side)});
     }
 
     //if we have nothing because of heading we'll just ignore it
-    if(correlated.edges().size() == 0 && heading_filtered.size())
+    if(correlated.edges.size() == 0 && heading_filtered.size())
       for(auto& path_edge : heading_filtered)
-        correlated.CorrelateEdge(std::move(path_edge));
+        correlated.edges.push_back(std::move(path_edge));
   }
 
   //if we found nothing that is no good..
-  if(correlated.edges().size() == 0)
+  if(correlated.edges.size() == 0)
     throw std::runtime_error("No suitable edges near location");
 
   //give it back
@@ -274,12 +271,82 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment);
 }
 
+//TODO: this is frought with peril. to properly to this we need to know
+//where in the world we are and use lower casing rules that are appropriate
+//so we can maximize the similarity measure.
+//are the names similar enough to consider them matching
+/*bool name_filter() {
+
+}*/
+
+// Test if this location is an isolated "island" without connectivity to the
+// larger routing graph. Does a breadth first search - if possible paths are
+// exhausted within some threshold this returns a set of edges within the
+// island.
+std::unordered_set<GraphId> island(const PathLocation& location,
+             GraphReader& reader, const NodeFilter& node_filter,
+             const EdgeFilter& edge_filter, const uint32_t edge_threshold,
+             const uint32_t length_threshold, const uint32_t node_threshold) {
+  std::unordered_set<GraphId> todo(edge_threshold);
+  std::unordered_set<GraphId> done(edge_threshold);
+
+  // Seed the list of edges to expand
+  for (const auto& edge : location.edges) {
+    todo.insert(edge.id);
+  }
+
+  // We are done if we hit a threshold meaning it isn't an island or we ran
+  // out of edges and we determine it is an island
+  uint32_t total_edge_length = 0;
+  uint32_t nodes_expanded = 0;
+  while ((done.size() < edge_threshold || total_edge_length < length_threshold ||
+          nodes_expanded < node_threshold) && todo.size()) {
+    // Get the next edge
+    const GraphId edge = *todo.cbegin();
+    done.emplace(edge);
+
+    // Get the directed edge - filter it out if not accessible
+    const DirectedEdge* directededge = reader.GetGraphTile(edge)->directededge(edge);
+    if (edge_filter(directededge)) {
+      continue;
+    }
+    total_edge_length += directededge->length();
+
+    // Get the end node - filter it out if not accessible
+    const GraphId node = directededge->endnode();
+    const GraphTile* tile = reader.GetGraphTile(node);
+    const NodeInfo* nodeinfo = tile->node(node);
+    if (node_filter(nodeinfo)) {
+      continue;
+    }
+
+    // Expand edges from the node
+    bool expanded = false;
+    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+      // Skip transition edges, transit connection edges, and edges that are not allowed
+      if (directededge->trans_up() || directededge->trans_down() ||
+          directededge->use() == Use::kTransitConnection ||
+          edge_filter(directededge)) {
+        continue;
+      }
+
+      // Add to the todo list
+      todo.emplace(edgeid);
+      expanded = true;
+    }
+    nodes_expanded += expanded;
+  }
+
+  // If there are still edges to do then we broke out of the loop above due to
+  // meeting thresholds and this is not a disconnected island. If there are no
+  // more edges then this is a disconnected island and we want to know what
+  // edges constitute the island so a second pass can avoid them
+  return (todo.size() == 0) ? done : std::unordered_set<GraphId>{};
 }
 
-namespace valhalla {
-namespace loki {
-
-PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter& filter) {
+PathLocation search(const Location& location, GraphReader& reader, const EdgeFilter& edge_filter) {
   //iterate over bins in a closest first manner
   const auto& tiles = reader.GetTileHierarchy().levels().rbegin()->second.tiles;
   const auto level = reader.GetTileHierarchy().levels().rbegin()->first;
@@ -321,9 +388,9 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
         if(e.tileid() != tile->id().tileid())
           tile = reader.GetGraphTile(e);
         const auto* edge = tile->directededge(e);
-        //no thanks on this one or it evil twin
-        if(filter(edge) && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
-          filter(edge = tile->directededge(e)))) {
+        //no thanks on this one or its evil twin
+        if(edge_filter(edge) && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
+          edge_filter(edge = tile->directededge(e)))) {
           continue;
         }
         //get some info about the edge
@@ -358,15 +425,25 @@ PathLocation Search(const Location& location, GraphReader& reader, const EdgeFil
   if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
     const GraphTile* other_tile;
     auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
-    return correlate_node(reader, location, filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
+    return correlate_node(reader, location, edge_filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
   }
   //it was the end node
   if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
     const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
-    return correlate_node(reader, location, filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
+    return correlate_node(reader, location, edge_filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
   }
   //it was along the edge
-  return correlate_edge(reader, location, filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
+  return correlate_edge(reader, location, edge_filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
+}
+
+}
+
+namespace valhalla {
+namespace loki {
+
+PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
+  //TODO: check if its an island and then search again
+  return search(location, reader, edge_filter);
 }
 
 }

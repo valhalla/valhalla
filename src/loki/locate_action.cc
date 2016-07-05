@@ -15,7 +15,7 @@ namespace {
 
   json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
     auto array = json::array({});
-    for(const auto& edge : location.edges()) {
+    for(const auto& edge : location.edges) {
       try {
         //get the osm way id
         auto tile = reader.GetGraphTile(edge.id);
@@ -25,8 +25,8 @@ namespace {
         if(verbose) {
           array->emplace_back(
             json::map({
-              {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-              {"correlated_lon", json::fp_t{location.vertex().lng(), 6}},
+              {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
+              {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
               {"side_of_street",
                 edge.sos == PathLocation::LEFT ? std::string("left") :
                   (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
@@ -42,8 +42,8 @@ namespace {
           array->emplace_back(
             json::map({
               {"way_id", edge_info->wayid()},
-              {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-              {"correlated_lon", json::fp_t{location.vertex().lng(), 6}},
+              {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
+              {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
               {"side_of_street",
                 edge.sos == PathLocation::LEFT ? std::string("left") :
                   (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
@@ -61,43 +61,45 @@ namespace {
     return array;
   }
 
+  json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader, bool verbose) {
+    //get the nodes we need
+    std::unordered_set<uint64_t> nodes;
+    for(const auto& e : location.edges)
+      if(e.end_node())
+        nodes.emplace(reader.GetGraphTile(e.id)->directededge(e.id)->endnode());
+    //ad them into an array of json
+    auto array = json::array({});
+    for(auto node_id : nodes) {
+      GraphId n(node_id);
+      const GraphTile* tile = reader.GetGraphTile(n);
+      auto* node_info = tile->node(n);
+      json::MapPtr node;
+      if(verbose) {
+        node = node_info->json(tile);
+        node->emplace("node_id", n.json());
+      }
+      else {
+        node = json::map({
+          {"lon", json::fp_t{node_info->latlng().first, 6}},
+          {"lat", json::fp_t{node_info->latlng().second, 6}},
+          //TODO: osm_id
+        });
+      }
+      array->emplace_back(node);
+    }
+    //give them back
+    return array;
+  }
+
   json::MapPtr serialize(const boost::optional<std::string>& id, const PathLocation& location, GraphReader& reader, bool verbose) {
     //serialze all the edges
     auto m = json::map
     ({
       {"edges", serialize_edges(location, reader, verbose)},
+      {"nodes", serialize_nodes(location, reader, verbose)},
       {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
       {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
     });
-
-    //serialize the node
-    GraphId node;
-    if(location.IsNode()) {
-      for(const auto& e : location.edges()) {
-        if(e.dist == 1.f) {
-          node = reader.GetGraphTile(e.id)->directededge(e.id)->endnode();
-          const GraphTile* tile = reader.GetGraphTile(node);
-          auto* node_info = tile->node(node);
-          if(verbose)
-            m->emplace("node", node_info->json(tile));
-          else {
-            m->emplace("node", json::map({
-              {"lon", json::fp_t{node_info->latlng().first, 6}},
-              {"lat", json::fp_t{node_info->latlng().second, 6}},
-              //TODO: osm_id
-            }));
-          }
-          break;
-        }
-      }
-    }//no node
-    else
-      m->emplace("node", static_cast<nullptr_t>(nullptr));
-    if(verbose)
-      m->emplace("node_id", node.json());
-    /*if (id)
-      m->emplace("id", *id);*/
-
     return m;
   }
 
@@ -127,7 +129,7 @@ namespace valhalla {
 
       for(const auto& location : locations) {
         try {
-          auto correlated = loki::Search(location, reader, costing_filter);
+          auto correlated = loki::Search(location, reader, edge_filter, node_filter);
           json->emplace_back(serialize(request.get_optional<std::string>("id"), correlated, reader, verbose));
         }
         catch(const std::exception& e) {

@@ -30,7 +30,7 @@ namespace {
     {"many_to_one", loki_worker_t::MANY_TO_ONE},
     {"many_to_many", loki_worker_t::MANY_TO_MANY},
     {"sources_to_targets", loki_worker_t::SOURCES_TO_TARGETS},
-    {"optimized", loki_worker_t::OPTIMIZED}
+    {"optimized_route", loki_worker_t::OPTIMIZED_ROUTE}
   };
 
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
@@ -38,7 +38,7 @@ namespace {
     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
     {loki_worker_t::MANY_TO_MANY, "many_to_many"},
     {loki_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
-    {loki_worker_t::OPTIMIZED, "optimized"}
+    {loki_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -57,12 +57,6 @@ namespace {
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
     //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
     for(size_t i = start; i < end; ++i) {
-      //check connectivity
-      uint32_t a_id = lowest_level->second.tiles.TileId(locations[origin].latlng_);
-      uint32_t b_id = lowest_level->second.tiles.TileId(locations[i].latlng_);
-      if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0}))
-        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
-
       //check if distance between latlngs exceed max distance limit the chosen matrix type
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
 
@@ -74,7 +68,7 @@ namespace {
       }
 
       if (path_distance > matrix_max_distance)
-        throw std::runtime_error("Path distance exceeds the max distance limit.");
+        throw std::runtime_error("Path distance exceeds the max distance limit");
       }
   }
 }
@@ -83,8 +77,8 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      //we want optimized to use the same location and distance limits as many_to_many
-      auto action_str = ACTION_TO_STRING.find((action == loki_worker_t::OPTIMIZED || action == loki_worker_t::SOURCES_TO_TARGETS) ? loki_worker_t::MANY_TO_MANY : action)->second;
+      //we want optimized_route to use the same location and distance limits as many_to_many
+      auto action_str = ACTION_TO_STRING.find((action == loki_worker_t::OPTIMIZED_ROUTE || action == loki_worker_t::SOURCES_TO_TARGETS) ? loki_worker_t::MANY_TO_MANY : action)->second;
 
       //check that location size does not exceed max.
       check_locations(sources.size(), targets.size(), max_locations.find(action_str)->second);
@@ -102,13 +96,13 @@ namespace valhalla {
           break;
         case MANY_TO_MANY:
         case SOURCES_TO_TARGETS:
-        case OPTIMIZED:
+        case OPTIMIZED_ROUTE:
           for(size_t i = 0; i < locations.size()-1; ++i)
             check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
           break;
       }
-      //correlate the various locations to the underlying graph
 
+      //correlate the various locations to the underlying graph
       /*std::vector<baldr::PathLocation> locs;
       locs.push_back(sources);
       locs.push_back(targets);
@@ -117,6 +111,32 @@ namespace valhalla {
         auto correlated = loki::Search(locs[i], reader, costing_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }*/
+      std::unordered_map<size_t, size_t> color_counts;
+      for(size_t i = 0; i < locations.size(); ++i) {
+        auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
+        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+        //TODO: get transit level for transit costing
+        //TODO: if transit send a non zero radius
+        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
+        for(auto color : colors){
+          auto itr = color_counts.find(color);
+          if(itr == color_counts.cend())
+            color_counts[color] = 1;
+          else
+            ++itr->second;
+        }
+      }
+
+      //are all the locations in the same color regions
+      bool connected = false;
+      for(const auto& c : color_counts) {
+        if(c.second == locations.size()) {
+          connected = true;
+          break;
+        }
+      }
+      if(!connected)
+        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
 
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
       //pass on to thor with type of matrix

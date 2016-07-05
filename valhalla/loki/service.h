@@ -11,6 +11,7 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
 
 namespace valhalla {
@@ -20,7 +21,7 @@ namespace valhalla {
 
     class loki_worker_t {
      public:
-      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, SOURCES_TO_TARGETS, OPTIMIZED};
+      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, SOURCES_TO_TARGETS, OPTIMIZED_ROUTE};
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();
@@ -35,8 +36,10 @@ namespace valhalla {
       std::vector<baldr::PathLocation> sources;
       std::vector<baldr::PathLocation> targets;
       sif::CostFactory<sif::DynamicCost> factory;
-      sif::EdgeFilter costing_filter;
+      sif::EdgeFilter edge_filter;
+      sif::NodeFilter node_filter;
       valhalla::baldr::GraphReader reader;
+      valhalla::baldr::connectivity_map_t connectivity_map;
       std::string action_str;
       std::unordered_map<std::string, size_t> max_locations;
       std::unordered_map<std::string, float> max_distance;
