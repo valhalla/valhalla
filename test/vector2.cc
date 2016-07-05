@@ -1,6 +1,6 @@
-#include "valhalla/midgard/vector2.h"
-
-#include "valhalla/midgard/point2.h"
+#include "midgard/vector2.h"
+#include "midgard/point2.h"
+#include "midgard/util.h"
 #include "test.h"
 
 
@@ -76,7 +76,7 @@ void TestOpAssignment() {
 }
 
 void TryGet_x(const Vector2& v, const float expected) {
-  if (expected != v.x())
+  if (!equal(expected, v.x()))
     throw runtime_error("Get_x test failed");
 }
 
@@ -86,7 +86,7 @@ void TestGet_x() {
 }
 
 void TryGet_y(const Vector2& v, const float expected) {
-  if (expected != v.y())
+  if (!equal(expected, v.y()))
     throw runtime_error("Get_y test failed");
 }
 
@@ -97,7 +97,7 @@ void TestGet_y() {
 
 void TrySet_x(Vector2& v, const float expected) {
   v.set_x(expected);
-  if (expected != v.x())
+  if (!equal(expected, v.x()))
     throw runtime_error("Set_x test failed");
 }
 
@@ -109,7 +109,7 @@ void TestSet_x() {
 
 void TrySet_y(Vector2& v, const float expected) {
   v.set_y(expected);
-  if (expected != v.y())
+  if (!equal(expected, v.y()))
     throw runtime_error("Set_y test failed");
 }
 
@@ -254,7 +254,7 @@ void TestOpEqualTo() {
 
 void TryDotProduct(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Dot(b);
-  if (expected != result)
+  if (!equal(expected, result))
     throw runtime_error("DotProduct test failed");
 }
 
@@ -265,7 +265,7 @@ void TestDotProduct() {
 
 void TryCrossProduct(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Cross(b);
-  if (expected != result)
+  if (!equal(expected, result))
     throw runtime_error("CrossProduct test failed");
 }
 
@@ -286,7 +286,7 @@ void TestPerpendicular() {
 
 void TryNorm(const Vector2& a, float expected) {
   float result = a.Norm();
-  if (expected != result)
+  if (!equal(expected, result))
     throw runtime_error("Norm test failed");
 }
 
@@ -297,7 +297,7 @@ void TestNorm() {
 
 void TryNormSquared(const Vector2& a, float expected) {
   float result = a.NormSquared();
-  if (expected != result)
+  if (!equal(expected, result))
     throw runtime_error("NormSquared test failed");
 }
 
@@ -321,7 +321,7 @@ void TestNormalize() {
 
 void TryComponent(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Component(b);
-  if (expected != result)
+  if (!equal(expected, result))
     throw runtime_error("Component test failed");
 }
 
@@ -346,7 +346,7 @@ void TestProjection() {
 
 void TryAngleBetween(const Vector2& a, const Vector2& b, float expected) {
   float result = (a.AngleBetween(b) * kDegPerRad);
-  if (expected != result)
+  if (!equal(expected, result))
     throw runtime_error("AngleBetween test failed");
 }
 

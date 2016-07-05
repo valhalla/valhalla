@@ -1,5 +1,6 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
+#include "midgard/util.h"
 #include <cmath>
 
 #include "test.h"
@@ -8,6 +9,10 @@ using namespace std;
 using namespace valhalla::midgard;
 
 namespace {
+bool equal(const PointLL& a, const PointLL& b){
+  return valhalla::midgard::equal(a.first, b.first) && valhalla::midgard::equal(a.second, b.second);
+}
+
 void test_invalid() {
   PointLL ll;
   if (ll.IsValid())
@@ -224,13 +229,17 @@ void TestMidPoint() {
   //lines of longitude are geodesics so the mid point of points
   //on the same line of longitude should still be at the same longitude
   auto mid = PointLL(0, 90).MidPoint({0, 0});
-  if(mid != PointLL(0, 45))
+  if(!equal(mid, PointLL(0, 45)))
     throw std::logic_error("Wrong mid point");
   mid = PointLL(0, 90).MidPoint({0, -66});
-  if(mid != PointLL(0,12))
+  if(!equal(mid, PointLL(0,12)))
     throw std::logic_error("Wrong mid point");
+
+  //lines of latitude are not geodesics so if we put them 180 degrees apart
+  //the shortest path between them is actually the geodesic that intersects
+  //the pole. longitude is meaningless then
   mid = PointLL(-23, 45).MidPoint({157, 45});
-  if(mid != PointLL(0, 90))
+  if(mid.second != 90)
     throw std::logic_error("Wrong mid point");
 
   //in the northern hemisphere we should expect midpoints on
@@ -252,10 +261,10 @@ void TestMidPoint() {
 
   //the equator is the only line of latitude that is also a geodesic
   mid = PointLL(-15, 0).MidPoint({15, 0});
-  if(mid != PointLL(0, 0))
+  if(!equal(mid, PointLL(0, 0)))
     throw std::logic_error("Wrong mid point");
   mid = PointLL(-170, 0).MidPoint({160, 0});
-  if(mid != PointLL(175, 0))
+  if(!equal(mid, PointLL(175, 0)))
     throw std::logic_error("Wrong mid point");
 }
 

@@ -154,7 +154,7 @@ bool Ellipse<coord_t>::Contains(const coord_t& pt) const {
   // point is in or on the ellipse.
   float dx = pt.x() - center_.x();
   float dy = pt.y() - center_.y();
-  return (((k1_ * sqr(dx)) + (k2_ * dx * dy) + (k3_ * sqr(dy)) - 1) <= 0);
+  return ((k1_ * sqr(dx)) + (k2_ * dx * dy) + (k3_ * sqr(dy)) - 1) < kEpsilon;
 }
 
 // Explicit instantiation
