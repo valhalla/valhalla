@@ -713,80 +713,80 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP>.",
-        "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Entez dans la station.",
+        "1": "Entez dans <TRANSIT_STOP>.",
+        "2": "Entez dans <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Enter the station."],
-        "1": ["Enter the Embarcadero Station."],
-        "2": ["Enter the 8 St - NYU Station."]
+        "0": ["Entez dans la station."],
+        "1": ["Entez dans Embarcadero Station."],
+        "2": ["Entez dans 8 St - NYU Station."]
       }
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP>.",
-        "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Entez dans la station.",
+        "1": "Entez dans <TRANSIT_STOP>.",
+        "2": "Entez dans <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Enter the station."],
-        "1": ["Enter the Embarcadero Station."],
-        "2": ["Enter the 8 St - NYU Station."]
+        "0": ["Entez dans la station."],
+        "1": ["Entez dans Embarcadero Station."],
+        "2": ["Entez dans 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Transfer at the station.",
-        "1": "Transfer at the <TRANSIT_STOP>.",
-        "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Changez à station.",
+        "1": "Changez à <TRANSIT_STOP>.",
+        "2": "Changez à <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Transfer at the station."],
-        "1": ["Transfer at the Embarcadero Station."],
-        "2": ["Transfer at the 8 St - NYU Station."]
+        "0": ["Changez à station."],
+        "1": ["Changez à Embarcadero Station."],
+        "2": ["Changez à 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Transfer at the station.",
-        "1": "Transfer at the <TRANSIT_STOP>.",
-        "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Changez à station.",
+        "1": "Changez à <TRANSIT_STOP>.",
+        "2": "Changez à <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Transfer at the station."],
-        "1": ["Transfer at the Embarcadero Station."],
-        "2": ["Transfer at the 8 St - NYU Station."]
+        "0": ["Changez à station."],
+        "1": ["Changez à Embarcadero Station."],
+        "2": ["Changez à 8 St - NYU Station."]
       }
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Exit the station.",
-        "1": "Exit the <TRANSIT_STOP>.",
-        "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Sortez de la station.",
+        "1": "Sortez de <TRANSIT_STOP>.",
+        "2": "Sortez de <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Exit the station."],
-        "1": ["Exit the Embarcadero Station."],
-        "2": ["Exit the 8 St - NYU Station."]
+        "0": ["Sortez de la station."],
+        "1": ["Sortez de Embarcadero Station."],
+        "2": ["Sortez de 8 St - NYU Station."]
       }
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Exit the station.",
-        "1": "Exit the <TRANSIT_STOP>.",
-        "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Sortez de la station.",
+        "1": "Sortez de <TRANSIT_STOP>.",
+        "2": "Sortez de <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Exit the station."],
-        "1": ["Exit the Embarcadero Station."],
-        "2": ["Exit the 8 St - NYU Station."]
+        "0": ["Sortez de la station."],
+        "1": ["Sortez de Embarcadero Station."],
+        "2": ["Sortez de 8 St - NYU Station."]
       }
     },
     "depart": {
@@ -866,36 +866,36 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Restez <TRANSIT_NAME>.",
-        "1": "Restez <TRANSIT_NAME> vers <TRANSIT_HEADSIGN>."
+        "0": "Restez sur <TRANSIT_NAME>.",
+        "1": "Restez sur <TRANSIT_NAME> vers <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": ["le tram", "le metro", "le train", " le bus", " le ferry", "le téléphérique", "la gondole", "le funiculaire"],
       "example_phrases": {
-        "0": ["Restez New Haven."],
-        "1": ["Restez F vers JAMAICA - 179 ST."]
+        "0": ["Restez sur New Haven."],
+        "1": ["Restez sur F vers JAMAICA - 179 ST."]
       }
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Transfer pour prendre the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Transfer pour prendre the <TRANSIT_NAME> vers <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Changez pour prendre <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Changez pour prendre <TRANSIT_NAME> vers <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["le tram", "le metro", "le train", " le bus", " le ferry", "le téléphérique", "la gondole", "le funiculaire"],
       "transit_stop_count_labels": {"one": "arrêt", "other": "arrêts"},
       "example_phrases": {
-        "0": ["Transfer pour prendre the New Haven. (1 stop)", "Transfer pour prendre the tram. (4 stops)"],
-        "1": ["Transfer pour prendre the F vers JAMAICA - 179 ST. (10 stops)"]
+        "0": ["Changez pour prendre New Haven. (1 arrêt)", "Changez pour prendre le tram. (4 arrêts)"],
+        "1": ["Changez pour prendre F vers JAMAICA - 179 ST. (10 arrêts)"]
       }
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Transfer pour prendre the <TRANSIT_NAME>.",
-        "1": "Transfer pour prendre the <TRANSIT_NAME> vers <TRANSIT_HEADSIGN>."
+        "0": "Changez pour prendre <TRANSIT_NAME>.",
+        "1": "Changez pour prendre <TRANSIT_NAME> vers <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": ["le tram", "le metro", "le train", " le bus", " le ferry", "le téléphérique", "la gondole", "le funiculaire"],
       "example_phrases": {
-        "0": ["Transfer pour prendre the New Haven."],
-        "1": ["Transfer pour prendre the F vers JAMAICA - 179 ST."]
+        "0": ["Changez pour prendre New Haven."],
+        "1": ["Changez pour prendre F vers JAMAICA - 179 ST."]
       }
     },
     "post_transit_connection_destination": {
@@ -981,7 +981,7 @@
       },
       "transit_stop_count_labels": {"one": "arrêt", "other": "arrêts"},
       "example_phrases": {
-        "0": ["Voyage à arrêt.", "Voyage à 3 arrêts."]
+        "0": ["Voyage à 1 arrêt.", "Voyage à 3 arrêts."]
       }
     },
     "verbal_multi_cue": {
@@ -989,7 +989,7 @@
         "0": "<CURRENT_VERBAL_CUE> Ensuite, <NEXT_VERBAL_CUE>"
       },
       "example_phrases": {
-        "0": ["Prenez à droite sur East Fayette Street. Ensuite, Tournez à droite vers North Gay Street."]
+        "0": ["Serrez à droite sur East Fayette Street. Ensuite, Tournez à droite vers North Gay Street."]
       }
     }
 
