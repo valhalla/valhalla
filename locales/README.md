@@ -6,10 +6,10 @@ Using [IETF BCP 47](https://tools.ietf.org/html/bcp47) as reference - the typica
 Czech/Czech Republic example:  
 `cs-CZ`
 
-2. Update the `posix_locale` value in your new file. The character encoding must be utf8. The typical format is:  
-<[ISO 639 two-letter language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)>_<[ISO 3166 two-letter country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)>.utf8  
+2. Update the `posix_locale` value in your new file. The character encoding must be UTF-8. The typical format is:  
+<[ISO 639 two-letter language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)>_<[ISO 3166 two-letter country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)>.UTF-8  
 Czech/Czech Republic example:  
-`cs_CZ.utf8`
+`cs_CZ.UTF-8`
 
 3. Do not translate the JSON keys or phrase tags. An example using the ramp instruction:  
 ![Alt text](/locales/img/do_not_translate.png)
