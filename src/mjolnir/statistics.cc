@@ -47,8 +47,7 @@ validator_stats::validator_stats()
     tile_width(), country_width(), tile_length(), country_length(),
     tile_weight(), country_weight(), tile_axle_load(), country_axle_load(),
     fork_signs(), exit_signs(),
-    tile_areas(), tile_geometries(),iso_codes(), tile_ids(),
-    dupcounts(4), densities(4) { }
+    tile_areas(), tile_geometries(),iso_codes(), tile_ids() { }
 
 void validator_stats::add_tile_road(const uint32_t& tile_id, const RoadClass& rclass, float length) {
   tile_ids.insert(tile_id);
@@ -163,14 +162,6 @@ void validator_stats::add_tile_geom(const uint32_t& tile_id, const AABB2<PointLL
   tile_geometries[tile_id] = geom;
 }
 
-void validator_stats::add_density(float density, int level) {
-  densities[level].push_back(density);
-}
-
-void validator_stats::add_dup(uint32_t newdup, int level) {
-  dupcounts[level].push_back(newdup);
-}
-
 const std::unordered_set<uint32_t>& validator_stats::get_ids() const { return tile_ids; }
 
 const std::unordered_set<std::string>& validator_stats::get_isos() const { return iso_codes; }
@@ -223,76 +214,46 @@ void validator_stats::add (const validator_stats& stats) {
   // Combine ids and isos
   tile_ids = merge(tile_ids, stats.get_ids());
   iso_codes = merge(iso_codes, stats.get_isos());
-  // Combine tile statistics
-  auto newTileLengths = stats.get_tile_lengths();
-  auto newTileAreas = stats.get_tile_areas();
-  auto newTileGeom = stats.get_tile_geometries();
-  auto newTileOneWay = stats.get_tile_one_way();
-  auto newTileSpeed = stats.get_tile_speed_info();
-  auto newTileIntEdges = stats.get_tile_int_edges();
-  auto newTileNamed = stats.get_tile_named();
-  auto newTileHazmat = stats.get_tile_hazmat();
-  auto newTileTruckRoute = stats.get_tile_truck_route();
-  auto newTileHeight = stats.get_tile_height();
-  auto newTileWidth = stats.get_tile_width();
-  auto newTileLength = stats.get_tile_length();
-  auto newTileWeight = stats.get_tile_weight();
-  auto newTileAxleLoad = stats.get_tile_axle_load();
-  auto newExitInfo = stats.get_exit_info();
-  auto newForkInfo = stats.get_fork_info();
 
-  tile_areas = merge(tile_areas, newTileAreas);
-  tile_geometries = merge(tile_geometries, newTileGeom);
-  tile_lengths = merge(tile_lengths, newTileLengths);
-  tile_one_way = merge(tile_one_way, newTileOneWay);
-  tile_speed_info = merge(tile_speed_info, newTileSpeed);
-  tile_int_edges = merge(tile_int_edges, newTileIntEdges);
-  tile_named = merge(tile_named, newTileNamed);
-  tile_hazmat = merge(tile_hazmat, newTileHazmat);
-  tile_truck_route = merge(tile_truck_route, newTileTruckRoute);
-  tile_height = merge(tile_height, newTileHeight);
-  tile_width = merge(tile_width, newTileWidth);
-  tile_length = merge(tile_length, newTileLength);
-  tile_weight = merge(tile_weight, newTileWeight);
-  tile_axle_load = merge(tile_axle_load, newTileAxleLoad);
+  // Combine tile statistics
+  tile_areas = merge(tile_areas, stats.get_tile_areas());
+  tile_geometries = merge(tile_geometries, stats.get_tile_geometries());
+  tile_lengths = merge(tile_lengths, stats.get_tile_lengths());
+  tile_one_way = merge(tile_one_way, stats.get_tile_one_way());
+  tile_speed_info = merge(tile_speed_info, stats.get_tile_speed_info());
+  tile_int_edges = merge(tile_int_edges, stats.get_tile_int_edges());
+  tile_named = merge(tile_named, stats.get_tile_named());
+  tile_hazmat = merge(tile_hazmat, stats.get_tile_hazmat());
+  tile_truck_route = merge(tile_truck_route, stats.get_tile_truck_route());
+  tile_height = merge(tile_height, stats.get_tile_height());
+  tile_width = merge(tile_width, stats.get_tile_width());
+  tile_length = merge(tile_length, stats.get_tile_length());
+  tile_weight = merge(tile_weight, stats.get_tile_weight());
+  tile_axle_load = merge(tile_axle_load, stats.get_tile_axle_load());
 
   // Combine country statistics
-  auto newCountryLengths = stats.get_country_lengths();
-  auto newCountryOneWay = stats.get_country_one_way();
-  auto newCountrySpeed = stats.get_country_speed_info();
-  auto newCountryIntEdges = stats.get_country_int_edges();
-  auto newCountryNamed = stats.get_country_named();
-  auto newCountryHazmat = stats.get_country_hazmat();
-  auto newCountryTruckRoute = stats.get_country_truck_route();
-  auto newCountryHeight = stats.get_country_height();
-  auto newCountryWidth = stats.get_country_width();
-  auto newCountryLength = stats.get_country_length();
-  auto newCountryWeight = stats.get_country_weight();
-  auto newCountryAxleLoad = stats.get_country_axle_load();
-
-  country_lengths = merge(country_lengths, newCountryLengths);
-  country_one_way = merge(country_one_way, newCountryOneWay);
-  country_speed_info = merge(country_speed_info, newCountrySpeed);
-  country_int_edges = merge(country_int_edges, newCountryIntEdges);
-  country_named = merge(country_named, newCountryNamed);
-  country_hazmat = merge(country_hazmat, newCountryHazmat);
-  country_truck_route = merge(country_truck_route, newCountryTruckRoute);
-  country_height = merge(country_height, newCountryHeight);
-  country_width = merge(country_width, newCountryWidth);
-  country_length = merge(country_length, newCountryLength);
-  country_weight = merge(country_weight, newCountryWeight);
-  country_axle_load = merge(country_axle_load, newCountryAxleLoad);
+  country_lengths = merge(country_lengths, stats.get_country_lengths());
+  country_one_way = merge(country_one_way, stats.get_country_one_way());
+  country_speed_info = merge(country_speed_info, stats.get_country_speed_info());
+  country_int_edges = merge(country_int_edges, stats.get_country_int_edges());
+  country_named = merge(country_named, stats.get_country_named());
+  country_hazmat = merge(country_hazmat, stats.get_country_hazmat());
+  country_truck_route = merge(country_truck_route, stats.get_country_truck_route());
+  country_height = merge(country_height, stats.get_country_height());
+  country_width = merge(country_width, stats.get_country_width());
+  country_length = merge(country_length, stats.get_country_length());
+  country_weight = merge(country_weight, stats.get_country_weight());
+  country_axle_load = merge(country_axle_load, stats.get_country_axle_load());
 
   // Combine exit statistics
-  fork_signs = merge(fork_signs, newForkInfo);
-  exit_signs = merge(exit_signs, newExitInfo);
+  fork_signs = merge(fork_signs, stats.get_exit_info());
+  exit_signs = merge(exit_signs, stats.get_fork_info());
 
   // Combine roulette data
   roulette_data.Add(stats.roulette_data);
 }
 
 
-//TODO: split this into separate methods!
 void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   // Get the location of the db file to write
   auto database = pt.get_optional<std::string>("mjolnir.statistics");
@@ -344,6 +305,39 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
+
+  create_tile_tables(db_handle, stmt);
+  create_country_tables(db_handle, stmt);
+  insert_tile_data(db_handle, stmt);
+  insert_country_data(db_handle, stmt);
+
+  // Create Index on geometry column
+  sql = "SELECT CreateSpatialIndex('tiledata', 'geom')";
+  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+
+  sql = "VACUUM ANALYZE";
+  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+  sqlite3_close(db_handle);
+  LOG_INFO("Finished");
+}
+
+void validator_stats::create_tile_tables(sqlite3 *db_handle, sqlite3_stmt *stmt) {
+  uint32_t ret;
+  char *err_msg = NULL;
+  std::string sql;
+
   // Create table for tiles
   sql = "SELECT InitSpatialMetaData(); CREATE TABLE tiledata (";
   sql += "tileid INTEGER PRIMARY KEY,";
@@ -412,8 +406,14 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
+}
 
-  // Create table for countries
+void validator_stats::create_country_tables(sqlite3 *db_handle, sqlite3_stmt *stmt) {
+  uint32_t ret;
+  char *err_msg = NULL;
+  std::string sql;
+
+  // Create tables for country data
   sql = "CREATE TABLE countrydata (";
   sql += "isocode TEXT PRIMARY KEY,";
   sql += "motorway REAL,";
@@ -469,6 +469,13 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
+}
+
+void validator_stats::insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
+
+  uint32_t ret;
+  char *err_msg = NULL;
+  std::string sql;
 
   // Begin the prepared statements for tiledata
   ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
@@ -670,6 +677,13 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     return;
   }
 
+}
+
+void validator_stats::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
+  uint32_t ret;
+  char *err_msg = NULL;
+  std::string sql;
+
   // Begin the prepared statements for country data
   ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -843,27 +857,6 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close (db_handle);
     return;
   }
-
-  // Create Index on geometry column
-  sql = "SELECT CreateSpatialIndex('tiledata', 'geom')";
-  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  sql = "VACUUM ANALYZE";
-  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-  sqlite3_close(db_handle);
-  LOG_INFO("Finished");
 }
 
 validator_stats::RouletteData::RouletteData ()

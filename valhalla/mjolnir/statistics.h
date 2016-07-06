@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <sqlite3.h>
+
 #include "valhalla/midgard/aabb2.h"
 #include <valhalla/baldr/graphconstants.h>
 #include <boost/property_tree/ptree.hpp>
@@ -91,10 +93,22 @@ class validator_stats {
   std::unordered_set<std::string> iso_codes;
   std::unordered_map<uint32_t, float> tile_areas;
   std::unordered_map<uint32_t, AABB2<PointLL>> tile_geometries;
-  std::vector<std::vector<uint32_t> > dupcounts;
-  std::vector<std::vector<float> > densities;
 
 public:
+
+  struct RouletteData {
+    std::unordered_map<uint64_t, PointLL> node_locs;
+    std::unordered_map<uint64_t, std::vector<PointLL> > way_shapes;
+    std::unordered_set<uint64_t> way_IDs;
+
+    RouletteData ();
+
+    void AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape);
+
+    void Add (const RouletteData& rd);
+
+    void GenerateTasks ();
+  } roulette_data;
 
   validator_stats ();
 
@@ -139,10 +153,6 @@ public:
 
   void add_fork_exitinfo(const std::pair<uint64_t, bool>& fork_signs);
   void add_exitinfo(const std::pair<uint64_t, bool>& exitinfo);
-
-  void add_density(float density, int level);
-
-  void add_dup(uint32_t newdup, int level);
 
   const std::unordered_set<uint32_t>& get_ids() const;
 
@@ -192,31 +202,19 @@ public:
 
   const std::unordered_map<uint32_t, AABB2<PointLL>>& get_tile_geometries() const;
 
-  const std::vector<uint32_t> get_dups(int level) const;
-
-  const std::vector<float> get_densities(int level) const;
-
-  const std::vector<std::vector<uint32_t>> get_dups() const;
-
-  const std::vector<std::vector<float>> get_densities() const;
-
   void add(const validator_stats& stats);
 
   void build_db(const boost::property_tree::ptree& pt);
 
-  struct RouletteData {
-    std::unordered_map<uint64_t, PointLL> node_locs;
-    std::unordered_map<uint64_t, std::vector<PointLL> > way_shapes;
-    std::unordered_set<uint64_t> way_IDs;
+private:
+  void create_tile_tables(sqlite3 *db_handle, sqlite3_stmt *stmt);
 
-    RouletteData ();
+  void create_country_tables(sqlite3 *db_handle, sqlite3_stmt *stmt);
 
-    void AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape);
+  void insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt);
 
-    void Add (const RouletteData& rd);
+  void insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt);
 
-    void GenerateTasks ();
-  } roulette_data;
 };
 }
 }
