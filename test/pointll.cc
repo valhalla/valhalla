@@ -38,19 +38,19 @@ void TestHeadingAlongPolyline() {
     { -73.986438, 40.755819 } }, 30.0f)) != 303)
     throw std::runtime_error("Invalid polyline begin heading - should be 303");
 
-  if (((int)(PointLL::HeadingAlongPolyline( {
+  if (std::round(PointLL::HeadingAlongPolyline( {
     { -73.986438, 40.755819 },
-    { -73.986484, 40.755681 } }, 30.0f) + 0.5f)) != 194)
+    { -73.986484, 40.755681 } }, 30.0f)) != 194)
     throw std::runtime_error("Invalid polyline begin heading - should be 194");
 
-  if (((int)(PointLL::HeadingAlongPolyline( {
+  if (std::round(PointLL::HeadingAlongPolyline( {
     { -73.985777, 40.755539 },
     { -73.986440, 40.755820 },
-    { -73.986617, 40.755254 } }, 30.0f) + 0.5f)) != 299)
+    { -73.986617, 40.755254 } }, 30.0f)) != 299)
     throw std::runtime_error("Invalid polyline begin heading - should be 299");
 
   // Partial roundabout
-  if (((int)(PointLL::HeadingAlongPolyline( {
+  if (std::round(PointLL::HeadingAlongPolyline( {
     { -76.316360,39.494102 },
     { -76.316360,39.494129 },
     { -76.316376,39.494152 },
@@ -59,65 +59,65 @@ void TestHeadingAlongPolyline() {
     { -76.316444,39.494209 },
     { -76.316483,39.494221 },
     { -76.316521,39.494228 }
-      }, 30.0f) + 0.5f)) != 314)
+      }, 30.0f)) != 314)
     throw std::runtime_error("Invalid polyline begin heading - expected 314");
 
   // north (0)
-  if (((int)(PointLL::HeadingAlongPolyline({
+  if (std::round(PointLL::HeadingAlongPolyline({
     { -76.612682, 39.294540 },
     { -76.612681, 39.294897 },
     { -76.612708, 39.295208 }
-      }, 30.0f) + 0.5f)) != 0)
+      }, 30.0f)) != 0)
     throw std::runtime_error("Invalid polyline begin heading - expected 0");
 
   // east (90)
-  if (((int)(PointLL::HeadingAlongPolyline({
+  if (std::round(PointLL::HeadingAlongPolyline({
     { -76.612682, 39.294540 },
     { -76.612508, 39.294535 },
     { -76.612359, 39.294541 },
     { -76.612151, 39.294545 }
-      }, 30.0f) + 0.5f)) != 90)
+      }, 30.0f)) != 90)
     throw std::runtime_error("Invalid polyline begin heading - expected 90");
 
   // south (176)
-  if (((int)(PointLL::HeadingAlongPolyline({
+  if (std::round(PointLL::HeadingAlongPolyline({
     { -76.612682, 39.294540 },
     { -76.612670, 39.294447 },
     { -76.612666, 39.294378 },
     { -76.612659, 39.294280 }
-      }, 30.0f) + 0.5f)) != 176)
+      }, 30.0f)) != 176)
     throw std::runtime_error("Invalid polyline begin heading - expected 176");
 
   // west (266)
-  if (((int)(PointLL::HeadingAlongPolyline({
+  if (std::round(PointLL::HeadingAlongPolyline({
     { -76.612682, 39.294540 },
     { -76.612789, 39.294527 },
     { -76.612898, 39.294525 },
     { -76.613033, 39.294523 },
-      }, 30.0f) + 0.5f)) != 266)
+      }, 30.0f)) != 266)
       throw std::runtime_error("Invalid polyline begin heading - expected 266");
 
 }
 
 void TestHeadingAtEndOfPolyline() {
-  if (((int)(PointLL::HeadingAtEndOfPolyline( {
+  if (std::round(PointLL::HeadingAtEndOfPolyline( {
     { -73.986392, 40.755800 },
-    { -73.986438, 40.755819 } }, 30.0f) + 0.5f)) != 303)
+    { -73.986438, 40.755819 } }, 30.0f)) != 303)
     throw std::runtime_error("Invalid polyline end heading - should be 303");
 
-  if (((int)(PointLL::HeadingAtEndOfPolyline( {
+  if (std::round(PointLL::HeadingAtEndOfPolyline( {
     { -73.986438, 40.755819 },
-    { -73.986484, 40.755681 } }, 30.0f) + 0.5f)) != 194)
+    { -73.986484, 40.755681 } }, 30.0f)) != 194)
     throw std::runtime_error("Invalid polyline end heading - should be 194");
 
-  if (((int)(PointLL::HeadingAtEndOfPolyline( {
+  if (std::round(PointLL::HeadingAtEndOfPolyline( {
     { -73.985777, 40.755539 },
     { -73.986440, 40.755820 },
-    { -73.986617, 40.755254 } }, 30.0f) + 0.5f)) != 194)
+    { -73.986617, 40.755254 } }, 30.0f)) != 194)
     throw std::runtime_error("Invalid polyline end heading - should be 194");
 
   // Partial roundabout
-  if (((int)(PointLL::HeadingAtEndOfPolyline( {
+  if (std::round(PointLL::HeadingAtEndOfPolyline( {
     { -76.316360,39.494102 },
     { -76.316360,39.494129 },
     { -76.316376,39.494152 },
@@ -126,42 +126,42 @@ void TestHeadingAtEndOfPolyline() {
     { -76.316444,39.494209 },
     { -76.316483,39.494221 },
     { -76.316521,39.494228 }
-      }, 30.0f) + 0.5f)) != 314)
+      }, 30.0f)) != 314)
     throw std::runtime_error("Invalid polyline end heading - expected 314");
 
   // north (356)
-  if (((int)(PointLL::HeadingAtEndOfPolyline({
+  if (std::round(PointLL::HeadingAtEndOfPolyline({
     { -76.612682, 39.294540 },
     { -76.612681, 39.294897 },
     { -76.612708, 39.295208 }
-      }, 30.0f) + 0.5f)) != 356)
+      }, 30.0f)) != 356)
     throw std::runtime_error("Invalid polyline end heading - expected 356");
 
   // east (89)
-  if (((int)(PointLL::HeadingAtEndOfPolyline({
+  if (std::round(PointLL::HeadingAtEndOfPolyline({
     { -76.612682, 39.294540 },
     { -76.612508, 39.294535 },
     { -76.612359, 39.294541 },
     { -76.612151, 39.294545 }
-      }, 30.0f) + 0.5f)) != 89)
+      }, 30.0f)) != 89)
     throw std::runtime_error("Invalid polyline end heading - expected 89");
 
   // south (176)
-  if (((int)(PointLL::HeadingAtEndOfPolyline({
+  if (std::round(PointLL::HeadingAtEndOfPolyline({
     { -76.612682, 39.294540 },
     { -76.612670, 39.294447 },
     { -76.612666, 39.294378 },
     { -76.612659, 39.294280 }
-      }, 30.0f) + 0.5f)) != 176)
+      }, 30.0f)) != 176)
     throw std::runtime_error("Invalid polyline end heading - expected 176");
 
   // west (266)
-  if (((int)(PointLL::HeadingAtEndOfPolyline({
+  if (std::round(PointLL::HeadingAtEndOfPolyline({
     { -76.612682, 39.294540 },
     { -76.612789, 39.294527 },
     { -76.612898, 39.294525 },
     { -76.613033, 39.294523 },
-      }, 30.0f) + 0.5f)) != 266)
+      }, 30.0f)) != 266)
       throw std::runtime_error("Invalid polyline end heading - expected 266");
 
 }
