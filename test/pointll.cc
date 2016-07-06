@@ -33,21 +33,21 @@ void test_constructor() {
 }
 
 void TestHeadingAlongPolyline() {
-  if (((int)(PointLL::HeadingAlongPolyline( {
+  if (std::round(PointLL::HeadingAlongPolyline( {
     { -73.986392, 40.755800 },
-    { -73.986438, 40.755819 } }, 30.0f) + 0.5f)) != 303)
-    throw std::runtime_error("Invalid polyline begin heading");
+    { -73.986438, 40.755819 } }, 30.0f)) != 303)
+    throw std::runtime_error("Invalid polyline begin heading - should be 303");
 
   if (((int)(PointLL::HeadingAlongPolyline( {
     { -73.986438, 40.755819 },
     { -73.986484, 40.755681 } }, 30.0f) + 0.5f)) != 194)
-    throw std::runtime_error("Invalid polyline begin heading");
+    throw std::runtime_error("Invalid polyline begin heading - should be 194");
 
   if (((int)(PointLL::HeadingAlongPolyline( {
     { -73.985777, 40.755539 },
     { -73.986440, 40.755820 },
     { -73.986617, 40.755254 } }, 30.0f) + 0.5f)) != 299)
-    throw std::runtime_error("Invalid polyline begin heading");
+    throw std::runtime_error("Invalid polyline begin heading - should be 299");
 
   // Partial roundabout
   if (((int)(PointLL::HeadingAlongPolyline( {
@@ -103,18 +103,18 @@ void TestHeadingAtEndOfPolyline() {
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
     { -73.986392, 40.755800 },
     { -73.986438, 40.755819 } }, 30.0f) + 0.5f)) != 303)
-    throw std::runtime_error("Invalid polyline end heading");
+    throw std::runtime_error("Invalid polyline end heading - should be 303");
 
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
     { -73.986438, 40.755819 },
     { -73.986484, 40.755681 } }, 30.0f) + 0.5f)) != 194)
-    throw std::runtime_error("Invalid polyline end heading");
+    throw std::runtime_error("Invalid polyline end heading - should be 194");
 
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
     { -73.985777, 40.755539 },
     { -73.986440, 40.755820 },
     { -73.986617, 40.755254 } }, 30.0f) + 0.5f)) != 194)
-    throw std::runtime_error("Invalid polyline end heading");
+    throw std::runtime_error("Invalid polyline end heading - should be 194");
 
   // Partial roundabout
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
