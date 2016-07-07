@@ -1,5 +1,6 @@
 {
   "posix_locale": "cs_CZ.UTF-8",
+  "aliases": ["cs"],
   "instructions": {
     "start": {
       "phrases": {
