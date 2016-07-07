@@ -42,7 +42,7 @@ class Isochrone {
   /**
    *
    */
-  const GriddedData<midgard::PointLL>* Compute(baldr::PathLocation& origin,
+  const std::shared_ptr<GriddedData<midgard::PointLL> > Compute(baldr::PathLocation& origin,
           const uint32_t max_time_seconds,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -63,7 +63,7 @@ class Isochrone {
   std::shared_ptr<EdgeStatus> edgestatus_;
 
   // Isochrone gridded time data
-  GriddedData<midgard::PointLL>* isotile_;
+  std::shared_ptr<GriddedData<midgard::PointLL> > isotile_;
 
   /**
    *
