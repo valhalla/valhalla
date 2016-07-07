@@ -227,12 +227,10 @@ namespace valhalla {
       auto request_sources = request.get_child_optional("sources");
       auto request_targets = request.get_child_optional("targets");
 
-      if(!request_locations)
-        if (!request_sources && !request_targets)
+      if(!request_locations || (!request_sources && !request_targets))
           throw std::runtime_error("Insufficiently specified required parameter 'locations'");
 
       if (action == ROUTE || action == VIAROUTE || action == LOCATE) {
-
         for(const auto& location : *request_locations) {
           try{
             locations.push_back(baldr::Location::FromPtree(location.second));
@@ -261,7 +259,7 @@ namespace valhalla {
                 targets.push_back(baldr::PathLocation::FromPtree(locations, request_locations->back()));
                 break;
               case MANY_TO_MANY:
-              case OPTIMIZED:
+              case OPTIMIZED_ROUTE:
                 for(const auto& reqloc : *request_locations) {
                   sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc));
                   targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc));

@@ -79,11 +79,10 @@ namespace valhalla {
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal") {
-        http_response_t response(400, "Bad Request", headers_t{CORS});
+        http_response_t response(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing",  headers_t{CORS});
         response.from_info(request_info);
         return {false, {response.to_string()}};
       }
-
       //we want optimized_route to use the same location and distance limits as many_to_many
       auto action_str = ACTION_TO_STRING.find((action == loki_worker_t::OPTIMIZED_ROUTE || action == loki_worker_t::SOURCES_TO_TARGETS) ? loki_worker_t::MANY_TO_MANY : action)->second;
       //check that location size does not exceed max.
