@@ -154,7 +154,7 @@ namespace {
 
 int main(void) {
   //make this whole thing bail if it doesnt finish fast
-  alarm(30);
+  alarm(90);
 
   test::suite suite("Loki Service");
 
