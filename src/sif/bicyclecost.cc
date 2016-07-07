@@ -12,7 +12,7 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr float kDefaultManeuverPenalty         = 10.0f;  // Seconds
+constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
@@ -311,16 +311,6 @@ class BicycleCost : public DynamicCost {
   // factor).
   uint32_t speed_penalty_threshold_;
   float speed_factor_;
-
-  /**
-   * Compute a turn cost based on the turn type, crossing flag,
-   * and whether right or left side of road driving.
-   * @param  turn_type  Turn type (see baldr/turn.h)
-   * @param  crossing   Crossing another road if true.
-   * @param  drive_on_right  Right hand side of road driving if true.
-   */
-  float TurnCost(const baldr::Turn::Type turn_type, const bool crossing,
-                 const bool drive_on_right) const;
 
  public:
   /**
@@ -649,13 +639,13 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
-    float turn_cost;
-    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+    // Take the higher of the turn degree cost and the crossing cost
+    float turn_cost = (edge->drive_on_right()) ?
+        kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < kTCCrossing &&
+        edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
-    } else {
-      turn_cost = (edge->drive_on_right()) ?
-          kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
-          kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
     seconds += trans_density_factor_[node->density()] *
                edge->stopimpact(idx) * turn_cost;
@@ -704,13 +694,13 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
-    float turn_cost;
-    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+    // Take the higher of the turn degree cost and the crossing cost
+    float turn_cost = (edge->drive_on_right()) ?
+        kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < kTCCrossing &&
+        edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
-    } else {
-      turn_cost = (edge->drive_on_right()) ?
-          kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
-          kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
     seconds += trans_density_factor_[node->density()] *
               edge->stopimpact(idx) * turn_cost;
