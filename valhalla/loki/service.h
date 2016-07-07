@@ -32,7 +32,7 @@ namespace valhalla {
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       boost::property_tree::ptree config;
-      const std::vector<baldr::Location> locations;
+      std::vector<baldr::Location> locations;
       std::vector<baldr::PathLocation> sources;
       std::vector<baldr::PathLocation> targets;
       sif::CostFactory<sif::DynamicCost> factory;

@@ -247,22 +247,22 @@ namespace valhalla {
         if (request_locations) {  //if matrix type and using locations parameter
           switch (action) {
               case ONE_TO_MANY:
-                sources.push_back(baldr::PathLocation::FromPtree(locations, request_locations->front()));
+                sources.push_back(baldr::PathLocation::FromPtree(locations, request_locations->front().second));
                 for(const auto& reqloc : *request_locations)
-                  targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc));
+                  targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
 
                 break;
               case MANY_TO_ONE:
                 for(const auto& reqloc : *request_locations)
-                  sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc));
+                  sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
 
-                targets.push_back(baldr::PathLocation::FromPtree(locations, request_locations->back()));
+                targets.push_back(baldr::PathLocation::FromPtree(locations, request_locations->back().second));
                 break;
               case MANY_TO_MANY:
               case OPTIMIZED_ROUTE:
                 for(const auto& reqloc : *request_locations) {
-                  sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc));
-                  targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc));
+                  sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
+                  targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
                 }
                 break;
           }
