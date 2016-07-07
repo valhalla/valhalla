@@ -29,188 +29,224 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
+  // merges contents of sets and maps that do not have overlapping keys
   template <class T> T merge(T a, T b) {
     T tmp(a);
     tmp.insert(b.begin(), b.end());
-    return tmp;
+    return std::move(tmp);
+  }
+
+  // accumulates counts into a new map for maps that have counts associated with its keys
+  template <class T> T merge_counts(T a, T b) {
+    T tmp(a);
+    for (auto it = b.begin(); it != b.end(); it++) {
+      tmp[it->first] += it->second;
+    }
+    return std::move(tmp);
   }
 }
 
 namespace valhalla {
 namespace mjolnir {
 
-validator_stats::validator_stats()
+statistics::statistics()
   : tile_lengths(), country_lengths(), tile_int_edges(),country_int_edges(),
     tile_one_way(), country_one_way(), tile_speed_info(), country_speed_info(),
     tile_named(), country_named(), tile_truck_route(), country_truck_route(),
     tile_hazmat(), country_hazmat(), tile_height(), country_height(),
     tile_width(), country_width(), tile_length(), country_length(),
     tile_weight(), country_weight(), tile_axle_load(), country_axle_load(),
-    fork_signs(), exit_signs(),
+    tile_exit_signs(), tile_fork_signs(), ctry_exit_signs(), ctry_fork_signs(),
+    tile_exit_count(), tile_fork_count(), ctry_exit_count(), ctry_fork_count(),
     tile_areas(), tile_geometries(),iso_codes(), tile_ids() { }
 
-void validator_stats::add_tile_road(const uint32_t& tile_id, const RoadClass& rclass, float length) {
+void statistics::add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_ids.insert(tile_id);
   tile_lengths[tile_id][rclass] += length;
 }
 
-void validator_stats::add_country_road(const std::string& ctry_code, const RoadClass& rclass, float length) {
+void statistics::add_country_road(const std::string& ctry_code, const RoadClass& rclass, const float length) {
   iso_codes.insert(ctry_code);
   country_lengths[ctry_code][rclass] += length;
 }
 
-void validator_stats::add_tile_int_edge(const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count) {
+void statistics::add_tile_int_edge(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count) {
   tile_int_edges[tile_id][rclass] += count;
 }
 
-void validator_stats::add_country_int_edge(const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count) {
+void statistics::add_country_int_edge(const std::string& ctry_code, const RoadClass& rclass, const size_t& count) {
   country_int_edges[ctry_code][rclass] += count;
 }
 
-void validator_stats::add_tile_one_way(const uint32_t& tile_id, const RoadClass& rclass, float length) {
+void statistics::add_tile_one_way(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_one_way[tile_id][rclass] += length;
 }
 
-void validator_stats::add_country_one_way(const std::string& ctry_code, const RoadClass& rclass, float length) {
+void statistics::add_country_one_way(const std::string& ctry_code, const RoadClass& rclass, const float length) {
   country_one_way[ctry_code][rclass] += length;
 }
 
-void validator_stats::add_tile_speed_info(const uint32_t& tile_id, const RoadClass& rclass, float length) {
+void statistics::add_tile_speed_info(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_speed_info[tile_id][rclass] += length;
 }
 
-void validator_stats::add_country_speed_info(const std::string& ctry_code, const RoadClass& rclass, float length) {
+void statistics::add_country_speed_info(const std::string& ctry_code, const RoadClass& rclass, const float length) {
   country_speed_info[ctry_code][rclass] += length;
 }
 
-void validator_stats::add_tile_named(const uint32_t& tile_id, const RoadClass& rclass, float length) {
+void statistics::add_tile_named(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_named[tile_id][rclass] += length;
 }
 
-void validator_stats::add_country_named(const std::string& ctry_code, const RoadClass& rclass, float length) {
+void statistics::add_country_named(const std::string& ctry_code, const RoadClass& rclass, const float length) {
   country_named[ctry_code][rclass] += length;
 }
 
-void validator_stats::add_tile_hazmat(const uint32_t& tile_id, const RoadClass& rclass, float length) {
+void statistics::add_tile_hazmat(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_hazmat[tile_id][rclass] += length;
 }
 
-void validator_stats::add_country_hazmat(const std::string& ctry_code, const RoadClass& rclass, float length) {
+void statistics::add_country_hazmat(const std::string& ctry_code, const RoadClass& rclass, const float length) {
   country_hazmat[ctry_code][rclass] += length;
 }
 
-void validator_stats::add_tile_truck_route(const uint32_t& tile_id, const RoadClass& rclass, float length) {
+void statistics::add_tile_truck_route(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_truck_route[tile_id][rclass] += length;
 }
 
-void validator_stats::add_country_truck_route(const std::string& ctry_code, const RoadClass& rclass, float length) {
+void statistics::add_country_truck_route(const std::string& ctry_code, const RoadClass& rclass, const float length) {
   country_truck_route[ctry_code][rclass] += length;
 }
 
-void validator_stats::add_tile_height(const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_tile_height(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
   tile_height[tile_id][rclass] += count;
 }
 
-void validator_stats::add_country_height(const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_country_height(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
   country_height[ctry_code][rclass] += count;
 }
 
-void validator_stats::add_tile_width(const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_tile_width(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
   tile_width[tile_id][rclass] += count;
 
 }
-void validator_stats::add_country_width(const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_country_width(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
   country_width[ctry_code][rclass] += count;
 }
 
-void validator_stats::add_tile_length(const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_tile_length(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
   tile_length[tile_id][rclass] += count;
 }
 
-void validator_stats::add_country_length(const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_country_length(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
   country_length[ctry_code][rclass] += count;
 }
 
-void validator_stats::add_tile_weight(const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_tile_weight(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
   tile_weight[tile_id][rclass] += count;
 }
 
-void validator_stats::add_country_weight(const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_country_weight(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
   country_weight[ctry_code][rclass] += count;
 }
 
-void validator_stats::add_tile_axle_load(const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_tile_axle_load(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
   tile_axle_load[tile_id][rclass] += count;
 }
 
-void validator_stats::add_country_axle_load(const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count){
+void statistics::add_country_axle_load(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
   country_axle_load[ctry_code][rclass] += count;
 }
 
-void validator_stats::add_fork_exitinfo(const std::pair<uint64_t, bool>& forkinfo) {
-  fork_signs.insert(forkinfo);
-}
-void validator_stats::add_exitinfo(const std::pair<uint64_t, bool>& exitinfo) {
-  exit_signs.insert(exitinfo);
+void statistics::add_exitinfo(const std::pair<uint64_t, short>& exitinfo) {
+  tile_exit_signs[exitinfo.first] += exitinfo.second;
+  tile_exit_count[exitinfo.first] += 1;
 }
 
-void validator_stats::add_tile_area(const uint32_t& tile_id, const float area) {
+void statistics::add_fork_exitinfo(const std::pair<uint64_t, short>& forkinfo) {
+  tile_fork_signs[forkinfo.first] += forkinfo.second;
+  tile_fork_count[forkinfo.first] += 1;
+}
+
+void statistics::add_exitinfo(const std::pair<std::string, short>& exitinfo) {
+  ctry_exit_signs[exitinfo.first] += exitinfo.second;
+  ctry_exit_count[exitinfo.first] += 1;
+}
+
+void statistics::add_fork_exitinfo(const std::pair<std::string, short>& forkinfo) {
+  ctry_fork_signs[forkinfo.first] += forkinfo.second;
+  ctry_fork_count[forkinfo.first] += 1;
+}
+
+void statistics::add_tile_area(const uint64_t& tile_id, const float area) {
   tile_areas[tile_id] = area;
 }
 
-void validator_stats::add_tile_geom(const uint32_t& tile_id, const AABB2<PointLL> geom) {
+void statistics::add_tile_geom(const uint64_t& tile_id, const AABB2<PointLL> geom) {
   tile_geometries[tile_id] = geom;
 }
 
-const std::unordered_set<uint32_t>& validator_stats::get_ids() const { return tile_ids; }
+const std::unordered_set<uint64_t>& statistics::get_ids() const { return tile_ids; }
 
-const std::unordered_set<std::string>& validator_stats::get_isos() const { return iso_codes; }
+const std::unordered_set<std::string>& statistics::get_isos() const { return iso_codes; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_tile_lengths() const { return tile_lengths; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_country_lengths() const { return country_lengths; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_lengths() const { return tile_lengths; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_lengths() const { return country_lengths; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher> >& validator_stats::get_tile_int_edges() const { return tile_int_edges; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher> >& validator_stats::get_country_int_edges() const { return country_int_edges; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher> >& statistics::get_tile_int_edges() const { return tile_int_edges; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher> >& statistics::get_country_int_edges() const { return country_int_edges; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_tile_one_way() const { return tile_one_way; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_country_one_way() const { return country_one_way; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_one_way() const { return tile_one_way; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_one_way() const { return country_one_way; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_tile_speed_info () const { return tile_speed_info; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_country_speed_info() const { return country_speed_info; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_speed_info () const { return tile_speed_info; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_speed_info() const { return country_speed_info; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_tile_named() const { return tile_named; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& validator_stats::get_country_named() const { return country_named; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_named() const { return tile_named; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_named() const { return country_named; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher>>& validator_stats::get_tile_hazmat() const { return tile_hazmat; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher>>& validator_stats::get_country_hazmat() const { return country_hazmat; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_tile_hazmat() const { return tile_hazmat; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_country_hazmat() const { return country_hazmat; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher>>& validator_stats::get_tile_truck_route() const { return tile_truck_route; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher>>& validator_stats::get_country_truck_route() const { return country_truck_route; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_tile_truck_route() const { return tile_truck_route; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_country_truck_route() const { return country_truck_route; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_tile_height() const { return tile_height; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_country_height() const { return country_height; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_height() const { return tile_height; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_height() const { return country_height; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_tile_width() const { return tile_width; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_country_width() const { return country_width; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_width() const { return tile_width; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_width() const { return country_width; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_tile_length() const { return tile_length; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_country_length() const { return country_length; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_length() const { return tile_length; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_length() const { return country_length; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_tile_weight() const { return tile_weight; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_country_weight() const { return country_weight; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_weight() const { return tile_weight; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_weight() const { return country_weight; }
 
-const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_tile_axle_load() const { return tile_axle_load; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher>>& validator_stats::get_country_axle_load() const { return country_axle_load; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_axle_load() const { return tile_axle_load; }
+const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_axle_load() const { return country_axle_load; }
 
-const std::unordered_map<uint32_t, float>& validator_stats::get_tile_areas() const { return tile_areas; }
+const std::unordered_map<uint64_t, float>& statistics::get_tile_areas() const { return tile_areas; }
 
-const std::unordered_map<uint32_t, AABB2<PointLL>>& validator_stats::get_tile_geometries() const { return tile_geometries; }
+const std::unordered_map<uint64_t, AABB2<PointLL>>& statistics::get_tile_geometries() const { return tile_geometries; }
 
-const std::unordered_map<uint64_t, bool>& validator_stats::get_fork_info() const { return fork_signs; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_info() const { return tile_fork_signs; }
 
-const std::unordered_map<uint64_t, bool>& validator_stats::get_exit_info() const { return exit_signs; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_info() const { return tile_exit_signs; }
 
-void validator_stats::add (const validator_stats& stats) {
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_info() const { return ctry_fork_signs; }
+
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_info() const { return ctry_exit_signs; }
+
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_count() const { return tile_fork_signs; }
+
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_count() const { return tile_exit_signs; }
+
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_count() const { return ctry_fork_signs; }
+
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_count() const { return ctry_exit_signs; }
+
+void statistics::add (const statistics& stats) {
   // Combine ids and isos
   tile_ids = merge(tile_ids, stats.get_ids());
   iso_codes = merge(iso_codes, stats.get_isos());
@@ -246,630 +282,34 @@ void validator_stats::add (const validator_stats& stats) {
   country_axle_load = merge(country_axle_load, stats.get_country_axle_load());
 
   // Combine exit statistics
-  fork_signs = merge(fork_signs, stats.get_exit_info());
-  exit_signs = merge(exit_signs, stats.get_fork_info());
+  tile_exit_signs = merge_counts(tile_exit_signs, stats.get_tile_exit_info());
+  ctry_exit_signs = merge_counts(ctry_exit_signs, stats.get_ctry_exit_info());
+
+  tile_exit_count = merge_counts(tile_exit_count, stats.get_tile_exit_count());
+  ctry_exit_count = merge_counts(ctry_exit_count, stats.get_ctry_exit_count());
+
+  tile_fork_signs = merge_counts(tile_fork_signs, stats.get_tile_fork_info());
+  ctry_fork_signs = merge_counts(ctry_fork_signs, stats.get_ctry_fork_info());
+
+  tile_fork_count = merge_counts(tile_fork_count, stats.get_tile_fork_count());
+  ctry_fork_count = merge_counts(ctry_fork_count, stats.get_ctry_fork_count());
 
   // Combine roulette data
   roulette_data.Add(stats.roulette_data);
 }
 
 
-void validator_stats::build_db(const boost::property_tree::ptree& pt) {
-  // Get the location of the db file to write
-  auto database = pt.get_optional<std::string>("mjolnir.statistics");
-  if(!database) {
-    return;
-  }
-  else if(boost::filesystem::exists(*database)) {
-    boost::filesystem::remove(*database);
-  }
-
-  spatialite_init(0);
-
-  sqlite3 *db_handle;
-  sqlite3_stmt *stmt;
-  uint32_t ret;
-  char *err_msg = NULL;
-  std::string sql;
-
-  ret = sqlite3_open_v2(database->c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + *database);
-    sqlite3_close(db_handle);
-    db_handle = NULL;
-    return;
-  }
-
-  // loading SpatiaLite as an extension
-  sqlite3_enable_load_extension(db_handle, 1);
-#if SQLITE_VERSION_NUMBER > 3008002
-    sql = "SELECT load_extension('mod_spatialite')";
-#else
-    sql = "SELECT load_extension('libspatialite')";
-#endif
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("load_extension() error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  LOG_INFO("Writing statistics database");
-
-  // Turn on foreign keys
-  sql = "PRAGMA foreign_keys = ON";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  create_tile_tables(db_handle, stmt);
-  create_country_tables(db_handle, stmt);
-  insert_tile_data(db_handle, stmt);
-  insert_country_data(db_handle, stmt);
-
-  // Create Index on geometry column
-  sql = "SELECT CreateSpatialIndex('tiledata', 'geom')";
-  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  sql = "VACUUM ANALYZE";
-  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-  sqlite3_close(db_handle);
-  LOG_INFO("Finished");
-}
-
-void validator_stats::create_tile_tables(sqlite3 *db_handle, sqlite3_stmt *stmt) {
-  uint32_t ret;
-  char *err_msg = NULL;
-  std::string sql;
-
-  // Create table for tiles
-  sql = "SELECT InitSpatialMetaData(); CREATE TABLE tiledata (";
-  sql += "tileid INTEGER PRIMARY KEY,";
-  sql += "tilearea REAL,";
-  sql += "totalroadlen REAL,";
-  sql += "motorway REAL,";
-  sql += "pmary REAL,";
-  sql += "secondary REAL,";
-  sql += "tertiary REAL,";
-  sql += "trunk REAL,";
-  sql += "residential REAL,";
-  sql += "unclassified REAL,";
-  sql += "serviceother REAL";
-  sql += ")";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  // Add tile geometry column
-  sql = "SELECT AddGeometryColumn('tiledata', ";
-  sql += "'geom', 4326, 'POLYGON', 2)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  // Create table for tile data of road classes
-  sql = "CREATE TABLE rclasstiledata (";
-  sql += "tileid INTEGER,";
-  sql += "type TEXT NOT NULL,";
-  sql += "oneway REAL,";
-  sql += "maxspeed REAL,";
-  sql += "internaledges INTEGER,";
-  sql += "named REAL,";
-  sql += "FOREIGN KEY (tileid) REFERENCES tiledata(tileid)";
-  sql += ")";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  // Create table for truck tile data of road classes
-  sql = "CREATE TABLE truckrclasstiledata (";
-  sql += "tileid INTEGER,";
-  sql += "type TEXT NOT NULL,";
-  sql += "hazmat REAL,";
-  sql += "truck_route REAL,";
-  sql += "height INTEGER,";
-  sql += "width INTEGER,";
-  sql += "length INTEGER,";
-  sql += "weight INTEGER,";
-  sql += "axle_load INTEGER,";
-  sql += "FOREIGN KEY (tileid) REFERENCES tiledata(tileid)";
-  sql += ")";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-}
-
-void validator_stats::create_country_tables(sqlite3 *db_handle, sqlite3_stmt *stmt) {
-  uint32_t ret;
-  char *err_msg = NULL;
-  std::string sql;
-
-  // Create tables for country data
-  sql = "CREATE TABLE countrydata (";
-  sql += "isocode TEXT PRIMARY KEY,";
-  sql += "motorway REAL,";
-  sql += "pmary REAL,";
-  sql += "secondary REAL,";
-  sql += "tertiary REAL,";
-  sql += "trunk REAL,";
-  sql += "residential REAL,";
-  sql += "unclassified REAL,";
-  sql += "serviceother REAL";
-  sql += ")";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  // Create table for country data of road classes
-  sql = "CREATE TABLE rclassctrydata (";
-  sql += "isocode TEXT NOT NULL,";
-  sql += "type TEXT NOT NULL,";
-  sql += "oneway REAL,";
-  sql += "maxspeed REAL,";
-  sql += "internaledges INTEGER,";
-  sql += "named REAL,";
-  sql += "FOREIGN KEY (isocode) REFERENCES countrydata(isocode)";
-  sql += ")";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  // Create table for truck country data of road classes
-  sql = "CREATE TABLE truckrclassctrydata (";
-  sql += "isocode TEXT NOT NULL,";
-  sql += "type TEXT NOT NULL,";
-  sql += "hazmat REAL,";
-  sql += "truck_route REAL,";
-  sql += "height INTEGER,";
-  sql += "width INTEGER,";
-  sql += "length INTEGER,";
-  sql += "weight INTEGER,";
-  sql += "axle_load INTEGER,";
-  sql += "FOREIGN KEY (isocode) REFERENCES countrydata(isocode)";
-  sql += ")";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-}
-
-void validator_stats::insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
-
-  uint32_t ret;
-  char *err_msg = NULL;
-  std::string sql;
-
-  // Begin the prepared statements for tiledata
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  sql = "INSERT INTO tiledata (tileid, tilearea, totalroadlen, motorway, pmary, secondary, tertiary, trunk, residential, unclassified, serviceother, geom) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326))";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Fill DB with the tile statistics
-  for (auto tileid : tile_ids) {
-    uint8_t index = 1;
-    sqlite3_reset(stmt);
-    sqlite3_clear_bindings(stmt);
-    // Tile ID
-    sqlite3_bind_int(stmt, index, tileid);
-    ++index;
-    // Tile Area
-    sqlite3_bind_double(stmt, index, tile_areas[tileid]);
-    ++index;
-    // Total Road Length
-    float totalLen = 0;
-    for (auto rclass : rclasses) {
-      totalLen += tile_lengths[tileid][rclass];
-    }
-    sqlite3_bind_double(stmt, index, totalLen);
-    ++index;
-    // Individual Road Class Lengths
-    for (auto rclass : rclasses) {
-      std::string roadStr = roadClassToString.at(rclass);
-      sqlite3_bind_double(stmt, index, tile_lengths[tileid][rclass]);
-      ++index;
-    }
-    // Use tile bounding box corners to make a polygon
-    if (tile_geometries.find(tileid) != tile_geometries.end()) {
-      auto maxx = std::to_string(tile_geometries.at(tileid).maxx());
-      auto minx = std::to_string(tile_geometries.at(tileid).minx());
-      auto maxy = std::to_string(tile_geometries.at(tileid).maxy());
-      auto miny = std::to_string(tile_geometries.at(tileid).miny());
-      std::string polyWKT = "POLYGON (("
-          + minx + " " + miny + ", "
-          + minx + " " + maxy + ", "
-          + maxx + " " + maxy + ", "
-          + maxx + " " + miny + ", "
-          + minx + " " + miny + "))";
-      sqlite3_bind_text (stmt, index, polyWKT.c_str(), polyWKT.length(), SQLITE_STATIC);
-    } else {
-      LOG_ERROR("Geometry for tile " + std::to_string(tileid) + " not found.");
-    }
-    ret = sqlite3_step (stmt);
-    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-      continue;
-    }
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Begin adding the statistics for each road type of tile data
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  sql = "INSERT INTO rclasstiledata (tileid, type, oneway, maxspeed, internaledges, named) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?)";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Fill the roadclass stats for tiles
-  for (auto tileid : tile_ids) {
-    for (auto rclass : rclasses) {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // Tile ID (parent tile)
-      sqlite3_bind_int(stmt, index, tileid);
-      ++index;
-      // Roadway type
-      auto type = roadClassToString.at(rclass);
-      sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
-      ++index;
-      // One Way data
-      sqlite3_bind_double(stmt, index, tile_one_way[tileid][rclass]);
-      ++index;
-      // Max speed info
-      sqlite3_bind_double(stmt, index, tile_speed_info[tileid][rclass]);
-      ++index;
-      // Internal edges count
-      sqlite3_bind_int(stmt, index, tile_int_edges[tileid][rclass]);
-      ++index;
-      // Named roads
-      sqlite3_bind_double(stmt, index, tile_named[tileid][rclass]);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    }
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Begin adding the truck statistics for each road type of tile data
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  sql = "INSERT INTO truckrclasstiledata (tileid, type, hazmat, truck_route, height, width, length, weight, axle_load) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Fill the truck roadclass stats for tiles
-  for (auto tileid : tile_ids) {
-    for (auto rclass : rclasses) {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // Tile ID (parent tile)
-      sqlite3_bind_int(stmt, index, tileid);
-      ++index;
-      // Roadway type
-      auto type = roadClassToString.at(rclass);
-      sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
-      ++index;
-      // Hazmat
-      sqlite3_bind_double(stmt, index, tile_hazmat[tileid][rclass]);
-      ++index;
-      // Truck Route
-      sqlite3_bind_double(stmt, index, tile_truck_route[tileid][rclass]);
-      ++index;
-      // Height
-      sqlite3_bind_int(stmt, index, tile_height[tileid][rclass]);
-      ++index;
-      // Width
-      sqlite3_bind_int(stmt, index, tile_width[tileid][rclass]);
-      ++index;
-      // Length
-      sqlite3_bind_int(stmt, index, tile_length[tileid][rclass]);
-      ++index;
-      // Weight
-      sqlite3_bind_int(stmt, index, tile_weight[tileid][rclass]);
-      ++index;
-      // Axle Load
-      sqlite3_bind_int(stmt, index, tile_axle_load[tileid][rclass]);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    }
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-}
-
-void validator_stats::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
-  uint32_t ret;
-  char *err_msg = NULL;
-  std::string sql;
-
-  // Begin the prepared statements for country data
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  sql = "INSERT INTO countrydata (isocode, motorway, pmary, secondary, tertiary, trunk, residential, unclassified, serviceother)";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Fill DB with the country statistics
-  for (auto country : iso_codes) {
-    uint8_t index = 1;
-    sqlite3_reset(stmt);
-    sqlite3_clear_bindings(stmt);
-    // Country ISO
-    sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
-    ++index;
-    // Individual Road Class Lengths
-    for (auto rclass : rclasses) {
-      std::string roadStr = roadClassToString.at(rclass);
-      sqlite3_bind_double(stmt, index, country_lengths[country][rclass]);
-      ++index;
-    }
-    ret = sqlite3_step (stmt);
-    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-      continue;
-    }
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Begin adding the statistics for each road type of country data
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  sql = "INSERT INTO rclassctrydata (isocode, type, oneway, maxspeed, internaledges, named) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?)";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Fill the roadclass stats for countries
-  for (auto country : iso_codes) {
-    for (auto rclass : rclasses) {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // ISO (parent ID)
-      sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
-      ++index;
-      // Roadway type
-      auto type = roadClassToString.at(rclass);
-      sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
-      ++index;
-      // One Way data
-      sqlite3_bind_double(stmt, index, country_one_way[country][rclass]);
-      ++index;
-      // Max speed info
-      sqlite3_bind_double(stmt, index, country_speed_info[country][rclass]);
-      ++index;
-      // Internal edges count
-      sqlite3_bind_int(stmt, index, country_int_edges[country][rclass]);
-      ++index;
-      // Named Roads
-      sqlite3_bind_double(stmt, index, country_named[country][rclass]);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    }
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Begin adding the truck statistics for each road type of country data
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  sql = "INSERT INTO truckrclassctrydata (isocode, type, hazmat, truck_route, height, width, length, weight, axle_load) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  // Fill the truck roadclass stats for countries
-  for (auto country : iso_codes) {
-    for (auto rclass : rclasses) {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // ISO (parent ID)
-      sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
-      ++index;
-      // Roadway type
-      auto type = roadClassToString.at(rclass);
-      sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
-      ++index;
-      // Hazmat
-      sqlite3_bind_double(stmt, index, country_hazmat[country][rclass]);
-      ++index;
-      // Truck Route
-      sqlite3_bind_double(stmt, index, country_truck_route[country][rclass]);
-      ++index;
-      // Height
-      sqlite3_bind_int(stmt, index, country_height[country][rclass]);
-      ++index;
-      // Width
-      sqlite3_bind_int(stmt, index, country_width[country][rclass]);
-      ++index;
-      // Length
-      sqlite3_bind_int(stmt, index, country_length[country][rclass]);
-      ++index;
-      // Weight
-      sqlite3_bind_int(stmt, index, country_weight[country][rclass]);
-      ++index;
-      // Axle Load
-      sqlite3_bind_int(stmt, index, country_axle_load[country][rclass]);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    }
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-}
-
-validator_stats::RouletteData::RouletteData ()
+statistics::RouletteData::RouletteData ()
   : node_locs(), way_IDs(), way_shapes() { }
 
-void validator_stats::RouletteData::AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape) {
+void statistics::RouletteData::AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape) {
   auto result = way_IDs.insert(id);
   if (result.second)
     node_locs.insert({id, p});
     way_shapes.insert({id, shape});
 }
 
-void validator_stats::RouletteData::Add (const RouletteData& rd) {
+void statistics::RouletteData::Add (const RouletteData& rd) {
   const auto new_ids = rd.way_IDs;
   const auto new_shapes = rd.way_shapes;
   const auto new_nodes = rd.node_locs;
@@ -878,7 +318,7 @@ void validator_stats::RouletteData::Add (const RouletteData& rd) {
   }
 }
 
-void validator_stats::RouletteData::GenerateTasks () {
+void statistics::RouletteData::GenerateTasks () {
   bool write_comma = false;
   std::string json_str = "";
   json_str += "[";

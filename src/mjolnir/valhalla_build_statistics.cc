@@ -1,5 +1,4 @@
 
-#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/statistics.h"
 
 #include <ostream>
@@ -46,18 +45,15 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsPedestrianTerminal(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+bool IsPedestrianTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
                 const GraphId& startnode,
-                NodeInfo& startnodeinfo,
-                DirectedEdge& directededge,
-                validator_stats::RouletteData& rd,
+                const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge,
+                statistics::RouletteData& rd,
                 const uint32_t idx) {
 
   bool is_terminal = true;
-  lock.lock();
-  const GraphTile* tile = reader.GetGraphTile(startnode);
-  lock.unlock();
-  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
 
     if (i == idx)
@@ -78,24 +74,21 @@ bool IsPedestrianTerminal(GraphTileBuilder &tilebuilder, GraphReader& reader, st
   if (is_terminal) {
     if (startnodeinfo.edge_count() > 1) {
       rd.AddTask(startnodeinfo.latlng(),
-                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->wayid(),
-                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape());
+                 tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+                 tile.edgeinfo(directededge.edgeinfo_offset())->shape());
       return true;
     }
   }
   return false;
 }
 
-bool IsLoopTerminal(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+bool IsLoopTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
                 const GraphId& startnode,
-                NodeInfo& startnodeinfo,
-                DirectedEdge& directededge,
-                validator_stats::RouletteData& rd) {
+                const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge,
+                statistics::RouletteData& rd) {
 
-  lock.lock();
-  const GraphTile* tile = reader.GetGraphTile(startnode);
-  lock.unlock();
-  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
   uint32_t inbound = 0, outbound = 0;
 
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
@@ -115,23 +108,20 @@ bool IsLoopTerminal(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mut
 
   if ((outbound >= 2 && inbound == 0) || (inbound >= 2 && outbound == 0)) {
     rd.AddTask(startnodeinfo.latlng(),
-               tilebuilder.edgeinfo(directededge.edgeinfo_offset())->wayid(),
-               tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape());
+               tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+               tile.edgeinfo(directededge.edgeinfo_offset())->shape());
     return true;
   }
   return false;
 }
 
-bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
+bool IsReversedOneway(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
                 const GraphId& startnode,
-                NodeInfo& startnodeinfo,
-                DirectedEdge& directededge,
-                validator_stats::RouletteData& rd) {
+                const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge,
+                statistics::RouletteData& rd) {
 
-  lock.lock();
-  const GraphTile* tile = reader.GetGraphTile(startnode);
-  lock.unlock();
-  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
   uint32_t inbound = 0, outbound = 0;
 
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
@@ -148,15 +138,20 @@ bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::m
   if (!outbound && inbound)
   {
     const GraphId endnode = directededge.endnode();
-    lock.lock();
-    const GraphTile* tile = reader.GetGraphTile(endnode);
-    lock.unlock();
-    const NodeInfo* nodeinfo = tile->node(endnode.id());
+    const NodeInfo* endnodeinfo;
+    const GraphTile* tile_ptr;
+    if (endnode.tileid() == startnode.tileid()) {
+      tile_ptr = &tile;
+      endnodeinfo = tile_ptr->node(endnode.id());
+    } else {
+      tile_ptr = reader.GetGraphTile(endnode);
+      endnodeinfo = tile_ptr->node(endnode.id());
+    }
 
-    const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
+    const DirectedEdge* diredge = tile_ptr->directededge(endnodeinfo->edge_index());
     uint32_t inbound = 0, outbound = 0;
 
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
+    for (uint32_t i = 0; i < endnodeinfo->edge_count(); i++, diredge++) {
 
       if ((diredge->forwardaccess() & kAutoAccess) &&
           !(diredge->reverseaccess() & kAutoAccess))
@@ -169,8 +164,8 @@ bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::m
 
     if (!outbound && inbound) {
       rd.AddTask(startnodeinfo.latlng(),
-                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->wayid(),
-                 tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape());
+                 tile_ptr->edgeinfo(directededge.edgeinfo_offset())->wayid(),
+                 tile_ptr->edgeinfo(directededge.edgeinfo_offset())->shape());
       return true;
     }
   }
@@ -178,45 +173,51 @@ bool IsReversedOneway(GraphTileBuilder &tilebuilder, GraphReader& reader, std::m
   return false;
 }
 
-void checkExitInfo(GraphTileBuilder &tilebuilder, GraphReader& reader, std::mutex& lock,
-                const GraphId& startnode, NodeInfo& startnodeinfo,
-                DirectedEdge& directededge, validator_stats& stats) {
+void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode, const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge, statistics& stats) {
   // If this DE is right after a motorway junction it is an exit and should
   // have signs
-  if (startnodeinfo.type() == NodeType::kMotorWayJunction && !directededge.exitsign()){
+  if (startnodeinfo.type() == NodeType::kMotorWayJunction){
     // Check to see if the motorway continues, if it does, this is an exit ramp,
     // otherwise if all edges are links, it is a fork
     const GraphTile* tile = reader.GetGraphTile(startnode);
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
-    std::vector<std::pair<uint64_t, bool>> fork_signs;
+    std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
+    std::vector<std::pair<std::string, bool>> ctry_fork_signs;
     bool fork = true;
-    for (uint32_t i = 0; i < startnodeinfo.edge_count(); ++i, ++otheredge) {
+    for (size_t i = 0; i < startnodeinfo.edge_count(); ++i, ++otheredge) {
       if (!otheredge->link()) {
         fork = false;
         // no need to keep checking if it's not a fork
         break;
       } else {
         // store exit info in case this is a fork
-        auto edgeinfo = tile->edgeinfo(otheredge->edgeinfo_offset());
-        fork_signs.push_back({edgeinfo->wayid(), otheredge->exitsign()});
+        std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
+        tile_fork_signs.push_back({tile->id(), otheredge->exitsign()});
+        ctry_fork_signs.push_back({iso_code, otheredge->exitsign()});
       }
     }
     // If it was a fork, store the data appropriately
     if (fork) {
-      for (auto& sign : fork_signs)
+      for (auto& sign : tile_fork_signs)
+        stats.add_fork_exitinfo(sign);
+      for (auto& sign : ctry_fork_signs)
         stats.add_fork_exitinfo(sign);
     } else {
       // Otherwise store original edge info as a normal exit
-      auto edgeinfo = tile->edgeinfo(otheredge->edgeinfo_offset());
-      stats.add_exitinfo({edgeinfo->wayid(), directededge.exitsign()});
+      std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
+      stats.add_exitinfo({tile->id(), directededge.exitsign()});
+      stats.add_exitinfo({iso_code, directededge.exitsign()});
     }
   }
 }
-void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
+void AddStatistics(statistics& stats, const DirectedEdge& directededge,
     const uint32_t tileid, std::string& begin_node_iso,
-    HGVRestrictionTypes& hgv, GraphTileBuilder& tilebuilder,
+    HGVRestrictionTypes& hgv, const GraphTile& tile,
     GraphReader& graph_reader, std::mutex& lock, GraphId& node,
-    NodeInfo& nodeinfo, uint32_t idx) {
+    const NodeInfo& nodeinfo, uint32_t idx) {
+
   auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ?
     directededge.length() * 0.5f : directededge.length() * 0.25f;
@@ -253,7 +254,7 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
 
   // Check for exit signage if it is a highway link
   if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
-    checkExitInfo(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats);
+    checkExitInfo(tile,graph_reader,lock,node,nodeinfo,directededge,stats);
   }
 
   // Add all other statistics
@@ -265,17 +266,15 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
     // Check if one way
     if ((!fward || !bward) && (fward || bward)) {
       edge_length *= 0.5f;
-      const GraphTile* tile = graph_reader.GetGraphTile(node);
-      bool found = IsPedestrianTerminal(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data,idx);
+      //const GraphTile* tile = graph_reader.GetGraphTile(node);
+      bool found = IsPedestrianTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data,idx);
       if (!found && directededge.endnode().id() == node.id()) {
-        lock.lock();
         const GraphTile* end_tile = graph_reader.GetGraphTile(directededge.endnode());
-        lock.unlock();
-        if (tile->id() == end_tile->id())
-          found = IsLoopTerminal(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+        if (tile.id() == end_tile->id())
+          found = IsLoopTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
       }
       if (!found && directededge.endnode().id() != node.id()) {
-        found = IsReversedOneway(tilebuilder,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+        found = IsReversedOneway(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
       }
       stats.add_tile_one_way(tileid, rclass, edge_length);
       stats.add_country_one_way(begin_node_iso, rclass, edge_length);
@@ -292,7 +291,7 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
       stats.add_country_speed_info(begin_node_iso, rclass, edge_length);
     }
     // Check if edge has any names
-    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
+    if (tile.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
       stats.add_tile_named(tileid, rclass, edge_length);
       stats.add_country_named(begin_node_iso, rclass, edge_length);
     }
@@ -305,10 +304,9 @@ void AddStatistics(validator_stats& stats, DirectedEdge& directededge,
 
 void build(const boost::property_tree::ptree& pt,
               std::deque<GraphId>& tilequeue, std::mutex& lock,
-              std::promise<validator_stats>& result) {
-
+              std::promise<statistics>& result) {
     // Our local class for gathering the stats
-    validator_stats stats;
+    statistics stats;
     // Local Graphreader
     GraphReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
@@ -335,31 +333,24 @@ void build(const boost::property_tree::ptree& pt,
       level = tile_id.level();
       auto tileid = tile_id.tileid();
 
-      // Get the tile
-      GraphTileBuilder tilebuilder(hierarchy, tile_id, false);
-
       // Update nodes and directed edges as needed
-      std::vector<NodeInfo> nodes;
       std::vector<DirectedEdge> directededges;
 
       // Get this tile
-      lock.lock();
       const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
-      lock.unlock();
 
       // Iterate through the nodes and the directed edges
       float roadlength = 0.0f;
-      uint32_t nodecount = tilebuilder.header()->nodecount();
+      uint32_t nodecount = tile->header()->nodecount();
       GraphId node = tile_id;
-      for (uint32_t i = 0; i < nodecount; i++, node++) {
+      for (uint64_t i = 0; i < nodecount; i++, node++) {
         // The node we will modify
-        NodeInfo nodeinfo = tilebuilder.node(i);
-        auto ni = tile->node(i);
-        std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
+        const NodeInfo* nodeinfo = tile->node(node);
+        std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
 
         // Go through directed edges
-        uint32_t idx = ni->edge_index();
-        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++) {
+        uint32_t idx = nodeinfo->edge_index();
+        for (uint32_t j = 0, n = nodeinfo->edge_count(); j < n; j++, idx++) {
           auto de = tile->directededge(idx);
 
           // HGV restriction mask (for stats)
@@ -406,27 +397,24 @@ void build(const boost::property_tree::ptree& pt,
             }
           }
           // The edge we will modify
-          DirectedEdge& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
+          const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index() + j);
 
           // Road Length and some variables for statistics
           float edge_length;
           bool valid_length = false;
-          if (!directededge.shortcut() && !directededge.trans_up() &&
-              !directededge.trans_down()) {
-            edge_length = directededge.length();
+          if (!directededge->shortcut() && !directededge->trans_up() &&
+              !directededge->trans_down()) {
+            edge_length = directededge->length();
             roadlength += edge_length;
             valid_length = true;
           }
 
           // Statistics
           if (valid_length) {
-            AddStatistics(stats, directededge, tileid, begin_node_iso,
-                          hgv, tilebuilder, graph_reader, lock, node, nodeinfo, j);
+            AddStatistics(stats, *directededge, tileid, begin_node_iso,
+                          hgv, *tile, graph_reader, lock, node, *nodeinfo, j);
           }
         }
-
-        // Add the node to the list
-        nodes.emplace_back(std::move(nodeinfo));
       }
 
       // Add density to return class. Approximate the tile area square km
@@ -496,7 +484,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
                pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
 
   // Setup promises
-  std::list<std::promise<validator_stats> > results;
+  std::list<std::promise<statistics> > results;
 
   // Spawn the threads
   for (auto& thread : threads) {
@@ -509,7 +497,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads)
     thread->join();
   // Get the promise from the future
-  validator_stats stats;
+  statistics stats;
   for (auto& result : results) {
     auto r = result.get_future().get();
     //keep track of stats
