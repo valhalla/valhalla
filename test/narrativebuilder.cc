@@ -62,7 +62,7 @@ const NarrativeDictionary& GetNarrativeDictionary(
     throw std::runtime_error("Invalid language tag.");
   }
 
-  return phrase_dictionary->second;
+  return *phrase_dictionary->second;
 }
 
 void PopulateManeuver(

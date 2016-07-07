@@ -22,17 +22,24 @@ namespace {
       LOG_TRACE("LOCALES");
       LOG_TRACE("-------");
       LOG_TRACE("- " + json.first);
-      try {
-        boost::property_tree::ptree narrative_pt;
-        std::stringstream ss; ss << json.second;
-        boost::property_tree::read_json(ss, narrative_pt);
-        LOG_TRACE("JSON read");
-        valhalla::odin::NarrativeDictionary narrative_dictionary(narrative_pt);
-        LOG_TRACE("NarrativeDictionary created");
-        locales.emplace(json.first, std::move(narrative_dictionary));
-      }
-      catch(...) {
-        LOG_WARN("Failed to parse narrative for locale: " + json.first);
+      //load the json
+      boost::property_tree::ptree narrative_pt;
+      std::stringstream ss; ss << json.second;
+      boost::property_tree::read_json(ss, narrative_pt);
+      LOG_TRACE("JSON read");
+      //parse it into an object and add it to the map
+      auto narrative_dictionary = std::make_shared<valhalla::odin::NarrativeDictionary>(narrative_pt);
+      LOG_TRACE("NarrativeDictionary created");
+      locales.insert(std::make_pair(json.first, narrative_dictionary));
+      //insert all the aliases as this same object
+      auto aliases = narrative_pt.get_child("aliases");
+      for(const auto& alias : aliases) {
+        auto name = alias.second.get_value<std::string>();
+        auto inserted = locales.insert(std::make_pair(name, narrative_dictionary));
+        if(!inserted.second) {
+          throw std::logic_error("Alias '" + name + "' in json locale '" + json.first +
+            "' has duplicate with posix_locale '" + inserted.first->second->GetLocale().name());
+        }
       }
     }
     return locales;

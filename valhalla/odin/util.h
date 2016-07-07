@@ -52,7 +52,7 @@ std::string get_localized_date(const std::string& date_time,
  *
  * @return the map of locales to NarrativeDictionaries
  */
-using locales_singleton_t = std::unordered_map<std::string, NarrativeDictionary>;
+using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary> >;
 const locales_singleton_t& get_locales();
 
 /**

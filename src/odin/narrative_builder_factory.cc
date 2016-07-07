@@ -28,12 +28,12 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
   // language then add logic here and return derived NarrativeBuilder
   if (directions_options.language() == "cs-CZ") {
     return midgard::make_unique<NarrativeBuilder_csCZ>(
-        directions_options, trip_path, phrase_dictionary->second);
+        directions_options, trip_path, *phrase_dictionary->second);
   }
 
   // otherwise just return pointer to NarrativeBuilder
   return midgard::make_unique<NarrativeBuilder>(directions_options, trip_path,
-                                                phrase_dictionary->second);
+                                                *phrase_dictionary->second);
 }
 
 }

@@ -295,7 +295,7 @@ const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
     throw std::runtime_error("Invalid language tag.");
   }
 
-  return phrase_dictionary->second;
+  return *phrase_dictionary->second;
 }
 
 void validate(const std::string& test_target, const std::string& expected) {
