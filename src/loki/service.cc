@@ -227,7 +227,8 @@ namespace valhalla {
       auto request_sources = request.get_child_optional("sources");
       auto request_targets = request.get_child_optional("targets");
 
-      if(!request_locations || (!request_sources && !request_targets))
+      if (!request_locations)
+        if (!request_sources && !request_targets)
           throw std::runtime_error("Insufficiently specified required parameter 'locations'");
 
       if (action == ROUTE || action == VIAROUTE || action == LOCATE) {
@@ -242,8 +243,8 @@ namespace valhalla {
         if(locations.size() < (action == LOCATE ? 1 : 2))
           throw std::runtime_error("Insufficient number of locations provided");
 
-      } else {
-
+        valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+     } else {
         if (request_locations) {  //if matrix type and using locations parameter
           switch (action) {
               case ONE_TO_MANY:
@@ -266,6 +267,7 @@ namespace valhalla {
                 }
                 break;
           }
+          valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
         }
         if (request_sources) {
           for(const auto& source : *request_sources) {
@@ -278,6 +280,8 @@ namespace valhalla {
           }
           if(sources.size() < 1)
             throw std::runtime_error("Insufficient number of sources provided");
+
+          valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
         }
         if (request_targets) {
           for(const auto& target : *request_targets) {
@@ -290,12 +294,10 @@ namespace valhalla {
           }
           if(targets.size() < 1)
             throw std::runtime_error("Insufficient number of targets provided");
+
+          valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
         }
       }
-
-      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
-      valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
-      valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
 
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
