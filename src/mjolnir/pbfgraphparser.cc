@@ -755,11 +755,13 @@ struct graph_callback : public OSMPBF::Callback {
           case RestrictionType::kOnlyRightTurn:
           case RestrictionType::kOnlyLeftTurn:
           case RestrictionType::kOnlyStraightOn:
+          case RestrictionType::kNoEntry:
+          case RestrictionType::kNoExit:
+          case RestrictionType::kNoTurn:
             hasRestriction = true;
             restriction.set_type(type);
             break;
           default:
-            // kNoEntry and kNoExit not supported.
             return;
         }
       }
