@@ -39,7 +39,7 @@ endif
 
 #timezone info from boost
 src/baldr/date_time_zonespec.h:
-	-xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c) date_time/zonespec.csv > src/baldr/date_time_zonespec.h
+	-xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c | xargs) date_time/zonespec.csv > src/baldr/date_time_zonespec.h
 BUILT_SOURCES = src/baldr/date_time_zonespec.h
 nodist_libvalhalla_baldr_la_SOURCES = src/baldr/date_time_zonespec.h
 CLEANFILES = src/baldr/date_time_zonespec.h
