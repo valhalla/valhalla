@@ -182,6 +182,7 @@ void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
     // Check to see if the motorway continues, if it does, this is an exit ramp,
     // otherwise if all edges are links, it is a fork
     const GraphTile* tile = reader.GetGraphTile(startnode);
+    /*
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
     std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
     std::vector<std::pair<std::string, bool>> ctry_fork_signs;
@@ -204,12 +205,12 @@ void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
         stats.add_fork_exitinfo(sign);
       for (auto& sign : ctry_fork_signs)
         stats.add_fork_exitinfo(sign);
-    } else {
+    } else { */
       // Otherwise store original edge info as a normal exit
       std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
       stats.add_exitinfo({tile->id(), directededge.exitsign()});
       stats.add_exitinfo({iso_code, directededge.exitsign()});
-    }
+    //}
   }
 }
 void AddStatistics(statistics& stats, const DirectedEdge& directededge,

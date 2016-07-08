@@ -30,19 +30,19 @@ using namespace valhalla::mjolnir;
 
 namespace {
   // merges contents of sets and maps that do not have overlapping keys
-  template <class T> T merge(T a, T b) {
+  template <class T> T merge(T &a, T b) {
     T tmp(a);
     tmp.insert(b.begin(), b.end());
-    return std::move(tmp);
+    return tmp;
   }
 
   // accumulates counts into a new map for maps that have counts associated with its keys
-  template <class T> T merge_counts(T a, T b) {
+  template <class T> T merge_counts(T &a, T b) {
     T tmp(a);
     for (auto it = b.begin(); it != b.end(); it++) {
       tmp[it->first] += it->second;
     }
-    return std::move(tmp);
+    return tmp;
   }
 }
 
@@ -238,13 +238,13 @@ const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_info() 
 
 const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_info() const { return ctry_exit_signs; }
 
-const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_count() const { return tile_fork_signs; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_count() const { return tile_fork_count; }
 
-const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_count() const { return tile_exit_signs; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_count() const { return tile_exit_count; }
 
-const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_count() const { return ctry_fork_signs; }
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_count() const { return ctry_fork_count; }
 
-const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_count() const { return ctry_exit_signs; }
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_count() const { return ctry_exit_count; }
 
 void statistics::add (const statistics& stats) {
   // Combine ids and isos
@@ -296,6 +296,7 @@ void statistics::add (const statistics& stats) {
 
   // Combine roulette data
   roulette_data.Add(stats.roulette_data);
+
 }
 
 
