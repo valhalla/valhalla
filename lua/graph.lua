@@ -56,6 +56,9 @@ restriction = {
 ["only_right_turn"] = 4,
 ["only_left_turn"] = 5,
 ["only_straight_on"] = 6
+["no_entry"] = 7,
+["no_exit"] = 8,
+["no_turn"] = 9
 }
 
 dow = {
