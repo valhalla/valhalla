@@ -209,6 +209,21 @@ void TryTestIsValid(std::string date, bool return_value) {
     throw std::runtime_error("Test is_iso_local failed: " + date);
 }
 
+void TryTestDST(std::string input_date, std::string input_time, std::string time_zone, std::string value) {
+
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone));
+
+  boost::gregorian::date date = boost::gregorian::date_from_iso_string(input_date);
+  boost::posix_time::time_duration td = boost::posix_time::duration_from_string(input_time);
+
+  boost::local_time::local_date_time in_local_time = DateTime::get_ldt(date,td,tz);
+
+  std::cout << in_local_time.to_string() << std::endl;
+
+  if (in_local_time.to_string() != value)
+    throw std::runtime_error("Test DST failed: " + value);
+}
+
 }
 
 void TestGetDaysFromPivotDate() {
@@ -386,9 +401,22 @@ void TestIsValid(){
   TryTestIsValid("2015-05-06T01",false);
   TryTestIsValid("01:00",false);
   TryTestIsValid("aefopijafepij",false);
-
 }
 
+void TestDST(){
+  TryTestDST("20160313", "02:00", "America/New_York", "2016-Mar-13 03:00:00 EDT");
+  TryTestDST("20160313", "02:15", "America/New_York", "2016-Mar-13 03:15:00 EDT");
+  TryTestDST("20160313", "03:00", "America/New_York", "2016-Mar-13 03:00:00 EDT");
+  TryTestDST("20160313", "03:15", "America/New_York", "2016-Mar-13 03:15:00 EDT");
+
+  TryTestDST("20160313", "02:00", "Europe/Amsterdam", "2016-Mar-13 02:00:00 CET");
+  TryTestDST("20160313", "03:00", "Europe/Amsterdam", "2016-Mar-13 03:00:00 CET");
+
+  TryTestDST("20160327", "02:00", "Europe/Amsterdam", "2016-Mar-27 03:00:00 CEST");
+  TryTestDST("20160327", "02:15", "Europe/Amsterdam", "2016-Mar-27 03:15:00 CEST");
+  TryTestDST("20160327", "03:00", "Europe/Amsterdam", "2016-Mar-27 03:00:00 CEST");
+  TryTestDST("20160327", "03:15", "Europe/Amsterdam", "2016-Mar-27 03:15:00 CEST");
+}
 
 int main(void) {
   test::suite suite("datetime");
@@ -402,6 +430,7 @@ int main(void) {
   suite.test(TEST_CASE(TestEpoch));
   suite.test(TEST_CASE(TestIsServiceAvailable));
   suite.test(TEST_CASE(TestIsValid));
+  suite.test(TEST_CASE(TestDST));
 
   return suite.tear_down();
 }
