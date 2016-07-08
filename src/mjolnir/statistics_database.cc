@@ -717,26 +717,21 @@ void statistics::insert_exit_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill the exit stats for tiles
-  for (auto tileid : tile_ids) {
-    try {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // Tile ID (parent tile)
-      sqlite3_bind_int(stmt, index, tileid);
-      ++index;
-      // Does it have an exit sign?
-      float percent = static_cast<float>(tile_exit_signs.at(tileid)) / static_cast<float>(tile_exit_count.at(tileid));;
-      sqlite3_bind_double(stmt, index, percent);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    } catch (std::out_of_range e) {
-      //No data for that id
+  for (auto it = tile_exit_signs.cbegin(); it != tile_exit_signs.cend(); it++) {
+    uint8_t index = 1;
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    // Tile ID (parent tile)
+    sqlite3_bind_int(stmt, index, it->first);
+    ++index;
+    // Does it have an exit sign?
+    float percent = static_cast<float>(it->second) / static_cast<float>(tile_exit_count.at(it->first));;
+    sqlite3_bind_double(stmt, index, percent);
+    ret = sqlite3_step (stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   sqlite3_finalize (stmt);
   ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
@@ -767,26 +762,21 @@ void statistics::insert_exit_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill the fork exit stats for tiles
-  for (auto tileid : tile_ids) {
-    try {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // Tile ID (parent tile)
-      sqlite3_bind_int(stmt, index, tileid);
-      ++index;
-      // Does it have an exit sign?
-      float percent = static_cast<float>(tile_fork_signs.at(tileid)) / static_cast<float>(tile_fork_count.at(tileid));
-      sqlite3_bind_double(stmt, index, percent);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    } catch (std::out_of_range e) {
-      // No data for this is
+  for (auto it = tile_fork_signs.cbegin(); it != tile_fork_signs.cend(); it++) {
+    uint8_t index = 1;
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    // Tile ID (parent tile)
+    sqlite3_bind_int(stmt, index, it->first);
+    ++index;
+    // Does it have an exit sign?
+    float percent = static_cast<float>(it->second) / static_cast<float>(tile_fork_count.at(it->first));
+    sqlite3_bind_double(stmt, index, percent);
+    ret = sqlite3_step (stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   sqlite3_finalize (stmt);
   ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
@@ -817,26 +807,21 @@ void statistics::insert_exit_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill the exit stats for countries
-  for (auto country : iso_codes) {
-    try {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // ISO (parent ID)
-      sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
-      ++index;
-      // Does this exit have signs?
-      float percent = static_cast<float>(ctry_exit_signs.at(country)) / static_cast<float>(ctry_exit_count.at(country));
-      sqlite3_bind_double(stmt, index, percent);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    } catch (std::out_of_range e) {
-      // No data for this country
+  for (auto it = ctry_exit_signs.cbegin(); it != ctry_exit_signs.cend(); it++) {
+    uint8_t index = 1;
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    // ISO (parent ID)
+    sqlite3_bind_text(stmt, index, it->first.c_str(), it->first.length(), SQLITE_STATIC);
+    ++index;
+    // Does this exit have signs?
+    float percent = static_cast<float>(it->second) / static_cast<float>(ctry_exit_count.at(it->first));
+    sqlite3_bind_double(stmt, index, percent);
+    ret = sqlite3_step (stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   sqlite3_finalize (stmt);
   ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
@@ -866,26 +851,21 @@ void statistics::insert_exit_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill the fork exit stats for countries
-  for (auto country : iso_codes) {
-    try {
-      uint8_t index = 1;
-      sqlite3_reset(stmt);
-      sqlite3_clear_bindings(stmt);
-      // ISO (parent ID)
-      sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
-      ++index;
-      // Does this exit have signs?
-      float percent = static_cast<float>(ctry_fork_signs.at(country)) / static_cast<float>(ctry_fork_count.at(country));
-      sqlite3_bind_double(stmt, index, percent);
-      ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-        continue;
-      }
-      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-    } catch (std::out_of_range e) {
-      //No data for this country
+  for (auto it = ctry_fork_signs.cbegin(); it != ctry_fork_signs.cend(); it++) {
+    uint8_t index = 1;
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    // ISO (parent ID)
+    sqlite3_bind_text(stmt, index, it->first.c_str(), it->first.length(), SQLITE_STATIC);
+    ++index;
+    // Does this exit have signs?
+    float percent = static_cast<float>(it->second) / static_cast<float>(ctry_fork_count.at(it->first));
+    sqlite3_bind_double(stmt, index, percent);
+    ret = sqlite3_step (stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   sqlite3_finalize (stmt);
   ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);

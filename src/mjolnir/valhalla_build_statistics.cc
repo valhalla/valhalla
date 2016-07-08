@@ -174,21 +174,24 @@ bool IsReversedOneway(const GraphTile &tile, GraphReader& reader, std::mutex& lo
 }
 
 void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
-                const GraphId& startnode, const NodeInfo& startnodeinfo,
-                const DirectedEdge& directededge, statistics& stats) {
-  // If this DE is right after a motorway junction it is an exit and should
+                   const GraphId& startnode, const NodeInfo& startnodeinfo,
+                   const DirectedEdge& directededge, statistics& stats) {
+  // If this edge is right after a motorway junction it is an exit and should
   // have signs
   if (startnodeinfo.type() == NodeType::kMotorWayJunction){
     // Check to see if the motorway continues, if it does, this is an exit ramp,
-    // otherwise if all edges are links, it is a fork
+    // otherwise if all forward edges are links, it is a fork
     const GraphTile* tile = reader.GetGraphTile(startnode);
-    /*
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
     std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
     std::vector<std::pair<std::string, bool>> ctry_fork_signs;
+    // Assume it is a fork
     bool fork = true;
     for (size_t i = 0; i < startnodeinfo.edge_count(); ++i, ++otheredge) {
-      if (!otheredge->link()) {
+      // If it is an outgoing edge that is not a link, it is not a fork
+      if (((otheredge->forwardaccess() & kAutoAccess) &&
+            !(otheredge->reverseaccess() & kAutoAccess)) &&
+          !otheredge->link()) {
         fork = false;
         // no need to keep checking if it's not a fork
         break;
@@ -205,14 +208,15 @@ void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
         stats.add_fork_exitinfo(sign);
       for (auto& sign : ctry_fork_signs)
         stats.add_fork_exitinfo(sign);
-    } else { */
+    } else {
       // Otherwise store original edge info as a normal exit
       std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
       stats.add_exitinfo({tile->id(), directededge.exitsign()});
       stats.add_exitinfo({iso_code, directededge.exitsign()});
-    //}
+    }
   }
 }
+
 void AddStatistics(statistics& stats, const DirectedEdge& directededge,
     const uint32_t tileid, std::string& begin_node_iso,
     HGVRestrictionTypes& hgv, const GraphTile& tile,
