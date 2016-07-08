@@ -375,7 +375,10 @@ enum class RestrictionType : uint8_t {
   kNoUTurn = 3,
   kOnlyRightTurn = 4,
   kOnlyLeftTurn = 5,
-  kOnlyStraightOn = 6
+  kOnlyStraightOn = 6,
+  kNoEntry = 7,
+  kNoExit = 8,
+  kNoTurn = 9
 };
 
 // Access Restriction types. Maximum value supported is 31. DO NOT EXCEED.
