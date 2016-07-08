@@ -256,7 +256,7 @@ void validate(const boost::property_tree::ptree& pt,
     GraphReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
-    auto numLevels = hierarchy.levels().size();
+    auto numLevels = hierarchy.levels().size() + 1;    // To account for transit
     // vector to hold densities for each level
     std::vector<std::vector<float>> densities(numLevels);
     // Array to hold duplicates
