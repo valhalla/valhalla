@@ -90,14 +90,27 @@ boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
       }
       else {
 //Daylight Savings Results are ambiguous: time given: 2016-Nov-06 01:00:00
-        boost::posix_time::time_duration time_dur = boost::posix_time::hours(1);
+        boost::posix_time::time_duration time_dur = time_zone->dst_offset();
 
         in_local_time = boost::local_time::local_date_time(date, td + time_dur, time_zone,
                                                            boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
         in_local_time -= time_dur;
       }
     }
+ /*     else {
+//Daylight Savings Results are ambiguous: time given: 2016-Nov-06 01:00:00  2:00 a.m. to 1:00 a.m.
+        boost::posix_time::time_duration time_dur = time_zone->dst_offset();
 
+        in_local_time = boost::local_time::local_date_time(date, td + time_dur, time_zone,
+                                                           boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+        in_local_time -= time_dur;
+      }
+    } else if (time_zone->dst_local_end_time(date.year()).date() == date &&
+        time_duration >= time_zone->dst_local_end_time(date.year()).time_of_day()) {
+
+        boost::posix_time::time_duration time_dur = time_zone->dst_offset();
+        in_local_time -= time_dur;
+    }*/
     return in_local_time;
 }
 
@@ -208,7 +221,7 @@ uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& 
 }
 
 // check if service is available for a date.
-bool is_service_available(const uint64_t& days, const uint32_t& start_date, const uint32_t& date, const uint32_t& end_date) {
+bool is_service_available(const uint64_t days, const uint32_t start_date, const uint32_t date, const uint32_t end_date) {
 
   if (start_date <= date && date <= end_date) {
     boost::gregorian::date start = pivot_date_ + boost::gregorian::days(start_date);
@@ -394,34 +407,116 @@ uint64_t seconds_since_epoch(const std::string& date_time,
 }
 
 // Get the date from seconds and timezone.
-std::string seconds_to_date(uint64_t seconds, const boost::local_time::time_zone_ptr& time_zone) {
+void seconds_to_date(const bool is_depart_at,
+                     const uint64_t origin_seconds, const uint64_t dest_seconds,
+                     const boost::local_time::time_zone_ptr& origin_tz,
+                     const boost::local_time::time_zone_ptr& dest_tz,
+                     std::string& iso_origin, std::string& iso_dest) {
 
-  std::string iso_date_time;
-  if (!time_zone)
-    return iso_date_time;
+  iso_origin.empty();
+  iso_dest.empty();
+  if (!origin_tz || !dest_tz)
+    return;
 
   try {
     std::string tz_string;
 
     boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
-    boost::local_time::local_date_time local_date_time(pt,time_zone);
+    boost::posix_time::ptime origin_pt = time_epoch + boost::posix_time::seconds(origin_seconds);
+    boost::local_time::local_date_time origin_date_time(origin_pt,origin_tz);
 
-    pt = local_date_time.local_time();
-    boost::gregorian::date date = pt.date();
+    boost::posix_time::ptime dest_pt = time_epoch + boost::posix_time::seconds(dest_seconds);
+    boost::local_time::local_date_time dest_date_time(dest_pt,dest_tz);
 
+    boost::gregorian::date o_date = origin_date_time.local_time().date();
+    boost::gregorian::date d_date = dest_date_time.local_time().date();
+
+    if (is_depart_at && dest_date_time.is_dst()) {
+
+      boost::gregorian::date dst_date = dest_tz->dst_local_end_time(d_date.year()).date();
+      bool in_range = (o_date <= dst_date && dst_date <= d_date);
+
+      if (in_range) // in range meaning via the dates.
+      {
+         if (o_date == dst_date)
+         {
+           // must start before dst end time - the offset otherwise the time is ambiguous
+           in_range = origin_date_time.local_time().time_of_day() <
+               (dest_tz->dst_local_end_time(d_date.year()).time_of_day() - dest_tz->dst_offset());
+
+            if (in_range)
+            {
+               // starts and ends on the same day.
+               if (o_date == d_date)
+                 in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+            }
+         }
+         else if (dst_date == d_date)
+           in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+      }
+
+      if (in_range)
+        dest_date_time -= dest_tz->dst_offset();
+    }
+
+    if (!is_depart_at) {
+
+      boost::gregorian::date dst_date = origin_tz->dst_local_start_time(o_date.year()).date();
+      bool in_range = (o_date <= dst_date && dst_date <= d_date);
+
+      if (in_range) // in range meaning via the dates.
+      {
+         if (o_date == dst_date)
+         {
+           // must start before dst start time - the offset otherwise the time is ambiguous
+           in_range = origin_date_time.local_time().time_of_day() <
+               (origin_tz->dst_local_start_time(d_date.year()).time_of_day() - origin_tz->dst_offset());
+
+            if (in_range)
+            {
+               // starts and ends on the same day.
+               if (o_date == d_date)
+                 in_range = origin_tz->dst_local_start_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+            }
+         }
+         else if (dst_date == d_date)
+           in_range = origin_tz->dst_local_start_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+      }
+
+      if (in_range)
+        origin_date_time += origin_tz->dst_offset();
+    }
+
+
+
+
+
+    origin_pt = origin_date_time.local_time();
+    boost::gregorian::date date = origin_pt.date();
     std::stringstream ss_time;
-    ss_time << pt.time_of_day();
+    ss_time << origin_pt.time_of_day();
     std::string time = ss_time.str();
 
     std::size_t found = time.find_last_of(":"); // remove seconds.
     if (found != std::string::npos)
       time = time.substr(0,found);
 
-    iso_date_time = to_iso_extended_string(date) + "T" + time;
+    iso_origin = to_iso_extended_string(date) + "T" + time;
+
+    dest_pt = dest_date_time.local_time();
+    date = dest_pt.date();
+    ss_time.str("");
+    ss_time << dest_pt.time_of_day();
+    time = ss_time.str();
+
+    found = time.find_last_of(":"); // remove seconds.
+    if (found != std::string::npos)
+      time = time.substr(0,found);
+
+    iso_dest = to_iso_extended_string(date) + "T" + time;
+
 
   } catch (std::exception& e){}
-  return iso_date_time;
 }
 
 //Get the dow mask
