@@ -279,6 +279,9 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
     case RestrictionType::kNoRightTurn:
     case RestrictionType::kNoStraightOn:
     case RestrictionType::kNoUTurn:
+    case RestrictionType::kNoEntry:
+    case RestrictionType::kNoExit:
+    case RestrictionType::kNoTurn:
       // Iterate through the edge wayIds until the matching to way Id is found
       for (uint32_t idx = 0, n = wayids.size(); idx < n; idx++) {
         if (wayids[idx] == tr.to()) {
