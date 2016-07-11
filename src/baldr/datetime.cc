@@ -97,20 +97,6 @@ boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
         in_local_time -= time_dur;
       }
     }
- /*     else {
-//Daylight Savings Results are ambiguous: time given: 2016-Nov-06 01:00:00  2:00 a.m. to 1:00 a.m.
-        boost::posix_time::time_duration time_dur = time_zone->dst_offset();
-
-        in_local_time = boost::local_time::local_date_time(date, td + time_dur, time_zone,
-                                                           boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
-        in_local_time -= time_dur;
-      }
-    } else if (time_zone->dst_local_end_time(date.year()).date() == date &&
-        time_duration >= time_zone->dst_local_end_time(date.year()).time_of_day()) {
-
-        boost::posix_time::time_duration time_dur = time_zone->dst_offset();
-        in_local_time -= time_dur;
-    }*/
     return in_local_time;
 }
 
@@ -420,7 +406,6 @@ void seconds_to_date(const bool is_depart_at,
 
   try {
     std::string tz_string;
-
     boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
     boost::posix_time::ptime origin_pt = time_epoch + boost::posix_time::seconds(origin_seconds);
     boost::local_time::local_date_time origin_date_time(origin_pt,origin_tz);
@@ -461,35 +446,31 @@ void seconds_to_date(const bool is_depart_at,
 
     if (!is_depart_at) {
 
-      boost::gregorian::date dst_date = origin_tz->dst_local_start_time(o_date.year()).date();
+      boost::gregorian::date dst_date = origin_tz->dst_local_end_time(o_date.year()).date();
       bool in_range = (o_date <= dst_date && dst_date <= d_date);
 
       if (in_range) // in range meaning via the dates.
       {
          if (o_date == dst_date)
          {
-           // must start before dst start time - the offset otherwise the time is ambiguous
-           in_range = origin_date_time.local_time().time_of_day() <
-               (origin_tz->dst_local_start_time(d_date.year()).time_of_day() - origin_tz->dst_offset());
+           // must start before dst end time
+           in_range = origin_date_time.local_time().time_of_day() <=
+               (origin_tz->dst_local_end_time(o_date.year()).time_of_day());
 
             if (in_range)
             {
                // starts and ends on the same day.
                if (o_date == d_date)
-                 in_range = origin_tz->dst_local_start_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+                 in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() > dest_date_time.local_time().time_of_day();
             }
          }
          else if (dst_date == d_date)
-           in_range = origin_tz->dst_local_start_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+           in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() > dest_date_time.local_time().time_of_day();
       }
 
       if (in_range)
-        origin_date_time += origin_tz->dst_offset();
+        origin_date_time -= origin_tz->dst_offset();
     }
-
-
-
-
 
     origin_pt = origin_date_time.local_time();
     boost::gregorian::date date = origin_pt.date();
@@ -501,7 +482,16 @@ void seconds_to_date(const bool is_depart_at,
     if (found != std::string::npos)
       time = time.substr(0,found);
 
-    iso_origin = to_iso_extended_string(date) + "T" + time;
+    ss_time.str("");
+    if (origin_date_time.is_dst())
+      ss_time << origin_tz->dst_offset() + origin_tz->base_utc_offset();
+    else ss_time << origin_tz->base_utc_offset();
+
+    iso_origin = to_iso_extended_string(date) + "T" + time + ss_time.str();
+
+    found = iso_origin.find_last_of(":"); // remove seconds.
+    if (found != std::string::npos)
+      iso_origin = iso_origin.substr(0,found);
 
     dest_pt = dest_date_time.local_time();
     date = dest_pt.date();
@@ -513,8 +503,16 @@ void seconds_to_date(const bool is_depart_at,
     if (found != std::string::npos)
       time = time.substr(0,found);
 
-    iso_dest = to_iso_extended_string(date) + "T" + time;
+    ss_time.str("");
+    if (dest_date_time.is_dst())
+      ss_time << dest_tz->dst_offset() + dest_tz->base_utc_offset();
+    else ss_time << dest_tz->base_utc_offset();
 
+    iso_dest = to_iso_extended_string(date) + "T" + time + ss_time.str();
+
+    found = iso_dest.find_last_of(":"); // remove seconds.
+    if (found != std::string::npos)
+      iso_dest = iso_dest.substr(0,found);
 
   } catch (std::exception& e){}
 }
