@@ -136,9 +136,12 @@ namespace DateTime {
 
   /**
    * Get the iso date time from seconds since epoch and timezone.
-   * @param   seconds     seconds since epoch
-   * @param   time_zone   Timezone.
-   * @return  Returns the formated date 2015-05-06.
+   * @param   origin_seconds      seconds since epoch for origin
+   * @param   dest_seconds        seconds since epoch for dest
+   * @param   origin_tz           timezone for origin
+   * @param   dest_tz             timezone for dest
+   * @param   iso_origin          origin string that will be updated
+   * @param   iso_dest            dest string that will be updated
    */
   void seconds_to_date(const bool is_depart_at,
                        const uint64_t origin_seconds, const uint64_t dest_seconds,
