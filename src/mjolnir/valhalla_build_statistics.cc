@@ -511,7 +511,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   LOG_INFO("Finished");
 
   stats.build_db(pt);
-  stats.roulette_data.GenerateTasks();
+  stats.roulette_data.GenerateTasks(pt);
 }
 
 bool ParseArguments(int argc, char *argv[]) {

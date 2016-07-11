@@ -115,7 +115,7 @@ public:
 
     void Add (const RouletteData& rd);
 
-    void GenerateTasks ();
+    void GenerateTasks (const boost::property_tree::ptree& pt) const ;
   } roulette_data;
 
   statistics ();

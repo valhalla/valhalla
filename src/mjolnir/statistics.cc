@@ -23,6 +23,7 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -319,38 +320,53 @@ void statistics::RouletteData::Add (const RouletteData& rd) {
   }
 }
 
-void statistics::RouletteData::GenerateTasks () {
-  bool write_comma = false;
-  std::string json_str = "";
-  json_str += "[";
+void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree& pt) const {
+  // build a task list for each collected wayid
+  json::ArrayPtr arr = json::array({});
   for (auto& id : way_IDs) {
-    if (write_comma)
-      json_str += ",";
-    json_str += "{\"geometries\": {\"features\": [";
-    json_str += "{\"geometry\": {\"coordinates\": ["
-              + std::to_string(node_locs.at(id).lng()) + "," + std::to_string(node_locs.at(id).lat())
-              + "],\"type\": \"Point\"},\"id\": null,\"properties\": {},\"type\": \"Feature\"},";
-    json_str += "{\"geometry\": {\"coordinates\": [ ";
-    bool coord_comma = false;
-    for (auto& p : way_shapes.at(id)){
-      if (coord_comma)
-        json_str += ",";
-      json_str += "[" + std::to_string(p.lng()) + "," + std::to_string(p.lat()) + "]";
-      coord_comma = true;
+    // build shape array before the rest of the json
+    json::ArrayPtr coords = json::array({
+      json::array({json::fp_t{way_shapes.at(id)[0].lng(), 5}, json::fp_t{way_shapes.at(id)[0].lat(), 5}})
+    });
+    for (size_t i = 1; i < way_shapes.at(id).size(); ++i) {
+      const auto& way_point = way_shapes.at(id)[i];
+      coords->emplace_back(json::array({json::fp_t{way_point.lng(), 5}, json::fp_t{way_point.lat(), 5}}));
     }
-    json_str += " ],\"type\": \"Linestring\" },\"id\": null,\"properties\": {\"osmid\": " + std::to_string(id) + "},\"type\": \"Feature\"}";
-    json_str += "],\"type\": \"FeatureCollection\"},";
-    json_str += "\"identifier\": \"" + std::to_string(id) + "\",";
-    json_str += "\"instruction\": \"Check to see if the one way road is logical\"}";
-    write_comma = true;
+    // build each task into the json array
+    arr->emplace_back(
+      json::map
+      ({
+       {"geometries", json::map
+        ({
+         {"features", json::array
+          ({json::map
+           ({
+            {"geometry", json::map
+             ({
+              {"coordinates", coords},
+              {"type", std::string("Linestring")}
+             })},
+            {"properties", json::map
+            ({
+             {"osmid", id}
+            })},
+            {"type", std::string("Feature")}
+           })
+          })
+         },
+         {"type", std::string("FeatureCollection")}
+        })},
+       {"identifier", id},
+       {"instruction", std::string("Check to make sure the one way road is logical")}
+      }));
   }
-  json_str += "]";
-  std::string file_str = "/data/valhalla/tasks.json";
+  // write out to a file
+  std::string file_str = pt.get<std::string>("mjolnir.maproulette_tasks");
   if (boost::filesystem::exists(file_str))
       boost::filesystem::remove(file_str);
   std::ofstream file;
   file.open(file_str);
-  file << json_str << std::endl;
+  file << *arr << std::endl;
   file.close();
   LOG_INFO("MapRoulette tasks saved to /data/valhalla/tasks.json");
 }
