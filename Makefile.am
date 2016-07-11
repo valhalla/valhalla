@@ -45,6 +45,7 @@ src/proto/%.pb.cc: proto/%.proto
 #turn locales json into strings we can load
 src/odin/locales.h: locales/*.json
 	-pushd locales && ./make_locales.sh *.json > ../src/odin/locales.h && popd
+
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
@@ -89,13 +90,8 @@ libvalhalla_odin_la_SOURCES = \
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB)
 
-#distributed executables
-bin_PROGRAMS = odin_service
-odin_service_SOURCES = src/odin/odin_service.cc
-odin_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-odin_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_odin.la
-
 # tests
+TESTS_ENVIRONMENT=LOCPATH=locales
 check_PROGRAMS = \
 	test/maneuversbuilder \
 	test/narrativebuilder \

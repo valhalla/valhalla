@@ -47,7 +47,7 @@ void NarrativeDictionary::Load(
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate posix_locale...");
   // Populate posix locale
-  posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.utf8");
+  posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.UTF-8");
   try {
     locale = std::locale(posix_locale.c_str());
   }

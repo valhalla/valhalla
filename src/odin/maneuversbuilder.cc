@@ -87,8 +87,11 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Calculate the consecutive exit sign count and then sort
   CountAndSortExitSigns(maneuvers);
 
-  // Conform maneuver type assignment
+  // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
+
+  // Enhance signless interchanges
+  EnhanceSignlessInterchnages(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int combined_man_id = 1;
@@ -325,7 +328,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine current turn channel maneuver with next maneuver
-      else if (curr_man->turn_channel() && (curr_man != next_man)) {
+      else if (IsTurnChannelManeuverCombinable(
+          prev_man, curr_man, next_man, (curr_man == maneuvers.begin()))) {
         LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
         curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
                                               next_man,
@@ -1356,27 +1360,33 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
       if (maneuver.internal_left_turn_count()
           > maneuver.internal_right_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
-        LOG_TRACE("ManeuverType=UTURN_LEFT");
+        LOG_TRACE("kReverse: 1 ManeuverType=UTURN_LEFT");
       } else if (maneuver.internal_right_turn_count()
           > maneuver.internal_left_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-        LOG_TRACE("ManeuverType=UTURN_RIGHT");
+        LOG_TRACE("kReverse: 1 ManeuverType=UTURN_RIGHT");
+      } else if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        LOG_TRACE("kReverse: 2 ManeuverType=UTURN_LEFT");
+      } else if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        LOG_TRACE("kReverse: 2 ManeuverType=UTURN_RIGHT");
       } else if (trip_path_->GetCurrEdge(maneuver.begin_node_index())
           ->drive_on_right()) {
         if (maneuver.turn_degree() < 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-          LOG_TRACE("ManeuverType=UTURN_RIGHT");
+          LOG_TRACE("kReverse: 3 ManeuverType=UTURN_RIGHT");
         } else {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
-          LOG_TRACE("ManeuverType=UTURN_LEFT");
+          LOG_TRACE("kReverse: 3 ManeuverType=UTURN_LEFT");
         }
       } else {
         if (maneuver.turn_degree() > 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
-          LOG_TRACE("ManeuverType=UTURN_LEFT");
+          LOG_TRACE("kReverse: 4 ManeuverType=UTURN_LEFT");
         } else {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-          LOG_TRACE("ManeuverType=UTURN_RIGHT");
+          LOG_TRACE("kReverse: 4 ManeuverType=UTURN_RIGHT");
         }
       }
       break;
@@ -1860,22 +1870,32 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
           Maneuver::RelativeDirection::kKeepLeft);
     } else if ((xedge_counts.left_similar_traversable_outbound == 0)
         && (xedge_counts.left_traversable_outbound > 0)
-        && (xedge_counts.right_traversable_outbound == 0)
-        && !curr_edge->IsStraightest(
-            maneuver.turn_degree(),
-            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
-                prev_edge->end_heading(), prev_edge->travel_mode()))) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepRight);
+        && (xedge_counts.right_traversable_outbound == 0)) {
+      if (!curr_edge->IsStraightest(
+          maneuver.turn_degree(),
+          node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+              prev_edge->end_heading(), prev_edge->travel_mode()))) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepRight);
+      } else if (maneuver.turn_channel()
+        && (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepRight);
+      }
     } else if ((xedge_counts.right_similar_traversable_outbound == 0)
         && (xedge_counts.right_traversable_outbound > 0)
-        && (xedge_counts.left_traversable_outbound == 0)
-        && !curr_edge->IsStraightest(
-            maneuver.turn_degree(),
-            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
-                prev_edge->end_heading(), prev_edge->travel_mode()))) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepLeft);
+        && (xedge_counts.left_traversable_outbound == 0)) {
+      if (!curr_edge->IsStraightest(
+          maneuver.turn_degree(),
+          node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+              prev_edge->end_heading(), prev_edge->travel_mode()))) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepLeft);
+      } else if (maneuver.turn_channel()
+        && (Turn::GetType(maneuver.turn_degree()) != Turn::Type::kStraight)) {
+        maneuver.set_begin_relative_direction(
+            Maneuver::RelativeDirection::kKeepLeft);
+      }
     }
   }
 }
@@ -1953,6 +1973,91 @@ float ManeuversBuilder::GetSpeed(TripPath_TravelMode travel_mode,
     return edge_speed;
 }
 
-}
+bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
+    std::list<Maneuver>::iterator prev_man,
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man,
+    bool start_man) const {
+
+  // Current maneuver must be a turn channel and not equal to the next maneuver
+  if (curr_man->turn_channel() && (curr_man != next_man)) {
+
+    uint32_t new_turn_degree;
+    if (start_man) {
+      // Determine turn degree current maneuver and next maneuver
+      new_turn_degree = GetTurnDegree(curr_man->end_heading(),
+                                      next_man->begin_heading());
+    } else {
+      // Determine turn degree based on previous maneuver and next maneuver
+      new_turn_degree = GetTurnDegree(prev_man->end_heading(),
+                                      next_man->begin_heading());
+    }
+
+    Turn::Type new_turn_type = Turn::GetType(new_turn_degree);
+
+    // Process simple right turn channel
+    // Combineable if begin of turn channel is relative right and
+    // final turn type is right or straight (not left)
+    if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight)
+            || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight))
+        && ((new_turn_type == Turn::Type::kSlightRight)
+            || (new_turn_type == Turn::Type::kRight)
+            || (new_turn_type == Turn::Type::kSharpRight)
+            || (new_turn_type == Turn::Type::kStraight))) {
+      return true;
+    }
+
+    // Process simple left turn channel
+    // Combineable if begin of turn channel is relative left and
+    // final turn type is left or straight (not right)
+    if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft)
+            || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+        && ((new_turn_type == Turn::Type::kSlightLeft)
+            || (new_turn_type == Turn::Type::kLeft)
+            || (new_turn_type == Turn::Type::kSharpLeft)
+            || (new_turn_type == Turn::Type::kStraight))) {
+      return true;
+    }
+
+  }
+  return false;
 }
 
+void ManeuversBuilder::EnhanceSignlessInterchnages(
+    std::list<Maneuver>& maneuvers) {
+  auto prev_man = maneuvers.begin();
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+
+  if (next_man != maneuvers.end())
+    ++next_man;
+
+  // Walk the maneuvers to find signless interchange maneuvers to enhance
+  while (next_man != maneuvers.end()) {
+
+    // If the current maneuver is a ramp OR nameless fork and does not have any signage
+    // and the previous maneuver is not a ramp or fork
+    // and the next maneuver is a 'Merge maneuver'
+    // then add the first street name from the next maneuver
+    // to the current maneuver branch sign list
+    if ((curr_man->ramp() || (curr_man->fork() && !curr_man->HasStreetNames()))
+        && !curr_man->HasExitSign()
+        && !(prev_man->ramp() || prev_man->fork())
+        && (next_man->type()
+            == TripDirections_Maneuver_Type::TripDirections_Maneuver_Type_kMerge)
+        && next_man->HasStreetNames()) {
+      curr_man->mutable_signs()->mutable_exit_branch_list()->emplace_back(
+          next_man->street_names().front()->value());
+
+    }
+
+    // on to the next maneuver...
+    prev_man = curr_man;
+    curr_man = next_man;
+    ++next_man;
+  }
+
+}
+
+}
+}
