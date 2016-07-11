@@ -54,76 +54,76 @@ void try_get_formatted_date(const std::string& date_time,
   void test_time() {
 
     std::locale locale = create_locale("blah");
-    try_get_formatted_time("2014-01-02T23:59","23:59",locale);
+    try_get_formatted_time("2014-01-02T23:59-05:00","23:59",locale);
 
     locale = create_locale("en_US.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
-    try_get_formatted_time("2014-01-02T23:59","11:59 PM",locale);
-    try_get_formatted_time("2014-01-01T07:01","7:01 AM",locale);
-    try_get_formatted_time("2014-01-02T15:00","3:00 PM",locale);
-    try_get_formatted_time("2014-01-02T24:00","12:00 AM",locale);
-    try_get_formatted_time("2014-01-02T12:00","12:00 PM",locale);
+    try_get_formatted_time("2014-01-02T23:59-05:00","11:59 PM",locale);
+    try_get_formatted_time("2014-01-01T07:01-05:00","7:01 AM",locale);
+    try_get_formatted_time("2014-01-02T15:00-05:00","3:00 PM",locale);
+    try_get_formatted_time("2014-01-02T24:00-05:00","12:00 AM",locale);
+    try_get_formatted_time("2014-01-02T12:00-05:00","12:00 PM",locale);
 
     locale = create_locale("de_DE.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
-    try_get_formatted_time("2014-01-02T23:59","23:59",locale);
-    try_get_formatted_time("2014-01-01T07:01","07:01",locale);
-    try_get_formatted_time("2014-01-02T15:00","15:00",locale);
-    try_get_formatted_time("2014-01-02T24:00","00:00",locale);
-    try_get_formatted_time("2014-01-02T12:00","12:00",locale);
+    try_get_formatted_time("2014-01-02T23:59+01:00","23:59",locale);
+    try_get_formatted_time("2014-01-01T07:01+01:00","07:01",locale);
+    try_get_formatted_time("2014-01-02T15:00+01:00","15:00",locale);
+    try_get_formatted_time("2014-01-02T24:00+01:00","00:00",locale);
+    try_get_formatted_time("2014-01-02T12:00+01:00","12:00",locale);
 
     locale = create_locale("cs_CZ.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
-    try_get_formatted_time("2014-01-02T23:59","23:59",locale);
-    try_get_formatted_time("2014-01-01T07:01","07:01",locale);
-    try_get_formatted_time("2014-01-02T15:00","15:00",locale);
-    try_get_formatted_time("2014-01-02T24:00","00:00",locale);
-    try_get_formatted_time("2014-01-02T12:00","12:00",locale);
+    try_get_formatted_time("2014-01-02T23:59+01:00","23:59",locale);
+    try_get_formatted_time("2014-01-01T07:01+01:00","07:01",locale);
+    try_get_formatted_time("2014-01-02T15:00+01:00","15:00",locale);
+    try_get_formatted_time("2014-01-02T24:00+01:00","00:00",locale);
+    try_get_formatted_time("2014-01-02T12:00+01:00","12:00",locale);
 
     locale = create_locale("it_IT.utf8");
     try_get_formatted_time("20140101","",locale);
     try_get_formatted_time("Blah","",locale);
-    try_get_formatted_time("2014-01-02T23:59","23:59",locale);
-    try_get_formatted_time("2014-01-01T07:01","07:01",locale);
-    try_get_formatted_time("2014-01-02T15:00","15:00",locale);
-    try_get_formatted_time("2014-01-02T24:00","00:00",locale);
-    try_get_formatted_time("2014-01-02T12:00","12:00",locale);
+    try_get_formatted_time("2014-01-02T23:59+01:00","23:59",locale);
+    try_get_formatted_time("2014-01-01T07:01+01:00","07:01",locale);
+    try_get_formatted_time("2014-01-02T15:00+01:00","15:00",locale);
+    try_get_formatted_time("2014-01-02T24:00+01:00","00:00",locale);
+    try_get_formatted_time("2014-01-02T12:00+01:00","12:00",locale);
 
   }
 
   void test_date() {
 
     std::locale locale = create_locale("blah");
-    try_get_formatted_date("2014-01-01T07:01","01/01/14",locale);
+    try_get_formatted_date("2014-01-01T07:01-05:00","01/01/14",locale);
 
     locale = create_locale("en_US.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
-    try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
-    try_get_formatted_date("2015-07-05T15:00","07/05/2015",locale);
+    try_get_formatted_date("2014-01-01T07:01-05:00","01/01/2014",locale);
+    try_get_formatted_date("2015-07-05T15:00-05:00","07/05/2015",locale);
 
     locale = create_locale("de_DE.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
-    try_get_formatted_date("2014-01-01T07:01","01.01.2014",locale);
-    try_get_formatted_date("2015-07-05T15:00","05.07.2015",locale);
+    try_get_formatted_date("2014-01-01T07:01+01:00","01.01.2014",locale);
+    try_get_formatted_date("2015-07-05T15:00+01:00","05.07.2015",locale);
 
     locale = create_locale("cs_CZ.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
-    try_get_formatted_date("2014-01-01T07:01","1.1.2014",locale);
-    try_get_formatted_date("2015-07-05T15:00","5.7.2015",locale);
-    try_get_formatted_date("2015-12-13T15:00","13.12.2015",locale);
+    try_get_formatted_date("2014-01-01T07:01+01:00","1.1.2014",locale);
+    try_get_formatted_date("2015-07-05T15:00+01:00","5.7.2015",locale);
+    try_get_formatted_date("2015-12-13T15:00+01:00","13.12.2015",locale);
 
     locale = create_locale("it_IT.utf8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
-    try_get_formatted_date("2014-01-01T07:01","01/01/2014",locale);
-    try_get_formatted_date("2015-07-05T15:00","05/07/2015",locale);
-    try_get_formatted_date("2015-12-13T15:00","13/12/2015",locale);
+    try_get_formatted_date("2014-01-01T07:01+01:00","01/01/2014",locale);
+    try_get_formatted_date("2015-07-05T15:00+01:00","05/07/2015",locale);
+    try_get_formatted_date("2015-12-13T15:00+01:00","13/12/2015",locale);
 
 
   }
