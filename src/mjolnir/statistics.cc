@@ -368,7 +368,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   file.open(file_str);
   file << *arr << std::endl;
   file.close();
-  LOG_INFO("MapRoulette tasks saved to /data/valhalla/tasks.json");
+  LOG_INFO("MapRoulette tasks saved to " + file_str);
 }
 }
 }
