@@ -80,6 +80,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
+	valhalla/mjolnir/statistics.h \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
@@ -111,6 +112,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \
 	src/mjolnir/pbfgraphparser.cc \
+	src/mjolnir/statistics.cc \
 	src/mjolnir/transitbuilder.cc \
 	src/mjolnir/util.cc \
 	src/mjolnir/graph_lua_proc.h \
@@ -128,6 +130,7 @@ bin_PROGRAMS = \
 	valhalla_build_transit \
 	valhalla_query_transit \
 	valhalla_ways_to_edges \
+	valhalla_build_speeds \
 	valhalla_build_statistics
 
 valhalla_benchmark_admins_SOURCES = src/mjolnir/valhalla_benchmark_admins.cc
@@ -157,6 +160,10 @@ valhalla_query_transit_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS
 valhalla_ways_to_edges_SOURCES = src/mjolnir/valhalla_ways_to_edges.cc
 valhalla_ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_ways_to_edges_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+
+valhalla_build_speeds_SOURCES = src/mjolnir/valhalla_build_speeds.cc
+valhalla_build_speeds_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_speeds_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lsqlite3 libvalhalla_mjolnir.la
 
 valhalla_build_statistics_SOURCES = src/mjolnir/valhalla_build_statistics.cc src/mjolnir/statistics.cc src/mjolnir/statistics_database.cc valhalla/mjolnir/statistics.h
 valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
