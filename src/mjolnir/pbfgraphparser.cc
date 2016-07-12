@@ -418,6 +418,14 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_speed(std::stof(tag.second));
         w.set_tagged_speed(true);
       }
+      else if (tag.first == "forward_speed") {
+        w.set_forward_speed(std::stof(tag.second));
+        w.set_forward_tagged_speed(true);
+      }
+      else if (tag.first == "backward_speed") {
+        w.set_backward_speed(std::stof(tag.second));
+        w.set_backward_tagged_speed(true);
+      }
 
       else if (tag.first == "maxspeed:hgv") {
         w.set_truck_speed(std::stof(tag.second));
@@ -551,8 +559,18 @@ struct graph_callback : public OSMPBF::Callback {
         }
       }
 
-      else if (tag.first == "lanes")
+      else if (tag.first == "lanes") {
         w.set_lanes(std::stoi(tag.second));
+        w.set_tagged_lanes(true);
+      }
+      else if (tag.first == "forward_lanes") {
+        w.set_forward_lanes(std::stoi(tag.second));
+        w.set_forward_tagged_lanes(true);
+      }
+      else if (tag.first == "backward_lanes") {
+        w.set_backward_lanes(std::stoi(tag.second));
+        w.set_backward_tagged_lanes(true);
+      }
 
       else if (tag.first == "tunnel")
         w.set_tunnel(tag.second == "true" ? true : false);
@@ -648,8 +666,19 @@ struct graph_callback : public OSMPBF::Callback {
     }
 
     //If no speed has been set by a user, assign a speed based on highway tag.
-    if (!w.tagged_speed())
+    if (!w.tagged_speed() && !w.forward_tagged_speed() && !w.backward_tagged_speed()) {
       w.set_speed(default_speed);
+    }
+
+    // I hope this does not happen, but it probably will (i.e., user sets forward speed
+    // and not the backward speed and vice versa.)
+    if (w.forward_tagged_speed() && !w.backward_tagged_speed() && !w.oneway()) {
+      w.set_backward_speed(w.forward_speed());
+      w.set_backward_tagged_speed(true);
+    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed() && !w.oneway()) {
+      w.set_forward_speed(w.backward_speed());
+      w.set_forward_tagged_speed(true);
+    }
 
     //default to drive on right.
     w.set_drive_on_right(true);
