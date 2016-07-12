@@ -87,7 +87,8 @@ check_PROGRAMS = \
 	test/encode \
 	test/tiles \
 	test/sequence \
-	test/util_midgard
+	test/util_midgard \
+	test/gridded_data
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
 test_point2_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
@@ -126,12 +127,14 @@ test_util_midgard_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
 test_util_midgard_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
 test_logging_SOURCES = test/logging.cc test/test.cc
 test_logging_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
-test_logging_LDFLAGS = -pthread
 test_logging_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
+test_logging_LDFLAGS = -pthread
 test_sequence_SOURCES = test/sequence.cc test/test.cc
-test_sequence_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
-test_sequence_LDFLAGS = -pthread
+test_sequence_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
 test_sequence_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
+test_gridded_data_SOURCES = test/gridded_data.cc test/test.cc
+test_gridded_data_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) 
+test_gridded_data_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

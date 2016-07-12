@@ -57,6 +57,7 @@ test/util_midgard
 test/logging
 test/sequence
 test/grid
+test/gridded_data
 nodes.nd
 test/*.log
 test/*.trs
