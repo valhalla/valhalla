@@ -51,7 +51,8 @@ nobase_include_HEADERS = \
 	valhalla/thor/pathinfo.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/thor/trippathbuilder.h \
-	valhalla/thor/service.h
+	valhalla/thor/service.h \
+	valhalla/thor/trafficalgorithm.h
 libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
@@ -67,7 +68,8 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/timedistancematrix.cc \
 	src/thor/trip_path.cc \
 	src/thor/trippathbuilder.cc \
-	src/thor/service.cc
+	src/thor/service.cc \
+	src/thor/trafficalgorithm.cc
 libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@
 
