@@ -497,6 +497,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         // Set name
         if (transit_stop->name_offset())
           transit_stop_info->set_name(graphtile->GetName(transit_stop->name_offset()));
+
+        // Set latitude and longitude
+        TripPath_LatLng* stop_ll = transit_stop_info->mutable_ll();
+        stop_ll->set_lat(node->latlng().lat());
+        stop_ll->set_lng(node->latlng().lng());
       }
 
       // Set the arrival time at this node (based on schedule from last trip
