@@ -50,6 +50,30 @@ struct OSMWay {
   float speed() const;
 
   /**
+   * Sets the backward speed
+   * @param  backward_speed   Speed in KPH.
+   */
+  void set_backward_speed(const float backward_speed);
+
+  /**
+   * Gets the backward speed in KPH.
+   * @return  Returns backward speed.
+   */
+  float backward_speed() const;
+
+  /**
+   * Sets the forward speed
+   * @param  forward_speed   Speed in KPH.
+   */
+  void set_forward_speed(const float forward_speed);
+
+  /**
+   * Gets the forward speed in KPH.
+   * @return  Returns forward speed.
+   */
+  float forward_speed() const;
+
+  /**
    * Sets the truck speed
    * @param  speed   Truck speed in KPH.
    */
@@ -520,6 +544,30 @@ struct OSMWay {
   uint32_t lanes() const;
 
   /**
+   * Sets the number of backward lanes
+   * @param  backward_lanes  Number of backward lanes
+   */
+  void set_backward_lanes(const uint32_t backward_lanes);
+
+  /**
+   * Get the number of backward lanes
+   * @return  Returns number of backward lanes.
+   */
+  uint32_t backward_lanes() const;
+
+  /**
+   * Sets the number of forward lanes
+   * @param  forward_lanes  Number of forward lanes
+   */
+  void set_forward_lanes(const uint32_t forward_lanes);
+
+  /**
+   * Get the number of forward lanes
+   * @return  Returns number of forward lanes.
+   */
+  uint32_t forward_lanes() const;
+
+  /**
    * Sets the tunnel flag.
    * @param  tunnel   Is a tunnel road?
    */
@@ -628,6 +676,66 @@ struct OSMWay {
   bool tagged_speed() const;
 
   /**
+   * Sets the forward tagged_speed flag.
+   * @param  forward_tagged_speed  User specified speed?
+   */
+  void set_forward_tagged_speed(const bool forward_tagged_speed);
+
+  /**
+   * Get the forward_tagged_speed flag.
+   * @return  Returns forward_tagged_speed flag.
+   */
+  bool forward_tagged_speed() const;
+
+  /**
+   * Sets the backward tagged_speed flag.
+   * @param  backward_tagged_speed  User specified speed?
+   */
+  void set_backward_tagged_speed(const bool backward_tagged_speed);
+
+  /**
+   * Get the backward_tagged_speed flag.
+   * @return  Returns backward_tagged_speed flag.
+   */
+  bool backward_tagged_speed() const;
+
+  /**
+    * Sets the tagged_lanes flag.
+    * @param  tagged_lanes  User specified lanes?
+    */
+   void set_tagged_lanes(const bool tagged_lanes);
+
+   /**
+    * Get the tagged_lanes flag.
+    * @return  Returns tagged_lanes flag.
+    */
+   bool tagged_lanes() const;
+
+   /**
+    * Sets the forward tagged_lanes flag.
+    * @param  forward_tagged_lanes  User specified lanes?
+    */
+   void set_forward_tagged_lanes(const bool forward_tagged_lanes);
+
+   /**
+    * Get the forward_tagged_lanes flag.
+    * @return  Returns forward_tagged_lanes flag.
+    */
+   bool forward_tagged_lanes() const;
+
+   /**
+    * Sets the backward tagged_lanes flag.
+    * @param  backward_tagged_lanes  User specified lanes?
+    */
+   void set_backward_tagged_lanes(const bool backward_tagged_lanes);
+
+   /**
+    * Get the backward_tagged_lanes flag.
+    * @return  Returns backward_tagged_lanes flag.
+    */
+   bool backward_tagged_lanes() const;
+
+  /**
    * Sets the truck route flag.
    * @param  truck_route  Is this part of the local, national,
    *                      or state truck network or designated truck way?
@@ -717,26 +825,30 @@ struct OSMWay {
   // Way attributes
   union WayAttributes {
     struct Fields {
-      uint32_t destination_only :1;
-      uint32_t no_thru_traffic  :1;
-      uint32_t oneway           :1;
-      uint32_t roundabout       :1;
-      uint32_t ferry            :1;
-      uint32_t rail             :1;
-      uint32_t surface          :3;
-      uint32_t cycle_lane       :2;
-      uint32_t lanes            :4;
-      uint32_t tunnel           :1;
-      uint32_t toll             :1;
-      uint32_t bridge           :1;
-      uint32_t seasonal         :1;
-      uint32_t hov              :1;
-      uint32_t drive_on_right   :1;
-      uint32_t bike_network     :4;
-      uint32_t exit             :1;
-      uint32_t tagged_speed     :1;
-      uint32_t truck_route      :1;
-      uint32_t spare            :4;
+      uint32_t destination_only       :1;
+      uint32_t no_thru_traffic        :1;
+      uint32_t oneway                 :1;
+      uint32_t roundabout             :1;
+      uint32_t ferry                  :1;
+      uint32_t rail                   :1;
+      uint32_t surface                :3;
+      uint32_t cycle_lane             :2;
+      uint32_t tunnel                 :1;
+      uint32_t toll                   :1;
+      uint32_t bridge                 :1;
+      uint32_t seasonal               :1;
+      uint32_t hov                    :1;
+      uint32_t drive_on_right         :1;
+      uint32_t bike_network           :4;
+      uint32_t exit                   :1;
+      uint32_t tagged_speed           :1;
+      uint32_t forward_tagged_speed   :1;
+      uint32_t backward_tagged_speed  :1;
+      uint32_t tagged_lanes           :1;
+      uint32_t forward_tagged_lanes   :1;
+      uint32_t backward_tagged_lanes  :1;
+      uint32_t truck_route            :1;
+      uint32_t spare                  :3;
     } fields;
     uint32_t v;
   };
@@ -747,7 +859,10 @@ struct OSMWay {
       uint32_t road_class        :3;     // Importance of the road/path
       uint32_t link              :1;     // *link tag - Ramp or turn channel
       uint32_t use               :6;     // Use / form
-      uint32_t spare             :22;    // Spare
+      uint32_t lanes             :4;
+      uint32_t forward_lanes     :4;
+      uint32_t backward_lanes    :4;
+      uint32_t spare             :10;    // Spare
     } fields;
     uint32_t v;
   };
@@ -780,6 +895,12 @@ struct OSMWay {
 
   // Speed in kilometers per hour
   uint8_t speed_;
+
+  // Speed in kilometers per hour
+  uint8_t backward_speed_;
+
+  // Speed in kilometers per hour
+  uint8_t forward_speed_;
 
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
