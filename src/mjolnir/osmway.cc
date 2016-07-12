@@ -580,7 +580,7 @@ bool  OSMWay::forward_tagged_speed() const {
   return attributes_.fields.forward_tagged_speed;
 }
 
-// Sets the tagged_forward speed flag.
+// Sets the tagged_backward speed flag.
 void  OSMWay::set_backward_tagged_speed(const bool backward_tagged_speed) {
   attributes_.fields.backward_tagged_speed = backward_tagged_speed;
 }
