@@ -80,7 +80,6 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
-	valhalla/mjolnir/statistics.h \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
