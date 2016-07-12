@@ -417,55 +417,45 @@ void seconds_to_date(const bool is_depart_at,
     boost::gregorian::date d_date = dest_date_time.local_time().date();
 
     if (is_depart_at && dest_date_time.is_dst()) {
-
       boost::gregorian::date dst_date = dest_tz->dst_local_end_time(d_date.year()).date();
       bool in_range = (o_date <= dst_date && dst_date <= d_date);
 
-      if (in_range) // in range meaning via the dates.
-      {
-         if (o_date == dst_date)
-         {
-           // must start before dst end time - the offset otherwise the time is ambiguous
-           in_range = origin_date_time.local_time().time_of_day() <
-               (dest_tz->dst_local_end_time(d_date.year()).time_of_day() - dest_tz->dst_offset());
+      if (in_range) { // in range meaning via the dates.
+        if (o_date == dst_date) {
+          // must start before dst end time - the offset otherwise the time is ambiguous
+          in_range = origin_date_time.local_time().time_of_day() <
+              (dest_tz->dst_local_end_time(d_date.year()).time_of_day() - dest_tz->dst_offset());
 
-            if (in_range)
-            {
-               // starts and ends on the same day.
-               if (o_date == d_date)
-                 in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
-            }
-         }
-         else if (dst_date == d_date)
-           in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+          if (in_range) {
+            // starts and ends on the same day.
+            if (o_date == d_date)
+              in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
+          }
+        }
+        else if (dst_date == d_date)
+          in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <= dest_date_time.local_time().time_of_day();
       }
-
       if (in_range)
         dest_date_time -= dest_tz->dst_offset();
     }
 
     if (!is_depart_at) {
-
       boost::gregorian::date dst_date = origin_tz->dst_local_end_time(o_date.year()).date();
       bool in_range = (o_date <= dst_date && dst_date <= d_date);
 
-      if (in_range) // in range meaning via the dates.
-      {
-         if (o_date == dst_date)
-         {
-           // must start before dst end time
-           in_range = origin_date_time.local_time().time_of_day() <=
-               (origin_tz->dst_local_end_time(o_date.year()).time_of_day());
+      if (in_range) { // in range meaning via the dates.
+        if (o_date == dst_date) {
+          // must start before dst end time
+          in_range = origin_date_time.local_time().time_of_day() <=
+              (origin_tz->dst_local_end_time(o_date.year()).time_of_day());
 
-            if (in_range)
-            {
-               // starts and ends on the same day.
-               if (o_date == d_date)
-                 in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() > dest_date_time.local_time().time_of_day();
-            }
-         }
-         else if (dst_date == d_date)
-           in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() > dest_date_time.local_time().time_of_day();
+          if (in_range) {
+            // starts and ends on the same day.
+            if (o_date == d_date)
+              in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() > dest_date_time.local_time().time_of_day();
+          }
+        } else if (dst_date == d_date)
+          in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() > dest_date_time.local_time().time_of_day();
       }
 
       if (in_range)
