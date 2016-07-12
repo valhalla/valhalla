@@ -27,8 +27,9 @@ class GriddedData : public Tiles<coord_t> {
    * tiles.
    * @param  pt     Coordinate to set within the tiles.
    * @param  value  Value to set at the tile/grid location.
+   * @return whether or not the value was set
    */
-  void Set(const coord_t& pt, const float value);
+  bool Set(const coord_t& pt, const float value);
 
   /**
    * Set the value at a specified point if the value is less than the current
@@ -36,8 +37,9 @@ class GriddedData : public Tiles<coord_t> {
    * tiles.
    * @param  pt     Coordinate to set within the tiles.
    * @param  value  Value to set at the tile/grid location.
+   * @return whether or not the value was set
    */
-  void SetIfLessThan(const coord_t& pt, const float value);
+  bool SetIfLessThan(const coord_t& pt, const float value);
 
   /**
    * Get the array of data.
@@ -45,10 +47,13 @@ class GriddedData : public Tiles<coord_t> {
    */
   const std::vector<float>& data() const;
 
+  //TODO: a data structure to hold the contours
+  //TODO: a function to turn said object into geojson
+
   /**
    * Generate contour lines from the gridded data.
    */
-  void GenerateContourLines(const std::vector<float> contours);
+  void GenerateContourLines(const std::vector<float>& contours);
 
  protected:
   std::vector<float> data_;                  // Data value within each tile

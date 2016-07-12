@@ -14,32 +14,30 @@ GriddedData<coord_t>::GriddedData(const AABB2<coord_t>& bounds, const float tile
             const float value)
     : Tiles<coord_t>(bounds, tilesize) {
   // Resize the data vector and fill with the value
-  data_.resize(this->nrows() * this->ncolumns());
+  data_.resize(this->nrows_ * this->ncolumns_);
   std::fill(data_.begin(), data_.end(), value);
 }
 
 // Set the value at a specified coordinate.
 template <class coord_t>
-void GriddedData<coord_t>::Set(const coord_t& pt, const float value) {
-  int32_t cell_id = this->TileId(pt);
-  if (cell_id > 0 && cell_id < data_.size()) {
+bool GriddedData<coord_t>::Set(const coord_t& pt, const float value) {
+  auto cell_id = this->TileId(pt);
+  if (cell_id >= 0 && cell_id < data_.size()) {
     data_[cell_id] = value;
-  } else {
-    LOG_ERROR("Trying to set a value outside the tile");
+    return true;
   }
+  return false;
 }
 
 // Set the value at a specified coordinate if less than the current value
 template <class coord_t>
-void GriddedData<coord_t>::SetIfLessThan(const coord_t& pt, const float value) {
+bool GriddedData<coord_t>::SetIfLessThan(const coord_t& pt, const float value) {
   int32_t cell_id = this->TileId(pt);
-  if (cell_id > 0 && cell_id < data_.size()) {
-    if (value < data_[cell_id]) {
+  if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
       data_[cell_id] = value;
-    }
-  } else {
-    LOG_ERROR("Trying to set a value outside the tile");
+      return true;
   }
+  return false;
 }
 
 // Get the array of times
@@ -53,22 +51,22 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-void GriddedData<coord_t>::GenerateContourLines(const std::vector<float> contours) {
+void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contours) {
+  //TODO: sort and validate contours
+
   // Values at tile corners and center (0 element is center)
   int sh[5];
-  float s[5];               // Values at the tile corners and center
+  typename coord_t::first_type s[5];               // Values at the tile corners and center
   coord_t tile_corners[5];    // coord_t at tile corners and center
 
   // Find the intersection along a tile edge
   auto sect = [&tile_corners, &s](const int p1, const int p2) {
-    float ds = s[p2] - s[p1];
+    auto ds = s[p2] - s[p1];
     return coord_t((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
                    (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
   };
 
-  int nrows = this->nrows();
-  int ncols = this->ncolumns();
-  int tile_inc[4] = { 0, 1, ncols + 1, ncols };
+  int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
   int case_value;
   int case_table[3][3][3] = {
      { {0,0,8},{0,2,5},{7,6,9} },
@@ -76,16 +74,16 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float> contour
      { {9,6,7},{5,2,0},{8,0,0} }
    };
 
-  for (int row = nrows - 1; row >= 0; row--) {
-    for (int col = 0; col <= ncols - 1; col++) {
+  for (int row = this->nrows_ - 1; row >= 0; row--) {
+    for (int col = 0; col <= this->ncolumns_ - 1; col++) {
       int tileid = this->TileId(col, row);
-      uint16_t cell1 = data_[tileid];
-      uint16_t cell2 = data_[tileid + ncols];     // TileId(col, row+1)];
-      uint16_t cell3 = data_[tileid + 1];         // TileId(col+1, row)];
-      uint16_t cell4 = data_[tileid + ncols + 1]; // TileId(col+1, row+1)];
-      uint16_t dmin  = std::min(std::min(cell1, cell2),
+      auto cell1 = data_[tileid];
+      auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col, row+1)];
+      auto cell3 = data_[tileid + 1];         // TileId(col+1, row)];
+      auto cell4 = data_[tileid + this->ncolumns_ + 1]; // TileId(col+1, row+1)];
+      auto dmin  = std::min(std::min(cell1, cell2),
                                 std::min(cell3, cell4));
-      uint16_t dmax  = std::max(std::max(cell1, cell2),
+      auto dmax  = std::max(std::max(cell1, cell2),
                                 std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
@@ -203,7 +201,8 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float> contour
 template <class coord_t>
 void GriddedData<coord_t>::AddToContourLine(const coord_t& pt1,
                       const coord_t& pt2, const int k) {
-  // TODO!!!
+  //LOG_INFO(std::to_string(k) + " | (" + std::to_string(pt1.first) + "," + std::to_string(pt1.second) +
+   //        ") -> (" + std::to_string(pt2.first) + "," + std::to_string(pt2.second) + ")");
 }
 
 // Explicit instantiation
