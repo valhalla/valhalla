@@ -1,5 +1,5 @@
 
-#include "mjolnir/statistics.h"
+#include "statistics.h"
 
 #include <ostream>
 #include <boost/format.hpp>
