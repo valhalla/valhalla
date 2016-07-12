@@ -38,6 +38,7 @@ valhalla_build_tiles
 valhalla_build_transit
 valhalla_query_transit
 valhalla_ways_to_edges
+valhalla_build_speeds
 valhalla_build_statistics
 *.o
 .deps/
@@ -64,9 +65,11 @@ test/refs
 test/graphparser
 test/signinfo
 test/utrecht
+test/countryaccess
 test/*.log
 test/*.trs
 test/data/bin_tiles/bin/*
+test/data/amsterdam_tiles
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 

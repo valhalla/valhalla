@@ -21,7 +21,8 @@ uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges);
 void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
+                     const std::string& way_nodes_file,
                      DataQuality& stats);
 }
 }
-#endif  // VALHALLA_MJOLNIR_NODE_EXPANDER_H_
+#endif  // VALHALLA_MJOLNIR_LINK_CLASSIFICATION_H_

@@ -1,5 +1,7 @@
+#include "mjolnir/admin.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/countryaccess.h"
 
 #include <memory>
 #include <future>
@@ -22,8 +24,13 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -34,10 +41,7 @@
 #include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+#include "mjolnir/osmaccess.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -537,169 +541,6 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   return relative_density;
 }
 
-// Get polygon index.  Used by tz and admin areas
-uint32_t GetMultiPolyId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
-  uint32_t index = 0;
-  point_type p(ll.lng(), ll.lat());
-  for (const auto& poly : polys) {
-    if (boost::geometry::covered_by(p, poly.second))
-      return poly.first;
-  }
-  return index;
-}
-
-std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
-                                                             const AABB2<PointLL>& aabb) {
-  std::unordered_map<uint32_t,multi_polygon_type> polys;
-  if (!db_handle)
-    return polys;
-
-  sqlite3_stmt *stmt = 0;
-  uint32_t ret;
-  char *err_msg = nullptr;
-  uint32_t result = 0;
-
-  std::string sql = "select TZID, st_astext(geom) from tz_world where ";
-  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) ";
-  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'tz_world' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + "));";
-
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-
-  if (ret == SQLITE_OK) {
-    result = sqlite3_step(stmt);
-
-    while (result == SQLITE_ROW) {
-      std::string tz_id;
-      std::string geom;
-
-      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
-        tz_id = (char*)sqlite3_column_text(stmt, 0);
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
-        geom = (char*)sqlite3_column_text(stmt, 1);
-
-      uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
-      if (idx == 0) {
-        result = sqlite3_step(stmt);
-        continue;
-      }
-
-      multi_polygon_type multi_poly;
-      boost::geometry::read_wkt(geom, multi_poly);
-      polys.emplace(idx, multi_poly);
-
-      result = sqlite3_step(stmt);
-    }
-  }
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
-  }
-  return polys;
-}
-
-std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
-                                                             const AABB2<PointLL>& aabb, GraphTileBuilder& tilebuilder) {
-  std::unordered_map<uint32_t,multi_polygon_type> polys;
-  if (!db_handle)
-    return polys;
-
-  sqlite3_stmt *stmt = 0;
-  uint32_t ret;
-  char *err_msg = nullptr;
-  uint32_t result = 0;
-  uint32_t id = 0;
-  bool dor = true;
-  std::string geom;
-  std::string country_name, state_name, country_iso, state_iso;
-
-  std::string sql = "SELECT state.rowid, country.name, state.name, country.iso_code, ";
-  sql += "state.iso_code, state.drive_on_right, st_astext(state.geom) ";
-  sql += "from admins state, admins country where ";
-  sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and ";
-  sql += "country.rowid = state.parent_admin and state.admin_level=4 ";
-  sql += "and state.rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + "));";
-
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-
-  if (ret == SQLITE_OK) {
-    result = sqlite3_step(stmt);
-    if (result == SQLITE_DONE) { //state/prov not found, try to find country
-
-      sql = "SELECT rowid, name, \"\", iso_code, \"\", drive_on_right, st_astext(geom) from ";
-      sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-      sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-      sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
-      sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-      sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-      sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-      sql += std::to_string(aabb.maxy()) + "));";
-
-      sqlite3_finalize(stmt);
-      stmt = 0;
-      ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-
-      if (ret == SQLITE_OK) {
-        result = 0;
-        result = sqlite3_step(stmt);
-      }
-    }
-    while (result == SQLITE_ROW) {
-
-      id = sqlite3_column_int(stmt, 0);
-
-      country_name = "";
-      state_name = "";
-      country_iso = "";
-      state_iso = "";
-
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
-        country_name = (char*)sqlite3_column_text(stmt, 1);
-
-      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
-        state_name = (char*)sqlite3_column_text(stmt, 2);
-
-      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
-        country_iso = (char*)sqlite3_column_text(stmt, 3);
-
-      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
-        state_iso = (char*)sqlite3_column_text(stmt, 4);
-
-      dor = true;
-      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
-        dor = sqlite3_column_int(stmt, 5);
-
-      geom = "";
-      if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
-        geom = (char*)sqlite3_column_text(stmt, 6);
-
-      uint32_t index = tilebuilder.AddAdmin(country_name,state_name,
-                                            country_iso,state_iso);
-      multi_polygon_type multi_poly;
-      boost::geometry::read_wkt(geom, multi_poly);
-      polys.emplace(index, multi_poly);
-      drive_on_right.emplace(index, dor);
-
-      result = sqlite3_step(stmt);
-    }
-  }
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
-  }
-
-  return polys;
-}
-
 /**
  * Returns true if edge transition is a pencil point u-turn, false otherwise.
  * A pencil point intersection happens when a doubly-digitized road transitions
@@ -930,14 +771,8 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
 
-  // if we are continuing on a cycleway, reduce the cost by half
-  if (edges[from].use() == Use::kCycleway && edges[to].use() == Use::kCycleway)
-    stop_impact *= 0.5f;
-
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
-
-  // TODO:Increase stop level based on classification of edges
 
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved.
@@ -947,11 +782,11 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     // Increase stop impact on merge
     stop_impact += 2;
   } else if (edges[from].use() == Use::kTurnChannel) {
-      if (edges[to].use() == Use::kRamp) {
-        stop_impact += 1;
-      } else {
-        stop_impact /= 2;
-      }
+    if (edges[to].use() == Use::kRamp) {
+      stop_impact += 1;
+    } else {
+      stop_impact /= 2;
+    }
   }
 
   // Clamp to kMaxStopImpact
@@ -1067,71 +902,21 @@ bool ConsistentNames(const std::string& country_code,
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
+             const std::string& access_file,
              const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue, std::mutex& lock,
              std::promise<enhancer_stats>& result) {
 
+  auto less_than = [](const OSMAccess& a, const OSMAccess& b){return a.way_id() < b.way_id();};
+  sequence<OSMAccess> access_tags(access_file, false);
+
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  sqlite3 *admin_db_handle = nullptr;
-  if (database && boost::filesystem::exists(*database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
-    std::string sql;
-    uint32_t ret = sqlite3_open_v2(database->c_str(), &admin_db_handle,
-                        SQLITE_OPEN_READONLY, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + *database);
-      sqlite3_close(admin_db_handle);
-      admin_db_handle = nullptr;
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(admin_db_handle, 1);
-    sql = "SELECT load_extension('libspatialite')";
-    ret = sqlite3_exec(admin_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(admin_db_handle);
-      return;
-    }
-  }
-  else
+  sqlite3 *admin_db_handle = GetDBHandle(*database);
+  if (!admin_db_handle)
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
 
-  database = pt.get_optional<std::string>("timezone");
-  // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = nullptr;
-  if (database && boost::filesystem::exists(*database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
-    std::string sql;
-    uint32_t ret = sqlite3_open_v2(database->c_str(), &tz_db_handle,
-                        SQLITE_OPEN_READONLY, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + *database);
-      sqlite3_close(tz_db_handle);
-      admin_db_handle = nullptr;
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(tz_db_handle, 1);
-    sql = "SELECT load_extension('libspatialite')";
-    ret = sqlite3_exec(tz_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(tz_db_handle);
-      return;
-    }
-  }
-  else
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
+  std::unordered_map<std::string, std::vector<int>> country_access = GetCountryAccess(admin_db_handle);
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -1167,40 +952,13 @@ void enhance(const boost::property_tree::ptree& pt,
     GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
     lock.unlock();
 
-    // Create a dummy admin record at index 0. Used if admin records
-    // are not used/created or if none is found.
-    tilebuilder.AddAdmin("None","None","","");
-
     // this will be our updated list of restrictions.
     // need to do some conversions on weights; therefore, we must update
     // the restriction list.
     uint32_t ar_before = tilebuilder.header()->access_restriction_count();
     std::vector<AccessRestriction> access_restrictions;
 
-    // Get the admin polygons. If only one exists for the tile check if the
-    // tile is entirely inside the polygon
-    bool tile_within_one_admin = false;
     uint32_t id  = tile_id.tileid();
-    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
-    std::unordered_map<uint32_t,bool> drive_on_right;
-    if (admin_db_handle) {
-      admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
-                           tilebuilder);
-      if (admin_polys.size() == 1) {
-        // TODO - check if tile bounding box is entirely inside the polygon...
-        tile_within_one_admin = true;
-      }
-    }
-
-    bool tile_within_one_tz = false;
-    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
-    if (tz_db_handle) {
-      tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id));
-      if (tz_polys.size() == 1) {
-        tile_within_one_tz = true;
-      }
-    }
-
     // First pass - update links (set use to ramp or turn channel) and
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
@@ -1225,7 +983,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // If this edge is a link, update its use (potentially change short
         // links to turn channels)
         if (directededge.link()) {
-          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
+//          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
           if (directededge.use() == Use::kTurnChannel) {
             stats.turnchannelcount++;
           } else {
@@ -1249,18 +1007,7 @@ void enhance(const boost::property_tree::ptree& pt,
                                     stats, tiles, local_level);
       nodeinfo.set_density(density);
 
-      // Set admin index
-      uint32_t admin_index = (tile_within_one_admin) ?
-                    admin_polys.begin()->first :
-                    GetMultiPolyId(admin_polys, nodeinfo.latlng());
-      nodeinfo.set_admin_index(admin_index);
-
-      // Set the time zone index
-      uint32_t tz_index = (tile_within_one_tz) ?
-                    tz_polys.begin()->first :
-                    GetMultiPolyId(tz_polys, nodeinfo.latlng());
-      nodeinfo.set_timezone(tz_index);
-
+      uint32_t admin_index = nodeinfo.admin_index();
       // Set the country code
       std::string country_code = "";
       if (admin_index != 0)
@@ -1277,7 +1024,8 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
+        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        auto shape = e_offset->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
         heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
@@ -1305,12 +1053,54 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
+        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        std::string end_node_code = "";
+        uint32_t end_admin_index = 0;
+        // Get the tile at the end node
+        const GraphTile* endnodetile = nullptr;
+        if (tile->id() == directededge.endnode().Tile_Base()) {
+          end_admin_index = tile->node(directededge.endnode().id())->admin_index();
+          end_node_code = tile->admin(end_admin_index)->country_iso();
+        } else {
+          lock.lock();
+          endnodetile = reader.GetGraphTile(directededge.endnode());
+          lock.unlock();
+          end_admin_index = endnodetile->node(directededge.endnode().id())->admin_index();
+          end_node_code = endnodetile->admin(end_admin_index)->country_iso();
+        }
+
+        // only process country access logic if the iso country codes match.
+        if (country_code == end_node_code) {
+
+          // country access logic.
+          // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
+          // struct, then this means that it has been set by a user of the
+          // OpenStreetMap community.  Therefore, we will not override this tag with the
+          // country defaults.  Otherwise, country specific access wins.
+          // Currently, overrides only exist for Trunk RC and Uses below.
+          OSMAccess target{e_offset->wayid()};
+
+          if (admin_index != 0 && country_access.find(country_code) != country_access.end() &&
+              (directededge.classification() == RoadClass::kTrunk ||
+                  directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
+                  directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
+                  directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
+
+            if (directededge.leaves_tile())
+              access_tags.find(target,less_than);
+            else target = OSMAccess{e_offset->wayid()};
+
+            std::vector<int> access = country_access.at(country_code);
+            SetCountryAccess(directededge, access, target);
+          }
+        }
+
+        // Use::kPedestrian is really a kFootway
+        if (directededge.use() == Use::kPedestrian)
+          directededge.set_use(Use::kFootway);
+
         // Update speed.
         UpdateSpeed(directededge, density);
-
-        // Set drive on right flag
-        if (admin_index != 0)
-          directededge.set_drive_on_right(drive_on_right[admin_index]);
 
         // Name continuity - set in NodeInfo. Do not set this for transit
         // nodes since the stop Id is stored in that field (union).
@@ -1418,9 +1208,6 @@ void enhance(const boost::property_tree::ptree& pt,
   if (admin_db_handle)
     sqlite3_close (admin_db_handle);
 
-  if (tz_db_handle)
-    sqlite3_close (tz_db_handle);
-
   // Send back the statistics
   result.set_value(stats);
 }
@@ -1431,7 +1218,8 @@ namespace valhalla {
 namespace mjolnir {
 
 // Enhance the local level of the graph
-void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
+void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
+                            const std::string& access_file) {
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(
     std::max(static_cast<unsigned int>(1),
@@ -1466,6 +1254,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
                  std::cref(pt.get_child("mjolnir")),
+                 std::cref(access_file),
                  std::ref(hierarchy_properties), std::ref(tilequeue),
                  std::ref(lock), std::ref(results.back())));
   }

@@ -1,291 +1,569 @@
+
+#include "mjolnir/statistics.h"
+
+#include <ostream>
+#include <boost/format.hpp>
+#include <boost/program_options.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <sstream>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <boost/format.hpp>
-#include <sqlite3.h>
+#include <utility>
+#include <queue>
+#include <list>
+#include <thread>
+#include <future>
+#include <mutex>
 
-#include <valhalla/baldr/json.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/nodeinfo.h>
 
-using dataPair = std::pair<std::vector<std::string>*, std::unordered_map<std::string, std::vector<float>>*>;
+using namespace valhalla::midgard;
+using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
 
-/*
- * Handle errors returned from the db
- * Params
- *  rc - response code from previous sqlite3_exec call
- *  errMsg - char* passed into the previous sqlite3_exec call
- * Post
- *  returns normally if there is not error
- *  prints the db error and exits if an error occurred
- */
-void checkDBResponse(int rc, char* errMsg) {
-  if ( rc != SQLITE_OK ) {
-    std::cout << "SQL error: " << errMsg << std::endl;
-    sqlite3_free(errMsg);
-    exit(0);
+namespace bpo = boost::program_options;
+boost::filesystem::path config_file_path;
+
+namespace {
+
+struct HGVRestrictionTypes {
+  bool hazmat;
+  bool axle_load;
+  bool height;
+  bool length;
+  bool weight;
+  bool width;
+};
+
+bool IsPedestrianTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode,
+                const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge,
+                statistics::RouletteData& rd,
+                const uint32_t idx) {
+
+  bool is_terminal = true;
+  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+
+    if (i == idx)
+      continue;
+
+    if (((diredge->reverseaccess() & kPedestrianAccess) ||
+        (diredge->forwardaccess() & kPedestrianAccess)) &&
+        (!(diredge->forwardaccess() & kAutoAccess) &&
+          !(diredge->reverseaccess() & kAutoAccess))){
+      continue;
+    }
+    else {
+      is_terminal = false;
+      break;
+    }
+  }
+
+  if (is_terminal) {
+    if (startnodeinfo.edge_count() > 1) {
+      rd.AddTask(startnodeinfo.latlng(),
+                 tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+                 tile.edgeinfo(directededge.edgeinfo_offset())->shape());
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsLoopTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode,
+                const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge,
+                statistics::RouletteData& rd) {
+
+  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
+  uint32_t inbound = 0, outbound = 0;
+
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+
+    if (((diredge->forwardaccess() & kAutoAccess) &&
+        !(diredge->reverseaccess() & kAutoAccess)) ||
+        ((diredge->forwardaccess() & kAutoAccess) &&
+         (diredge->reverseaccess() & kAutoAccess)))
+      outbound++;
+
+    if ((!(diredge->forwardaccess() & kAutoAccess) &&
+        (diredge->reverseaccess() & kAutoAccess)) ||
+        ((diredge->forwardaccess() & kAutoAccess) &&
+         (diredge->reverseaccess() & kAutoAccess)))
+      inbound++;
+  }
+
+  if ((outbound >= 2 && inbound == 0) || (inbound >= 2 && outbound == 0)) {
+    rd.AddTask(startnodeinfo.latlng(),
+               tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
+               tile.edgeinfo(directededge.edgeinfo_offset())->shape());
+    return true;
+  }
+  return false;
+}
+
+bool IsReversedOneway(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
+                const GraphId& startnode,
+                const NodeInfo& startnodeinfo,
+                const DirectedEdge& directededge,
+                statistics::RouletteData& rd) {
+
+  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
+  uint32_t inbound = 0, outbound = 0;
+
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+
+    if ((diredge->forwardaccess() & kAutoAccess) &&
+        !(diredge->reverseaccess() & kAutoAccess))
+      outbound++;
+
+    if (!(diredge->forwardaccess() & kAutoAccess) &&
+        (diredge->reverseaccess() & kAutoAccess))
+      inbound++;
+  }
+
+  if (!outbound && inbound)
+  {
+    const GraphId endnode = directededge.endnode();
+    const NodeInfo* endnodeinfo;
+    const GraphTile* tile_ptr;
+    if (endnode.tileid() == startnode.tileid()) {
+      tile_ptr = &tile;
+      endnodeinfo = tile_ptr->node(endnode.id());
+    } else {
+      tile_ptr = reader.GetGraphTile(endnode);
+      endnodeinfo = tile_ptr->node(endnode.id());
+    }
+
+    const DirectedEdge* diredge = tile_ptr->directededge(endnodeinfo->edge_index());
+    uint32_t inbound = 0, outbound = 0;
+
+    for (uint32_t i = 0; i < endnodeinfo->edge_count(); i++, diredge++) {
+
+      if ((diredge->forwardaccess() & kAutoAccess) &&
+          !(diredge->reverseaccess() & kAutoAccess))
+        outbound++;
+
+      if (!(diredge->forwardaccess() & kAutoAccess) &&
+          (diredge->reverseaccess() & kAutoAccess))
+        inbound++;
+    }
+
+    if (!outbound && inbound) {
+      rd.AddTask(startnodeinfo.latlng(),
+                 tile_ptr->edgeinfo(directededge.edgeinfo_offset())->wayid(),
+                 tile_ptr->edgeinfo(directededge.edgeinfo_offset())->shape());
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
+                   const GraphId& startnode, const NodeInfo& startnodeinfo,
+                   const DirectedEdge& directededge, statistics& stats) {
+  // If this edge is right after a motorway junction it is an exit and should
+  // have signs
+  if (startnodeinfo.type() == NodeType::kMotorWayJunction){
+    // Check to see if the motorway continues, if it does, this is an exit ramp,
+    // otherwise if all forward edges are links, it is a fork
+    const GraphTile* tile = reader.GetGraphTile(startnode);
+    const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
+    std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
+    std::vector<std::pair<std::string, bool>> ctry_fork_signs;
+    // Assume it is a fork
+    bool fork = true;
+    for (size_t i = 0; i < startnodeinfo.edge_count(); ++i, ++otheredge) {
+      // If it is an outgoing edge that is not a link, it is not a fork
+      if (((otheredge->forwardaccess() & kAutoAccess) &&
+            !(otheredge->reverseaccess() & kAutoAccess)) &&
+          !otheredge->link()) {
+        fork = false;
+        // no need to keep checking if it's not a fork
+        break;
+      } else {
+        // store exit info in case this is a fork
+        std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
+        tile_fork_signs.push_back({tile->id(), otheredge->exitsign()});
+        ctry_fork_signs.push_back({iso_code, otheredge->exitsign()});
+      }
+    }
+    // If it was a fork, store the data appropriately
+    if (fork) {
+      for (auto& sign : tile_fork_signs)
+        stats.add_fork_exitinfo(sign);
+      for (auto& sign : ctry_fork_signs)
+        stats.add_fork_exitinfo(sign);
+    } else {
+      // Otherwise store original edge info as a normal exit
+      std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
+      stats.add_exitinfo({tile->id(), directededge.exitsign()});
+      stats.add_exitinfo({iso_code, directededge.exitsign()});
+    }
   }
 }
 
-/*
- * Callback function that gets the column names from the database
- */
-static int classCallback (void *data, int argc, char **argv, char **colName) {
-  std::vector<std::string> *cat = (std::vector<std::string>*) data;
-  for (int i = 1; i < argc; ++i) {
-    cat->push_back(colName[i]);
+void AddStatistics(statistics& stats, const DirectedEdge& directededge,
+    const uint32_t tileid, std::string& begin_node_iso,
+    HGVRestrictionTypes& hgv, const GraphTile& tile,
+    GraphReader& graph_reader, std::mutex& lock, GraphId& node,
+    const NodeInfo& nodeinfo, uint32_t idx) {
+
+  auto rclass = directededge.classification();
+  float edge_length = (tileid == directededge.endnode().tileid()) ?
+    directededge.length() * 0.5f : directededge.length() * 0.25f;
+
+  // Add truck stats.
+  if (directededge.truck_route()) {
+    stats.add_tile_truck_route(tileid, rclass, edge_length);
+    stats.add_country_truck_route(begin_node_iso, rclass, edge_length);
   }
-  cat->push_back("total");
-  return 0;
-}
-
-/*
- * Queries the database to get road class types
- * Params
- *  *db - sqlite3 database connection object
- *  classes - a vector of strings representing the road types
- *
- * Post
- *  The array containing the road classes is filled
- */
-void fillClasses(sqlite3 *db, std::vector<std::string>& classes) {
- 
-  std::string sql = "SELECT * FROM countrydata LIMIT 1";
-  char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), classCallback, (void*) &classes, &errMsg);
-  checkDBResponse(rc, errMsg);
-}
-
-/*
- * Callback function to reveive query results from sqlite3_exec
- * Params
- *  *dataPair - the pointer used to pass data structures into this function
- *  argc - # arguments
- *  **argv - char array of arguments
- *  **colName - char array returned column names from the database
- */
-static int countryDataCallback (void *data_pair, int argc, char **argv, char **colName) {
-  dataPair* p = (dataPair*) data_pair;
-  auto* countries = std::get<0>(*p);
-  auto* data = std::get<1>(*p);
-
-  countries->push_back(argv[0]);
-  std::string line = "";
-  for (int i = 1; i < argc; ++i) {
-    line += argv[i];
-    line += " ";
+  if (hgv.hazmat) {
+    stats.add_tile_hazmat(tileid, rclass, edge_length);
+    stats.add_country_hazmat(begin_node_iso, rclass, edge_length);
+  }
+  if (hgv.axle_load) {
+    stats.add_tile_axle_load(tileid, rclass);
+    stats.add_country_axle_load(begin_node_iso, rclass);
+  }
+  if (hgv.height) {
+    stats.add_tile_height(tileid, rclass);
+    stats.add_country_height(begin_node_iso, rclass);
+  }
+  if (hgv.length) {
+    stats.add_tile_length(tileid, rclass);
+    stats.add_country_length(begin_node_iso, rclass);
+  }
+  if (hgv.weight) {
+    stats.add_tile_weight(tileid, rclass);
+    stats.add_country_weight(begin_node_iso, rclass);
+  }
+  if (hgv.width) {
+    stats.add_tile_width(tileid, rclass);
+    stats.add_country_width(begin_node_iso, rclass);
   }
 
-  std::istringstream iss(line);
-  float tok;
-  float sum = 0;
-  std::vector<float> *classData = new std::vector<float>();
-
-  while (iss >> tok) {
-    classData->push_back(tok);
-    sum += tok;
+  // Check for exit signage if it is a highway link
+  if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
+    checkExitInfo(tile,graph_reader,lock,node,nodeinfo,directededge,stats);
   }
-  classData->push_back(sum);
-  data->emplace(argv[0], *classData);
 
-  return 0;
-}
+  // Add all other statistics
+  // Only consider edge if edge is good and it's not a link
+  if (!directededge.link()) {
+    //Determine access for directed edge
+    auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
+    auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
+    // Check if one way
+    if ((!fward || !bward) && (fward || bward)) {
+      edge_length *= 0.5f;
+      //const GraphTile* tile = graph_reader.GetGraphTile(node);
+      bool found = IsPedestrianTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data,idx);
+      if (!found && directededge.endnode().id() == node.id()) {
+        const GraphTile* end_tile = graph_reader.GetGraphTile(directededge.endnode());
+        if (tile.id() == end_tile->id())
+          found = IsLoopTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+      }
+      if (!found && directededge.endnode().id() != node.id()) {
+        found = IsReversedOneway(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+      }
+      stats.add_tile_one_way(tileid, rclass, edge_length);
+      stats.add_country_one_way(begin_node_iso, rclass, edge_length);
+    }
 
-/*
- * Queries the database to get length of roads in each class per country
- * Params
- *  *db - sqlite3 database connection object
- *  countries - vector of country iso codes
- *  data - 2D vector of road lengths
- *    each column belongs to a certain country
- *    each row is a type of road
- * Post
- *  countries contains the iso codes of all countries in the database
- *  data contains the lengths of each type of road for each country
- */
-void fillCountryData(sqlite3 *db, std::vector<std::string>& countries, std::unordered_map<std::string, std::vector<float>>& data) {
- 
-  std::string sql = "SELECT * FROM countrydata WHERE isocode IS NOT \"\"";
+    // Check if this edge is internal
+    if (directededge.internal()) {
+      stats.add_tile_int_edge(tileid, rclass);
+      stats.add_country_int_edge(begin_node_iso, rclass);
+    }
+    // Check if edge has maxspeed tag
+    if (directededge.speed_type() == SpeedType::kTagged){
+      stats.add_tile_speed_info(tileid, rclass, edge_length);
+      stats.add_country_speed_info(begin_node_iso, rclass, edge_length);
+    }
+    // Check if edge has any names
+    if (tile.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
+      stats.add_tile_named(tileid, rclass, edge_length);
+      stats.add_country_named(begin_node_iso, rclass, edge_length);
+    }
 
-  char *errMsg = 0;
-  dataPair data_pair = {&countries, &data};
-  int rc = sqlite3_exec(db, sql.c_str(), countryDataCallback, (void*) &data_pair, &errMsg);
-  checkDBResponse(rc, errMsg);
-}
-
-/* 
- * Callback function to receive query results from sqlite3_exec
- * Params
- *  *dataPair - the pointer used to pass data structures into this function
- *  argc - # arguments
- *  **argv - char array of arguments
- *  **colName - char array returned column names from the database
- */
-static int maxSpeedCallback (void *data, int argc, char **argv, char **colName) {
-  auto* maxSpeedInfo =
-    (std::unordered_map<std::string, std::vector<float>>*) data;
-  
-  std::istringstream ss(argv[2]);
-  float val;
-  ss >> val;
-
-  maxSpeedInfo->at(argv[0]).push_back(val);
-
-  return 0;
-}
-
-/*
- * Retrieves the maxspeed data from the database and fills the data structure
- */
-void fillMaxSpeedData(sqlite3* db, std::unordered_map<std::string, std::vector<float>>& maxSpeedInfo) {
- 
-  std::string sql = "SELECT isocode,type,maxspeed";
-  sql += " FROM rclassctrydata";
-  sql += " WHERE (type='Motorway' OR type='Primary' OR type='Secondary' OR type='Trunk')";
-  sql += " AND isocode IS NOT \"\"";
-
-  char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), maxSpeedCallback, (void*) &maxSpeedInfo, &errMsg);
-  checkDBResponse(rc, errMsg);
-}
-
-/* 
- * Callback function to receive query results from sqlite3_exec
- * Params
- *  *data - the pointer used to pass data structures into this function
- *  argc - # arguments
- *  **argv - char array of arguments
- *  **colName - char array returned column names from the database
- */
-static int namedCallback (void *data, int argc, char **argv, char **colName) {
-  auto* namedInfo =
-    (std::unordered_map<std::string, std::vector<float>>*) data;
-  
-  std::istringstream ss(argv[2]);
-  float val;
-  ss >> val;
-
-  namedInfo->at(argv[0]).push_back(val);
-
-  return 0;
-}
-
-/*
- * Retrieves the named road data from the database and fills the data structure
- */
-void fillNamedData(sqlite3* db, std::unordered_map<std::string, std::vector<float>>& namedInfo) {
- 
-  std::string sql = "SELECT isocode,type,named";
-  sql += " FROM rclassctrydata";
-  sql += " WHERE (type='Residential' OR type='Unclassified')";
-  sql += " AND isocode IS NOT \"\"";
-
-  char *errMsg = 0;
-  int rc = sqlite3_exec(db, sql.c_str(), namedCallback, (void*) &namedInfo, &errMsg);
-  checkDBResponse(rc, errMsg);
-}
-/*
- * Generates a javascript file that has a function to return
- *  all the data queried from the database
- * Params
- *  countries - names of all the countries from the database
- *  data - float values for all the lengths of road per country
- *  classes - the types of road classes
- *  maxClasses - types of road data which have corresponding maxspeed data
- *  maxSpeedInfo - float values for each maxClass for each country
- */
-void generateJson (std::vector<std::string>& countries,
-                   std::unordered_map<std::string, std::vector<float>>& data,
-                   std::vector<std::string>& classes,
-                   std::unordered_map<std::string, std::vector<float>>& maxSpeedInfo,
-                   std::vector<std::string>& maxClasses,
-                   std::unordered_map<std::string, std::vector<float>>& namedInfo,
-                   std::vector<std::string>& namedClasses) {
-
-  using namespace valhalla::baldr;
-
-  std::ofstream out ("road_data.json");
-  json::MapPtr map = json::map({});
-  for (size_t i = 0; i < countries.size(); ++i) {
-    map->emplace(
-      countries[i], json::map
-      ({
-        {"iso2", countries[i]},
-        {"classinfo", json::map
-        ({
-         {classes[0], json::fp_t{data[countries[i]][0]}},
-         {classes[1], json::fp_t{data[countries[i]][1]}},
-         {classes[2], json::fp_t{data[countries[i]][2]}},
-         {classes[3], json::fp_t{data[countries[i]][3]}},
-         {classes[4], json::fp_t{data[countries[i]][4]}},
-         {classes[5], json::fp_t{data[countries[i]][5]}},
-         {classes[6], json::fp_t{data[countries[i]][6]}},
-         {classes[7], json::fp_t{data[countries[i]][7]}},
-         {classes[8], json::fp_t{data[countries[i]][8]}}
-        })},
-        {"maxspeed", json::map
-        ({
-         {maxClasses[0], json::fp_t{maxSpeedInfo[countries[i]][0]}},
-         {maxClasses[1], json::fp_t{maxSpeedInfo[countries[i]][1]}},
-         {maxClasses[2], json::fp_t{maxSpeedInfo[countries[i]][2]}},
-         {maxClasses[3], json::fp_t{maxSpeedInfo[countries[i]][3]}}
-        })},
-        {"named", json::map
-        ({
-         {namedClasses[0], json::fp_t{namedInfo[countries[i]][0]}},
-         {namedClasses[1], json::fp_t{namedInfo[countries[i]][1]}},
-        })}
-      })
-    );
+    // Add road lengths to statistics for current country and tile
+    stats.add_country_road(begin_node_iso, rclass, edge_length);
+    stats.add_tile_road(tileid, rclass, edge_length);
   }
-  out << *map << std::endl;
+}
 
-  out.close();
+void build(const boost::property_tree::ptree& pt,
+              std::deque<GraphId>& tilequeue, std::mutex& lock,
+              std::promise<statistics>& result) {
+    // Our local class for gathering the stats
+    statistics stats;
+    // Local Graphreader
+    GraphReader graph_reader(pt.get_child("mjolnir"));
+    // Get some things we need throughout
+    const auto& hierarchy = graph_reader.GetTileHierarchy();
+
+    // Check for more tiles
+    while (true) {
+      lock.lock();
+      if (tilequeue.empty()) {
+        lock.unlock();
+        break;
+      }
+      // Get the next tile Id
+      GraphId tile_id = tilequeue.front();
+      tilequeue.pop_front();
+      lock.unlock();
+
+      // Point tiles to the set we need for current level
+      auto level = tile_id.level();
+      if (hierarchy.levels().rbegin()->second.level+1 == level)
+        level = hierarchy.levels().rbegin()->second.level;
+
+      const auto& tiles = hierarchy.levels().find(level)->second.tiles;
+      level = tile_id.level();
+      auto tileid = tile_id.tileid();
+
+      // Update nodes and directed edges as needed
+      std::vector<DirectedEdge> directededges;
+
+      // Get this tile
+      const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+
+      // Iterate through the nodes and the directed edges
+      float roadlength = 0.0f;
+      uint32_t nodecount = tile->header()->nodecount();
+      GraphId node = tile_id;
+      for (uint64_t i = 0; i < nodecount; i++, node++) {
+        // The node we will modify
+        const NodeInfo* nodeinfo = tile->node(node);
+        std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
+
+        // Go through directed edges
+        uint32_t idx = nodeinfo->edge_index();
+        for (uint32_t j = 0, n = nodeinfo->edge_count(); j < n; j++, idx++) {
+          auto de = tile->directededge(idx);
+
+          // HGV restriction mask (for stats)
+          HGVRestrictionTypes hgv = {};
+
+          // check access restrictions. TODO - should check modes as well
+          uint32_t ar_modes = de->access_restriction();
+          if (ar_modes) {
+            //since only truck restrictions exist, we can still get all restrictions
+            //later we may only want to get just the truck ones for stats.
+            auto res = tile->GetAccessRestrictions(idx, kAllAccess);
+            if (res.size() == 0) {
+              LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
+                  std::to_string(tile_id.level()));
+            } else {
+              for (auto r : res) {
+                if (r.edgeindex() != idx) {
+                  LOG_ERROR("Access restriction edge index does not match idx");
+                } else {
+                  switch (r.type()) {
+                    case AccessType::kHazmat:
+                      hgv.hazmat = true;
+                      break;
+                    case AccessType::kMaxAxleLoad:
+                      hgv.axle_load = true;
+                      break;
+                    case AccessType::kMaxHeight:
+                      hgv.height = true;
+                      break;
+                    case AccessType::kMaxLength:
+                      hgv.length = true;
+                      break;
+                    case AccessType::kMaxWeight:
+                      hgv.weight = true;
+                      break;
+                    case AccessType::kMaxWidth:
+                      hgv.width = true;
+                      break;
+                    default:
+                      break;
+                  }
+                }
+              }
+            }
+          }
+          // The edge we will modify
+          const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index() + j);
+
+          // Road Length and some variables for statistics
+          float edge_length;
+          bool valid_length = false;
+          if (!directededge->shortcut() && !directededge->trans_up() &&
+              !directededge->trans_down()) {
+            edge_length = directededge->length();
+            roadlength += edge_length;
+            valid_length = true;
+          }
+
+          // Statistics
+          if (valid_length) {
+            AddStatistics(stats, *directededge, tileid, begin_node_iso,
+                          hgv, *tile, graph_reader, lock, node, *nodeinfo, j);
+          }
+        }
+      }
+
+      // Add density to return class. Approximate the tile area square km
+      AABB2<PointLL> bb = tiles.TileBounds(tileid);
+      float area = ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
+                   ((bb.maxx() - bb.minx()) *
+                     DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
+      stats.add_tile_area(tileid, area);
+      stats.add_tile_geom(tileid, tiles.TileBounds(tileid));
+
+
+      // Check if we need to clear the tile cache
+      lock.lock();
+      if (graph_reader.OverCommitted())
+        graph_reader.Clear();
+      lock.unlock();
+    }
+
+    // Fill promise with statistics
+    result.set_value(std::move(stats));
+  }
+}
+
+void BuildStatistics(const boost::property_tree::ptree& pt) {
+
+  // Graphreader
+  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  // Make sure there are at least 2 levels!
+  if (hierarchy.levels().size() < 2)
+    throw std::runtime_error("Bad tile hierarchy - need 2 levels");
+
+  // Create a randomized queue of tiles to work from
+  std::deque<GraphId> tilequeue;
+  for (auto tier : hierarchy.levels()) {
+    auto level = tier.second.level;
+    auto tiles = tier.second.tiles;
+    for (uint32_t id = 0; id < tiles.TileCount(); id++) {
+      // If tile exists add it to the queue
+      GraphId tile_id(id, level, 0);
+      if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
+        tilequeue.emplace_back(std::move(tile_id));
+      }
+    }
+
+    //transit level
+    if (level == hierarchy.levels().rbegin()->second.level) {
+      level += 1;
+      for (uint32_t id = 0; id < tiles.TileCount(); id++) {
+        // If tile exists add it to the queue
+        GraphId tile_id(id, level, 0);
+        if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
+          tilequeue.emplace_back(std::move(tile_id));
+        }
+      }
+    }
+  }
+  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+
+  // A mutex we can use to do the synchronization
+  std::mutex lock;
+
+  LOG_INFO("Gathering information about the tiles in " + pt.get<std::string>("mjolnir.tile_dir"));
+
+  // Setup threads
+  std::vector<std::shared_ptr<std::thread> > threads(
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
+
+  // Setup promises
+  std::list<std::promise<statistics> > results;
+
+  // Spawn the threads
+  for (auto& thread : threads) {
+    results.emplace_back();
+    thread.reset(new std::thread(build, std::cref(pt), std::ref(tilequeue),
+                                 std::ref(lock), std::ref(results.back())));
+  }
+
+  // Wait for threads to finish
+  for (auto& thread : threads)
+    thread->join();
+  // Get the promise from the future
+  statistics stats;
+  for (auto& result : results) {
+    auto r = result.get_future().get();
+    //keep track of stats
+    stats.add(r);
+  }
+  LOG_INFO("Finished");
+
+  stats.build_db(pt);
+  stats.roulette_data.GenerateTasks(pt);
+}
+
+bool ParseArguments(int argc, char *argv[]) {
+  bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
+  options.add_options()
+    ("help,h", "Print this help message")
+    ("config,c",
+     boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+     "Path to the json configuration file.");
+  bpo::variables_map vm;
+  try {
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
+    bpo::notify(vm);
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
+    return false;
+  }
+
+  if (vm.count("help")) {
+    std::cout << options << "\n";
+    return true;
+  }
+  if (vm.count("config")) {
+    if (boost::filesystem::is_regular_file(config_file_path))
+      return true;
+    else
+      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+  }
+
+  return false;
 }
 
 int main (int argc, char** argv) {
-  // If there is no input file print and error and exit
-  if (argc < 2) {
-    std::cout << "ERROR: No input file specified." << std::endl;
-    std::cout << "Usage: " << argv[0] << " statistics.sqlite" << std::endl;
-    exit(0);
+  if (!ParseArguments(argc, argv))
+    return EXIT_FAILURE;
+
+  // check the type of input
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(config_file_path.c_str(), pt);
+
+  //configure loggin
+  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
+  if (logging_subtree) {
+    auto loggin_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    valhalla::midgard::logging::Configure(loggin_config);
   }
 
-  // data structures
-  std::vector<std::string> roadClasses;
-  std::vector<std::string> countries;
-  std::unordered_map<std::string, std::vector<float>> roadClassInfo;
-  // speed info
-  std::vector<std::string> maxClasses = {"Motorway", "Primary", "Secondary", "Trunk"};
-  std::unordered_map<std::string, std::vector<float>> maxSpeedInfo;
-  // name info
-  std::vector<std::string> namedClasses = {"Residential", "Unclassified"};
-  std::unordered_map<std::string, std::vector<float>> namedInfo;
+  //set up directory
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  valhalla::baldr::TileHierarchy hierarchy(tile_dir);
 
-  // open DB file
-  sqlite3 *db;
-  int rc = sqlite3_open(argv[1], &db);
-  if ( rc ) {
-    std::cout << "Opening DB failed: " << sqlite3_errmsg(db);
-    exit(0);
-  }
+  BuildStatistics(pt);
 
-  // fill data structures
-  fillClasses(db, roadClasses);
-  fillCountryData(db, countries, roadClassInfo);
-  // create the entries in the map
-  for (auto& s : countries) {
-    maxSpeedInfo[s];
-    namedInfo[s];
-  }
-  fillMaxSpeedData(db, maxSpeedInfo);
-  fillNamedData(db, namedInfo);
- 
-  generateJson(countries, roadClassInfo, roadClasses,
-               maxSpeedInfo, maxClasses,
-               namedInfo, namedClasses);
- 
-  sqlite3_close(db);
-  return 0;
+  return EXIT_SUCCESS;
 }

@@ -115,7 +115,7 @@ end
 
   --we save admins as 2(country) or 4(state/prov).  
 function rels_proc (kv, nokeys)
-  if (kv["type"] == "boundary" and kv["boundary"] == "administrative" and
+  if (kv["type"] == "boundary" and (kv["boundary"] == "administrative" or kv["boundary"] == "territorial") and
      (kv["admin_level"] == "2" or kv["admin_level"] == "3" or kv["admin_level"] == "4" or kv["admin_level"] == "6")) then
 
 
@@ -123,7 +123,8 @@ function rels_proc (kv, nokeys)
          kv["name"] ~= "Martinique" and kv["name"] ~= "Mayotte" and kv["name"] ~= "Saint-Pierre-et-Miquelon" and
          kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin" and kv["name"] ~= "Polynésie Française" and 
          kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and 
-         kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name"] ~= "France métropolitaine") then
+         kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
+         kv["name:en"] ~= "Hong Kong") then
         return 1, kv
      end
 
@@ -141,7 +142,7 @@ function rels_proc (kv, nokeys)
 
      if kv["admin_level"] == "3" then
        kv["admin_level"] = "2"
-       if kv["name"] == "France métropolitaine" then
+       if kv["name:en"] == "Metropolitan France" then
          kv["name"] = "France"
          kv["iso_code"] = "FR"
        end

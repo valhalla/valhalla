@@ -276,6 +276,26 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
       e1_iso != iso || e2_iso != iso)
     return false;
 
+  // Simple check for a possible maneuver where the continuation is a turn
+  // and there are other edges at the node (forward intersecting edge or a
+  // 'T' intersection
+  if (nodeinfo->local_edge_count() > 2) {
+    // Find number of driveable edges
+    uint32_t driveable = 0;
+    for (uint32_t i = 0; i < nodeinfo->local_edge_count(); i++) {
+      if (nodeinfo->local_driveability(i) != Traversability::kNone) {
+        driveable++;
+      }
+    }
+    if (driveable > 2) {
+      uint32_t heading1 = (nodeinfo->heading(edge1->localedgeidx()) + 180) % 360;
+      uint32_t turn_degree = GetTurnDegree(heading1, nodeinfo->heading(edge2->localedgeidx()));
+      if (turn_degree > 60 && turn_degree < 300) {
+        return false;
+      }
+    }
+  }
+
   // Store the pairs of base edges entering and exiting this node
   EdgePairs edgepairs;
   edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
