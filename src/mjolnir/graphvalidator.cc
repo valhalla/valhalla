@@ -1,7 +1,6 @@
 
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/statistics.h"
 
 #include <valhalla/midgard/logging.h>
 
