@@ -182,8 +182,7 @@ message TripPath {
     optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
     optional bool is_parent_stop = 6;        // true if this is a parent stop
     optional bool assumed_schedule = 7;      // true if the times are based on an assumed schedule
-    optional float latitude = 8;             // Latitude of the transit stop
-    optional float longitude = 9;            // Longitude of the transit stop
+    optional LatLng ll = 8;                  // Latitude, longitude of the transit stop
   }
 
   message Node {
