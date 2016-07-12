@@ -111,7 +111,6 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \
 	src/mjolnir/pbfgraphparser.cc \
-	src/mjolnir/statistics.cc \
 	src/mjolnir/transitbuilder.cc \
 	src/mjolnir/util.cc \
 	src/mjolnir/graph_lua_proc.h \
