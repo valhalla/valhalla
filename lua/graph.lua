@@ -993,6 +993,8 @@ function filter_tags_generic(kv)
   kv["alt_name"] = kv["alt_name"]
   kv["official_name"] = kv["official_name"]
   kv["speed"] = normalize_speed(kv["maxspeed"])
+  kv["backward_speed"] = normalize_speed(kv["maxspeed:backward"])
+  kv["forward_speed"] = normalize_speed(kv["maxspeed:forward"])
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
   kv["surface"] = kv["surface"]
@@ -1024,6 +1026,19 @@ function filter_tags_generic(kv)
     lane_count = 10
   end
   kv["lanes"] = lane_count
+
+  lane_count = numeric_prefix(kv["lanes:forward"],false)
+  if lane_count and lane_count > 10 then
+    lane_count = 10
+  end
+  kv["forward_lanes"] = lane_count
+
+  lane_count = numeric_prefix(kv["lanes:backward"],false)
+  if lane_count and lane_count > 10 then
+    lane_count = 10
+  end
+  kv["backward_lanes"] = lane_count
+
   kv["bridge"] = bridge[kv["bridge"]] or "false"
   
   -- TODO access:conditional
