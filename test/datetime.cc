@@ -192,21 +192,25 @@ void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::st
 
 }
 
-void TryTestEpoch() {
-
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
-  uint64_t sec =  DateTime::seconds_since_epoch(tz);
-  std::string today = DateTime::seconds_to_date(sec,tz);
-
-  if (today != DateTime::iso_date_time(tz))
-    throw std::runtime_error("Test Epoch failed.");
-}
-
 void TryTestIsValid(std::string date, bool return_value) {
 
   auto ret = DateTime::is_iso_local(date);
   if (ret != return_value)
     throw std::runtime_error("Test is_iso_local failed: " + date);
+}
+
+void TryTestDST(const bool is_depart_at, const uint64_t origin_seconds, const uint64_t dest_seconds, std::string o_value, std::string d_value) {
+
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+
+  std::string iso_origin, iso_dest;
+  DateTime::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
+
+  if (iso_origin != o_value)
+    throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " + iso_origin);
+
+  if (iso_dest != d_value)
+    throw std::runtime_error("Test destination DST failed.  Expected: " + d_value + " but received " + iso_dest);
 }
 
 }
@@ -353,10 +357,6 @@ void TestServiceDays() {
 
 }
 
-void TestEpoch() {
-  TryTestEpoch();
-}
-
 void TestIsServiceAvailable() {
   TryIsServiceAvailable("2015-11-11", "2016-01-09", "2016-01-09",580999813345182728, true);
   TryIsServiceAvailable("2015-11-11", "2016-01-10", "2016-01-09",580999813345182728, false);
@@ -386,9 +386,64 @@ void TestIsValid(){
   TryTestIsValid("2015-05-06T01",false);
   TryTestIsValid("01:00",false);
   TryTestIsValid("aefopijafepij",false);
-
 }
 
+void TestDST(){
+
+  //bunch of tests for the start and end of dst using startat and arriveby
+
+  TryTestDST(true, 1457845200, 1457858104, "2016-03-13T00:00-05:00", "2016-03-13T04:35-04:00");
+  TryTestDST(true, 1457848800, 1457860508, "2016-03-13T01:00-05:00", "2016-03-13T05:15-04:00");
+  TryTestDST(true, 1457852100, 1457853188, "2016-03-13T01:55-05:00", "2016-03-13T03:13-04:00");
+  TryTestDST(true, 1457852400, 1457853488, "2016-03-13T03:00-04:00", "2016-03-13T03:18-04:00");
+  TryTestDST(true, 1457854200, 1457859493, "2016-03-13T03:30-04:00", "2016-03-13T04:58-04:00");
+  TryTestDST(true, 1457855700, 1457856788, "2016-03-13T03:55-04:00", "2016-03-13T04:13-04:00");
+  TryTestDST(true, 1457852400, 1457853488, "2016-03-13T03:00-04:00", "2016-03-13T03:18-04:00");
+  TryTestDST(true, 1457853300, 1457854388, "2016-03-13T03:15-04:00", "2016-03-13T03:33-04:00");
+
+  TryTestDST(true, 1478406600, 1478407484, "2016-11-06T00:30-04:00", "2016-11-06T00:44-04:00");
+  TryTestDST(true, 1478408340, 1478409215, "2016-11-06T00:59-04:00", "2016-11-06T01:13-04:00");
+  TryTestDST(true, 1478408340, 1478413633, "2016-11-06T00:59-04:00", "2016-11-06T01:27-05:00");
+  TryTestDST(true, 1478413800, 1478414684, "2016-11-06T01:30-05:00", "2016-11-06T01:44-05:00");
+  TryTestDST(true, 1478413800, 1478418104, "2016-11-06T01:30-05:00", "2016-11-06T02:41-05:00");
+  TryTestDST(true, 1478415600, 1478420893, "2016-11-06T02:00-05:00", "2016-11-06T03:28-05:00");
+  TryTestDST(true, 1478412000, 1478417293, "2016-11-06T01:00-05:00", "2016-11-06T02:28-05:00");
+  TryTestDST(true, 1478419200, 1478424493, "2016-11-06T03:00-05:00", "2016-11-06T04:28-05:00");
+  TryTestDST(true, 1478408340, 1478420602, "2016-11-06T00:59-04:00", "2016-11-06T03:23-05:00");
+  TryTestDST(true, 1479016740, 1479029002, "2016-11-13T00:59-05:00", "2016-11-13T04:23-05:00");
+
+  TryTestDST(false,1457847695, 1457848800, "2016-03-13T00:41-05:00", "2016-03-13T01:00-05:00");
+  TryTestDST(false,1457851295, 1457852400, "2016-03-13T01:41-05:00", "2016-03-13T03:00-04:00");
+  TryTestDST(false,1457853095, 1457854200, "2016-03-13T03:11-04:00", "2016-03-13T03:30-04:00");
+  TryTestDST(false,1457851595, 1457852700, "2016-03-13T01:46-05:00", "2016-03-13T03:05-04:00");
+  TryTestDST(false,1457851595, 1457852700, "2016-03-13T01:46-05:00", "2016-03-13T03:05-04:00");
+  TryTestDST(false,1457846553, 1457852400, "2016-03-13T00:22-05:00", "2016-03-13T03:00-04:00");
+  TryTestDST(false,1457847453, 1457852700, "2016-03-13T00:37-05:00", "2016-03-13T03:05-04:00");
+  TryTestDST(false,1457933853, 1457939100, "2016-03-14T01:37-04:00", "2016-03-14T03:05-04:00");
+  TryTestDST(false,1457848559, 1457856300, "2016-03-13T00:55-05:00", "2016-03-13T04:05-04:00");
+  TryTestDST(false,1457847978, 1457856000, "2016-03-13T00:46-05:00", "2016-03-13T04:00-04:00");
+  TryTestDST(false,1457934378, 1457942400, "2016-03-14T01:46-04:00", "2016-03-14T04:00-04:00");
+
+  TryTestDST(false,1478406871, 1478415600, "2016-11-06T00:34-04:00", "2016-11-06T02:00-05:00");
+  TryTestDST(false,1478493271, 1478502000, "2016-11-06T23:34-05:00", "2016-11-07T02:00-05:00");
+  TryTestDST(false,1478410471, 1478419200, "2016-11-06T01:34-04:00", "2016-11-06T03:00-05:00");
+  TryTestDST(false,1478496871, 1478505600, "2016-11-07T00:34-05:00", "2016-11-07T03:00-05:00");
+  TryTestDST(false,1478414071, 1478422800, "2016-11-06T01:34-05:00", "2016-11-06T04:00-05:00");
+  TryTestDST(false,1478500471, 1478509200, "2016-11-07T01:34-05:00", "2016-11-07T04:00-05:00");
+  TryTestDST(false,1478410406, 1478422800, "2016-11-06T01:33-04:00", "2016-11-06T04:00-05:00");
+  TryTestDST(false,1478496806, 1478509200, "2016-11-07T00:33-05:00", "2016-11-07T04:00-05:00");
+  TryTestDST(false,1478406806, 1478419200, "2016-11-06T00:33-04:00", "2016-11-06T03:00-05:00");
+  TryTestDST(false,1478493206, 1478505600, "2016-11-06T23:33-05:00", "2016-11-07T03:00-05:00");
+  TryTestDST(false,1478403206, 1478415600, "2016-11-05T23:33-04:00", "2016-11-06T02:00-05:00");
+  TryTestDST(false,1478489606, 1478502000, "2016-11-06T22:33-05:00", "2016-11-07T02:00-05:00");
+  TryTestDST(false,1478399606, 1478412000, "2016-11-05T21:33-04:00", "2016-11-06T01:00-05:00");
+  TryTestDST(false,1478486006, 1478498400, "2016-11-06T21:33-05:00", "2016-11-07T01:00-05:00");
+  TryTestDST(false,1478409968, 1478412000, "2016-11-06T00:26-04:00", "2016-11-06T01:00-05:00");
+  TryTestDST(false,1478410268, 1478412300, "2016-11-06T00:31-04:00", "2016-11-06T01:05-05:00");
+  TryTestDST(false,1478413868, 1478415900, "2016-11-06T01:31-05:00", "2016-11-06T02:05-05:00");
+  TryTestDST(false,1478417468, 1478419500, "2016-11-06T02:31-05:00", "2016-11-06T03:05-05:00");
+
+}
 
 int main(void) {
   test::suite suite("datetime");
@@ -399,9 +454,9 @@ int main(void) {
   suite.test(TEST_CASE(TestDuration));
   suite.test(TEST_CASE(TestIsoDateTime));
   suite.test(TEST_CASE(TestServiceDays));
-  suite.test(TEST_CASE(TestEpoch));
   suite.test(TEST_CASE(TestIsServiceAvailable));
   suite.test(TEST_CASE(TestIsValid));
+  suite.test(TEST_CASE(TestDST));
 
   return suite.tear_down();
 }

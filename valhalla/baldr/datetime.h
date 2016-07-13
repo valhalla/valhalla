@@ -89,8 +89,8 @@ namespace DateTime {
    * @param   date the date in question...in the format of days since pivot.
    * @param   end_date in the format of days since pivot
    */
-  bool is_service_available(const uint64_t& days, const uint32_t& start_date,
-                            const uint32_t& date, const uint32_t& end_date);
+  bool is_service_available(const uint64_t days, const uint32_t start_date,
+                            const uint32_t date, const uint32_t end_date);
 
   /**
    * Get the number of days elapsed from the pivot date until
@@ -136,11 +136,18 @@ namespace DateTime {
 
   /**
    * Get the iso date time from seconds since epoch and timezone.
-   * @param   seconds     seconds since epoch
-   * @param   time_zone   Timezone.
-   * @return  Returns the formated date 2015-05-06.
+   * @param   origin_seconds      seconds since epoch for origin
+   * @param   dest_seconds        seconds since epoch for dest
+   * @param   origin_tz           timezone for origin
+   * @param   dest_tz             timezone for dest
+   * @param   iso_origin          origin string that will be updated
+   * @param   iso_dest            dest string that will be updated
    */
-  std::string seconds_to_date(uint64_t seconds, const boost::local_time::time_zone_ptr& time_zone);
+  void seconds_to_date(const bool is_depart_at,
+                       const uint64_t origin_seconds, const uint64_t dest_seconds,
+                       const boost::local_time::time_zone_ptr& origin_tz,
+                       const boost::local_time::time_zone_ptr& dest_tz,
+                       std::string& iso_origin, std::string& iso_dest);
 
   /**
    * Get the dow mask.
