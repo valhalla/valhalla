@@ -378,29 +378,38 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     uint32_t elapsedtime = node->elapsed_time();
 
     auto* last_tile = graphreader.GetGraphTile(startnode);
-    if (dest.date_time_) {
+    if (dest.date_time_) { // arrive by
 
       uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
                                                    DateTime::get_tz_db().
                                                    from_index(last_tile->node(startnode)->timezone()));
-      tp_orig->set_date_time(DateTime::seconds_to_date(sec - elapsedtime,
-                                                       DateTime::get_tz_db().
-                                                       from_index(first_node->timezone())));
-      origin.date_time_ = tp_orig->date_time();
-      tp_dest->set_date_time(DateTime::seconds_to_date(sec,DateTime::get_tz_db().
-                                                       from_index(last_tile->node(startnode)->timezone())));
 
-    } else if (origin.date_time_) {
+      std::string origin_date, dest_date;
+      DateTime::seconds_to_date(false, sec - elapsedtime, sec, DateTime::get_tz_db().
+                                from_index(first_node->timezone()),
+                                DateTime::get_tz_db().
+                                from_index(last_tile->node(startnode)->timezone()),
+                                origin_date, dest_date);
+
+      tp_orig->set_date_time(origin_date);
+      origin.date_time_ = tp_orig->date_time();
+      tp_dest->set_date_time(dest_date);
+
+    } else if (origin.date_time_) { // leave at
       uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
                                                    DateTime::get_tz_db().
                                                    from_index(first_node->timezone()));
 
-      tp_dest->set_date_time(DateTime::seconds_to_date(sec + elapsedtime,
-                                                       DateTime::get_tz_db().
-                                                       from_index(last_tile->node(startnode)->timezone())));
+      std::string origin_date, dest_date;
+      DateTime::seconds_to_date(true, sec, sec + elapsedtime, DateTime::get_tz_db().
+                                from_index(first_node->timezone()),
+                                DateTime::get_tz_db().
+                                from_index(last_tile->node(startnode)->timezone()),
+                                origin_date, dest_date);
+
+      tp_dest->set_date_time(dest_date);
       dest.date_time_ = tp_dest->date_time();
-      tp_orig->set_date_time(DateTime::seconds_to_date(sec, DateTime::get_tz_db().
-                                                       from_index(first_node->timezone())));
+      tp_orig->set_date_time(origin_date);
     }
 
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
@@ -666,29 +675,38 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   }
 
   auto* last_tile = graphreader.GetGraphTile(startnode);
-  if (dest.date_time_) {
+  if (dest.date_time_) { // arrive by
 
     uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
                                                  DateTime::get_tz_db().
                                                  from_index(last_tile->node(startnode)->timezone()));
-    tp_orig->set_date_time(DateTime::seconds_to_date(sec - elapsedtime,
-                                                     DateTime::get_tz_db().
-                                                     from_index(first_node->timezone())));
-    origin.date_time_ = tp_orig->date_time();
-    tp_dest->set_date_time(DateTime::seconds_to_date(sec,DateTime::get_tz_db().
-                                                     from_index(last_tile->node(startnode)->timezone())));
 
-  } else if (origin.date_time_) {
+    std::string origin_date, dest_date;
+    DateTime::seconds_to_date(false, sec - elapsedtime, sec, DateTime::get_tz_db().
+                              from_index(first_node->timezone()),
+                              DateTime::get_tz_db().
+                              from_index(last_tile->node(startnode)->timezone()),
+                              origin_date, dest_date);
+
+    tp_orig->set_date_time(origin_date);
+    origin.date_time_ = tp_orig->date_time();
+    tp_dest->set_date_time(dest_date);
+
+  } else if (origin.date_time_) { // leave at
     uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
                                                  DateTime::get_tz_db().
                                                  from_index(first_node->timezone()));
 
-    tp_dest->set_date_time(DateTime::seconds_to_date(sec + elapsedtime,
-                                                     DateTime::get_tz_db().
-                                                     from_index(last_tile->node(startnode)->timezone())));
+    std::string origin_date, dest_date;
+    DateTime::seconds_to_date(true, sec, sec + elapsedtime, DateTime::get_tz_db().
+                              from_index(first_node->timezone()),
+                              DateTime::get_tz_db().
+                              from_index(last_tile->node(startnode)->timezone()),
+                              origin_date, dest_date);
+
+    tp_dest->set_date_time(dest_date);
     dest.date_time_ = tp_dest->date_time();
-    tp_orig->set_date_time(DateTime::seconds_to_date(sec, DateTime::get_tz_db().
-                                                     from_index(first_node->timezone())));
+    tp_orig->set_date_time(origin_date);
   }
 
   // Add the last node
