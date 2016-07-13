@@ -399,8 +399,9 @@ void seconds_to_date(const bool is_depart_at,
                      const boost::local_time::time_zone_ptr& dest_tz,
                      std::string& iso_origin, std::string& iso_dest) {
 
-  iso_origin.empty();
-  iso_dest.empty();
+  iso_origin = "";
+  iso_dest = "";
+
   if (!origin_tz || !dest_tz)
     return;
 
