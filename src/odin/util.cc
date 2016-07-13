@@ -97,12 +97,23 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
 }
 
 //Get the time from the inputed date.
-//date_time is in the format of 2015-05-06T08:00
+//date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_time(const std::string& date_time,
                                const std::locale& locale) {
   if (date_time.find("T") == std::string::npos) return "";
 
-  std::string time = date_time;
+  std::string datetime;
+  std::size_t found = date_time.find_last_of("+"); // remove tz offset
+  if (found != std::string::npos)
+    datetime = date_time.substr(0,found);
+  else {
+    found = date_time.find_last_of("-"); // remove tz offset
+    if (found != std::string::npos)
+      datetime = date_time.substr(0,found);
+    else return "";
+  }
+
+  std::string time = datetime;
   try {
     // formatting for in and output
     std::locale in_locale(std::locale::classic(), new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M"));
@@ -112,7 +123,7 @@ std::string get_localized_time(const std::string& date_time,
 
     //parse the input
     boost::posix_time::ptime pt;
-    in_stream.str(date_time);
+    in_stream.str(datetime);
     in_stream >> pt;
 
     //format the output
@@ -142,12 +153,23 @@ std::string get_localized_time(const std::string& date_time,
 }
 
 //Get the date from the inputed date.
-//date_time is in the format of 2015-05-06T08:00
+//date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_date(const std::string& date_time,
                                const std::locale& locale) {
   if (date_time.find("T") == std::string::npos) return "";
 
-  std::string date = date_time;
+  std::string datetime;
+  std::size_t found = date_time.find_last_of("+"); // remove tz offset
+  if (found != std::string::npos)
+    datetime = date_time.substr(0,found);
+  else {
+    found = date_time.find_last_of("-"); // remove tz offset
+    if (found != std::string::npos)
+      datetime = date_time.substr(0,found);
+    else return "";
+  }
+
+  std::string date = datetime;
   try {
 
     // formatting for in and output
@@ -158,7 +180,7 @@ std::string get_localized_date(const std::string& date_time,
 
     //parse the input
     boost::posix_time::ptime pt;
-    in_stream.str(date_time);
+    in_stream.str(datetime);
     in_stream >> pt;
 
     //format the output
