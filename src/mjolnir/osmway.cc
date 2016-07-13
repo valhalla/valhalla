@@ -50,6 +50,26 @@ float OSMWay::speed() const {
   return static_cast<float>(speed_);
 }
 
+// Sets the backward speed in KPH.
+void OSMWay::set_backward_speed(const float backward_speed) {
+  backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
+}
+
+// Gets the backward speed in KPH.
+float OSMWay::backward_speed() const {
+  return static_cast<float>(backward_speed_);
+}
+
+// Sets the backward speed in KPH.
+void OSMWay::set_forward_speed(const float forward_speed) {
+  forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
+}
+
+// Gets the backward speed in KPH.
+float OSMWay::forward_speed() const {
+  return static_cast<float>(forward_speed_);
+}
+
 // Sets the truck speed in KPH.
 void OSMWay::set_truck_speed(const float speed) {
   truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
@@ -432,12 +452,32 @@ CycleLane OSMWay::cyclelane() const {
 
 // Sets the number of lanes
 void OSMWay::set_lanes(const uint32_t lanes) {
-  attributes_.fields.lanes = lanes;
+  classification_.fields.lanes = lanes;
 }
 
 // Get the number of lanes
 uint32_t OSMWay::lanes() const {
-  return attributes_.fields.lanes;
+  return classification_.fields.lanes;
+}
+
+// Sets the number of backward lanes
+void OSMWay::set_backward_lanes(const uint32_t backward_lanes) {
+  classification_.fields.backward_lanes = backward_lanes;
+}
+
+// Get the number of backward lanes
+uint32_t OSMWay::backward_lanes() const {
+  return classification_.fields.backward_lanes;
+}
+
+// Sets the number of forward lanes
+void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
+  classification_.fields.forward_lanes = forward_lanes;
+}
+
+// Get the number of forward lanes
+uint32_t OSMWay::forward_lanes() const {
+  return classification_.fields.forward_lanes;
 }
 
 // Set tunnel flag.
@@ -528,6 +568,56 @@ void  OSMWay::set_tagged_speed(const bool tagged_speed) {
 // Get the tagged_speed flag.
 bool  OSMWay::tagged_speed() const {
   return attributes_.fields.tagged_speed;
+}
+
+// Sets the tagged_forward speed flag.
+void  OSMWay::set_forward_tagged_speed(const bool forward_tagged_speed) {
+  attributes_.fields.forward_tagged_speed = forward_tagged_speed;
+}
+
+// Get the tagged_forward_speed flag.
+bool  OSMWay::forward_tagged_speed() const {
+  return attributes_.fields.forward_tagged_speed;
+}
+
+// Sets the tagged_backward speed flag.
+void  OSMWay::set_backward_tagged_speed(const bool backward_tagged_speed) {
+  attributes_.fields.backward_tagged_speed = backward_tagged_speed;
+}
+
+// Get the tagged_backward_speed flag.
+bool  OSMWay::backward_tagged_speed() const {
+  return attributes_.fields.backward_tagged_speed;
+}
+
+// Sets the tagged_lanes flag.
+void  OSMWay::set_tagged_lanes(const bool tagged_lanes) {
+  attributes_.fields.tagged_lanes = tagged_lanes;
+}
+
+// Get the tagged_lanes flag.
+bool  OSMWay::tagged_lanes() const {
+  return attributes_.fields.tagged_lanes;
+}
+
+// Sets the tagged_forward lanes flag.
+void  OSMWay::set_forward_tagged_lanes(const bool forward_tagged_lanes) {
+  attributes_.fields.forward_tagged_lanes = forward_tagged_lanes;
+}
+
+// Get the tagged_forward_lanes flag.
+bool  OSMWay::forward_tagged_lanes() const {
+  return attributes_.fields.forward_tagged_lanes;
+}
+
+// Sets the tagged_forward lanes flag.
+void  OSMWay::set_backward_tagged_lanes(const bool backward_tagged_lanes) {
+  attributes_.fields.backward_tagged_lanes = backward_tagged_lanes;
+}
+
+// Get the tagged_backward_speed flag.
+bool  OSMWay::backward_tagged_lanes() const {
+  return attributes_.fields.backward_tagged_lanes;
 }
 
 // Sets the truck route flag.
