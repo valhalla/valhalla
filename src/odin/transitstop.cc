@@ -14,11 +14,14 @@ const std::unordered_map<int, TripDirections_TransitStop_Type> translate_transit
 };
 
 TransitStop::TransitStop(TripDirections_TransitStop_Type type,
-                         std::string onestop_id, std::string name,
+                         std::string onestop_id,
+                         std::string name,
                          std::string arrival_date_time,
                          std::string departure_date_time,
                          bool is_parent_stop,
-                         bool assumed_schedule)
+                         bool assumed_schedule,
+                         float lat,
+                         float lng)
     : type(type),
       onestop_id(onestop_id),
       name(name),
@@ -26,16 +29,22 @@ TransitStop::TransitStop(TripDirections_TransitStop_Type type,
       departure_date_time(departure_date_time),
       is_parent_stop(is_parent_stop),
       assumed_schedule(assumed_schedule) {
+  ll.set_lat(lat);
+  ll.set_lng(lng);
 }
 
 TransitStop::TransitStop(TripPath_TransitStopInfo_Type type,
-                         std::string onestop_id, std::string name,
+                         std::string onestop_id,
+                         std::string name,
                          std::string arrival_date_time,
-                         std::string departure_date_time, bool is_parent_stop,
-                         bool assumed_schedule)
+                         std::string departure_date_time,
+                         bool is_parent_stop,
+                         bool assumed_schedule,
+                         float lat,
+                         float lng)
     : TransitStop(translate_transit_stop_type.find(type)->second, onestop_id,
                   name, arrival_date_time, departure_date_time, is_parent_stop,
-                  assumed_schedule) {
+                  assumed_schedule, lat, lng) {
 }
 
 std::string TransitStop::ToParameterString() const {
@@ -63,6 +72,12 @@ std::string TransitStop::ToParameterString() const {
 
   str += delim;
   str += std::to_string(assumed_schedule);
+
+  str += delim;
+  str += std::to_string(ll.lat());
+
+  str += delim;
+  str += std::to_string(ll.lng());
 
   str += " }";
 

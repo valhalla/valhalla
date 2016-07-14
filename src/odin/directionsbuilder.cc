@@ -350,6 +350,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
         if (transit_stop.assumed_schedule) {
           trip_transit_stop->set_assumed_schedule(true);
         }
+        trip_transit_stop->mutable_ll()->set_lat(transit_stop.ll.lat());
+        trip_transit_stop->mutable_ll()->set_lng(transit_stop.ll.lng());
       }
     }
 
