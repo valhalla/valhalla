@@ -190,8 +190,8 @@ namespace {
 int main() {
   test::suite suite("util");
 
-  //suite.test(TEST_CASE(test_supported_locales));
-  //suite.test(TEST_CASE(test_get_locales));
+  suite.test(TEST_CASE(test_supported_locales));
+  suite.test(TEST_CASE(test_get_locales));
   suite.test(TEST_CASE(test_time));
   suite.test(TEST_CASE(test_date));
 

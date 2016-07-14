@@ -1,5 +1,6 @@
 {
   "posix_locale": "it_IT.UTF-8",
+  "aliases": ["it"],
   "instructions": {
     "start": {
       "phrases": {
