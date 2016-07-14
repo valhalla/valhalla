@@ -702,6 +702,12 @@ namespace {
                     json_transit_stop->emplace("assumed_schedule", transit_stop.assumed_schedule());
                 }
 
+                // latitude and longitude
+                if (transit_stop.has_ll()) {
+                    json_transit_stop->emplace("lat", json::fp_t{transit_stop.ll().lat(), 6});
+                    json_transit_stop->emplace("lon",json::fp_t{transit_stop.ll().lng(), 6});
+                }
+
                 json_transit_stops->emplace_back(json_transit_stop);
 
               }
