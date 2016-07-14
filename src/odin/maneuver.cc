@@ -69,7 +69,7 @@ Maneuver::Maneuver()
       bicycle_type_(TripPath_BicycleType_kRoad),
       transit_type_(TripPath_TransitType_kRail),
       transit_connection_(false),
-      transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", false, false),
+      transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", false, false, 0.0f, 0.0f),
       rail_(false),
       bus_(false),
       fork_(false),

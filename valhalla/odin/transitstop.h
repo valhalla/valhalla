@@ -14,12 +14,12 @@ struct TransitStop {
   TransitStop(TripDirections_TransitStop_Type type, std::string onestop_id,
               std::string name, std::string arrival_date_time,
               std::string departure_date_time, bool is_parent_stop,
-              bool assumed_schedule);
+              bool assumed_schedule, float lat, float lng);
 
   TransitStop(TripPath_TransitStopInfo_Type type, std::string onestop_id,
               std::string name, std::string arrival_date_time,
               std::string departure_date_time, bool is_parent_stop,
-              bool assumed_schedule);
+              bool assumed_schedule, float lat, float lng);
 
   std::string ToParameterString() const;
 
@@ -30,6 +30,7 @@ struct TransitStop {
   std::string departure_date_time;
   bool is_parent_stop;
   bool assumed_schedule;
+  TripDirections_LatLng ll;
 };
 
 }

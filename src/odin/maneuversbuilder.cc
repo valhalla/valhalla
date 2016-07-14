@@ -873,7 +873,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
                       node->transit_stop_info().arrival_date_time(),
                       node->transit_stop_info().departure_date_time(),
                       node->transit_stop_info().is_parent_stop(),
-                      node->transit_stop_info().assumed_schedule()));
+                      node->transit_stop_info().assumed_schedule(),
+                      node->transit_stop_info().ll().lat(),
+                      node->transit_stop_info().ll().lng()));
     }
     // else mark it as transit connection destination
     else {
@@ -980,7 +982,9 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
                         node->transit_stop_info().arrival_date_time(),
                         node->transit_stop_info().departure_date_time(),
                         node->transit_stop_info().is_parent_stop(),
-                        node->transit_stop_info().assumed_schedule())));
+                        node->transit_stop_info().assumed_schedule(),
+                        node->transit_stop_info().ll().lat(),
+                        node->transit_stop_info().ll().lng())));
   }
 
 }
@@ -1058,7 +1062,9 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
                     node->transit_stop_info().arrival_date_time(),
                     node->transit_stop_info().departure_date_time(),
                     node->transit_stop_info().is_parent_stop(),
-                    node->transit_stop_info().assumed_schedule()));
+                    node->transit_stop_info().assumed_schedule(),
+                    node->transit_stop_info().ll().lat(),
+                    node->transit_stop_info().ll().lng()));
   }
 
   // Insert first transit stop
@@ -1072,7 +1078,9 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
                         node->transit_stop_info().arrival_date_time(),
                         node->transit_stop_info().departure_date_time(),
                         node->transit_stop_info().is_parent_stop(),
-                        node->transit_stop_info().assumed_schedule())));
+                        node->transit_stop_info().assumed_schedule(),
+                        node->transit_stop_info().ll().lat(),
+                        node->transit_stop_info().ll().lng())));
   }
 
   // Set the begin intersecting edge name consistency
