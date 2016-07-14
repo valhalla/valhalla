@@ -279,6 +279,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       tripid  = 0;
       blockid = 0;
       if (directededge->IsTransitLine()) {
+        // Check if transit costing allows this edge
+        if (!tc->Allowed(directededge, pred, tile, edgeid)) {
+          continue;
+        }
+
+        // Look up the next departure along this edge
         const TransitDeparture* departure = tile->GetNextDeparture(
                     directededge->lineid(), localtime, day, dow, date_before_tile);
         if (departure) {
