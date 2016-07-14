@@ -520,8 +520,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
                                   trip_id);
 
-        std::cout << std::to_string(trip_id) << std::endl;
-
         assumed_schedule = false;
         uint32_t date, day = 0;
         if (origin.date_time_) {
@@ -551,9 +549,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
           // Copy the arrival time for use at the next transit stop
           arrival_time = DateTime::get_duration(*origin.date_time_,
                                      (transit_departure->departure_time() +
-                                         transit_departure->elapsed_time()) -
-                                         origin_sec_from_mid,
-                                         DateTime::get_tz_db().from_index(node->timezone()));
+                                     transit_departure->elapsed_time()) -
+                                     origin_sec_from_mid,
+                                     DateTime::get_tz_db().from_index(node->timezone()));
 
           // Get the block Id
           block_id = transit_departure->blockid();
