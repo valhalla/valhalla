@@ -29,9 +29,11 @@ void TryGetDOW(std::string date_time, uint32_t expected_dow) {
 
 void TryGetDuration(std::string date_time, uint32_t seconds, std::string expected_date_time) {
 
-  if (DateTime::get_duration(date_time,seconds) != expected_date_time) {
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+
+  if (DateTime::get_duration(date_time,seconds,tz) != expected_date_time) {
     throw std::runtime_error(
-        std::string("Incorrect duration ") + DateTime::get_duration(date_time,seconds) +
+        std::string("Incorrect duration ") + DateTime::get_duration(date_time,seconds, tz) +
         std::string(" ") + expected_date_time);
   }
 }
@@ -245,14 +247,14 @@ void TestDOW() {
 
 void TestDuration() {
 
-  TryGetDuration("20140101",30,"2014-01-01T00:00");
-  TryGetDuration("20140102",60,"2014-01-02T00:01");
-  TryGetDuration("2014-01-02",60,"2014-01-02T00:01");
+  TryGetDuration("20140101",30,"2014-01-01T00:00-05:00");
+  TryGetDuration("20140102",60,"2014-01-02T00:01-05:00");
+  TryGetDuration("2014-01-02",60,"2014-01-02T00:01-05:00");
   TryGetDuration("19990101",89, "");
-  TryGetDuration("20140101T07:01",61,"2014-01-01T07:02");
-  TryGetDuration("20140102T15:00",61,"2014-01-02T15:01");
-  TryGetDuration("20140102T15:00",86400,"2014-01-03T15:00");
-
+  TryGetDuration("20140101T07:01",61,"2014-01-01T07:02-05:00");
+  TryGetDuration("20140102T15:00",61,"2014-01-02T15:01-05:00");
+  TryGetDuration("20140102T15:00",86400,"2014-01-03T15:00-05:00");
+  TryGetDuration("20160714",60,"2016-07-14T00:01-04:00");
 }
 
 void TestIsoDateTime() {
