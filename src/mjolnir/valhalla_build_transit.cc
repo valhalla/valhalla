@@ -659,7 +659,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
     for(const auto& stop : stops) {
-      request = url((boost::format("/api/v1/schedule_stop_pairs?total=false&per_page=%1%&origin_onestop_id=%2%&service_from_date=%3%-%4%-%5%")
+      request = url((boost::format("/api/v1/schedule_stop_pairs?active=true&total=false&per_page=%1%&origin_onestop_id=%2%&service_from_date=%3%-%4%-%5%")
         % pt.get<std::string>("per_page") % stop.first % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
       request = *request + import_level;
       do {
