@@ -166,11 +166,13 @@ namespace DateTime {
 
   /**
    * Add x seconds to a date_time and return a ISO date_time string.
-   * @param   date_time in the format of 01:34:15 or 2015-05-06T08:00
-   * @param   seconds to add to the date.
+   * @param   date_time   in the format of 01:34:15 or 2015-05-06T08:00
+   * @param   seconds     seconds to add to the date.
+   * @param   tz          timezone
    * @return  Returns ISO formatted string
    */
-  std::string get_duration(const std::string& date_time, const uint32_t seconds);
+  std::string get_duration(const std::string& date_time, const uint32_t seconds,
+                           const boost::local_time::time_zone_ptr& tz);
 
   /**
    * checks if string is in the format of %Y-%m-%dT%H:%M

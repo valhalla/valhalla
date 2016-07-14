@@ -564,7 +564,8 @@ uint32_t seconds_from_midnight(const std::string& date_time) {
 
 //add x seconds to a date_time and return a ISO date_time string.
 //date_time is in the format of 20150516 or 2015-05-06T08:00
-std::string get_duration(const std::string& date_time, const uint32_t seconds) {
+std::string get_duration(const std::string& date_time, const uint32_t seconds,
+                         const boost::local_time::time_zone_ptr& tz) {
   std::string formatted_date_time;
   boost::posix_time::ptime start;
   boost::gregorian::date date;
@@ -591,7 +592,20 @@ std::string get_duration(const std::string& date_time, const uint32_t seconds) {
   boost::posix_time::ptime end = start + boost::posix_time::seconds(seconds);
   formatted_date_time = boost::posix_time::to_iso_extended_string(end);
 
+  boost::local_time::local_date_time dt(end,tz);
+
   std::size_t found = formatted_date_time.find_last_of(":"); // remove seconds.
+  if (found != std::string::npos)
+    formatted_date_time = formatted_date_time.substr(0,found);
+
+  std::stringstream ss;
+  if (dt.is_dst())
+    ss << tz->dst_offset() + tz->base_utc_offset();
+  else ss << tz->base_utc_offset();
+
+  formatted_date_time += ss.str();
+
+  found = formatted_date_time.find_last_of(":"); // remove seconds.
   if (found != std::string::npos)
     formatted_date_time = formatted_date_time.substr(0,found);
 
