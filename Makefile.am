@@ -44,7 +44,7 @@ src/proto/%.pb.cc: proto/%.proto
 
 #turn locales json into strings we can load
 src/odin/locales.h: locales/*.json
-	-pushd locales && ./make_locales.sh *.json > ../src/odin/locales.h && popd
+	-cd locales && ./make_locales.sh *.json > ../src/odin/locales.h && cd -
 
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/odin/locales.h
