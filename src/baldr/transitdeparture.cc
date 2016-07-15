@@ -94,7 +94,11 @@ uint32_t TransitDeparture::schedule_index() const {
 // operator < - for sorting. Sort by line Id and departure time.
 bool TransitDeparture::operator < (const TransitDeparture& other) const {
   if (lineid() == other.lineid()) {
-    return departure_time() < other.departure_time();
+    if (departure_time() == other.departure_time()) {
+      return tripid_ < other.tripid_;
+    } else {
+      return departure_time() < other.departure_time();
+    }
   } else {
     return lineid() < other.lineid();
   }
