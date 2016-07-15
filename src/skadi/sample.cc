@@ -67,8 +67,8 @@ namespace {
   }
 
   uint64_t file_size(const std::string& file_name) {
-    struct stat64 s;
-    int rc = stat64(file_name.c_str(), &s);
+    struct stat s;
+    int rc = stat(file_name.c_str(), &s);
     return rc == 0 ? s.st_size : -1;
   }
 
