@@ -115,59 +115,26 @@ bool IsLoopTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock
   return false;
 }
 
-bool IsReversedOneway(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
+bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
                 const GraphId& startnode,
                 const NodeInfo& startnodeinfo,
                 const DirectedEdge& directededge,
                 statistics::RouletteData& rd) {
 
   const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
-  uint32_t inbound = 0, outbound = 0;
-
-  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
-
-    if ((diredge->forwardaccess() & kAutoAccess) &&
-        !(diredge->reverseaccess() & kAutoAccess))
+  size_t inbound = 0, outbound = 0;
+  // Check all the edges from the current node and count inbound and outbound edges
+  for (size_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+    if ((diredge->forwardaccess() & kAutoAccess))
       outbound++;
-
-    if (!(diredge->forwardaccess() & kAutoAccess) &&
-        (diredge->reverseaccess() & kAutoAccess))
+    if ((diredge->reverseaccess() & kAutoAccess))
       inbound++;
   }
 
-  if (!outbound && inbound)
-  {
-    const GraphId endnode = directededge.endnode();
-    const NodeInfo* endnodeinfo;
-    const GraphTile* tile_ptr;
-    if (endnode.tileid() == startnode.tileid()) {
-      tile_ptr = &tile;
-      endnodeinfo = tile_ptr->node(endnode.id());
-    } else {
-      tile_ptr = reader.GetGraphTile(endnode);
-      endnodeinfo = tile_ptr->node(endnode.id());
-    }
-
-    const DirectedEdge* diredge = tile_ptr->directededge(endnodeinfo->edge_index());
-    uint32_t inbound = 0, outbound = 0;
-
-    for (uint32_t i = 0; i < endnodeinfo->edge_count(); i++, diredge++) {
-
-      if ((diredge->forwardaccess() & kAutoAccess) &&
-          !(diredge->reverseaccess() & kAutoAccess))
-        outbound++;
-
-      if (!(diredge->forwardaccess() & kAutoAccess) &&
-          (diredge->reverseaccess() & kAutoAccess))
-        inbound++;
-    }
-
-    if (!outbound && inbound) {
-      rd.AddTask(startnodeinfo.latlng(),
-                 tile_ptr->edgeinfo(directededge.edgeinfo_offset())->wayid(),
-                 tile_ptr->edgeinfo(directededge.edgeinfo_offset())->shape());
-      return true;
-    }
+  // If there is a way in and no way out, or vice versa
+  if ((!outbound && inbound) || (outbound && !inbound)) {
+    rd.AddNode(startnodeinfo.latlng());
+    return true;
   }
 
   return false;
@@ -279,7 +246,7 @@ void AddStatistics(statistics& stats, const DirectedEdge& directededge,
           found = IsLoopTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
       }
       if (!found && directededge.endnode().id() != node.id()) {
-        found = IsReversedOneway(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
+        found = IsUnroutableNode(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
       }
       stats.add_tile_one_way(tileid, rclass, edge_length);
       stats.add_country_one_way(begin_node_iso, rclass, edge_length);

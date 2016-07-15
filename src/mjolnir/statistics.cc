@@ -302,7 +302,7 @@ void statistics::add (const statistics& stats) {
 
 
 statistics::RouletteData::RouletteData ()
-  : node_locs(), way_IDs(), way_shapes() { }
+  : node_locs(), way_IDs(), way_shapes(), unroutable_nodes() { }
 
 void statistics::RouletteData::AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape) {
   auto result = way_IDs.insert(id);
@@ -311,18 +311,20 @@ void statistics::RouletteData::AddTask (const PointLL& p, const uint64_t id, con
     way_shapes.insert({id, shape});
 }
 
+void statistics::RouletteData::AddNode(const PointLL& p) {
+  unroutable_nodes.insert(p);
+}
+
 void statistics::RouletteData::Add (const RouletteData& rd) {
-  const auto new_ids = rd.way_IDs;
-  const auto new_shapes = rd.way_shapes;
-  const auto new_nodes = rd.node_locs;
-  for (auto& id : new_ids) {
-    AddTask(new_nodes.at(id), id, new_shapes.at(id));
-  }
+  way_IDs = merge(way_IDs, rd.way_IDs);
+  way_shapes = merge(way_shapes, rd.way_shapes);
+  node_locs = merge(node_locs, rd.node_locs);
+  unroutable_nodes = merge(unroutable_nodes, rd.unroutable_nodes);
 }
 
 void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree& pt) const {
   // build a task list for each collected wayid
-  json::ArrayPtr arr = json::array({});
+  json::ArrayPtr tasks = json::array({});
   for (auto& id : way_IDs) {
     // build shape array before the rest of the json
     json::ArrayPtr coords = json::array({
@@ -333,42 +335,57 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
       coords->emplace_back(json::array({json::fp_t{way_point.lng(), 5}, json::fp_t{way_point.lat(), 5}}));
     }
     // build each task into the json array
-    arr->emplace_back(
-      json::map
-      ({
-       {"geometries", json::map
-        ({
-         {"features", json::array
-          ({json::map
+    tasks->emplace_back(
+        json::map
+         ({
+          {"geometry", json::map
+          ({
+           {"coordinates", coords},
+           {"type", std::string("LineString")}
+          })},
+          {"properties", json::map
            ({
-            {"geometry", json::map
-             ({
-              {"coordinates", coords},
-              {"type", std::string("Linestring")}
-             })},
-            {"properties", json::map
-            ({
-             {"osmid", id}
-            })},
-            {"type", std::string("Feature")}
-           })
-          })
-         },
-         {"type", std::string("FeatureCollection")}
-        })},
-       {"identifier", id},
-       {"instruction", std::string("Check to make sure the one way road is logical")}
-      }));
+            {"osmid", id},
+            {"type", std::string("Loop")}
+           })},
+          {"type", std::string("Feature")}
+         })
+        );
   }
+  // Add all unroutable nodes to the json array
+  for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
+    tasks->emplace_back(
+        json::map
+         ({
+          {"geometry", json::map
+          ({
+           {"coordinates", json::array
+            ({{json::fp_t{it->lng(), 5}}, {json::fp_t{it->lat(), 5}}})
+           },
+           {"type", std::string("Point")}
+          })},
+          {"properties", json::map
+           ({
+            {"type", std::string("Node")}
+           })},
+          {"type", std::string("Feature")}
+         })
+        );
+  }
+  // Put the tasks' json into the feature collection
+  json::MapPtr geo_json = json::map
+    ({
+     {"type", std::string("FeatureCollection")},
+     {"features", tasks}
+    });
   // write out to a file
-  std::string file_str = pt.get<std::string>("mjolnir.maproulette_tasks");
-  if (boost::filesystem::exists(file_str))
-      boost::filesystem::remove(file_str);
+  if (boost::filesystem::exists("maproulette_tasks.geojson"))
+      boost::filesystem::remove("maproulette_tasks.geojson");
   std::ofstream file;
-  file.open(file_str);
-  file << *arr << std::endl;
+  file.open("maproulette_tasks.geojson");
+  file << *geo_json << std::endl;
   file.close();
-  LOG_INFO("MapRoulette tasks saved to " + file_str);
+  LOG_INFO("MapRoulette tasks saved to maproulette_tasks.geojson");
 }
 }
 }

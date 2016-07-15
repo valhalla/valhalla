@@ -15,13 +15,9 @@ namespace valhalla {
 namespace mjolnir {
 
 void statistics::build_db(const boost::property_tree::ptree& pt) {
-  // Get the location of the db file to write
-  auto database = pt.get_optional<std::string>("mjolnir.statistics");
-  if(!database) {
-    return;
-  }
-  else if(boost::filesystem::exists(*database)) {
-    boost::filesystem::remove(*database);
+  std::string database = "statistics.sqlite";
+  if(boost::filesystem::exists(database)) {
+    boost::filesystem::remove(database);
   }
 
   spatialite_init(0);
@@ -32,9 +28,9 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   char *err_msg = NULL;
   std::string sql;
 
-  ret = sqlite3_open_v2(database->c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+  ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
   if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + *database);
+    LOG_ERROR("cannot open " + database);
     sqlite3_close(db_handle);
     db_handle = NULL;
     return;
@@ -105,7 +101,7 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
     return;
   }
   sqlite3_close(db_handle);
-  LOG_INFO("Finished");
+  LOG_INFO("Statistics database saved to statistics.sqlite");
 }
 
 void statistics::create_tile_tables(sqlite3 *db_handle, sqlite3_stmt *stmt) {
