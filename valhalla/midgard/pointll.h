@@ -150,4 +150,15 @@ class PointLL : public Point2 {
 }
 }
 
+namespace std {
+  template <> struct hash<valhalla::midgard::PointLL> {
+    size_t operator()(const valhalla::midgard::PointLL& p) const {
+      uint64_t h;
+      std::memcpy(&h, &p.first, 4);
+      std::memcpy(&h + 4, &p.second, 4);
+      return std::hash<uint64_t>()(h);
+    }
+  };
+}
+
 #endif  // VALHALLA_MIDGARD_POINTLL_H_

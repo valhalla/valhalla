@@ -1,9 +1,8 @@
-#include <map>
-#include <algorithm>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/gridded_data.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
+#include "midgard/tiles.h"
+#include "midgard/gridded_data.h"
+#include "midgard/logging.h"
 
 namespace valhalla {
 namespace midgard {
@@ -51,8 +50,8 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contours) {
-  //TODO: sort and validate contours
+typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contours_lines) {
+  //TODO: sort and validate contour range
 
   // Values at tile corners and center (0 element is center)
   int sh[5];
@@ -60,11 +59,18 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contou
   coord_t tile_corners[5];    // coord_t at tile corners and center
 
   // Find the intersection along a tile edge
-  auto sect = [&tile_corners, &s](const int p1, const int p2) {
+  auto intersect = [&tile_corners, &s](int p1, int p2) {
     auto ds = s[p2] - s[p1];
     return coord_t((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
                    (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
   };
+
+  //we need something to hold each iso-line
+  using segment_t = std::list<coord_t>;
+  std::vector<std::list<segment_t> > segments(contours_lines.size());
+  //and something to find them quickly
+  using segment_lookup_t = std::unordered_map<coord_t, typename std::list<segment_t>::iterator>;
+  std::vector<segment_lookup_t> lookup(contours_lines.size());
 
   int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
   int case_value;
@@ -74,24 +80,23 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contou
      { {9,6,7},{5,2,0},{8,0,0} }
    };
 
+  // For each cell
   for (int row = this->nrows_ - 1; row >= 0; row--) {
     for (int col = 0; col <= this->ncolumns_ - 1; col++) {
       int tileid = this->TileId(col, row);
       auto cell1 = data_[tileid];
-      auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col, row+1)];
-      auto cell3 = data_[tileid + 1];         // TileId(col+1, row)];
+      auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col,   row+1)];
+      auto cell3 = data_[tileid + 1];                   // TileId(col+1, row)];
       auto cell4 = data_[tileid + this->ncolumns_ + 1]; // TileId(col+1, row+1)];
-      auto dmin  = std::min(std::min(cell1, cell2),
-                                std::min(cell3, cell4));
-      auto dmax  = std::max(std::max(cell1, cell2),
-                                std::max(cell3, cell4));
+      auto dmin  = std::min(std::min(cell1, cell2), std::min(cell3, cell4));
+      auto dmax  = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
-      if (dmax < contours.front() || dmin > contours.back())
+      if (dmax < contours_lines.front() || dmin > contours_lines.back())
          continue;
 
       int k = 0;
-      for (auto contour : contours) {
+      for (auto contour : contours_lines) {
         if (contour < dmin || contour > dmax) {
           k++;
           continue;
@@ -162,47 +167,95 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contou
             break;
           case 4:              // Line between vertex 1 and side 2-3
             pt1 = tile_corners[m1];
-            pt2 = sect(m2, m3);
+            pt2 = intersect(m2, m3);
             break;
           case 5:              // Line between vertex 2 and side 3-1
             pt1 = tile_corners[m2];
-            pt2 = sect(m3, m1);
+            pt2 = intersect(m3, m1);
             break;
           case 6:              // Line between vertex 3 and side 1-2
             pt1 = tile_corners[m3];
-            pt2 = sect(m1, m2);
+            pt2 = intersect(m1, m2);
             break;
           case 7:              // Line between sides 1-2 and 2-3
-            pt1 = sect(m1, m2);
-            pt2 = sect(m2, m3);
+            pt1 = intersect(m1, m2);
+            pt2 = intersect(m2, m3);
           break;
           case 8:              // Line between sides 2-3 and 3-1
-            pt1 = sect(m2, m3);
-            pt2 = sect(m3, m1);
+            pt1 = intersect(m2, m3);
+            pt2 = intersect(m3, m1);
             break;
           case 9:              // Line between sides 3-1 and 1-2
-            pt1 = sect(m3, m1);
-            pt2 = sect(m1, m2);
+            pt1 = intersect(m3, m1);
+            pt2 = intersect(m1, m2);
             break;
           default:
             break;
           }
 
-          // Add to the contour lines
-          AddToContourLine(pt1, pt2, k);
+          //can we lengthen a segment from this point
+          typename segment_lookup_t::iterator it;
+          if((it = lookup[k].find(pt1)) != lookup[k].end()) {
+            //update the segment
+            if(it->second->front() == pt1)
+              it->second->push_front(pt2);
+            else
+              it->second->push_back(pt2);
+            //update the lookup table
+            lookup[k].emplace(pt2, it->second);
+            lookup[k].erase(it);
+          }//can we lengthen a segment from this other point
+          else if((it = lookup[k].find(pt2)) != lookup[k].end()) {
+            //update the segment
+            if(it->second->front() == pt2)
+              it->second->push_front(pt1);
+            else
+              it->second->push_back(pt1);
+            //update the lookup table
+            lookup[k].emplace(pt1, it->second);
+            lookup[k].erase(it);
+          }//this is an orphan segment for now
+          else {
+            //new segment
+            segments[k].push_front(segment_t{pt1, pt2});
+            //indexed
+            lookup[k].emplace(pt1, segments[k].begin());
+            lookup[k].emplace(pt2, segments[k].begin());
+          }
+
         }
         k++;
       } // Each contour
     } // Each tile col
   } // Each tile row
-}
 
-// Add a segment to the contour lines
-template <class coord_t>
-void GriddedData<coord_t>::AddToContourLine(const coord_t& pt1,
-                      const coord_t& pt2, const int k) {
-  //LOG_INFO(std::to_string(k) + " | (" + std::to_string(pt1.first) + "," + std::to_string(pt1.second) +
-   //        ") -> (" + std::to_string(pt2.first) + "," + std::to_string(pt2.second) + ")");
+  //lace up orphaned segments within a given contour
+  contours_t contours(contours_lines.size());
+  for(size_t i = 0; i < contours.size(); ++i) {
+    auto& contour = contours[i];
+    auto contour_pts = 0;
+    do {
+      contour_pts = contour.size();
+      for(auto& segment : segments[i]) {
+        if(!contour.size())
+          contour.swap(segment);
+        else if(segment.front() == contour.back())
+          contour.splice(contour.end(), segment, std::next(segment.begin()), segment.end());
+        else if(segment.back() == contour.front())
+          contour.splice(contour.begin(), segment, segment.begin(), std::prev(segment.end()));
+        else if(segment.front() == contour.front()) {
+          segment.reverse();
+          contour.splice(contour.begin(), segment, segment.begin(), std::prev(segment.end()));
+        }
+        else if(segment.back() == contour.back()) {
+          segment.reverse();
+          contour.splice(contour.end(), segment, std::next(segment.begin()), segment.end());
+        }
+      }
+    } while(contour_pts != contour.size());
+  }
+
+  return contours;
 }
 
 // Explicit instantiation

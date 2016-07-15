@@ -4,6 +4,8 @@
 #include <vector>
 #include <utility>
 #include <tuple>
+#include <cstring>
+#include <functional>
 
 namespace valhalla{
 namespace midgard{
@@ -162,6 +164,17 @@ class Point2 : public std::pair<float, float>{
 };
 
 }
+}
+
+namespace std {
+  template <> struct hash<valhalla::midgard::Point2> {
+    size_t operator()(const valhalla::midgard::Point2& p) const {
+      uint64_t h;
+      std::memcpy(&h, &p.first, 4);
+      std::memcpy(&h + 4, &p.second, 4);
+      return std::hash<uint64_t>()(h);
+    }
+  };
 }
 
 #endif  // VALHALLA_MIDGARD_POINT2_H_
