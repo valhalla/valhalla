@@ -1,5 +1,6 @@
 #include "test.h"
 #include "midgard/gridded_data.h"
+#include "midgard/pointll.h"
 #include <limits>
 
 using namespace valhalla::midgard;
@@ -15,10 +16,24 @@ namespace {
           throw std::logic_error("Should have been able to set this cell");
       }
     }
-    /*auto contours = */g.GenerateContourLines({100000,200000,300000,400000,500000,600000,700000});
+    auto contours = g.GenerateContourLines({100000,200000,300000,400000,500000,600000,700000});
 
-    //are these right?
+    //need to be the same size and all of them have to have a single ring
+    if(contours.size() != 7)
+      throw std::logic_error("There should be 7 iso lines");
+    for(const auto& contour : contours)
+      if(contour.size() != 1)
+        throw std::logic_error("Each contour should be a single ring");
 
+    //because of the pattern above we shoul end up with concentric circles
+    //every ring should have all smaller rings inside it
+    for(size_t i = 0; i < contours.size(); ++i) {
+      for(size_t j = i + 1; j < contours.size(); ++j) {
+        for(const auto& p : contours[j])
+          if(!p.WithinConvexPolygon(contours[i]))
+            throw std::logic_error("Ring " + std::to_string(i) + " should contain ring " + std::to_string(j));
+      }
+    }
   }
 
 }
