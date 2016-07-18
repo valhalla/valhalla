@@ -90,6 +90,14 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
   allow_transitions_ = costing->AllowTransitions();
   hierarchy_limits_  = costing->GetHierarchyLimits();
   hierarchy_limits_reverse_ = costing->GetHierarchyLimits();
+
+  // Allow more expansion in bidirectional on arterial and local to
+  // account for shorter routes and more direct paths near the origin
+  // and destination. These numbers match the values in CostMatrix
+  hierarchy_limits_[1].max_up_transitions = 2000;
+  hierarchy_limits_[2].max_up_transitions = 100;
+  hierarchy_limits_reverse_[1].max_up_transitions = 2000;
+  hierarchy_limits_reverse_[2].max_up_transitions = 100;
 }
 
 // Calculate best path using bi-directional A*. No hierarchies or time
@@ -214,7 +222,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         if (pred.trans_up()) {
           hierarchy_limits_[level+1].up_transition_count++;
         }
-        if (hierarchy_limits_[level].StopExpanding(pred.distance())) {
+        if (hierarchy_limits_[level].StopExpanding()) {
           continue;
         }
       }
@@ -227,8 +235,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
                   i++, directededge++, edgeid++) {
         // Handle upward transition edges
         if (directededge->trans_up()) {
-           if (allow_transitions_ &&
-               hierarchy_limits_[level].AllowUpwardTransition(dist)) {
+           if (allow_transitions_) {
              // Allow the transition edge. Add it to the adjacency list and
              // edge labels using the predecessor information. Transition
              // edges have no length.
@@ -325,7 +332,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         if (pred2.trans_up()) {
           hierarchy_limits_reverse_[level+1].up_transition_count++;
         }
-        if (hierarchy_limits_reverse_[level].StopExpanding(pred2.distance())) {
+        if (hierarchy_limits_reverse_[level].StopExpanding()) {
           continue;
         }
       }
@@ -348,8 +355,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
               i++, directededge++, edgeid++) {
         // Handle upward transition edges.
         if (directededge->trans_up()) {
-          if (allow_transitions_ &&
-              hierarchy_limits_reverse_[level].AllowUpwardTransition(dist)) {
+          if (allow_transitions_) {
             // Allow the transition edge. Add it to the adjacency list and
             // edge labels using the predecessor information. Transition
             // edges have no length.

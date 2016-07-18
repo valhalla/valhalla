@@ -27,7 +27,6 @@ Isochrone::Isochrone()
       adjacencylist_(nullptr),
       edgestatus_(nullptr) {
   edgelabels_.reserve(kInitialEdgeLabelCount);
-  isotile_ = nullptr;
 }
 
 // Destructor
@@ -48,7 +47,7 @@ void Isochrone::Clear() {
 }
 
 // Compute an isochrone.
-const GriddedData<PointLL>* Isochrone::Compute(PathLocation& origin,
+const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(PathLocation& origin,
              const uint32_t max_time_seconds,
              GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
@@ -67,9 +66,6 @@ const GriddedData<PointLL>* Isochrone::Compute(PathLocation& origin,
 
   // Construct the isotile. Convert time in seconds to a max distance
   // in meters based on an estimate of max speed for the travel mode.
-  if (isotile_ != nullptr) {
-    delete isotile_;
-  }
   int nt = 512;
   float max_distance = 10000.0f;
   if (mode_ == TravelMode::kDrive) {
@@ -87,7 +83,7 @@ const GriddedData<PointLL>* Isochrone::Compute(PathLocation& origin,
   AABB2<PointLL> bounds(PointLL(center.lng() - delta, center.lat() - delta),
                         PointLL(center.lng() + delta, center.lat() + delta));
   float tilesize = (2.0f * delta) / static_cast<float>(nt);
-  isotile_ = new GriddedData<PointLL>(bounds, tilesize, max_time_seconds + 300);
+  isotile_.reset(new GriddedData<PointLL>(bounds, tilesize, max_time_seconds + 300));
 
   // Set the origin
   SetOrigin(graphreader, origin, costing);

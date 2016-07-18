@@ -62,8 +62,8 @@ namespace {
         row->emplace_back(json::map({
           {"from_index", static_cast<uint64_t>(origin)},
           {"to_index", static_cast<uint64_t>(destination + (i - start))},
-          {"time", static_cast<nullptr_t>(nullptr)},
-          {"distance", static_cast<nullptr_t>(nullptr)}
+          {"time", static_cast<std::nullptr_t>(nullptr)},
+          {"distance", static_cast<std::nullptr_t>(nullptr)}
         }));
       }
     }
