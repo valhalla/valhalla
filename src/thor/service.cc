@@ -135,11 +135,10 @@ namespace valhalla {
         }
 
         // Set the origin edge to the through_edge
-        auto edges = origin.edges();
-        for (auto e : edges) {
+        for (auto e : origin.edges) {
           if (e.id == through_edge) {
-            origin.ClearEdges();
-            origin.CorrelateEdge(e);
+            origin.edges.clear();
+            origin.edges.push_back(e);
             break;
           }
         }

@@ -9,6 +9,7 @@ using namespace valhalla::sif;
 namespace {
 
 constexpr int kExtendSearchThreshold = 250;
+constexpr uint32_t kMaxMatrixIterations = 2000000;
 
 // Convenience method to get opposing edge Id given a directed edge and a tile
 GraphId GetOpposingEdgeId(const DirectedEdge* edge, const GraphTile* tile) {
@@ -105,26 +106,30 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   int n = 0;
   while (true) {
     // Iterate all target locations in a backwards search
-    for (uint32_t i = 0; i < target_location_list.size(); i++) {
+    for (uint32_t i = 0; i < target_count_; i++) {
       if (target_status_[i].threshold > 0) {
         target_status_[i].threshold--;
         BackwardSearch(i, graphreader, costing);
-      }
-      if (target_status_[i].threshold == 0) {
-        target_status_[i].threshold = -1;
-        remaining_targets_--;
+        if (target_status_[i].threshold == 0) {
+          target_status_[i].threshold = -1;
+          if (remaining_targets_ > 0) {
+            remaining_targets_--;
+          }
+        }
       }
     }
 
     // Iterate all source locations in a forward search. Mark any
-    for (uint32_t i = 0; i < source_location_list.size(); i++) {
+    for (uint32_t i = 0; i < source_count_; i++) {
       if (source_status_[i].threshold > 0) {
         source_status_[i].threshold--;
         ForwardSearch(i, n, graphreader, costing);
-      }
-      if (source_status_[i].threshold == 0) {
-        source_status_[i].threshold = -1;
-        remaining_sources_--;
+        if (source_status_[i].threshold == 0) {
+          source_status_[i].threshold = -1;
+          if (remaining_sources_ > 0) {
+            remaining_sources_--;
+          }
+        }
       }
     }
 
@@ -132,6 +137,12 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     if (remaining_sources_ == 0 && remaining_targets_ == 0) {
       LOG_INFO("SourceToTarget iterations: n = " + std::to_string(n));
       break;
+    }
+
+    // Protect against edge cases that may lead to never breaking out of
+    // this loop. This should never occur but lets make sure.
+    if (n >= kMaxMatrixIterations) {
+      throw std::runtime_error("Exceeded max iterations in CostMatrix::SourceToTarget");
     }
     n++;
   }
@@ -197,10 +208,10 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
   if (predindex == kInvalidLabel) {
     // Forward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
-    source_status_[index].threshold = 0;
     for (uint32_t target = 0; target < target_count_; target++) {
       UpdateStatus(index, target);
     }
+    source_status_[index].threshold = 0;
     return;
   }
 
@@ -270,7 +281,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
                         directededge, pred.cost(), pred.restrictions(),
                         pred.opp_local_idx(), mode_,
                         Cost(pred.transition_cost(), pred.transition_secs()),
-                        pred.walking_distance());
+                        pred.path_distance());
       }
       continue;
     }
@@ -296,7 +307,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
     Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost = pred.cost() + tc +
                 costing->EdgeCost(directededge, nodeinfo->density());
-    uint32_t distance = pred.walking_distance() + directededge->length();
+    uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
@@ -366,8 +377,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
           // Update best connection and set found = true.
           // distance computation only works with the casts.
-          uint32_t d = std::abs(static_cast<int>(pred.walking_distance())   +
-                                static_cast<int>(opp_el.walking_distance()) -
+          uint32_t d = std::abs(static_cast<int>(pred.path_distance())   +
+                                static_cast<int>(opp_el.path_distance()) -
                                 static_cast<int>(opp_el.transition_secs()));
           best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
           best_connection_[idx].found = true;
@@ -385,9 +396,9 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
             float oppsec = (predidx == kInvalidLabel) ?
                           0 : edgelabels[predidx].cost().secs;
             uint32_t oppdist = (predidx == kInvalidLabel) ?
-                          0 : edgelabels[predidx].walking_distance();
+                          0 : edgelabels[predidx].path_distance();
             float s = pred.cost().secs + oppsec + opp_el.transition_secs();
-            uint32_t d = pred.walking_distance() + oppdist;
+            uint32_t d = pred.path_distance() + oppdist;
 
             // Update best connection and set a threshold
             best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
@@ -414,7 +425,7 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
   auto it = s.find(target);
   if (it != s.end()) {
     s.erase(it);
-    if (s.empty()) {
+    if (s.empty() && source_status_[source].threshold > 0) {
       // At least 1 connection has been found to each target for this source.
       // Set a threshold to continue search for a limited number of times.
       source_status_[source].threshold = kExtendSearchThreshold;
@@ -426,7 +437,7 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
   it = t.find(source);
   if (it != t.end()) {
     t.erase(it);
-    if (t.empty()) {
+    if (t.empty() && target_status_[target].threshold > 0) {
       // At least 1 connection has been found to each source for this target.
       // Set a threshold to continue search for a limited number of times.
       target_status_[target].threshold = kExtendSearchThreshold;
@@ -445,10 +456,10 @@ void CostMatrix::BackwardSearch(const uint32_t index,
   if (predindex == kInvalidLabel) {
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
-    target_status_[index].threshold = 0;
     for (uint32_t source = 0; source < source_count_; source++) {
       UpdateStatus(source, index);
     }
+    target_status_[index].threshold = 0;
     return;
   }
 
@@ -524,7 +535,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
                         directededge, pred.cost(), pred.restrictions(),
                         pred.opp_local_idx(), mode_,
                         Cost(pred.transition_cost(), pred.transition_secs()),
-                        pred.walking_distance());
+                        pred.path_distance());
       }
       continue;
     }
@@ -564,7 +575,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
                    nodeinfo, opp_edge, opp_pred_edge);
     Cost newcost = pred.cost() + tc +
                    costing->EdgeCost(opp_edge, nodeinfo->density());
-    uint32_t distance = pred.walking_distance() + directededge->length();
+    uint32_t distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
@@ -618,9 +629,9 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
     source_hierarchy_limits_[index][2].max_up_transitions = 100;
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (origin.edges())) {
+    for (const auto& edge : (origin.edges)) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (origin.IsNode() && edge.dist == 1) {
+      if (edge.end_node()) {
         continue;
       }
 
@@ -687,10 +698,10 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     target_hierarchy_limits_[index][2].max_up_transitions = 100;
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (dest.edges())) {
+    for (const auto& edge : (dest.edges)) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (dest.IsNode() && edge.dist == 0.0f) {
+      if (edge.begin_node()) {
         continue;
       }
 

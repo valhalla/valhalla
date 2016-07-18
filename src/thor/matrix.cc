@@ -169,6 +169,8 @@ namespace valhalla {
           break;
         case MATRIX_TYPE::MANY_TO_MANY:
         case MATRIX_TYPE::SOURCES_TO_TARGETS:
+          //TODO: correlated.get_child("sources").get_size() to know how much of the correlated to subset out)
+          //TODO: correlated.get_child("targets").get_size() to know how much of the correlated to subset out after the sources subset)
           json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode), units, distance_scale);
           matrix_action_type = "many-to-many";
           break;

@@ -22,8 +22,7 @@ PathAlgorithm::PathAlgorithm()
       allow_transitions_(false),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      walking_distance_(0) {
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+      tile_creation_date_(0) {
 }
 
 // Destructor
@@ -62,6 +61,10 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new AdjacencyList(mincost, range, bucketsize));
   edgestatus_.reset(new EdgeStatus());
+
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_.reserve(kInitialEdgeLabelCount);
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
@@ -108,8 +111,11 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), destination.vertex(), costing);
-  float mindist = astarheuristic_.GetDistance(origin.vertex());
+  //Note: because we can correlate to more than one place for a given PathLocation
+  //using edges.front here means we are only setting the heuristics to one of them
+  //alternate paths using the other correlated points to may be harder to find
+  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
+  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
@@ -271,7 +277,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
       AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_);
+                    directededge->opp_local_idx(), mode_, 0);
     }
   }
   return {};      // Should never get here
@@ -320,7 +326,8 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
   AddToAdjacencyList(edgeid, pred.sortcost());
   edgelabels_.emplace_back(predindex, edgeid,
                 edge, pred.cost(), pred.sortcost(), dist,
-                pred.restrictions(), pred.opp_local_idx(), mode_);
+                pred.restrictions(), pred.opp_local_idx(), mode_,
+                pred.path_distance());
 }
 
 // Add an edge at the origin to the adjacency list
@@ -330,9 +337,9 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : (origin.edges())) {
+  for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
@@ -364,7 +371,10 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
+        // Update cost and use A* heuristic from the origin location rather
+        // than the end node of this edge
         cost -= p->second;
+        dist = astarheuristic_.GetDistance(origin.latlng_);
       }
     }
 
@@ -378,7 +388,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     adjacencylist_->Add(edgelabels_.size(), sortcost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d, 0, 0, 0, 0, false);
+            directededge->opp_local_idx(), mode_, d);
     edge_label.set_origin();
 
     // Set the origin flag
@@ -399,9 +409,9 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.edges()) {
+  for (const auto& edge : dest.edges) {
     // If destination is at a node skip any outbound edges
-    if (dest.IsNode() && edge.dist == 0.0f) {
+    if (edge.begin_node()) {
       continue;
     }
 
@@ -425,9 +435,9 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
 bool PathAlgorithm::IsTrivial(const GraphId& edgeid,
                               const PathLocation& origin,
                               const PathLocation& destination) const {
-  for (const auto& destination_edge : destination.edges()) {
+  for (const auto& destination_edge : destination.edges) {
     if (destination_edge.id == edgeid) {
-      for (const auto& origin_edge : origin.edges()) {
+      for (const auto& origin_edge : origin.edges) {
         if (origin_edge.id == edgeid &&
             origin_edge.dist <= destination_edge.dist) {
           return true;

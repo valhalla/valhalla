@@ -138,7 +138,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       Cost newcost = pred.cost() +
                      costing->EdgeCost(directededge, nodeinfo->density()) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
-      uint32_t distance = pred.walking_distance() + directededge->length();
+      uint32_t distance = pred.path_distance() + directededge->length();
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
@@ -160,8 +160,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, distance,
-                    0, 0, 0, 0, false);
+                    directededge->opp_local_idx(), mode_, distance);
     }
   }
   return {};      // Should never get here
@@ -284,7 +283,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
                     costing->EdgeCost(opp_edge, nodeinfo->density()) +
                     costing->TransitionCostReverse(directededge->localedgeidx(),
                                         nodeinfo, opp_edge, opp_pred_edge);
-      uint32_t distance = pred.walking_distance() + directededge->length();
+      uint32_t distance = pred.path_distance() + directededge->length();
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
@@ -306,8 +305,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, distance,
-                    0, 0, 0, 0, false);
+                    directededge->opp_local_idx(), mode_, distance);
     }
   }
   return {};      // Should never get here
@@ -336,9 +334,9 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : (origin.edges())) {
+  for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
@@ -367,7 +365,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     adjacencylist_->Add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             cost.cost, 0.0f, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d, 0, 0, 0, 0, false);
+            directededge->opp_local_idx(), mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
   }
@@ -378,7 +376,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                       const PathLocation& dest,
                       const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add opposing edges to adjacency list
-  for (const auto& edge : dest.edges()) {
+  for (const auto& edge : dest.edges) {
     // Get the directed edge
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
@@ -410,8 +408,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // TODO - restrictions?
     adjacencylist_->Add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost,
-            cost.cost, 0.0f, 0, opp_dir_edge->opp_local_idx(), mode_, d,
-            0, 0, 0, 0, false);
+            cost.cost, 0.0f, 0, opp_dir_edge->opp_local_idx(), mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
   }
@@ -438,7 +435,7 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
       settled_count_++;
     } else {
       // Set up the destination - consider each possible location edge.
-      for (const auto& edge : loc.edges()) {
+      for (const auto& edge : loc.edges) {
         // Keep the id and the partial distance for the
         // remainder of the edge.
         d.dest_edges[edge.id] = (1.0f - edge.dist);
@@ -481,7 +478,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
       settled_count_++;
     } else {
       // Set up the destination - consider each possible location edge.
-      for (const auto& edge : loc.edges()) {
+      for (const auto& edge : loc.edges) {
         // Get the opposing directed edge Id - this is the edge marked as the
         // "destination" - but the cost is based on the forward path along the
         // initial edge.
@@ -551,7 +548,7 @@ bool TimeDistanceMatrix::UpdateDestinations(const uint32_t origin_index,
     Cost newcost = pred.cost() - (costing->EdgeCost(edge, 0.0f) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
-      dest.distance = pred.walking_distance() - (edge->length() * remainder);
+      dest.distance = pred.path_distance() - (edge->length() * remainder);
     }
 
     // Erase this edge from further consideration. Mark this destination as

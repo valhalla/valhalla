@@ -28,10 +28,18 @@ int GetThreshold(const TravelMode mode, const int n) {
 namespace valhalla {
 namespace thor {
 
+constexpr uint64_t kInitialEdgeLabelCountBD = 100000;
+
 // Default constructor
-BidirectionalAStar::BidirectionalAStar()
-    : PathAlgorithm() {
+BidirectionalAStar::BidirectionalAStar() {
   threshold_ = 0;
+  mode_ = TravelMode::kDrive;
+  allow_transitions_ = false;
+  adjacencylist_ = nullptr;
+  edgestatus_ = nullptr;
+  tile_creation_date_ = 0;
+  edgelabels_.reserve(kInitialEdgeLabelCountBD);
+  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
 }
 
 // Destructor
@@ -96,7 +104,10 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Set origin and destination locations - seeds the adj. lists
-  Init(origin.vertex(), destination.vertex(), costing);
+  //Note: because we can correlate to more than one place for a given PathLocation
+  //using edges.front here means we are only setting the heuristics to one of them
+  //alternate paths using the other correlated points to may be harder to find
+  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
   SetOrigin(graphreader, origin, costing);
   SetDestination(graphreader, destination, costing);
 
@@ -517,9 +528,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : origin.edges()) {
+  for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (origin.IsNode() && edge.dist == 1) {
+    if (edge.end_node()) {
       continue;
     }
 
@@ -548,7 +559,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     AddToAdjacencyList(edgeid, sortcost);
     edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_);
+            directededge->opp_local_idx(), mode_, 0);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -569,10 +580,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   Cost c;
-  for (const auto& edge : dest.edges()) {
+  for (const auto& edge : dest.edges) {
     // If the destination is at a node, skip any outbound edges (so any
     // opposing inbound edges are not considered)
-    if (dest.IsNode() && edge.dist == 0.0f) {
+    if (edge.begin_node()) {
       continue;
     }
 

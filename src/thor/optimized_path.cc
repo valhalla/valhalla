@@ -39,11 +39,31 @@ namespace valhalla {
       // Forward the original request
       result.messages.emplace_back(std::move(request_str));
 
+      // Use CostMatrix to find costs from each location to every other location
       CostMatrix costmatrix;
       std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode);
+
+      // Return an error if any locations are totally unreachable
+      uint32_t idx = 0;
+      uint32_t n = correlated.size();
+      for (uint32_t i = 0; i < n; i++) {
+        bool reachable = false;
+        for (uint32_t j = 0; j < n; j++) {
+          if (td[idx].time != kMaxCost && i != j) {
+            reachable = true;
+          }
+          idx++;
+        }
+        if (!reachable) {
+          throw std::runtime_error("Location at index " + std::to_string(i) + " is unreachable");
+        }
+      }
+
+      // Set time costs to send to Optimizer.
       std::vector<float> time_costs;
-      for (size_t i = 0; i < td.size(); i++)
-        time_costs.emplace_back(static_cast<float>(td[i].time));
+      for (auto& itr : td) {
+        time_costs.emplace_back(static_cast<float>(itr.time));
+      }
 
       for (size_t i = 0; i < correlated.size(); i++)
         LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
@@ -66,8 +86,8 @@ namespace valhalla {
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
       if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request_manytomany) {
-        LOG_WARN("thor::route optimized_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::route optimized_path exceeded threshold::"+ request_str);
+        LOG_WARN("thor::optimized_route elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::optimized_route exceeded threshold::"+ request_str);
         midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");
       }
       return result;
