@@ -150,7 +150,8 @@ class Point2 : public std::pair<float, float>{
    *                  Last vertex is not equal to the first.
    * @return  Returns true if the point is within the polygon, false if not.
    */
-  virtual bool WithinConvexPolygon(const std::vector<Point2>& poly) const;
+  template <class container_t>
+  bool WithinConvexPolygon(const container_t& poly) const;
 
   /**
    * Handy for templated functions that use both Point2 or PointLL to know whether or not
