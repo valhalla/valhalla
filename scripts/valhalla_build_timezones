@@ -6,7 +6,7 @@ error_exit() {
 }
 
 if [ -z "$1" ]; then
-    echo "No config supplied.  Usage: ./create_tz_db.sh /data/valhalla/mjolnir/conf/valhalla.json"
+    echo "No config supplied.  Usage: valhalla_build_timezones /data/valhalla/mjolnir/conf/valhalla.json"
     exit 1
 fi
 
