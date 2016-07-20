@@ -55,6 +55,16 @@ int main(int argc, char** argv) {
       LOG_WARN("Listening on a domain socket limits the server to local requests");
   }
 
+  //configure logging
+  boost::optional<boost::property_tree::ptree&> logging_subtree = config
+      .get_child_optional("tyr.logging");
+  if (logging_subtree) {
+    auto logging_config = valhalla::midgard::ToMap<
+        const boost::property_tree::ptree&,
+        std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    valhalla::midgard::logging::Configure(logging_config);
+  }
+
   //number of workers to use at each stage
   auto worker_concurrency = std::thread::hardware_concurrency();
   if(argc > 2)
