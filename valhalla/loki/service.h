@@ -9,7 +9,6 @@
 #include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
