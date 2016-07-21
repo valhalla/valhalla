@@ -119,10 +119,6 @@ namespace valhalla {
         max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
-      for(const auto& matrix_type : std::list<std::string>{"one_to_many","many_to_one","many_to_many"}) {
-        max_locations.emplace(matrix_type, config.get<size_t>("service_limits." + matrix_type + ".max_locations"));
-        max_distance.emplace(matrix_type, config.get<float>("service_limits." + matrix_type + ".max_distance"));
-      }
       if (max_locations.empty())
         throw std::runtime_error("Missing max_locations configuration.");
       if (max_distance.empty())
@@ -221,15 +217,15 @@ namespace valhalla {
       }
     }
 
-    void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       auto request_sources = request.get_child_optional("sources");
       auto request_targets = request.get_child_optional("targets");
 
       if (!request_locations)
-        if (!request_sources && !request_targets)
-          throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+        if (!request_sources || !request_targets)
+          throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
 
       if (action == ROUTE || action == VIAROUTE || action == LOCATE) {
         for(const auto& location : *request_locations) {
@@ -245,58 +241,68 @@ namespace valhalla {
 
         valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
      } else {
-        if (request_locations) {  //if matrix type and using locations parameter
+       //if MATRIX OR OPTIMIZED and not using sources & targets parameters
+       //deprecated way of specifying
+       if (!request_sources || !request_targets) {
+
+         if (request_locations->size() < 2)
+           throw std::runtime_error("Insufficient number of locations provided");
+
+         //create new sources and targets ptree from locations
+         boost::property_tree::ptree sources_child, targets_child;
           switch (action) {
               case ONE_TO_MANY:
-                sources.push_back(baldr::PathLocation::FromPtree(locations, request_locations->front().second));
+                sources_child.push_back(request_locations->front());
                 for(const auto& reqloc : *request_locations)
-                  targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
+                  targets_child.push_back(reqloc);
 
                 break;
               case MANY_TO_ONE:
                 for(const auto& reqloc : *request_locations)
-                  sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
+                  sources_child.push_back(reqloc);
 
-                targets.push_back(baldr::PathLocation::FromPtree(locations, request_locations->back().second));
+                targets_child.push_back(request_locations->back());
                 break;
               case MANY_TO_MANY:
               case OPTIMIZED_ROUTE:
                 for(const auto& reqloc : *request_locations) {
-                  sources.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
-                  targets.push_back(baldr::PathLocation::FromPtree(locations, reqloc.second));
+                  sources_child.push_back(reqloc);
+                  targets_child.push_back(reqloc);
                 }
                 break;
           }
-          valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+          //add these back in the original request (in addition to locations while being deprecated
+          request.add_child("sources", sources_child);
+          request.add_child("targets", targets_child);
+          request_sources = request.get_child("sources");
+          request_targets = request.get_child("targets");
         }
-        if (request_sources) {
-          for(const auto& source : *request_sources) {
-            try{
-              sources.push_back(baldr::PathLocation::FromPtree(locations, source.second));
-            }
-            catch (...) {
-              throw std::runtime_error("Failed to parse source");
-            }
-          }
-          if(sources.size() < 1)
-            throw std::runtime_error("Insufficient number of sources provided");
 
-          valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
-        }
-        if (request_targets) {
-          for(const auto& target : *request_targets) {
-            try{
-              targets.push_back(baldr::PathLocation::FromPtree(locations, target.second));
-            }
-            catch (...) {
-              throw std::runtime_error("Failed to parse target");
-            }
+        for(const auto& source : *request_sources) {
+          try{
+            sources.push_back(baldr::Location::FromPtree(source.second));
           }
-          if(targets.size() < 1)
-            throw std::runtime_error("Insufficient number of targets provided");
-
-          valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+          catch (...) {
+            throw std::runtime_error("Failed to parse source");
+          }
         }
+        if(sources.size() < 1)
+           throw std::runtime_error("Insufficient number of sources provided");
+
+        valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+
+        for(const auto& target : *request_targets) {
+          try{
+            targets.push_back(baldr::Location::FromPtree(target.second));
+          }
+          catch (...) {
+            throw std::runtime_error("Failed to parse target");
+          }
+        }
+        if(targets.size() < 1)
+          throw std::runtime_error("Insufficient number of targets provided");
+
+        valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
       }
 
       //using the costing we can determine what type of edge filtering to use

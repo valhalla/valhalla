@@ -26,15 +26,15 @@ namespace valhalla {
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();
      protected:
-      void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request);
+      void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request);
       prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
-      std::vector<baldr::PathLocation> sources;
-      std::vector<baldr::PathLocation> targets;
+      std::vector<baldr::Location> sources;
+      std::vector<baldr::Location> targets;
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter edge_filter;
       sif::NodeFilter node_filter;
