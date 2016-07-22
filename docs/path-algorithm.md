@@ -46,9 +46,9 @@ Edges that have been visited are stored in a vector with an EdgeLabel structure 
 - **Opposing edge Id** - Graph Id of the opposing edge (for bidirectional A*).
 - **End node** - GraphId of the end node of the edge. This allows the expansion to occur by reading the node and not having to re-read the directed edge to find its end node.
 - **Cost** - Cost and elapsed time in seconds along the path to this edge.
-- **Sort cost** Cost including includes A* heuristic. 
-- ** Distance** - An estimate of the straight line distance to the destination.
-- ** Predecessor edge** - Index to the predecessor edge label information within the EdgeLabels list.
+- **Sort cost** - Cost including includes A* heuristic. 
+- **Distance** - An estimate of the straight line distance to the destination.
+- **Predecessor edge** - Index to the predecessor edge label information within the EdgeLabels list.
 
 Several other pieces of information about the prior edge are also kept to avoid having to re-read an edge. In addition, several transit specific attributes are added for multi-modal routes.
 
