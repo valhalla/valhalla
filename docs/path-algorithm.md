@@ -40,7 +40,7 @@ Each directed edge in the routing graph can have three states:
 - **Temporary** - An edge that has been visited or encountered but there could still be a lower cost path to this edge. This edge will be "adjacent" or connected to an edge that is permanently labeled. Temporary edges are noted in the Adjacency List and are sorted such that they are "expanded" in order of lowest cost.
 - **Permanent** - Lowest cost path to this edge has been found.
 
-Edges that have been visited are stored in a vector with an EdgeLabel structure that contains information about the path up to this edge. In particular the predecessor edge is stored. This allows the shortest path of directed edges to be consstructed by using each edges predecessor information to walk the path backwards. Additional information about the path to get to the directed edge is also kept. This information includes:
+Edges that have been visited are stored in a vector with an EdgeLabel structure that contains information about the path up to this edge. In particular the predecessor edge is stored. This allows the shortest path of directed edges to be constructed by using each edges predecessor information to walk the path backwards. Additional information about the path to get to the directed edge is also kept. This information includes:
 
 - **Edge Id** - Graph Id of the edge.
 - **Opposing edge Id** - Graph Id of the opposing edge (for bidirectional A*).
