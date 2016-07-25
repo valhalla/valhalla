@@ -21,6 +21,7 @@ namespace {
       }
     }
 
+    //make the contours
     std::vector<float> iso_markers{100000,200000,300000,400000,500000,600000,700000};
     auto contours = g.GenerateContours(iso_markers);
 
