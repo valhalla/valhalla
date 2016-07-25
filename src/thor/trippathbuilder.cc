@@ -723,6 +723,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   // Assign the admins
   AssignAdmins(trip_path, admin_info_list);
 
+  // Set the bounding box of the shape
+  AABB2<PointLL> bbox(trip_shape);
+  TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  min_ll->set_lat(bbox.miny());
+  min_ll->set_lng(bbox.minx());
+  TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  max_ll->set_lat(bbox.maxy());
+  max_ll->set_lng(bbox.maxx());
+
   // Encode shape and add to trip path.
   std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
   trip_path.set_shape(encoded_shape_);
