@@ -146,8 +146,7 @@ class Point2 : public std::pair<float, float>{
    * @param  poly  List of vertices that form a convex polygon. Assumes
    *               the following:
    *                  Polygon is convex.
-   *                  There are no duplicate vertices.
-   *                  Last vertex is not equal to the first.
+   *                  Only the first and last vertices may be duplicated.
    * @return  Returns true if the point is within the polygon, false if not.
    */
   template <class container_t>
