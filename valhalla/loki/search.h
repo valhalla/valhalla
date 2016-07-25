@@ -13,13 +13,14 @@ namespace valhalla{
 namespace loki{
 
 /**
- * A callable element which returns true if an edge should be
- * filtered out of the correlated set and false if the edge is usable
+ * A callable element which returns a value between 0 and 1 based on
+ * how desirable the edge is for use as a location. 0 indicated the
+ * edge should not be used as a location (inaccessible).
  *
  * TODO: remove the filtering of transit edges when they get proper
  * opposing edges added to the graph
  */
-const sif::EdgeFilter PassThroughEdgeFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down() || edge->IsTransitLine(); };
+const sif::EdgeFilter PassThroughEdgeFilter = [](const baldr::DirectedEdge* edge) -> float { return !(edge->trans_up() || edge->trans_down() || edge->IsTransitLine()); };
 
 /**
  * A callable element which returns true if a node should be
