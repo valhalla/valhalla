@@ -20,13 +20,7 @@ namespace loki{
  * TODO: remove the filtering of transit edges when they get proper
  * opposing edges added to the graph
  */
-const sif::EdgeFilter PassThroughEdgeFilter = [](const baldr::DirectedEdge* edge){
-  if (edge->trans_up() || edge->trans_down() || edge->IsTransitLine()) {
-    return 0.0f;
-  } else {
-    return 1.0f;
-  }
-};
+const sif::EdgeFilter PassThroughEdgeFilter = [](const baldr::DirectedEdge* edge) -> float { return !(edge->trans_up() || edge->trans_down() || edge->IsTransitLine()); };
 
 /**
  * A callable element which returns true if a node should be
