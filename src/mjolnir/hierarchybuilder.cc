@@ -272,8 +272,7 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
   std::string iso = tile->admininfo(nodeinfo->admin_index()).country_iso();
   std::string e1_iso = EndNodeIso(edge1, info);
   std::string e2_iso = EndNodeIso(edge2, info);
-  if (e1_iso.empty() || e2_iso.empty() || iso.empty() ||
-      e1_iso != iso || e2_iso != iso)
+  if (e1_iso != iso || e2_iso != iso)
     return false;
 
   // Simple check for a possible maneuver where the continuation is a turn
