@@ -6,6 +6,11 @@ message TripDirections {
     optional float lat = 1;
     optional float lng = 2;
   }
+  
+  message BoundingBox {
+    optional LatLng min_ll = 1;
+    optional LatLng max_ll = 2;
+  }
 
   message Location {
     enum Type {
@@ -35,6 +40,7 @@ message TripDirections {
   message Summary {
     optional float length = 1;          // kilometers or miles based on units
     optional uint32 time = 2;           // seconds
+    optional BoundingBox bbox = 3;      // Bounding box of the shape
   }
 
   message TransitStop {

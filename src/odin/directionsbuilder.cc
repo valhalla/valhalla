@@ -392,6 +392,11 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       etp->GetLength(directions_options.units()));
   trip_directions.mutable_summary()->set_time(
       etp->node(etp->GetLastNodeIndex()).elapsed_time());
+  auto mutable_bbox = trip_directions.mutable_summary()->mutable_bbox();
+  mutable_bbox->mutable_min_ll()->set_lat(etp->bbox().min_ll().lat());
+  mutable_bbox->mutable_min_ll()->set_lng(etp->bbox().min_ll().lng());
+  mutable_bbox->mutable_max_ll()->set_lat(etp->bbox().max_ll().lat());
+  mutable_bbox->mutable_max_ll()->set_lng(etp->bbox().max_ll().lng());
 
   // Populate shape
   trip_directions.set_shape(etp->shape());
