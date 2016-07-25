@@ -66,11 +66,10 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
   };
 
   //we need something to hold each iso-line
-  using segment_t = std::list<coord_t>;
-  std::vector<std::list<segment_t> > segments(contours_lines.size());
+  contours_t contours(contours_lines.size());
   //and something to find them quickly
-  using segment_lookup_t = std::unordered_map<coord_t, typename std::list<segment_t>::iterator>;
-  std::vector<segment_lookup_t> lookup(contours_lines.size());
+  using contour_lookup_t = std::unordered_map<coord_t, typename std::list<contour_t>::iterator>;
+  std::vector<contour_lookup_t> lookup(contours_lines.size());
 
   int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
   int case_value;
@@ -194,7 +193,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
           }
 
           //can we lengthen a segment from this point
-          typename segment_lookup_t::iterator it;
+          typename contour_lookup_t::iterator it;
           if((it = lookup[k].find(pt1)) != lookup[k].end()) {
             //update the segment
             if(it->second->front() == pt1)
@@ -217,10 +216,10 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
           }//this is an orphan segment for now
           else {
             //new segment
-            segments[k].push_front(segment_t{pt1, pt2});
+            contours[k].push_front(contour_t{pt1, pt2});
             //indexed
-            lookup[k].emplace(pt1, segments[k].begin());
-            lookup[k].emplace(pt2, segments[k].begin());
+            lookup[k].emplace(pt1, contours[k].begin());
+            lookup[k].emplace(pt2, contours[k].begin());
           }
 
         }
@@ -229,30 +228,35 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
     } // Each tile col
   } // Each tile row
 
-  //lace up orphaned segments within a given contour
-  contours_t contours(contours_lines.size());
-  for(size_t i = 0; i < contours.size(); ++i) {
-    auto& contour = contours[i];
-    auto contour_pts = 0;
+  //for each iso line
+  for(auto& contour_segments : contours) {
+    //lace up as many segments as possible
+    size_t laced;
     do {
-      contour_pts = contour.size();
-      for(auto& segment : segments[i]) {
-        if(!contour.size())
-          contour.swap(segment);
-        else if(segment.front() == contour.back())
-          contour.splice(contour.end(), segment, std::next(segment.begin()), segment.end());
-        else if(segment.back() == contour.front())
-          contour.splice(contour.begin(), segment, segment.begin(), std::prev(segment.end()));
-        else if(segment.front() == contour.front()) {
-          segment.reverse();
-          contour.splice(contour.begin(), segment, segment.begin(), std::prev(segment.end()));
-        }
-        else if(segment.back() == contour.back()) {
-          segment.reverse();
-          contour.splice(contour.end(), segment, std::next(segment.begin()), segment.end());
+      //look for any pairs we can mash together
+      laced = 0;
+      for(auto& a : contour_segments) {
+        for(auto& b : contour_segments) {
+          //cant merge segment to itself or empty segments
+          if(!a.size() || !b.size() || &a == &b)
+            continue;
+          //assume splicing
+          ++laced;
+          //a adds b on the end
+          if(a.back() == b.front()) { b.pop_front(); a.splice(a.end(), b); }
+          //b adds a on the end
+          else if(b.back() == a.front()) { a.pop_front(); b.splice(b.end(), a); }
+          //a adds reverse b on the end
+          else if(a.back() == b.back()) { b.pop_back(); b.reverse(); a.splice(a.end(), b); }
+          //reverse b adds a on the end
+          else if(a.front() == b.front()) { b.pop_front(); b.reverse(); b.splice(b.end(), a); }
+          //didn't splice them
+          else { --laced; }
         }
       }
-    } while(contour_pts != contour.size());
+    } while(laced > 0);
+    //clean out the empty segments
+    contour_segments.remove_if([](const std::list<coord_t>& s){return !s.size();});
   }
 
   return contours;

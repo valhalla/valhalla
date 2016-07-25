@@ -55,7 +55,8 @@ class GriddedData : public Tiles<coord_t> {
    *
    * @return contour line geometries
    */
-  using contours_t = std::vector<std::list<coord_t> >;
+  using contour_t = std::list<coord_t>;
+  using contours_t = std::vector<std::list<contour_t > >;
   contours_t GenerateContourLines(const std::vector<float>& contours);
 
  protected:
