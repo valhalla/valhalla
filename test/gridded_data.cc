@@ -11,9 +11,11 @@ namespace {
   void test_gridded() {
     //fill this as distance from center
     GriddedData<PointLL> g({-5,-5,5,5}, 1, std::numeric_limits<float>::max());
-    for(float i = -4.5; i < 5; i += 1) {
-      for(float j = -4.5; j < 5; j += 1) {
-        if(!g.Set({i,j}, PointLL(0,0).Distance({i,j})))
+    for(int i = 0; i < 10; ++i) {
+      for(int j = 0; j < 10; ++j) {
+        Tiles<PointLL> t({-5,-5,5,5}, 1);
+        auto c = t.Center(t.TileId(i,j));
+        if(!g.Set(c, PointLL(0,0).Distance(c)))
           throw std::logic_error("Should have been able to set this cell");
       }
     }

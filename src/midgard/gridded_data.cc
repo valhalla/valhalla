@@ -79,9 +79,9 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
      { {9,6,7},{5,2,0},{8,0,0} }
    };
 
-  // For each cell
-  for (int row = this->nrows_ - 1; row >= 0; row--) {
-    for (int col = 0; col <= this->ncolumns_ - 1; col++) {
+  // For each cell, skipping the outer rim since its out of bounds
+  for (int row = 1; row < this->nrows_ - 1; ++row) {
+    for (int col = 1; col < this->ncolumns_ - 1; ++col) {
       int tileid = this->TileId(col, row);
       auto cell1 = data_[tileid];
       auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col,   row+1)];

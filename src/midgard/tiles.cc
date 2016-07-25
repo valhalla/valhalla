@@ -280,7 +280,7 @@ AABB2<coord_t> Tiles<coord_t>::TileBounds(const int32_t col,
 // Get the center of the specified tile.
 template <class coord_t>
 coord_t Tiles<coord_t>::Center(const int32_t tileid) const {
-  Point2 base = Base(tileid);
+  auto base = Base(tileid);
   return coord_t(base.x() + tilesize_ * 0.5, base.y() + tilesize_ * 0.5);
 }
 
