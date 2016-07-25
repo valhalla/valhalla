@@ -22,7 +22,7 @@ namespace {
     auto contours = g.GenerateContourLines(iso_markers);
 
     //need to be the same size and all of them have to have a single ring
-    if(contours.size() != 7)
+    if(contours.size() != iso_markers.size())
       throw std::logic_error("There should be 7 iso lines");
 /*
     //for each iso line
