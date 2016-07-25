@@ -12,6 +12,14 @@ namespace sif {
 
 // Default options/values
 namespace {
+
+enum class BicycleType {
+  kRoad     = 0,
+  kCross    = 1,    // Cyclocross bike - road bike setup with wider tires
+  kHybrid   = 2,    // Hybrid or city bike
+  kMountain = 3
+};
+
 constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
@@ -71,6 +79,13 @@ constexpr float kCrossSurfaceSpeedFactors[] =
         { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.5f, 0.0f, 0.0f };
 constexpr float kMountainSurfaceSpeedFactors[] =
         { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.0f };
+
+// Worst allowed surface based on bicycle type
+constexpr Surface kWorstAllowedSurface[] =
+        { Surface::kCompacted,            // Road bicycle
+          Surface::kGravel,               // Cross
+          Surface::kDirt,                 // Hybrid
+          Surface::kPath };               // Mountain
 
 // User propensity to use roads. Range of values from 0 (avoid roads - try to
 // stay on cycleways and paths) to 1 (totally comfortable riding on roads).
@@ -257,12 +272,6 @@ class BicycleCost : public DynamicCost {
   virtual float AStarCostFactor() const;
 
  protected:
-  enum class BicycleType {
-    kRoad     = 0,
-    kCross    = 1,    // Cyclocross bike - road bike setup with wider tires
-    kHybrid   = 2,    // Hybrid or city bike
-    kMountain = 3
-  };
 
   float speedfactor_[100];          // Cost factors based on speed in kph
   float density_factor_[16];        // Density factor
@@ -313,30 +322,27 @@ class BicycleCost : public DynamicCost {
   float speed_factor_;
 
  public:
+
   /**
    * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each edges attribution
-   * @return Function to be used in filtering out edges
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method. Function/functor is also used to filter
+   * edges not usable / inaccessible by bicycle.
    */
   virtual const EdgeFilter GetEdgeFilter() const {
-    //throw back a lambda that checks the access for this type of costing
-    BicycleType b = bicycletype_;
-    return [b](const baldr::DirectedEdge* edge){
-      // Prohibit certain roads based on surface type and bicycle type
-      // Do not allow starting a bicycle route on steps
-      if(!edge->trans_up() && !edge->trans_down() &&
-        (edge->forwardaccess() & kBicycleAccess) &&
-         edge->use() != Use::kSteps) {
-        if (b == BicycleType::kRoad)
-          return edge->surface() > Surface::kCompacted;
-        else if (b == BicycleType::kHybrid)
-          return edge->surface() > Surface::kDirt;
-        else if (b == BicycleType::kCross)
-          return edge->surface() > Surface::kGravel;
-        else if (b == BicycleType::kMountain)
-          return edge->surface() > Surface::kPath;
+    // Throw back a lambda that checks the access for this type of costing
+    uint32_t b = static_cast<uint32_t>(bicycletype_);
+    return [b](const baldr::DirectedEdge* edge) {
+      if ( edge->trans_up() || edge->trans_down() ||
+          !(edge->forwardaccess() & kBicycleAccess) ||
+           edge->use() == Use::kSteps ||
+           edge->surface() > kWorstAllowedSurface[b]) {
+        return 0.0f;
+      } else {
+        // TODO - use classification/use to alter the factor
+        return 1.0f;
       }
-      return true;
     };
   }
 

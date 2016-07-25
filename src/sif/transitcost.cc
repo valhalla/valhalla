@@ -159,17 +159,25 @@ class TransitCost : public DynamicCost {
 
   /**
    * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each edges attribution
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method. Function/functor is also used to filter
+   * edges not usable / inaccessible by transit route use.
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
    * @return Function/functor to be used in filtering out edges
    */
   virtual const EdgeFilter GetEdgeFilter() const {
-    //throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge){
-      return edge->trans_up() || edge->trans_down() ||
-             edge->use() >= Use::kFerry ||
-           !(edge->forwardaccess() & kPedestrianAccess);
+    // Throw back a lambda that checks the access for this type of costing
+    return [](const baldr::DirectedEdge* edge) {
+      if (edge->trans_up() || edge->trans_down() ||
+          edge->use() >= Use::kFerry ||
+         !(edge->forwardaccess() & kPedestrianAccess))
+        return 0.0f;
+      else {
+        // TODO - use classification/use to alter the factor
+        return 1.0f;
+      }
     };
   }
 
