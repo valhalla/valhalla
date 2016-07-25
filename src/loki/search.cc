@@ -132,7 +132,7 @@ const NodeInfo* get_end_node(GraphReader& reader, const DirectedEdge* edge) {
   return tile->node(edge->endnode());
 }
 
-PathLocation correlate_node(GraphReader& reader, const Location& location, const EdgeFilter& filter, const GraphTile* tile, const NodeInfo* node, const float sqdist){
+PathLocation correlate_node(GraphReader& reader, const Location& location, const EdgeFilter& edge_filter, const GraphTile* tile, const NodeInfo* node, const float sqdist){
   PathLocation correlated(location);
   std::list<PathLocation::PathEdge> heading_filtered;
   //now that we have a node we can pass back all the edges leaving and entering it
@@ -149,7 +149,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
     auto info = tile->edgeinfo(edge->edgeinfo_offset());
 
     //do we want this edge
-    if(!filter(edge)) {
+    if(edge_filter(edge) != 0.0f) {
       PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), PathLocation::NONE};
       std::get<2>(closest_point) = edge->forward() ? 0 : info->shape().size() - 2;
       if(!heading_filter(edge, info, closest_point, location.heading_))
@@ -159,7 +159,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
     }
 
     //do we want the evil twin
-    if(!filter(other_edge)) {
+    if(edge_filter(other_edge) != 0.0f) {
       PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(),PathLocation::NONE};
       std::get<2>(closest_point) = other_edge->forward() ? 0 : info->shape().size() - 2;
       if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
@@ -182,7 +182,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
   return correlated;
 }
 
-PathLocation correlate_edge(GraphReader& reader, const Location& location, const EdgeFilter& filter, const std::tuple<PointLL, float, size_t>& closest_point,
+PathLocation correlate_edge(GraphReader& reader, const Location& location, const EdgeFilter& edge_filter, const std::tuple<PointLL, float, size_t>& closest_point,
     const DirectedEdge* closest_edge, const GraphId& closest_edge_id, const std::unique_ptr<const EdgeInfo>&closest_edge_info) {
   //now that we have an edge we can pass back all the info about it
   PathLocation correlated(location);
@@ -208,7 +208,7 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     const GraphTile* other_tile;
     auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id, other_tile);
     const auto* other_edge = other_tile->directededge(opposing_edge_id);
-    if(!filter(other_edge)) {
+    if(edge_filter(other_edge) != 0.0f) {
       if(heading_filter(other_edge, closest_edge_info, closest_point, location.heading_))
         heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), flip_side(side));
       else
@@ -307,7 +307,7 @@ std::unordered_set<GraphId> island(const PathLocation& location,
 
     // Get the directed edge - filter it out if not accessible
     const DirectedEdge* directededge = reader.GetGraphTile(edge)->directededge(edge);
-    if (edge_filter(directededge)) {
+    if (edge_filter(directededge) == 0.0f) {
       continue;
     }
     total_edge_length += directededge->length();
@@ -328,7 +328,7 @@ std::unordered_set<GraphId> island(const PathLocation& location,
       // Skip transition edges, transit connection edges, and edges that are not allowed
       if (directededge->trans_up() || directededge->trans_down() ||
           directededge->use() == Use::kTransitConnection ||
-          edge_filter(directededge)) {
+          edge_filter(directededge) == 0.0f) {
         continue;
       }
 
@@ -389,8 +389,8 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
           tile = reader.GetGraphTile(e);
         const auto* edge = tile->directededge(e);
         //no thanks on this one or its evil twin
-        if(edge_filter(edge) && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
-          edge_filter(edge = tile->directededge(e)))) {
+        if(edge_filter(edge) == 0.0f && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
+          edge_filter(edge = tile->directededge(e)) == 0.0f)) {
           continue;
         }
         //get some info about the edge
