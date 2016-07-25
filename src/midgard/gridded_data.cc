@@ -4,6 +4,8 @@
 #include "midgard/gridded_data.h"
 #include "midgard/logging.h"
 
+#include <sstream>
+
 namespace valhalla {
 namespace midgard {
 
@@ -50,7 +52,7 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contours_lines) {
+typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_lines) {
   //TODO: sort and validate contour range
 
   // Values at tile corners and center (0 element is center)
@@ -66,10 +68,10 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
   };
 
   //we need something to hold each iso-line
-  contours_t contours(contours_lines.size());
+  contours_t contours(contour_lines.size());
   //and something to find them quickly
   using contour_lookup_t = std::unordered_map<coord_t, typename std::list<contour_t>::iterator>;
-  std::vector<contour_lookup_t> lookup(contours_lines.size());
+  std::vector<contour_lookup_t> lookup(contour_lines.size());
 
   int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
   int case_value;
@@ -91,11 +93,11 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
       auto dmax  = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
-      if (dmax < contours_lines.front() || dmin > contours_lines.back())
+      if (dmax < contour_lines.front() || dmin > contour_lines.back())
          continue;
 
       int k = 0;
-      for (auto contour : contours_lines) {
+      for (auto contour : contour_lines) {
         if (contour < dmin || contour > dmax) {
           k++;
           continue;
@@ -260,6 +262,35 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContourL
   }
 
   return contours;
+}
+
+template <class coord_t>
+std::string GriddedData<coord_t>::GenerateContourGeoJson(const std::vector<float>& contour_lines) {
+  //generate the contours
+  auto contours = this->GenerateContours(contour_lines);
+
+  //for each iso contour line
+  auto iso = contour_lines.begin();
+  std::stringstream stream;
+  stream << "{\"type\":\"FeatureCollection\",\"features\":[";
+  for(const auto& feature : contours) {
+    //for each piece of the line
+    stream << "{\"type\":\"Feature\",\"properties\":{\"iso\": " << *iso << "},";
+    stream << "\"geometry\":{\"type\":\"MultiLineString\",\"coordinates\":[";
+    //do the lines
+    for(const auto& line : feature) {
+      //do this line
+      stream << "[";
+      for(const auto& coord : line) {
+        stream << "[" << coord.first << "," << coord.second << "]" << (&coord != &line.back() ? "," : "");
+      }
+      stream << "]"  << (&line != &feature.back() ? "," : "");
+    }
+    stream << "]}}" << (&feature != &contours.back() ? "," : "");
+    ++iso;
+  }
+  stream << "]}";
+  return stream.str();
 }
 
 // Explicit instantiation

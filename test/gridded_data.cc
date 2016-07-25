@@ -22,32 +22,11 @@ namespace {
     }
 
     std::vector<float> iso_markers{100000,200000,300000,400000,500000,600000,700000};
-    auto contours = g.GenerateContourLines(iso_markers);
+    auto contours = g.GenerateContours(iso_markers);
 
     //need to be the same size and all of them have to have a single ring
     if(contours.size() != iso_markers.size())
       throw std::logic_error("There should be 7 iso lines");
-
-    //for each iso line
-    auto iso = iso_markers.begin();
-    std::cout << "{\"type\":\"FeatureCollection\",\"features\":[";
-    for(const auto& x : contours) {
-      //for each piece of the line
-      std::cout << "{\"type\":\"Feature\",\"properties\":{\"iso\": " << *iso << "},";
-      std::cout << "\"geometry\":{\"type\":\"MultiLineString\",\"coordinates\":[";
-      //do the lines
-      for(const auto& y : x) {
-        //do this line
-        std::cout << "[";
-        for(const auto& c : y) {
-          std::cout << "[" << c.first << "," << c.second << "]" << (&c != &y.back() ? "," : "");
-        }
-        std::cout << "]"  << (&y != &x.back() ? "," : "");
-      }
-      std::cout << "]}}" << (&x != &contours.back() ? "," : "");
-      ++iso;
-    }
-    std::cout << "]}";
 
     //because of the pattern above we should end up with concentric circles
     //every ring should have all smaller rings inside it
