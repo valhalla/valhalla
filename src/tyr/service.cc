@@ -12,6 +12,8 @@
 #include <prime_server/http_protocol.hpp>
 using namespace prime_server;
 
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/proto/tripdirections.pb.h>
@@ -23,6 +25,7 @@ using namespace prime_server;
 #include "tyr/service.h"
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::odin;
 using namespace valhalla::tyr;
@@ -325,14 +328,25 @@ namespace {
 
       uint64_t time = 0;
       long double length = 0;
+      AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
       for(const auto& leg : legs) {
         time += static_cast<uint64_t>(leg.summary().time());
         length += leg.summary().length();
+
+        AABB2<PointLL> leg_bbox(leg.summary().bbox().min_ll().lng(),
+                                leg.summary().bbox().min_ll().lat(),
+                                leg.summary().bbox().max_ll().lng(),
+                                leg.summary().bbox().max_ll().lat());
+        bbox.Expand(leg_bbox);
       }
 
       auto route_summary = json::map({});
       route_summary->emplace("time", time);
       route_summary->emplace("length", json::fp_t{length, 3});
+      route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
+      route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
+      route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
+      route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
       midgard::logging::Log("trip_time::" + std::to_string(time) +"s", " [ANALYTICS] ");
       midgard::logging::Log("trip_length::" + std::to_string(length) + "km", " [ANALYTICS] ");
       return route_summary;
@@ -742,6 +756,10 @@ namespace {
         }
         summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
         summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
+        summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
+        summary->emplace("min_lon",json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
+        summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
+        summary->emplace("max_lon",json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
         leg->emplace("summary",summary);
         leg->emplace("shape", directions_leg.shape());
 
