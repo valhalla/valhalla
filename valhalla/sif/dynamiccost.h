@@ -17,10 +17,14 @@ namespace valhalla {
 namespace sif {
 
 /**
- * A callable element which returns true if an edge should be
- * filtered out of the correlated set and false if the edge is usable
+ * A callable element which returns a value between 0 and 1 indicating how
+ * desirable the edge is for use as a location. A value of 0 indicates the
+ * edge is not usable (no access for the travel mode used by this costing)
+ * while 1 indicates the edge is highly preferred. Values in between can be
+ * used to rank edges such that desirable edges that might be slightly
+ * farther from the location than a less desirable edge can be chosen.
  */
-using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
+using EdgeFilter = std::function<float (const baldr::DirectedEdge*)>;
 
 /**
  * A callable element which returns true if a node should be
@@ -243,7 +247,9 @@ class DynamicCost {
 
   /**
    * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each edges attribution
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method.
    */
   virtual const EdgeFilter GetEdgeFilter() const = 0;
 
