@@ -48,7 +48,7 @@ namespace {
 */
     //because of the pattern above we should end up with concentric circles
     //every ring should have all smaller rings inside it
-    for(size_t i = 1; i < contours.size() - 1; ++i) {
+    for(size_t i = 1; i < contours.size(); ++i) {
       //not looking at a ring any more so we are done
       if(contours[i].front().front() != contours[i].front().back())
         break;
