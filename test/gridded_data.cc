@@ -2,7 +2,7 @@
 #include "midgard/gridded_data.h"
 #include "midgard/pointll.h"
 #include <limits>
-#include <iostream>
+//#include <iostream>
 
 using namespace valhalla::midgard;
 
@@ -41,6 +41,8 @@ namespace {
           throw std::logic_error("Ring " + std::to_string(i) + " should contain ring " + std::to_string(i - 1));
       }
     }
+
+    //std::cout << g.GenerateContourGeoJson(iso_markers);
   }
 
 }
