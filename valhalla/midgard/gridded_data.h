@@ -50,24 +50,24 @@ class GriddedData : public Tiles<coord_t> {
   /**
    * Generate contour lines from the gridded data.
    *
-   * @param contours    the values at which the contour lines should occur
-   *                    basically the lines on the measuring stick
+   * @param contour_intervals    the values at which the contour lines should occur
+   *                             basically the lines on the measuring stick
    *
    * @return contour line geometries
    */
   using contour_t = std::list<coord_t>;
   using contours_t = std::vector<std::list<contour_t > >;
-  contours_t GenerateContours(const std::vector<float>& contours);
+  contours_t GenerateContours(const std::vector<float>& contour_intervals);
 
   /**
    * Generate contour lines from the gridded data.
    *
-   * @param contours    the values at which the contour lines should occur
-   *                    basically the lines on the measuring stick
+   * @param contour_intervals    the values at which the contour lines should occur
+   *                             basically the lines on the measuring stick
    *
    * @return contour geojson
    */
-  std::string GenerateContourGeoJson(const std::vector<float>& contours);
+  std::string GenerateContourGeoJson(const std::vector<float>& contour_intervals);
 
  protected:
   std::vector<float> data_;                  // Data value within each tile
