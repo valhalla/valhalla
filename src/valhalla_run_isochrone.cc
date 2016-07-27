@@ -139,10 +139,9 @@ int main(int argc, char *argv[]) {
     boost::property_tree::read_json(stream, json_ptree);
 
     try {
-      for (const auto& location : json_ptree.get_child("locations"))
+      for (const auto& location : json_ptree.get_child("locations")) {
         locations.emplace_back(std::move(Location::FromPtree(location.second)));
-      if (locations.size() != 1)
-        throw;
+      }
     } catch (...) {
       throw std::runtime_error("Requires a single location");
     }
@@ -227,7 +226,7 @@ int main(int argc, char *argv[]) {
   uint32_t max_seconds = 3600;
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
-  auto isotile = isochrone.Compute(path_location[0], max_seconds, reader, mode_costing, mode);
+  auto isotile = isochrone.Compute(path_location, max_seconds, reader, mode_costing, mode);
   auto geojson = isotile->GenerateContourGeoJson({300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3000, 3300, 3600, 3900, 4200, 4500, 4800, 5100, 5400});
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
