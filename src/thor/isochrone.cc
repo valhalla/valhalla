@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "thor/isochrone.h"
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::midgard;
@@ -64,32 +65,35 @@ const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(
   edgestatus_.reset(new EdgeStatus());
   edgelabels_.reserve(kInitialEdgeLabelCount);
 
-  // Construct the isotile. Convert time in seconds to a max distance
-  // in meters based on an estimate of max speed for the travel mode.
-  int nt = 512;
-  float max_distance = 10000.0f;
-  if (mode_ == TravelMode::kDrive) {
-    max_distance = max_seconds * 70.0f * 0.44704;
-    nt = 1024;
-  } else if (mode_ == TravelMode::kPedestrian) {
-    max_distance = max_seconds * 5.0f * 0.44704;
-    nt = 512;
+  // Construct the isotile. Use a grid size based on travel mode.
+  // Convert time in seconds to a max distance in meters based on an
+  // estimate of max speed for the travel mode.
+  float grid_size, max_distance;
+  if (mode_ == TravelMode::kPedestrian) {
+    grid_size = 200.0f;
+    max_distance = max_seconds * 5.0f * 0.44704f;
   } else if (mode_ == TravelMode::kBicycle) {
-    max_distance = max_seconds * 20.0f * 0.44704;
-    nt = 512;
+    grid_size = 200.0f;
+    max_distance = max_seconds * 20.0f * 0.44704f;
+  } else {
+    // A driving mode
+    grid_size = 400.0f;
+    max_distance = max_seconds * 70.0f * 0.44704f;
   }
 
-  // Form grid for isotiles.
-  float delta = max_distance / kMetersPerDegreeLat;
+  // Form grid for isotiles. Convert grid size to degrees.
+  grid_size /= kMetersPerDegreeLat;
+  float lat = origin_locations[0].latlng_.lat();
+  float delta_lat = max_distance / kMetersPerDegreeLat;
+  float delta_lon = max_distance / DistanceApproximator::MetersPerLngDegree(lat);
   AABB2<PointLL> bounds(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   for (const auto& loc : origin_locations) {
     PointLL center = loc.latlng_;
-    AABB2<PointLL> bbox(PointLL(center.lng() - delta, center.lat() - delta),
-                        PointLL(center.lng() + delta, center.lat() + delta));
+    AABB2<PointLL> bbox(PointLL(center.lng() - delta_lon, center.lat() - delta_lat),
+                        PointLL(center.lng() + delta_lon, center.lat() + delta_lat));
     bounds.Expand(bbox);
   }
-  float tilesize = (2.0f * delta) / static_cast<float>(nt);
-  isotile_.reset(new GriddedData<PointLL>(bounds, tilesize, max_seconds + 300));
+  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_seconds + 300));
 
   // Set the origin locations
   SetOriginLocations(graphreader, origin_locations, costing);
