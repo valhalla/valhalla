@@ -83,6 +83,16 @@ class Polyline2 {
   Polyline2 GeneralizedPolyline(const float t);
 
   /**
+   * Generalize the given list of points
+   *
+   * @param polyline    the list of points
+   * @param epsilon     the tolerance used in removing points
+   *
+   */
+  template <class container_t>
+  static void Generalize(container_t& polyline, float epsilon);
+
+  /**
    * Clip this polyline to the specified bounding box.
    * @param box  Bounding box to clip this polyline to.
    * @return  Returns the number of vertices in hte clipped polygon.
@@ -99,19 +109,6 @@ class Polyline2 {
 protected:
   // Polyline points
   std::vector<coord_t> pts_;
-
-  /**
-   * Douglass-Peucker generalization. Finds the vertex farthest from the
-   * segment between vertices i and j and checks if this distance exceeds
-   * the tolerance. If the distance is less than the tolerance the segment
-   * i,j is added to the output list of generalized vertices.
-   * @param  i  Index of the first vertex.
-   * @param  j  Index of the second vertex.
-   * @param  t2 Tolerance (squared)
-   * @param  genpts List of generalized vertices.
-   */
-  void DouglasPeucker(const uint32_t i, const uint32_t j,
-                      const float t2, std::vector<coord_t>& genpts);
 };
 
 }
