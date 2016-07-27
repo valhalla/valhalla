@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <cmath>
+#include <list>
 
 namespace {
 const float INVALID = 0xBADBADBAD;
@@ -304,22 +305,29 @@ bool PointLL::IsLeft(const PointLL& p1, const PointLL& p2) const {
 
 // Tests whether this point is within a convex polygon. Iterate through the
 // edges - to be inside the point must be to the same side of each edge.
-bool PointLL::WithinConvexPolygon(const std::vector<PointLL>& poly) const {
-   // Get the side relative to the last edge
-  bool left = IsLeft(poly.back(), poly.front());
-
-  // Iterate through edges
+template <class container_t>
+bool PointLL::WithinConvexPolygon(const container_t& poly) const {
+  // Get the side relative to the last edge
   auto p1 = poly.begin();
-  auto p2 = p1 + 1;
-  for ( ; p2 < poly.end(); p1++, p2++) {
+  auto p2 = std::next(p1);
+  bool left = IsLeft(*p1, *p2);
+
+  // Iterate through the rest of the edges
+  for(p1 = p2, ++p2; p2 != poly.end(); ++p1, ++p2) {
     if (IsLeft(*p1, *p2) != left) {
       return false;
     }
   }
-  return true;
+
+  // If it was a full ring we are done otherwise check the last segment
+  return poly.front() == poly.back() || IsLeft(poly.back(), poly.front()) == left;
 }
 
 bool PointLL::IsSpherical() { return true; }
+
+// Explicit instantiations
+template bool PointLL::WithinConvexPolygon(const std::vector<PointLL>&) const;
+template bool PointLL::WithinConvexPolygon(const std::list<PointLL>&) const;
 
 }
 }

@@ -132,11 +132,11 @@ class PointLL : public Point2 {
    * @param  poly  List of vertices that form a convex polygon. Assumes
    *               the following:
    *                  Polygon is convex.
-   *                  There are no duplicate vertices.
-   *                  Last vertex is not equal to the first.
+   *                  Only the first and last vertices may be duplicated.
    * @return  Returns true if the point is within the polygon, false if not.
    */
-  virtual bool WithinConvexPolygon(const std::vector<PointLL>& poly) const;
+  template <class container_t>
+  bool WithinConvexPolygon(const container_t& poly) const;
 
   /**
    * Handy for templated functions that use both Point2 or PointLL to know whether or not
@@ -148,6 +148,17 @@ class PointLL : public Point2 {
 };
 
 }
+}
+
+namespace std {
+  template <> struct hash<valhalla::midgard::PointLL> {
+    size_t operator()(const valhalla::midgard::PointLL& p) const {
+      uint64_t h;
+      std::memcpy(&h, &p.first, 4);
+      std::memcpy(&h + 4, &p.second, 4);
+      return std::hash<uint64_t>()(h);
+    }
+  };
 }
 
 #endif  // VALHALLA_MIDGARD_POINTLL_H_

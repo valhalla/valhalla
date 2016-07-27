@@ -1,9 +1,10 @@
-#include <map>
-#include <algorithm>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/gridded_data.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
+#include "midgard/tiles.h"
+#include "midgard/gridded_data.h"
+#include "midgard/logging.h"
+
+#include <sstream>
 
 namespace valhalla {
 namespace midgard {
@@ -51,8 +52,8 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contours) {
-  //TODO: sort and validate contours
+typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_lines) {
+  //TODO: sort and validate contour range
 
   // Values at tile corners and center (0 element is center)
   int sh[5];
@@ -60,11 +61,17 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contou
   coord_t tile_corners[5];    // coord_t at tile corners and center
 
   // Find the intersection along a tile edge
-  auto sect = [&tile_corners, &s](const int p1, const int p2) {
+  auto intersect = [&tile_corners, &s](int p1, int p2) {
     auto ds = s[p2] - s[p1];
     return coord_t((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
                    (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
   };
+
+  //we need something to hold each iso-line
+  contours_t contours(contour_lines.size());
+  //and something to find them quickly
+  using contour_lookup_t = std::unordered_map<coord_t, typename std::list<contour_t>::iterator>;
+  std::vector<contour_lookup_t> lookup(contour_lines.size());
 
   int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
   int case_value;
@@ -74,24 +81,23 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contou
      { {9,6,7},{5,2,0},{8,0,0} }
    };
 
-  for (int row = this->nrows_ - 1; row >= 0; row--) {
-    for (int col = 0; col <= this->ncolumns_ - 1; col++) {
+  // For each cell, skipping the outer rim since its out of bounds
+  for (int row = 1; row < this->nrows_ - 1; ++row) {
+    for (int col = 1; col < this->ncolumns_ - 1; ++col) {
       int tileid = this->TileId(col, row);
       auto cell1 = data_[tileid];
-      auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col, row+1)];
-      auto cell3 = data_[tileid + 1];         // TileId(col+1, row)];
+      auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col,   row+1)];
+      auto cell3 = data_[tileid + 1];                   // TileId(col+1, row)];
       auto cell4 = data_[tileid + this->ncolumns_ + 1]; // TileId(col+1, row+1)];
-      auto dmin  = std::min(std::min(cell1, cell2),
-                                std::min(cell3, cell4));
-      auto dmax  = std::max(std::max(cell1, cell2),
-                                std::max(cell3, cell4));
+      auto dmin  = std::min(std::min(cell1, cell2), std::min(cell3, cell4));
+      auto dmax  = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
-      if (dmax < contours.front() || dmin > contours.back())
+      if (dmax < contour_lines.front() || dmin > contour_lines.back())
          continue;
 
       int k = 0;
-      for (auto contour : contours) {
+      for (auto contour : contour_lines) {
         if (contour < dmin || contour > dmax) {
           k++;
           continue;
@@ -162,47 +168,129 @@ void GriddedData<coord_t>::GenerateContourLines(const std::vector<float>& contou
             break;
           case 4:              // Line between vertex 1 and side 2-3
             pt1 = tile_corners[m1];
-            pt2 = sect(m2, m3);
+            pt2 = intersect(m2, m3);
             break;
           case 5:              // Line between vertex 2 and side 3-1
             pt1 = tile_corners[m2];
-            pt2 = sect(m3, m1);
+            pt2 = intersect(m3, m1);
             break;
           case 6:              // Line between vertex 3 and side 1-2
             pt1 = tile_corners[m3];
-            pt2 = sect(m1, m2);
+            pt2 = intersect(m1, m2);
             break;
           case 7:              // Line between sides 1-2 and 2-3
-            pt1 = sect(m1, m2);
-            pt2 = sect(m2, m3);
+            pt1 = intersect(m1, m2);
+            pt2 = intersect(m2, m3);
           break;
           case 8:              // Line between sides 2-3 and 3-1
-            pt1 = sect(m2, m3);
-            pt2 = sect(m3, m1);
+            pt1 = intersect(m2, m3);
+            pt2 = intersect(m3, m1);
             break;
           case 9:              // Line between sides 3-1 and 1-2
-            pt1 = sect(m3, m1);
-            pt2 = sect(m1, m2);
+            pt1 = intersect(m3, m1);
+            pt2 = intersect(m1, m2);
             break;
           default:
             break;
           }
 
-          // Add to the contour lines
-          AddToContourLine(pt1, pt2, k);
+          //can we lengthen a segment from this point
+          typename contour_lookup_t::iterator it;
+          if((it = lookup[k].find(pt1)) != lookup[k].end()) {
+            //update the segment
+            if(it->second->front() == pt1)
+              it->second->push_front(pt2);
+            else
+              it->second->push_back(pt2);
+            //update the lookup table
+            lookup[k].emplace(pt2, it->second);
+            lookup[k].erase(it);
+          }//can we lengthen a segment from this other point
+          else if((it = lookup[k].find(pt2)) != lookup[k].end()) {
+            //update the segment
+            if(it->second->front() == pt2)
+              it->second->push_front(pt1);
+            else
+              it->second->push_back(pt1);
+            //update the lookup table
+            lookup[k].emplace(pt1, it->second);
+            lookup[k].erase(it);
+          }//this is an orphan segment for now
+          else {
+            //new segment
+            contours[k].push_front(contour_t{pt1, pt2});
+            //indexed
+            lookup[k].emplace(pt1, contours[k].begin());
+            lookup[k].emplace(pt2, contours[k].begin());
+          }
+
         }
         k++;
       } // Each contour
     } // Each tile col
   } // Each tile row
+
+  //for each iso line
+  for(auto& contour_segments : contours) {
+    //lace up as many segments as possible
+    size_t laced;
+    do {
+      //look for any pairs we can mash together
+      laced = 0;
+      for(auto& a : contour_segments) {
+        for(auto& b : contour_segments) {
+          //cant merge segment to itself or empty segments
+          if(!a.size() || !b.size() || &a == &b)
+            continue;
+          //assume splicing
+          ++laced;
+          //a adds b on the end
+          if(a.back() == b.front()) { b.pop_front(); a.splice(a.end(), b); }
+          //b adds a on the end
+          else if(b.back() == a.front()) { a.pop_front(); b.splice(b.end(), a); }
+          //a adds reverse b on the end
+          else if(a.back() == b.back()) { b.pop_back(); b.reverse(); a.splice(a.end(), b); }
+          //reverse b adds a on the end
+          else if(a.front() == b.front()) { b.pop_front(); b.reverse(); b.splice(b.end(), a); }
+          //didn't splice them
+          else { --laced; }
+        }
+      }
+    } while(laced > 0);
+    //clean out the empty segments
+    contour_segments.remove_if([](const std::list<coord_t>& s){return !s.size();});
+  }
+
+  return contours;
 }
 
-// Add a segment to the contour lines
 template <class coord_t>
-void GriddedData<coord_t>::AddToContourLine(const coord_t& pt1,
-                      const coord_t& pt2, const int k) {
-  //LOG_INFO(std::to_string(k) + " | (" + std::to_string(pt1.first) + "," + std::to_string(pt1.second) +
-   //        ") -> (" + std::to_string(pt2.first) + "," + std::to_string(pt2.second) + ")");
+std::string GriddedData<coord_t>::GenerateContourGeoJson(const std::vector<float>& contour_lines) {
+  //generate the contours
+  auto contours = this->GenerateContours(contour_lines);
+
+  //for each iso contour line
+  auto iso = contour_lines.begin();
+  std::stringstream stream;
+  stream << "{\"type\":\"FeatureCollection\",\"features\":[";
+  for(const auto& feature : contours) {
+    //for each piece of the line
+    stream << "{\"type\":\"Feature\",\"properties\":{\"iso\": " << *iso << "},";
+    stream << "\"geometry\":{\"type\":\"MultiLineString\",\"coordinates\":[";
+    //do the lines
+    for(const auto& line : feature) {
+      //do this line
+      stream << "[";
+      for(const auto& coord : line) {
+        stream << "[" << coord.first << "," << coord.second << "]" << (&coord != &line.back() ? "," : "");
+      }
+      stream << "]"  << (&line != &feature.back() ? "," : "");
+    }
+    stream << "]}}" << (&feature != &contours.back() ? "," : "");
+    ++iso;
+  }
+  stream << "]}";
+  return stream.str();
 }
 
 // Explicit instantiation

@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cmath>
+#include <list>
 
 #include "midgard/util.h"
 #include "midgard/vector2.h"
@@ -165,22 +166,29 @@ bool Point2::IsLeft(const Point2& p1, const Point2& p2) const {
 
 // Tests whether this point is within a convex polygon. Iterate through the
 // edges - to be inside the point must be to the same side of each edge.
-bool Point2::WithinConvexPolygon(const std::vector<Point2>& poly) const {
-   // Get the side relative to the last edge
-  bool left = IsLeft(poly.back(), poly.front());
-
-  // Iterate through edges
+template <class container_t>
+bool Point2::WithinConvexPolygon(const container_t& poly) const {
+  // Get the side relative to the last edge
   auto p1 = poly.begin();
-  auto p2 = p1 + 1;
-  for ( ; p2 < poly.end(); p1++, p2++) {
+  auto p2 = std::next(p1);
+  bool left = IsLeft(*p1, *p2);
+
+  // Iterate through the rest of the edges
+  for(p1 = p2, ++p2; p2 != poly.end(); ++p1, ++p2) {
     if (IsLeft(*p1, *p2) != left) {
       return false;
     }
   }
-  return true;
+
+  // If it was a full ring we are done otherwise check the last segment
+  return poly.front() == poly.back() || IsLeft(poly.back(), poly.front()) == left;
 }
 
 bool Point2::IsSpherical() { return false; }
+
+// Explicit instantiations
+template bool Point2::WithinConvexPolygon(const std::vector<Point2>&) const;
+template bool Point2::WithinConvexPolygon(const std::list<Point2>&) const;
 
 }
 }
