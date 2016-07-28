@@ -32,6 +32,15 @@ class GriddedData : public Tiles<coord_t> {
   bool Set(const coord_t& pt, const float value);
 
   /**
+   * Set the value at a specified tile Id if the value is less than the current
+   * value set at the grid location. Verifies that the tile is valid.
+   * @param  tile_id     Tile Id to set value for.
+   * @param  value  Value to set at the tile/grid location.
+   * @return whether or not the value was set
+   */
+  bool SetIfLessThan(const int tile_id, const float value);
+
+  /**
    * Set the value at a specified point if the value is less than the current
    * value set at the grid location. Verifies that the point is within the
    * tiles.

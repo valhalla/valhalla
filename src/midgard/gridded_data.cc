@@ -42,6 +42,16 @@ bool GriddedData<coord_t>::SetIfLessThan(const coord_t& pt, const float value) {
   return false;
 }
 
+// Set the value at a specified tile Id if less than the current value
+template <class coord_t>
+bool GriddedData<coord_t>::SetIfLessThan(const int tile_id, const float value) {
+  if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
+      data_[tile_id] = value;
+      return true;
+  }
+  return false;
+}
+
 // Get the array of times
 template <class coord_t>
 const std::vector<float>& GriddedData<coord_t>::data() const {
