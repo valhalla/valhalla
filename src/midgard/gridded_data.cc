@@ -201,47 +201,50 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             continue;
 
           //see if we have anything to connect this segment to
-          typename contour_lookup_t::iterator rec_a = lookup[k].find(pt1), rec_b = lookup[k].find(pt2);
-          if(rec_a == lookup[k].end() && rec_b != lookup[k].end()) {
+          typename contour_lookup_t::iterator rec_a = lookup[k].find(pt1);
+          typename contour_lookup_t::iterator rec_b = lookup[k].find(pt2);
+          if(rec_b != lookup[k].end()) {
             std::swap(pt1, pt2);
             std::swap(rec_a, rec_b);
           }
 
           //we want to merge two records
-          if(rec_a != lookup[k].end() && rec_b != lookup[k].end()) {
-            //um we have this segment already
-            if(rec_a->second == rec_b->second)
-              continue;
-
+          if(rec_b != lookup[k].end()) {
             //get the segments in question and remove their lookup info
             auto segment_a = rec_a->second;
+            bool head_a = rec_a->first == segment_a->front();
             auto segment_b = rec_b->second;
+            bool head_b = rec_b->first == segment_b->front();
             lookup[k].erase(rec_a);
             lookup[k].erase(rec_b);
+
+            //this segment is now a ring
+            if(segment_a == segment_b) {
+              segment_a->push_back(segment_a->front());
+              continue;
+            }
+
+            //erase the other lookups
             lookup[k].erase(lookup[k].find(pt1 == segment_a->front() ? segment_a->back() : segment_a->front()));
             lookup[k].erase(lookup[k].find(pt2 == segment_b->front() ? segment_b->back() : segment_b->front()));
 
             //add b to a
-            if(segment_a->back() == segment_b->front()) {
-              segment_a->pop_back();
+            if(!head_a && head_b) {
               segment_a->splice(segment_a->end(), *segment_b);
               contours[k].erase(segment_b);
             }//add a to b
-            else if(segment_b->back() == segment_a->front()) {
-              segment_b->pop_back();
+            else if(!head_b && head_a) {
               segment_b->splice(segment_b->end(), *segment_a);
               contours[k].erase(segment_a);
               segment_a = segment_b;
             }//flip a and add b
-            else if(segment_a->front() == segment_b->front()) {
+            else if(head_a && head_b) {
               segment_a->reverse();
-              segment_a->pop_back();
               segment_a->splice(segment_a->end(), *segment_b);
               contours[k].erase(segment_b);
             }//flip b and add to a
-            else if(segment_a->back() == segment_b->back()) {
+            else if(!head_a && !head_b) {
               segment_b->reverse();
-              segment_a->pop_back();
               segment_a->splice(segment_a->end(), *segment_b);
               contours[k].erase(segment_b);
             }
@@ -274,7 +277,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
     } // Each tile col
   } // Each tile row
 
-  //generalize by appx meters a tile takes up
+  //generalize by appx 1 tenth of the meters a tile takes up
   auto c = this->TileBounds().Center();
   auto m = coord_t{c.first - this->tilesize_ / 2, c.second - this->tilesize_ / 2}.Distance(
                   {c.first + this->tilesize_ / 2, c.second + this->tilesize_ / 2});

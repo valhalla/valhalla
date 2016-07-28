@@ -31,16 +31,22 @@ namespace {
 
     //because of the pattern above we should end up with concentric circles
     //every ring should have all smaller rings inside it
+    size_t rings = 0;
     for(size_t i = 1; i < contours.size(); ++i) {
       //not looking at a ring any more so we are done
       if(contours[i].front().front() != contours[i].front().back())
         break;
+      ++rings;
       //if this is a ring the iso lines with lesser units should be contained within it
       for(const auto& p : contours[i - 1].front()) {
         if(!p.WithinConvexPolygon(contours[i].front()))
           throw std::logic_error("Ring " + std::to_string(i) + " should contain ring " + std::to_string(i - 1));
       }
     }
+
+    //there should be quite a few rings here
+    if(rings == 0)
+      throw std::logic_error("There should be at least a few rings here");
 
     //std::cout << g.GenerateContourGeoJson(iso_markers);
   }
