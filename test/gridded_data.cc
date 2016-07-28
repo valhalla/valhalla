@@ -15,8 +15,8 @@ namespace {
       for(int j = 0; j < 10; ++j) {
         Tiles<PointLL> t({-5,-5,5,5}, 1);
         //NOTE: we aren't setting the center because the contour algorithm uses bottom left
-        auto b = t.Base(t.TileId(i,j));
-        if(!g.Set(b, PointLL(0,0).Distance(b)))
+        auto c = t.Center(t.TileId(i,j));
+        if(!g.Set(c, PointLL(0,0).Distance(c)))
           throw std::logic_error("Should have been able to set this cell");
       }
     }
@@ -33,6 +33,9 @@ namespace {
     //every ring should have all smaller rings inside it
     size_t rings = 0;
     for(size_t i = 1; i < contours.size(); ++i) {
+      //there has to be something
+      if(contours[i].empty())
+        throw std::logic_error("Every contour should have some data");
       //not looking at a ring any more so we are done
       if(contours[i].front().front() != contours[i].front().back())
         break;

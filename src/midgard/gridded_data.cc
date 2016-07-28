@@ -279,12 +279,20 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
 
   //generalize by appx 1 tenth of the meters a tile takes up
   auto c = this->TileBounds().Center();
-  auto m = coord_t{c.first - this->tilesize_ / 2, c.second - this->tilesize_ / 2}.Distance(
-                  {c.first + this->tilesize_ / 2, c.second + this->tilesize_ / 2});
+  auto h = this->tilesize_ / 2;
+  auto m = coord_t{c.first - h, c.second - h}.Distance({c.first + h, c.second + h});
   m /= 10.f;
-  for(auto& contour : contours)
-    for(auto& line : contour)
+  for(auto& contour : contours) {
+    for(auto& line : contour) {
+      /*
+      //HACK: samples are on the bottom left but should be center..
+      for(auto& coord : line) {
+        coord.first += h;
+        coord.second += h;
+      }*/
       Polyline2<coord_t>::Generalize(line, m);
+    }
+  }
 
   return contours;
 }
