@@ -3,6 +3,7 @@
 #include "midgard/tiles.h"
 #include "midgard/gridded_data.h"
 #include "midgard/logging.h"
+#include "midgard/polyline2.h"
 
 #include <sstream>
 
@@ -52,7 +53,7 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_lines) {
+typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_intervals) {
   //TODO: sort and validate contour range
 
   // Values at tile corners and center (0 element is center)
@@ -68,10 +69,11 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
   };
 
   //we need something to hold each iso-line
-  contours_t contours(contour_lines.size());
+  contours_t contours(contour_intervals.size());
   //and something to find them quickly
   using contour_lookup_t = std::unordered_map<coord_t, typename std::list<contour_t>::iterator>;
-  std::vector<contour_lookup_t> lookup(contour_lines.size());
+  std::vector<contour_lookup_t> lookup(contour_intervals.size());
+  //TODO: preallocate the lookups for each interval
 
   int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
   int case_value;
@@ -93,11 +95,11 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
       auto dmax  = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
-      if (dmax < contour_lines.front() || dmin > contour_lines.back())
+      if (dmax < contour_intervals.front() || dmin > contour_intervals.back())
          continue;
 
       int k = 0;
-      for (auto contour : contour_lines) {
+      for (auto contour : contour_intervals) {
         if (contour < dmin || contour > dmax) {
           k++;
           continue;
@@ -194,32 +196,77 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             break;
           }
 
-          //can we lengthen a segment from this point
-          typename contour_lookup_t::iterator it;
-          if((it = lookup[k].find(pt1)) != lookup[k].end()) {
-            //update the segment
-            if(it->second->front() == pt1)
-              it->second->push_front(pt2);
+          //this isnt a segment..
+          if(pt1 == pt2)
+            continue;
+
+          //see if we have anything to connect this segment to
+          typename contour_lookup_t::iterator rec_a = lookup[k].find(pt1);
+          typename contour_lookup_t::iterator rec_b = lookup[k].find(pt2);
+          if(rec_b != lookup[k].end()) {
+            std::swap(pt1, pt2);
+            std::swap(rec_a, rec_b);
+          }
+
+          //we want to merge two records
+          if(rec_b != lookup[k].end()) {
+            //get the segments in question and remove their lookup info
+            auto segment_a = rec_a->second;
+            bool head_a = rec_a->first == segment_a->front();
+            auto segment_b = rec_b->second;
+            bool head_b = rec_b->first == segment_b->front();
+            lookup[k].erase(rec_a);
+            lookup[k].erase(rec_b);
+
+            //this segment is now a ring
+            if(segment_a == segment_b) {
+              segment_a->push_back(segment_a->front());
+              continue;
+            }
+
+            //erase the other lookups
+            lookup[k].erase(lookup[k].find(pt1 == segment_a->front() ? segment_a->back() : segment_a->front()));
+            lookup[k].erase(lookup[k].find(pt2 == segment_b->front() ? segment_b->back() : segment_b->front()));
+
+            //add b to a
+            if(!head_a && head_b) {
+              segment_a->splice(segment_a->end(), *segment_b);
+              contours[k].erase(segment_b);
+            }//add a to b
+            else if(!head_b && head_a) {
+              segment_b->splice(segment_b->end(), *segment_a);
+              contours[k].erase(segment_a);
+              segment_a = segment_b;
+            }//flip a and add b
+            else if(head_a && head_b) {
+              segment_a->reverse();
+              segment_a->splice(segment_a->end(), *segment_b);
+              contours[k].erase(segment_b);
+            }//flip b and add to a
+            else if(!head_a && !head_b) {
+              segment_b->reverse();
+              segment_a->splice(segment_a->end(), *segment_b);
+              contours[k].erase(segment_b);
+            }
+
+            //update the look up
+            lookup[k].emplace(segment_a->front(), segment_a);
+            lookup[k].emplace(segment_a->back(), segment_a);
+          }//ap/prepend to an existing one
+          else if(rec_a != lookup[k].end()) {
+            //it goes on the front
+            if(rec_a->second->front() == pt1)
+              rec_a->second->push_front(pt2);
+            //it goes on the back
             else
-              it->second->push_back(pt2);
+              rec_a->second->push_back(pt2);
+
             //update the lookup table
-            lookup[k].emplace(pt2, it->second);
-            lookup[k].erase(it);
-          }//can we lengthen a segment from this other point
-          else if((it = lookup[k].find(pt2)) != lookup[k].end()) {
-            //update the segment
-            if(it->second->front() == pt2)
-              it->second->push_front(pt1);
-            else
-              it->second->push_back(pt1);
-            //update the lookup table
-            lookup[k].emplace(pt1, it->second);
-            lookup[k].erase(it);
+            lookup[k].emplace(pt2, rec_a->second);
+            lookup[k].erase(rec_a);
           }//this is an orphan segment for now
           else {
-            //new segment
             contours[k].push_front(contour_t{pt1, pt2});
-            //indexed
             lookup[k].emplace(pt1, contours[k].begin());
             lookup[k].emplace(pt2, contours[k].begin());
           }
@@ -230,35 +277,21 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
     } // Each tile col
   } // Each tile row
 
-  //for each iso line
-  for(auto& contour_segments : contours) {
-    //lace up as many segments as possible
-    size_t laced;
-    do {
-      //look for any pairs we can mash together
-      laced = 0;
-      for(auto& a : contour_segments) {
-        for(auto& b : contour_segments) {
-          //cant merge segment to itself or empty segments
-          if(!a.size() || !b.size() || &a == &b)
-            continue;
-          //assume splicing
-          ++laced;
-          //a adds b on the end
-          if(a.back() == b.front()) { b.pop_front(); a.splice(a.end(), b); }
-          //b adds a on the end
-          else if(b.back() == a.front()) { a.pop_front(); b.splice(b.end(), a); }
-          //a adds reverse b on the end
-          else if(a.back() == b.back()) { b.pop_back(); b.reverse(); a.splice(a.end(), b); }
-          //reverse b adds a on the end
-          else if(a.front() == b.front()) { b.pop_front(); b.reverse(); b.splice(b.end(), a); }
-          //didn't splice them
-          else { --laced; }
-        }
-      }
-    } while(laced > 0);
-    //clean out the empty segments
-    contour_segments.remove_if([](const std::list<coord_t>& s){return !s.size();});
+  //generalize by appx 1 tenth of the meters a tile takes up
+  auto c = this->TileBounds().Center();
+  auto h = this->tilesize_ / 2;
+  auto m = coord_t{c.first - h, c.second - h}.Distance({c.first + h, c.second + h});
+  m /= 10.f;
+  for(auto& contour : contours) {
+    for(auto& line : contour) {
+      /*
+      //HACK: samples are on the bottom left but should be center..
+      for(auto& coord : line) {
+        coord.first += h;
+        coord.second += h;
+      }*/
+      Polyline2<coord_t>::Generalize(line, m);
+    }
   }
 
   return contours;

@@ -15,8 +15,8 @@ namespace {
       for(int j = 0; j < 10; ++j) {
         Tiles<PointLL> t({-5,-5,5,5}, 1);
         //NOTE: we aren't setting the center because the contour algorithm uses bottom left
-        auto b = t.Base(t.TileId(i,j));
-        if(!g.Set(b, PointLL(0,0).Distance(b)))
+        auto c = t.Center(t.TileId(i,j));
+        if(!g.Set(c, PointLL(0,0).Distance(c)))
           throw std::logic_error("Should have been able to set this cell");
       }
     }
@@ -31,16 +31,25 @@ namespace {
 
     //because of the pattern above we should end up with concentric circles
     //every ring should have all smaller rings inside it
+    size_t rings = 0;
     for(size_t i = 1; i < contours.size(); ++i) {
+      //there has to be something
+      if(contours[i].empty())
+        throw std::logic_error("Every contour should have some data");
       //not looking at a ring any more so we are done
       if(contours[i].front().front() != contours[i].front().back())
         break;
+      ++rings;
       //if this is a ring the iso lines with lesser units should be contained within it
       for(const auto& p : contours[i - 1].front()) {
         if(!p.WithinConvexPolygon(contours[i].front()))
           throw std::logic_error("Ring " + std::to_string(i) + " should contain ring " + std::to_string(i - 1));
       }
     }
+
+    //there should be quite a few rings here
+    if(rings == 0)
+      throw std::logic_error("There should be at least a few rings here");
 
     //std::cout << g.GenerateContourGeoJson(iso_markers);
   }

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <list>
+#include <functional>
 
 namespace valhalla {
 namespace midgard {
@@ -68,9 +69,7 @@ uint32_t Polyline2<coord_t>::Generalize(const float t) {
   // Create a vector for the output shape. Recursively call Douglass-Peucker
   // method to generalize the polyline. Square the error tolerance to avoid
   // sqrts.
-  std::vector<coord_t> genpts;
-  DouglasPeucker(0, pts_.size() - 1, t*t, genpts);
-  pts_= genpts;
+  Generalize(pts_, t);
   return pts_.size();
 }
 
@@ -80,9 +79,44 @@ template <class coord_t>
 Polyline2<coord_t> Polyline2<coord_t>::GeneralizedPolyline(const float t) {
   // Recursively call Douglass-Peucker method to generalize the polyline.
   // Square the error tolerance to avoid sqrts.
-  std::vector<coord_t> genpts;
-  DouglasPeucker(0, pts_.size() - 1, t * t, genpts);
-  return Polyline2(genpts);
+  Polyline2 generalized(pts_);
+  generalized.Generalize(t);
+  return generalized;
+}
+
+template <class coord_t>
+template <class container_t>
+void Polyline2<coord_t>::Generalize(container_t& polyline, float epsilon) {
+
+  //the recursive bit
+  epsilon *= epsilon;
+  std::function<void (typename container_t::iterator, typename container_t::iterator)> peucker;
+  peucker = [&peucker, &polyline, epsilon](typename container_t::iterator start, typename container_t::iterator end) {
+    //find the point furthest from the line
+    float dmax = 0.f;
+    typename container_t::iterator itr;
+    LineSegment2<coord_t> l{*start, *end};
+    coord_t tmp;
+    for(auto i = std::next(start); i != end; ++i) {
+      auto d = l.DistanceSquared(*i, tmp);
+      if(d > dmax) {
+        itr = i;
+        dmax = d;
+      }
+    }
+
+    //there are some high frequency details between start and end
+    //so we need to look for flatter sections between them
+    if(dmax >= epsilon) {
+        peucker(start, itr);
+        peucker(itr, end);
+    }//nothing sticks out between start and end so simplify it away
+    else
+      polyline.erase(std::next(start), end);
+  };
+
+  //recurse!
+  peucker(polyline.begin(), std::prev(polyline.end()));
 }
 
 // Clip this polyline to the specified bounding box.
@@ -101,48 +135,6 @@ Polyline2<coord_t> Polyline2<coord_t>::ClippedPolyline(const AABB2<coord_t>& box
   return Polyline2(pts);
 }
 
-// Douglass-Peucker generalization. Finds the vertex farthest from the
-// segment between vertices i and j and checks if this distance exceeds
-// the tolerance. If the distance is less than the tolerance the segment
-// i,j is added to the output list of generalized vertices.
-template <class coord_t>
-void Polyline2<coord_t>::DouglasPeucker(const uint32_t i, const uint32_t j,
-                    const float t2, std::vector<coord_t>& genpts) {
-  // Find the vertex farthest from the line segment ViVj
-  uint32_t index = 0;
-  float maxdist = 0.0f;
-  float d2;
-  coord_t tmp;
-  LineSegment2<coord_t> v(pts_[i], pts_[j]);
-  for (uint32_t k = i+1; k < j; k++) {
-    // Get the squared distance from the intermediate point to the segment
-    d2 = v.DistanceSquared(pts_[k], tmp);
-    if (d2 > maxdist) {
-      maxdist = d2;
-      index   = k;
-    }
-  }
-
-  // If the maximum distance is greater than the error tolerance,
-  // divide the sub-polyline into two at the furthest point and
-  // recursively call this method
-  if (maxdist > t2) {
-    DouglasPeucker(i, index, t2, genpts);
-    DouglasPeucker(index, j, t2, genpts);
-  }
-  else {
-    // Output segment ViVj to the generalized shape
-    uint32_t n = genpts.size();
-    if (n == 0 || !(pts_[i] == genpts[n-1])) {
-      genpts.push_back(pts_[i]);
-      n++;
-    }
-    if (!(pts_[j] == genpts[n-1])) {
-      genpts.push_back(pts_[j]);
-    }
-  }
-}
-
 // Explicit instantiation
 template class Polyline2<Point2>;
 template class Polyline2<PointLL>;
@@ -151,6 +143,11 @@ template float Polyline2<PointLL>::Length(const std::vector<PointLL>&);
 template float Polyline2<Point2>::Length(const std::vector<Point2>&);
 template float Polyline2<PointLL>::Length(const std::list<PointLL>&);
 template float Polyline2<Point2>::Length(const std::list<Point2>&);
+
+template void Polyline2<PointLL>::Generalize(std::vector<PointLL>&, float);
+template void Polyline2<Point2>::Generalize(std::vector<Point2>&, float);
+template void Polyline2<PointLL>::Generalize(std::list<PointLL>&, float);
+template void Polyline2<Point2>::Generalize(std::list<Point2>&, float);
 
 }
 }
