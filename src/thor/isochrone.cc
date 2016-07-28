@@ -80,6 +80,7 @@ const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(
     grid_size = 400.0f;
     max_distance = max_seconds * 70.0f * 0.44704f;
   }
+  shape_interval_ = grid_size * 0.25f;
 
   // Form grid for isotiles. Convert grid size to degrees.
   grid_size /= kMetersPerDegreeLat;
@@ -186,6 +187,13 @@ const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(
 // Update the isotile
 void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
                               const PointLL& ll) {
+  // Skip if the opposing edge has already been settled.
+  GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid());
+  EdgeStatusInfo edgestatus = edgestatus_->Get(opp);
+  if (edgestatus.set() == EdgeSet::kPermanent) {
+      return;
+  }
+
   // Get time at the end node of the predecessor
   float secs1 = pred.cost().secs;
 
@@ -199,26 +207,29 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
     secs0 = edgelabels_[predindex].cost().secs;
   }
 
-  // Get the directed edge. Mark grid cells along the shape if time is
-  // less than what is already populated
+  // Get the directed edge and its shape. Make sure shape is forward
+  // direction and resample it to the shape interval.
   const GraphTile* tile = graphreader.GetGraphTile(pred.edgeid().Tile_Base());
   const DirectedEdge* edge = tile->directededge(pred.edgeid());
-  float length = edge->length();
-  if (length < shape_interval_) {
-    isotile_->SetIfLessThan(ll, secs1);
-  } else {
-    float delta = (shape_interval_ * (secs1 - secs0)) / length;
-    auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
-    if (!edge->forward()) {
-      std::reverse(shape.begin(), shape.end());
+  auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
+  if (!edge->forward()) {
+    std::reverse(shape.begin(), shape.end());
+  }
+  auto resampled = resample_spherical_polyline(shape, shape_interval_);
+
+  // Mark grid cells along the shape if time is less than what is
+  // already populated. Get intersection of tiles along each segment
+  // so this doesn't miss shape that crosses tile corners
+  float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
+  float secs = secs0;
+  auto itr1 = resampled.begin();
+  auto itr2 = itr1 + 1;
+  for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
+    secs += delta;
+    auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
+    for (auto t : tiles) {
+      isotile_->SetIfLessThan(t.first, secs);
     }
-    float secs = secs0;
-    auto resampled = resample_spherical_polyline(shape, shape_interval_);
-    for (auto itr = resampled.begin() + 1; itr < resampled.end() - 1; itr++) {
-      secs += delta;
-      isotile_->SetIfLessThan(*itr, secs);
-    }
-    isotile_->SetIfLessThan(ll, secs1);
   }
 }
 
