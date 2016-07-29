@@ -140,10 +140,9 @@ int main(int argc, char *argv[]) {
     boost::property_tree::read_json(stream, json_ptree);
 
     try {
-      for (const auto& location : json_ptree.get_child("locations"))
+      for (const auto& location : json_ptree.get_child("locations")) {
         locations.emplace_back(std::move(Location::FromPtree(location.second)));
-      if (locations.size() != 1)
-        throw;
+      }
     } catch (...) {
       throw std::runtime_error("Requires a single location");
     }
