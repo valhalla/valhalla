@@ -2,6 +2,9 @@
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
 #include <valhalla/midgard/tiles.h>
+#include <vector>
+#include <map>
+#include <list>
 
 namespace valhalla {
 namespace midgard {
@@ -61,22 +64,16 @@ class GriddedData : public Tiles<coord_t> {
    *
    * @param contour_intervals    the values at which the contour lines should occur
    *                             basically the lines on the measuring stick
+   * @param rings_only           only include geometry of contours that are polygons
+   * @param denoise              remove any contours whose size ratio is less than
+   *                             this parameter with respect to the largest contour
+   *                             with the same interval. by default only keep the largest
    *
-   * @return contour line geometries
+   * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
   using contour_t = std::list<coord_t>;
-  using contours_t = std::vector<std::list<contour_t > >;
-  contours_t GenerateContours(const std::vector<float>& contour_intervals);
-
-  /**
-   * Generate contour lines from the gridded data.
-   *
-   * @param contour_intervals    the values at which the contour lines should occur
-   *                             basically the lines on the measuring stick
-   *
-   * @return contour geojson
-   */
-  std::string GenerateContourGeoJson(const std::vector<float>& contour_intervals);
+  using contours_t = std::map<float, std::list<contour_t>, std::function<bool(const float, const float)> >;
+  contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = true, const float denoise = 1.f) const;
 
  protected:
   std::vector<float> data_;                  // Data value within each tile

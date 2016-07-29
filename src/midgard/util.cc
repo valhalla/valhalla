@@ -466,5 +466,19 @@ typename coord_t::first_type x_intercept(const coord_t& u, const coord_t& v, con
 template PointLL::second_type x_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::second_type x);
 template Point2::second_type x_intercept<Point2>(const Point2& u, const Point2& v, const Point2::second_type x);
 
+template <class container_t>
+float polygon_area(const container_t& polygon) {
+  typename container_t::value_type::first_type area = polygon.back() == polygon.front() ? 0.f :
+    (polygon.back().first + polygon.front().first)*(polygon.back().second + polygon.front().second);
+  for(auto p1 = polygon.cbegin(), p2 = std::next(polygon.cbegin()); p2 != polygon.cend(); ++p1, ++p2)
+    area += (p1->first + p2->first)*(p1->second + p2->second);
+  return area*.5;
+}
+
+template PointLL::first_type polygon_area(const std::list<PointLL>&);
+template PointLL::first_type polygon_area(const std::vector<PointLL>&);
+template Point2::first_type polygon_area(const std::list<Point2>&);
+template Point2::first_type polygon_area(const std::vector<Point2>&);
+
 }
 }
