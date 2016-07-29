@@ -62,8 +62,8 @@ namespace {
       }
       std::cout << "]}}" << (&feature != &*std::prev(contours.cend()) ? "," : "");
     }
-    std::cout << "]}";
-  }*/
+    std::cout << "]}";*/
+  }
 
 }
 
