@@ -14,6 +14,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/geojson.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/odin/directionsbuilder.h>
@@ -223,12 +224,13 @@ int main(int argc, char *argv[]) {
     path_location.push_back(getPathLoc(loc, "fail_invalid_origin"));
   }
 
-  // Test - compute an isochrone. 2 hours
+  // Test - compute an isochrone
   uint32_t max_seconds = 3600;
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
-  auto isotile = isochrone.Compute(path_location[0], max_seconds, reader, mode_costing, mode);
-  auto geojson = isotile->GenerateContourGeoJson({300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3000, 3300, 3600, 3900, 4200, 4500, 4800, 5100, 5400});
+  auto isotile = isochrone.Compute(path_location, max_seconds, reader, mode_costing, mode);
+  auto contours = isotile->GenerateContours({900, 1800, 2700, 3600});
+  auto geojson = json::to_geojson<PointLL>(contours);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
@@ -242,7 +244,7 @@ int main(int argc, char *argv[]) {
   }
   LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" + " size= " + std::to_string(secs.size()));
 
-  LOG_INFO("Geojson: " + geojson);
+  std::cout << std::endl << *geojson;
   return EXIT_SUCCESS;
 }
 
