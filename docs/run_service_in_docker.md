@@ -36,7 +36,7 @@ installed.
         --volume  "${WORK_DIR}":/data \
         --workdir /data \
         valhalla/meili \
-        pbfgraphbuilder --conf conf/valhalla.json berlin-latest.osm.pbf
+        valhalla_build_tiles --conf conf/valhalla.json berlin-latest.osm.pbf
    ```
 
    This process takes time from a few minutes to hours, depending on
