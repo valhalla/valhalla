@@ -46,7 +46,6 @@ class Isochrone {
    * time taken to reach each grid point. This gridded data is then contoured
    * so it can be output as polygons. Multiple locations are allowed as the
    * origins - within some reasonable distance from each other.
-   * TODO - currently does not allow multi-modal.
    * @param  origin_locs  List of origin locations.
    * @param  max_seconds  Maximum time (seconds) for largest contour
    * @param  graphreader  Graphreader
@@ -59,6 +58,25 @@ class Isochrone {
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
+
+  /**
+   * Compute an isochrone grid for multi-modal routes. This creates and
+   * populates a lat,lon grid with time taken to reach each grid point.
+   * This gridded data is then contoured so it can be output as polygons.
+   * Multiple locations are allowed as the origins - within some reasonable
+   * distance from each other.
+   * @param  origin_locations  List of origin locations.
+   * @param  max_seconds  Maximum time (seconds) for largest contour
+   * @param  graphreader  Graphreader
+   * @param  mode_costing List of costing objects
+   * @param  mode         Travel mode
+   */
+  const std::shared_ptr<GriddedData<midgard::PointLL> > ComputeMultiModal(
+               std::vector<baldr::PathLocation>& origin_locations,
+               const uint32_t max_seconds,
+               baldr::GraphReader& graphreader,
+               const std::shared_ptr<sif::DynamicCost>* mode_costing,
+               const sif::TravelMode mode);
 
  protected:
   float shape_interval_;        // Interval along shape to mark time
@@ -76,6 +94,23 @@ class Isochrone {
 
   // Isochrone gridded time data
   std::shared_ptr<GriddedData<midgard::PointLL> > isotile_;
+
+  /**
+   * Initialize prior to computing the isocrhones. Creates adjacency list,
+   * edgestatus support, and reserves edgelabels.
+   * @param bucketsize  Adjacency list bucket size.
+   */
+  void Initialize(const uint32_t bucketsize);
+
+  /**
+   * Constructs the isotile - 2-D gridded data containing the time
+   * to get to each lat,lng tile.
+   * @param  mulitmodal  True if the route type is multimodal.
+   * @param  max_seconds Maximum time (seconds) for computing isochrones.
+   * @param  origin_locations  List of origin locations.
+   */
+  void ConstructIsoTile(const bool multimodal, const uint32_t max_seconds,
+                        std::vector<baldr::PathLocation>& origin_locations);
 
   /**
    * Updates the isotile using the edge information from the predecessor edge
@@ -117,7 +152,7 @@ class Isochrone {
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
-                  const std::vector<baldr::PathLocation>& origin_locations,
+                  std::vector<baldr::PathLocation>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
 
 };
