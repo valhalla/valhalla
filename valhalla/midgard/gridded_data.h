@@ -76,7 +76,8 @@ class GriddedData : public Tiles<coord_t> {
   contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = true, const float denoise = 1.f) const;
 
  protected:
-  std::vector<float> data_;                  // Data value within each tile
+  float max_value_;             // Maximum value stored in the tile
+  std::vector<float> data_;     // Data value within each tile
 };
 
 }
