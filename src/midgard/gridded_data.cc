@@ -17,7 +17,8 @@ namespace midgard {
 template <class coord_t>
 GriddedData<coord_t>::GriddedData(const AABB2<coord_t>& bounds, const float tilesize,
             const float value)
-    : Tiles<coord_t>(bounds, tilesize) {
+    : Tiles<coord_t>(bounds, tilesize),
+      max_value_(value) {
   // Resize the data vector and fill with the value
   data_.resize(this->nrows_ * this->ncolumns_);
   std::fill(data_.begin(), data_.end(), value);
@@ -119,7 +120,10 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
         for (int m = 4; m >= 0; m--) {
           if (m > 0) {
             int newtileid = tileid + tile_inc[m-1];
-            s[m]  = data_[newtileid] - contour;
+            // Make sure the tile corner value is not set to the max_value
+            // (messes up the intersect method). Set a value slightly above
+            // the contour (e.g. 20 seconds higher)
+            s[m] = (data_[newtileid] < max_value_) ? data_[newtileid] - contour : 20.0f;
             tile_corners[m] = this->Base(newtileid);
           } else {
             s[0]  = 0.25 * (s[1] + s[2] + s[3] + s[4]);
@@ -141,7 +145,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
          Each triangle is then indexed by the parameter m, and the 3
          vertices of each triangle are indexed by parameters m1,m2,and m3.
          It is assumed that the centre of the box is always vertex 2
-         though this isimportant only when all 3 vertices lie exactly on
+         though this is important only when all 3 vertices lie exactly on
          the same contour level, in which case only the side of the box
          is drawn.
             vertex 4 +-------------------+ vertex 3
