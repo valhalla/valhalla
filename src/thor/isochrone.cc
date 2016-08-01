@@ -1,7 +1,6 @@
 #include <iostream> // TODO remove if not needed
 #include <map>
 #include <algorithm>
-#include <limits>
 #include "thor/isochrone.h"
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/distanceapproximator.h>
