@@ -223,25 +223,53 @@ int main(int argc, char *argv[]) {
     path_location.push_back(getPathLoc(loc, "fail_invalid_origin"));
   }
 
-  // Test - compute an isochrone
+  // For multimodal - hack the date time for now!
+  if (routetype == "multimodal") {
+      path_location.front().date_time_ = "current";
+  }
+
+  // Compute the isotile
   uint32_t max_seconds = 3600;
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
-  auto isotile = isochrone.Compute(path_location, max_seconds, reader, mode_costing, mode);
-  auto contours = isotile->GenerateContours({900, 1800, 2700, 3600});
-  auto geojson = json::to_geojson<PointLL>(contours);
+  auto isotile = (routetype == "multimodal") ?
+      isochrone.ComputeMultiModal(path_location, max_seconds, reader, mode_costing, mode) :
+      isochrone.Compute(path_location, max_seconds, reader, mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
 
+  // Evaluate the min, max rows and columns that are set
   int nv = 0;
-  auto& secs = isotile->data();
-  for (auto sec : secs) {
-    if (sec < max_seconds) {
-      nv++;
+  int32_t min_row = isotile->nrows();
+  int32_t max_row = 0;
+  int32_t min_col = isotile->ncolumns();
+  int32_t max_col = 0;
+  auto iso_data = isotile->data();
+  for (int32_t row = 0; row < isotile->nrows(); row++) {
+    for (int32_t col = 0; col < isotile->ncolumns(); col++) {
+      int id = isotile->TileId(col, row);
+      if (iso_data[id] < max_seconds + 300) {
+        min_row = std::min(row, min_row);
+        max_row = std::max(row, max_row);
+        min_col = std::min(col, min_col);
+        max_col = std::max(col, max_col);
+        nv++;
+      }
     }
   }
-  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" + " size= " + std::to_string(secs.size()));
+  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" + " size= " + std::to_string(iso_data.size()));
+  LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) + " max = " + std::to_string(max_row));
+  LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) + " max = " + std::to_string(max_col));
+
+  auto contours = isotile->GenerateContours({900, 1800, 2700, 3600});
+  auto geojson = json::to_geojson<PointLL>(contours);
+
+  auto t3 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
+  LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count();
+  LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
   std::cout << std::endl << *geojson;
   return EXIT_SUCCESS;
