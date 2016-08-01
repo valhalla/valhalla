@@ -245,7 +245,7 @@ int main(int argc, char *argv[]) {
   int32_t max_row = 0;
   int32_t min_col = isotile->ncolumns();
   int32_t max_col = 0;
-  auto iso_data = isotile->data();
+  const auto& iso_data = isotile->data();
   for (int32_t row = 0; row < isotile->nrows(); row++) {
     for (int32_t col = 0; col < isotile->ncolumns(); col++) {
       int id = isotile->TileId(col, row);
