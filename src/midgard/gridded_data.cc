@@ -17,11 +17,11 @@ namespace midgard {
 template <class coord_t>
 GriddedData<coord_t>::GriddedData(const AABB2<coord_t>& bounds, const float tilesize,
             const float value)
-    : Tiles<coord_t>(bounds, tilesize) {
+    : Tiles<coord_t>(bounds, tilesize),
+      max_value_(value) {
   // Resize the data vector and fill with the value
   data_.resize(this->nrows_ * this->ncolumns_);
   std::fill(data_.begin(), data_.end(), value);
-  max_value_ = value;
 }
 
 // Set the value at a specified coordinate.
