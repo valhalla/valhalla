@@ -8,6 +8,7 @@
 
 #include <sstream>
 #include <cmath>
+#include <algorithm>
 
 namespace valhalla {
 namespace midgard {
@@ -291,7 +292,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
   auto c = this->TileBounds().Center();
   auto h = this->tilesize_ / 2;
   auto m = coord_t{c.first - h, c.second - h}.Distance({c.first + h, c.second + h});
-  m *= .1f;
+  m *= .2f;
   //for each contour
   for(auto& contour : contours) {
     //they only wanted rings!
@@ -299,26 +300,19 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
       contour.second.remove_if([](const contour_t& line){return line.front() != line.back();});
     //sort them by area (maybe length would be sufficient?) biggest first
     std::unordered_map<const contour_t*, typename coord_t::first_type> cache(contour.second.size());
-    contour.second.sort([&cache](const contour_t& a, const contour_t& b) {
-      typename coord_t::first_type area_a;
-      if(cache.find(&a) == cache.end()) { area_a = polygon_area(a); cache[&a] = area_a; }
-      else { area_a = cache[&a]; }
-
-      typename coord_t::first_type area_b;
-      if(cache.find(&b) == cache.end()) { area_b = polygon_area(b); cache[&b] = area_b; }
-      else { area_b = cache[&b]; }
-
-      return std::abs(area_a) > std::abs(area_b);
-    });
+    std::for_each(contour.second.cbegin(), contour.second.cend(), [&cache](const contour_t& c){cache[&c] = polygon_area(c);});
+    contour.second.sort([&cache](const contour_t& a, const contour_t& b) {return std::abs(cache[&a]) > std::abs(cache[&b]);});
     //they only want the most significant ones!
-    if(denoise && contour.second.size() > 1)
-      contour.second.remove_if([&cache,&contour](const contour_t& c){return std::abs(cache[&c]/cache[&contour.second.front()]) < .5f;});
-    //generalize and wind them
+    if(denoise > 0.f)
+      contour.second.remove_if([&cache, &contour, denoise](const contour_t& c){return std::abs(cache[&c]/cache[&contour.second.front()]) < denoise;});
+    //generalize and wind them the same
     for(auto& line : contour.second) {
       Polyline2<coord_t>::Generalize(line, m);
       //TODO: if this is an inner dont do this..
       if(cache[&line] > 0)
         line.reverse();
+      //sampling the bottom left corner means everything is skewed, so unskew it
+      for(auto& coord : line) { coord.first += h; coord.second += h; }
     }
   }
 
