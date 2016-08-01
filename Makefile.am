@@ -54,6 +54,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/edgeinfo.h \
+	valhalla/baldr/geojson.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
@@ -90,6 +91,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
+	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
 	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
