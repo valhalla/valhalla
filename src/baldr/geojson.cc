@@ -5,24 +5,27 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <utility>
+
+namespace {
+  using rgba_t = std::tuple<float,float,float>;
+}
 
 namespace valhalla {
 namespace baldr {
 namespace json {
 
 template <class coord_t>
-MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours, const std::vector<rgba_t>& colors) {
+MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours, const std::vector<std::string>& colors) {
   //for each contour interval
   int i = 0;
-  float a = .33f;
   auto color_itr = colors.cbegin();
   auto features = array({});
   for(const auto& contours : grid_contours) {
     //color was supplied
-    rgba_t color;
-    if(color_itr != colors.cend()) {
-      color = *color_itr;
-      a = std::get<3>(color);
+    std::stringstream hex;
+    if(color_itr != colors.cend() && !color_itr->empty()) {
+      hex << *color_itr;
       color_itr++;
     }//or we computed it..
     else {
@@ -30,13 +33,13 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
       auto c = .5f;
       auto x = c * (1 - std::abs(std::fmod(h/60.f, 2.f) - 1));
       auto m = .25f;
-      color = h < 60 ? rgba_t{m + c, m + x, m, a} : (h < 120 ? rgba_t{m + x, m + c, m, a} : rgba_t{m, m + c, m + x, a});
+      rgba_t color = h < 60 ? rgba_t{m + c, m + x, m} : (h < 120 ? rgba_t{m + x, m + c, m} : rgba_t{m, m + c, m + x});
+      hex << "#" << std::hex << static_cast<int>(std::get<0>(color)*255 + .5f) <<
+                    std::hex << static_cast<int>(std::get<1>(color)*255 + .5f) <<
+                    std::hex << static_cast<int>(std::get<2>(color)*255 + .5f);
     }
     ++i;
-    std::stringstream hex;
-    hex << "#" << std::hex << static_cast<int>(std::get<0>(color)*255 + .5f) <<
-                  std::hex << static_cast<int>(std::get<1>(color)*255 + .5f) <<
-                  std::hex << static_cast<int>(std::get<2>(color)*255 + .5f);
+
     //for each contour on that interval
     for(const auto& contour : contours.second) {
       //make some geometry
@@ -57,7 +60,7 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
           {"properties", map({
             {"contour", static_cast<uint64_t>(contours.first)},
             {"fill", hex.str()},
-            {"fill-opacity", json::fp_t{std::get<3>(color), 2}},
+            {"fill-opacity", json::fp_t{.33f, 2}},
           })},
         })
       );
@@ -71,8 +74,8 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
   return feature_collection;
 }
 
-template MapPtr to_geojson<midgard::Point2>(const midgard::GriddedData<midgard::Point2>::contours_t&, const std::vector<rgba_t>&);
-template MapPtr to_geojson<midgard::PointLL>(const midgard::GriddedData<midgard::PointLL>::contours_t&, const std::vector<rgba_t>&);
+template MapPtr to_geojson<midgard::Point2>(const midgard::GriddedData<midgard::Point2>::contours_t&, const std::vector<std::string>&);
+template MapPtr to_geojson<midgard::PointLL>(const midgard::GriddedData<midgard::PointLL>::contours_t&, const std::vector<std::string>&);
 
 }
 }
