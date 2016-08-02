@@ -74,8 +74,8 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  uint32_t n_contours = 2;
-  uint32_t minutes = 120;
+  size_t n_contours = 4;
+  unsigned int max_minutes = 60;
   std::string origin, routetype, json, config;
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
       // positional arguments
-      ("ncontours,n", bpo::value<uint32_t>(&n_contours), "Number of contours.")
-      ("minutes,m", bpo::value<uint32_t>(&minutes), "Maximum minutes.")
+      ("ncontours,n", bpo::value<size_t>(&n_contours), "Number of contours.")
+      ("minutes,m", bpo::value<unsigned int>(&max_minutes), "Maximum minutes.")
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
   bpo::positional_options_description pos_options;
@@ -234,11 +234,10 @@ int main(int argc, char *argv[]) {
 
   // Compute the isotile
   auto t1 = std::chrono::high_resolution_clock::now();
-  uint32_t max_seconds = minutes * 60;
   Isochrone isochrone;
   auto isotile = (routetype == "multimodal") ?
-      isochrone.ComputeMultiModal(path_location, max_seconds, reader, mode_costing, mode) :
-      isochrone.Compute(path_location, max_seconds, reader, mode_costing, mode);
+      isochrone.ComputeMultiModal(path_location, max_minutes, reader, mode_costing, mode) :
+      isochrone.Compute(path_location, max_minutes, reader, mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
@@ -253,7 +252,7 @@ int main(int argc, char *argv[]) {
   for (int32_t row = 0; row < isotile->nrows(); row++) {
     for (int32_t col = 0; col < isotile->ncolumns(); col++) {
       int id = isotile->TileId(col, row);
-      if (iso_data[id] < max_seconds + 300) {
+      if (iso_data[id] < max_minutes + 5) {
         min_row = std::min(row, min_row);
         max_row = std::max(row, max_row);
         min_col = std::min(col, min_col);
@@ -267,8 +266,8 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) + " max = " + std::to_string(max_col));
 
   std::vector<float> contour_times;
-  for (int i = 1; i <= n_contours; i++) {
-    contour_times.push_back((max_seconds * i) / n_contours);
+  for (size_t i = 1; i <= n_contours; i++) {
+    contour_times.push_back((max_minutes * i) / n_contours);
   }
   auto contours = isotile->GenerateContours(contour_times);
   auto geojson = json::to_geojson<PointLL>(contours);
