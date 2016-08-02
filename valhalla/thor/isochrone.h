@@ -47,14 +47,14 @@ class Isochrone {
    * so it can be output as polygons. Multiple locations are allowed as the
    * origins - within some reasonable distance from each other.
    * @param  origin_locs  List of origin locations.
-   * @param  max_seconds  Maximum time (seconds) for largest contour
+   * @param  max_minutes  Maximum time (minutes) for largest contour
    * @param  graphreader  Graphreader
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  const std::shared_ptr<GriddedData<midgard::PointLL> > Compute(
+  std::shared_ptr<const GriddedData<midgard::PointLL> > Compute(
           std::vector<baldr::PathLocation>& origin_locs,
-          const uint32_t max_seconds,
+          const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
@@ -66,14 +66,14 @@ class Isochrone {
    * Multiple locations are allowed as the origins - within some reasonable
    * distance from each other.
    * @param  origin_locations  List of origin locations.
-   * @param  max_seconds  Maximum time (seconds) for largest contour
+   * @param  max_minutes  Maximum time (minutes) for largest contour
    * @param  graphreader  Graphreader
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  const std::shared_ptr<GriddedData<midgard::PointLL> > ComputeMultiModal(
+  std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeMultiModal(
                std::vector<baldr::PathLocation>& origin_locations,
-               const uint32_t max_seconds,
+               const unsigned int max_minutes,
                baldr::GraphReader& graphreader,
                const std::shared_ptr<sif::DynamicCost>* mode_costing,
                const sif::TravelMode mode);
@@ -106,10 +106,10 @@ class Isochrone {
    * Constructs the isotile - 2-D gridded data containing the time
    * to get to each lat,lng tile.
    * @param  mulitmodal  True if the route type is multimodal.
-   * @param  max_seconds Maximum time (seconds) for computing isochrones.
+   * @param  max_minutes Maximum time (minutes) for computing isochrones.
    * @param  origin_locations  List of origin locations.
    */
-  void ConstructIsoTile(const bool multimodal, const uint32_t max_seconds,
+  void ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
                         std::vector<baldr::PathLocation>& origin_locations);
 
   /**

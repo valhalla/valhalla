@@ -39,8 +39,7 @@ namespace {
     config.add_child("costing_options.bicycle", {});
     config.add_child("costing_options.pedestrian", {});
     config.add_child("costing_options.transit", {});
-    config.add("thor.logging.long_request_route", "110.0");
-    config.add("thor.logging.long_request_manytomany", "15000.0");
+    config.add("thor.logging.long_request", "110.0");
 
     thor_worker_t worker(config);
     for (auto& req_resp : failure_request_responses) {

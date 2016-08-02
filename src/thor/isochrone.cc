@@ -35,6 +35,8 @@ uint32_t GetOperatorId(const GraphTile* tile, uint32_t routeid,
   return 0;
 }
 
+constexpr float to_minutes = 1.0/60.0;
+
 }
 
 namespace valhalla {
@@ -66,11 +68,12 @@ void Isochrone::Clear() {
 }
 
 // Construct the isotile. Use a grid size based on travel mode.
-// Convert time in seconds to a max distance in meters based on an
+// Convert time in minutes to a max distance in meters based on an
 // estimate of max average speed for the travel mode.
-void Isochrone::ConstructIsoTile(const bool multimodal, const uint32_t max_seconds,
+void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
                                  std::vector<baldr::PathLocation>& origin_locations) {
   float grid_size, max_distance;
+  auto max_seconds = max_minutes * 60;
   if (multimodal) {
     grid_size = 200.0f;
     max_distance = max_seconds * 70.0f * 0.44704f; // TODO
@@ -99,7 +102,7 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const uint32_t max_secon
                         PointLL(center.lng() + dlon, center.lat() + dlat));
     bounds.Expand(bbox);
   }
-  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_seconds + 300));
+  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_minutes + 5));
 }
 
 // Initialize - create adjacency list, edgestatus support, and reserve
@@ -112,9 +115,9 @@ void Isochrone::Initialize(const uint32_t bucketsize) {
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(
+std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
              std::vector<PathLocation>& origin_locations,
-             const uint32_t max_seconds,
+             const unsigned int max_minutes,
              GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
@@ -123,8 +126,9 @@ const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize and create the isotile
+  auto max_seconds = max_minutes * 60;
   Initialize(costing->UnitSize());
-  ConstructIsoTile(false, max_seconds, origin_locations);
+  ConstructIsoTile(false, max_minutes, origin_locations);
 
   // Set the origin locations
   SetOriginLocations(graphreader, origin_locations, costing);
@@ -208,29 +212,30 @@ const std::shared_ptr<GriddedData<PointLL> > Isochrone::Compute(
   return isotile_;      // Should never get here
 }
 
-const std::shared_ptr<GriddedData<PointLL> > Isochrone::ComputeMultiModal(
+std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
              std::vector<PathLocation>& origin_locations,
-             const uint32_t max_seconds, GraphReader& graphreader,
+             const unsigned int max_minutes, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
-  const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
+  const auto& pc = mode_costing[static_cast<uint8_t>(TravelMode::kPedestrian)];
   pc->SetAllowTransitConnections(true);
   pc->UseMaxMultiModalDistance();
 
   // Set the mode from the origin
   mode_ = mode;
-  const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
-  const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
+  const auto& costing = mode_costing[static_cast<uint8_t>(mode)];
+  const auto& tc = mode_costing[static_cast<uint8_t>(TravelMode::kPublicTransit)];
 
   // Get maximum transfer distance (TODO - want to allow unlimited walking once
   // you get off the transit stop...)
   uint32_t max_transfer_distance = 99999.0f; //costing->GetMaxTransferDistanceMM();
 
   // Initialize and create the isotile
+  auto max_seconds = max_minutes * 60;
   Initialize(costing->UnitSize());
-  ConstructIsoTile(true, max_seconds, origin_locations);
+  ConstructIsoTile(true, max_minutes, origin_locations);
 
   // Set the origin locations.
   SetOriginLocations(graphreader, origin_locations, costing);
@@ -557,7 +562,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
     secs += delta;
     auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
     for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs);
+      isotile_->SetIfLessThan(t.first, secs * to_minutes);
     }
   }
 }

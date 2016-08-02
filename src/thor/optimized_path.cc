@@ -85,7 +85,7 @@ namespace valhalla {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request_manytomany) {
+      if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request) {
         LOG_WARN("thor::optimized_route elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::optimized_route exceeded threshold::"+ request_str);
         midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");
