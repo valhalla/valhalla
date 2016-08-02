@@ -32,7 +32,8 @@ namespace {
     {"/one_to_many", loki_worker_t::ONE_TO_MANY},
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
     {"/many_to_many", loki_worker_t::MANY_TO_MANY},
-    {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE}
+    {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE},
+    {"/isochrone", loki_worker_t::ISOCHRONE},
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -187,6 +188,8 @@ namespace valhalla {
           case MANY_TO_MANY:
           case OPTIMIZED_ROUTE:
             return matrix(action->second, request_pt, info);
+          case ISOCHRONE:
+            return isolines(request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
@@ -219,7 +222,7 @@ namespace valhalla {
       }
     }
 
-    void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -232,7 +235,7 @@ namespace valhalla {
           throw std::runtime_error("Failed to parse location");
         }
       }
-      if(locations.size() < (action == LOCATE ? 1 : 2))
+      if(locations.size() < (action == LOCATE || action == ISOCHRONE ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
 
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
@@ -251,6 +254,21 @@ namespace valhalla {
         }//but everything else does
         else
           throw std::runtime_error("No edge/node costing provided");
+      }
+
+      //check isoline options
+      if(action == ISOCHRONE) {
+        //make sure the isoline definitions are valid
+        auto contours = request.get_child_optional("contours");
+        if(!contours)
+          throw std::runtime_error("Insufficiently specified required parameter 'contours'");
+        size_t prev = 0;
+        for(const auto& contour : *contours) {
+          auto c = contour.second.get<size_t>("time", -1);
+          if(c < prev || c == -1)
+            throw std::runtime_error("Insufficiently specified required parameter 'time'");
+          prev = c;
+        }
       }
 
       // TODO - have a way of specifying mode at the location
