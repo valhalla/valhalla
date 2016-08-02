@@ -122,8 +122,9 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             int newtileid = tileid + tile_inc[m-1];
             // Make sure the tile corner value is not set to the max_value
             // (messes up the intersect method). Set a value slightly above
-            // the contour (e.g. 20 seconds higher)
-            s[m] = (data_[newtileid] < max_value_) ? data_[newtileid] - contour : 20.0f;
+            // the contour (e.g. 1 minute higher).
+            // TODO - the value 1 is a bit of a hack.
+            s[m] = (data_[newtileid] < max_value_) ? data_[newtileid] - contour : 1.0f;
             tile_corners[m] = this->Base(newtileid);
           } else {
             s[0]  = 0.25 * (s[1] + s[2] + s[3] + s[4]);
