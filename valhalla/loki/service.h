@@ -30,7 +30,7 @@ namespace valhalla {
       prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t isolines(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t isochrones(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
@@ -44,8 +44,10 @@ namespace valhalla {
       std::unordered_map<std::string, float> max_distance;
       float long_request;
       // Minimum and maximum walking distances (to validate input).
-      uint32_t min_transit_walking_dis;
-      uint32_t max_transit_walking_dis;
+      unsigned int min_transit_walking_dis;
+      unsigned int max_transit_walking_dis;
+      unsigned int max_contours;
+      unsigned int max_time;
     };
   }
 }

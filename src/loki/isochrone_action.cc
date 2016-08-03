@@ -12,24 +12,13 @@
 using namespace prime_server;
 using namespace valhalla::baldr;
 
-namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-
-  void check_locations(const size_t location_count, const size_t max_locations) {
-    //check that location size does not exceed max.
-    if (location_count > max_locations)
-      throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations) + ".");
- }
-
-}
-
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::isolines(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      //make sure we meet the limits
-      auto costing = request.get<std::string>("costing");
-      check_locations(locations.size(), max_locations.find(costing)->second);
+    worker_t::result_t loki_worker_t::isochrones(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      //check that location size does not exceed max
+      if (locations.size() > max_locations.find("isochrone")->second)
+        throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find("isochrone")->second) + ".");
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {

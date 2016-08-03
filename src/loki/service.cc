@@ -101,8 +101,11 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir")),
-        connectivity_map(reader.GetTileHierarchy()), long_request(config.get<float>("loki.logging.long_request")) {
+    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
+        config(config), reader(config.get_child("mjolnir")), connectivity_map(reader.GetTileHierarchy()),
+        long_request(config.get<float>("loki.logging.long_request")),
+        max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
+        max_time(config.get<unsigned int>("service_limits.isochrone.max_time")) {
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
@@ -123,6 +126,7 @@ namespace valhalla {
         max_locations.emplace(matrix_type, config.get<size_t>("service_limits." + matrix_type + ".max_locations"));
         max_distance.emplace(matrix_type, config.get<float>("service_limits." + matrix_type + ".max_distance"));
       }
+      max_locations.emplace("isochrone", config.get<size_t>("service_limits.isochrone.max_locations"));
       if (max_locations.empty())
         throw std::runtime_error("Missing max_locations configuration.");
       if (max_distance.empty())
@@ -189,7 +193,7 @@ namespace valhalla {
           case OPTIMIZED_ROUTE:
             return matrix(action->second, request_pt, info);
           case ISOCHRONE:
-            return isolines(request_pt, info);
+            return isochrones(request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
@@ -262,11 +266,16 @@ namespace valhalla {
         auto contours = request.get_child_optional("contours");
         if(!contours)
           throw std::runtime_error("Insufficiently specified required parameter 'contours'");
+        //check that the number of contours is ok
+        if(contours->size() > max_contours)
+          throw std::runtime_error("Exceeded max contours of " + std::to_string(max_contours) + ".");
         size_t prev = 0;
         for(const auto& contour : *contours) {
           auto c = contour.second.get<size_t>("time", -1);
           if(c < prev || c == -1)
             throw std::runtime_error("Insufficiently specified required parameter 'time'");
+          if(c > max_time)
+            throw std::runtime_error("Exceeded max time of " + std::to_string(max_time) + ".");
           prev = c;
         }
       }

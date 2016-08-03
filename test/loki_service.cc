@@ -106,6 +106,7 @@ namespace {
         \"many_to_one\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
         \"many_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
         \"optimized_order_route\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
+        \"isochrone\": { \"max_contours\": 4, \"max_time\": 120, \"max_locations\": 1}, \
         \"max_shape\": 750000,\
         \"min_resample\": 10.0 \
       }, \
