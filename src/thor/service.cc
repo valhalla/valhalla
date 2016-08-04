@@ -162,12 +162,39 @@ namespace valhalla {
           return;
         }
 
-        // Set the origin edge to the through_edge
-        for (auto e : origin.edges) {
+        // Check if the through edge is dist = 1 (through point is at a node)
+        bool ends_at_node = false;;
+        for (const auto& e : origin.edges) {
           if (e.id == through_edge) {
-            origin.edges.clear();
-            origin.edges.push_back(e);
-            break;
+            if (e.end_node()) {
+              ends_at_node = true;
+              break;
+            }
+          }
+        }
+
+        // Special case if location is at the end of a through edge
+        if (ends_at_node) {
+          // Erase the through edge and its opposing edge (if in the list)
+          // from the origin edges
+          auto opp_edge = reader.GetOpposingEdgeId(through_edge);
+          auto it = origin.edges.begin();
+          while (it != origin.edges.end()) {
+            if (it->id == through_edge ||
+                it->id == opp_edge) {
+              it = origin.edges.erase(it);
+            } else {
+              it++;
+            }
+          }
+        } else {
+          // Set the origin edge to the through_edge.
+          for (auto e : origin.edges) {
+            if (e.id == through_edge) {
+              origin.edges.clear();
+              origin.edges.push_back(e);
+              break;
+            }
           }
         }
       }
