@@ -33,7 +33,8 @@ namespace {
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
     {"/many_to_many", loki_worker_t::MANY_TO_MANY},
     {"/sources_to_targets", loki_worker_t::SOURCES_TO_TARGETS},
-    {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE}
+    {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE},
+    {"/isochrone", loki_worker_t::ISOCHRONE},
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -101,8 +102,11 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir")),
-        connectivity_map(reader.GetTileHierarchy()), long_request(config.get<float>("loki.logging.long_request")) {
+    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
+        config(config), reader(config.get_child("mjolnir")), connectivity_map(reader.GetTileHierarchy()),
+        long_request(config.get<float>("loki.logging.long_request")),
+        max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
+        max_time(config.get<unsigned int>("service_limits.isochrone.max_time")) {
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
@@ -119,6 +123,11 @@ namespace valhalla {
         max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
+      for(const auto& matrix_type : std::list<std::string>{"one_to_many","many_to_one","many_to_many"}) {
+        max_locations.emplace(matrix_type, config.get<size_t>("service_limits." + matrix_type + ".max_locations"));
+        max_distance.emplace(matrix_type, config.get<float>("service_limits." + matrix_type + ".max_distance"));
+      }
+      max_locations.emplace("isochrone", config.get<size_t>("service_limits.isochrone.max_locations"));
       if (max_locations.empty())
         throw std::runtime_error("Missing max_locations configuration.");
       if (max_distance.empty())
@@ -185,6 +194,8 @@ namespace valhalla {
           case SOURCES_TO_TARGETS:
           case OPTIMIZED_ROUTE:
             return matrix(action->second, request_pt, info);
+          case ISOCHRONE:
+            return isochrones(request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
@@ -234,7 +245,6 @@ namespace valhalla {
           init_matrix(action, request);
           break;
       }
-
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
       if (costing)
@@ -249,6 +259,26 @@ namespace valhalla {
         }//but everything else does
         else
           throw std::runtime_error("No edge/node costing provided");
+      }
+
+      //check isoline options
+      if(action == ISOCHRONE) {
+        //make sure the isoline definitions are valid
+        auto contours = request.get_child_optional("contours");
+        if(!contours)
+          throw std::runtime_error("Insufficiently specified required parameter 'contours'");
+        //check that the number of contours is ok
+        if(contours->size() > max_contours)
+          throw std::runtime_error("Exceeded max contours of " + std::to_string(max_contours) + ".");
+        size_t prev = 0;
+        for(const auto& contour : *contours) {
+          auto c = contour.second.get<size_t>("time", -1);
+          if(c < prev || c == -1)
+            throw std::runtime_error("Insufficiently specified required parameter 'time'");
+          if(c > max_time)
+            throw std::runtime_error("Exceeded max time of " + std::to_string(max_time) + ".");
+          prev = c;
+        }
       }
 
       // TODO - have a way of specifying mode at the location
