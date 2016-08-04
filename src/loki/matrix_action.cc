@@ -1,7 +1,6 @@
 #include <functional>
 #include <unordered_map>
 #include <boost/property_tree/info_parser.hpp>
-#include <boost/optional.hpp>
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/distanceapproximator.h>
