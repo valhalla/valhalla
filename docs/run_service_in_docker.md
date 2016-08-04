@@ -14,15 +14,20 @@ installed.
    ```
 
 3. We need a work directory, let's say `~/tiles` (must be absolute
-   path), to place configuration files, OSM data and tiles:
+   path), to serve as a shared folder between host and the docker
+   container. We will place OSM data, configuration files, and
+   generated tiles there:
+
    ```sh
    WORK_DIR=~/tiles
    mkdir -p "${WORK_DIR}"
    ```
 
-4. Download the OSM of your city to the work directory:
-   ```sh
-   wget --directory-prefix "${WORK_DIR}" http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+4. Search your city and download the OSM data at
+   [Mapzen metro extracts](https://mapzen.com/data/metro-extracts/). Here
+   we take Berlin as example:
+    ```sh
+   wget --directory-prefix "${WORK_DIR}" https://s3.amazonaws.com/metro-extracts.mapzen.com/berlin_germany.osm.pbf
    ```
 
 5. Clone the Valhalla conf to the work directory:
@@ -36,7 +41,7 @@ installed.
         --volume  "${WORK_DIR}":/data \
         --workdir /data \
         valhalla/meili \
-        valhalla_build_tiles --conf conf/valhalla.json berlin-latest.osm.pbf
+        valhalla_build_tiles --conf conf/valhalla.json berlin_germany.osm.pbf
    ```
 
    This process takes time from a few minutes to hours, depending on
