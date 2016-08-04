@@ -156,5 +156,5 @@ int main(int argc, char *argv[])
 
   suite.test(TEST_CASE(TestQuery));
 
-  return 0;
+  return suite.tear_down();
 }

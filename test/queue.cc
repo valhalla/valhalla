@@ -148,7 +148,7 @@ void TestQueue()
   for (const auto& label : labels) {
     test::assert_bool(label.id() == i,
                       "id should be matched");
-    test::assert_bool(label.sortcost() == i,
+    test::assert_bool(label.sortcost() == i + 1,
                       "sortcost should be matched");
     i++;
   }
@@ -200,5 +200,5 @@ int main(int argc, char *argv[])
 
   suite.test(TEST_CASE(TestSorting));
 
-  return 0;
+  return suite.tear_down();
 }

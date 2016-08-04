@@ -171,5 +171,5 @@ int main(int argc, char *argv[])
 
   suite.test(TEST_CASE(TestGeoJSONReader));
 
-  return 0;
+  return suite.tear_down();
 }

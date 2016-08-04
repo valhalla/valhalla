@@ -15,7 +15,7 @@ namespace {
 
 inline float
 normalize(float num, float den)
-{ return 0.f == den? std::min(std::max(num / den, 0.f), 1.f) : 0.f; }
+{ return 0.f == den? 0.f : std::min(std::max(num / den, 0.f), 1.f); }
 
 }
 
@@ -73,17 +73,20 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
   // than source and smaller than target
   bool open = false;
 
+  // Iterate segments
   iterator_t prev_vertex = begin;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     const auto segment_length = prev_vertex->Distance(*vertex),
                 vertex_length = prev_vertex_length + segment_length;
 
+    // Open if source is located at current segment
     if (!open && source_length < vertex_length) {
       const auto offset = normalize(source_length - prev_vertex_length, segment_length);
       clip.push_back(LocateAlong(*prev_vertex, *vertex, offset));
       open = true;
     }
 
+    // Open -> Close if target is located at current segment
     if (open && target_length < vertex_length) {
       const auto offset = normalize(target_length - prev_vertex_length, segment_length);
       clip.push_back(LocateAlong(*prev_vertex, *vertex, offset));
@@ -91,6 +94,7 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
       break;
     }
 
+    // Add the end vertex of current segment if it is in open state
     if (open) {
       clip.push_back(*vertex);
     }

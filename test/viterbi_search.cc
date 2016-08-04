@@ -331,5 +331,5 @@ int main(int argc, char *argv[])
 
   suite.test(TEST_CASE(TestViterbiSearch));
 
-  return 0;
+  return suite.tear_down();
 }
