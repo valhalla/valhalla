@@ -209,6 +209,7 @@ namespace valhalla {
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
+
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -235,6 +236,7 @@ namespace valhalla {
       else if (date_time_type == 2) //arrive)
         locations.back().date_time_ = date_time_value;
 
+
       //we require correlated locations
       size_t i = 0;
       do {
@@ -248,6 +250,14 @@ namespace valhalla {
           throw std::runtime_error("Failed to parse correlated location");
         }
       }while(++i);
+
+      //if we have a sources and targets request here we will divvy up the correlated amongst them
+      auto request_sources = request.get_child_optional("sources");
+      auto request_targets = request.get_child_optional("targets");
+      if(request_sources && request_targets) {
+        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
+        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
+      }
 
       // Parse out the type of route - this provides the costing method to use
       auto costing = request.get_optional<std::string>("costing");
@@ -278,6 +288,8 @@ namespace valhalla {
       multi_modal_astar.Clear();
       locations.clear();
       correlated.clear();
+      correlated_s.clear();
+      correlated_t.clear();
       if(reader.OverCommitted())
         reader.Clear();
     }

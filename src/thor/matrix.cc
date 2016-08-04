@@ -18,6 +18,15 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
+namespace std {
+  template <>
+  struct hash<thor_worker_t::MATRIX_TYPE>
+  {
+    std::size_t operator()(const thor_worker_t::MATRIX_TYPE& a) const {
+      return std::hash<int>()(a);
+    }
+  };
+}
 
 namespace {
 
@@ -27,6 +36,13 @@ namespace {
     {"many_to_many", thor_worker_t::MANY_TO_MANY},
     {"sources_to_targets", thor_worker_t::SOURCES_TO_TARGETS}
   };
+
+  const std::unordered_map<thor_worker_t::MATRIX_TYPE, std::string> ACTION_TO_STRING {
+     {thor_worker_t::ONE_TO_MANY, "one_to_many"},
+     {thor_worker_t::MANY_TO_ONE, "many_to_one"},
+     {thor_worker_t::MANY_TO_MANY, "many_to_many"},
+     {thor_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"}
+   };
 
   constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -46,22 +62,22 @@ namespace {
     return input_locs;
   }
 
-  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds,
-      const size_t origin, const size_t destination, const size_t start, const size_t end, double distance_scale) {
+  json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
+      size_t start_td, const size_t td_count, const size_t source_index, const size_t target_index, double distance_scale) {
     auto row = json::array({});
-    for(size_t i = start; i < end; i++) {
+    for(size_t i = start_td; i < start_td + td_count; ++i) {
       //check to make sure a route was found; if not, return null for distance & time in matrix result
       if (tds[i].time != kMaxCost) {
         row->emplace_back(json::map({
-          {"from_index", static_cast<uint64_t>(origin)},
-          {"to_index", static_cast<uint64_t>(destination + (i - start))},
+          {"from_index", static_cast<uint64_t>(source_index)},
+          {"to_index", static_cast<uint64_t>(target_index)},
           {"time", static_cast<uint64_t>(tds[i].time)},
           {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}
         }));
       } else {
         row->emplace_back(json::map({
-          {"from_index", static_cast<uint64_t>(origin)},
-          {"to_index", static_cast<uint64_t>(destination + (i - start))},
+          {"from_index", static_cast<uint64_t>(source_index)},
+          {"to_index", static_cast<uint64_t>(target_index)},
           {"time", static_cast<std::nullptr_t>(nullptr)},
           {"distance", static_cast<std::nullptr_t>(nullptr)}
         }));
@@ -70,68 +86,19 @@ namespace {
     return row;
   }
 
-  //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
-  // {
-  //   input_locations: [{},{},{}],
-  //   one_to_many:
-  //   [
-  //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
-  //   ]
-  // }
-  json::MapPtr serialize_one_to_many(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
-     auto json = json::map({
-      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size(), distance_scale)})},
-      {"locations", json::array({locations(correlated)})},
-      {"units", units},
-    });
-    if (id)
-      json->emplace("id", *id);
-    return json;
-  }
-
-  //Returns a column vector of computed time and distance from each location to the last (destination) location provided.
-  // {
-  //   input_locations: [{},{},{}],
-  //   many_to_one:
-  //   [
-  //     [{origin0,dest0,x,x}],
-  //     [{origin1,dest0,x,x}],
-  //     [{origin2,dest0,x,x}],
-  //     [{origin3,dest0,0,0}]
-  //   ]
-  // }
-  json::MapPtr serialize_many_to_one(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
-    json::ArrayPtr column_matrix = json::array({});
-    for(size_t i = 0; i < correlated.size(); ++i)
-      column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, i, i + 1, distance_scale));
+  json::MapPtr serialize(const std::string action, const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated_s, const std::vector<PathLocation>& correlated_t, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+    json::ArrayPtr matrix = json::array({});
+    for(size_t source_index = 0; source_index < correlated_s.size(); ++source_index) {
+      for(size_t target_index = 0; target_index < correlated_t.size(); ++target_index) {
+        matrix->emplace_back(
+          serialize_row(tds, source_index * correlated_t.size(), correlated_t.size(),
+                        source_index, target_index + (action == "sources_to_targets" ? 0 : correlated_s.size()), distance_scale));
+      }
+    }
     auto json = json::map({
-      {"many_to_one", column_matrix},
-      {"locations", json::array({locations(correlated)})},
-      {"units", units},
-    });
-    if (id)
-      json->emplace("id", *id);
-    return json;
-  }
-
-  //Returns a square matrix of computed time and distance from each location to every other location.
-  // {
-  //   input_locations: [{},{},{}],
-  //   many_to_many:
-  //   [
-  //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}],
-  //     [{origin1,dest0,x,x},{origin1,dest1,0,0},{origin1,dest2,x,x},{origin1,dest3,x,x}],
-  //     [{origin2,dest0,x,x},{origin2,dest1,x,x},{origin2,dest2,0,0},{origin2,dest3,x,x}],
-  //     [{origin3,dest0,x,x},{origin3,dest1,x,x},{origin3,dest2,x,x},{origin3,dest3,0,0}]
-  //   ]
-  // }
-  json::MapPtr serialize_many_to_many(const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
-    json::ArrayPtr square_matrix = json::array({});
-    for(size_t i = 0; i < correlated.size(); ++i)
-      square_matrix->emplace_back(serialize_row(correlated, tds, i, 0, correlated.size() * i, correlated.size() * (i + 1), distance_scale));
-    auto json = json::map({
-      {"many_to_many", square_matrix},
-      {"locations", json::array({locations(correlated)})},
+      {action, matrix},
+      {"sources", json::array({locations(correlated_s)})},
+      {"targets", json::array({locations(correlated_t)})},
       {"units", units},
     });
     if (id)
@@ -154,27 +121,10 @@ namespace valhalla {
       if (units == "mi")
         distance_scale = kMilePerMeter;
 
-
-      //do the real work
       json::MapPtr json;
+      //do the real work
       thor::CostMatrix costmatrix;
-      switch ( matrix_type) {
-        case MATRIX_TYPE::ONE_TO_MANY:
-          json = serialize_one_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget({correlated.front()}, correlated, reader, mode_costing, mode), units, distance_scale);
-          matrix_action_type = "one-to-many";
-          break;
-        case MATRIX_TYPE::MANY_TO_ONE:
-          json = serialize_many_to_one(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(correlated, {correlated.back()}, reader, mode_costing, mode), units, distance_scale);
-          matrix_action_type = "many-to-one";
-          break;
-        case MATRIX_TYPE::MANY_TO_MANY:
-        case MATRIX_TYPE::SOURCES_TO_TARGETS:
-          //TODO: correlated.get_child("sources").get_size() to know how much of the correlated to subset out)
-          //TODO: correlated.get_child("targets").get_size() to know how much of the correlated to subset out after the sources subset)
-          json = serialize_many_to_many(request.get_optional<std::string>("id"), correlated, costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode), units, distance_scale);
-          matrix_action_type = "many-to-many";
-          break;
-        }
+      json = serialize(ACTION_TO_STRING.find(matrix_type)->second, request.get_optional<std::string>("id"), correlated_s, correlated_t, costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode), units, distance_scale);
 
       //jsonp callback if need be
       std::ostringstream stream;
@@ -190,7 +140,7 @@ namespace valhalla {
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
       auto long_request = (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? long_request_route : long_request_manytomany;
-      if (!request_info.do_not_track && (elapsed_time.count() / correlated.size()) > long_request) {
+      if (!request_info.do_not_track && ((elapsed_time.count() / correlated_s.size()) || elapsed_time.count() / correlated_t.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));

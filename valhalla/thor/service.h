@@ -51,7 +51,11 @@ namespace valhalla {
       valhalla::sif::TravelMode mode;
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
+      std::vector<baldr::Location> sources;
+      std::vector<baldr::Location> targets;
       std::vector<baldr::PathLocation> correlated;
+      std::vector<baldr::PathLocation> correlated_s;
+      std::vector<baldr::PathLocation> correlated_t;
       sif::CostFactory<sif::DynamicCost> factory;
       valhalla::sif::cost_ptr_t mode_costing[4];    // TODO - max # of modes?
       valhalla::baldr::GraphReader reader;
