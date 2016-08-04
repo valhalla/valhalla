@@ -49,7 +49,7 @@ Contributing
 
 We welcome contributions to meili. If you would like to report an issue, or even better fix an existing one, please use the [meili issue tracker](https://github.com/valhalla/meili/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/meili) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](https://google.github.io/styleguide/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/meili) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
 Tests
 -----
