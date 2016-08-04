@@ -302,12 +302,12 @@ void statistics::add (const statistics& stats) {
 
 
 statistics::RouletteData::RouletteData ()
-  : node_locs(), way_IDs(), way_shapes(), unroutable_nodes() { }
+  : shape_bb(), way_IDs(), way_shapes(), unroutable_nodes() { }
 
-void statistics::RouletteData::AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape) {
+void statistics::RouletteData::AddTask (const AABB2<PointLL>& bb, const uint64_t id, const std::vector<PointLL>& shape) {
   auto result = way_IDs.insert(id);
   if (result.second)
-    node_locs.insert({id, p});
+    shape_bb.insert({id, bb});
     way_shapes.insert({id, shape});
 }
 
@@ -318,7 +318,7 @@ void statistics::RouletteData::AddNode(const PointLL& p) {
 void statistics::RouletteData::Add (const RouletteData& rd) {
   way_IDs = merge(way_IDs, rd.way_IDs);
   way_shapes = merge(way_shapes, rd.way_shapes);
-  node_locs = merge(node_locs, rd.node_locs);
+  shape_bb = merge(shape_bb, rd.shape_bb);
   unroutable_nodes = merge(unroutable_nodes, rd.unroutable_nodes);
 }
 
@@ -354,6 +354,16 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   }
   // Add all unroutable nodes to the json array
   for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
+    uint64_t hash;
+    float* lat = new float;
+    float* lng = new float;
+    *lat = it->lat();
+    *lng = it->lng();
+    if (*lat > *lng) {
+      hash = *(reinterpret_cast<uint64_t*>(lat))<<32 | *(reinterpret_cast<uint64_t*>(lng));
+    }
+    delete lat;
+    delete lng;
     tasks->emplace_back(
         json::map
          ({
@@ -366,7 +376,8 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
           })},
           {"properties", json::map
            ({
-            {"type", std::string("Node")}
+            {"type", std::string("Node")},
+            {"key", hash}
            })},
           {"type", std::string("Feature")}
          })
@@ -386,6 +397,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   file << *geo_json << std::endl;
   file.close();
   LOG_INFO("MapRoulette tasks saved to maproulette_tasks.geojson");
+  LOG_INFO(std::to_string(tasks->size()) + " tasks generated");
 }
 }
 }
