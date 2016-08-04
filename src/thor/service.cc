@@ -178,15 +178,9 @@ namespace valhalla {
           // Erase the through edge and its opposing edge (if in the list)
           // from the origin edges
           auto opp_edge = reader.GetOpposingEdgeId(through_edge);
-          auto it = origin.edges.begin();
-          while (it != origin.edges.end()) {
-            if (it->id == through_edge ||
-                it->id == opp_edge) {
-              it = origin.edges.erase(it);
-            } else {
-              it++;
-            }
-          }
+          std::remove_if(origin.edges.begin(), origin.edges.end(),
+             [&through_edge, &opp_edge](const PathLocation::PathEdge& edge) {
+                return edge.id == through_edge || edge.id == opp_edge; });
         } else {
           // Set the origin edge to the through_edge.
           for (auto e : origin.edges) {
