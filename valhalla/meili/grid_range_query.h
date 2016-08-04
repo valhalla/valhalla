@@ -188,7 +188,14 @@ class GridRangeQuery
             bbox_.miny() + (j + 0.5) * cell_height_}; }
 
   const std::vector<key_t>& GetItemsInCell(int i, int j) const
-  { return items_[i + j * num_cols_]; }
+  {
+    if (!(0 <= i && i < num_rows_) || !(0 <= j && j < num_cols_)) {
+      throw std::runtime_error("Cell index (" + std::to_string(i)  + ", " + std::to_string(j)
+                               + ") is out of the grid bounds (" + std::to_string(num_rows_) + "x"
+                               + std::to_string(num_cols_) + ")");
+    }
+    return items_[i + j * num_cols_];
+  }
 
   // Index a line segment into the grid
   void AddLineSegment(const key_t edgeid, const LineSegment& segment)
@@ -268,7 +275,14 @@ class GridRangeQuery
   { return BoundingBoxLineSegmentIntersections(CellBoundingBox(i, j), segment); }
 
   std::vector<key_t>& ItemsInCell(int i, int j)
-  { return items_[i + j * num_cols_]; }
+  {
+    if (!(0 <= i && i < num_rows_) || !(0 <= j && j < num_cols_)) {
+      throw std::runtime_error("Cell index (" + std::to_string(i)  + ", " + std::to_string(j)
+                               + ") is out of the grid bounds (" + std::to_string(num_rows_) + "x"
+                               + std::to_string(num_cols_) + " cells)");
+    }
+    return items_[i + j * num_cols_];
+  }
 
   BoundingBox bbox_;
   float cell_width_;
