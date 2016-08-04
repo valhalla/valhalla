@@ -1,6 +1,7 @@
 #include <functional>
 #include <unordered_map>
 #include <boost/property_tree/info_parser.hpp>
+#include <boost/optional.hpp>
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/distanceapproximator.h>
@@ -39,29 +40,102 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  void check_distance(const GraphReader& reader, const std::vector<Location>& sources, const std::vector<Location>& targets, const size_t s_index, float matrix_max_distance, float& max_location_distance) {
+  void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
 
-     //see if any locations pairs are unreachable or too far apart
-     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-     for(size_t t_index = 0; t_index < targets.size(); ++t_index) {
-       //check if distance between latlngs exceed max distance limit
-       auto path_distance = sources[s_index].latlng_.Distance(targets[t_index].latlng_);
+    //see if any locations pairs are unreachable or too far apart
+    for(const auto& source : sources){
+      for(const auto& target : targets) {
+        //check if distance between latlngs exceed max distance limit
+        auto path_distance = source.latlng_.Distance(target.latlng_);
 
-       //only want to log the maximum distance between 2 locations for matrix
-       LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
-       if (path_distance >= max_location_distance) {
-           max_location_distance = path_distance;
-           LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
+        //only want to log the maximum distance between 2 locations for matrix
+        LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
+        if (path_distance >= max_location_distance) {
+          max_location_distance = path_distance;
+          LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
        }
 
        if (path_distance > matrix_max_distance)
          throw std::runtime_error("Path distance exceeds the max distance limit");
        }
+     }
   }
 }
 
 namespace valhalla {
   namespace loki {
+
+  void loki_worker_t::init_matrix(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
+    auto request_locations = request.get_child_optional("locations");
+    auto request_sources = request.get_child_optional("sources");
+    auto request_targets = request.get_child_optional("targets");
+
+    //we require locations
+    if (!request_locations)
+      if (!request_sources || !request_targets)
+        throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+
+    //if MATRIX OR OPTIMIZED and not using sources & targets parameters
+    //deprecated way of specifying
+    if (!request_sources && !request_targets) {
+     if (request_locations->size() < 2)
+       throw std::runtime_error("Insufficient number of locations provided");
+
+    //create new sources and targets ptree from locations
+    boost::property_tree::ptree sources_child, targets_child;
+    switch (action) {
+        case ONE_TO_MANY:
+          sources_child.push_back(request_locations->front());
+          for(const auto& reqloc : *request_locations)
+            targets_child.push_back(reqloc);
+
+          break;
+        case MANY_TO_ONE:
+          for(const auto& reqloc : *request_locations)
+            sources_child.push_back(reqloc);
+
+          targets_child.push_back(request_locations->back());
+          break;
+        case MANY_TO_MANY:
+        case OPTIMIZED_ROUTE:
+          for(const auto& reqloc : *request_locations) {
+            sources_child.push_back(reqloc);
+            targets_child.push_back(reqloc);
+          }
+          break;
+      }
+      //add these back in the original request (in addition to locations while being deprecated
+      request.add_child("sources", sources_child);
+      request.add_child("targets", targets_child);
+      request_sources = request.get_child("sources");
+      request_targets = request.get_child("targets");
+
+      for(const auto& source : *request_sources) {
+        try{
+          sources.push_back(baldr::Location::FromPtree(source.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse source");
+        }
+      }
+      for(const auto& target : *request_targets) {
+        try{
+          targets.push_back(baldr::Location::FromPtree(target.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse target");
+        }
+      }
+    }
+    if(sources.size() < 1)
+       throw std::runtime_error("Insufficient number of sources provided");
+
+    valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+    if(targets.size() < 1)
+      throw std::runtime_error("Insufficient number of targets provided");
+
+    valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+  }
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       auto costing = request.get<std::string>("costing");
@@ -78,24 +152,29 @@ namespace valhalla {
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      for(size_t s_index = 0; s_index < sources.size()-1; ++s_index)
-        check_distance(reader,sources,targets,s_index,max_distance.find(action_str)->second, max_location_distance);
+      check_distance(sources, targets, max_distance.find(action_str)->second, max_location_distance);
 
-      //TODO: Do this step last for sources to targets work
       //correlate the various locations to the underlying graph
-      /*std::vector<baldr::Location> locs;
-      locs.push_back(sources);
-      locs.push_back(targets);
+      std::vector<baldr::Location> sources_targets;
+      std::move(sources.begin(), sources.end(), std::back_inserter(sources_targets));
+      std::move(targets.begin(), targets.end(), std::back_inserter(sources_targets));
+      //std::unordered_map<baldr::Location, baldr::PathLocation> searched;
 
-      for(size_t i = 0; i < locs.size(); ++i) {
-        auto correlated = loki::Search(locs[i], reader, costing_filter);
-        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
-      }*/
 
+      //TODO: need to add logic to PathLocation so that this commented out portion works
+      //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
-      for(size_t s = 0; s < sources.size(); ++s) {
-        auto correlated = loki::Search(sources[s], reader, edge_filter, node_filter);
-        request.put_child("correlated" + std::to_string(s), correlated.ToPtree(s));
+      for(size_t i = 0; i < sources_targets.size(); ++i) {
+        auto& l = sources_targets[i];
+        /*const auto& found = searched.find(l);
+        if(found == searched.cend()) {
+          auto correlated = loki::Search(l, reader, edge_filter, node_filter);
+          found = searched.insert(l, std::move(correlated)).first;
+        }
+        request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));*/
+
+        auto correlated = loki::Search(l, reader, edge_filter, node_filter);
+        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
         //TODO: get transit level for transit costing
         //TODO: if transit send a non zero radius
         auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
@@ -108,10 +187,10 @@ namespace valhalla {
         }
       }
 
-      //are all the s in the same color regions
+      //are all the locations in the same color regions
       bool connected = false;
       for(const auto& c : color_counts) {
-        if(c.second == sources.size() && c.second == targets.size()) {
+        if(c.second == sources_targets.size()) {
           connected = true;
           break;
         }

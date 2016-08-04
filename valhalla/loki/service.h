@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/optional.hpp>
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
@@ -26,6 +27,9 @@ namespace valhalla {
       void cleanup();
      protected:
       void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void init_locate(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void init_route(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void init_matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request);
       prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
