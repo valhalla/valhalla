@@ -94,6 +94,17 @@ void TryGetServiceDays(std::string begin_date, std::string end_date, uint32_t do
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
 }
 
+void TryGetServiceDays(std::string tile_date, std::string begin_date, std::string end_date, uint32_t dow_mask, uint64_t value) {
+
+  auto t = DateTime::get_formatted_date(tile_date);
+  auto b = DateTime::get_formatted_date(begin_date);
+  auto e = DateTime::get_formatted_date(end_date);
+  uint64_t days = DateTime::get_service_days(b, e, DateTime::days_from_pivot_date(t), dow_mask);
+
+  if (value != days)
+    throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
+}
+
 void TryIsServiceAvailable(std::string begin_date, std::string date, std::string end_date,uint64_t days, bool value) {
 
   auto b = DateTime::days_from_pivot_date(DateTime::get_formatted_date(begin_date));
@@ -356,6 +367,15 @@ void TestServiceDays() {
 
   //Test to confirm that enddate is cut off at 60 days
   TryTestServiceEndDate("2015-09-25", "2017-09-28", "2015-11-23", dow_mask);
+
+  //Start date is after the tile date but before end date.
+  TryGetServiceDays("2016-08-03", "2016-09-01", "2016-10-28", dow_mask, 562843568692002816);
+
+  //Start date before tile date.
+  TryGetServiceDays("2016-08-03", "2016-07-05", "2016-08-31", dow_mask, 486142951);
+
+  //Start date is in the future.
+  TryGetServiceDays("2016-08-03", "2016-10-28", "2016-12-28", dow_mask, 0);
 
 }
 
