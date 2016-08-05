@@ -88,5 +88,12 @@ Location Location::FromCsv(const std::string& csv) {
   return l;
 }
 
+bool Location::operator==(const Location& o) const {
+  return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ &&
+         name_ == o.name_ && street_ == o.street_ && city_ == o.city_ &&
+         state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
+         date_time_ == o.date_time_ && heading_ == o.heading_ && way_id_ == o.way_id_;
+}
+
 }
 }

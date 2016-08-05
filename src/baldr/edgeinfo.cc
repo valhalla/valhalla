@@ -63,9 +63,9 @@ uint32_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
 }
 
 // Get a list of names
-const std::vector<std::string> EdgeInfo::GetNames() const {
+std::vector<std::string> EdgeInfo::GetNames() const {
   // Get each name
-  std::vector<std::string> names;
+  std::vector<std::string> names; names.reserve(name_count());
   for (uint32_t i = 0; i < name_count(); i++) {
     uint32_t offset = GetStreetNameOffset(i);
 

@@ -55,6 +55,12 @@ struct Location {
    */
   static Location FromCsv(const std::string& csv);
 
+  /**
+   * equality.
+   *
+   */
+  bool operator==(const Location& o) const;
+
 
   //coordinates of the location as used for searching the graph
   midgard::PointLL latlng_;
@@ -87,6 +93,14 @@ struct Location {
 };
 
 }
+}
+
+namespace std {
+  template <> struct hash<valhalla::baldr::Location> {
+    size_t operator()(const valhalla::baldr::Location& l) const {
+      return std::hash<valhalla::midgard::PointLL>()(l.latlng_);
+    }
+  };
 }
 
 #endif // VALHALLA_BALDR_LOCATION_H_

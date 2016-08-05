@@ -70,7 +70,7 @@ class EdgeInfo {
    * Convenience method to get the names for an edge
    * @return   Returns a list (vector) of names.
    */
-  const std::vector<std::string> GetNames() const;
+  std::vector<std::string> GetNames() const;
 
   /**
    * Get the shape of the edge.
