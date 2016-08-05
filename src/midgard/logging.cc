@@ -113,6 +113,22 @@ class StdOutLogger : public Logger {
 bool std_out_logger_registered =
   RegisterLogger("std_out", [](const LoggingConfig& config){Logger* l = new StdOutLogger(config); return l;});
 
+class StdErrLogger : public StdOutLogger {
+  using StdOutLogger::StdOutLogger;
+  virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
+    std::string output;
+    output.reserve(message.length() + 64);
+    output.append(TimeStamp());
+    output.append(custom_directive);
+    output.append(message);
+    output.push_back('\n');
+    std::cerr << output;
+    std::cerr.flush();
+  }
+};
+bool std_err_logger_registered =
+  RegisterLogger("std_err", [](const LoggingConfig& config){Logger* l = new StdErrLogger(config); return l;});
+
 //TODO: add log rolling
 //logger that writes to file
 class FileLogger : public Logger {
