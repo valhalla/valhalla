@@ -177,21 +177,24 @@ namespace valhalla {
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
-        init_request(action->second, request_pt);
         switch (action->second) {
-          case ROUTE:
-          case VIAROUTE:
-            return route(action->second, request_pt, info);
-          case LOCATE:
-            return locate(request_pt, info);
-          case ONE_TO_MANY:
-          case MANY_TO_ONE:
-          case MANY_TO_MANY:
-          case SOURCES_TO_TARGETS:
-          case OPTIMIZED_ROUTE:
-            return matrix(action->second, request_pt, info);
-          case ISOCHRONE:
-            return isochrones(request_pt, info);
+        case ROUTE:
+        case VIAROUTE:
+          init_route(action->second, request_pt);
+          return route(action->second, request_pt, info);
+        case LOCATE:
+          init_locate(action->second, request_pt);
+          return locate(request_pt, info);
+        case ONE_TO_MANY:
+        case MANY_TO_ONE:
+        case MANY_TO_MANY:
+        case SOURCES_TO_TARGETS:
+        case OPTIMIZED_ROUTE:
+          init_matrix(action->second, request_pt);
+          return matrix(action->second, request_pt, info);
+        case ISOCHRONE:
+          init_isochrones(action->second, request_pt);
+          return isochrones(request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
@@ -221,89 +224,6 @@ namespace valhalla {
         result.messages.emplace_back(response.to_string());
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
-      }
-    }
-
-    void loki_worker_t::init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-      switch (action) {
-        case ROUTE:
-        case VIAROUTE:
-          init_route(action, request);
-          break;
-        case LOCATE:
-          init_locate(action, request);
-          break;
-        case ONE_TO_MANY:
-        case MANY_TO_ONE:
-        case MANY_TO_MANY:
-        case SOURCES_TO_TARGETS:
-        case OPTIMIZED_ROUTE:
-          init_matrix(action, request);
-          break;
-      }
-      //using the costing we can determine what type of edge filtering to use
-      auto costing = request.get_optional<std::string>("costing");
-      if (costing)
-      valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
-
-      if(!costing) {
-        //locate doesnt require a filter
-        if(action == LOCATE) {
-          edge_filter = loki::PassThroughEdgeFilter;
-          node_filter = loki::PassThroughNodeFilter;
-          return;
-        }//but everything else does
-        else
-          throw std::runtime_error("No edge/node costing provided");
-      }
-
-      //check isoline options
-      if(action == ISOCHRONE) {
-        //make sure the isoline definitions are valid
-        auto contours = request.get_child_optional("contours");
-        if(!contours)
-          throw std::runtime_error("Insufficiently specified required parameter 'contours'");
-        //check that the number of contours is ok
-        if(contours->size() > max_contours)
-          throw std::runtime_error("Exceeded max contours of " + std::to_string(max_contours) + ".");
-        size_t prev = 0;
-        for(const auto& contour : *contours) {
-          auto c = contour.second.get<size_t>("time", -1);
-          if(c < prev || c == -1)
-            throw std::runtime_error("Insufficiently specified required parameter 'time'");
-          if(c > max_time)
-            throw std::runtime_error("Exceeded max time of " + std::to_string(max_time) + ".");
-          prev = c;
-        }
-      }
-
-      // TODO - have a way of specifying mode at the location
-      if(*costing == "multimodal")
-        *costing = "pedestrian";
-
-      // Get the costing options. Get the base options from the config and the
-      // options for the specified costing method
-      std::string method_options = "costing_options." + *costing;
-      auto config_costing = config.get_child_optional(method_options);
-      if(!config_costing)
-        throw std::runtime_error("No costing method found for '" + *costing + "'");
-      auto request_costing = request.get_child_optional(method_options);
-      if(request_costing) {
-        // If the request has any options for this costing type, merge the 2
-        // costing options - override any config options that are in the request.
-        // and add any request options not in the config.
-        // TODO: suboptions are probably getting smashed when we do this, preserve them
-        boost::property_tree::ptree overridden = *config_costing;
-        for(const auto& r : *request_costing)
-          overridden.put_child(r.first, r.second);
-        auto c = factory.Create(*costing, overridden);
-        edge_filter = c->GetEdgeFilter();
-        node_filter = c->GetNodeFilter();
-      }// No options to override so use the config options verbatim
-      else {
-        auto c = factory.Create(*costing, *config_costing);
-        edge_filter = c->GetEdgeFilter();
-        node_filter = c->GetNodeFilter();
       }
     }
 
