@@ -20,7 +20,9 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Algorithm to generate an isochrone.
+ * Algorithm to generate an isochrone as a lat,lon grid with time taken to
+ * each each grid point. This gridded data can then be contoured to create
+ * isolines or contours.
  */
 class Isochrone {
  public:
@@ -35,18 +37,46 @@ class Isochrone {
   virtual ~Isochrone();
 
   /**
-   *
+   * Clear the temporary memory (adjacency list, edgestatus, edgelabels)
    */
   void Clear();
 
   /**
-   *
+   * Compute an isochrone grid. This creates and populates a lat,lon grid with
+   * time taken to reach each grid point. This gridded data is then contoured
+   * so it can be output as polygons. Multiple locations are allowed as the
+   * origins - within some reasonable distance from each other.
+   * @param  origin_locs  List of origin locations.
+   * @param  max_minutes  Maximum time (minutes) for largest contour
+   * @param  graphreader  Graphreader
+   * @param  mode_costing List of costing objects
+   * @param  mode         Travel mode
    */
-  const std::shared_ptr<GriddedData<midgard::PointLL> > Compute(baldr::PathLocation& origin,
-          const uint32_t max_time_seconds,
+  std::shared_ptr<const GriddedData<midgard::PointLL> > Compute(
+          std::vector<baldr::PathLocation>& origin_locs,
+          const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
+
+  /**
+   * Compute an isochrone grid for multi-modal routes. This creates and
+   * populates a lat,lon grid with time taken to reach each grid point.
+   * This gridded data is then contoured so it can be output as polygons.
+   * Multiple locations are allowed as the origins - within some reasonable
+   * distance from each other.
+   * @param  origin_locations  List of origin locations.
+   * @param  max_minutes  Maximum time (minutes) for largest contour
+   * @param  graphreader  Graphreader
+   * @param  mode_costing List of costing objects
+   * @param  mode         Travel mode
+   */
+  std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeMultiModal(
+               std::vector<baldr::PathLocation>& origin_locations,
+               const unsigned int max_minutes,
+               baldr::GraphReader& graphreader,
+               const std::shared_ptr<sif::DynamicCost>* mode_costing,
+               const sif::TravelMode mode);
 
  protected:
   float shape_interval_;        // Interval along shape to mark time
@@ -66,6 +96,28 @@ class Isochrone {
   std::shared_ptr<GriddedData<midgard::PointLL> > isotile_;
 
   /**
+   * Initialize prior to computing the isocrhones. Creates adjacency list,
+   * edgestatus support, and reserves edgelabels.
+   * @param bucketsize  Adjacency list bucket size.
+   */
+  void Initialize(const uint32_t bucketsize);
+
+  /**
+   * Constructs the isotile - 2-D gridded data containing the time
+   * to get to each lat,lng tile.
+   * @param  mulitmodal  True if the route type is multimodal.
+   * @param  max_minutes Maximum time (minutes) for computing isochrones.
+   * @param  origin_locations  List of origin locations.
+   */
+  void ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
+                        std::vector<baldr::PathLocation>& origin_locations);
+
+  /**
+   * Updates the isotile using the edge information from the predecessor edge
+   * label. This is the edge being settled (lowest cost found to the edge).
+   * @param  pred         Predecessor edge label (edge being settled).
+   * @param  graphreader  Graph reader
+   * @param  ll           Lat,lon at the end of the edge.
    *
    */
   void UpdateIsoTile(const sif::EdgeLabel& pred,
@@ -94,14 +146,14 @@ class Isochrone {
                             const sif::Cost& newcost);
 
   /**
-   * Add edges at the origin to the adjacency list.
-   * @param  graphreader  Graph tile reader.
-   * @param  origin       Location information of the origin.
-   * @param  costing      Dynamic costing.
+   * Add edge(s) at each origin location to the adjacency list.
+   * @param  graphreader       Graph tile reader.
+   * @param  origin_locations  Location information of origins.
+   * @param  costing           Dynamic costing.
    */
-  void SetOrigin(baldr::GraphReader& graphreader,
-                 baldr::PathLocation& origin,
-                 const std::shared_ptr<sif::DynamicCost>& costing);
+  void SetOriginLocations(baldr::GraphReader& graphreader,
+                  std::vector<baldr::PathLocation>& origin_locations,
+                  const std::shared_ptr<sif::DynamicCost>& costing);
 
 };
 

@@ -7,15 +7,16 @@ using namespace prime_server;
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/geojson.h>
 
 #include "thor/service.h"
+#include "thor/isochrone.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-
 
 namespace {
 
@@ -40,8 +41,7 @@ namespace valhalla {
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), reader(config.get_child("mjolnir")),
-      long_request_route(config.get<float>("thor.logging.long_request_route")),
-      long_request_manytomany(config.get<float>("thor.logging.long_request_manytomany")){
+      long_request(config.get<float>("thor.logging.long_request")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -102,9 +102,39 @@ namespace valhalla {
               return matrix(matrix_iter->second, costing, request, info);
             case OPTIMIZED_ROUTE:
               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-              return optimized_path(correlated, costing, request_str, info.do_not_track);
+              return optimized_path(correlated_s, correlated_t, costing, request_str, info.do_not_track);
           }
+        }//TODO: move isochrones logic to separate file
+        else if(request.get_optional<bool>("isochrone")) {
+          std::vector<float> contours;
+          std::vector<std::string> colors;
+          for(const auto& contour : request.get_child("contours")) {
+            contours.push_back(contour.second.get<float>("time"));
+            colors.push_back(contour.second.get<std::string>("color", ""));
+          }
+
+          //get the raster
+          auto grid = costing == "multimodal" ?
+            isochrone.ComputeMultiModal(correlated, contours.back(), reader, mode_costing, mode) :
+            isochrone.Compute(correlated, contours.back(), reader, mode_costing, mode);
+
+          //turn it into geojson
+          auto isolines = grid->GenerateContours(contours);
+          auto geojson = baldr::json::to_geojson<PointLL>(isolines, colors);
+          auto id = request.get_optional<std::string>("id");
+          if(id)
+            geojson->emplace("id", *id);
+          std::stringstream stream; stream << *geojson;
+
+          //return the geojson
+          worker_t::result_t result{false};
+          http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
         }
+
+        //regular route
         return trip_path(costing, request_str, date_time_type, info.do_not_track);
       }
       catch(const std::exception& e) {
@@ -134,12 +164,33 @@ namespace valhalla {
           return;
         }
 
-        // Set the origin edge to the through_edge
-        for (auto e : origin.edges) {
+        // Check if the through edge is dist = 1 (through point is at a node)
+        bool ends_at_node = false;;
+        for (const auto& e : origin.edges) {
           if (e.id == through_edge) {
-            origin.edges.clear();
-            origin.edges.push_back(e);
-            break;
+            if (e.end_node()) {
+              ends_at_node = true;
+              break;
+            }
+          }
+        }
+
+        // Special case if location is at the end of a through edge
+        if (ends_at_node) {
+          // Erase the through edge and its opposing edge (if in the list)
+          // from the origin edges
+          auto opp_edge = reader.GetOpposingEdgeId(through_edge);
+          std::remove_if(origin.edges.begin(), origin.edges.end(),
+             [&through_edge, &opp_edge](const PathLocation::PathEdge& edge) {
+                return edge.id == through_edge || edge.id == opp_edge; });
+        } else {
+          // Set the origin edge to the through_edge.
+          for (auto e : origin.edges) {
+            if (e.id == through_edge) {
+              origin.edges.clear();
+              origin.edges.push_back(e);
+              break;
+            }
           }
         }
       }
@@ -222,7 +273,7 @@ namespace valhalla {
           throw std::runtime_error("Failed to parse location");
         }
       }
-      if(locations.size() < 2)
+      if(locations.size() < (request.get_optional<bool>("isochrone") ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
 
       //type - 0: current, 1: depart, 2: arrive
@@ -290,6 +341,7 @@ namespace valhalla {
       correlated.clear();
       correlated_s.clear();
       correlated_t.clear();
+      isochrone.Clear();
       if(reader.OverCommitted())
         reader.Clear();
     }
