@@ -2578,14 +2578,6 @@
       },
       {
          "key": "barrier",
-         "value": "toll_booth",
-         "object_types": [
-            "node"
-         ],
-         "description": "Set tollbooth flag to true."
-      },
-      {
-         "key": "barrier",
          "value": "border_control",
          "object_types": [
             "node"
