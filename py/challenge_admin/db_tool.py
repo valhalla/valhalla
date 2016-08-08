@@ -3,7 +3,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Challenge, Task
-from config import config
+import config
 
 class db_tool:
 
@@ -32,8 +32,11 @@ class db_tool:
 
         # get the active challenge and change it to false
         active_challenge = self.get_active_challenge()
-        active_challenge.active = False
-        self.session.add(active_challenge)
+
+        # don't make any changes if there is no active challenge
+        if active_challenge != None:
+            active_challenge.active = False
+            self.session.add(active_challenge)
 
         # set the new challenge to active
         challenge.active = True
@@ -43,6 +46,23 @@ class db_tool:
         self.session.commit()
 
 
+    def get_challenge(self, num):
+        '''returns the challenge with corresponding id from the database'''
+        return self.session.query(Challenge).filter_by(id=num).first()
+
+
     def get_active_challenge(self):
         '''returns the active challenge in the database'''
         return self.session.query(Challenge).filter_by(active=1).first()
+
+
+    def insert_challenge(self, challenge):
+        '''inserts an already created challenge into the database'''
+
+        # don't allow the insertion of an active challenge. This must be handled
+        # through other method calls
+        challenge.active = False
+
+        # add challenge and commit changes to db
+        self.session.add(challenge)
+        self.session.commit()

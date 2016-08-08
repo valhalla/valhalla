@@ -2,56 +2,13 @@
 
 import requests
 import json
-from config import config
-from db_tools import db_tool
+import config
+from utils import utils
+from db_tool import db_tool
+from challenge_manager import challenge_interface
+
 
 class admin_tool:
-
-    def __init__(self):
-        self.header = {'Content-Type': 'application/json',
-                       'apiKey': config.api_key}
-
-        self.required = ['name', 'instruction', 'id']
-        self.fields = {
-                       'project': ['name', 'description'],
-                       'challenge': ['name', 'parent', 'identifier', 'difficulty',
-                                     'description', 'blurb', 'instruction']
-                      }
-
-    def manage(self, type, create=False):
-        '''manages the creation and update of challenges and projects'''
-        print('Enter each field or leave blank to skip')
-        payload = {}
-
-        # if it's being updated we need it's ID
-        if not create:
-            # Needs the ID field if being updated
-            self.fields[type].append('id')
-
-        # fill in all the fields for the api call
-        for field in self.fields[type]:
-
-            # if it's a required field, make sure it's filled in
-            data = ''
-            if field in self.required:
-                while not data:
-                    print(field, 'is required')
-                    data = input(field + ': ')
-            else:
-                data = input(field + ': ')
-            if data:
-                payload[field] = data
-
-        # Send off the payload to the appropriate endpoint
-        response = ''
-        if create:
-            response = requests.post('{}/api/v2/{}'.format(config.url, type),
-                                     data=json.dumps(payload), headers=self.header)
-        else:
-            response = requests.put('{}/api/v2/{}/{}'.format(config.url, type, payload['id']),
-                                    data=json.dumps(payload), headers=self.header)
-        return response
-
 
     def create_upload_tasks(self):
         '''Reads a geojson file specified in config, then generates and uploads the tasks to maproulete'''
@@ -111,36 +68,57 @@ class admin_tool:
     def get_tasks_from_api(self, challenge_id):
         '''http get up to 10000 tasks from maproulette'''
         payload = {'limit': 10000}
-        response = requests.get('{}/api/v2/challenge/{}/tasks'.format(config.url, challenge_id), headers=self.header, params=payload)
+        response = requests.get('{}/api/v2/challenge/{}/tasks'.format(config.url, challenge_id), headers=config.header, params=payload)
         return response
 
     def upload_tasks(self, tasks):
         '''http POST a list of tasks to maproulette'''
         print('Uploading {} tasks'.format(len(tasks)))
-        response = requests.post('{}/api/v2/tasks'.format(config.url), data=json.dumps(tasks), headers=self.header)
+        response = requests.post('{}/api/v2/tasks'.format(config.url), data=json.dumps(tasks), headers=config.header)
         return response
 
     def update_tasks(self, tasks):
         '''http PUT a list of tasks to maproulette'''
         print('Uploading {} tasks'.format(len(tasks)))
-        response = requests.put('{}/api/v2/tasks'.format(config.url), data=json.dumps(tasks), headers=self.header)
+        response = requests.put('{}/api/v2/tasks'.format(config.url), data=json.dumps(tasks), headers=config.header)
         return response
+
+
+def something():
+    # Send off the payload to the appropriate endpoint
+    response = ''
+    if create:
+        response = requests.post('{}/api/v2/challenge'.format(config.url),
+                                 data=json.dumps(payload), headers=config.header)
+    else:
+        response = requests.put('{}/api/v2/challenge/{}'.format(config.url, payload['id']),
+                                data=json.dumps(payload), headers=config.header)
+    return response
+
+
 
 
 if __name__ == '__main__':
     selection = None
     admin = admin_tool()
     while selection != 'q':
+        utils.clear_console()
         selection = input(
 '''Select One:
-[1] Create Project
-[2] Update Project
-[3] Create Challenge
-[4] Update Challenge
-[5] Create Tasks
-[q] Quit
+    [1] Manage Challenges
+    [2] Upload tasks to a challenge
+    [3] Manage Projects
+    [q] Quit
+
 ==> ''')
 
+        if (selection == '1'):
+            challenge_interface()
+
+
+
+
+'''
         if (selection == '1'):
             admin.manage('project', True)
         elif (selection == '2'):
@@ -155,4 +133,5 @@ if __name__ == '__main__':
             break
         else:
             print("Please enter an option 1-6")
+'''
 
