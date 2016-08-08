@@ -157,27 +157,23 @@ namespace valhalla {
       std::vector<baldr::Location> sources_targets;
       std::move(sources.begin(), sources.end(), std::back_inserter(sources_targets));
       std::move(targets.begin(), targets.end(), std::back_inserter(sources_targets));
-      //std::unordered_map<baldr::Location, baldr::PathLocation> searched;
+      std::unordered_map<baldr::Location, baldr::PathLocation> searched;
 
-
-      //TODO: need to add logic to PathLocation so that this commented out portion works
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
       for(size_t i = 0; i < sources_targets.size(); ++i) {
         auto& l = sources_targets[i];
-        /*const auto& found = searched.find(l);
+        auto found = searched.find(l);
         if(found == searched.cend()) {
           auto correlated = loki::Search(l, reader, edge_filter, node_filter);
-          found = searched.insert(l, std::move(correlated)).first;
+          found = searched.insert({l, std::move(correlated)}).first;
         }
-        request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));*/
+        request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));
 
-        auto correlated = loki::Search(l, reader, edge_filter, node_filter);
-        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
         //TODO: get transit level for transit costing
         //TODO: if transit send a non zero radius
-        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
-        for(auto color : colors){
+        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, found->second, 0);
+        for(auto& color : colors){
           auto itr = color_counts.find(color);
           if(itr == color_counts.cend())
             color_counts[color] = 1;
