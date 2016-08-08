@@ -46,7 +46,8 @@ bin_PROGRAMS = valhalla_skadi_worker \
 	valhalla_run_isochrone \
 	valhalla_run_route \
 	valhalla_benchmark_adjacency_list \
-	valhalla_run_matrix
+	valhalla_run_matrix \
+	valhalla_export_edges
 valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
 valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
@@ -86,6 +87,9 @@ valhalla_benchmark_adjacency_list_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BO
 valhalla_run_matrix_SOURCES = src/valhalla_run_matrix.cc
 valhalla_run_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_run_matrix_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
+valhalla_export_edges_SOURCES = src/valhalla_export_edges.cc
+valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_export_edges_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
 
 EXTRA_PROGRAMS = city_test unconnected_ways
 CLEANFILES = $(EXTRA_PROGRAMS)
