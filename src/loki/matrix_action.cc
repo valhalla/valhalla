@@ -128,12 +128,14 @@ namespace valhalla {
     }
     if(sources.size() < 1)
        throw std::runtime_error("Insufficient number of sources provided");
-
     valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+
     if(targets.size() < 1)
       throw std::runtime_error("Insufficient number of targets provided");
-
     valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+
+    //no locations!
+    request.erase("locations");
   }
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
