@@ -124,7 +124,8 @@ namespace valhalla {
       json::MapPtr json;
       //do the real work
       thor::CostMatrix costmatrix;
-      json = serialize(ACTION_TO_STRING.find(matrix_type)->second, request.get_optional<std::string>("id"), correlated_s, correlated_t, costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode), units, distance_scale);
+      json = serialize(ACTION_TO_STRING.find(matrix_type)->second, request.get_optional<std::string>("id"), correlated_s, correlated_t,
+        costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode), units, distance_scale);
 
       //jsonp callback if need be
       std::ostringstream stream;

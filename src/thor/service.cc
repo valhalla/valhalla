@@ -93,6 +93,7 @@ namespace valhalla {
           if (matrix_iter == MATRIX.cend())
             throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_route'.");
 
+          //which is it?
           switch (matrix_iter->second) {
             case ONE_TO_MANY:
             case MANY_TO_ONE:
@@ -263,16 +264,30 @@ namespace valhalla {
 
       //we require locations
       auto request_locations = request.get_child_optional("locations");
-      if(!request_locations)
+      auto request_sources = request.get_child_optional("sources");
+      auto request_targets = request.get_child_optional("targets");
+      if(request_locations) {
+        for(const auto& location : *request_locations) {
+          try{ locations.push_back(baldr::Location::FromPtree(location.second)); }
+          catch (...) { throw std::runtime_error("Failed to parse location"); }
+        }
+      }//if we have a sources and targets request here we will divvy up the correlated amongst them
+      else if(request_sources && request_targets) {
+        for(const auto& s : *request_sources) {
+          try{ locations.push_back(baldr::Location::FromPtree(s.second)); }
+          catch (...) { throw std::runtime_error("Failed to parse source"); }
+        }
+        for(const auto& t : *request_targets) {
+          try{ locations.push_back(baldr::Location::FromPtree(t.second)); }
+          catch (...) { throw std::runtime_error("Failed to parse target"); }
+        }
+
+        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
+        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
+      }//we need something
+      else
         throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse location");
-        }
-      }
+
       if(locations.size() < (request.get_optional<bool>("isochrone") ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
 
@@ -301,14 +316,6 @@ namespace valhalla {
           throw std::runtime_error("Failed to parse correlated location");
         }
       }while(++i);
-
-      //if we have a sources and targets request here we will divvy up the correlated amongst them
-      auto request_sources = request.get_child_optional("sources");
-      auto request_targets = request.get_child_optional("targets");
-      if(request_sources && request_targets) {
-        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
-        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
-      }
 
       // Parse out the type of route - this provides the costing method to use
       auto costing = request.get_optional<std::string>("costing");
