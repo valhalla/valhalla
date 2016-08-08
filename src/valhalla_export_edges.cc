@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
   "\n");
 
   //bool unnamed = true;
-  std::string column_separator = "\0";
+  std::string column_separator{'\0'};
   std::string row_separator = "\n";
   std::string config;
 
@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
       auto encoded = encode(shape);
       std::cout << encoded << column_separator;
       for(const auto& name : names)
-        std::cout << name << column_separator;
+        std::cout << name << (&name == &names.back() ? "" : column_separator);
       std::cout << row_separator;
       std::cout.flush();
 
