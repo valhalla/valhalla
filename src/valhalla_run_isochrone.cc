@@ -74,6 +74,7 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
+  bool reverse = true;
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
   std::string origin, routetype, json, config;
@@ -87,6 +88,7 @@ int main(int argc, char *argv[]) {
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
       // positional arguments
+      ("reverse,r", bpo::value<bool>(&reverse), "Reverse direction.")
       ("ncontours,n", bpo::value<size_t>(&n_contours), "Number of contours.")
       ("minutes,m", bpo::value<unsigned int>(&max_minutes), "Maximum minutes.")
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
@@ -237,7 +239,9 @@ int main(int argc, char *argv[]) {
   Isochrone isochrone;
   auto isotile = (routetype == "multimodal") ?
       isochrone.ComputeMultiModal(path_location, max_minutes, reader, mode_costing, mode) :
-      isochrone.Compute(path_location, max_minutes, reader, mode_costing, mode);
+      (reverse) ?
+        isochrone.ComputeReverse(path_location, max_minutes, reader, mode_costing, mode) :
+        isochrone.Compute(path_location, max_minutes, reader, mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
