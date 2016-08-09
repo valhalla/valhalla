@@ -70,9 +70,11 @@ namespace valhalla {
     auto request_targets = request.get_child_optional("targets");
 
     //we require locations
-    if (!request_locations)
-      if (!request_sources || !request_targets)
+    if (!request_locations) {
+      if (!request_sources || !request_targets) {
         throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+      }
+    }
 
     //if MATRIX OR OPTIMIZED and not using sources & targets parameters
     //deprecated way of specifying
@@ -80,9 +82,9 @@ namespace valhalla {
      if (request_locations->size() < 2)
        throw std::runtime_error("Insufficient number of locations provided");
 
-    //create new sources and targets ptree from locations
-    boost::property_tree::ptree sources_child, targets_child;
-    switch (action) {
+      //create new sources and targets ptree from locations
+      boost::property_tree::ptree sources_child, targets_child;
+      switch (action) {
         case ONE_TO_MANY:
           sources_child.push_back(request_locations->front());
           for(const auto& reqloc : *request_locations)
@@ -109,6 +111,7 @@ namespace valhalla {
       request_sources = request.get_child("sources");
       request_targets = request.get_child("targets");
 
+    }
       for(const auto& source : *request_sources) {
         try{
           sources.push_back(baldr::Location::FromPtree(source.second));
@@ -125,7 +128,6 @@ namespace valhalla {
           throw std::runtime_error("Failed to parse target");
         }
       }
-    }
     if(sources.size() < 1)
        throw std::runtime_error("Insufficient number of sources provided");
     valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
