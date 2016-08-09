@@ -34,6 +34,24 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
+  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, std::vector<baldr::Location> locations) {
+    //we require correlated locations
+    std::vector<baldr::PathLocation> correlated;
+    size_t i = 0;
+    do {
+      auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+      if(!path_location)
+        break;
+      try {
+        correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+      }
+      catch (...) {
+        throw std::runtime_error("Failed to parse correlated location");
+      }
+    }while(++i);
+    return correlated;
+  }
+
 }
 
 namespace valhalla {
@@ -271,6 +289,7 @@ namespace valhalla {
           try{ locations.push_back(baldr::Location::FromPtree(location.second)); }
           catch (...) { throw std::runtime_error("Failed to parse location"); }
         }
+        correlated = store_correlated_locations(request, locations);
       }//if we have a sources and targets request here we will divvy up the correlated amongst them
       else if(request_sources && request_targets) {
         for(const auto& s : *request_sources) {
@@ -281,6 +300,7 @@ namespace valhalla {
           try{ locations.push_back(baldr::Location::FromPtree(t.second)); }
           catch (...) { throw std::runtime_error("Failed to parse target"); }
         }
+        correlated = store_correlated_locations(request, locations);
 
         correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
         correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
@@ -301,21 +321,6 @@ namespace valhalla {
         locations.front().date_time_ = date_time_value;
       else if (date_time_type == 2) //arrive)
         locations.back().date_time_ = date_time_value;
-
-
-      //we require correlated locations
-      size_t i = 0;
-      do {
-        auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-        if(!path_location)
-          break;
-        try {
-          correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse correlated location");
-        }
-      }while(++i);
 
       // Parse out the type of route - this provides the costing method to use
       auto costing = request.get_optional<std::string>("costing");

@@ -44,11 +44,10 @@ namespace valhalla {
       std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
 
       // Return an error if any locations are totally unreachable
-      std::vector<baldr::PathLocation> correlated_sources_targets;
-      std::move(correlated_s.begin(), correlated_s.end(), std::back_inserter(correlated_sources_targets));
-      std::move(correlated_t.begin(), correlated_t.end(), std::back_inserter(correlated_sources_targets));
+      std::vector<baldr::PathLocation> correlated =  (correlated_s.size() > correlated_t.size() ? correlated_s : correlated_t);
+
       uint32_t idx = 0;
-      uint32_t n = correlated_sources_targets.size();
+      uint32_t n = correlated.size();
       for (uint32_t i = 0; i < n; i++) {
         bool reachable = false;
         for (uint32_t j = 0; j < n; j++) {
@@ -68,15 +67,15 @@ namespace valhalla {
         time_costs.emplace_back(static_cast<float>(itr.time));
       }
 
-      for (size_t i = 0; i < correlated_sources_targets.size(); i++)
-        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated_sources_targets[i].latlng_.lat()) + ", "+ std::to_string(correlated_sources_targets[i].latlng_.lng()));
+      for (size_t i = 0; i < correlated.size(); i++)
+        LOG_INFO("BEFORE reorder of locations:: " + std::to_string(correlated[i].latlng_.lat()) + ", "+ std::to_string(correlated[i].latlng_.lng()));
 
       Optimizer optimizer;
       //returns the optimal order of the path_locations
-      auto order = optimizer.Solve(correlated_sources_targets.size(), time_costs);
+      auto order = optimizer.Solve(correlated.size(), time_costs);
       std::vector<PathLocation> best_order;
       for (size_t i = 0; i< order.size(); i++) {
-        best_order.emplace_back(correlated_sources_targets[order[i]]);
+        best_order.emplace_back(correlated[order[i]]);
         LOG_INFO("reordered locations:: " + std::to_string(best_order[i].latlng_.lat()) + ", "+ std::to_string(best_order[i].latlng_.lng()));
       }
 

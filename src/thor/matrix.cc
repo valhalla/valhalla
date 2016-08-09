@@ -70,14 +70,14 @@ namespace {
       if (tds[i].time != kMaxCost) {
         row->emplace_back(json::map({
           {"from_index", static_cast<uint64_t>(source_index)},
-          {"to_index", static_cast<uint64_t>(target_index)},
+          {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
           {"time", static_cast<uint64_t>(tds[i].time)},
           {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}
         }));
       } else {
         row->emplace_back(json::map({
           {"from_index", static_cast<uint64_t>(source_index)},
-          {"to_index", static_cast<uint64_t>(target_index)},
+          {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
           {"time", static_cast<std::nullptr_t>(nullptr)},
           {"distance", static_cast<std::nullptr_t>(nullptr)}
         }));
@@ -89,18 +89,20 @@ namespace {
   json::MapPtr serialize(const std::string action, const boost::optional<std::string>& id, const std::vector<PathLocation>& correlated_s, const std::vector<PathLocation>& correlated_t, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr matrix = json::array({});
     for(size_t source_index = 0; source_index < correlated_s.size(); ++source_index) {
-      for(size_t target_index = 0; target_index < correlated_t.size(); ++target_index) {
         matrix->emplace_back(
           serialize_row(tds, source_index * correlated_t.size(), correlated_t.size(),
-                        source_index, target_index + (action == "sources_to_targets" ? 0 : correlated_s.size()), distance_scale));
-      }
+                        source_index, action == "many_to_one" ? correlated_s.size()-1 : 0, distance_scale));
     }
     auto json = json::map({
       {action, matrix},
-      {"sources", json::array({locations(correlated_s)})},
-      {"targets", json::array({locations(correlated_t)})},
       {"units", units},
     });
+    if (action == "sources_to_targets") {
+      json->emplace("targets", json::array({locations(correlated_t)}));
+      json->emplace("sources", json::array({locations(correlated_s)}));
+    } else {
+      json->emplace("locations", json::array({locations(correlated_s.size() > correlated_t.size() ? correlated_s : correlated_t)}));
+    }
     if (id)
       json->emplace("id", *id);
     return json;
