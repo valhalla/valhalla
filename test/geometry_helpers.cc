@@ -2,17 +2,13 @@
 #include <cmath>
 
 #include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/util.h>
 
 #include "test.h"
 #include "meili/geometry_helpers.h"
 
+using namespace valhalla::midgard;
 using namespace valhalla::meili::helpers;
-
-
-template <typename T>
-bool approximate(T a, T b, T r = 0.00001)
-{ return std::abs(a - b) <= r; }
-
 
 void TestClipLineString()
 {
@@ -24,23 +20,23 @@ void TestClipLineString()
                     "Should not clip anything if range is [0, 1]");
 
   clip = ClipLineString(line.begin(), line.end(), 0.f, 0.1f);
-  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.1f),
+  test::assert_bool(equal(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.1f),
                     "10% portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.5f, 1.f);
-  test::assert_bool(LineStringLength(clip.begin(), clip.end()) == LineStringLength(line.begin(), line.end()) * 0.5f,
+  test::assert_bool(equal(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.5f),
                     "50% portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.5f, 0.7f);
-  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.2f),
+  test::assert_bool(equal(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.2f),
                     "0.2 portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.65f, 0.7f);
-  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.05f),
+  test::assert_bool(equal(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.05f),
                     "5% portion should be clipped");
 
   clip = ClipLineString(line.begin(), line.end(), 0.4999f, 0.5f);
-  test::assert_bool(approximate(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.0001f),
+  test::assert_bool(equal(LineStringLength(clip.begin(), clip.end()), LineStringLength(line.begin(), line.end()) * 0.0001f),
                     "0.1% portion should be clipped");
 
   test::assert_bool(ClipLineString(line.begin(), line.end(), 0.65f, 0.5f).empty(),
@@ -67,7 +63,6 @@ void TestClipLineString()
   test::assert_bool(ClipLineString(line.begin(), line.end(), 0.5f, 0.1f).empty(),
                     "nothing should be clipped since empty set [0.5, 0.1]");
 }
-
 
 int main(int argc, char *argv[])
 {
