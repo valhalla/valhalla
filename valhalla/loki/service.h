@@ -21,6 +21,7 @@ namespace valhalla {
     class loki_worker_t {
      public:
       enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, SOURCES_TO_TARGETS, OPTIMIZED_ROUTE, ISOCHRONE};
+      void determine_costing_options(const ACTION_TYPE& action, boost::property_tree::ptree& request);
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();

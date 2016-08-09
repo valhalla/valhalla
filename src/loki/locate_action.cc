@@ -142,46 +142,8 @@ namespace valhalla {
 
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
 
-      //using the costing we can determine what type of edge filtering to use
-      auto costing = request.get_optional<std::string>("costing");
-      if (costing)
-        valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
-      else {
-        //locate doesnt require a filter
-        edge_filter = loki::PassThroughEdgeFilter;
-        node_filter = loki::PassThroughNodeFilter;
-        return;
-      }
-
-      // TODO - have a way of specifying mode at the location
-      if(*costing == "multimodal")
-        *costing = "pedestrian";
-
-      // Get the costing options. Get the base options from the config and the
-      // options for the specified costing method
-      std::string method_options = "costing_options." + *costing;
-      auto config_costing = config.get_child_optional(method_options);
-      if(!config_costing)
-        throw std::runtime_error("No costing method found for '" + *costing + "'");
-      auto request_costing = request.get_child_optional(method_options);
-      if(request_costing) {
-        // If the request has any options for this costing type, merge the 2
-        // costing options - override any config options that are in the request.
-        // and add any request options not in the config.
-        // TODO: suboptions are probably getting smashed when we do this, preserve them
-        boost::property_tree::ptree overridden = *config_costing;
-        for(const auto& r : *request_costing)
-          overridden.put_child(r.first, r.second);
-        auto c = factory.Create(*costing, overridden);
-        edge_filter = c->GetEdgeFilter();
-        node_filter = c->GetNodeFilter();
-      }// No options to override so use the config options verbatim
-      else {
-        auto c = factory.Create(*costing, *config_costing);
-        edge_filter = c->GetEdgeFilter();
-        node_filter = c->GetNodeFilter();
-      }
-    }
+      determine_costing_options(action, request);
+     }
 
     worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //correlate the various locations to the underlying graph
