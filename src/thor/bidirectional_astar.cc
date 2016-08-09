@@ -222,7 +222,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
       // Expand from end node in forward direction.
       uint32_t shortcuts = 0;
-      GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+      GraphId edgeid(node.tileid(), level, nodeinfo->edge_index());
       const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count();
                   i++, directededge++, edgeid++) {
@@ -332,17 +332,15 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 
       // Get the opposing predecessor directed edge. Need to make sure we get
       // the correct one if a transition occurred
-      const DirectedEdge* opp_pred_edge;
-      if (pred2.opp_edgeid().Tile_Base() == tile2->id().Tile_Base()) {
-        opp_pred_edge = tile2->directededge(pred2.opp_edgeid().id());
-      } else {
-        opp_pred_edge = graphreader.GetGraphTile(pred2.opp_edgeid().
-                         Tile_Base())->directededge(pred2.opp_edgeid());
-      }
+      const DirectedEdge* opp_pred_edge=
+          (pred2.opp_edgeid().Tile_Base() == tile2->id().Tile_Base()) ?
+              tile2->directededge(pred2.opp_edgeid().id()) :
+              graphreader.GetGraphTile(pred2.opp_edgeid().
+                     Tile_Base())->directededge(pred2.opp_edgeid());
 
       // Expand from end node in forward direction.
       uint32_t shortcuts = 0;
-      GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+      GraphId edgeid(node.tileid(), level, nodeinfo->edge_index());
       const DirectedEdge* directededge = tile2->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count();
               i++, directededge++, edgeid++) {
@@ -358,7 +356,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
                       pred2.sortcost(), pred2.distance(),
                       pred2.restrictions(), pred2.opp_local_idx(), mode_,
                       Cost(pred2.transition_cost(), pred2.transition_secs()));
-            }
+          }
           continue;
         }
 
