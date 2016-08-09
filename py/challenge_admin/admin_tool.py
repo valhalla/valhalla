@@ -84,16 +84,6 @@ class admin_tool:
         return response
 
 
-def something():
-    # Send off the payload to the appropriate endpoint
-    response = ''
-    if create:
-        response = requests.post('{}/api/v2/challenge'.format(config.url),
-                                 data=json.dumps(payload), headers=config.header)
-    else:
-        response = requests.put('{}/api/v2/challenge/{}'.format(config.url, payload['id']),
-                                data=json.dumps(payload), headers=config.header)
-    return response
 
 
 

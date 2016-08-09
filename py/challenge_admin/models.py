@@ -15,7 +15,8 @@ class Challenge(Base):
     active = Column(Integer, nullable=False)
 
     # points to all the tasks that belong to this challenge
-    tasks = relationship('Task', backref='challenge', lazy='dynamic')
+    tasks = relationship('Task', back_populates='challenge', lazy='dynamic',
+                         cascade='all,delete,delete-orphan')
 
     # in case we print a challenge
     def __repr__(self):
@@ -30,6 +31,8 @@ class Task(Base):
     instruction = Column(String(512), nullable=False)
     status = Column(Integer, nullable=False)
     challenge_id = Column(Integer, ForeignKey('challenges.id'))
+
+    challenge = relationship('Challenge', back_populates='tasks')
 
     # in case we want to print a task
     def __repr__(self):

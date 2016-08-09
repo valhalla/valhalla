@@ -59,10 +59,12 @@ class db_tool:
     def insert_challenge(self, challenge):
         '''inserts an already created challenge into the database'''
 
-        # don't allow the insertion of an active challenge. This must be handled
-        # through other method calls
-        challenge.active = False
-
         # add challenge and commit changes to db
         self.session.add(challenge)
+        self.session.commit()
+
+
+    def delete_challenge(self, challenge):
+        ''' deletes the challenge passed in if it exists in the database'''
+        self.session.delete(challenge)
         self.session.commit()
