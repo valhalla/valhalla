@@ -212,6 +212,129 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
   return isotile_;      // Should never get here
 }
 
+// Compute iso-tile that we can use to generate isochrones.
+std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
+             std::vector<PathLocation>& dest_locations,
+             const unsigned int max_minutes,
+             GraphReader& graphreader,
+             const std::shared_ptr<DynamicCost>* mode_costing,
+             const TravelMode mode) {
+  // Set the mode and costing
+  mode_ = mode;
+  const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+
+  // Initialize and create the isotile
+  auto max_seconds = max_minutes * 60;
+  Initialize(costing->UnitSize());
+  ConstructIsoTile(false, max_minutes, dest_locations);
+
+  // Set the origin locations
+  SetDestinationLocations(graphreader, dest_locations, costing);
+
+  // Compute the isotile
+  uint32_t n = 0;
+  const GraphTile* tile;
+  while (true) {
+    // Get next element from adjacency list. Check that it is valid. An
+    // invalid label indicates there are no edges that can be expanded.
+    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    if (predindex == kInvalidLabel) {
+      return isotile_;
+    }
+
+    // Copy the EdgeLabel for use in costing and settle the edge.
+    EdgeLabel pred = edgelabels_[predindex];
+    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+
+    // Get the end node of the prior directed edge. Skip if tile not found
+    // (can happen with regional data sets).
+    GraphId node = pred.endnode();
+    if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
+      continue;
+    }
+
+    // Get the nodeinfo and update the isotile
+    const NodeInfo* nodeinfo = tile->node(node);
+    UpdateIsoTile(pred, graphreader, nodeinfo->latlng());
+    n++;
+
+    // Return after the time interval has been met
+    if (pred.cost().secs > max_seconds) {
+      LOG_INFO("Exceed time interval: n = " + std::to_string(n));
+      return isotile_;
+    }
+
+    // Check access at the node
+    if (!costing->Allowed(nodeinfo)) {
+      continue;
+    }
+
+    // Get the opposing predecessor directed edge.
+    const DirectedEdge* opp_pred_edge =
+        (pred.opp_edgeid().Tile_Base() == tile->id().Tile_Base()) ?
+            tile->directededge(pred.opp_edgeid().id()) :
+            graphreader.GetGraphTile(pred.opp_edgeid().
+                  Tile_Base())->directededge(pred.opp_edgeid());
+
+    // Expand from end node.
+    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+      // Do not transition to upper hierarchies.
+      if (directededge->trans_up()) {
+        continue;
+      }
+
+      // Get the current set. Skip this edge if permanently labeled (best
+      // path already found to this directed edge).
+      EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
+      if (edgestatus.set() == EdgeSet::kPermanent) {
+        continue;
+      }
+
+      // Get opposing edge Id and end node tile
+      const GraphTile* t2 = directededge->leaves_tile() ?
+           graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (t2 == nullptr) {
+        continue;
+      }
+      GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+
+      // Get opposing directed edge and check if allowed.
+      const DirectedEdge* opp_edge = t2->directededge(oppedge);
+      if (!costing->AllowedReverse(directededge, pred, opp_edge,
+                                   tile, edgeid)) {
+        continue;
+      }
+
+      // Compute the cost to the end of this edge with separate transition cost
+      Cost tc = costing->TransitionCostReverse(directededge->localedgeidx(),
+                                  nodeinfo, opp_edge, opp_pred_edge);
+      Cost newcost = pred.cost() +
+                     costing->EdgeCost(opp_edge, nodeinfo->density());
+      newcost.cost += tc.cost;
+
+      // Check if edge is temporarily labeled and this path has less cost. If
+      // less cost the predecessor is updated and the sort cost is decremented
+      // by the difference in real cost (A* heuristic doesn't change)
+      if (edgestatus.set() == EdgeSet::kTemporary) {
+        CheckIfLowerCostPath(edgestatus.status.index, predindex, newcost);
+        continue;
+      }
+
+      // Add edge label, add to the adjacency list and set edge status
+      uint32_t idx = edgelabels_.size();
+      adjacencylist_->Add(idx, newcost.cost);
+      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      edgelabels_.emplace_back(predindex, edgeid, oppedge,
+                    directededge, newcost, newcost.cost, 0.0f,
+                    directededge->restrictions(),
+                    directededge->opp_local_idx(), mode_, tc);
+    }
+  }
+  return isotile_;      // Should never get here
+}
+
 std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
              std::vector<PathLocation>& origin_locations,
              const unsigned int max_minutes, GraphReader& graphreader,
@@ -631,8 +754,10 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
+      uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-      adjacencylist_->Add(edgelabels_.size(), cost.cost);
+      adjacencylist_->Add(idx, cost.cost);
+      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
               cost.cost, 0.0f, directededge->restrictions(),
               directededge->opp_local_idx(), mode_, d);
@@ -647,6 +772,56 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       *origin.date_time_ == "current") {
       origin.date_time_ = DateTime::iso_date_time(
           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+    }
+  }
+}
+
+// Add destination edges to the reverse path adjacency list.
+void Isochrone::SetDestinationLocations(GraphReader& graphreader,
+                     std::vector<PathLocation>& dest_locations,
+                     const std::shared_ptr<DynamicCost>& costing) {
+  // Add edges for each location to the adjacency list
+  for (auto& dest : dest_locations) {
+    // Set time at the origin lat, lon grid to 0
+    isotile_->Set(dest.latlng_, 0);
+
+    // Iterate through edges and add to adjacency list
+    Cost c;
+    for (const auto& edge : dest.edges) {
+      // If the destination is at a node, skip any outbound edges (so any
+      // opposing inbound edges are not considered)
+      if (edge.begin_node()) {
+        continue;
+      }
+
+      // Get the directed edge
+      GraphId edgeid = edge.id;
+      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      const DirectedEdge* directededge = tile->directededge(edgeid);
+
+      // Get the opposing directed edge, continue if we cannot get it
+      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
+      if (!opp_edge_id.Is_Valid()) {
+        continue;
+      }
+      const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
+
+      // Get cost and sort cost (based on distance from endnode of this edge
+      // to the origin. Make sure we use the reverse A* heuristic. Note that
+      // the end node of the opposing edge is in the same tile as the directed
+      // edge.
+      Cost cost = costing->EdgeCost(opp_dir_edge,
+                      graphreader.GetEdgeDensity(opp_edge_id)) * edge.dist;
+
+      // Add EdgeLabel to the adjacency list. Set the predecessor edge index
+      // to invalid to indicate the origin of the path. Make sure the opposing
+      // edge (edgeid) is set.
+      uint32_t idx = edgelabels_.size();
+      adjacencylist_->Add(idx, cost.cost);
+      edgestatus_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
+      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
+               opp_dir_edge, cost, cost.cost, 0.0f, opp_dir_edge->restrictions(),
+               opp_dir_edge->opp_local_idx(), mode_, c);
     }
   }
 }

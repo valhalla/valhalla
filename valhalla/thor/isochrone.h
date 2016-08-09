@@ -59,6 +59,16 @@ class Isochrone {
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
 
+  // Compute iso-tile that we can use to generate isochrones. This is used for
+  // the reverse direction - construct times for gridded data indicating how
+  // long it takes to reach the destination location.
+  std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeReverse(
+               std::vector<baldr::PathLocation>& dest_locations,
+               const unsigned int max_minutes,
+               baldr::GraphReader& graphreader,
+               const std::shared_ptr<sif::DynamicCost>* mode_costing,
+               const sif::TravelMode mode);
+
   /**
    * Compute an isochrone grid for multi-modal routes. This creates and
    * populates a lat,lon grid with time taken to reach each grid point.
@@ -148,12 +158,22 @@ class Isochrone {
   /**
    * Add edge(s) at each origin location to the adjacency list.
    * @param  graphreader       Graph tile reader.
-   * @param  origin_locations  Location information of origins.
+   * @param  origin_locations  Location information for origins.
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
                   std::vector<baldr::PathLocation>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+    * Add edge(s) at each destination location to the adjacency list.
+    * @param  graphreader       Graph tile reader.
+    * @param  dest_locations    Location information for destinations.
+    * @param  costing           Dynamic costing.
+    */
+  void SetDestinationLocations(baldr::GraphReader& graphreader,
+                       std::vector<baldr::PathLocation>& dest_locations,
+                       const std::shared_ptr<sif::DynamicCost>& costing);
 
 };
 

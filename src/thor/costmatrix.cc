@@ -11,13 +11,6 @@ namespace {
 constexpr int kExtendSearchThreshold = 250;
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 
-// Convenience method to get opposing edge Id given a directed edge and a tile
-GraphId GetOpposingEdgeId(const DirectedEdge* edge, const GraphTile* tile) {
-  GraphId endnode = edge->endnode();
-  return { endnode.tileid(), endnode.level(),
-           tile->node(endnode.id())->edge_index() + edge->opp_index() };
-}
-
 }
 
 namespace valhalla {
@@ -327,7 +320,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
     if (t2 == nullptr) {
       continue;
     }
-    GraphId oppedge = GetOpposingEdgeId(directededge, t2);
+    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
     // Add edge label, add to the adjacency list and set edge status
     adj->Add(edgelabels.size(), newcost.cost);
@@ -559,7 +552,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
     if (t2 == nullptr) {
       continue;
     }
-    GraphId oppedge = GetOpposingEdgeId(directededge, t2);
+    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
