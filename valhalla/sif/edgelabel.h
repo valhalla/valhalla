@@ -309,12 +309,6 @@ class EdgeLabel {
   uint32_t path_distance() const;
 
   /**
-   * Get the predecessor road classification.
-   * @return Predecessor road classification.
-   */
-  baldr::RoadClass classification() const;
-
-  /**
    * Get the transit trip Id.
    * @return   Returns the transit trip Id of the prior edge.
    */
@@ -434,12 +428,8 @@ class EdgeLabel {
   // predecessor_:     Index to the predecessor edge label information.
   uint32_t predecessor_;
 
-  /**
-   * tripid_:          Transit trip Id.
-   * classification_ : Classification of edge.
-   */
-  uint32_t tripid_           : 28;
-  uint32_t classification_   : 4;
+  // tripid_:          Transit trip Id.
+  uint32_t tripid_;
 
   // Block Id and prior operator (index to an internal mapping).
   // 0 indicates no prior.
