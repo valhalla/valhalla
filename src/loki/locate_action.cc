@@ -132,7 +132,6 @@ namespace valhalla {
       else {
         edge_filter = loki::PassThroughEdgeFilter;
         node_filter = loki::PassThroughNodeFilter;
-        return;
       }
     }
 
