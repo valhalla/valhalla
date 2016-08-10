@@ -21,20 +21,20 @@ namespace valhalla {
     class loki_worker_t {
      public:
       enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, SOURCES_TO_TARGETS, OPTIMIZED_ROUTE, ISOCHRONE};
-      void location_parser(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void location_parser(const boost::property_tree::ptree& request);
       void determine_costing_options(const boost::property_tree::ptree& request);
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();
      protected:
-      void init_locate(const ACTION_TYPE& action, boost::property_tree::ptree& request);
-      void init_route(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void init_locate(const boost::property_tree::ptree& request);
+      void init_route(const boost::property_tree::ptree& request);
       void init_matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request);
-      void init_isochrones(const ACTION_TYPE& action, boost::property_tree::ptree& request);
-      prime_server::worker_t::result_t locate(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      void init_isochrones(const boost::property_tree::ptree& request);
+      prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t isochrones(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t isochrones(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;

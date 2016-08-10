@@ -15,8 +15,10 @@ using namespace valhalla::baldr;
 namespace valhalla {
   namespace loki {
 
-  void loki_worker_t::init_isochrones(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
-    location_parser(action, request);
+  void loki_worker_t::init_isochrones(const boost::property_tree::ptree& request) {
+    location_parser(request);
+    if(locations.size() < 1)
+      throw std::runtime_error("Insufficient number of locations provided");
     //make sure the isoline definitions are valid
     auto contours = request.get_child_optional("contours");
     if(!contours)
@@ -36,8 +38,8 @@ namespace valhalla {
     determine_costing_options(request);
   }
 
-    worker_t::result_t loki_worker_t::isochrones(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      init_isochrones(action, request);
+    worker_t::result_t loki_worker_t::isochrones(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_isochrones(request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
         throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find("isochrone")->second) + ".");

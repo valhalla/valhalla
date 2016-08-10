@@ -103,7 +103,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::location_parser(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+    void loki_worker_t::location_parser(const boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if (!request_locations)
@@ -117,11 +117,7 @@ namespace valhalla {
           throw std::runtime_error("Failed to parse location");
         }
       }
-      if(locations.size() < (action == LOCATE || action == ISOCHRONE ? 1 : 2))
-        throw std::runtime_error("Insufficient number of locations provided");
-
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
-
     }
 
     void loki_worker_t::determine_costing_options(const boost::property_tree::ptree& request) {
