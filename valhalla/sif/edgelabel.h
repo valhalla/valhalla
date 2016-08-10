@@ -309,6 +309,12 @@ class EdgeLabel {
   uint32_t path_distance() const;
 
   /**
+   * Get the predecessor road classification.
+   * @return Predecessor road classification.
+   */
+  baldr::RoadClass classification() const;
+
+  /**
    * Get the transit trip Id.
    * @return   Returns the transit trip Id of the prior edge.
    */
@@ -365,6 +371,12 @@ class EdgeLabel {
    */
   void set_not_thru(const bool not_thru);
 
+  /**
+   * Is this edge a dead end.
+   * @return  Returns true if the edge is a dead end.
+   */
+  bool deadend() const;
+
  private:
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
@@ -419,21 +431,32 @@ class EdgeLabel {
   uint64_t origin_           : 1;
   uint64_t toll_             : 1;
 
-  // Index to the predecessor edge label information.
+  // predecessor_:     Index to the predecessor edge label information.
   uint32_t predecessor_;
 
-  // Transit trip Id
-  uint32_t tripid_;
+  /**
+   * tripid_:          Transit trip Id.
+   * classification_ : Classification of edge.
+   */
+  uint32_t tripid_           : 28;
+  uint32_t classification_   : 4;
 
   // Block Id and prior operator (index to an internal mapping).
   // 0 indicates no prior.
-  uint32_t blockid_          : 22;
+  uint32_t blockid_          : 20;
   uint32_t transit_operator_ : 10;
+  uint32_t spare_            : 2;
 
-  // Transition cost (used in bidirectional path search).
-  uint32_t transition_cost_ : 16;
+  /**
+   * transition_cost_: Transition cost (used in bidirectional path search).
+   * transition_secs_: Transition time (used in bidirectional path search).
+   * not_thru_:        Flag indicating edge is not_thru.
+   * deadend_:         Flag indicating edge is a deadend.
+   */
+  uint32_t transition_cost_ : 15;
   uint32_t transition_secs_ : 15;
   uint32_t not_thru_        : 1;
+  uint32_t deadend_         : 1;
 };
 
 }

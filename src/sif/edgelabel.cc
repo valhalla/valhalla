@@ -18,7 +18,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const uint32_t restrictions,
                      const uint32_t opp_local_idx,
                      const TravelMode mode, const uint32_t path_distance)
-    : edgeid_(edgeid),
+    : predecessor_(predecessor),
+      edgeid_(edgeid),
       opp_edgeid_ {},
       endnode_(edge->endnode()),
       cost_(cost),
@@ -37,13 +38,14 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       has_transit_(0),
       origin_(0),
       toll_(edge->toll()),
-      predecessor_(predecessor),
+      classification_(static_cast<uint32_t>(edge->classification())),
       tripid_(0),
       blockid_(0),
       transit_operator_(0),
       transition_cost_(0),
       transition_secs_(0),
-      not_thru_(edge->not_thru())  {
+      not_thru_(edge->not_thru()),
+      deadend_(edge->deadend()) {
 }
 
 // Constructor with values - used in bidirectional A*
@@ -53,7 +55,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const uint32_t restrictions,
                      const uint32_t opp_local_idx,
                      const TravelMode mode, const Cost& tc)
-    : edgeid_(edgeid),
+    : predecessor_(predecessor),
+      edgeid_(edgeid),
       opp_edgeid_(oppedgeid),
       endnode_(edge->endnode()),
       cost_(cost),
@@ -72,13 +75,14 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       has_transit_(0),
       origin_(0),
       toll_(edge->toll()),
-      predecessor_(predecessor),
+      classification_(static_cast<uint32_t>(edge->classification())),
       tripid_(0),
       blockid_(0),
       transit_operator_(0),
       transition_cost_(tc.cost),
       transition_secs_(tc.secs),
-      not_thru_(edge->not_thru())  {
+      not_thru_(edge->not_thru()),
+      deadend_(edge->deadend()) {
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -90,7 +94,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
           const uint32_t tripid, const GraphId& prior_stopid,
           const uint32_t blockid, const uint32_t transit_operator,
           const bool has_transit)
-    : edgeid_(edgeid),
+    : predecessor_(predecessor),
+      edgeid_(edgeid),
       opp_edgeid_(prior_stopid),
       endnode_(edge->endnode()),
       cost_(cost),
@@ -109,13 +114,14 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       has_transit_(has_transit),
       origin_(0),
       toll_(edge->toll()),
-      predecessor_(predecessor),
+      classification_(static_cast<uint32_t>(edge->classification())),
       tripid_(tripid),
       blockid_(blockid),
       transit_operator_(transit_operator),
       transition_cost_(0),
       transition_secs_(0),
-      not_thru_(edge->not_thru()) {
+      not_thru_(edge->not_thru()),
+      deadend_(edge->deadend()) {
 }
 
 // Constructor with values - used in time distance matrix (needs the
@@ -126,7 +132,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                 const Cost& cost, const uint32_t restrictions,
                 const uint32_t opp_local_idx, const TravelMode mode,
                 const Cost& tc, const uint32_t path_distance)
-    :  edgeid_(edgeid),
+    :  predecessor_(predecessor),
+       edgeid_(edgeid),
        opp_edgeid_(oppedgeid),
        endnode_(edge->endnode()),
        cost_(cost),
@@ -145,13 +152,14 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
        has_transit_(0),
        origin_(0),
        toll_(edge->toll()),
-       predecessor_(predecessor),
+       classification_(static_cast<uint32_t>(edge->classification())),
        tripid_(0),
        blockid_(0),
        transit_operator_(0),
        transition_cost_(tc.cost),
        transition_secs_(tc.secs),
-       not_thru_(edge->not_thru()) {
+       not_thru_(edge->not_thru()),
+       deadend_(edge->deadend()) {
 }
 
 // Update predecessor and cost values in the label.
@@ -308,6 +316,11 @@ uint32_t EdgeLabel::path_distance() const {
   return path_distance_;
 }
 
+// Get the predecessor road classification.
+RoadClass EdgeLabel::classification() const {
+  return static_cast<RoadClass>(classification_);
+}
+
 // Get the transit trip Id.
 uint32_t EdgeLabel::tripid() const {
   return tripid_;
@@ -351,6 +364,11 @@ bool EdgeLabel::not_thru() const {
 // Set the not-through flag for this edge.
 void EdgeLabel::set_not_thru(const bool not_thru) {
   not_thru_ = not_thru;
+}
+
+// Is this edge a dead end.
+bool EdgeLabel::deadend() const {
+  return deadend_;
 }
 
 // Operator for sorting.
