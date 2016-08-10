@@ -31,7 +31,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::optimized_path(const std::vector<PathLocation>& correlated, const std::string &costing, const std::string &request_str, const bool header_dnt) {
+    worker_t::result_t  thor_worker_t::optimized_path(const std::vector<PathLocation>& correlated_s, const std::vector<PathLocation>& correlated_t, const std::string &costing, const std::string &request_str, const bool header_dnt) {
       worker_t::result_t result{true};
       //get time for start of request
       auto s = std::chrono::system_clock::now();
@@ -41,9 +41,11 @@ namespace valhalla {
 
       // Use CostMatrix to find costs from each location to every other location
       CostMatrix costmatrix;
-      std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated, correlated, reader, mode_costing, mode);
+      std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
 
       // Return an error if any locations are totally unreachable
+      std::vector<baldr::PathLocation> correlated =  (correlated_s.size() > correlated_t.size() ? correlated_s : correlated_t);
+
       uint32_t idx = 0;
       uint32_t n = correlated.size();
       for (uint32_t i = 0; i < n; i++) {
@@ -85,7 +87,7 @@ namespace valhalla {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request) {
+      if (!header_dnt && ((elapsed_time.count() / correlated_s.size()) || elapsed_time.count() / correlated_t.size()) > long_request) {
         LOG_WARN("thor::optimized_route elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::optimized_route exceeded threshold::"+ request_str);
         midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");

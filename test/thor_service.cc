@@ -71,5 +71,3 @@ int main(void) {
 
   return suite.tear_down();
 }
-
-

@@ -24,6 +24,7 @@ namespace {
     {"one_to_many", thor_worker_t::ONE_TO_MANY},
     {"many_to_one", thor_worker_t::MANY_TO_ONE},
     {"many_to_many", thor_worker_t::MANY_TO_MANY},
+    {"sources_to_targets", thor_worker_t::SOURCES_TO_TARGETS},
     {"optimized_route", thor_worker_t::OPTIMIZED_ROUTE}
   };
 
@@ -32,6 +33,24 @@ namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+
+  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, std::vector<baldr::Location> locations) {
+    //we require correlated locations
+    std::vector<baldr::PathLocation> correlated;
+    size_t i = 0;
+    do {
+      auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+      if(!path_location)
+        break;
+      try {
+        correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+      }
+      catch (...) {
+        throw std::runtime_error("Failed to parse correlated location");
+      }
+    }while(++i);
+    return correlated;
+  }
 
 }
 
@@ -92,15 +111,17 @@ namespace valhalla {
           if (matrix_iter == MATRIX.cend())
             throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_route'.");
 
+          //which is it?
           switch (matrix_iter->second) {
             case ONE_TO_MANY:
             case MANY_TO_ONE:
             case MANY_TO_MANY:
+            case SOURCES_TO_TARGETS:
               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
               return matrix(matrix_iter->second, costing, request, info);
             case OPTIMIZED_ROUTE:
               valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-              return optimized_path(correlated, costing, request_str, info.do_not_track);
+              return optimized_path(correlated_s, correlated_t, costing, request_str, info.do_not_track);
           }
         }//TODO: move isochrones logic to separate file
         else if(request.get_optional<bool>("isochrone")) {
@@ -258,18 +279,35 @@ namespace valhalla {
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
+
       //we require locations
       auto request_locations = request.get_child_optional("locations");
-      if(!request_locations)
+      auto request_sources = request.get_child_optional("sources");
+      auto request_targets = request.get_child_optional("targets");
+      if(request_locations) {
+        for(const auto& location : *request_locations) {
+          try{ locations.push_back(baldr::Location::FromPtree(location.second)); }
+          catch (...) { throw std::runtime_error("Failed to parse location"); }
+        }
+        correlated = store_correlated_locations(request, locations);
+      }//if we have a sources and targets request here we will divvy up the correlated amongst them
+      else if(request_sources && request_targets) {
+        for(const auto& s : *request_sources) {
+          try{ locations.push_back(baldr::Location::FromPtree(s.second)); }
+          catch (...) { throw std::runtime_error("Failed to parse source"); }
+        }
+        for(const auto& t : *request_targets) {
+          try{ locations.push_back(baldr::Location::FromPtree(t.second)); }
+          catch (...) { throw std::runtime_error("Failed to parse target"); }
+        }
+        correlated = store_correlated_locations(request, locations);
+
+        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
+        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
+      }//we need something
+      else
         throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse location");
-        }
-      }
+
       if(locations.size() < (request.get_optional<bool>("isochrone") ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
 
@@ -283,20 +321,6 @@ namespace valhalla {
         locations.front().date_time_ = date_time_value;
       else if (date_time_type == 2) //arrive)
         locations.back().date_time_ = date_time_value;
-
-      //we require correlated locations
-      size_t i = 0;
-      do {
-        auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-        if(!path_location)
-          break;
-        try {
-          correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse correlated location");
-        }
-      }while(++i);
 
       // Parse out the type of route - this provides the costing method to use
       auto costing = request.get_optional<std::string>("costing");
@@ -327,6 +351,8 @@ namespace valhalla {
       multi_modal_astar.Clear();
       locations.clear();
       correlated.clear();
+      correlated_s.clear();
+      correlated_t.clear();
       isochrone.Clear();
       if(reader.OverCommitted())
         reader.Clear();
