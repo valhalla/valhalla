@@ -16,25 +16,7 @@ namespace valhalla {
   namespace loki {
 
   void loki_worker_t::init_isochrones(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
-    //we require locations
-    auto request_locations = request.get_child_optional("locations");
-
-    if (!request_locations)
-      throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-
-    for(const auto& location : *request_locations) {
-      try{
-        locations.push_back(baldr::Location::FromPtree(location.second));
-      }
-      catch (...) {
-        throw std::runtime_error("Failed to parse location");
-      }
-    }
-    if(locations.size() < 2)
-      throw std::runtime_error("Insufficient number of locations provided");
-
-    valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
-
+    location_parser(action, request);
     //make sure the isoline definitions are valid
     auto contours = request.get_child_optional("contours");
     if(!contours)
@@ -51,10 +33,11 @@ namespace valhalla {
         throw std::runtime_error("Exceeded max time of " + std::to_string(max_time) + ".");
       prev = c;
     }
-    determine_costing_options(action, request);
+    determine_costing_options(request);
   }
 
     worker_t::result_t loki_worker_t::isochrones(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_isochrones(action->second, request_pt);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
         throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find("isochrone")->second) + ".");

@@ -42,29 +42,12 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_route(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
-      //we require locations
-      auto request_locations = request.get_child_optional("locations");
-
-      if (!request_locations)
-        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse location");
-        }
-      }
-      if(locations.size() < 2)
-        throw std::runtime_error("Insufficient number of locations provided");
-
-      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
-
-      determine_costing_options(action, request);
+      location_parser(action, request);
+      determine_costing_options(request);
     }
 
     worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_route(action->second, request_pt);
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);
       check_distance(reader, locations, max_distance.find(costing)->second);

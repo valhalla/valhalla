@@ -103,22 +103,34 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::determine_costing_options(const loki_worker_t::ACTION_TYPE& action, boost::property_tree::ptree& request) {
+    void loki_worker_t::location_parser(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+      //we require locations
+      auto request_locations = request.get_child_optional("locations");
+      if (!request_locations)
+        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+
+      for(const auto& location : *request_locations) {
+        try{
+          locations.push_back(baldr::Location::FromPtree(location.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse location");
+        }
+      }
+      if(locations.size() < (action == LOCATE || action == ISOCHRONE ? 1 : 2))
+        throw std::runtime_error("Insufficient number of locations provided");
+
+      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+
+    }
+
+    void loki_worker_t::determine_costing_options(boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
        auto costing = request.get_optional<std::string>("costing");
        if (costing)
-       valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
-
-       if(!costing) {
-         //locate doesnt require a filter
-         if(action == loki_worker_t::LOCATE) {
-           edge_filter = loki::PassThroughEdgeFilter;
-           node_filter = loki::PassThroughNodeFilter;
-           return;
-         }//but everything else does
-         else
-           throw std::runtime_error("No edge/node costing provided");
-       }
+         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
+       else
+         throw std::runtime_error("No edge/node costing provided");
 
        // TODO - have a way of specifying mode at the location
        if(*costing == "multimodal")
@@ -171,6 +183,8 @@ namespace valhalla {
         max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
+      max_locations.emplace("sources_to_targets", config.get<size_t>("service_limits.sources_to_targets.max_locations"));
+      max_distance.emplace("sources_to_targets", config.get<float>("service_limits.sources_to_targets.max_distance"));
       max_locations.emplace("isochrone", config.get<size_t>("service_limits.isochrone.max_locations"));
       if (max_locations.empty())
         throw std::runtime_error("Missing max_locations configuration.");
@@ -228,20 +242,16 @@ namespace valhalla {
         switch (action->second) {
         case ROUTE:
         case VIAROUTE:
-          init_route(action->second, request_pt);
           return route(action->second, request_pt, info);
         case LOCATE:
-          init_locate(action->second, request_pt);
           return locate(request_pt, info);
         case ONE_TO_MANY:
         case MANY_TO_ONE:
         case MANY_TO_MANY:
         case SOURCES_TO_TARGETS:
         case OPTIMIZED_ROUTE:
-          init_matrix(action->second, request_pt);
           return matrix(action->second, request_pt, info);
         case ISOCHRONE:
-          init_isochrones(action->second, request_pt);
           return isochrones(request_pt, info);
         }
 

@@ -123,29 +123,19 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_locate(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
-      //we require locations
-      auto request_locations = request.get_child_optional("locations");
-
-      if (!request_locations)
-        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
-
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse location");
-        }
+      location_parser(action, request);
+      auto costing = request.get_optional<std::string>("costing");
+      if (costing)
+        determine_costing_options(request);
+      else {
+        edge_filter = loki::PassThroughEdgeFilter;
+        node_filter = loki::PassThroughNodeFilter;
+        return;
       }
-      if(locations.size() < 1)
-        throw std::runtime_error("Insufficient number of locations provided");
-
-      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
-
-      determine_costing_options(action, request);
-     }
+    }
 
     worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_locate(action->second, request_pt);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       auto verbose = request.get<bool>("verbose", false);

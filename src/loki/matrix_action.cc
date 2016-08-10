@@ -112,22 +112,22 @@ namespace valhalla {
       request_targets = request.get_child("targets");
 
     }
-      for(const auto& source : *request_sources) {
-        try{
-          sources.push_back(baldr::Location::FromPtree(source.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse source");
-        }
+    for(const auto& source : *request_sources) {
+      try{
+        sources.push_back(baldr::Location::FromPtree(source.second));
       }
-      for(const auto& target : *request_targets) {
-        try{
-          targets.push_back(baldr::Location::FromPtree(target.second));
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse target");
-        }
+      catch (...) {
+        throw std::runtime_error("Failed to parse source");
       }
+    }
+    for(const auto& target : *request_targets) {
+      try{
+        targets.push_back(baldr::Location::FromPtree(target.second));
+      }
+      catch (...) {
+        throw std::runtime_error("Failed to parse target");
+      }
+    }
     if(sources.size() < 1)
        throw std::runtime_error("Insufficient number of sources provided");
     valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
@@ -139,10 +139,11 @@ namespace valhalla {
     //no locations!
     request.erase("locations");
 
-    determine_costing_options(action, request);
+    determine_costing_options(request);
   }
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_matrix(action->second, request_pt);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal") {
         http_response_t response(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing",  headers_t{CORS});
