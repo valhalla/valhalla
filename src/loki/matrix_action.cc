@@ -25,92 +25,162 @@ namespace std {
 }
 
 namespace {
-  const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> STRING_TO_ACTION {
-    {"one_to_many", loki_worker_t::ONE_TO_MANY},
-    {"many_to_one", loki_worker_t::MANY_TO_ONE},
-    {"many_to_many", loki_worker_t::MANY_TO_MANY},
-    {"optimized_route", loki_worker_t::OPTIMIZED_ROUTE}
-  };
 
+// TODO: Separate matrix actions to be deprecated and replaced by sources_to_targets action
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
-    {loki_worker_t::ONE_TO_MANY, "one_to_many"},
-    {loki_worker_t::MANY_TO_ONE, "many_to_one"},
-    {loki_worker_t::MANY_TO_MANY, "many_to_many"},
-    {loki_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
-  };
+     {loki_worker_t::ONE_TO_MANY, "one_to_many"},
+     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
+     {loki_worker_t::MANY_TO_MANY, "many_to_many"},
+     {loki_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
+     {loki_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
+   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  void check_locations(const size_t location_count, const size_t max_locations) {
-    //check that location size does not exceed max.
-    if (location_count > max_locations)
-      throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations) + ".");
-  }
-
-  void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float matrix_max_distance, float& max_location_distance) {
+  void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
 
     //see if any locations pairs are unreachable or too far apart
-    auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-    //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
-    for(size_t i = start; i < end; ++i) {
-      //check if distance between latlngs exceed max distance limit the chosen matrix type
-      auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
+    for(const auto& source : sources){
+      for(const auto& target : targets) {
+        //check if distance between latlngs exceed max distance limit
+        auto path_distance = source.latlng_.Distance(target.latlng_);
 
-      //only want to log the maximum distance between 2 locations for matrix
-      LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
-      if (path_distance >= max_location_distance) {
+        //only want to log the maximum distance between 2 locations for matrix
+        LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
+        if (path_distance >= max_location_distance) {
           max_location_distance = path_distance;
           LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
-      }
+        }
 
-      if (path_distance > matrix_max_distance)
-        throw std::runtime_error("Path distance exceeds the max distance limit");
-      }
+        if (path_distance > matrix_max_distance)
+          throw std::runtime_error("Path distance exceeds the max distance limit");
+        }
+     }
   }
 }
 
 namespace valhalla {
   namespace loki {
 
+    void loki_worker_t::init_matrix(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
+      auto request_locations = request.get_child_optional("locations");
+      auto request_sources = request.get_child_optional("sources");
+      auto request_targets = request.get_child_optional("targets");
+
+      //we require locations
+      if (!request_locations) {
+        if (!request_sources || !request_targets) {
+          throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+        }
+      }
+
+      //if MATRIX OR OPTIMIZED and not using sources & targets parameters
+      //deprecated way of specifying
+      if (!request_sources && !request_targets) {
+        if (request_locations->size() < 2)
+          throw std::runtime_error("Insufficient number of locations provided");
+
+        //create new sources and targets ptree from locations
+        boost::property_tree::ptree sources_child, targets_child;
+        switch (action) {
+          case ONE_TO_MANY:
+            sources_child.push_back(request_locations->front());
+            for(const auto& reqloc : *request_locations)
+              targets_child.push_back(reqloc);
+
+            break;
+          case MANY_TO_ONE:
+            for(const auto& reqloc : *request_locations)
+              sources_child.push_back(reqloc);
+
+            targets_child.push_back(request_locations->back());
+            break;
+          case MANY_TO_MANY:
+          case OPTIMIZED_ROUTE:
+            for(const auto& reqloc : *request_locations) {
+              sources_child.push_back(reqloc);
+              targets_child.push_back(reqloc);
+            }
+            break;
+        }
+        //add these back in the original request (in addition to locations while being deprecated
+        request.add_child("sources", sources_child);
+        request.add_child("targets", targets_child);
+        request_sources = request.get_child("sources");
+        request_targets = request.get_child("targets");
+
+      }
+      for(const auto& source : *request_sources) {
+        try{
+          sources.push_back(baldr::Location::FromPtree(source.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse source");
+        }
+      }
+      for(const auto& target : *request_targets) {
+        try{
+          targets.push_back(baldr::Location::FromPtree(target.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse target");
+        }
+      }
+      if(sources.size() < 1)
+         throw std::runtime_error("Insufficient number of sources provided");
+      valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+
+      if(targets.size() < 1)
+        throw std::runtime_error("Insufficient number of targets provided");
+      valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+
+      //no locations!
+      request.erase("locations");
+
+      determine_costing_options(request);
+    }
+
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal") {
         http_response_t response(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing",  headers_t{CORS});
         response.from_info(request_info);
         return {false, {response.to_string()}};
       }
-      //we want optimized_route to use the same location and distance limits as many_to_many
-      auto action_str = ACTION_TO_STRING.find(action == loki_worker_t::OPTIMIZED_ROUTE ? loki_worker_t::MANY_TO_MANY : action)->second;
+
       //check that location size does not exceed max.
-      check_locations(locations.size(), max_locations.find(action_str)->second);
+      auto action_str = ACTION_TO_STRING.find(loki_worker_t::SOURCES_TO_TARGETS)->second;
+      if ((sources.size() > max_locations.find(action_str)->second) || (targets.size() > max_locations.find(action_str)->second))
+        throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find(action_str)->second) + ".");
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      switch (action) {
-        case ONE_TO_MANY:
-          check_distance(reader,locations,0,0,locations.size(),max_distance.find(action_str)->second, max_location_distance);
-          break;
-        case MANY_TO_ONE:
-          check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance.find(action_str)->second, max_location_distance);
-          break;
-        case MANY_TO_MANY:
-        case OPTIMIZED_ROUTE:
-          for(size_t i = 0; i < locations.size()-1; ++i)
-            check_distance(reader,locations,i,(i+1),locations.size(),max_distance.find(action_str)->second, max_location_distance);
-          break;
-      }
+      check_distance(sources, targets, max_distance.find(action_str)->second, max_location_distance);
+
+      //correlate the various locations to the underlying graph
+      std::vector<baldr::Location> sources_targets;
+      std::move(sources.begin(), sources.end(), std::back_inserter(sources_targets));
+      std::move(targets.begin(), targets.end(), std::back_inserter(sources_targets));
+      std::unordered_map<baldr::Location, baldr::PathLocation> searched;
 
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
-      for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
-        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+      for(size_t i = 0; i < sources_targets.size(); ++i) {
+        auto& l = sources_targets[i];
+        auto found = searched.find(l);
+        if(found == searched.cend()) {
+          auto correlated = loki::Search(l, reader, edge_filter, node_filter);
+          found = searched.insert({l, std::move(correlated)}).first;
+        }
+        request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));
+
         //TODO: get transit level for transit costing
         //TODO: if transit send a non zero radius
-        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
-        for(auto color : colors){
+        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, found->second, 0);
+        for(auto& color : colors){
           auto itr = color_counts.find(color);
           if(itr == color_counts.cend())
             color_counts[color] = 1;
@@ -122,7 +192,7 @@ namespace valhalla {
       //are all the locations in the same color regions
       bool connected = false;
       for(const auto& c : color_counts) {
-        if(c.second == locations.size()) {
+        if(c.second == sources_targets.size()) {
           connected = true;
           break;
         }

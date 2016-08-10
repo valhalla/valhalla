@@ -28,6 +28,8 @@ namespace {
     http_request_t(POST, "/route", "{"),
     http_request_t(GET, "/route"),
     http_request_t(POST, "/route"),
+    http_request_t(GET, "/many_to_one"),
+    http_request_t(POST, "/many_to_many"),
     http_request_t(GET, "/locate?json={\"locations\":[{\"lon\":0}]}"),
     http_request_t(POST, "/locate", "{\"locations\":[{\"lon\":0}]}"),
     http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90}]}"),
@@ -45,7 +47,12 @@ namespace {
         ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}"),
     http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
         ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}")
+        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}"),
+    http_request_t(GET, "/one_to_many?json={\"sources\":[{\"lon\":0,\"lat\":90}]}"),
+    http_request_t(GET, "/many_to_one?json={\"targets\":[{\"lon\":0,\"lat\":90}]}"),
+    http_request_t(GET, "/many_to_many?json={\"locations\":[{\"lon\":0,\"lat\":90}]}"),
+    http_request_t(GET, "/sources_to_targets?json={\"targets\":[{\"lon\":0,\"lat\":90}]}"),
+    http_request_t(GET, "/sources_to_targets?json={\"locations\":[{\"lon\":0,\"lat\":90}]}")
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
@@ -55,12 +62,14 @@ namespace {
     {405, std::string("Try a POST or GET request instead")},
     {405, std::string("Try a POST or GET request instead")},
     {405, std::string("Try a POST or GET request instead")},
-    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' ")},
-    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' ")},
+    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' '/sources_to_targets' '/optimized_route' ")},
+    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' '/sources_to_targets' '/optimized_route' ")},
     {400, std::string("Failed to parse json request")},
     {400, std::string("Failed to parse json request")},
     {400, std::string("Insufficiently specified required parameter 'locations'")},
     {400, std::string("Insufficiently specified required parameter 'locations'")},
+    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
+    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
     {400, std::string("Failed to parse location")},
     {400, std::string("Failed to parse location")},
     {400, std::string("Insufficient number of locations provided")},
@@ -74,7 +83,12 @@ namespace {
     {400, std::string("No costing method found for 'yak'")},
     {400, std::string("No costing method found for 'yak'")},
     {400, std::string("Exceeded max locations of 20.")},
-    {400, std::string("Exceeded max locations of 20.")}
+    {400, std::string("Exceeded max locations of 20.")},
+    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
+    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
+    {400, std::string("Insufficient number of locations provided")},
+    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
+    {400, std::string("Insufficient number of locations provided")}
   };
 
 
@@ -93,7 +107,7 @@ namespace {
     boost::property_tree::ptree config;
     std::stringstream json; json << "{ \
       \"mjolnir\": { \"tile_dir\": \"test/tiles\" }, \
-      \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\"], \
+      \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\",\"sources_to_targets\",\"optimized_route\" ], \
                   \"logging\": { \"long_request\": 100.0 }, \
                   \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
       \"thor\": { \"service\": { \"proxy\": \"ipc:///tmp/test_thor_proxy\" } }, \
@@ -102,10 +116,8 @@ namespace {
         \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
         \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50, \
         \"min_transit_walking_distance\": 1, \"max_transit_walking_distance\": 10000 }, \
-        \"one_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
-        \"many_to_one\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
-        \"many_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
-        \"optimized_order_route\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
+        \"sources_to_targets\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
+        \"optimized_route\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
         \"isochrone\": { \"max_contours\": 4, \"max_time\": 120, \"max_locations\": 1}, \
         \"max_shape\": 750000,\
         \"min_resample\": 10.0 \

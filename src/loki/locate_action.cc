@@ -122,7 +122,21 @@ namespace {
 namespace valhalla {
   namespace loki {
 
+    void loki_worker_t::init_locate(const boost::property_tree::ptree& request) {
+      location_parser(request);
+      if(locations.size() < 1)
+        throw std::runtime_error("Insufficient number of locations provided");
+      auto costing = request.get_optional<std::string>("costing");
+      if (costing)
+        determine_costing_options(request);
+      else {
+        edge_filter = loki::PassThroughEdgeFilter;
+        node_filter = loki::PassThroughNodeFilter;
+      }
+    }
+
     worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       auto verbose = request.get<bool>("verbose", false);

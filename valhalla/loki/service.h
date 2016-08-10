@@ -8,7 +8,6 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
-
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
@@ -21,12 +20,17 @@ namespace valhalla {
 
     class loki_worker_t {
      public:
-      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, OPTIMIZED_ROUTE, ISOCHRONE};
+      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, SOURCES_TO_TARGETS, OPTIMIZED_ROUTE, ISOCHRONE};
+      void location_parser(const boost::property_tree::ptree& request);
+      void determine_costing_options(const boost::property_tree::ptree& request);
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void cleanup();
      protected:
-      void init_request(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void init_locate(const boost::property_tree::ptree& request);
+      void init_route(const boost::property_tree::ptree& request);
+      void init_matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request);
+      void init_isochrones(const boost::property_tree::ptree& request);
       prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
@@ -34,6 +38,8 @@ namespace valhalla {
 
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
+      std::vector<baldr::Location> sources;
+      std::vector<baldr::Location> targets;
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter edge_filter;
       sif::NodeFilter node_filter;

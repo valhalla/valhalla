@@ -36,13 +36,20 @@ namespace {
       valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
   }
-
 }
 
 namespace valhalla {
   namespace loki {
 
+    void loki_worker_t::init_route(const boost::property_tree::ptree& request) {
+      location_parser(request);
+      if(locations.size() < 2)
+        throw std::runtime_error("Insufficient number of locations provided");
+      determine_costing_options(request);
+    }
+
     worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_route(request);
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);
       check_distance(reader, locations, max_distance.find(costing)->second);
