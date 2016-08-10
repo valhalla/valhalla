@@ -134,8 +134,8 @@ namespace valhalla {
       }
     }
 
-    worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      init_locate(action->second, request_pt);
+    worker_t::result_t loki_worker_t::locate(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_locate(action, request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       auto verbose = request.get<bool>("verbose", false);

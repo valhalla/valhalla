@@ -143,7 +143,7 @@ namespace valhalla {
   }
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      init_matrix(action->second, request_pt);
+      init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal") {
         http_response_t response(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing",  headers_t{CORS});

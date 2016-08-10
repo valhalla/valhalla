@@ -36,8 +36,8 @@ namespace valhalla {
     determine_costing_options(request);
   }
 
-    worker_t::result_t loki_worker_t::isochrones(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      init_isochrones(action->second, request_pt);
+    worker_t::result_t loki_worker_t::isochrones(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+      init_isochrones(action, request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
         throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find("isochrone")->second) + ".");

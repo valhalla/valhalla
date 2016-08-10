@@ -124,7 +124,7 @@ namespace valhalla {
 
     }
 
-    void loki_worker_t::determine_costing_options(boost::property_tree::ptree& request) {
+    void loki_worker_t::determine_costing_options(const boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
        auto costing = request.get_optional<std::string>("costing");
        if (costing)
@@ -237,29 +237,33 @@ namespace valhalla {
             return result;
         }
 
-        //parse the query's json
-        auto request_pt = from_request(action->second, request);
-        switch (action->second) {
-        case ROUTE:
-        case VIAROUTE:
-          return route(action->second, request_pt, info);
-        case LOCATE:
-          return locate(request_pt, info);
-        case ONE_TO_MANY:
-        case MANY_TO_ONE:
-        case MANY_TO_MANY:
-        case SOURCES_TO_TARGETS:
-        case OPTIMIZED_ROUTE:
-          return matrix(action->second, request_pt, info);
-        case ISOCHRONE:
-          return isochrones(request_pt, info);
-        }
-
         //apparently you wanted something that we figured we'd support but havent written yet
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+
+        //parse the query's json
+        auto request_pt = from_request(action->second, request);
+        switch (action->second) {
+        case ROUTE:
+        case VIAROUTE:
+          result = route(action->second, request_pt, info);
+          break;
+        case LOCATE:
+          result = locate(action->second, request_pt, info);
+          break;
+        case ONE_TO_MANY:
+        case MANY_TO_ONE:
+        case MANY_TO_MANY:
+        case SOURCES_TO_TARGETS:
+        case OPTIMIZED_ROUTE:
+          result = matrix(action->second, request_pt, info);
+          break;
+        case ISOCHRONE:
+          result = isochrones(action->second, request_pt, info);
+          break;
+        }
 
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
