@@ -247,7 +247,7 @@ namespace valhalla {
           result = route(action->second, request_pt, info);
           break;
         case LOCATE:
-          result = locate(action->second, request_pt, info);
+          result = locate(request_pt, info);
           break;
         case ONE_TO_MANY:
         case MANY_TO_ONE:
@@ -257,7 +257,7 @@ namespace valhalla {
           result = matrix(action->second, request_pt, info);
           break;
         case ISOCHRONE:
-          result = isochrones(action->second, request_pt, info);
+          result = isochrones(request_pt, info);
           break;
         }
 
