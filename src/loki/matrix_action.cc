@@ -52,11 +52,11 @@ namespace {
         if (path_distance >= max_location_distance) {
           max_location_distance = path_distance;
           LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
-       }
+        }
 
-       if (path_distance > matrix_max_distance)
-         throw std::runtime_error("Path distance exceeds the max distance limit");
-       }
+        if (path_distance > matrix_max_distance)
+          throw std::runtime_error("Path distance exceeds the max distance limit");
+        }
      }
   }
 }
@@ -79,8 +79,8 @@ namespace valhalla {
       //if MATRIX OR OPTIMIZED and not using sources & targets parameters
       //deprecated way of specifying
       if (!request_sources && !request_targets) {
-       if (request_locations->size() < 2)
-         throw std::runtime_error("Insufficient number of locations provided");
+        if (request_locations->size() < 2)
+          throw std::runtime_error("Insufficient number of locations provided");
 
         //create new sources and targets ptree from locations
         boost::property_tree::ptree sources_child, targets_child;
