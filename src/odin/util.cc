@@ -109,32 +109,23 @@ std::string get_localized_time(const std::string& date_time,
                                const std::locale& locale) {
   if (date_time.find("T") == std::string::npos) return "";
 
-  std::string datetime;
-  std::size_t found = date_time.find_last_of("+"); // remove tz offset
-  if (found != std::string::npos)
-    datetime = date_time.substr(0,found);
-  else {
-    found = date_time.find_last_of("-"); // remove tz offset
-    if (found != std::string::npos)
-      datetime = date_time.substr(0,found);
-    else return "";
-  }
-
-  std::string time = datetime;
+  std::string time = date_time;
   try {
     // formatting for in and output
-    std::locale in_locale(std::locale::classic(), new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M"));
+    std::locale in_locale(std::locale::classic(), new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M%ZP"));
     std::stringstream in_stream; in_stream.imbue(in_locale);
-    std::locale out_locale(locale, new boost::posix_time::time_facet("%X"));
+    std::locale out_locale(locale, new boost::local_time::local_time_facet("%X"));
     std::stringstream out_stream; out_stream.imbue(out_locale);
 
-    //parse the input
-    boost::posix_time::ptime pt;
-    in_stream.str(datetime);
-    in_stream >> pt;
+    // This is our output date time.
+    boost::local_time::local_date_time ldt(boost::local_time::not_a_date_time);
+
+     // Read the timestamp into ldt.
+    in_stream.str(date_time);
+    in_stream >> ldt;
 
     //format the output
-    out_stream << pt;
+    out_stream << ldt;
     time = out_stream.str();
 
     //seconds is too granular so we try to remove
@@ -153,9 +144,21 @@ std::string get_localized_time(const std::string& date_time,
       if (time.substr(0, 1) == "0")
         time = time.substr(1, time.size());
     }
+    boost::algorithm::trim(time);
+
+    // Add the timezone abbreviation to the time.
+    // TODO: when we support right to left languages, we need to handle the
+    // placement of the timezone.
+    std::locale tz_out_locale(locale, new boost::local_time::local_time_facet("%z"));
+    std::stringstream tz_out_stream; tz_out_stream.imbue(tz_out_locale);
+
+    //format the output
+    tz_out_stream << ldt;
+    if (!out_stream.str().empty())
+      time += " " + tz_out_stream.str();
+
   } catch (std::exception&) { return ""; }
 
-  boost::algorithm::trim(time);
   return time;
 }
 
@@ -165,29 +168,18 @@ std::string get_localized_date(const std::string& date_time,
                                const std::locale& locale) {
   if (date_time.find("T") == std::string::npos) return "";
 
-  std::string datetime;
-  std::size_t found = date_time.find_last_of("+"); // remove tz offset
-  if (found != std::string::npos)
-    datetime = date_time.substr(0,found);
-  else {
-    found = date_time.find_last_of("-"); // remove tz offset
-    if (found != std::string::npos)
-      datetime = date_time.substr(0,found);
-    else return "";
-  }
-
-  std::string date = datetime;
+  std::string date = date_time;
   try {
 
     // formatting for in and output
-    std::locale in_locale(std::locale::classic(), new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M"));
+    std::locale in_locale(std::locale::classic(), new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M%ZP"));
     std::stringstream in_stream; in_stream.imbue(in_locale);
     std::locale out_locale(locale, new boost::posix_time::time_facet("%x"));
     std::stringstream out_stream; out_stream.imbue(out_locale);
 
     //parse the input
     boost::posix_time::ptime pt;
-    in_stream.str(datetime);
+    in_stream.str(date);
     in_stream >> pt;
 
     //format the output
