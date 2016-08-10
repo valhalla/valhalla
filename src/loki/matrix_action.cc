@@ -64,83 +64,83 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-  void loki_worker_t::init_matrix(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
-    auto request_locations = request.get_child_optional("locations");
-    auto request_sources = request.get_child_optional("sources");
-    auto request_targets = request.get_child_optional("targets");
+    void loki_worker_t::init_matrix(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
+      auto request_locations = request.get_child_optional("locations");
+      auto request_sources = request.get_child_optional("sources");
+      auto request_targets = request.get_child_optional("targets");
 
-    //we require locations
-    if (!request_locations) {
-      if (!request_sources || !request_targets) {
-        throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+      //we require locations
+      if (!request_locations) {
+        if (!request_sources || !request_targets) {
+          throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+        }
       }
+
+      //if MATRIX OR OPTIMIZED and not using sources & targets parameters
+      //deprecated way of specifying
+      if (!request_sources && !request_targets) {
+       if (request_locations->size() < 2)
+         throw std::runtime_error("Insufficient number of locations provided");
+
+        //create new sources and targets ptree from locations
+        boost::property_tree::ptree sources_child, targets_child;
+        switch (action) {
+          case ONE_TO_MANY:
+            sources_child.push_back(request_locations->front());
+            for(const auto& reqloc : *request_locations)
+              targets_child.push_back(reqloc);
+
+            break;
+          case MANY_TO_ONE:
+            for(const auto& reqloc : *request_locations)
+              sources_child.push_back(reqloc);
+
+            targets_child.push_back(request_locations->back());
+            break;
+          case MANY_TO_MANY:
+          case OPTIMIZED_ROUTE:
+            for(const auto& reqloc : *request_locations) {
+              sources_child.push_back(reqloc);
+              targets_child.push_back(reqloc);
+            }
+            break;
+        }
+        //add these back in the original request (in addition to locations while being deprecated
+        request.add_child("sources", sources_child);
+        request.add_child("targets", targets_child);
+        request_sources = request.get_child("sources");
+        request_targets = request.get_child("targets");
+
+      }
+      for(const auto& source : *request_sources) {
+        try{
+          sources.push_back(baldr::Location::FromPtree(source.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse source");
+        }
+      }
+      for(const auto& target : *request_targets) {
+        try{
+          targets.push_back(baldr::Location::FromPtree(target.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse target");
+        }
+      }
+      if(sources.size() < 1)
+         throw std::runtime_error("Insufficient number of sources provided");
+      valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+
+      if(targets.size() < 1)
+        throw std::runtime_error("Insufficient number of targets provided");
+      valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+
+      //no locations!
+      request.erase("locations");
+
+      determine_costing_options(request);
     }
-
-    //if MATRIX OR OPTIMIZED and not using sources & targets parameters
-    //deprecated way of specifying
-    if (!request_sources && !request_targets) {
-     if (request_locations->size() < 2)
-       throw std::runtime_error("Insufficient number of locations provided");
-
-      //create new sources and targets ptree from locations
-      boost::property_tree::ptree sources_child, targets_child;
-      switch (action) {
-        case ONE_TO_MANY:
-          sources_child.push_back(request_locations->front());
-          for(const auto& reqloc : *request_locations)
-            targets_child.push_back(reqloc);
-
-          break;
-        case MANY_TO_ONE:
-          for(const auto& reqloc : *request_locations)
-            sources_child.push_back(reqloc);
-
-          targets_child.push_back(request_locations->back());
-          break;
-        case MANY_TO_MANY:
-        case OPTIMIZED_ROUTE:
-          for(const auto& reqloc : *request_locations) {
-            sources_child.push_back(reqloc);
-            targets_child.push_back(reqloc);
-          }
-          break;
-      }
-      //add these back in the original request (in addition to locations while being deprecated
-      request.add_child("sources", sources_child);
-      request.add_child("targets", targets_child);
-      request_sources = request.get_child("sources");
-      request_targets = request.get_child("targets");
-
-    }
-    for(const auto& source : *request_sources) {
-      try{
-        sources.push_back(baldr::Location::FromPtree(source.second));
-      }
-      catch (...) {
-        throw std::runtime_error("Failed to parse source");
-      }
-    }
-    for(const auto& target : *request_targets) {
-      try{
-        targets.push_back(baldr::Location::FromPtree(target.second));
-      }
-      catch (...) {
-        throw std::runtime_error("Failed to parse target");
-      }
-    }
-    if(sources.size() < 1)
-       throw std::runtime_error("Insufficient number of sources provided");
-    valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
-
-    if(targets.size() < 1)
-      throw std::runtime_error("Insufficient number of targets provided");
-    valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
-
-    //no locations!
-    request.erase("locations");
-
-    determine_costing_options(request);
-  }
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       init_matrix(action, request);
