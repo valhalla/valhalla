@@ -1174,6 +1174,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
       // Set the intersection type
       if (nodeinfo.edge_count() == 1) {
+        // TODO - does this need to be a count of driveable edges
+        // (e.g. a node that has 1 driveable edge and a walkway?)
         nodeinfo.set_intersection(IntersectionType::kDeadEnd);
       } else if (nodeinfo.edge_count() == 2) {
         if (nodeinfo.type() == NodeType::kGate ||
