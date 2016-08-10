@@ -142,7 +142,7 @@ namespace valhalla {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if (!request_info.do_not_track && ((elapsed_time.count() / correlated_s.size()) || elapsed_time.count() / correlated_t.size()) > long_request) {
+      if (!request_info.do_not_track && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
