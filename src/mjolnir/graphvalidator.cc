@@ -78,7 +78,8 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
                               uint64_t wayid, const GraphTile* tile, const GraphTile* end_tile,
-                              uint32_t& dupcount, std::string& endnodeiso) {
+                              uint32_t& dupcount, std::string& endnodeiso,
+                              bool& deadend) {
 
   if (!end_tile) {
     LOG_WARN("End tile invalid.")
@@ -91,6 +92,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 
   // Set the end node iso.  Used for country crossings.
   endnodeiso = end_tile->admin(nodeinfo->admin_index())->country_iso();
+
+  // Set the deadend flag (TODO - do we need to worry about driveability)
+  deadend = nodeinfo->intersection() == IntersectionType::kDeadEnd;
 
   // Get the directed edges and return when the end node matches
   // the specified node and length / transit attributes matches
@@ -363,12 +367,14 @@ void validate(const boost::property_tree::ptree& pt,
 
           // Set the opposing edge index and get the country ISO at the
           // end node)
+          bool deadend = false;
           std::string end_node_iso;
           uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
                  0 : tile->edgeinfo(directededge.edgeinfo_offset())->wayid();
           uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
-                                                    wayid, tile, endnode_tile, dupcount, end_node_iso);
+                 wayid, tile, endnode_tile, dupcount, end_node_iso, deadend);
           directededge.set_opp_index(opp_index);
+          directededge.set_deadend(deadend);
 
           if (directededge.use() == Use::kTransitConnection)
               directededge.set_opp_local_idx(opp_index);
