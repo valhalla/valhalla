@@ -353,17 +353,8 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
         );
   }
   // Add all unroutable nodes to the json array
+  auto hasher = std::hash<PointLL>();
   for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
-    uint64_t hash;
-    float* lat = new float;
-    float* lng = new float;
-    *lat = it->lat();
-    *lng = it->lng();
-    if (*lat > *lng) {
-      hash = *(reinterpret_cast<uint64_t*>(lat))<<32 | *(reinterpret_cast<uint64_t*>(lng));
-    }
-    delete lat;
-    delete lng;
     tasks->emplace_back(
         json::map
          ({
@@ -377,7 +368,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
           {"properties", json::map
            ({
             {"type", std::string("Node")},
-            {"key", hash}
+            {"key", hasher(*it)}
            })},
           {"type", std::string("Feature")}
          })
@@ -387,7 +378,16 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   json::MapPtr geo_json = json::map
     ({
      {"type", std::string("FeatureCollection")},
-     {"features", tasks}
+     {"features", tasks},
+     {"properties", json::map
+       ({
+        {"instructions", json::map
+         ({
+          {"Loop", std::string("This one way road loops back on itself. Edit it so that the raod is properly accessible")},
+          {"Node", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
+         })}
+       })
+     }
     });
   // write out to a file
   if (boost::filesystem::exists("maproulette_tasks.geojson"))

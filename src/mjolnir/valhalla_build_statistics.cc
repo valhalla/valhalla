@@ -46,43 +46,6 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsPedestrianTerminal(const GraphTile &tile, GraphReader& reader,
-                const GraphId& startnode,
-                const NodeInfo& startnodeinfo,
-                const DirectedEdge& directededge,
-                statistics::RouletteData& rd,
-                const uint32_t idx) {
-
-  bool is_terminal = true;
-  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
-  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
-
-    if (i == idx)
-      continue;
-
-    if (((diredge->reverseaccess() & kPedestrianAccess) ||
-        (diredge->forwardaccess() & kPedestrianAccess)) &&
-        (!(diredge->forwardaccess() & kAutoAccess) &&
-          !(diredge->reverseaccess() & kAutoAccess))){
-      continue;
-    }
-    else {
-      is_terminal = false;
-      break;
-    }
-  }
-
-  if (is_terminal) {
-    if (startnodeinfo.edge_count() > 1 && directededge.length() > 50) {
-      rd.AddTask(AABB2<PointLL>(tile.edgeinfo(directededge.edgeinfo_offset())->shape()),
-                 tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
-                 tile.edgeinfo(directededge.edgeinfo_offset())->shape());
-      return true;
-    }
-  }
-  return false;
-}
-
 bool IsLoopTerminal(const GraphTile &tile, GraphReader& reader,
                 const GraphId& startnode,
                 const NodeInfo& startnodeinfo,

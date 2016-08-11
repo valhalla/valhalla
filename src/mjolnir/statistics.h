@@ -105,25 +105,10 @@ class statistics {
 public:
 
   struct RouletteData {
-    struct pointHash {
-      std::size_t operator()(const PointLL& p) const {
-        uint64_t hash;
-        float* lat = new float;
-        float* lng = new float;
-        *lat = p.lat();
-        *lng = p.lng();
-        if (*lat > *lng) {
-          hash = *(reinterpret_cast<uint64_t*>(lat))<<32 | *(reinterpret_cast<uint64_t*>(lng));
-        }
-        delete lat;
-        delete lng;
-        return hash;
-      }
-    };
     std::unordered_map<uint64_t, AABB2<PointLL> > shape_bb;;
     std::unordered_map<uint64_t, std::vector<PointLL> > way_shapes;
     std::unordered_set<uint64_t> way_IDs;
-    std::unordered_set<PointLL, pointHash> unroutable_nodes;
+    std::unordered_set<PointLL, std::hash<PointLL>> unroutable_nodes;
 
     RouletteData ();
 
