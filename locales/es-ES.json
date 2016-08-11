@@ -1,5 +1,6 @@
 {
-  "posix_locale": "es_ES.utf8",
+  "posix_locale": "es_ES.UTF-8",
+  "aliases": ["es"],
   "instructions": {
     "start": {
       "phrases": {
@@ -128,7 +129,7 @@
         "0": ["Vine Street cambia de nombre a Middletown Road."]
       }
     },
-    "Continuar": {
+    "continue": {
       "phrases": {
         "0": "Continuar.",
         "1": "Continuar en <STREET_NAMES>."
@@ -139,7 +140,7 @@
         "1": ["Continuar en 10th Avenue."]
       }
     },
-    "Continuar_verbal_alert": {
+    "continue_verbal_alert": {
       "phrases": {
         "0": "Continuar.",
         "1": "Continuar en <STREET_NAMES>."
@@ -150,7 +151,7 @@
         "1": ["Continuar en 10th Avenue."]
       }
     },
-    "Continuar_verbal": {
+    "continue_verbal": {
       "phrases": {
         "0": "Continuar por <LENGTH>.",
         "1": "Continuar en <STREET_NAMES> por <LENGTH>."
@@ -299,7 +300,7 @@
         "5": ["Hacer un giro en U a la izquierda en Devonshire Road para quedar en Jonestown Road, U.S. 22."]
       }
     },
-    "ramp_derecho": {
+    "ramp_straight": {
       "phrases": {
         "0": "Siga derecho para tomar el repecho.",
         "1": "Siga derecho para tomar la <BRANCH_SIGN> del repecho.",
@@ -315,7 +316,7 @@
         "4": ["Siga derecho para tomar el repecho de Gettysburg Pike."]
       }
     },
-    "ramp_derecho_verbal": {
+    "ramp_straight_verbal": {
       "phrases": {
         "0": "Siga derecho para tomar el repecho.",
         "1": "Siga derecho para tomar el repecho <BRANCH_SIGN>.",
@@ -633,13 +634,13 @@
         "2": ["Tomar el Ferry Bridgeport - Port Jefferson."]
       }
     },
-    "enter_fe rry_verbal": {
+    "enter_ferry_verbal": {
       "phrases": {
         "0": "Tomar el Ferry.",
         "1": "Tomar el <STREET_NAMES>.",
         "2": "Tomar el <FERRY_LABEL> <STREET_NAMES>."
       },
-      "empt_street_name_labels": ["la acera", "la ciclovía", "el sendero de bicicleta de montaña"],
+      "empty_street_name_labels": ["la acera", "la ciclovía", "el sendero de bicicleta de montaña"],
       "ferry_label": "Ferry",
       "example_phrases": {
         "0": ["Tomar el Ferry."],
@@ -717,7 +718,7 @@
         "1": "Entrar en <TRANSIT_STOP>.",
         "2": "Enter en <TRANSIT_STOP> <Estación_LABEL>."
       },
-      "Estación_label": "Estación",
+      "station_label": "Estación",
       "example_phrases": {
         "0": ["Entrar en la estación."],
         "1": ["Entrar en la estación de Embarcadero."],
@@ -730,33 +731,33 @@
         "1": "Entrar en <TRANSIT_STOP>.",
         "2": "Entrar en <TRANSIT_STOP> <Estación_LABEL>."
       },
-      "Estación_label": "Estación",
+      "station_label": "Estación",
       "example_phrases": {
         "0": ["Entrar en la estación."],
         "1": ["Entrar en la estación Embarcadero."],
         "2": ["Entrar en la 8 St - NYU Estación."]
       }
     },
-    "transit_connection_Trasladarse": {
+    "transit_connection_transfer": {
       "phrases": {
         "0": "Trasladarse a la Estación.",
         "1": "Trasladarse a la <TRANSIT_STOP>.",
         "2": "Trasladarse a la <Estación_LABEL> <TRANSIT_STOP>."
       },
-      "Estación_label": "Estación",
+      "station_label": "Estación",
       "example_phrases": {
         "0": ["Trasladarse a la Estación."],
         "1": ["Trasladarse a la Embarcadero Estación."],
         "2": ["Trasladarse a la 8 St - Estación NYU."]
       }
     },
-    "transit_connection_Trasladarse_verbal": {
+    "transit_connection_transfer_verbal": {
       "phrases": {
         "0": "Trasladarse a la Estación.",
         "1": "Trasladarse a la <TRANSIT_STOP>.",
         "2": "Trasladarse a la <Estación_LABEL> <TRANSIT_STOP>."
       },
-      "Estación_label": "Estación",
+      "station_label": "Estación",
       "example_phrases": {
         "0": ["Trasladarse a la Estación."],
         "1": ["Trasladarse a la Estación Embarcadero."],
@@ -769,7 +770,7 @@
         "1": "Salir de <TRANSIT_STOP>.",
         "2": "Salir de <Estación_LABEL> <TRANSIT_STOP>."
       },
-      "Estación_label": "Estación",
+      "station_label": "Estación",
       "example_phrases": {
         "0": ["Salir de la Estación."],
         "1": ["Salir de la Estación Embarcadero."],
@@ -782,7 +783,7 @@
         "1": "Salir de <TRANSIT_STOP>.",
         "2": "Salir de la <Estación_LABEL> <TRANSIT_STOP>."
       },
-      "Estación_label": "Estación",
+      "station_label": "Estación",
       "example_phrases": {
         "0": ["Salir de la Estación."],
         "1": ["Salir de la Estación Embarcadero."],
@@ -875,7 +876,7 @@
         "1": ["Permanecer en F toward JAMAICA - 179 ST."]
       }
     },
-    "transit_Trasladarse": {
+    "transit_transfer": {
       "phrases": {
         "0": "Trasladarse para tomar la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Trasladarse para tomar la <TRANSIT_NAME> toward <TRANSIT_DirigirseSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
@@ -887,7 +888,7 @@
         "1": ["Trasladarse para tomar F toward JAMAICA - 179 ST. (10 paradas)"]
       }
     },
-    "transit_Trasladarse_verbal": {
+    "transit_transfer_verbal": {
       "phrases": {
         "0": "Trasladarse para tomar la <TRANSIT_NAME>.",
         "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_DirigirseSIGN>."
@@ -992,6 +993,6 @@
         "0": ["Girar levemente a la derecha en East Fayette Street. Después doble a la derecha en North Gay Street."]
       }
     }
-
   }
 }
+
