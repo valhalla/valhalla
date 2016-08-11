@@ -8,13 +8,13 @@ sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config cma
 
 #clone async
 mkdir -p deps
-for dep in midgard baldr sif odin; do
+for dep in midgard baldr sif meili odin; do
 	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep &
 done
 wait
 
 #build sync
-for dep in midgard baldr sif odin; do
+for dep in midgard baldr sif meili odin; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"

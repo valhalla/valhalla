@@ -29,15 +29,20 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-  worker_t::result_t thor_worker_t::trip_path(const std::string &costing, const std::string &request_str, const boost::optional<int> &date_time_type, const bool header_dnt){
+  worker_t::result_t thor_worker_t::route(const boost::property_tree::ptree& request, const std::string &request_str, const boost::optional<int> &date_time_type, const bool header_dnt){
+    parse_locations(request);
+    auto costing = parse_costing(request);
+
     worker_t::result_t result{true};
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     // Forward the original request
     result.messages.emplace_back(request_str);
 
-    auto trippaths = (date_time_type && *date_time_type == 2) ? path_arrive_by(correlated, costing, request_str) : path_depart_from(correlated, costing, date_time_type, request_str);
-    for (const auto &trippath: trippaths){
+    auto trippaths = (date_time_type && *date_time_type == 2) ?
+        path_arrive_by(correlated, costing, request_str) :
+        path_depart_at(correlated, costing, date_time_type, request_str);
+    for (const auto &trippath: trippaths) {
       result.messages.emplace_back(trippath.SerializeAsString());
     }
     //get processing time for thor
@@ -50,6 +55,55 @@ namespace valhalla {
      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
     }
     return result;
+  }
+
+  /**
+   * Update the origin edges for a through location.
+   */
+  void thor_worker_t::update_origin(baldr::PathLocation& origin, bool prior_is_node,
+                    const baldr::GraphId& through_edge) {
+    if (prior_is_node) {
+      // TODO - remove the opposing through edge from list of edges unless
+      // all outbound edges are entering noth_thru regions.
+      // For now allow all edges
+    } else {
+      // Check if the edge is entering a not_thru region - if so do not
+      // exclude the opposing edge
+      const DirectedEdge* de = reader.GetGraphTile(through_edge)->directededge(through_edge);
+      if (de->not_thru()) {
+        return;
+      }
+
+      // Check if the through edge is dist = 1 (through point is at a node)
+      bool ends_at_node = false;;
+      for (const auto& e : origin.edges) {
+        if (e.id == through_edge) {
+          if (e.end_node()) {
+            ends_at_node = true;
+            break;
+          }
+        }
+      }
+
+      // Special case if location is at the end of a through edge
+      if (ends_at_node) {
+        // Erase the through edge and its opposing edge (if in the list)
+        // from the origin edges
+        auto opp_edge = reader.GetOpposingEdgeId(through_edge);
+        std::remove_if(origin.edges.begin(), origin.edges.end(),
+           [&through_edge, &opp_edge](const PathLocation::PathEdge& edge) {
+              return edge.id == through_edge || edge.id == opp_edge; });
+      } else {
+        // Set the origin edge to the through_edge.
+        for (auto e : origin.edges) {
+          if (e.id == through_edge) {
+            origin.edges.clear();
+            origin.edges.push_back(e);
+            break;
+          }
+        }
+      }
+    }
   }
 
   thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
@@ -69,6 +123,39 @@ namespace valhalla {
         }
       }
       return &bidir_astar;
+    }
+  }
+
+  void thor_worker_t::get_path(PathAlgorithm* path_algorithm,
+               baldr::PathLocation& origin, baldr::PathLocation& destination,
+               std::vector<thor::PathInfo>& path_edges) {
+    midgard::logging::Log("#_passes::1", " [ANALYTICS] ");
+    // Find the path.
+    path_edges = path_algorithm->GetBestPath(origin, destination, reader,
+                                             mode_costing, mode);
+    // If path is not found try again with relaxed limits (if allowed)
+    if (path_edges.size() == 0) {
+      valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+      if (cost->AllowMultiPass()) {
+        // 2nd pass. Less aggressive hierarchy transitioning
+        path_algorithm->Clear();
+        bool using_astar = (path_algorithm == &astar);
+        float relax_factor = using_astar ? 16.0f : 8.0f;
+        float expansion_within_factor = using_astar ? 4.0f : 2.0f;
+        cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
+        midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
+        path_edges = path_algorithm->GetBestPath(origin, destination,
+                                  reader, mode_costing, mode);
+
+        // 3rd pass (only for A*)
+        if (path_edges.size() == 0 && using_astar) {
+          path_algorithm->Clear();
+          cost->DisableHighwayTransitions();
+          midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
+          path_edges = path_algorithm->GetBestPath(origin, destination,
+                                   reader, mode_costing, mode);
+        }
+      }
     }
   }
 
@@ -171,7 +258,7 @@ namespace valhalla {
     return trippaths;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_from(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str) {
     //get time for start of request
     auto s = std::chrono::system_clock::now();
     bool prior_is_node = false;

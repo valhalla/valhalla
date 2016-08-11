@@ -8,9 +8,9 @@ using namespace prime_server;
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
-#include <valhalla/thor/costmatrix.h>
 
 #include "thor/service.h"
+#include "thor/costmatrix.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -20,9 +20,9 @@ using namespace valhalla::thor;
 
 namespace std {
   template <>
-  struct hash<thor_worker_t::MATRIX_TYPE>
+  struct hash<thor_worker_t::ACTION_TYPE>
   {
-    std::size_t operator()(const thor_worker_t::MATRIX_TYPE& a) const {
+    std::size_t operator()(const thor_worker_t::ACTION_TYPE& a) const {
       return std::hash<int>()(a);
     }
   };
@@ -30,19 +30,14 @@ namespace std {
 
 namespace {
 
-  const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX {
-    {"one_to_many", thor_worker_t::ONE_TO_MANY},
-    {"many_to_one", thor_worker_t::MANY_TO_ONE},
-    {"many_to_many", thor_worker_t::MANY_TO_MANY},
-    {"sources_to_targets", thor_worker_t::SOURCES_TO_TARGETS}
-  };
-
-  const std::unordered_map<thor_worker_t::MATRIX_TYPE, std::string> ACTION_TO_STRING {
+  const std::unordered_map<thor_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
      {thor_worker_t::ONE_TO_MANY, "one_to_many"},
      {thor_worker_t::MANY_TO_ONE, "many_to_one"},
      {thor_worker_t::MANY_TO_MANY, "many_to_many"},
-     {thor_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"}
+     {thor_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
+     {thor_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
    };
+
 
   constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -113,12 +108,17 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+    worker_t::result_t  thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      parse_locations(request);
+      parse_costing(request);
+
+      const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
+      valhalla::midgard::logging::Log("matrix_type::" + matrix_type, " [ANALYTICS] ");
+
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
-      auto matrix_action_type = request.get_optional<std::string>("matrix_type");
       auto units = request.get<std::string>("units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
@@ -126,7 +126,7 @@ namespace valhalla {
       json::MapPtr json;
       //do the real work
       thor::CostMatrix costmatrix;
-      json = serialize(ACTION_TO_STRING.find(matrix_type)->second, request.get_optional<std::string>("id"), correlated_s, correlated_t,
+      json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
         costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode), units, distance_scale);
 
       //jsonp callback if need be
@@ -145,9 +145,9 @@ namespace valhalla {
       if (!request_info.do_not_track && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::" + *matrix_action_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::" + *matrix_action_type + " matrix request exceeded threshold::"+ ss.str());
-        (matrix_type!=MATRIX_TYPE::MANY_TO_MANY) ? midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ") : midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");
+        LOG_WARN("thor::" + matrix_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
       }
 
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
@@ -156,6 +156,5 @@ namespace valhalla {
       result.messages.emplace_back(response.to_string());
       return result;
     }
-
   }
 }

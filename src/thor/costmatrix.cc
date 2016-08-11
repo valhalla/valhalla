@@ -143,7 +143,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // Form the time, distance matrix from the destinations list
   uint32_t idx = 0;
   std::vector<TimeDistance> td;
-  for (auto& connection : best_connection_) {
+  for (const auto& connection : best_connection_) {
     td.emplace_back(std::round(connection.cost.secs),
                     std::round(connection.distance));
     idx++;

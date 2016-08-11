@@ -19,24 +19,15 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-
-  const std::unordered_map<std::string, thor_worker_t::MATRIX_TYPE> MATRIX{
-    {"one_to_many", thor_worker_t::ONE_TO_MANY},
-    {"many_to_one", thor_worker_t::MANY_TO_ONE},
-    {"many_to_many", thor_worker_t::MANY_TO_MANY},
-    {"sources_to_targets", thor_worker_t::SOURCES_TO_TARGETS},
-    {"optimized_route", thor_worker_t::OPTIMIZED_ROUTE}
-  };
-
-  std::size_t tdindex = 0;
   constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, std::vector<baldr::Location> locations) {
+  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
     //we require correlated locations
     std::vector<baldr::PathLocation> correlated;
+    correlated.reserve(locations.size());
     size_t i = 0;
     do {
       auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
@@ -103,58 +94,26 @@ namespace valhalla {
         }
 
         // Initialize request - get the PathALgorithm to use
-        std::string costing = init_request(request);
-        auto date_time_type = request.get_optional<int>("date_time.type");
-        auto matrix_type = request.get_optional<std::string>("matrix_type");
-        if (matrix_type) {
-          auto matrix_iter = MATRIX.find(*matrix_type);
-          if (matrix_iter == MATRIX.cend())
-            throw std::runtime_error("Incorrect type provided:: " + *matrix_type + "  Accepted types are 'one_to_many', 'many_to_one', 'many_to_many' or 'optimized_route'.");
-
-          //which is it?
-          switch (matrix_iter->second) {
-            case ONE_TO_MANY:
-            case MANY_TO_ONE:
-            case MANY_TO_MANY:
-            case SOURCES_TO_TARGETS:
-              valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-              return matrix(matrix_iter->second, costing, request, info);
-            case OPTIMIZED_ROUTE:
-              valhalla::midgard::logging::Log("matrix_type::" + *matrix_type, " [ANALYTICS] ");
-              return optimized_path(correlated_s, correlated_t, costing, request_str, info.do_not_track);
-          }
-        }//TODO: move isochrones logic to separate file
-        else if(request.get_optional<bool>("isochrone")) {
-          std::vector<float> contours;
-          std::vector<std::string> colors;
-          for(const auto& contour : request.get_child("contours")) {
-            contours.push_back(contour.second.get<float>("time"));
-            colors.push_back(contour.second.get<std::string>("color", ""));
-          }
-
-          //get the raster
-          auto grid = costing == "multimodal" ?
-            isochrone.ComputeMultiModal(correlated, contours.back(), reader, mode_costing, mode) :
-            isochrone.Compute(correlated, contours.back(), reader, mode_costing, mode);
-
-          //turn it into geojson
-          auto isolines = grid->GenerateContours(contours);
-          auto geojson = baldr::json::to_geojson<PointLL>(isolines, colors);
-          auto id = request.get_optional<std::string>("id");
-          if(id)
-            geojson->emplace("id", *id);
-          std::stringstream stream; stream << *geojson;
-
-          //return the geojson
-          worker_t::result_t result{false};
-          http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
+        ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
+        //what action is it
+        switch (action) {
+          case ONE_TO_MANY:
+          case MANY_TO_ONE:
+          case MANY_TO_MANY:
+          case SOURCES_TO_TARGETS:
+            return matrix(action, request, info);
+          case OPTIMIZED_ROUTE:
+            return optimized_route(request, request_str, info.do_not_track);
+          case ISOCHRONE:
+            return isochrone(request, info);
+          case ROUTE:
+          case VIAROUTE:
+            return route(request, request_str, request.get_optional<int>("date_time.type"), info.do_not_track);
+          case ATTRIBUTES:
+            return attributes(request, info);
+          default:
+            throw std::runtime_error("Unknown action"); //this should never happen
         }
-
-        //regular route
-        return trip_path(costing, request_str, date_time_type, info.do_not_track);
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
@@ -163,88 +122,6 @@ namespace valhalla {
         result.messages.emplace_back(response.to_string());
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return result;
-      }
-    }
-
-    /**
-     * Update the origin edges for a through location.
-     */
-    void thor_worker_t::update_origin(baldr::PathLocation& origin, bool prior_is_node,
-                      const baldr::GraphId& through_edge) {
-      if (prior_is_node) {
-        // TODO - remove the opposing through edge from list of edges unless
-        // all outbound edges are entering noth_thru regions.
-        // For now allow all edges
-      } else {
-        // Check if the edge is entering a not_thru region - if so do not
-        // exclude the opposing edge
-        const DirectedEdge* de = reader.GetGraphTile(through_edge)->directededge(through_edge);
-        if (de->not_thru()) {
-          return;
-        }
-
-        // Check if the through edge is dist = 1 (through point is at a node)
-        bool ends_at_node = false;;
-        for (const auto& e : origin.edges) {
-          if (e.id == through_edge) {
-            if (e.end_node()) {
-              ends_at_node = true;
-              break;
-            }
-          }
-        }
-
-        // Special case if location is at the end of a through edge
-        if (ends_at_node) {
-          // Erase the through edge and its opposing edge (if in the list)
-          // from the origin edges
-          auto opp_edge = reader.GetOpposingEdgeId(through_edge);
-          std::remove_if(origin.edges.begin(), origin.edges.end(),
-             [&through_edge, &opp_edge](const PathLocation::PathEdge& edge) {
-                return edge.id == through_edge || edge.id == opp_edge; });
-        } else {
-          // Set the origin edge to the through_edge.
-          for (auto e : origin.edges) {
-            if (e.id == through_edge) {
-              origin.edges.clear();
-              origin.edges.push_back(e);
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    void thor_worker_t::get_path(PathAlgorithm* path_algorithm,
-                 baldr::PathLocation& origin, baldr::PathLocation& destination,
-                 std::vector<thor::PathInfo>& path_edges) {
-      midgard::logging::Log("#_passes::1", " [ANALYTICS] ");
-      // Find the path.
-      path_edges = path_algorithm->GetBestPath(origin, destination, reader,
-                                               mode_costing, mode);
-      // If path is not found try again with relaxed limits (if allowed)
-      if (path_edges.size() == 0) {
-        valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-        if (cost->AllowMultiPass()) {
-          // 2nd pass. Less aggressive hierarchy transitioning
-          path_algorithm->Clear();
-          bool using_astar = (path_algorithm == &astar);
-          float relax_factor = using_astar ? 16.0f : 8.0f;
-          float expansion_within_factor = using_astar ? 4.0f : 2.0f;
-          cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
-          midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
-          path_edges = path_algorithm->GetBestPath(origin, destination,
-                                    reader, mode_costing, mode);
-
-          // 3rd pass (only for A*)
-          if (path_edges.size() == 0 && using_astar) {
-            path_algorithm->Clear();
-            cost->DisableHighwayTransitions();
-            midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
-            path_edges = path_algorithm->GetBestPath(origin, destination,
-                                     reader, mode_costing, mode);
-          }
-        }
       }
     }
 
@@ -272,14 +149,29 @@ namespace valhalla {
       return factory.Create(costing, *config_costing);
     }
 
-    std::string thor_worker_t::init_request(const boost::property_tree::ptree& request) {
-      auto id = request.get_optional<std::string>("id");
-      // Parse out units; if none specified, use kilometers
-      double distance_scale = kKmPerMeter;
-      auto units = request.get<std::string>("units", "km");
-      if (units == "mi")
-        distance_scale = kMilePerMeter;
+    std::string thor_worker_t::parse_costing(const boost::property_tree::ptree& request) {
+      // Parse out the type of route - this provides the costing method to use
+      auto costing = request.get<std::string>("costing");
 
+      // Set travel mode and construct costing
+      if (costing == "multimodal") {
+        // For multi-modal we construct costing for all modes and set the
+        // initial mode to pedestrian. (TODO - allow other initial modes)
+        mode_costing[0] = get_costing(request, "auto");
+        mode_costing[1] = get_costing(request, "pedestrian");
+        mode_costing[2] = get_costing(request, "bicycle");
+        mode_costing[3] = get_costing(request, "transit");
+        mode = valhalla::sif::TravelMode::kPedestrian;
+      } else {
+        valhalla::sif::cost_ptr_t cost = get_costing(request, costing);
+        mode = cost->travelmode();
+        mode_costing[static_cast<uint32_t>(mode)] = cost;
+      }
+      valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)), " [ANALYTICS] ");
+      return costing;
+    }
+
+    void thor_worker_t::parse_locations(const boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       auto request_sources = request.get_child_optional("sources");
@@ -308,9 +200,6 @@ namespace valhalla {
       else
         throw std::runtime_error("Insufficiently specified required parameter 'locations'");
 
-      if(locations.size() < (request.get_optional<bool>("isochrone") ? 1 : 2))
-        throw std::runtime_error("Insufficient number of locations provided");
-
       //type - 0: current, 1: depart, 2: arrive
       auto date_time_type = request.get_optional<int>("date_time.type");
       auto date_time_value = request.get_optional<std::string>("date_time.value");
@@ -321,28 +210,6 @@ namespace valhalla {
         locations.front().date_time_ = date_time_value;
       else if (date_time_type == 2) //arrive)
         locations.back().date_time_ = date_time_value;
-
-      // Parse out the type of route - this provides the costing method to use
-      auto costing = request.get_optional<std::string>("costing");
-      if(!costing)
-        throw std::runtime_error("No edge/node costing provided");
-
-      // Set travel mode and construct costing
-      if (*costing == "multimodal") {
-        // For multi-modal we construct costing for all modes and set the
-        // initial mode to pedestrian. (TODO - allow other initial modes)
-        mode_costing[0] = get_costing(request, "auto");
-        mode_costing[1] = get_costing(request, "pedestrian");
-        mode_costing[2] = get_costing(request, "bicycle");
-        mode_costing[3] = get_costing(request, "transit");
-        mode = valhalla::sif::TravelMode::kPedestrian;
-      } else {
-        valhalla::sif::cost_ptr_t cost = get_costing(request, *costing);
-        mode = cost->travelmode();
-        mode_costing[static_cast<uint32_t>(mode)] = cost;
-      }
-      valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)), " [ANALYTICS] ");
-      return *costing;
     }
 
     void thor_worker_t::cleanup() {
@@ -353,7 +220,7 @@ namespace valhalla {
       correlated.clear();
       correlated_s.clear();
       correlated_t.clear();
-      isochrone.Clear();
+      isochrone_gen.Clear();
       if(reader.OverCommitted())
         reader.Clear();
     }
