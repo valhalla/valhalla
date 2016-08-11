@@ -10,9 +10,13 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_isochrones(const boost::property_tree::ptree& request) {
+      //strip off unused information
       parse_locations(request);
       if(locations.size() < 1)
         throw std::runtime_error("Insufficient number of locations provided");
+      for(auto& l : locations)
+        l.heading_.reset();
+
       //make sure the isoline definitions are valid
       auto contours = request.get_child_optional("contours");
       if(!contours)

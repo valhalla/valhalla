@@ -112,6 +112,7 @@ namespace valhalla {
       for(const auto& source : *request_sources) {
         try{
           sources.push_back(baldr::Location::FromPtree(source.second));
+          sources.back().heading_.reset();
         }
         catch (...) {
           throw std::runtime_error("Failed to parse source");
@@ -120,6 +121,7 @@ namespace valhalla {
       for(const auto& target : *request_targets) {
         try{
           targets.push_back(baldr::Location::FromPtree(target.second));
+          targets.back().heading_.reset();
         }
         catch (...) {
           throw std::runtime_error("Failed to parse target");
