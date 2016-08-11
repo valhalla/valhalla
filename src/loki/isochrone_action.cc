@@ -1,13 +1,7 @@
 #include "loki/service.h"
 #include "loki/search.h"
 
-#include <boost/property_tree/info_parser.hpp>
-
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
+#include <boost/property_tree/json_parser.hpp>
 
 using namespace prime_server;
 using namespace valhalla::baldr;
@@ -16,7 +10,7 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_isochrones(const boost::property_tree::ptree& request) {
-      location_parser(request);
+      parse_locations(request);
       if(locations.size() < 1)
         throw std::runtime_error("Insufficient number of locations provided");
       //make sure the isoline definitions are valid
@@ -35,7 +29,7 @@ namespace valhalla {
           throw std::runtime_error("Exceeded max time of " + std::to_string(max_time) + ".");
         prev = c;
       }
-      determine_costing_options(request);
+      parse_costing(request);
     }
 
     worker_t::result_t loki_worker_t::isochrones(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
@@ -50,8 +44,7 @@ namespace valhalla {
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
-      //let thor know this is isolines
-      request.put("isochrone", 1);
+      //pass it on
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};

@@ -3,11 +3,8 @@
 
 #include <boost/property_tree/info_parser.hpp>
 
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
 
 using namespace prime_server;
 using namespace valhalla::baldr;
@@ -42,13 +39,13 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_route(const boost::property_tree::ptree& request) {
-      location_parser(request);
+      parse_locations(request);
       if(locations.size() < 2)
         throw std::runtime_error("Insufficient number of locations provided");
-      determine_costing_options(request);
+      parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::route(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       init_route(request);
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);
@@ -141,10 +138,6 @@ namespace valhalla {
       }
       if(!connected)
         throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
-
-      //let tyr know if its valhalla or osrm format
-      if(action == loki_worker_t::VIAROUTE)
-        request.put("osrm", "compatibility");
 
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);

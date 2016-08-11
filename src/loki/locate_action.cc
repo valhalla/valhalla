@@ -1,12 +1,12 @@
 #include "loki/service.h"
 #include "loki/search.h"
+
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace prime_server;
 using namespace valhalla::baldr;
-
 
 namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -123,12 +123,12 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_locate(const boost::property_tree::ptree& request) {
-      location_parser(request);
+      parse_locations(request);
       if(locations.size() < 1)
         throw std::runtime_error("Insufficient number of locations provided");
       auto costing = request.get_optional<std::string>("costing");
       if (costing)
-        determine_costing_options(request);
+        parse_costing(request);
       else {
         edge_filter = loki::PassThroughEdgeFilter;
         node_filter = loki::PassThroughNodeFilter;

@@ -48,7 +48,8 @@ libvalhalla_loki_la_SOURCES = \
 	src/loki/locate_action.cc \
 	src/loki/route_action.cc \
 	src/loki/matrix_action.cc \
-	src/loki/isochrone_action.cc
+	src/loki/isochrone_action.cc \
+	src/loki/attributes_action.cc
 libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 

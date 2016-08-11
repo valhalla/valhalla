@@ -35,6 +35,7 @@ namespace {
     {"/sources_to_targets", loki_worker_t::SOURCES_TO_TARGETS},
     {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE},
     {"/isochrone", loki_worker_t::ISOCHRONE},
+    {"/attributes", loki_worker_t::ATTRIBUTES},
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -103,7 +104,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::location_parser(const boost::property_tree::ptree& request) {
+    void loki_worker_t::parse_locations(const boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if (!request_locations)
@@ -120,7 +121,7 @@ namespace valhalla {
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
     }
 
-    void loki_worker_t::determine_costing_options(const boost::property_tree::ptree& request) {
+    void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
        auto costing = request.get_optional<std::string>("costing");
        if (costing)
@@ -163,6 +164,7 @@ namespace valhalla {
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
         max_time(config.get<unsigned int>("service_limits.isochrone.max_time")) {
+
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
@@ -188,9 +190,9 @@ namespace valhalla {
         throw std::runtime_error("Missing max_distance configuration.");
 
       min_transit_walking_dis =
-          config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
+        config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
       max_transit_walking_dis =
-          config.get<int>("service_limits.pedestrian.max_transit_walking_distance");
+        config.get<int>("service_limits.pedestrian.max_transit_walking_distance");
 
       // Register edge/node costing methods
       // TODO: move this into the loop above
@@ -241,31 +243,39 @@ namespace valhalla {
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
+        //let further processes more easily know what kind of request it was
+        request_pt.put<int>("action", action->second);
+
+        //do request specific processing
         switch (action->second) {
-        case ROUTE:
-        case VIAROUTE:
-          result = route(action->second, request_pt, info);
-          break;
-        case LOCATE:
-          result = locate(request_pt, info);
-          break;
-        case ONE_TO_MANY:
-        case MANY_TO_ONE:
-        case MANY_TO_MANY:
-        case SOURCES_TO_TARGETS:
-        case OPTIMIZED_ROUTE:
-          result = matrix(action->second, request_pt, info);
-          break;
-        case ISOCHRONE:
-          result = isochrones(request_pt, info);
-          break;
+          case ROUTE:
+          case VIAROUTE:
+            result = route(request_pt, info);
+            break;
+          case LOCATE:
+            result = locate(request_pt, info);
+            break;
+          case ONE_TO_MANY:
+          case MANY_TO_ONE:
+          case MANY_TO_MANY:
+          case SOURCES_TO_TARGETS:
+          case OPTIMIZED_ROUTE:
+            result = matrix(action->second, request_pt, info);
+            break;
+          case ISOCHRONE:
+            result = isochrones(request_pt, info);
+            break;
+          case ATTRIBUTES:
+            result = attributes(request_pt, info);
+            break;
         }
 
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        if (!info.do_not_track && (elapsed_time.count() / locations.size()) > long_request) {
+        auto work_units = locations.size() ? locations.size() : 1;
+        if (!info.do_not_track && elapsed_time.count() / work_units > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));

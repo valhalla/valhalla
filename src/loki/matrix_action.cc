@@ -1,14 +1,11 @@
-#include <functional>
-#include <unordered_map>
-#include <boost/property_tree/info_parser.hpp>
-
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-
 #include "loki/service.h"
 #include "loki/search.h"
+
+#include <boost/property_tree/info_parser.hpp>
+#include <unordered_map>
+
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/midgard/logging.h>
 
 using namespace prime_server;
 using namespace valhalla::baldr;
@@ -26,7 +23,7 @@ namespace std {
 
 namespace {
 
-// TODO: Separate matrix actions to be deprecated and replaced by sources_to_targets action
+  // TODO: Separate matrix actions to be deprecated and replaced by sources_to_targets action
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
      {loki_worker_t::ONE_TO_MANY, "one_to_many"},
      {loki_worker_t::MANY_TO_ONE, "many_to_one"},
@@ -64,7 +61,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_matrix(const ACTION_TYPE& action,  boost::property_tree::ptree& request) {
+    void loki_worker_t::init_matrix(ACTION_TYPE action, boost::property_tree::ptree& request) {
       auto request_locations = request.get_child_optional("locations");
       auto request_sources = request.get_child_optional("sources");
       auto request_targets = request.get_child_optional("targets");
@@ -139,10 +136,10 @@ namespace valhalla {
       //no locations!
       request.erase("locations");
 
-      determine_costing_options(request);
+      parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action,boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal") {
@@ -152,13 +149,13 @@ namespace valhalla {
       }
 
       //check that location size does not exceed max.
-      auto action_str = ACTION_TO_STRING.find(loki_worker_t::SOURCES_TO_TARGETS)->second;
-      if ((sources.size() > max_locations.find(action_str)->second) || (targets.size() > max_locations.find(action_str)->second))
-        throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find(action_str)->second) + ".");
+      auto max = max_locations.find("sources_to_targets")->second;
+      if (sources.size() > max || targets.size() > max)
+        throw std::runtime_error("Exceeded max locations of " + std::to_string(max) + ".");
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      check_distance(sources, targets, max_distance.find(action_str)->second, max_location_distance);
+      check_distance(sources, targets, max_distance.find("sources_to_targets")->second, max_location_distance);
 
       //correlate the various locations to the underlying graph
       std::vector<baldr::Location> sources_targets;
@@ -199,18 +196,12 @@ namespace valhalla {
       }
       if(!connected)
         throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
-
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
-      //pass on to thor with type of matrix
-      request.put("matrix_type", ACTION_TO_STRING.find(action)->second);
+
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
-
-      /*for (auto message : result.messages){
-        LOG_INFO("SENDING TO THOR:: " + message);
-      }*/
 
       return result;
     }
