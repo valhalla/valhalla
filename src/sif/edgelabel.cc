@@ -74,6 +74,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       has_transit_(0),
       origin_(0),
       toll_(edge->toll()),
+      classification_(static_cast<uint32_t>(edge->classification())),
       tripid_(0),
       blockid_(0),
       transit_operator_(0),
@@ -112,6 +113,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       has_transit_(has_transit),
       origin_(0),
       toll_(edge->toll()),
+      classification_(static_cast<uint32_t>(edge->classification())),
       tripid_(tripid),
       blockid_(blockid),
       transit_operator_(transit_operator),
@@ -149,6 +151,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
        has_transit_(0),
        origin_(0),
        toll_(edge->toll()),
+       classification_(static_cast<uint32_t>(edge->classification())),
        tripid_(0),
        blockid_(0),
        transit_operator_(0),
@@ -310,6 +313,11 @@ uint32_t EdgeLabel::opp_index() const {
 // Get the current accumulated path distance in meters.
 uint32_t EdgeLabel::path_distance() const {
   return path_distance_;
+}
+
+// Get the predecessor road classification.
+RoadClass EdgeLabel::classification() const {
+  return static_cast<RoadClass>(classification_);
 }
 
 // Get the transit trip Id.
