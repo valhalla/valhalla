@@ -123,6 +123,15 @@ void TestAddLineSegment()
   grid.AddLineSegment(0, LineSegment({0.5, 0.5}, {0.5, 0.5}));
   test::assert_bool(grid.GetItemsInCell(0, 0).size() == old_item00_size + 1,
                     "empty segment should be added");
+
+  // A special case that failed
+  {
+    BoundingBox bbox(-78.5, 0, -78.25, 0.25);
+    // 0.005 == 0.25 / 500 where 0.25 is the tile size and we divided it into 500x500 cells
+    GridRangeQuery<int> grid(bbox, 0.005f, 0.005f);
+    // Should not thow anything here
+    grid.AddLineSegment(1, LineSegment({-78.4831, 0.002865}, {-78.4839, -0.001577}));
+  }
 }
 
 
