@@ -20,6 +20,7 @@
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
@@ -45,77 +46,148 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsPedestrianTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
-                const GraphId& startnode,
-                const NodeInfo& startnodeinfo,
-                const DirectedEdge& directededge,
-                statistics::RouletteData& rd,
-                const uint32_t idx) {
-
-  bool is_terminal = true;
-  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
-  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
-
-    if (i == idx)
-      continue;
-
-    if (((diredge->reverseaccess() & kPedestrianAccess) ||
-        (diredge->forwardaccess() & kPedestrianAccess)) &&
-        (!(diredge->forwardaccess() & kAutoAccess) &&
-          !(diredge->reverseaccess() & kAutoAccess))){
-      continue;
-    }
-    else {
-      is_terminal = false;
-      break;
-    }
-  }
-
-  if (is_terminal) {
-    if (startnodeinfo.edge_count() > 1) {
-      rd.AddTask(startnodeinfo.latlng(),
-                 tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
-                 tile.edgeinfo(directededge.edgeinfo_offset())->shape());
-      return true;
-    }
-  }
-  return false;
-}
-
-bool IsLoopTerminal(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
+bool IsLoopTerminal(const GraphTile &tile, GraphReader& reader,
                 const GraphId& startnode,
                 const NodeInfo& startnodeinfo,
                 const DirectedEdge& directededge,
                 statistics::RouletteData& rd) {
+  // Get correct tile to work with
+  auto end_tile = (tile.id() == directededge.endnode().tileid())
+    ? &tile : reader.GetGraphTile(directededge.endnode());
+  auto endnodeinfo = end_tile->node(directededge.endnode());
+  // If there aren't 3 edges we don't want it
+  if (endnodeinfo->edge_count() != 3)
+    return false;
 
-  const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
-  uint32_t inbound = 0, outbound = 0;
+  // All the edges from our node
+  const auto* first_edge = end_tile->directededge(endnodeinfo->edge_index());
+  const auto* second_edge = end_tile->directededge(endnodeinfo->edge_index() + 1);
+  const auto* last_edge = end_tile->directededge(endnodeinfo->edge_index() + 2);
+  const auto* opp_edge = end_tile->directededge(directededge.opp_index());
 
-  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+  // Setup the first and last edges
+  if (first_edge == opp_edge) {
+    // don't want the opp edge so use the second
+    first_edge = second_edge;
+  } else if (second_edge != opp_edge) {
+      // if the first and second edge are in the loop, use the second as our final loop edge
+      last_edge = second_edge;
+  } // otherwise, our edges our setup correctly
 
-    if (((diredge->forwardaccess() & kAutoAccess) &&
-        !(diredge->reverseaccess() & kAutoAccess)) ||
-        ((diredge->forwardaccess() & kAutoAccess) &&
-         (diredge->reverseaccess() & kAutoAccess)))
-      outbound++;
+  // A couple of helper functions
+  auto isOneWay = [] (const DirectedEdge* edge) {
+    auto fward = edge->forwardaccess() & kAutoAccess;
+    auto bward = edge->reverseaccess() & kAutoAccess;
+    return (fward != bward);
+  };
 
-    if ((!(diredge->forwardaccess() & kAutoAccess) &&
-        (diredge->reverseaccess() & kAutoAccess)) ||
-        ((diredge->forwardaccess() & kAutoAccess) &&
-         (diredge->reverseaccess() & kAutoAccess)))
-      inbound++;
-  }
+  auto autoAccess = [] (const DirectedEdge* edge, bool fward) {
+    return (fward) ? edge->forwardaccess() & kAutoAccess : edge->reverseaccess() & kAutoAccess;
+  };
 
-  if ((outbound >= 2 && inbound == 0) || (inbound >= 2 && outbound == 0)) {
-    rd.AddTask(startnodeinfo.latlng(),
-               tile.edgeinfo(directededge.edgeinfo_offset())->wayid(),
-               tile.edgeinfo(directededge.edgeinfo_offset())->shape());
-    return true;
+  // We have a one way edge, connected are two more one way edges that are one way in the same direction
+  if (isOneWay(&directededge) && endnodeinfo->edge_count() == 3 &&
+      isOneWay(first_edge) && isOneWay(last_edge) &&
+      autoAccess(first_edge, true) == autoAccess(last_edge, false)) {
+    // Which edge gets into the loop?
+    auto forward_edge = autoAccess(first_edge, true) ? first_edge : last_edge;
+    auto reverse_edge = (forward_edge == first_edge) ? last_edge : first_edge;
+
+    // A simple loop has forward and reverse edge connected at the same node
+    if (forward_edge->endnode() == reverse_edge->endnode()) {
+      // To be a loop that node must not have any other edges traversable in
+      // the same direction as our first entry edge
+      auto loop_node_tile = (end_tile->id() == forward_edge->endnode().tileid())
+        ? end_tile : reader.GetGraphTile(forward_edge->endnode());
+      auto loop_node_info = loop_node_tile->node(forward_edge->endnode());
+      const auto* edge_first = loop_node_tile->directededge(loop_node_info->edge_index());
+      const auto* edge_last = loop_node_tile->directededge(loop_node_info->edge_index() + loop_node_info->edge_count() - 1);
+
+      auto outboundIsRestrictive = [&] () {
+        // Determine which is the outbound edge
+        second_edge = edge_first + 1;
+        const auto* outbound = second_edge;
+        if (edge_first != first_edge && edge_first != last_edge) {
+          outbound = edge_first;
+          edge_first = second_edge;
+        } else if (edge_last != first_edge && edge_last != last_edge) {
+          outbound = edge_last;
+          edge_last = second_edge;
+        }
+
+        // If the inbound and outbound edges go in opposite directions then there is a problem
+        if (autoAccess(outbound, true) != autoAccess(&directededge, true) && autoAccess(outbound, false) != autoAccess(&directededge, false) && isOneWay(outbound))
+          return true;
+        else
+          return false;
+      };
+
+      if (loop_node_info->edge_count() == 2 || (loop_node_info->edge_count() == 3 && !outboundIsRestrictive())) {
+        // Victory
+        auto shape = tile.edgeinfo(first_edge->edgeinfo_offset())->shape();
+        auto second_shape = tile.edgeinfo(last_edge->edgeinfo_offset())->shape();
+        for (auto& point : second_shape)
+          shape.push_back(point);
+        rd.AddTask(AABB2<PointLL>(shape),
+                   tile.edgeinfo(first_edge->edgeinfo_offset())->wayid(),
+                   shape);
+        return true;
+      }
+    }
   }
   return false;
 }
 
-bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader, std::mutex& lock,
+bool IsLoop(GraphReader& reader, const DirectedEdge& directededge, const GraphId& startnode, statistics::RouletteData& rd) {
+  // A couple of helper functions
+  auto isOneWay = [] (const DirectedEdge* edge) {
+    auto fward = edge->forwardaccess() & kAutoAccess;
+    auto bward = edge->reverseaccess() & kAutoAccess;
+    return (fward != bward);
+  };
+  auto autoAccess = [] (const DirectedEdge* edge, bool fward) {
+    return (fward) ? edge->forwardaccess() & kAutoAccess : edge->reverseaccess() & kAutoAccess;
+  };
+
+  const auto* current_edge = &directededge;
+  const auto* starttile = reader.GetGraphTile(startnode);
+  const auto* opp_edge = starttile->directededge(startnode);
+  //keep looking while we are stuck on a oneway and we dont look too far
+  for(size_t i = 0; i < 3; ++i){
+    //where can we go from here
+    const DirectedEdge* next = nullptr;
+    const auto* tile = reader.GetGraphTile(current_edge->endnode());
+    const auto* end_node = tile->node(current_edge->endnode());
+    const auto* edge = tile->directededge(end_node->edge_index());
+    for(size_t j = 0; j < end_node->edge_count(); ++j, ++edge) {
+      if (autoAccess(edge,true) && isOneWay(edge)) {
+        //next one is here
+        if(!next && edge != opp_edge)
+          next = edge;
+        //too many options its not a loop
+        else
+          return false;
+      }
+    }
+    //dead end, not a loop but a problem
+    if(!next && isOneWay(current_edge)) {
+      return true;
+    }
+    //continue the loop if you havent finished it
+    if(next == &directededge) {
+      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next->edgeinfo_offset())->shape()),
+          tile->edgeinfo(next->edgeinfo_offset())->wayid(),
+          tile->edgeinfo(next->edgeinfo_offset())->shape());
+      return true;
+    }
+    if (next)
+      current_edge = next;
+  }
+  //we quit looking
+  return false;
+}
+
+bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader,
                 const GraphId& startnode,
                 const NodeInfo& startnodeinfo,
                 const DirectedEdge& directededge,
@@ -125,6 +197,10 @@ bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader, std::mutex& lo
   size_t inbound = 0, outbound = 0;
   // Check all the edges from the current node and count inbound and outbound edges
   for (size_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+    if (diredge->trans_up() || diredge->trans_down() || diredge->shortcut() ||
+        diredge->use() == Use::kTransitConnection) {
+      continue;
+    }
     if ((diredge->forwardaccess() & kAutoAccess))
       outbound++;
     if ((diredge->reverseaccess() & kAutoAccess))
@@ -132,7 +208,9 @@ bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader, std::mutex& lo
   }
 
   // If there is a way in and no way out, or vice versa
-  if ((!outbound && inbound) || (outbound && !inbound)) {
+  // And it's not a dead end
+  // Or it is a dead end, but is a high class road
+  if (((!outbound && inbound >= 2) || (outbound >= 2 && !inbound))) {
     rd.AddNode(startnodeinfo.latlng());
     return true;
   }
@@ -140,7 +218,7 @@ bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader, std::mutex& lo
   return false;
 }
 
-void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
+void checkExitInfo(const GraphTile& tile, GraphReader& reader,
                    const GraphId& startnode, const NodeInfo& startnodeinfo,
                    const DirectedEdge& directededge, statistics& stats) {
   // If this edge is right after a motorway junction it is an exit and should
@@ -187,7 +265,7 @@ void checkExitInfo(const GraphTile& tile, GraphReader& reader, std::mutex& lock,
 void AddStatistics(statistics& stats, const DirectedEdge& directededge,
     const uint32_t tileid, std::string& begin_node_iso,
     HGVRestrictionTypes& hgv, const GraphTile& tile,
-    GraphReader& graph_reader, std::mutex& lock, GraphId& node,
+    GraphReader& graph_reader, GraphId& node,
     const NodeInfo& nodeinfo, uint32_t idx) {
 
   auto rclass = directededge.classification();
@@ -226,31 +304,19 @@ void AddStatistics(statistics& stats, const DirectedEdge& directededge,
 
   // Check for exit signage if it is a highway link
   if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
-    checkExitInfo(tile,graph_reader,lock,node,nodeinfo,directededge,stats);
+    checkExitInfo(tile,graph_reader,node,nodeinfo,directededge,stats);
   }
 
   // Add all other statistics
   // Only consider edge if edge is good and it's not a link
   if (!directededge.link()) {
-    //Determine access for directed edge
-    auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
-    auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
-    // Check if one way
-    if ((!fward || !bward) && (fward || bward)) {
-      edge_length *= 0.5f;
-      //const GraphTile* tile = graph_reader.GetGraphTile(node);
-      bool found = IsPedestrianTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data,idx);
-      if (!found && directededge.endnode().id() == node.id()) {
-        const GraphTile* end_tile = graph_reader.GetGraphTile(directededge.endnode());
-        if (tile.id() == end_tile->id())
-          found = IsLoopTerminal(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
-      }
-      if (!found && directededge.endnode().id() != node.id()) {
-        found = IsUnroutableNode(tile,graph_reader,lock,node,nodeinfo,directededge,stats.roulette_data);
-      }
-      stats.add_tile_one_way(tileid, rclass, edge_length);
-      stats.add_country_one_way(begin_node_iso, rclass, edge_length);
+    edge_length *= 0.5f;
+    bool found = IsUnroutableNode(tile,graph_reader,node,nodeinfo,directededge,stats.roulette_data);
+    if (!found) {
+      //IsLoop(graph_reader,directededge,node,stats.roulette_data);
     }
+    stats.add_tile_one_way(tileid, rclass, edge_length);
+    stats.add_country_one_way(begin_node_iso, rclass, edge_length);
 
     // Check if this edge is internal
     if (directededge.internal()) {
@@ -384,7 +450,7 @@ void build(const boost::property_tree::ptree& pt,
           // Statistics
           if (valid_length) {
             AddStatistics(stats, *directededge, tileid, begin_node_iso,
-                          hgv, *tile, graph_reader, lock, node, *nodeinfo, j);
+                          hgv, *tile, graph_reader, node, *nodeinfo, j);
           }
         }
       }

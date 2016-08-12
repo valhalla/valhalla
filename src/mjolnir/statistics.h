@@ -100,32 +100,19 @@ class statistics {
   std::unordered_set<uint64_t> tile_ids;
   std::unordered_set<std::string> iso_codes;
   std::unordered_map<uint64_t, float> tile_areas;
-  std::unordered_map<uint64_t, AABB2<PointLL>> tile_geometries;
+  std::unordered_map<uint64_t, AABB2<PointLL> > tile_geometries;
 
 public:
 
   struct RouletteData {
-    struct pointHash {
-      std::size_t operator()(const PointLL& p) const {
-        uint64_t hash;
-        float* lat = new float;
-        float* lng = new float;
-        *lat = p.lat();
-        *lng = p.lng();
-        if (*lat > *lng) {
-          hash = *(reinterpret_cast<uint64_t*>(lat))<<32 | *(reinterpret_cast<uint64_t*>(lng));
-        }
-        return hash;
-      }
-    };
-    std::unordered_map<uint64_t, PointLL> node_locs;
+    std::unordered_map<uint64_t, AABB2<PointLL> > shape_bb;;
     std::unordered_map<uint64_t, std::vector<PointLL> > way_shapes;
     std::unordered_set<uint64_t> way_IDs;
-    std::unordered_set<PointLL, pointHash> unroutable_nodes;
+    std::unordered_set<PointLL, std::hash<PointLL>> unroutable_nodes;
 
     RouletteData ();
 
-    void AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape);
+    void AddTask (const AABB2<PointLL>& shape_bb, const uint64_t id, const std::vector<PointLL>& shape);
 
     void AddNode (const PointLL& p);
 

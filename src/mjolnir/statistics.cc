@@ -302,12 +302,12 @@ void statistics::add (const statistics& stats) {
 
 
 statistics::RouletteData::RouletteData ()
-  : node_locs(), way_IDs(), way_shapes(), unroutable_nodes() { }
+  : shape_bb(), way_IDs(), way_shapes(), unroutable_nodes() { }
 
-void statistics::RouletteData::AddTask (const PointLL& p, const uint64_t id, const std::vector<PointLL>& shape) {
+void statistics::RouletteData::AddTask (const AABB2<PointLL>& bb, const uint64_t id, const std::vector<PointLL>& shape) {
   auto result = way_IDs.insert(id);
   if (result.second)
-    node_locs.insert({id, p});
+    shape_bb.insert({id, bb});
     way_shapes.insert({id, shape});
 }
 
@@ -318,7 +318,7 @@ void statistics::RouletteData::AddNode(const PointLL& p) {
 void statistics::RouletteData::Add (const RouletteData& rd) {
   way_IDs = merge(way_IDs, rd.way_IDs);
   way_shapes = merge(way_shapes, rd.way_shapes);
-  node_locs = merge(node_locs, rd.node_locs);
+  shape_bb = merge(shape_bb, rd.shape_bb);
   unroutable_nodes = merge(unroutable_nodes, rd.unroutable_nodes);
 }
 
@@ -353,6 +353,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
         );
   }
   // Add all unroutable nodes to the json array
+  auto hasher = std::hash<PointLL>();
   for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
     tasks->emplace_back(
         json::map
@@ -366,7 +367,8 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
           })},
           {"properties", json::map
            ({
-            {"type", std::string("Node")}
+            {"type", std::string("Node")},
+            {"key", hasher(*it)}
            })},
           {"type", std::string("Feature")}
          })
@@ -376,7 +378,16 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   json::MapPtr geo_json = json::map
     ({
      {"type", std::string("FeatureCollection")},
-     {"features", tasks}
+     {"features", tasks},
+     {"properties", json::map
+       ({
+        {"instructions", json::map
+         ({
+          {"Loop", std::string("This one way road loops back on itself. Edit it so that the raod is properly accessible")},
+          {"Node", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
+         })}
+       })
+     }
     });
   // write out to a file
   if (boost::filesystem::exists("maproulette_tasks.geojson"))
@@ -386,6 +397,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   file << *geo_json << std::endl;
   file.close();
   LOG_INFO("MapRoulette tasks saved to maproulette_tasks.geojson");
+  LOG_INFO(std::to_string(tasks->size()) + " tasks generated");
 }
 }
 }

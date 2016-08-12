@@ -103,7 +103,6 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   sqlite3_close(db_handle);
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }
-
 void statistics::create_tile_tables(sqlite3 *db_handle, sqlite3_stmt *stmt) {
   uint32_t ret;
   char *err_msg = NULL;
