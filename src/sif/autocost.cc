@@ -652,9 +652,9 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
-  // TODO - perhaps allow U-turns at dead-end nodes?
+  // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kBusAccess) ||
-      (pred.opp_local_idx() == edge->localedgeidx()) ||
+      (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable) {
     return false;
@@ -672,9 +672,9 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
-  // TODO - perhaps allow U-turns at dead-end nodes?
+  // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
-        pred.opp_local_idx() == edge->localedgeidx() ||
+       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable) {
     return false;
