@@ -5,9 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <limits>
-
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/linesegment2.h>
+#include <tuple>
 
 
 namespace valhalla{
@@ -41,18 +39,18 @@ class GridTraversal
   { return 0 <= col && col < ncols_ && 0 <= row && row < nrows_; }
 
   std::vector<std::pair<int, int> >
-  Traverse(const midgard::LineSegment2<coord_t>& segment) const
+  Traverse(const coord_t& origin, const coord_t& dest) const
   {
     // Division by zero is undefined in C++, here we ensure it to be
     // infinity
-    const float height = segment.b().y() - segment.a().y(),
-                 width = segment.b().x() - segment.a().x(),
+    const float height = dest.y() - origin.y(),
+                 width = dest.x() - origin.x(),
                tangent = width == 0.f? std::numeric_limits<float>::infinity() : (height / width),
              cotangent = height == 0.f? std::numeric_limits<float>::infinity() : (width / height);
 
     int col, row, dest_col, dest_row;
-    std::tie(col, row) = StartSquare(segment, tangent, cotangent);
-    std::tie(dest_col, dest_row) = SquareAtPoint(segment.b());
+    std::tie(col, row) = StartSquare(origin, dest, tangent, cotangent);
+    std::tie(dest_col, dest_row) = SquareAtPoint(dest);
 
     // Append intersecting squares
     std::vector<std::pair<int, int>> squares;
@@ -62,22 +60,22 @@ class GridTraversal
       // Calculating next intersecting square
 
       // Intersect with the right border of the square
-      if (col < dest_col && IntersectsRow(segment.a(), tangent, col + 1) == row) {
+      if (col < dest_col && IntersectsRow(origin, tangent, col + 1) == row) {
         col++;
         continue;
       }
       // Intersect with the left border of the square
-      if (dest_col < col && IntersectsRow(segment.a(), tangent, col) == row) {
+      if (dest_col < col && IntersectsRow(origin, tangent, col) == row) {
         col--;
         continue;
       }
       // Intersect with the top border of the square
-      if (row < dest_row && IntersectsColumn(segment.a(), cotangent, row + 1) == col) {
+      if (row < dest_row && IntersectsColumn(origin, cotangent, row + 1) == col) {
         row++;
         continue;
       }
       // Intersect with the bottom border of the square
-      if (dest_row < row && IntersectsColumn(segment.a(), cotangent, row) == col) {
+      if (dest_row < row && IntersectsColumn(origin, cotangent, row) == col) {
         row--;
         continue;
       }
@@ -142,11 +140,9 @@ class GridTraversal
   }
 
   std::pair<int, int>
-  StartSquare(const midgard::LineSegment2<coord_t>& segment, float tangent, float cotangent) const
+  StartSquare(const coord_t& origin, const coord_t& dest,
+              float tangent, float cotangent) const
   {
-    const auto &origin = segment.a(),
-                 &dest = segment.b();
-
     // Return the square if origin point falls inside the grid
     int col, row;
     std::tie(col, row) = SquareAtPoint(origin);

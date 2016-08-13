@@ -2,13 +2,9 @@
 #ifndef MMP_GRID_RANGE_QUERY_H_
 #define MMP_GRID_RANGE_QUERY_H_
 
-#include <algorithm>
 #include <tuple>
-#include <utility>
 #include <vector>
 #include <unordered_set>
-#include <cmath>
-#include <stdexcept>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
@@ -60,12 +56,17 @@ class GridRangeQuery
     return items_[col + row * ncols_];
   }
 
+  void AddLineSegment(const item_t& item, const coord_t& origin, const coord_t& dest)
+  {
+    for (const auto& square: grid_.Traverse(origin, dest)) {
+      ItemsInSquare(square.first, square.second).push_back(item);
+    }
+  }
+
   // Index a line segment into the grid
   void AddLineSegment(const item_t& item, const midgard::LineSegment2<coord_t>& segment)
   {
-    for (const auto& square: grid_.Traverse(segment)) {
-      ItemsInSquare(square.first, square.second).push_back(item);
-    }
+    AddLineSegment(item, segment.a(), segment.b());
   }
 
   // Query all items that intersects with the range

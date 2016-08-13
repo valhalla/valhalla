@@ -64,58 +64,58 @@ void assert_equal_squares(const std::vector<std::pair<int, int>>& got,
 void TestGridTraversal()
 {
   meili::GridTraversal<midgard::Point2> grid(0.1, 0.1, 0.3, 0.3, 3, 3);
-  assert_equal_squares(grid.Traverse({{0, 0}, {0.9, 0.9}}),
+  assert_equal_squares(grid.Traverse({0, 0}, {0.9, 0.9}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 1}, {2, 2}},
                        "It should intersect squares in diagonal");
 
-  assert_equal_squares(grid.Traverse({{0, 0}, {0.5, 0.5}}),
+  assert_equal_squares(grid.Traverse({0, 0}, {0.5, 0.5}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 1}},
                        "It should intersect squares in diagonal");
 
-  assert_equal_squares(grid.Traverse({{0.2, 0.25}, {0.89, 0.32}}),
+  assert_equal_squares(grid.Traverse({0.2, 0.25}, {0.89, 0.32}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 0}, {2, 0}},
                        "It should intersect bottom squares");
 
-  assert_equal_squares(grid.Traverse({{0.2, 0.25}, {0.34, 0.83}}),
+  assert_equal_squares(grid.Traverse({0.2, 0.25}, {0.34, 0.83}),
                        std::vector<std::pair<int, int>>{{0, 0}, {0, 1}, {0, 2}},
                        "It should intersect leftmost squares");
 
-  assert_equal_squares(grid.Traverse({{0.3, 0.25}, {0.98, 0.83}}),
+  assert_equal_squares(grid.Traverse({0.3, 0.25}, {0.98, 0.83}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 0}, {1, 1}, {2, 1}, {2, 2}},
                        "It should intersect sqaures from SQUARE(0 0) to SQUARE(2 2) in the lower side way");
 
-  assert_equal_squares(grid.Traverse({{-1, 0.1}, {2, 0.1}}),
+  assert_equal_squares(grid.Traverse({-1, 0.1}, {2, 0.1}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 0}, {2, 0}},
                        "It should intersect bottom grid line");
 
-  assert_equal_squares(grid.Traverse({{0.1, -1}, {0.1, 2}}),
+  assert_equal_squares(grid.Traverse({0.1, -1}, {0.1, 2}),
                        std::vector<std::pair<int, int>>{{0, 0}, {0, 1}, {0, 2}},
                        "It should intersect leftmost grid line");
 
-  assert_equal_squares(grid.Traverse({{0.1, 0.1}, {0.1, 0.1}}),
+  assert_equal_squares(grid.Traverse({0.1, 0.1}, {0.1, 0.1}),
                        std::vector<std::pair<int, int>>{{0, 0}},
                        "Single point at left bottom corner should intersect SQUARE(0 0)");
 
-  assert_equal_squares(grid.Traverse({{0.5, 0.5}, {0.5, 0.5}}),
+  assert_equal_squares(grid.Traverse({0.5, 0.5}, {0.5, 0.5}),
                        std::vector<std::pair<int, int>>{{1, 1}},
                        "Single point should intersect SQUARE(1 1)");
 
-  assert_equal_squares(grid.Traverse({{0, 0}, {0, 0}}),
+  assert_equal_squares(grid.Traverse({0, 0}, {0, 0}),
                        std::vector<std::pair<int, int>>{},
                        "Single point outside grid should not intersect");
 
-  assert_equal_squares(grid.Traverse({{0, 0}, {0.1, 0.2}}),
+  assert_equal_squares(grid.Traverse({0, 0}, {0.1, 0.2}),
                        std::vector<std::pair<int, int>>{{0, 0}},
                        "It should intersect SQUARE(0 0)");
-  assert_equal_squares(grid.Traverse({{0, 0}, {0.2, 0.1}}),
+  assert_equal_squares(grid.Traverse({0, 0}, {0.2, 0.1}),
                        std::vector<std::pair<int, int>>{{0, 0}},
                        "It should intersect SQUARE(0 0)");
 
-  assert_equal_squares(grid.Traverse({{2, 1}, {0.5, 0.5}}),
+  assert_equal_squares(grid.Traverse({2, 1}, {0.5, 0.5}),
                        std::vector<std::pair<int, int>>{{2, 1}, {1, 1}},
                        "It should partially intersect from right side");
 
-  assert_equal_squares(grid.Traverse({{0, 0}, {0.07, 0.08}}),
+  assert_equal_squares(grid.Traverse({0, 0}, {0.07, 0.08}),
                        std::vector<std::pair<int, int>>{},
                        "A line segment completely outside the grid should not intersect");
 
@@ -124,35 +124,35 @@ void TestGridTraversal()
   // number
   meili::GridTraversal<midgard::Point2> perfect_grid(0.5, 0.5, 0.25, 0.25, 3, 3);
 
-  assert_equal_squares(perfect_grid.Traverse({{1.25, 1.25}, {1.25, 1.25}}),
+  assert_equal_squares(perfect_grid.Traverse({1.25, 1.25}, {1.25, 1.25}),
                        std::vector<std::pair<int, int>>{},
                        "Sit on the rightmost grid line but it is actually outside the grid");
 
-  assert_equal_squares(perfect_grid.Traverse({{1, 1}, {1, 1}}),
+  assert_equal_squares(perfect_grid.Traverse({1, 1}, {1, 1}),
                        std::vector<std::pair<int, int>>{{2, 2}},
                        "Sit on the corner of SQUARE(2 2)");
 
-  assert_equal_squares(perfect_grid.Traverse({{1, 0}, {1, 2}}),
+  assert_equal_squares(perfect_grid.Traverse({1, 0}, {1, 2}),
                        std::vector<std::pair<int, int>>{{2, 0}, {2, 1}, {2, 2}},
                        "Parallel to vertical grid lines");
-  assert_equal_squares(perfect_grid.Traverse({{1.05, 0}, {1.05, 2}}),
+  assert_equal_squares(perfect_grid.Traverse({1.05, 0}, {1.05, 2}),
                        std::vector<std::pair<int, int>>{{2, 0}, {2, 1}, {2, 2}},
                        "Parallel to vertical grid lines");
-  assert_equal_squares(perfect_grid.Traverse({{1.25, 0}, {1.25, 2}}),
+  assert_equal_squares(perfect_grid.Traverse({1.25, 0}, {1.25, 2}),
                        std::vector<std::pair<int, int>>{},
                        "Parallel to vertical grid lines");
 
-  assert_equal_squares(perfect_grid.Traverse({{0, 1}, {2, 1}}),
+  assert_equal_squares(perfect_grid.Traverse({0, 1}, {2, 1}),
                        std::vector<std::pair<int, int>>{{0, 2}, {1, 2}, {2, 2}},
                        "Parallel to horizontal grid lines");
-  assert_equal_squares(perfect_grid.Traverse({{0, 1.05}, {2, 1.05}}),
+  assert_equal_squares(perfect_grid.Traverse({0, 1.05}, {2, 1.05}),
                        std::vector<std::pair<int, int>>{{0, 2}, {1, 2}, {2, 2}},
                        "Parallel to horizontal grid lines");
-  assert_equal_squares(perfect_grid.Traverse({{0, 1.25}, {2, 1.25}}),
+  assert_equal_squares(perfect_grid.Traverse({0, 1.25}, {2, 1.25}),
                        std::vector<std::pair<int, int>>{},
                        "Parallel to horizontal grid lines");
 
-  assert_equal_squares(perfect_grid.Traverse({{1.25, 1}, {1.25, 1}}),
+  assert_equal_squares(perfect_grid.Traverse({1.25, 1}, {1.25, 1}),
                        std::vector<std::pair<int, int>>{},
                        "Single point sit on rightmost grid line");
 }
