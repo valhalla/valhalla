@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cmath>
+#include <limits>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/linesegment2.h>
@@ -41,8 +42,12 @@ class GridTraversal
   std::vector<std::pair<int, int> >
   Traverse(const midgard::LineSegment2<coord_t>& segment) const
   {
-    const float tangent = (segment.b().y() - segment.a().y()) / (segment.b().x() - segment.a().x()),
-              cotangent = 1.0 / tangent;
+    // Division by zero is undefined in C++, here we ensure it to be
+    // infinity
+    const float height = segment.b().y() - segment.a().y(),
+                 width = segment.b().x() - segment.a().x(),
+               tangent = width == 0.f? std::numeric_limits<float>::infinity() : (height / width),
+             cotangent = height == 0.f? std::numeric_limits<float>::infinity() : (width / height);
 
     int col, row, dest_col, dest_row;
     std::tie(col, row) = StartSquare(segment, tangent, cotangent);
@@ -138,7 +143,8 @@ class GridTraversal
   std::pair<int, int>
   StartSquare(const midgard::LineSegment2<coord_t>& segment, float tangent, float cotangent) const
   {
-    const auto& origin = segment.a(), &dest = segment.b();
+    const auto &origin = segment.a(),
+                 &dest = segment.b();
 
     // Return the square if origin point falls inside the grid
     int col, row;
