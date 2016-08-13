@@ -33,7 +33,8 @@ class GridTraversal
   {
     const float dx = pt.x() - minx_,
                 dy = pt.y() - miny_;
-    return { int(dx / square_width_), int(dy / square_height_) };
+    return {static_cast<int>(floor(dx / square_width_)),
+            static_cast<int>(floor(dy / square_height_))};
   }
 
   bool IsValidSquare(int col, int row) const
