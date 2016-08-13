@@ -195,7 +195,7 @@ class GridTraversal
 
   float minx_, miny_, maxx_, maxy_;
   float square_width_, square_height_;
-  unsigned ncols_, nrows_;
+  int ncols_, nrows_;
 };
 
 }
