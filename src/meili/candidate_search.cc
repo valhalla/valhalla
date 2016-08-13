@@ -148,7 +148,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
-void IndexTile(const baldr::GraphTile& tile, GridRangeQuery<baldr::GraphId>& grid)
+void IndexTile(const baldr::GraphTile& tile, CandidateGridQuery::grid_t& grid)
 {
   auto edgecount = tile.header()->directededgecount();
   if (edgecount <= 0) {
@@ -167,7 +167,7 @@ void IndexTile(const baldr::GraphTile& tile, GridRangeQuery<baldr::GraphId>& gri
       const auto edgeinfo = tile.edgeinfo(offset);
       const auto& shape = edgeinfo->shape();
       for (decltype(shape.size()) j = 1; j < shape.size(); ++j) {
-        grid.AddLineSegment(edgeid, LineSegment(shape[j - 1], shape[j]));
+        grid.AddLineSegment(edgeid, {shape[j - 1], shape[j]});
       }
     }
   }
@@ -186,12 +186,12 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_wi
 CandidateGridQuery::~CandidateGridQuery() {}
 
 
-inline const GridRangeQuery<baldr::GraphId>*
+inline const CandidateGridQuery::grid_t*
 CandidateGridQuery::GetGrid(baldr::GraphId tile_id) const
 { return GetGrid(reader_.GetGraphTile(tile_id)); }
 
 
-const GridRangeQuery<baldr::GraphId>*
+const CandidateGridQuery::grid_t*
 CandidateGridQuery::GetGrid(const baldr::GraphTile* tile_ptr) const
 {
   if (!tile_ptr) {
@@ -204,7 +204,7 @@ CandidateGridQuery::GetGrid(const baldr::GraphTile* tile_ptr) const
     return &(cached->second);
   }
 
-  auto inserted = grid_cache_.emplace(tile_id, GridRangeQuery<baldr::GraphId>(tile_ptr->BoundingBox(hierarchy_), cell_width_, cell_height_));
+  auto inserted = grid_cache_.emplace(tile_id, grid_t(tile_ptr->BoundingBox(hierarchy_), cell_width_, cell_height_));
   IndexTile(*tile_ptr, inserted.first->second);
   return &(inserted.first->second);
 }

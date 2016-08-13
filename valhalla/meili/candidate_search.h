@@ -11,6 +11,7 @@
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
@@ -54,13 +55,15 @@ class CandidateQuery
 class CandidateGridQuery final: public CandidateQuery
 {
  public:
+  using grid_t = GridRangeQuery<baldr::GraphId, midgard::PointLL>;
+
   CandidateGridQuery(baldr::GraphReader& reader, float cell_width, float cell_height);
 
   ~CandidateGridQuery();
 
-  const GridRangeQuery<baldr::GraphId>* GetGrid(baldr::GraphId tile_id) const;
+  const grid_t* GetGrid(baldr::GraphId tile_id) const;
 
-  const GridRangeQuery<baldr::GraphId>* GetGrid(const baldr::GraphTile* tile_ptr) const;
+  const grid_t* GetGrid(const baldr::GraphTile* tile_ptr) const;
 
   std::unordered_set<baldr::GraphId>
   RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
@@ -68,7 +71,7 @@ class CandidateGridQuery final: public CandidateQuery
   std::vector<Candidate>
   Query(const midgard::PointLL& location, float sq_search_radius, sif::EdgeFilter filter) const override;
 
-  std::unordered_map<baldr::GraphId, GridRangeQuery<baldr::GraphId> >::size_type
+  std::unordered_map<baldr::GraphId, grid_t>::size_type
   size() const
   { return grid_cache_.size(); }
 
@@ -83,7 +86,7 @@ class CandidateGridQuery final: public CandidateQuery
 
   float cell_height_;
 
-  mutable std::unordered_map<baldr::GraphId, GridRangeQuery<baldr::GraphId>> grid_cache_;
+  mutable std::unordered_map<baldr::GraphId, grid_t> grid_cache_;
 };
 
 }
