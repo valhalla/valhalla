@@ -7,6 +7,38 @@
 using namespace valhalla::meili;
 
 
+template <typename istream_t>
+std::vector<Measurement> ReadMeasurements(istream_t& istream,
+                                          float default_gps_accuracy,
+                                          float default_search_radius)
+{
+  std::string line;
+  std::vector<Measurement> measurements;
+
+  while (!istream.eof()) {
+    std::getline(istream, line);
+
+    if (line.empty()) {
+      if (measurements.empty()) {
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    // Read coordinates from the input line
+    float lng, lat;
+    std::stringstream stream(line);
+    stream >> lng; stream >> lat;
+    measurements.emplace_back(PointLL(lng, lat),
+                              default_gps_accuracy,
+                              default_search_radius);
+  }
+
+  return measurements;
+}
+
+
 int main(int argc, char *argv[])
 {
   if (argc < 2) {
@@ -24,52 +56,33 @@ int main(int argc, char *argv[])
   const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy"),
              default_search_radius = mapmatcher->config().get<float>("search_radius");
 
-  std::vector<Measurement> measurements;
-  std::string line;
-
   size_t index = 0;
-  while (true) {
-    std::getline(std::cin, line);
-    if (std::cin.eof() || line.empty()) {
+  for (std::vector<Measurement> measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius);
+       !measurements.empty();
+       measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius)) {
 
-      // Offline match
-      std::cout << "Sequence " << index++ << std::endl;
-      const auto& results = mapmatcher->OfflineMatch(measurements);
+    // Offline match
+    std::cout << "Sequence " << index++ << std::endl;
+    const auto& results = mapmatcher->OfflineMatch(measurements);
 
-      // Show results
-      size_t mmt_id = 0, count = 0;
-      for (const auto& result : results) {
-        if (result.HasState()) {
-          const auto& state = mapmatcher->mapmatching().state(result.stateid());
-          std::cout << mmt_id << " ";
-          std::cout << state.id() << " ";
-          std::cout << state.candidate().distance() << std::endl;
-          count++;
-        }
-        mmt_id++;
+    // Show results
+    size_t mmt_id = 0, count = 0;
+    for (const auto& result : results) {
+      if (result.HasState()) {
+        const auto& state = mapmatcher->mapmatching().state(result.stateid());
+        std::cout << mmt_id << " ";
+        std::cout << state.candidate().distance() << std::endl;
+        count++;
       }
-
-      // Summary
-      std::cout << count << "/" << measurements.size() << std::endl << std::endl;
-
-      // Clean up
-      measurements.clear();
-      matcher_factory.ClearFullCache();
-
-      if (std::cin.eof()) {
-        break;
-      } else {
-        continue;
-      }
+      mmt_id++;
     }
 
-    // Read coordinates from the input line
-    float lng, lat;
-    std::stringstream stream(line);
-    stream >> lng; stream >> lat;
-    measurements.emplace_back(PointLL(lng, lat),
-                              default_gps_accuracy,
-                              default_search_radius);
+    // Summary
+    std::cout << count << "/" << measurements.size() << std::endl << std::endl;
+
+    // Clean up
+    measurements.clear();
+    matcher_factory.ClearFullCache();
   }
 
   delete mapmatcher;
