@@ -67,7 +67,8 @@ nobase_include_HEADERS = \
 	valhalla/meili/geojson_writer.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
-	valhalla/meili/bucket_queue.h
+	valhalla/meili/bucket_queue.h \
+	valhalla/meili/grid_traversal.h
 libvalhalla_meili_la_SOURCES = \
 	src/meili/universal_cost.cc \
 	src/meili/routing.cc \
