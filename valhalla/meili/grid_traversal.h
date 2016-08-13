@@ -120,7 +120,7 @@ class GridTraversal
     // Since we have (intersect_x - origin.x()) / (intersect_y - origin.y()) == cotangent
     const float intersect_x = (intersect_y - origin.y()) * cotangent + origin.x();
     // Return the intersecting column
-    return (intersect_x - minx_) / square_width_;
+    return floor((intersect_x - minx_) / square_width_);
   }
 
   int IntersectsRow(const coord_t& origin, float tangent, int col) const
@@ -138,7 +138,7 @@ class GridTraversal
     // Since we have (intersect_y - origin.y()) / (intersect_x - origin.x()) == tangent
     const float intersect_y = (intersect_x - origin.x()) * tangent + origin.y();
     // Return the intersecting row
-    return (intersect_y - miny_) / square_height_;
+    return floor((intersect_y - miny_) / square_height_);
   }
 
   std::pair<int, int>
@@ -175,7 +175,7 @@ class GridTraversal
 
     // Bottom side of the grid
     if (origin.y() < miny_) {
-      const auto bottom_col = IntersectsColumn(origin, cotangent, nrows_ - 1);
+      const auto bottom_col = IntersectsColumn(origin, cotangent, 0);
       if (miny_ <= dest.y() && IsValidSquare(bottom_col, 0)) {
         return {bottom_col, 0};
       }
@@ -183,7 +183,7 @@ class GridTraversal
     // Top side of the grid
     else {
       // Assert maxy_ <= origin.y()
-      const auto top_col = IntersectsColumn(origin, cotangent, 0);
+      const auto top_col = IntersectsColumn(origin, cotangent, nrows_ - 1);
       if (dest.y() < maxy_ && IsValidSquare(top_col, nrows_ - 1)) {
         return {top_col, nrows_ - 1};
       }
