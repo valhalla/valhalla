@@ -98,6 +98,7 @@ valhalla_meili_worker_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@
 check_PROGRAMS = \
 	test/geometry_helpers \
 	test/grid_range_query \
+	test/grid_traversal \
 	test/map_matching \
 	test/queue \
 	test/routing \
@@ -108,6 +109,10 @@ check_PROGRAMS = \
 test_geometry_helpers_SOURCES = test/geometry_helpers.cc test/test.cc
 test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_geometry_helpers_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
+
+test_grid_traversal_SOURCES = test/grid_traversal.cc test/test.cc
+test_grid_traversal_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_grid_traversal_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_grid_range_query_SOURCES = test/grid_range_query.cc test/test.cc
 test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
