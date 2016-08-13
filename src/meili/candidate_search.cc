@@ -6,24 +6,8 @@ namespace valhalla {
 
 namespace meili {
 
-
-std::vector<Candidate>
-CandidateQuery::Query(const midgard::PointLL& location,
-                      float sq_search_radius,
-                      sif::EdgeFilter filter) const
-{
-  const baldr::GraphTile* tile = reader_.GetGraphTile(location);
-  if (tile && tile->header()->directededgecount() > 0) {
-    // TODO it doesn't work since it is not the right to increase
-    // graphids :(
-    const auto edgeid_begin = boost::counting_iterator<uint64_t>(tile->id()),
-                 edgeid_end = boost::counting_iterator<uint64_t>(static_cast<uint64_t>(tile->id())
-                                                                 + tile->header()->directededgecount());
-    return WithinSquaredDistance(location, sq_search_radius,
-                                 edgeid_begin, edgeid_end, filter, true);
-  }
-  return {};
-}
+CandidateQuery::CandidateQuery(baldr::GraphReader& graphreader):
+    reader_(graphreader) {}
 
 
 std::vector<std::vector<Candidate>>
@@ -46,38 +30,27 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
                                       float sq_search_radius,
                                       edgeid_iterator_t edgeid_begin,
                                       edgeid_iterator_t edgeid_end,
-                                      sif::EdgeFilter filter,
-                                      bool directed) const
+                                      sif::EdgeFilter filter) const
 {
   std::vector<Candidate> candidates;
-  std::unordered_set<baldr::GraphId> visited_nodes, visited_edges;
+  std::unordered_set<baldr::GraphId> visited_nodes;
   DistanceApproximator approximator(location);
   const baldr::GraphTile* tile = nullptr;
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
-    // Do a explict cast here as the iterator is probably of type
-    // uint64_t
-    const auto edgeid = static_cast<baldr::GraphId>(*it);
+    const auto& edgeid = *it;
     if (!edgeid.Is_Valid()) continue;
-
-    // Skip if it's visited
-    if (directed) {
-      if (!visited_edges.insert(edgeid).second) continue;
-    }
 
     const auto opp_edgeid = helpers::edge_opp_edgeid(reader_, edgeid, tile);
     if (!opp_edgeid.Is_Valid()) continue;
     const auto opp_edge = tile->directededge(opp_edgeid);
+
     // Make sure it's the last one since we need the tile of this edge
     const auto edge = helpers::edge_directededge(reader_, edgeid, tile);
     if (!edge) continue;
 
     if (!(edgeid.level() == edge->endnode().level() && edgeid.level() == opp_edgeid.level())) {
       throw std::logic_error("edges feed in candidate filtering should be at the same level as its endnode and opposite edge");
-    }
-
-    if (directed) {
-      visited_edges.insert(opp_edgeid);
     }
 
     // NOTE a pointer to edgeinfo is needed here because it returns
@@ -99,13 +72,13 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     Candidate correlated(baldr::Location(location, baldr::Location::StopType::BREAK));
 
     // Flag for avoiding recomputing projection later
-    bool included = !filter || !filter(edge);
+    const bool included = !filter || !filter(edge);
 
     if (included) {
       std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
 
       if (sq_distance <= sq_search_radius) {
-        float dist = edge->forward()? offset : 1.f - offset;
+        const float dist = edge->forward()? offset : 1.f - offset;
         if (dist == 1.f) {
           snapped_node = edge->endnode();
         } else if (dist == 0.f) {
@@ -122,7 +95,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       }
 
       if (sq_distance <= sq_search_radius) {
-        float dist = opp_edge->forward()? offset : 1.f - offset;
+        const float dist = opp_edge->forward()? offset : 1.f - offset;
         if (dist == 1.f) {
           snapped_node = opp_edge->endnode();
         } else if (dist == 0.f) {
@@ -305,9 +278,8 @@ CandidateGridQuery::Query(const midgard::PointLL& location,
   const auto& range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
   const auto& edgeids = RangeQuery(range);
   return WithinSquaredDistance(location, sq_search_radius,
-                               edgeids.begin(), edgeids.end(), filter, false);
+                               edgeids.begin(), edgeids.end(), filter);
 }
 
 }
-
 }
