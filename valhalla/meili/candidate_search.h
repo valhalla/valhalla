@@ -29,12 +29,12 @@ namespace meili {
 class CandidateQuery
 {
  public:
-  CandidateQuery(baldr::GraphReader& reader) : reader_(reader) {}
+  CandidateQuery(baldr::GraphReader& graphreader);
 
   virtual ~CandidateQuery() {}
 
   virtual std::vector<Candidate>
-  Query(const midgard::PointLL& point, float radius, sif::EdgeFilter filter = nullptr) const;
+  Query(const midgard::PointLL& point, float radius, sif::EdgeFilter filter = nullptr) const = 0;
 
   virtual std::vector<std::vector<Candidate>>
   QueryBulk(const std::vector<midgard::PointLL>& points, float radius, sif::EdgeFilter filter = nullptr);
@@ -45,8 +45,7 @@ class CandidateQuery
                         float sq_search_radius,
                         edgeid_iterator_t edgeid_begin,
                         edgeid_iterator_t edgeid_end,
-                        sif::EdgeFilter filter,
-                        bool directed) const;
+                        sif::EdgeFilter filter) const;
 
   baldr::GraphReader& reader_;
 };
@@ -61,13 +60,6 @@ class CandidateGridQuery final: public CandidateQuery
 
   ~CandidateGridQuery();
 
-  const grid_t* GetGrid(baldr::GraphId tile_id) const;
-
-  const grid_t* GetGrid(const baldr::GraphTile* tile_ptr) const;
-
-  std::unordered_set<baldr::GraphId>
-  RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
-
   std::vector<Candidate>
   Query(const midgard::PointLL& location, float sq_search_radius, sif::EdgeFilter filter) const override;
 
@@ -79,6 +71,13 @@ class CandidateGridQuery final: public CandidateQuery
   { grid_cache_.clear(); }
 
  private:
+
+  const grid_t* GetGrid(const baldr::GraphId& tile_id) const;
+
+  const grid_t* GetGrid(const baldr::GraphTile* tile_ptr) const;
+
+  std::unordered_set<baldr::GraphId>
+  RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
 
   const baldr::TileHierarchy& hierarchy_;
 
