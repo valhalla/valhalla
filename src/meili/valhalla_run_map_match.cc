@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
         if (result.HasState()) {
           const auto& state = mapmatcher->mapmatching().state(result.stateid());
           std::cout << mmt_id << " ";
-          std::cout << state.id() << " ";
           std::cout << state.candidate().distance() << std::endl;
           count++;
         }
