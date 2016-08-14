@@ -204,28 +204,19 @@ inline bool
 IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const baldr::GraphId& edgeid,
               const sif::cost_ptr_t costing,
-              const std::shared_ptr<const sif::EdgeLabel> pred_edgelabel,
-              const sif::EdgeFilter edgefilter,
+              const std::shared_ptr<const sif::EdgeLabel>& pred_edgelabel,
               const baldr::GraphTile* tile)
 {
-  if (costing) {
-    if (pred_edgelabel) {
-      // Still on the same edge and the predecessor's show-up here
-      // means it was allowed so we give it a pass directly
+  if (costing && pred_edgelabel) {
+    // Still on the same edge and the predecessor's show-up here
+    // means it was allowed so we give it a pass directly
 
-      // TODO let sif do this?
-      return edgeid == pred_edgelabel->edgeid()
-          || costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
-    } else {
-      if (edgefilter) {
-        return !edgefilter(edge);
-      } else {
-        return true;
-      }
-    }
-  } else {
-    return true;
+    // TODO let sif do this?
+    return edgeid == pred_edgelabel->edgeid()
+        || costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
   }
+
+  return true;
 }
 
 
@@ -416,8 +407,6 @@ find_shortest_path(baldr::GraphReader& reader,
 
   std::unordered_map<uint16_t, uint32_t> results;
 
-  const auto edgefilter = costing? costing->GetEdgeFilter() : nullptr;
-
   const baldr::GraphTile* tile = nullptr;
 
   while (!labelset.empty()) {
@@ -475,7 +464,7 @@ find_shortest_path(baldr::GraphReader& reader,
           throw std::logic_error("edges in expansion should be at the same level as its endnode");
         }
 
-        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter, tile)) continue;
+        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, tile)) continue;
 
         // Turn cost
         float turn_cost = 0.f;
@@ -549,7 +538,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
           if (!directededge) continue;
 
-          if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter, tile)) continue;
+          if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, tile)) continue;
 
           // U-turn cost
           float turn_cost = 0.f;

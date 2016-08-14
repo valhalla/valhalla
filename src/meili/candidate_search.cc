@@ -30,7 +30,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
                                       float sq_search_radius,
                                       edgeid_iterator_t edgeid_begin,
                                       edgeid_iterator_t edgeid_end,
-                                      sif::EdgeFilter filter) const
+                                      sif::EdgeFilter edgefilter) const
 {
   std::vector<Candidate> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
@@ -71,10 +71,10 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     baldr::GraphId snapped_node;
     Candidate correlated(baldr::Location(location, baldr::Location::StopType::BREAK));
 
-    // Flag for avoiding recomputing projection later
-    const bool included = !filter || !filter(edge);
+    // For avoiding recomputing projection later
+    const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
 
-    if (included) {
+    if (edge_included) {
       std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
 
       if (sq_distance <= sq_search_radius) {
@@ -88,9 +88,11 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
+    bool oppedge_included = !edgefilter || edgefilter(opp_edge) != 0.f;
+
     // Correlate its opp edge
-    if (!filter || !filter(opp_edge)) {
-      if (!included) {
+    if (oppedge_included) {
+      if (!edge_included) {
         std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
       }
 

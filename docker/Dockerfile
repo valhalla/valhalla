@@ -10,11 +10,14 @@ RUN cd /source && git clone --depth=1 --branch=master --recurse-submodules http:
     ./scripts/install.sh && \
     rm -rf /source/meili
 
+RUN cd /source && git clone --depth=1 --branch=master --recurse-submodules https://github.com/valhalla/conf.git
+
+# Mjolnir is optional. Comment them out if you have got them installed
+# on your host machine
+
 # Dependencies of Mjolnir
 RUN apt-get install -y protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev
 
-# Skadi and Mjolnir are optional. Comment them out if you get them
-# installed on your host machine
 RUN cd /source && git clone --depth=1 --recurse-submodules https://github.com/valhalla/skadi.git && \
     cd skadi && \
     ./scripts/install.sh && \
