@@ -716,7 +716,7 @@
       "phrases": {
         "0": "Entrar a la estación.",
         "1": "Entrar en <TRANSIT_STOP>.",
-        "2": "Enter en <TRANSIT_STOP> <STATION_LABEL>."
+        "2": "Entrar en <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
