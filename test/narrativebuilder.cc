@@ -1976,7 +1976,7 @@ void PopulateTransitConnectionStartManeuverList_1(
   maneuver.set_transit_connection_stop(
       TransitStop(TripDirections_TransitStop_Type_kStation,
                   "s-9q8yyv42k3-caltrain~sanfranciscostation",
-                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57EDT", 0,
+                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
                   1, 0.0f, 0.0f));
 }
 
@@ -1996,7 +1996,7 @@ void PopulateTransitConnectionStartManeuverList_2(
   maneuver.set_transit_connection_stop(
       TransitStop(TripDirections_TransitStop_Type_kStation,
                   "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                  "2016-03-29T08:02EDT", 0, 0, 0.0f, 0.0f));
+                  "2016-03-29T08:02-04:00", 0, 0, 0.0f, 0.0f));
 }
 
 void PopulateTransitConnectionTransferManeuverList_0(
@@ -2030,7 +2030,7 @@ void PopulateTransitConnectionTransferManeuverList_1(
   maneuver.set_transit_connection_stop(
       TransitStop(TripDirections_TransitStop_Type_kStation,
                   "s-9q8yyv42k3-caltrain~sanfranciscostation",
-                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57EDT", 0,
+                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
                   1, 0.0f, 0.0f));
 }
 
@@ -2049,7 +2049,7 @@ void PopulateTransitConnectionTransferManeuverList_2(
                    { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
   maneuver.set_transit_connection_stop(
       TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19EDT",
+                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
                   "", 0, 0, 0.0f, 0.0f));
 }
 
@@ -2084,7 +2084,7 @@ void PopulateTransitConnectionDestinationManeuverList_1(
   maneuver.set_transit_connection_stop(
       TransitStop(TripDirections_TransitStop_Type_kStation,
                   "s-9q8yyv42k3-caltrain~sanfranciscostation",
-                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57EDT", 0,
+                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
                   1, 0.0f, 0.0f));
 }
 
@@ -2103,7 +2103,7 @@ void PopulateTransitConnectionDestinationManeuverList_2(
                    { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
   maneuver.set_transit_connection_stop(
       TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19EDT",
+                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
                   "", 0, 0, 0.0f, 0.0f));
 }
 
@@ -2137,27 +2137,27 @@ void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 
   maneuver.set_transit_type(TripPath_TransitType_kRail);
 }
@@ -2192,27 +2192,27 @@ void PopulateTransitManeuverList_0(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
@@ -2238,43 +2238,43 @@ void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn2c3gg-hydest~vallejost", "Hyde St & Vallejo St",
-                      "2016-05-17T08:06EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:06-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn2cpr9-hydest~greenst", "Hyde St & Green St",
-                      "2016-05-17T08:06EDT", "2016-05-17T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn31h5q-hydest~unionst", "Hyde St & Union St",
-                      "2016-05-17T08:06EDT", "2016-05-17T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn32fnv-hydest~filbertst", "Hyde St & Filbert St",
-                      "2016-05-17T08:05EDT", "2016-05-17T08:05EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:05-04:00", "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn32yg5-hydest~greenwichst",
-                      "Hyde St & Greenwich St", "2016-05-17T08:05EDT",
-                      "2016-05-17T08:05EDT", 0, 1, 0.0f, 0.0f)));
+                      "Hyde St & Greenwich St", "2016-05-17T08:05-04:00",
+                      "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn38ez1-hydest~lombardst", "Hyde St & Lombard St",
-                      "2016-05-17T08:04EDT", "2016-05-17T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn3b9cv-hydest~chestnutst", "Hyde St & Chestnut St",
-                      "2016-05-17T08:04EDT", "2016-05-17T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-9q8zn60kc1-hydest~bayst", "Hyde St & Bay St", "",
-                      "2016-05-17T08:03EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-05-17T08:03-04:00", 0, 1, 0.0f, 0.0f)));
 
   maneuver.set_transit_type(TripPath_TransitType_kCableCar);
 
@@ -2310,14 +2310,14 @@ void PopulateTransitManeuverList_1_stop_count_1(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rkw4r8c-atlanticav~barclaysctr<r31n",
-                      "Atlantic Av - Barclays Ctr", "2016-05-17T08:08EDT", "", 0,
+                      "Atlantic Av - Barclays Ctr", "2016-05-17T08:08-04:00", "", 0,
                       0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rkmp4s9-unionst<r32n", "Union St", "",
-                      "2016-05-17T08:06EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:06-04:00", 0, 0, 0.0f, 0.0f)));
 
 }
 
@@ -2351,18 +2351,18 @@ void PopulateTransitManeuverList_1_stop_count_2(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20s", "14 St - Union Sq",
-                      "2016-05-17T08:08EDT", "2016-05-17T08:11EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:08-04:00", "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19s", "23 St", "2016-05-17T08:07EDT",
-                      "2016-05-17T08:07EDT", 0, 0, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19s", "23 St", "2016-05-17T08:07-04:00",
+                      "2016-05-17T08:07-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18s", "28 St", "", "2016-05-17T08:05EDT",
+                      "s-dr5ru37pdw-28st<r18s", "28 St", "", "2016-05-17T08:05-04:00",
                       0, 0, 0.0f, 0.0f)));
 
 }
@@ -2397,27 +2397,27 @@ void PopulateTransitManeuverList_1_stop_count_4(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitManeuverList_1_stop_count_8(std::list<Maneuver>& maneuvers,
@@ -2449,57 +2449,57 @@ void PopulateTransitManeuverList_1_stop_count_8(std::list<Maneuver>& maneuvers,
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru3006q-23st<d18n", "23 St", "2016-05-17T08:32EDT", "",
+                      "s-dr5ru3006q-23st<d18n", "23 St", "2016-05-17T08:32-04:00", "",
                       0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru0jt7k-14st<d19n", "14 St", "2016-05-17T08:30EDT",
-                      "2016-05-17T08:30EDT", 0, 0, 0.0f, 0.0f)));
+                      "s-dr5ru0jt7k-14st<d19n", "14 St", "2016-05-17T08:30-04:00",
+                      "2016-05-17T08:30-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsp47p6-w4st<d20n", "W 4 St", "2016-05-17T08:29EDT",
-                      "2016-05-17T08:29EDT", 0, 0, 0.0f, 0.0f)));
+                      "s-dr5rsp47p6-w4st<d20n", "W 4 St", "2016-05-17T08:29-04:00",
+                      "2016-05-17T08:29-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsjvd53-broadway~lafayettest<d21n",
-                      "Broadway-Lafayette St", "2016-05-17T08:26EDT",
-                      "2016-05-17T08:26EDT", 0, 0, 0.0f, 0.0f)));
+                      "Broadway-Lafayette St", "2016-05-17T08:26-04:00",
+                      "2016-05-17T08:26-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rskecru-essexst<m18n", "Essex St",
-                      "2016-05-17T08:23EDT", "2016-05-17T08:23EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:23-04:00", "2016-05-17T08:23-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rt49x7k-marcyav<m16n", "Marcy Av",
-                      "2016-05-17T08:16EDT", "2016-05-17T08:16EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:16-04:00", "2016-05-17T08:16-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rt4ky8n-hewesst<m14n", "Hewes St",
-                      "2016-05-17T08:15EDT", "2016-05-17T08:15EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:15-04:00", "2016-05-17T08:15-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rt3cjhx-lorimerst<m13n", "Lorimer St",
-                      "2016-05-17T08:13EDT", "2016-05-17T08:13EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:13-04:00", "2016-05-17T08:13-04:00", 0, 0, 0.0f, 0.0f)));
 
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rt3m8ny-flushingav<m12n", "Flushing Av", "",
-                      "2016-05-17T08:11EDT", 0, 0, 0.0f, 0.0f)));
+                      "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
 
 }
 
@@ -2533,27 +2533,27 @@ void PopulateTransitTransferManeuverList_0_no_name(std::list<Maneuver>& maneuver
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitTransferManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -2586,27 +2586,27 @@ void PopulateTransitTransferManeuverList_0(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitTransferManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -2639,27 +2639,27 @@ void PopulateTransitTransferManeuverList_1(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
@@ -2692,27 +2692,27 @@ void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuver
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -2745,27 +2745,27 @@ void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitRemainOnManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -2798,27 +2798,27 @@ void PopulateTransitRemainOnManeuverList_1(std::list<Maneuver>& maneuvers,
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08EDT", "", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07EDT",
-                      "2016-03-29T08:07EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06EDT",
-                      "2016-03-29T08:06EDT", 0, 1, 0.0f, 0.0f)));
+                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04EDT", "2016-03-29T08:04EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
   maneuver.InsertTransitStop(
       std::move(
           TransitStop(TripDirections_TransitStop_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02EDT", 0, 1, 0.0f, 0.0f)));
+                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_0(
@@ -6644,10 +6644,10 @@ void TestBuildTransit_0_train_miles_en_US() {
                                         state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the train. (4 stops)",
                                   "", "Take the train.", "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6678,10 +6678,10 @@ void TestBuildTransit_0_miles_en_US() {
                                   "",
                                   "Take the R.",
                                   "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6713,10 +6713,10 @@ void TestBuildTransit_1_cable_car_miles_en_US() {
       "Take the cable car toward Powell & Market. (7 stops)",
       "",
       "Take the cable car toward Powell & Market.", "Travel 7 stops.",
-      "Depart: 8:03 AM EDT from Hyde St & Bay St.",
-      "Depart at 8:03 AM EDT from Hyde St & Bay St.",
-      "Arrive: 8:06 AM EDT at Hyde St & Vallejo St.",
-      "Arrive at 8:06 AM EDT at Hyde St & Vallejo St.");
+      "Depart: 8:03 AM from Hyde St & Bay St.",
+      "Depart at 8:03 AM from Hyde St & Bay St.",
+      "Arrive: 8:06 AM at Hyde St & Vallejo St.",
+      "Arrive at 8:06 AM at Hyde St & Vallejo St.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6747,10 +6747,10 @@ void TestBuildTransit_1_stop_count_1_miles_en_US() {
                                   "",
                                   "Take the R toward FOREST HILLS - 71 AV.",
                                   "Travel 1 stop.",
-                                  "Depart: 8:06 AM EDT from Union St.",
-                                  "Depart at 8:06 AM EDT from Union St.",
-                                  "Arrive: 8:08 AM EDT at Atlantic Av - Barclays Ctr.",
-                                  "Arrive at 8:08 AM EDT at Atlantic Av - Barclays Ctr.");
+                                  "Depart: 8:06 AM from Union St.",
+                                  "Depart at 8:06 AM from Union St.",
+                                  "Arrive: 8:08 AM at Atlantic Av - Barclays Ctr.",
+                                  "Arrive at 8:08 AM at Atlantic Av - Barclays Ctr.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6781,10 +6781,10 @@ void TestBuildTransit_1_stop_count_2_miles_en_US() {
                                   "",
                                   "Take the R toward BAY RIDGE - 95 ST.",
                                   "Travel 2 stops.",
-                                  "Depart: 8:05 AM EDT from 28 St.",
-                                  "Depart at 8:05 AM EDT from 28 St.",
-                                  "Arrive: 8:08 AM EDT at 14 St - Union Sq.",
-                                  "Arrive at 8:08 AM EDT at 14 St - Union Sq.");
+                                  "Depart: 8:05 AM from 28 St.",
+                                  "Depart at 8:05 AM from 28 St.",
+                                  "Arrive: 8:08 AM at 14 St - Union Sq.",
+                                  "Arrive at 8:08 AM at 14 St - Union Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6815,10 +6815,10 @@ void TestBuildTransit_1_stop_count_4_miles_en_US() {
                                   "",
                                   "Take the R toward FOREST HILLS - 71 AV.",
                                   "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6849,10 +6849,10 @@ void TestBuildTransit_1_stop_count_8_miles_en_US() {
                                   "",
                                   "Take the M toward FOREST HILLS - 71 AV.",
                                   "Travel 8 stops.",
-                                  "Depart: 8:11 AM EDT from Flushing Av.",
-                                  "Depart at 8:11 AM EDT from Flushing Av.",
-                                  "Arrive: 8:32 AM EDT at 23 St.",
-                                  "Arrive at 8:32 AM EDT at 23 St.");
+                                  "Depart: 8:11 AM from Flushing Av.",
+                                  "Depart at 8:11 AM from Flushing Av.",
+                                  "Arrive: 8:32 AM at 23 St.",
+                                  "Arrive at 8:32 AM at 23 St.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6883,10 +6883,10 @@ void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
                                   "",
                                   "Nastupte na R směr FOREST HILLS - 71 AV.",
                                   "Jeďte 1 zastávku.",
-                                  "Odjezd: 08:06 EDT z Union St.",
-                                  "Odjíždíte v 08:06 EDT z Union St.",
-                                  "Příjezd: 08:08 EDT na Atlantic Av - Barclays Ctr.",
-                                  "Přijedete v 08:08 EDT na Atlantic Av - Barclays Ctr.");
+                                  "Odjezd: 08:06 z Union St.",
+                                  "Odjíždíte v 08:06 z Union St.",
+                                  "Příjezd: 08:08 na Atlantic Av - Barclays Ctr.",
+                                  "Přijedete v 08:08 na Atlantic Av - Barclays Ctr.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6917,10 +6917,10 @@ void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
                                   "",
                                   "Nastupte na R směr BAY RIDGE - 95 ST.",
                                   "Jeďte 2 zastávky.",
-                                  "Odjezd: 08:05 EDT z 28 St.",
-                                  "Odjíždíte v 08:05 EDT z 28 St.",
-                                  "Příjezd: 08:08 EDT na 14 St - Union Sq.",
-                                  "Přijedete v 08:08 EDT na 14 St - Union Sq.");
+                                  "Odjezd: 08:05 z 28 St.",
+                                  "Odjíždíte v 08:05 z 28 St.",
+                                  "Příjezd: 08:08 na 14 St - Union Sq.",
+                                  "Přijedete v 08:08 na 14 St - Union Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6951,10 +6951,10 @@ void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
                                   "",
                                   "Nastupte na R směr FOREST HILLS - 71 AV.",
                                   "Jeďte 4 zastávky.",
-                                  "Odjezd: 08:02 EDT z 8 St - NYU.",
-                                  "Odjíždíte v 08:02 EDT z 8 St - NYU.",
-                                  "Příjezd: 08:08 EDT na 34 St - Herald Sq.",
-                                  "Přijedete v 08:08 EDT na 34 St - Herald Sq.");
+                                  "Odjezd: 08:02 z 8 St - NYU.",
+                                  "Odjíždíte v 08:02 z 8 St - NYU.",
+                                  "Příjezd: 08:08 na 34 St - Herald Sq.",
+                                  "Přijedete v 08:08 na 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -6985,10 +6985,10 @@ void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
                                   "",
                                   "Nastupte na M směr FOREST HILLS - 71 AV.",
                                   "Jeďte 8 zastávek.",
-                                  "Odjezd: 08:11 EDT z Flushing Av.",
-                                  "Odjíždíte v 08:11 EDT z Flushing Av.",
-                                  "Příjezd: 08:32 EDT na 23 St.",
-                                  "Přijedete v 08:32 EDT na 23 St.");
+                                  "Odjezd: 08:11 z Flushing Av.",
+                                  "Odjíždíte v 08:11 z Flushing Av.",
+                                  "Příjezd: 08:32 na 23 St.",
+                                  "Přijedete v 08:32 na 23 St.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7020,10 +7020,10 @@ void TestBuildTransitTransfer_0_no_name_miles_en_US() {
                                   "Transfer to take the train. (4 stops)", "",
                                   "Transfer to take the train.",
                                   "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7053,10 +7053,10 @@ void TestBuildTransitTransfer_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Transfer to take the R. (4 stops)", "",
                                   "Transfer to take the R.", "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7087,9 +7087,9 @@ void TestBuildTransitTransfer_1_miles_en_US() {
       expected_maneuvers,
       "Transfer to take the R toward FOREST HILLS - 71 AV. (4 stops)", "",
       "Transfer to take the R toward FOREST HILLS - 71 AV.", "Travel 4 stops.",
-      "Depart: 8:02 AM EDT from 8 St - NYU.", "Depart at 8:02 AM EDT from 8 St - NYU.",
-      "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-      "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+      "Depart: 8:02 AM from 8 St - NYU.", "Depart at 8:02 AM from 8 St - NYU.",
+      "Arrive: 8:08 AM at 34 St - Herald Sq.",
+      "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7121,10 +7121,10 @@ void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
                                   "Remain on the train. (4 stops)", "",
                                   "Remain on the train.",
                                   "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7154,10 +7154,10 @@ void TestBuildTransitRemainOn_0_miles_en_US() {
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Remain on the R. (4 stops)", "",
                                   "Remain on the R.", "Travel 4 stops.",
-                                  "Depart: 8:02 AM EDT from 8 St - NYU.",
-                                  "Depart at 8:02 AM EDT from 8 St - NYU.",
-                                  "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-                                  "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+                                  "Depart: 8:02 AM from 8 St - NYU.",
+                                  "Depart at 8:02 AM from 8 St - NYU.",
+                                  "Arrive: 8:08 AM at 34 St - Herald Sq.",
+                                  "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -7188,9 +7188,9 @@ void TestBuildTransitRemainOn_1_miles_en_US() {
       expected_maneuvers,
       "Remain on the R toward FOREST HILLS - 71 AV. (4 stops)", "",
       "Remain on the R toward FOREST HILLS - 71 AV.", "Travel 4 stops.",
-      "Depart: 8:02 AM EDT from 8 St - NYU.", "Depart at 8:02 AM EDT from 8 St - NYU.",
-      "Arrive: 8:08 AM EDT at 34 St - Herald Sq.",
-      "Arrive at 8:08 AM EDT at 34 St - Herald Sq.");
+      "Depart: 8:02 AM from 8 St - NYU.", "Depart at 8:02 AM from 8 St - NYU.",
+      "Arrive: 8:08 AM at 34 St - Herald Sq.",
+      "Arrive at 8:08 AM at 34 St - Herald Sq.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
