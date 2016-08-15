@@ -716,7 +716,7 @@
       "phrases": {
         "0": "Entrar a la estación.",
         "1": "Entrar en <TRANSIT_STOP>.",
-        "2": "Enter en <TRANSIT_STOP> <Estación_LABEL>."
+        "2": "Enter en <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
@@ -729,7 +729,7 @@
       "phrases": {
         "0": "Entrar en la estación.",
         "1": "Entrar en <TRANSIT_STOP>.",
-        "2": "Entrar en <TRANSIT_STOP> <Estación_LABEL>."
+        "2": "Entrar en <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Estación",
       "example_phrases": {
@@ -742,7 +742,7 @@
       "phrases": {
         "0": "Trasladarse a la Estación.",
         "1": "Trasladarse a la <TRANSIT_STOP>.",
-        "2": "Trasladarse a la <Estación_LABEL> <TRANSIT_STOP>."
+        "2": "Trasladarse a la <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Estación",
       "example_phrases": {
@@ -755,7 +755,7 @@
       "phrases": {
         "0": "Trasladarse a la Estación.",
         "1": "Trasladarse a la <TRANSIT_STOP>.",
-        "2": "Trasladarse a la <Estación_LABEL> <TRANSIT_STOP>."
+        "2": "Trasladarse a la <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Estación",
       "example_phrases": {
@@ -768,7 +768,7 @@
       "phrases": {
         "0": "Salir de la Estación.",
         "1": "Salir de <TRANSIT_STOP>.",
-        "2": "Salir de <Estación_LABEL> <TRANSIT_STOP>."
+        "2": "Salir de <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Estación",
       "example_phrases": {
@@ -781,7 +781,7 @@
       "phrases": {
         "0": "Salir de la Estación.",
         "1": "Salir de <TRANSIT_STOP>.",
-        "2": "Salir de la <Estación_LABEL> <TRANSIT_STOP>."
+        "2": "Salir de la <STATION_LABEL> <TRANSIT_STOP>."
       },
       "station_label": "Estación",
       "example_phrases": {
@@ -833,7 +833,7 @@
     "transit": {
       "phrases": {
         "0": "Tomar la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_DirigirseSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["tranvía", "metro", "tren", "ómnibus", "ferry", "teleférico", "góndola", "funicular"],
       "transit_stop_count_labels": {"one": "parada", "other": "paradas"},
@@ -845,7 +845,7 @@
     "transit_verbal": {
       "phrases": {
         "0": "Tomar la <TRANSIT_NAME>.",
-        "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_DirigirseSIGN>."
+        "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": ["tranvía", "metro", "tren", "ómnibus", "ferry", "teleférico", "góndola", "funicular"],
       "example_phrases": {
@@ -856,7 +856,7 @@
     "transit_remain_on": {
       "phrases": {
         "0": "Permanecer en la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Permanecer en la <TRANSIT_NAME> toward <TRANSIT_DirigirseSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Permanecer en la <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["tranvía", "metro", "tren", "ómnibus", "ferry", "teleférico", "góndola", "funicular"],
       "transit_stop_count_labels": {"one": "parada", "other": "paradas"},
@@ -868,7 +868,7 @@
     "transit_remain_on_verbal": {
       "phrases": {
         "0": "Permanecer en la <TRANSIT_NAME>.",
-        "1": "Permanecer en la <TRANSIT_NAME> hacia <TRANSIT_DirigirseSIGN>."
+        "1": "Permanecer en la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": ["tranvía", "metro", "tren", "ómnibus", "ferry", "teleférico", "góndola", "funicular"],
       "example_phrases": {
@@ -879,7 +879,7 @@
     "transit_transfer": {
       "phrases": {
         "0": "Trasladarse para tomar la <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Trasladarse para tomar la <TRANSIT_NAME> toward <TRANSIT_DirigirseSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "Trasladarse para tomar la <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["tranvía", "metro", "tren", "ómnibus", "ferry", "teleférico", "góndola", "funicular"],
       "transit_stop_count_labels": {"one": "parada", "other": "paradas"},
@@ -891,7 +891,7 @@
     "transit_transfer_verbal": {
       "phrases": {
         "0": "Trasladarse para tomar la <TRANSIT_NAME>.",
-        "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_DirigirseSIGN>."
+        "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": ["tranvía", "metro", "tren", "ómnibus", "ferry", "teleférico", "góndola", "funicular"],
       "example_phrases": {
