@@ -14,7 +14,7 @@ done
 wait
 
 #build sync
-for dep in midgard baldr sif skadi loki odin thor tyr; do
+for dep in midgard baldr sif meili skadi loki odin thor tyr; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
