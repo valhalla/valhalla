@@ -8,7 +8,7 @@ sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc
 
 #clone async
 mkdir -p deps
-for dep in midgard baldr skadi sif loki odin thor tyr; do
+for dep in midgard baldr skadi sif meili loki odin thor tyr; do
 	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep &
 done
 wait
