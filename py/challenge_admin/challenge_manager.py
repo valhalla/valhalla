@@ -1,7 +1,6 @@
 import requests
 import json
 from utils import utils
-from db_tool import db_tool
 from models import Challenge
 import config
 

@@ -1,14 +1,45 @@
 #!/usr/bin/env python3
 
+import sys
+import getopt
 import requests
 import json
-import config
 from utils import utils
-from db_tool import db_tool
-from challenge_manager import challenge_interface
 
 
 class admin_tool:
+    def __init__(self, config):
+
+        utils.status_begin('Initializing')
+
+        # Read the config file into an object for access
+        with open(config) as conf_file:
+            conf = json.loads(conf_file.read())
+
+        # Set up header for API interactions
+        self.header = {'Content-Type': 'application/json',
+                       'apiKey': conf['api_key']}
+        # Get server url from config
+        self.server_url = conf['server_url']
+
+        self.challenges = {}
+        challenge_ids = conf['challenges']
+        for challenge in challenge_ids:
+            # Build dictionary of challenge types
+            self.challenges[challenge] = conf['challenges'][challenge]
+
+        utils.status_done()
+
+
+    def init_challenges(self):
+        self.challenge_tasks = {}
+        for challenge in self.challenges:
+            # Download tasks for each challenge
+            utils.status_begin('Downloading tasks from challenge ' + challenge)
+            tasks = self.get_tasks_from_api(challenge).json()
+            self.challenge_tasks[challenge] = tasks
+            utils.status_done()
+
 
     def create_upload_tasks(self):
         '''Reads a geojson file specified in config, then generates and uploads the tasks to maproulete'''
@@ -53,12 +84,8 @@ class admin_tool:
                     }
 
             # change some values depending on what type of task we built
-            if feature['properties']['type'] == 'Loop':
-                task['instruction'] = 'This one way road loops back on itself. Edit it so that the road is properly accessible'
-            else:
-                task['instruction'] = 'This node is either unreachable or unleaveable. '
-                task['instruction'] += 'Edit the surrounding roads so that the node can be accessed properly'
-
+            task_type = feature['properties']['type']
+            task['instruction'] = geojson['properties']['instructions'][task_type]
             # add the task to the list for later
             tasks.append(task)
             task_num += 1
@@ -68,7 +95,7 @@ class admin_tool:
     def get_tasks_from_api(self, challenge_id):
         '''http get up to 10000 tasks from maproulette'''
         payload = {'limit': 10000}
-        response = requests.get('{}/api/v2/challenge/{}/tasks'.format(config.url, challenge_id), headers=config.header, params=payload)
+        response = requests.get('{}/api/v2/challenge/{}/tasks'.format(self.server_url, challenge_id), headers=self.header, params=payload)
         return response
 
     def upload_tasks(self, tasks):
@@ -84,44 +111,38 @@ class admin_tool:
         return response
 
 
-
-
+    def init_headless_mode(self):
+        self.init_challenges()
 
 
 if __name__ == '__main__':
-    selection = None
-    admin = admin_tool()
-    while selection != 'q':
-        utils.clear_console()
-        selection = input(
-'''Select One:
-    [1] Manage Challenges
-    [2] Upload tasks to a challenge
-    [3] Manage Projects
-    [q] Quit
 
-==> ''')
+    # headless is off by default
+    config = ''
+    headless = False
 
-        if (selection == '1'):
-            challenge_interface()
+    # Set expected options and parse
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:H',['help','config=','headless'])
+    except getopt.GetoptError:
+        print('admin_tool.py --config conf/maproulette.json')
+        sys.exit(2)
 
+    # Use arguments and flags to set program parameters
+    for opt, arg in opts:
+        if opt in ('-h', '--help'):
+            print('admin_tool.py --config conf/maproulette.json')
+            sys.exit()
+        elif opt in ('-c', '--config'):
+            config = arg
+        elif opt in ('-H', '--headless'):
+            headless = True
 
+    admin = admin_tool(config)
 
-
-'''
-        if (selection == '1'):
-            admin.manage('project', True)
-        elif (selection == '2'):
-            admin.manage('project')
-        elif (selection == '3'):
-            admin.manage('challenge', True)
-        elif (selection == '4'):
-            admin.manage('challenge')
-        elif (selection == '5'):
-            admin.create_upload_tasks()
-        elif (selection == 'q'):
-            break
-        else:
-            print("Please enter an option 1-6")
-'''
-
+    # start in the correct mode
+    if headless:
+        admin.init_headless_mode()
+        admin.headless_start()
+    else:
+        pass
