@@ -296,8 +296,7 @@ float PedestrianCost::GetModeWeight() {
 }
 
 // Check if access is allowed on the specified edge. Disallow if no pedestrian
-// access. Disallow Uturns or entering not-thru edges except near the
-// destination. Do not allow if surface is impassable. Disallow edges
+// access. Do not allow if surface is impassable. Disallow edges
 // where max. walking distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
@@ -310,12 +309,6 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   if (!(edge->forwardaccess() & kPedestrianAccess) ||
        (edge->surface() == Surface::kImpassable) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
-    return false;
-  }
-
-  // Check for U-turn (if predecessor mode is also pedestrian)
-  if (pred.mode() == TravelMode::kPedestrian &&
-      pred.opp_local_idx() == edge->localedgeidx()) {
     return false;
   }
 
@@ -335,12 +328,11 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
-  // Disallow if no pedestrian access, surface marked as impassible, or
-  // is a Uturn. Do not check max walking distance and assume we are not
-  // allowing transit connections. Assume this method is never used in
+  // Disallow if no pedestrian access or surface marked as impassible.
+  // Do not check max walking distance and assume we are not allowing
+  // transit connections. Assume this method is never used in
   // multimodal routes).
   if (!(opp_edge->forwardaccess() & kPedestrianAccess) ||
-       (pred.opp_local_idx() == edge->localedgeidx()) ||
         opp_edge->surface() == Surface::kImpassable ||
         opp_edge->use() == Use::kTransitConnection) {
     return false;
