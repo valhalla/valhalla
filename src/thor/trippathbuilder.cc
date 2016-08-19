@@ -20,9 +20,6 @@ using namespace valhalla::odin;
 
 namespace {
 
-// Meters offset from start/end of shape for finding heading
-constexpr float kMetersOffsetForHeading = 30.0f;
-
 template<class iter>
 void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end,
                      float partial_length, bool back_insert,
@@ -840,12 +837,14 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
     trip_edge->set_begin_heading(
         std::round(
-            PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                          kMetersOffsetForHeading)));
+            PointLL::HeadingAlongPolyline(
+                edgeinfo->shape(),
+                GetOffsetForHeading(directededge->classification()))));
     trip_edge->set_end_heading(
         std::round(
-            PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                            kMetersOffsetForHeading)));
+            PointLL::HeadingAtEndOfPolyline(
+                edgeinfo->shape(),
+                GetOffsetForHeading(directededge->classification()))));
   } else {
     // Reverse driveability and heading
     if ((directededge->forwardaccess() & kAccess)
@@ -867,16 +866,19 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     trip_edge->set_begin_heading(
         std::round(
             fmod(
-                (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                                 kMetersOffsetForHeading)
+                (PointLL::HeadingAtEndOfPolyline(
+                    edgeinfo->shape(),
+                    GetOffsetForHeading(directededge->classification()))
                     + 180.0f),
                 360)));
 
     trip_edge->set_end_heading(
         std::round(
             fmod(
-                (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                               kMetersOffsetForHeading) + 180.0f),
+                (PointLL::HeadingAlongPolyline(
+                    edgeinfo->shape(),
+                    GetOffsetForHeading(directededge->classification()))
+                    + 180.0f),
                 360)));
   }
 
