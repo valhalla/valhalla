@@ -839,12 +839,14 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
         std::round(
             PointLL::HeadingAlongPolyline(
                 edgeinfo->shape(),
-                GetOffsetForHeading(directededge->classification()))));
+                GetOffsetForHeading(directededge->classification(),
+                                    directededge->use()))));
     trip_edge->set_end_heading(
         std::round(
             PointLL::HeadingAtEndOfPolyline(
                 edgeinfo->shape(),
-                GetOffsetForHeading(directededge->classification()))));
+                GetOffsetForHeading(directededge->classification(),
+                                    directededge->use()))));
   } else {
     // Reverse driveability and heading
     if ((directededge->forwardaccess() & kAccess)
@@ -868,8 +870,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
             fmod(
                 (PointLL::HeadingAtEndOfPolyline(
                     edgeinfo->shape(),
-                    GetOffsetForHeading(directededge->classification()))
-                    + 180.0f),
+                    GetOffsetForHeading(directededge->classification(),
+                                        directededge->use())) + 180.0f),
                 360)));
 
     trip_edge->set_end_heading(
@@ -877,8 +879,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
             fmod(
                 (PointLL::HeadingAlongPolyline(
                     edgeinfo->shape(),
-                    GetOffsetForHeading(directededge->classification()))
-                    + 180.0f),
+                    GetOffsetForHeading(directededge->classification(),
+                                        directededge->use())) + 180.0f),
                 360)));
   }
 
