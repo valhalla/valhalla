@@ -440,7 +440,8 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
       std::reverse(shape.begin(), shape.end());
     uint32_t to_heading = std::round(
         PointLL::HeadingAlongPolyline(
-            shape, GetOffsetForHeading(diredge->classification())));
+            shape,
+            GetOffsetForHeading(diredge->classification(), diredge->use())));
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
     if (turndegree < 30 || turndegree > 330) {
       continue;
@@ -1028,7 +1029,9 @@ void enhance(const boost::property_tree::ptree& pt,
           std::reverse(shape.begin(), shape.end());
         heading[j] = std::round(
             PointLL::HeadingAlongPolyline(
-                shape, GetOffsetForHeading(directededge.classification())));
+                shape,
+                GetOffsetForHeading(directededge.classification(),
+                                    directededge.use())));
 
         // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
         // same heading - should one be "adjusted" so the relative direction
