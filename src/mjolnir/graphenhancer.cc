@@ -62,9 +62,6 @@ constexpr uint32_t kUnreachableIterations = 20;
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
-// Meters offset from start/end of shape for finding heading
-constexpr float kMetersOffsetForHeading = 30.0f;
-
 // Radius (km) to use for density
 constexpr float kDensityRadius  = 2.0f;
 constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
@@ -441,8 +438,9 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
     auto shape = tile->edgeinfo(diredge->edgeinfo_offset())->shape();
     if (!diredge->forward())
       std::reverse(shape.begin(), shape.end());
-    uint32_t to_heading = std::round(PointLL::HeadingAlongPolyline(shape,
-                                 kMetersOffsetForHeading));
+    uint32_t to_heading = std::round(
+        PointLL::HeadingAlongPolyline(
+            shape, GetOffsetForHeading(diredge->classification())));
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
     if (turndegree < 30 || turndegree > 330) {
       continue;
@@ -1028,7 +1026,9 @@ void enhance(const boost::property_tree::ptree& pt,
         auto shape = e_offset->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
-        heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
+        heading[j] = std::round(
+            PointLL::HeadingAlongPolyline(
+                shape, GetOffsetForHeading(directededge.classification())));
 
         // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
         // same heading - should one be "adjusted" so the relative direction
