@@ -6,96 +6,6 @@
 using namespace valhalla::meili;
 
 
-void TestGridTools()
-{
-  const BoundingBox bbox(0, 0, 100, 100);
-  GridRangeQuery<int> grid(bbox, 1.f, 1.f);
-
-  {
-    const auto c = grid.GridCoordinates({12.5, 13.7});
-    test::assert_bool(c.first == 12 && c.second == 13,
-                      "should get the right grid coodinate");
-  }
-
-  {
-    const auto intersects = BoundingBoxLineSegmentIntersections(grid.CellBoundingBox(2, 3),
-                                                                LineSegment({2.5, 3.5}, {10, 3.5}));
-    test::assert_bool(intersects.size() == 1, "should be intersected");
-    test::assert_bool(intersects[0].point.x() == 3 && intersects[0].point.y() == 3.5,
-                      "intersected coordinate should be correct");
-  }
-
-  {
-    const LineSegment segment({0, 0}, {100, 100});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(ok && interior.a() == Point(0, 0) && interior.b() == Point(100, 100),
-                      "intersection should be LINESTRING(0 0, 100 100)");
-  }
-
-  {
-    const LineSegment segment({0, 0}, {50, 50});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(ok && interior.a() == Point(0, 0) && interior.b() == Point(50, 50),
-                      "intersection should be LINESTRING(0 0, 50 50)");
-  }
-
-  {
-    const LineSegment segment({50, 50}, {150, 150});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(ok && interior.a() == Point(50, 50) && interior.b() == Point(100, 100),
-                      "intersection should be LINESTRING(50 50, 100 100)");
-  }
-
-  {
-    const LineSegment segment({-50, -50}, {150, 150});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(ok && interior.a() == Point(0, 0) && interior.b() == Point(100, 100),
-                      "intersection should be LINESTRING(0 0, 100 100)");
-  }
-
-  {
-    const LineSegment segment({100, 100}, {150, 150});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(!ok, "Should be empty intersection");
-  }
-
-  {
-    const LineSegment segment({120, 120}, {150, 150});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(!ok, "Should be empty intersection");
-  }
-
-  {
-    const LineSegment segment({20, 20}, {80, 80});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(ok && interior.a() == Point(20, 20) && interior.b() == Point(80, 80),
-                      "intersection should be LINESTRING(20 20, 80 80)");
-  }
-
-  {
-    const LineSegment segment({20, 20}, {20, 20});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(ok && interior.a() == Point(20, 20) && interior.b() == Point(20, 20),
-                      "intersection should be LINESTRING(20 20, 20 20)");
-  }
-
-  {
-    const LineSegment segment({200, 200}, {200, 200});
-    LineSegment interior;
-    const auto ok = InteriorLineSegment(grid.bbox(), segment, interior);
-    test::assert_bool(!ok, "should be empty intersection");
-  }
-}
-
-
 void TestAddLineSegment()
 {
   BoundingBox bbox(0, 0, 100, 100);
@@ -123,6 +33,15 @@ void TestAddLineSegment()
   grid.AddLineSegment(0, LineSegment({0.5, 0.5}, {0.5, 0.5}));
   test::assert_bool(grid.GetItemsInCell(0, 0).size() == old_item00_size + 1,
                     "empty segment should be added");
+
+  // A special case that failed
+  {
+    BoundingBox bbox(-78.5, 0, -78.25, 0.25);
+    // 0.005 == 0.25 / 500 where 0.25 is the tile size and we divided it into 500x500 cells
+    GridRangeQuery<int> grid(bbox, 0.005f, 0.005f);
+    // Should not thow anything here
+    grid.AddLineSegment(1, LineSegment({-78.4831, 0.002865}, {-78.4839, -0.001577}));
+  }
 }
 
 
@@ -149,8 +68,6 @@ void TestQuery()
 int main(int argc, char *argv[])
 {
   test::suite suite("grid range query");
-
-  suite.test(TEST_CASE(TestGridTools));
 
   suite.test(TEST_CASE(TestAddLineSegment));
 
