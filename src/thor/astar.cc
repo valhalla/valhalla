@@ -1,9 +1,9 @@
 #include <iostream> // TODO remove if not needed
 #include <map>
 #include <algorithm>
-#include "thor/pathalgorithm.h"
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/logging.h>
+#include "thor/astar.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -17,7 +17,7 @@ namespace thor {
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-PathAlgorithm::PathAlgorithm()
+AStarPathAlgorithm::AStarPathAlgorithm()
     : mode_(TravelMode::kDrive),
       allow_transitions_(false),
       adjacencylist_(nullptr),
@@ -26,12 +26,12 @@ PathAlgorithm::PathAlgorithm()
 }
 
 // Destructor
-PathAlgorithm::~PathAlgorithm() {
+AStarPathAlgorithm::~AStarPathAlgorithm() {
   Clear();
 }
 
 // Clear the temporary information generated during path construction.
-void PathAlgorithm::Clear() {
+void AStarPathAlgorithm::Clear() {
   // Clear the edge labels and destination list
   edgelabels_.clear();
   destinations_.clear();
@@ -44,7 +44,7 @@ void PathAlgorithm::Clear() {
 }
 
 // Initialize prior to finding best path
-void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
+void AStarPathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
                          const std::shared_ptr<DynamicCost>& costing) {
   LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
   LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
@@ -76,7 +76,7 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
 // the destination (increase distance for lower densities and decrease
 // for higher densities) and the distance between origin and destination
 // (increase for shorter distances).
-void PathAlgorithm::ModifyHierarchyLimits(const float dist,
+void AStarPathAlgorithm::ModifyHierarchyLimits(const float dist,
                                           const uint32_t density) {
   // TODO - default distance below which we increase expansion within
   // distance. This is somewhat temporary to address route quality on shorter
@@ -102,7 +102,7 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
+std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
              PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
@@ -285,7 +285,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
 
 // Convenience method to add an edge to the adjacency list and temporarily
 // label it.
-void PathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
+void AStarPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
   uint32_t idx = edgelabels_.size();
   adjacencylist_->Add(idx, sortcost);
@@ -295,7 +295,7 @@ void PathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
 // Check if edge is temporarily labeled and this path has less cost. If
 // less cost the predecessor is updated and the sort cost is decremented
 // by the difference in real cost (A* heuristic doesn't change)
-void PathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
+void AStarPathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
                                          const uint32_t predindex,
                                          const Cost& newcost) {
   float dc = edgelabels_[idx].cost().cost - newcost.cost;
@@ -308,7 +308,7 @@ void PathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
 }
 
 // Handle a transition edge between hierarchies.
-void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
+void AStarPathAlgorithm::HandleTransitionEdge(const uint32_t level,
                     const GraphId& edgeid, const DirectedEdge* edge,
                     const EdgeLabel& pred, const uint32_t predindex,
                     const float dist) {
@@ -331,7 +331,7 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
 }
 
 // Add an edge at the origin to the adjacency list
-void PathAlgorithm::SetOrigin(GraphReader& graphreader,
+void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
                  PathLocation& origin,
                  const PathLocation& destination,
                  const std::shared_ptr<DynamicCost>& costing) {
@@ -404,7 +404,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
+uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
                      const PathLocation& dest,
                      const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
@@ -432,7 +432,7 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
 // is along both an origin and destination and origin shows up at the
 // beginning of the edge while the destination shows up at the end of
 // the edge
-bool PathAlgorithm::IsTrivial(const GraphId& edgeid,
+bool AStarPathAlgorithm::IsTrivial(const GraphId& edgeid,
                               const PathLocation& origin,
                               const PathLocation& destination) const {
   for (const auto& destination_edge : destination.edges) {
@@ -449,7 +449,7 @@ bool PathAlgorithm::IsTrivial(const GraphId& edgeid,
 }
 
 // Form the path from the adjacency list.
-std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest) {
+std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
   // Metrics to track
   LOG_INFO("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_INFO("path_iterations::" + std::to_string(edgelabels_.size()));

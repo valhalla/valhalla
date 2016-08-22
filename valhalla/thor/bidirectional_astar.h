@@ -7,7 +7,12 @@
 #include <utility>
 #include <memory>
 
+#include <valhalla/sif/edgelabel.h>
+#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/adjacencylist.h>
+#include <valhalla/thor/astarheuristic.h>
+#include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
 namespace thor {
@@ -23,9 +28,7 @@ struct CandidateConnection {
 };
 
 /**
- * Bidirectional A* algorithm. Use for pedestrian routes (and bicycle?) only
- * at this time due to probable difficulties joining whe highway hierarchies
- * and shortcuts are used.
+ * Bidirectional A* algorithm. Method for finding least-cost path.
  */
 class BidirectionalAStar : public PathAlgorithm {
  public:
@@ -61,11 +64,30 @@ class BidirectionalAStar : public PathAlgorithm {
   void Clear();
 
  protected:
-  // A*, edge labels, adjacency list, and edge status for the reverse path
-  AStarHeuristic astarheuristic_reverse_;
+  // Allow transitions (set from the costing model)
+  bool allow_transitions_;
+
+  // Current travel mode
+  sif::TravelMode mode_;
+
+  // Hierarchy limits
+  std::vector<sif::HierarchyLimits> hierarchy_limits_forward_;
   std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
+
+  // A* heuristic
+  AStarHeuristic astarheuristic_forward_;
+  AStarHeuristic astarheuristic_reverse_;
+
+  // Vector of edge labels (requires access by index).
+  std::vector<sif::EdgeLabel> edgelabels_forward_;
   std::vector<sif::EdgeLabel> edgelabels_reverse_;
+
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<AdjacencyList> adjacencylist_forward_;
   std::shared_ptr<AdjacencyList> adjacencylist_reverse_;
+
+  // Edge status. Mark edges that are in adjacency list or settled.
+  std::shared_ptr<EdgeStatus> edgestatus_forward_;
   std::shared_ptr<EdgeStatus> edgestatus_reverse_;
 
   // Best candidate connection and threshold to extend search.
@@ -118,12 +140,22 @@ class BidirectionalAStar : public PathAlgorithm {
   /**
    * Convenience method to add an edge to the adjacency list and temporarily
    * label it. This must be called before adding the edge label (so it uses
+   * the correct index).
+   * @param  edgeid    Edge to add to the adjacency list.
+   * @param  sortcost  Sort cost.
+   */
+  void AddToForwardAdjacencyList(const baldr::GraphId& edgeid,
+                                 const float sortcost);
+
+  /**
+   * Convenience method to add an edge to the adjacency list and temporarily
+   * label it. This must be called before adding the edge label (so it uses
    * the correct index). Adds to the reverse path from destination towards
    * the origin.
    * @param  edgeid    Edge to add to the adjacency list.
    * @param  sortcost  Sort cost.
    */
-  void AddToAdjacencyListReverse(const baldr::GraphId& edgeid,
+  void AddToReverseAdjacencyList(const baldr::GraphId& edgeid,
                                  const float sortcost);
 
   /**
@@ -135,7 +167,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  newcost    Cost of the new path.
    * @param  tc         Transition cost onto this edge.
    */
-  void CheckIfLowerCostPath(const uint32_t idx,
+  void CheckIfLowerCostPathForward(const uint32_t idx,
                             const uint32_t predindex,
                             const sif::Cost& newcost,
                             const sif::Cost& tc);
