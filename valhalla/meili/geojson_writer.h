@@ -368,8 +368,7 @@ void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& wr
 
   writer.String("coordinates");
   writer.StartArray();
-  const auto& segments = ConstructRoute(mapmatcher.graphreader(),
-                                        mapmatcher,
+  const auto& segments = ConstructRoute(mapmatcher.mapmatching(),
                                         results.cbegin(),
                                         results.cend());
   WriteRoute(writer, mapmatcher, segments);

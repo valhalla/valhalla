@@ -6,8 +6,9 @@
 #include <valhalla/baldr/graphid.h>
 
 #include "meili/geometry_helpers.h"
-#include "meili/match_route.h"
 #include "meili/graph_helpers.h"
+#include "meili/match_result.h"
+#include "meili/match_route.h"
 
 
 namespace {
@@ -31,7 +32,7 @@ RouteToString(baldr::GraphReader& graphreader,
       route << "[";
 
       if (segment->source == 0.f) {
-        const auto startnodeid = meili::helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        const auto startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
         if (startnodeid.Is_Valid()) {
           route << startnodeid;
         } else {
@@ -48,7 +49,7 @@ RouteToString(baldr::GraphReader& graphreader,
       }
 
       if (segment->target == 1.f) {
-        const auto endnodeid = meili::helpers::edge_endnodeid(graphreader, segment->edgeid, tile);
+        const auto endnodeid = helpers::edge_endnodeid(graphreader, segment->edgeid, tile);
         if (endnodeid.Is_Valid()) {
           route << endnodeid;
         } else {
@@ -125,8 +126,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 
         // We should remove this block of code when this issue is
         // solved from upstream
-        const auto endnodeid = meili::helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile);
-        const auto startnodeid = meili::helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile);
+        const auto startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
         if (endnodeid == startnodeid) {
           LOG_ERROR("This is a loop. Let it go");
           return true;
@@ -136,8 +137,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
         return false;
       }
     } else {
-      const auto endnodeid = meili::helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile),
-               startnodeid = meili::helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+      const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile),
+               startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
       if (!(prev_segment->target == 1.f
             && segment->source == 0.f
             && endnodeid == startnodeid)) {
@@ -153,12 +154,13 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 
 
 template <typename segment_iterator_t>
-void MergeRoute(std::vector<meili::EdgeSegment>& route,
-                segment_iterator_t segment_begin,
-                segment_iterator_t segment_end)
+std::vector<EdgeSegment>&
+MergeEdgeSegments(std::vector<EdgeSegment>& route,
+                  segment_iterator_t segment_begin,
+                  segment_iterator_t segment_end)
 {
   if (segment_begin == segment_end) {
-    return;
+    return route;
   }
 
   for (auto segment = std::next(segment_begin);  // Skip the first dummy segment
@@ -189,26 +191,11 @@ void MergeRoute(std::vector<meili::EdgeSegment>& route,
       route.push_back(*segment);
     }
   }
+
+  return route;
 }
 
-
-//explicit instantiations
-template std::string RouteToString<std::vector<EdgeSegment>::iterator>(
-    baldr::GraphReader&, std::vector<EdgeSegment>::iterator, std::vector<EdgeSegment>::iterator, const baldr::GraphTile*&);
-template std::string RouteToString<std::vector<EdgeSegment>::const_iterator>(
-    baldr::GraphReader&, std::vector<EdgeSegment>::const_iterator, std::vector<EdgeSegment>::const_iterator, const baldr::GraphTile*&);
-
-template bool ValidateRoute<std::vector<EdgeSegment>::iterator>(
-    baldr::GraphReader&, std::vector<EdgeSegment>::iterator, std::vector<EdgeSegment>::iterator, const baldr::GraphTile*&);
-template bool ValidateRoute<std::vector<EdgeSegment>::const_iterator>(
-    baldr::GraphReader&, std::vector<EdgeSegment>::const_iterator, std::vector<EdgeSegment>::const_iterator, const baldr::GraphTile*&);
-
-template void MergeRoute<std::vector<EdgeSegment>::iterator>(
-    std::vector<EdgeSegment>&, std::vector<EdgeSegment>::iterator, std::vector<EdgeSegment>::iterator);
-template void MergeRoute<std::vector<EdgeSegment>::const_iterator>(
-    std::vector<EdgeSegment>&, std::vector<EdgeSegment>::const_iterator, std::vector<EdgeSegment>::const_iterator);
-
-}
+};
 
 
 namespace valhalla {
@@ -269,37 +256,66 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
 }
 
 
+std::vector<EdgeSegment>&
+MergeRoute(std::vector<EdgeSegment>& route,
+           const RoutePathIterator& route_begin,
+           const RoutePathIterator& route_end)
+{
+  std::vector<EdgeSegment> segments;
+
+  for (auto label = route_begin; label != route_end; label++) {
+    segments.emplace_back(label->edgeid, label->source, label->target);
+  }
+
+  return MergeEdgeSegments(route, segments.rbegin(), segments.rend());
+}
+
+
+std::vector<EdgeSegment>
+MergeRoute(const RoutePathIterator& route_begin,
+           const RoutePathIterator& route_end)
+{
+  std::vector<EdgeSegment> segments;
+  return MergeRoute(segments, route_begin, route_end);
+}
+
+
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
-ConstructRoute(baldr::GraphReader& graphreader,
-               const MapMatcher& mapmatcher,
+ConstructRoute(const MapMatching& mapmatching,
                match_iterator_t begin,
                match_iterator_t end)
 {
-  std::vector<EdgeSegment> route;
+  // Find the first match result with state attached
   match_iterator_t previous_match = end;
-  const auto& mapmatching = mapmatcher.mapmatching();
+  for (auto match = begin; match != end; match++) {
+    if (match->HasState()) {
+      previous_match = match;
+      break;
+    }
+  }
+  if (previous_match == end) {
+    return {};
+  }
+
+  std::vector<EdgeSegment> route;
   const baldr::GraphTile* tile = nullptr;
 
-  for (auto match = begin; match != end; match++) {
+  // Merge segments into route
+  for (auto match = std::next(previous_match); match != end; match++) {
     if (!match->HasState()) {
       continue;
     }
+    const auto& previous_state = mapmatching.state(previous_match->stateid()),
+                         state = mapmatching.state(match->stateid());
+    const auto& segments = MergeRoute(previous_state.RouteBegin(state), previous_state.RouteEnd());
 
-    if (previous_match != end) {
-      std::vector<EdgeSegment> segments;
-      const auto& previous_state = mapmatching.state(previous_match->stateid());
-      for (auto segment = previous_state.RouteBegin(mapmatching.state(match->stateid())),
-                    end = previous_state.RouteEnd();
-           segment != end; segment++) {
-        segments.emplace_back(segment->edgeid, segment->source, segment->target);
-      }
-      if (ValidateRoute(graphreader, segments.rbegin(), segments.rend(), tile)) {
-        MergeRoute(route, segments.rbegin(), segments.rend());
-      } else {
-        throw std::runtime_error("Found invalid route");
-      }
+    if (!ValidateRoute(mapmatching.graphreader(), segments.begin(), segments.end(), tile)) {
+      throw std::runtime_error("Found invalid route");
     }
+
+    MergeEdgeSegments(route, segments.begin(), segments.end());
+
     previous_match = match;
   }
 
@@ -310,15 +326,13 @@ ConstructRoute(baldr::GraphReader& graphreader,
 //explicit instantiations
 template std::vector<EdgeSegment>
 ConstructRoute<std::vector<MatchResult>::iterator>(
-    baldr::GraphReader&,
-    const MapMatcher&,
+    const MapMatching&,
     std::vector<MatchResult>::iterator,
     std::vector<MatchResult>::iterator);
 
 template std::vector<EdgeSegment>
 ConstructRoute<std::vector<MatchResult>::const_iterator>(
-    baldr::GraphReader&,
-    const MapMatcher&,
+    const MapMatching&,
     std::vector<MatchResult>::const_iterator,
     std::vector<MatchResult>::const_iterator);
 
