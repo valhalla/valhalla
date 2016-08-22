@@ -169,7 +169,7 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
   writer.String("graphids");
   writer.StartArray();
   for (const auto& result : results) {
-    writer.Uint64(result.graphid().id());
+    writer.Uint64(result.edgeid().id());
   }
   writer.EndArray();
 
@@ -387,7 +387,7 @@ void GeoJSONRouteWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& 
   writer.String("matched_coordinates");
   writer.StartArray();
   for (const auto& result : results) {
-    if (result.graphid().Is_Valid()) {
+    if (result.edgeid().Is_Valid()) {
       serialize_coordinate(writer, result.lnglat());
     } else {
       writer.Null();

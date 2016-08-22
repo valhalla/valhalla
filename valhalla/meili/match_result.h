@@ -11,29 +11,22 @@
 namespace valhalla {
 namespace meili {
 
-enum class GraphType: uint8_t
-{ kUnknown = 0, kEdge, kNode };
-
-
 class MatchResult
 {
  public:
   MatchResult(const midgard::PointLL& lnglat,
               float distance,
-              const baldr::GraphId graphid,
-              GraphType graphtype,
+              const baldr::GraphId edgeid,
               StateId stateid)
       : lnglat_(lnglat),
         distance_(distance),
-        graphid_(graphid),
-        graphtype_(graphtype),
+        edgeid_(edgeid),
         stateid_(stateid) {}
 
   MatchResult(const midgard::PointLL& lnglat)
       : lnglat_(lnglat),
         distance_(0.f),
-        graphid_(),
-        graphtype_(GraphType::kUnknown),
+        edgeid_(),
         stateid_(kInvalidStateId) {}
 
   // Coordinate of the matched point
@@ -45,11 +38,8 @@ class MatchResult
   { return distance_; }
 
   // Which edge/node this matched point stays
-  const baldr::GraphId graphid() const
-  { return graphid_; }
-
-  GraphType graphtype() const
-  { return graphtype_; }
+  const baldr::GraphId& edgeid() const
+  { return edgeid_; }
 
   // Attach the state pointer for other information (e.g. reconstruct
   // the route path) and debugging
@@ -64,9 +54,7 @@ class MatchResult
 
   float distance_;
 
-  baldr::GraphId graphid_;
-
-  GraphType graphtype_;
+  baldr::GraphId edgeid_;
 
   StateId stateid_;
 };
