@@ -1,8 +1,8 @@
 #include <map>
 #include <algorithm>
-#include "thor/pathalgorithm.h"
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/logging.h>
+#include "thor/multimodal.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -39,7 +39,7 @@ namespace thor {
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
-    : PathAlgorithm(),
+    : AStarPathAlgorithm(),
       walking_distance_(0) {
 }
 

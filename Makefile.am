@@ -41,37 +41,38 @@ endif
 lib_LTLIBRARIES = libvalhalla_thor.la
 nobase_include_HEADERS = \
 	valhalla/thor/adjacencylist.h \
+	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/bidirectional_astar.h \
 	valhalla/thor/costmatrix.h \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/isochrone.h \
 	valhalla/thor/optimizer.h \
+	valhalla/thor/multimodal.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
-	valhalla/thor/timedistancematrix.h \
 	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/service.h \
 	valhalla/thor/trafficalgorithm.h
 libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
+	src/thor/astar.cc \
 	src/thor/astarheuristic.cc \
+	src/thor/attributes_action.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
 	src/thor/edgestatus.cc \
 	src/thor/isochrone.cc \
+	src/thor/isochrone_action.cc \
 	src/thor/matrix_action.cc \
 	src/thor/multimodal.cc \
+	src/thor/optimized_route_action.cc \
 	src/thor/optimizer.cc \
-	src/thor/pathalgorithm.cc \
-	src/thor/timedistancematrix.cc \
 	src/thor/route_action.cc \
 	src/thor/trippathbuilder.cc \
 	src/thor/service.cc \
-	src/thor/trafficalgorithm.cc \
-	src/thor/isochrone_action.cc \
-	src/thor/optimized_route_action.cc \
-	src/thor/attributes_action.cc
+	src/thor/trafficalgorithm.cc
+
 libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@
 

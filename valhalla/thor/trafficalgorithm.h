@@ -7,7 +7,7 @@
 #include <utility>
 #include <memory>
 
-#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/astar.h>
 
 namespace valhalla {
 namespace thor {
@@ -18,7 +18,7 @@ namespace thor {
  * estimated times. Ideally this would be integrated into sif (costing) and
  * baldr (tile access).
  */
-class TrafficAlgorithm : public PathAlgorithm {
+class TrafficAlgorithm : public AStarPathAlgorithm {
 public:
 
   /**

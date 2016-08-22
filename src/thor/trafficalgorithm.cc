@@ -16,7 +16,7 @@ namespace thor {
 
 // Default constructor
 TrafficAlgorithm::TrafficAlgorithm()
-    : PathAlgorithm() {
+    : AStarPathAlgorithm() {
 }
 
 // Destructor

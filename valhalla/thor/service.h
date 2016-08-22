@@ -20,6 +20,8 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/astar.h>
+#include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/thor/isochrone.h>
 
@@ -70,7 +72,7 @@ namespace valhalla {
       valhalla::sif::cost_ptr_t mode_costing[4];    // TODO - max # of modes?
       valhalla::baldr::GraphReader reader;
       // Path algorithms (TODO - perhaps use a map?))
-      PathAlgorithm astar;
+      AStarPathAlgorithm astar;
       BidirectionalAStar bidir_astar;
       MultiModalPathAlgorithm multi_modal_astar;
       Isochrone isochrone_gen;
