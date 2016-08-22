@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import os.path
 import getopt
 import requests
 import json
@@ -62,6 +63,9 @@ class admin_tool:
 
         # A list of tasks that exist but should have been fixed
         self.flagged_tasks = []
+
+        # Location of saved recurring fixed tasks
+        self.recurring_tasks_file = conf['recurring_tasks_file']
 
         for challenge in conf['challenges']:
             # Build dictionary of challenges
@@ -132,7 +136,7 @@ class admin_tool:
 
     def update_tasks(self, tasks):
         '''http PUT a list of tasks to maproulette'''
-        utils.status_begin('Uploading {} tasks'.format(len(tasks)))
+        utils.status_begin('Updating {} tasks'.format(len(tasks)))
         response = requests.put('{}/api/v2/tasks'.format(self.server_url), data=json.dumps(tasks), headers=self.header)
         utils.status_done()
         return response
@@ -143,16 +147,18 @@ class admin_tool:
         # Get a list of the tasks from the new geojson
         tasks = self.generate_tasks(self.geojson)
 
-        # If we haven't created any tasks for our challenges yet, do so now
         for challenge in self.challenges:
             if len(self.challenges[challenge].tasks) == 0:
+                # If we haven't created any tasks for our challenges yet, do so now
                 self.upload_tasks(tasks)
             else:
+                # If we have tasks, compare them to the new tasks
                 self.compare_tasks(tasks)
+                # then check for any erroneous 'fixed' tasks
+                self.process_recurring_tasks()
         if len(self.new_tasks) != 0:
+            # if there are any new tasks to be uploaded, do it
             self.upload_tasks(self.new_tasks)
-        #self.compare_log(self.flagged)
-        #self.update_log(self.flagged)
 
 
     def get_task_parent(self, task):
@@ -170,40 +176,67 @@ class admin_tool:
         for task in new_tasks:
             existing = self.challenges[str(task['parent'])].contains_task(task)
             if not existing:
+                # if the task hasn't existed recently, put it in a list for creation
                 self.new_tasks.append(task)
                 continue
             elif existing['status'] == Status.fixed:
-                #flag for logging into file
-                pass
+                # if we got a new task that should have been fixed, flag it
+                self.flagged_tasks.append(task)
 
 
-    def read_recurring_tasks(self):
-        pass
+    def process_recurring_tasks(self):
+        '''Compare the flagged tasks against the one already saved and modify them accordingly'''
+        # list of task ids that are not truly fixed
+        not_fixed = []
+        # make sure the file exists before we try to open it
+        if not os.path.isfile(self.recurring_tasks_file):
+            open(self.recurring_tasks_file, 'w').close()
+
+        # open the file and read through the data
+        with open(self.recurring_tasks_file) as in_file:
+            previous_tasks = []
+            # each line represents a task id
+            for line in in_file:
+                previous_tasks.append(line.strip())
+
+        # if the same task id exists in the flagged tasks it isn't fixed after all
+        not_fixed = [task for task in self.flagged_tasks if task['name'] in previous_tasks]
+
+        # remove any tasks from the flagged tasks that are not fixed
+        for task in not_fixed:
+            self.flagged_tasks.remove(task)
+
+        # write the flagged tasks out to the file so they can be verified next runtime
+        self.write_recurring_tasks(self.flagged_tasks)
+        # update the tasks that were supposed to be fixed, but weren't
+        if len(not_fixed) != 0:
+            for task in not_fixed:
+                task['status'] = Status.created
+            self.update_tasks(not_fixed)
 
 
-    def process_recurring_tasks(self, flagged_tasks):
-        pass
+    def write_recurring_tasks(self, tasks):
+        '''Writes out the task ids to the recurring tasks file'''
+        with open(self.recurring_tasks_file, 'w') as out_file:
+            for task in tasks:
+                out_file.write(task['name'] + '\n')
 
-
-    def flag_task(self, task):
-        pass
 
 if __name__ == '__main__':
 
-    # headless is off by default
     config = ''
 
     # Set expected options and parse
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:i:',['help','config=','geojson='])
     except getopt.GetoptError:
-        print('admin_tool.py --config conf/maproulette.json')
+        print('admin_tool.py --config conf/maproulette.json --geojson maproulette.geojson')
         sys.exit(2)
 
     # Use arguments and flags to set program parameters
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('admin_tool.py --config conf/maproulette.json')
+            print('admin_tool.py --config conf/maproulette.json --geojson maproulette.geojson')
             sys.exit()
         elif opt in ('-c', '--config'):
             config = arg

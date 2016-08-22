@@ -348,7 +348,8 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
             {"osmid", id},
             {"type", std::string("Loop")}
            })},
-          {"type", std::string("Feature")}
+          {"type", std::string("Feature")},
+          {"instruction", std::string("This one way road loops back on itself. Edit it so that the road is properly accessible")}
          })
         );
   }
@@ -370,7 +371,8 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
             {"type", std::string("Node")},
             {"key", hasher(*it)}
            })},
-          {"type", std::string("Feature")}
+          {"type", std::string("Feature")},
+          {"instruction", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
          })
         );
   }
@@ -383,7 +385,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
        ({
         {"instructions", json::map
          ({
-          {"Loop", std::string("This one way road loops back on itself. Edit it so that the raod is properly accessible")},
+          {"Loop", std::string("This one way road loops back on itself. Edit it so that the road is properly accessible")},
           {"Node", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
          })}
        })
