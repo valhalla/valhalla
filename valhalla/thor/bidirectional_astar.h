@@ -144,7 +144,8 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  edgeid    Edge to add to the adjacency list.
    * @param  sortcost  Sort cost.
    */
-  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
+  void AddToForwardAdjacencyList(const baldr::GraphId& edgeid,
+                                 const float sortcost);
 
   /**
    * Convenience method to add an edge to the adjacency list and temporarily
@@ -154,7 +155,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  edgeid    Edge to add to the adjacency list.
    * @param  sortcost  Sort cost.
    */
-  void AddToAdjacencyListReverse(const baldr::GraphId& edgeid,
+  void AddToReverseAdjacencyList(const baldr::GraphId& edgeid,
                                  const float sortcost);
 
   /**

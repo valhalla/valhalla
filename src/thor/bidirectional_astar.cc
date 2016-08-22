@@ -231,7 +231,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
              // Allow the transition edge. Add it to the adjacency list and
              // edge labels using the predecessor information. Transition
              // edges have no length.
-             AddToAdjacencyList(edgeid, pred.sortcost());
+             AddToForwardAdjacencyList(edgeid, pred.sortcost());
              edgelabels_forward_.emplace_back(forward_pred_idx, edgeid,
                        pred.opp_edgeid(), directededge, pred.cost(),
                        pred.sortcost(), pred.distance(), pred.restrictions(),
@@ -284,7 +284,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
               t2->node(directededge->endnode())->latlng(), dist);
 
         // Add edge label, add to the adjacency list and set edge status
-        AddToAdjacencyList(edgeid, sortcost);
+        AddToForwardAdjacencyList(edgeid, sortcost);
         edgelabels_forward_.emplace_back(forward_pred_idx, edgeid, oppedge, directededge,
                       newcost, sortcost, dist, directededge->restrictions(),
                       directededge->opp_local_idx(), mode_, tc);
@@ -349,7 +349,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
             // Allow the transition edge. Add it to the adjacency list and
             // edge labels using the predecessor information. Transition
             // edges have no length.
-            AddToAdjacencyListReverse(edgeid, pred2.sortcost());
+            AddToReverseAdjacencyList(edgeid, pred2.sortcost());
             edgelabels_reverse_.emplace_back(reverse_pred_idx, edgeid,
                       pred2.opp_edgeid(), directededge, pred2.cost(),
                       pred2.sortcost(), pred2.distance(),
@@ -412,7 +412,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
             t2->node(directededge->endnode())->latlng(), dist);
 
         // Add edge label, add to the adjacency list and set edge status
-        AddToAdjacencyListReverse(edgeid, sortcost);
+        AddToReverseAdjacencyList(edgeid, sortcost);
         edgelabels_reverse_.emplace_back(reverse_pred_idx, edgeid, oppedge,
                       directededge, newcost, sortcost, dist,
                       directededge->restrictions(),
@@ -423,9 +423,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   return {};    // If we are here the route failed
 }
 
-// Convenience method to add an edge to the adjacency list and temporarily
-// label it.
-void BidirectionalAStar::AddToAdjacencyList(const GraphId& edgeid,
+// Convenience method to add an edge to the forward adjacency list and
+// temporarily label it.
+void BidirectionalAStar::AddToForwardAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
   uint32_t idx = edgelabels_forward_.size();
   adjacencylist_forward_->Add(idx, sortcost);
@@ -434,7 +434,7 @@ void BidirectionalAStar::AddToAdjacencyList(const GraphId& edgeid,
 
 // Convenience method to add an edge to the reverse adjacency list and
 // temporarily label it.
-void BidirectionalAStar::AddToAdjacencyListReverse(const GraphId& edgeid,
+void BidirectionalAStar::AddToReverseAdjacencyList(const GraphId& edgeid,
                                         const float sortcost) {
   uint32_t idx = edgelabels_reverse_.size();
   adjacencylist_reverse_->Add(idx, sortcost);
@@ -561,7 +561,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
-    AddToAdjacencyList(edgeid, sortcost);
+    AddToForwardAdjacencyList(edgeid, sortcost);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_, 0);
@@ -617,7 +617,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path. Make sure the opposing
     // edge (edgeid) is set.
-    AddToAdjacencyListReverse(opp_edge_id, sortcost);
+    AddToReverseAdjacencyList(opp_edge_id, sortcost);
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
              opp_dir_edge, cost, sortcost, dist, opp_dir_edge->restrictions(),
              opp_dir_edge->opp_local_idx(), mode_, c);
