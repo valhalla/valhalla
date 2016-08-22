@@ -13,6 +13,7 @@
 -j '{"locations":[{"lat":43.004250,"lon":-70.947891,"street":"Red Loop Trail"},{"lat":42.996021,"lon":-70.947060,"street":""}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Mountain","use_roads":"0.5","cycling_speed":"25.0","use_hills":"0.5"}},"directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":34.41756,"lon":-119.86799},{"lat":34.41758,"lon":-119.85277}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","cycling_speed":17,"use_roads":0.1}}}'
 -j '{"locations":[{"lat":31.661728,"lon":-81.150981},{"lat":31.652614,"lon":-81.158684}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.697743,"lon":--76.173148},{"lat":39.705238,"lon":-76.171603}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.7104,"lon":-122.4349},{"lat":37.7913,"lon":-122.3923}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.7120,"lon":-122.4333},{"lat":37.7913,"lon":-122.3923}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.7913,"lon":-122.3918},{"lat":37.7107,"lon":-122.4344}],"costing":"bicycle","directions_options":{"units":"miles"}}'

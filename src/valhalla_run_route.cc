@@ -24,8 +24,9 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/astar.h>
 #include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/trippathbuilder.h>
 
 using namespace valhalla::midgard;
@@ -646,7 +647,7 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
   // Get the route
-  PathAlgorithm astar;
+  AStarPathAlgorithm astar;
   BidirectionalAStar bd;
   MultiModalPathAlgorithm mm;
   for (uint32_t i = 0; i < n; i++) {
@@ -658,14 +659,14 @@ int main(int argc, char *argv[]) {
       pathalgorithm = &astar;
     } else {
       bool same_edge = false;
+      pathalgorithm = &bd;
       for (auto& edge1 : path_location[i].edges) {
         for (auto& edge2 : path_location[i+1].edges) {
           if (edge1.id == edge2.id) {
-            same_edge = true;
+            pathalgorithm = &astar;
           }
         }
       }
-      pathalgorithm = (same_edge) ? &astar : &bd;
     }
     bool using_astar = (pathalgorithm == &astar);
 
