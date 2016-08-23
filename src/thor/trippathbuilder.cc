@@ -20,9 +20,6 @@ using namespace valhalla::odin;
 
 namespace {
 
-// Meters offset from start/end of shape for finding heading
-constexpr float kMetersOffsetForHeading = 30.0f;
-
 template<class iter>
 void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end,
                      float partial_length, bool back_insert,
@@ -544,12 +541,18 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
         if (transit_departure) {
 
+          std::string dt = DateTime::get_duration(*origin.date_time_,
+                           (transit_departure->departure_time() - origin_sec_from_mid),
+                           DateTime::get_tz_db().from_index(node->timezone()));
+
+          std::size_t found = dt.find_last_of(" "); // remove tz abbrev.
+          if (found != std::string::npos)
+            dt = dt.substr(0,found);
+
           // Set departure time from this transit stop
-          transit_stop_info->set_departure_date_time(
-              DateTime::get_duration(*origin.date_time_,
-                                     (transit_departure->departure_time() -
-                                     origin_sec_from_mid),
-                                     DateTime::get_tz_db().from_index(node->timezone())));
+          transit_stop_info->set_departure_date_time(dt);
+
+          //TODO:  set removed tz abbrev on transit_stop_info for departure.
 
           // Copy the arrival time for use at the next transit stop
           arrival_time = DateTime::get_duration(*origin.date_time_,
@@ -557,6 +560,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                      transit_departure->elapsed_time()) -
                                      origin_sec_from_mid,
                                      DateTime::get_tz_db().from_index(node->timezone()));
+
+          found = arrival_time.find_last_of(" "); //remove tz abbrev.
+          if (found != std::string::npos)
+            arrival_time = arrival_time.substr(0,found);
+
+          //TODO:  set removed tz abbrev on transit_stop_info for arrival.
 
           // Get the block Id
           block_id = transit_departure->blockid();
@@ -828,12 +837,16 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
     trip_edge->set_begin_heading(
         std::round(
-            PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                          kMetersOffsetForHeading)));
+            PointLL::HeadingAlongPolyline(
+                edgeinfo->shape(),
+                GetOffsetForHeading(directededge->classification(),
+                                    directededge->use()))));
     trip_edge->set_end_heading(
         std::round(
-            PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                            kMetersOffsetForHeading)));
+            PointLL::HeadingAtEndOfPolyline(
+                edgeinfo->shape(),
+                GetOffsetForHeading(directededge->classification(),
+                                    directededge->use()))));
   } else {
     // Reverse driveability and heading
     if ((directededge->forwardaccess() & kAccess)
@@ -855,16 +868,19 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     trip_edge->set_begin_heading(
         std::round(
             fmod(
-                (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                                 kMetersOffsetForHeading)
-                    + 180.0f),
+                (PointLL::HeadingAtEndOfPolyline(
+                    edgeinfo->shape(),
+                    GetOffsetForHeading(directededge->classification(),
+                                        directededge->use())) + 180.0f),
                 360)));
 
     trip_edge->set_end_heading(
         std::round(
             fmod(
-                (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                               kMetersOffsetForHeading) + 180.0f),
+                (PointLL::HeadingAlongPolyline(
+                    edgeinfo->shape(),
+                    GetOffsetForHeading(directededge->classification(),
+                                        directededge->use())) + 180.0f),
                 360)));
   }
 
