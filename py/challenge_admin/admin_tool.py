@@ -67,6 +67,9 @@ class admin_tool:
         # Location of saved recurring fixed tasks
         self.recurring_tasks_file = conf['recurring_tasks_file']
 
+        # Bool for whether or not to update the recurring tasks, off by default
+        self.resubmit = False
+
         for challenge in conf['challenges']:
             # Build dictionary of challenges
             self.challenges[challenge] = Challenge(challenge)
@@ -91,6 +94,10 @@ class admin_tool:
                 self.challenges[challenge].add_task(task)
 
             utils.status_done()
+
+
+    def set_resubmit(self):
+        self.resubmit = True
 
 
     def generate_tasks(self, geojson):
@@ -137,7 +144,8 @@ class admin_tool:
     def update_tasks(self, tasks):
         '''http PUT a list of tasks to maproulette'''
         utils.status_begin('Updating {} tasks'.format(len(tasks)))
-        response = requests.put('{}/api/v2/tasks'.format(self.server_url), data=json.dumps(tasks), headers=self.header)
+        for task in tasks:
+            response = requests.put('{}/api/v2/task/{}'.format(self.server_url, task['id']), data=json.dumps(tasks), headers=self.header)
         utils.status_done()
         return response
 
@@ -153,9 +161,12 @@ class admin_tool:
                 self.upload_tasks(tasks)
             else:
                 # If we have tasks, compare them to the new tasks
+                utils.status_begin('Gathering new tasks')
                 self.compare_tasks(tasks)
-                # then check for any erroneous 'fixed' tasks
-                self.process_recurring_tasks()
+                utils.status_done()
+                if self.resubmit:
+                    # then check for any erroneous 'fixed' tasks is the flag is set
+                    self.process_recurring_tasks()
         if len(self.new_tasks) != 0:
             # if there are any new tasks to be uploaded, do it
             self.upload_tasks(self.new_tasks)
@@ -178,10 +189,9 @@ class admin_tool:
             if not existing:
                 # if the task hasn't existed recently, put it in a list for creation
                 self.new_tasks.append(task)
-                continue
             elif existing['status'] == Status.fixed:
                 # if we got a new task that should have been fixed, flag it
-                self.flagged_tasks.append(task)
+                self.flagged_tasks.append(existing)
 
 
     def process_recurring_tasks(self):
@@ -225,10 +235,11 @@ class admin_tool:
 if __name__ == '__main__':
 
     config = ''
+    resubmit = False
 
     # Set expected options and parse
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:i:',['help','config=','geojson='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:i:r',['help','config=','geojson=','resubmit'])
     except getopt.GetoptError:
         print('admin_tool.py --config conf/maproulette.json --geojson maproulette.geojson')
         sys.exit(2)
@@ -242,8 +253,12 @@ if __name__ == '__main__':
             config = arg
         elif opt in ('-i', '--geojson'):
             geojson = arg
+        elif opt in ('-r', '--resubmit'):
+            resubmit = True
 
     admin = admin_tool(config, geojson)
+    if resubmit:
+        admin.set_resubmit()
 
     # Initialize the challenges from the geojson and MR API
     admin.init_challenges()
