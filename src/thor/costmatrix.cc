@@ -8,8 +8,14 @@ using namespace valhalla::sif;
 
 namespace {
 
-constexpr int kExtendSearchThreshold = 250;
 constexpr uint32_t kMaxMatrixIterations = 2000000;
+
+// Find a threshold to continue the search - should be based on
+// the max edge cost in the adjacency set?
+int GetThreshold(const TravelMode mode, const int n) {
+  return (mode == TravelMode::kDrive) ?
+          std::min(2700, std::max(100, n / 3)) : 500;
+}
 
 }
 
@@ -112,7 +118,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
       }
     }
 
-    // Iterate all source locations in a forward search. Mark any
+    // Iterate all source locations in a forward search
     for (uint32_t i = 0; i < source_count_; i++) {
       if (source_status_[i].threshold > 0) {
         source_status_[i].threshold--;
@@ -396,7 +402,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
             // Update best connection and set a threshold
             best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
             if (best_connection_[idx].threshold == 0) {
-              best_connection_[idx].threshold = n + kExtendSearchThreshold;
+              best_connection_[idx].threshold = n + GetThreshold(mode_,
+                     source_edgelabel_[source].size() + target_edgelabel_[target].size());
             } else if (n > best_connection_[idx].threshold) {
               best_connection_[idx].found = true;
             }
@@ -421,7 +428,8 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
     if (s.empty() && source_status_[source].threshold > 0) {
       // At least 1 connection has been found to each target for this source.
       // Set a threshold to continue search for a limited number of times.
-      source_status_[source].threshold = kExtendSearchThreshold;
+      source_status_[source].threshold = GetThreshold(mode_,
+             source_edgelabel_[source].size() + target_edgelabel_[target].size());;
     }
   }
 
@@ -433,7 +441,8 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
     if (t.empty() && target_status_[target].threshold > 0) {
       // At least 1 connection has been found to each source for this target.
       // Set a threshold to continue search for a limited number of times.
-      target_status_[target].threshold = kExtendSearchThreshold;
+      target_status_[target].threshold = GetThreshold(mode_,
+             source_edgelabel_[source].size() + target_edgelabel_[target].size());;
     }
   }
 }
