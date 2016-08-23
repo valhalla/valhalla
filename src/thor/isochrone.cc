@@ -363,6 +363,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
   // Set the origin locations.
   SetOriginLocations(graphreader, origin_locations, costing);
 
+  // For now the date_time must be set on the origin.
+  if (!origin_locations.front().date_time_) {
+    LOG_ERROR("No date time set on the origin location");
+    return isotile_;
+  }
+
   // Update start time
   uint32_t start_time, localtime, date, dow, day = 0;
   bool date_before_tile = false;
