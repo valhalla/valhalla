@@ -14,7 +14,6 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/adjacencylist.h>
 #include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/timedistancematrix.h>
 
 namespace valhalla {
 namespace thor {
@@ -22,6 +21,24 @@ namespace thor {
 // Use a 4 hour cost threshold. This is in addition to the distance
 // thresholds for quick rejection
 constexpr float kCostThresholdDefault = 14400.0f;   // 4 hours
+constexpr float kMaxCost = 99999999.9999f;
+
+
+// Time and Distance structure
+struct TimeDistance {
+  uint32_t time;  // Time in seconds
+  uint32_t dist;  // Distance in meters
+
+  TimeDistance()
+      : time(0),
+        dist(0) {
+  }
+
+  TimeDistance(const uint32_t secs, const uint32_t meters)
+      : time(secs),
+        dist(meters) {
+  }
+};
 
 /**
  * Status of a location. Tracks remaining locations to be found
