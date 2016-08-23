@@ -46,9 +46,10 @@ namespace valhalla {
       if (locations.size() > max_locations.find("isochrone")->second)
         throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find("isochrone")->second) + ".");
 
+      auto costing = request.get<std::string>("costing");
       auto date_type = request.get_optional<int>("date_time.type");
       //default to current date_time for mm or transit.
-      if (!date_type) {
+      if (!date_type && (costing == "multimodal" || costing == "transit")) {
         request.add("date_time.type", 0);
         date_type = request.get_optional<int>("date_time.type");
       }
