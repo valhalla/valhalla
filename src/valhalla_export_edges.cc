@@ -17,6 +17,13 @@ using namespace valhalla::baldr;
 
 namespace bpo = boost::program_options;
 
+//global options instead of passing them around
+std::string column_separator{'\0'};
+std::string row_separator = "\n";
+std::string config;
+bool ferries;
+bool unnamed;
+
 namespace {
 
 //a place we can mark what edges we've seen, even for the planet we should need < 100mb
@@ -70,6 +77,9 @@ edge_t next(const std::unordered_map<uint32_t, uint64_t>& tile_set, const bitset
     if(edge_set.get(tile_set.find(tile->id().tileid())->second + id.id()))
       continue;
     edge_t candidate{id, tile->directededge(id)};
+    //dont need these
+    if(!ferries && candidate.e->use() == Use::kFerry)
+      continue;
     //skip these
     if(candidate.e->trans_up() || candidate.e->use() == Use::kTransitConnection ||
        candidate.e->trans_down() || candidate.e->IsTransitLine()) //these should never happen
@@ -108,19 +118,15 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  //bool unnamed = true;
-  std::string column_separator{'\0'};
-  std::string row_separator = "\n";
-  std::string config;
-
   options.add_options()
       ("help,h", "Print this help message.")
       ("version,v", "Print the version of this software.")
-      //("unnamed,u", bpo::value<bool>(&unnamed),"Also export unnamed edges.")
       ("column,c", bpo::value<std::string>(&column_separator), "What separator to use between columns [default=\\0].")
       ("row,r", bpo::value<std::string>(&column_separator), "What separator to use between row [default=\\n].")
+      ("ferries,f", "Export ferries as well [default=false]")
+      ("unnamed,u", "Export unnamed edges as well [default=false]")
       // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
 
 
   bpo::positional_options_description pos_options;
@@ -137,7 +143,7 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (vm.count("help")) {
+  if (vm.count("help") || !vm.count("config")) {
     std::cout << options << "\n";
     return EXIT_SUCCESS;
   }
@@ -147,7 +153,8 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
   }
 
-  //argument checking and verification
+  bool ferries = vm.count("ferries");
+  bool unnamed = vm.count("unnamed");
 
   //parse the config
   boost::property_tree::ptree pt;
@@ -212,14 +219,14 @@ int main(int argc, char *argv[]) {
       edge_set.set(tile_set.find(opposing_edge.i.tileid())->second + opposing_edge.i.id());
       ++set;
 
-      //this is not useful either
-      if(edge.e->shortcut())
+      //shortcuts arent real and maybe we dont want ferries
+      if(edge.e->shortcut() || (!ferries && edge.e->use() == Use::kFerry))
         continue;
 
       //no name no thanks
       auto edge_info = tile->edgeinfo(edge.e->edgeinfo_offset());
       auto names = edge_info->GetNames();
-      if(names.size() == 0)
+      if(names.size() == 0 && !unnamed)
         continue;
 
       //TODO: at this point we need to traverse the graph from this edge to build a subgraph of like-named
