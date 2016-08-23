@@ -479,7 +479,6 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   float avoidhills = (1.0f - usehills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = 1.0f + avoidhills * kAvoidHillsStrength[i];
-LOG_INFO(std::to_string(i) + " Grade Penalty = " + std::to_string(grade_penalty[i] ));
   }
 }
 
