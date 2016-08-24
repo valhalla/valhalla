@@ -16,7 +16,10 @@ On the Map Roulette website click on your username at the top right, then select
 ### Modify the Config File
 Now that you have the information you need, substitute your api key into the config file. Then, you have to set up your challenges entry. A simple entry will look something like:
 
-`"challenges": { "18": ["Loop", "Node"] }`
+    "challenges":
+        {
+            "18": ["Loop", "Node"]
+        }
 
 This simply specifies that challenge number 18 will contain tasks of type Loop and Node. The challenge number is the one that you found after creating the challenge. The task types are the types of tasks you specified in the geojson.
 If you have gotten here and don't know what geojson you should have, [click here](link to mjolnir stats) to learn more.
@@ -24,5 +27,17 @@ If you have gotten here and don't know what geojson you should have, [click here
 Finally, make sure that you change the `server_url` field to reflect the actual server (http://maproulette.org) if not running the server locally.
 
 ## Using this tool
-Usage of the tool is fairly simple as it is designed to be largely automatic. All you need to do is prove some command line arguments.
+Usage of the tool is fairly simple as it is designed to be largely automatic. All you need to do is provide some command line arguments.
 
+### Required Arguments
+There are two required Arguments:
+
+    -c, --config    json config file to use
+    -i, --geojson   geojson to build new tasks from
+
+There are also others available:
+
+    -h, --help      how to call the program
+    -r, --resubmit  try to detect tasks that have not been fixed,
+                    if there are unfixed tasks marked as fixed,
+                    resubmit them as new tasks
