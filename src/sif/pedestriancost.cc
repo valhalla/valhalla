@@ -12,6 +12,10 @@ namespace sif {
 // Default options/values
 namespace {
 
+// User propensity to use ferries. Range of values from 0 (avoid ferries) to
+// 1 (totally comfortable riding on ferries).
+constexpr float kDefaultUseFerryFactor = 1.0f;
+
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
 // it is the max walking distance.
@@ -33,8 +37,13 @@ constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
 constexpr float kDefaultDrivewayFactor  = 5.0f;   // Avoid driveways
 constexpr float kDefaultStepPenalty     = 30.0f;  // 30 seconds
+constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+
+// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
+// since a ferry is sometimes required to complete a route.
+constexpr float kMaxFerryPenalty = 8.0f * 3600.0f; // 8 hours
 
 // Minimum and maximum average walking speed (to validate input).
 constexpr float kMinWalkingSpeed = 0.5f;
@@ -232,6 +241,9 @@ class PedestrianCost : public DynamicCost {
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+  float ferry_cost_;                // Cost (seconds) to exit a ferry
+  float ferry_penalty_;             // Penalty (seconds) to enter a ferry
+  float ferry_weight_;              // Weighting to apply to ferry edges
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -257,6 +269,28 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
                                                   kDefaultCountryCrossingCost);
   country_crossing_penalty_       = pt.get<float>("country_crossing_penalty",
                                                   kDefaultCountryCrossingPenalty);
+
+  // Set the cost (seconds) to enter a ferry (only apply entering since
+  // a route must exit a ferry (except artificial test routes ending on
+  // a ferry!)
+  ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
+
+  // Modify ferry penalty and edge weighting based on use_ferry factor
+  float use_ferry = pt.get<float>("use_ferry", kDefaultUseFerryFactor);
+  if (use_ferry < 0.5f) {
+    // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
+    float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - w));
+
+    // Double the cost at use_ferry == 0, progress to 1.0 at use_ferry = 0.5
+    ferry_weight_ = 1.0f + w;
+  } else {
+    // Add a ferry weighting factor to influence cost along ferries to make
+    // them more favorable if desired rather than driving. No ferry penalty.
+    // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+    ferry_penalty_ = 0.0f;
+    ferry_weight_  = 1.0f - (use_ferry - 0.5f);
+  }
 
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
@@ -353,7 +387,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (edge->use() == Use::kFerry) {
     float sec = edge->length() * (kSecPerHour * 0.001f) /
             static_cast<float>(edge->speed());
-    return { sec, sec };
+    return { sec * ferry_weight_, sec };
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
@@ -386,6 +420,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     penalty += country_crossing_penalty_;
   } else if (node->type() == NodeType::kGate) {
     penalty += gate_penalty_;
+  }
+
+  if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
   }
 
   // Slight maneuver penalty
@@ -423,6 +462,11 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     penalty += country_crossing_penalty_;
   } else if (node->type() == NodeType::kGate) {
     penalty += gate_penalty_;
+  }
+
+  if (opp_edge->use() != Use::kFerry && opp_pred_edge->use() == Use::kFerry) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
   }
 
   // Slight maneuver penalty
