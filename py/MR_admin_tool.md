@@ -22,7 +22,7 @@ Now that you have the information you need, substitute your api key into the con
         }
 
 This simply specifies that challenge number 18 will contain tasks of type Loop and Node. The challenge number is the one that you found after creating the challenge. The task types are the types of tasks you specified in the geojson.
-If you have gotten here and don't know what geojson you should have, [click here](link to mjolnir stats) to learn more.
+If you have gotten here and don't know what geojson you should have, [click here](https://github.com/valhalla/mjolnir/blob/master/docs/geojson.md) to learn more.
 
 Finally, make sure that you change the `server_url` field to reflect the actual server (http://maproulette.org) if not running the server locally.
 
