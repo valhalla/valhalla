@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  bool reverse = true;
+  bool reverse = false;
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
   std::string origin, routetype, json, config;
@@ -283,6 +283,7 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
   std::cout << std::endl << *geojson;
+
   return EXIT_SUCCESS;
 }
 
