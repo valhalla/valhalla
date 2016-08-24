@@ -12,6 +12,10 @@ namespace sif {
 // Default options/values
 namespace {
 
+// User propensity to use ferries. Range of values from 0 (avoid ferries) to
+// 1 (totally comfortable riding on ferries).
+constexpr float kDefaultUseFerryFactor = 1.0f;
+
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
 // it is the max walking distance.
@@ -203,6 +207,13 @@ class PedestrianCost : public DynamicCost {
   }
 
  private:
+
+  // A measure of willingness to use ferries. Ranges from 0-1 with
+  // 0 being not willing at all and 1 being totally comfortable with taking
+  // this transportation.
+  float use_ferry_;
+  float ferry_factor_;
+
   // Maximum walking distance
   uint32_t max_distance_;
 
@@ -258,12 +269,27 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   country_crossing_penalty_       = pt.get<float>("country_crossing_penalty",
                                                   kDefaultCountryCrossingPenalty);
 
+  // Willingness to use ferries. Make sure this is within range [0, 1].
+  use_ferry_ = pt.get<float>("use_ferry", kDefaultUseFerryFactor);
+  if (use_ferry_ < 0.0f || use_ferry_ > 1.0f) {
+    use_ferry_ = kDefaultUseFerryFactor;
+    LOG_WARN("Outside valid use_ferry factor range " +
+             std::to_string(use_ferry_) + ": using default");
+  }
+
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
     LOG_WARN("Outside valid walking speed range " +
               std::to_string(walking_speed_) + ": using default");
     walking_speed_ = kDefaultWalkingSpeed;
   }
+
+  // Set the factors. The factors above 0.5 start to reduce the weight
+  // for this mode while factors below 0.5 start to increase the weight for
+  // this mode.
+  ferry_factor_ = (use_ferry_ >= 0.5f) ?
+                 1.0f - (use_ferry_ - 0.5f) :
+                 1.0f + (0.5f - use_ferry_) * 5.0f;
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / walking_speed_;
@@ -304,6 +330,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
+  if (edge->use() == Use::kFerry)
+    return (use_ferry_ > 0.0f) ? true : false;
+
   // Disallow if no pedestrian access, surface marked as impassible,
   // or if max walking distance is exceeded.
   if (!(edge->forwardaccess() & kPedestrianAccess) ||
@@ -328,6 +357,9 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
+  if (opp_edge->use() == Use::kFerry)
+    return (use_ferry_ > 0.0f) ? true : false;
+
   // Disallow if no pedestrian access or surface marked as impassible.
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
@@ -350,10 +382,12 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const uint32_t density) const {
   // Ferries are a special case - they use the ferry speed (stored on the edge)
+  float weight = 1.0f;
   if (edge->use() == Use::kFerry) {
     float sec = edge->length() * (kSecPerHour * 0.001f) /
             static_cast<float>(edge->speed());
-    return { sec, sec };
+    weight *= ferry_factor_;
+    return { sec * weight, sec };
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
