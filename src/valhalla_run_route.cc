@@ -655,10 +655,10 @@ int main(int argc, char *argv[]) {
     PathAlgorithm* pathalgorithm;
     if (routetype == "multimodal") {
       pathalgorithm = &mm;
-    } else if (routetype == "bus") {
-      pathalgorithm = &astar;
+    } else if (routetype == "pedestrian") {
+      pathalgorithm = &bd;
     } else {
-      bool same_edge = false;
+      // Use bidirectional except for possible trivial cases
       pathalgorithm = &bd;
       for (auto& edge1 : path_location[i].edges) {
         for (auto& edge2 : path_location[i+1].edges) {
