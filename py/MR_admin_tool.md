@@ -10,8 +10,8 @@ A sample configuration file can be found at [valhalla/conf/maproulette.json](htt
 #### Create a challenge
 To get started you'll need to create a challenge using the interface on the website. Once you have created a challenge, you will just need the challenge ID. You will put the challenge ID into your configuration file later.
 
-#### Generate an API key
-On the Map Roulette website click on your username at the top right, then select "New API Key", or "View API Key" if you have already created one. You will need this key for later
+#### Get an API key
+On the Map Roulette website click on your username at the top right, then select "Profile". Your API key can be found in the side panel on the left.
 
 ### Modify the Config File
 Now that you have the information you need, substitute your api key into the config file. Then, you have to set up your challenges entry. A simple entry will look something like:
