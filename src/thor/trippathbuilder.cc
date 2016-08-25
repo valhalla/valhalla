@@ -330,6 +330,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       break;
     }
   }
+
   // Set the destination side of street, if one exists
   if (end_sos != PathLocation::SideOfStreet::NONE)
     tp_dest->set_side_of_street(GetTripPathSideOfStreet(end_sos));
@@ -341,22 +342,37 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // If the path was only one edge we have a special case
   if (path.size() == 1) {
-    if (end_pct < start_pct)
-      throw std::runtime_error(
-          "Generated reverse trivial path, report this bug!");
-    const auto tile = graphreader.GetGraphTile(path.front().edgeid);
-    const auto edge = tile->directededge(path.front().edgeid);
+    const GraphTile* tile = graphreader.GetGraphTile(path.front().edgeid);
+    const DirectedEdge* edge = tile->directededge(path.front().edgeid);
 
-    // Sort out the shape
+    // Get the shape. Reverse if the directed edge direction does
+    // not match the traversal direction (based on start and end percent).
     auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
-    if (!edge->forward())
+    if (edge->forward() != (start_pct < end_pct)) {
       std::reverse(shape.begin(), shape.end());
+    }
+
+    // If traversing the opposing direction: adjust start and end percent
+    // and reverse the edge and side of street if traversing the opposite
+    // direction
+    if (start_pct > end_pct) {
+      start_pct = 1.0f - start_pct;
+      end_pct   = 1.0f - end_pct;
+      edge = graphreader.GetOpposingEdge(path.front().edgeid, tile);
+      if (end_sos == PathLocation::SideOfStreet::LEFT) {
+        tp_dest->set_side_of_street(GetTripPathSideOfStreet(PathLocation::SideOfStreet::RIGHT));
+      } else if (end_sos == PathLocation::SideOfStreet::RIGHT) {
+        tp_dest->set_side_of_street(GetTripPathSideOfStreet(PathLocation::SideOfStreet::LEFT));
+      }
+    }
+
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
+    // Add trip edge
     auto trip_edge = AddTripEdge(path.front().edgeid.id(), path.front().trip_id, 0,
                                  path.front().mode, edge, trip_path.add_node(), tile,
-                                 end_pct - start_pct);
+                                 std::abs(end_pct - start_pct));
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size()-1);
     auto* node = trip_path.add_node();
