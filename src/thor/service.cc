@@ -48,6 +48,26 @@ namespace {
 namespace valhalla {
   namespace thor {
 
+    worker_t::result_t thor_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
+
+      //build up the json map
+      auto json_error = json::map({});
+      json_error->emplace("error", error);
+      json_error->emplace("status", status);
+      json_error->emplace("code", code);
+
+      //serialize it
+      std::stringstream ss;
+      ss << *json_error;
+
+      worker_t::result_t result{false};
+      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+
+      return result;
+    }
+
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), reader(config.get_child("mjolnir")),
       long_request(config.get<float>("thor.logging.long_request")){
@@ -77,20 +97,12 @@ namespace valhalla {
           boost::property_tree::read_json(stream, request);
         }
         catch(const std::exception& e) {
-          worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
           valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
-          return result;
+          return jsonify_error(500, "Internal Server Error", std::string(e.what()), info);
         }
         catch(...) {
-          worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
-          return result;
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info);
         }
 
         // Initialize request - get the PathALgorithm to use
@@ -116,12 +128,8 @@ namespace valhalla {
         }
       }
       catch(const std::exception& e) {
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return result;
+        return jsonify_error(400, "Bad Request", std::string(e.what()), info);
       }
     }
 
