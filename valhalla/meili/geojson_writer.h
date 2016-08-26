@@ -11,7 +11,8 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
-#include <valhalla/meili/map_matching.h>
+#include <valhalla/meili/map_matcher.h>
+#include <valhalla/meili/match_route.h>
 #include <valhalla/meili/match_result.h>
 
 
@@ -56,7 +57,7 @@ void serialize_graphid(rapidjson::Writer<buffer_t>& writer,
 
 template <typename buffer_t>
 void serialize_routes(rapidjson::Writer<buffer_t>& writer,
-                      const meili::MapMatching& mm,
+                      const meili::MapMatcher& mapmatcher,
                       const meili::State& state)
 {
   if (!state.routed()) {
@@ -64,9 +65,11 @@ void serialize_routes(rapidjson::Writer<buffer_t>& writer,
     return;
   }
 
+  const auto& mapmatching = mapmatcher.mapmatching();
+
   writer.StartArray();
-  if (state.time() + 1 < mm.size()) {
-    for (const auto& next_state : mm.states(state.time() + 1)) {
+  if (state.time() + 1 < mapmatching.size()) {
+    for (const auto& next_state : mapmatching.states(state.time() + 1)) {
       auto label = state.RouteBegin(*next_state);
       if (label != state.RouteEnd()) {
         writer.StartObject();
@@ -124,7 +127,7 @@ void serialize_routes(rapidjson::Writer<buffer_t>& writer,
 template <typename buffer_t>
 void serialize_state(rapidjson::Writer<buffer_t>& writer,
                      const meili::State& state,
-                     const meili::MapMatching& mm)
+                     const meili::MapMatcher& mapmatcher)
 {
   writer.StartObject();
 
@@ -143,7 +146,7 @@ void serialize_state(rapidjson::Writer<buffer_t>& writer,
   serialize_coordinate(writer, state.candidate().edges.front().projected);
 
   writer.String("routes");
-  serialize_routes(writer, mm, state);
+  serialize_routes(writer, mapmatcher, state);
 
   writer.EndObject();
 }
@@ -177,7 +180,7 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
     if (result.HasState()) {
       const auto& state = mapmatching.state(result.stateid());
       for (const auto& other_state : mapmatching.states(state.time())) {
-        serialize_state(writer, *other_state, mapmatching);
+        serialize_state(writer, *other_state, mapmatcher);
       }
     }
     writer.EndArray();

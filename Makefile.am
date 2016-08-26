@@ -68,14 +68,20 @@ nobase_include_HEADERS = \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
 	valhalla/meili/bucket_queue.h \
-	valhalla/meili/grid_traversal.h
+	valhalla/meili/grid_traversal.h \
+	valhalla/meili/map_matcher.h \
+	valhalla/meili/map_matcher_factory.h \
+	valhalla/meili/match_route.h
 libvalhalla_meili_la_SOURCES = \
 	src/meili/universal_cost.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
 	src/meili/service.cc \
-	src/meili/geojson_reader.cc
+	src/meili/geojson_reader.cc \
+	src/meili/map_matcher.cc \
+	src/meili/map_matcher_factory.cc \
+	src/meili/match_route.cc
 libvalhalla_meili_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_meili_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
@@ -99,7 +105,7 @@ check_PROGRAMS = \
 	test/geometry_helpers \
 	test/grid_range_query \
 	test/grid_traversal \
-	test/map_matching \
+	test/map_matcher_factory \
 	test/queue \
 	test/routing \
 	test/viterbi_search \
@@ -118,9 +124,9 @@ test_grid_range_query_SOURCES = test/grid_range_query.cc test/test.cc
 test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_grid_range_query_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
-test_map_matching_SOURCES = test/map_matching.cc test/test.cc
-test_map_matching_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_map_matching_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
+test_map_matcher_factory_SOURCES = test/map_matcher_factory.cc test/test.cc
+test_map_matcher_factory_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_map_matcher_factory_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_meili.la
 
 test_queue_SOURCES = test/queue.cc test/test.cc
 test_queue_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@

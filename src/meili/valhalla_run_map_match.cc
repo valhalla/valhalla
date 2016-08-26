@@ -1,16 +1,15 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "meili/map_matching.h"
+#include "meili/measurement.h"
+#include "meili/map_matcher_factory.h"
 
 
 using namespace valhalla::meili;
 
 
-template <typename istream_t>
-std::vector<Measurement> ReadMeasurements(istream_t& istream,
-                                          float default_gps_accuracy,
-                                          float default_search_radius)
+template <typename istream_t> std::vector<Measurement>
+ReadMeasurements(istream_t& istream, float default_gps_accuracy, float default_search_radius)
 {
   std::string line;
   std::vector<Measurement> measurements;
@@ -57,7 +56,7 @@ int main(int argc, char *argv[])
              default_search_radius = mapmatcher->config().get<float>("search_radius");
 
   size_t index = 0;
-  for (std::vector<Measurement> measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius);
+  for (auto measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius);
        !measurements.empty();
        measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius)) {
 
@@ -69,9 +68,8 @@ int main(int argc, char *argv[])
     size_t mmt_id = 0, count = 0;
     for (const auto& result : results) {
       if (result.HasState()) {
-        const auto& state = mapmatcher->mapmatching().state(result.stateid());
         std::cout << mmt_id << " ";
-        std::cout << state.candidate().distance() << std::endl;
+        std::cout << result.distance() << std::endl;
         count++;
       }
       mmt_id++;

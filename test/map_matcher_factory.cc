@@ -8,7 +8,8 @@
 
 #include "test.h"
 #include "meili/universal_cost.h"
-#include "meili/map_matching.h"
+#include "meili/map_matcher_factory.h"
+
 
 using namespace valhalla;
 
@@ -165,7 +166,7 @@ void TestMapMatcher()
   // Share the same pool
   test::assert_bool(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader(),
                     "graph reader shoule be shared among matchers");
-  test::assert_bool(&auto_matcher->rangequery() == &pedestrian_matcher->rangequery(),
+  test::assert_bool(&auto_matcher->candidatequery() == &pedestrian_matcher->candidatequery(),
                     "range query should be shared among matchers");
 
   delete auto_matcher;
