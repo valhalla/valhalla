@@ -81,11 +81,9 @@ namespace valhalla {
       auto date_time_value = request.get_optional<std::string>("date_time.value");
       if (date_type) {
         //not yet on this
-        if(date_type == 2 && (costing == "multimodal" || costing == "transit")) {
-          http_response_t response(501, "Not Implemented", "Arrive by for multimodal not implemented yet", headers_t{CORS});
-          response.from_info(request_info);
-          return {false, {response.to_string()}};
-        }
+        if(date_type == 2 && (costing == "multimodal" || costing == "transit"))
+          return jsonify_error(501, "Not Implemented", "Arrive by for multimodal not implemented yet", request_info);
+
         //what kind
         switch(*date_type) {
         case 0: //current

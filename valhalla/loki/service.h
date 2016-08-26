@@ -4,8 +4,6 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
-
-#include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/location.h>
@@ -13,11 +11,13 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
 
+using namespace prime_server;
+
+
 namespace valhalla {
   namespace loki {
 
     void run_service(const boost::property_tree::ptree& config);
-
     class loki_worker_t {
      public:
       enum ACTION_TYPE {ROUTE = 0, VIAROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
@@ -27,6 +27,8 @@ namespace valhalla {
       void cleanup();
 
      protected:
+
+      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const;
       void parse_locations(const boost::property_tree::ptree& request);
       void parse_costing(const boost::property_tree::ptree& request);
 
