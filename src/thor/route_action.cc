@@ -111,10 +111,14 @@ namespace valhalla {
     if (routetype == "multimodal") {
       return &multi_modal_astar;
     } else if (routetype == "bus") {
+      // TODO - can we use bidirectional A*?
       return &astar;
+    } else if (routetype == "pedestrian") {
+      return &bidir_astar;
     } else {
-      // Use A* if any origin and destination edges are the same or connect
-      // at a common node - otherwise use bidirectional A*
+      // Use A* if any origin and destination edges are the same - otherwise
+      // use bidirectional A*. Bidirectional A* does not handle trivial cases
+      // with oneways.
       for (auto& edge1 : origin.edges) {
         for (auto& edge2 : destination.edges) {
           if (edge1.id == edge2.id) {
