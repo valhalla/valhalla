@@ -10,11 +10,11 @@
                    V   V   V
   +-------------------------------------------------------+
   |                                                       |
-  |           [ Candidate Query ]                         |
+  |            [ Candidate Query ]                        |
   |                                                       |
   |               /    |    \                             |
-  |  Candidates  |     |     |  Candidates                | <-- Map Matcher
-  |              V     V     V                            |
+  |  Candidate   |     |     |  Candidate                 | <-- Map Matcher
+  |  cluster     V     V     V  cluster                   |
   |                                                       |
   |            [  Map Matching  ] <--- [ Viterbi Search ] |
   |                                \__ [ Routing ]        |
@@ -30,8 +30,8 @@
 
 Given a position and a radius, this component finds all underlying
 road segments lying within this radius around the position. For every
-incoming measurement we need to perform such a query to find all
-surrounding candidates, which will be used as input to the map
+incoming measurement we need to perform such a query to find a cluster
+of candidates around it, which will be used as input to the map
 matching component.
 
 The spatial query algorithm used in Meili is simple and
@@ -46,23 +46,24 @@ at page 7 for details.
 ## Map Matching
 `valhalla/meili/map_matching.h`
 
-The map matching component is the core component that implements the
-HMM-based map matching algorithm. It takes a list of candidate lists
-as input and finds out the most likely sequence of candidates. It
-delegates the actual search task to the Viterbi Search module, but it
-defines how to quantify the likelihood. Concretely speaking it
-inherits from the `ViterbiSearch` class and implements its virtual
-costing functions namely `ViterbiSearch::TransitionCost` and
+The `MapMatching` class is the core component that implements the
+HMM-based map matching algorithm. It takes a sequence of candidate
+clusters as input, and picks one candidate from each cluster to form
+the most likely sequence of candidates (Viterbi path). It delegates
+the actual search task to the Viterbi Search module, but it defines
+how to quantify the likelihood. Concretely speaking it inherits from
+the `ViterbiSearch` class and implements its virtual costing functions
+namely `ViterbiSearch::TransitionCost` and
 `ViterbiSearch::EmissionCost`.
 
 ### State
 `valhalla/meili/map_matching.h`
 
-When feeding a list of candidates into the component, each candidate
-will be attached with an *unique* ID, and an *identical* time. The ID
-is used to identify a state, whereas the time is used to identify what
-time a candidate comes in, or which measurement it comes
-from. Internally we name the wrapped candidate as a *state*.
+When feeding a cluster of candidates into the component, an *unique*
+ID and an *identical* time will be attached to each candidate. The ID
+identifies a state, whereas the time tells from which cluster a
+candidate comes. Internally we name the wrapped candidate as a
+*state*.
 
 ### Viterbi Search
 `valhalla/meili/viterbi_search.h`
@@ -75,15 +76,16 @@ implements the
 [naive Viterbi Algorithm](https://en.wikipedia.org/wiki/Viterbi_algorithm)
 and `ViterbiSearch` implements the lazy Dijkstra-based Viterbi
 Algorithm. Both implementations are able to find the optimal
-path. `NaiveViterbiSearch` is able to work with the both maximum and
+path. `NaiveViterbiSearch` is able to work with both maximum and
 minimum objectives, whereas `ViterbiSearch` only works with minimum
 objectives as it's Dijkstra-based.
 
-We derive `MapMatching` from `ViterbiSearch` because it's faster in
-theory. You can develop your own map matching algorithm to work with
-other road network sources (e.g. pgRouting) by inheriting from either
-implementation (depending on your objectives), and implement
-`IViterbiSearch::TransitionCost` and `IViterbiSearch::EmissionCost`.
+We derive `MapMatching` from `ViterbiSearch` for it has better
+performance in theory. You can develop your own map matching algorithm
+to work with other road network sources (e.g. pgRouting) by inheriting
+from either implementation (depending on your objectives), and
+implement `IViterbiSearch::TransitionCost` and
+`IViterbiSearch::EmissionCost`.
 
 The details about these algorithms are described
 [here](https://github.com/valhalla/meili/blob/master/docs/algorithms.md).
@@ -91,26 +93,22 @@ The details about these algorithms are described
 ### Routing
 `valhalla/meili/routing.h`
 
-This module focus on finding the shortest path (SP) from one state to
-another state in the road network. The path distance is required in
-the transition cost calculation (`MapMatching::TransitionCost`). The
-path is the inferred path between two measurements.
+This module focuses on finding the shortest path (SP) between two
+candidates in the road network. The path distance is required in the
+transition cost calculation (`MapMatching::TransitionCost`). The path
+will be the inferred path between their respective measurements if
+both candidates are picked as part of the most likely sequence.
+
+The SP algorithm is based on AStar, and it routes from single origin
+to multiple destinations. AStar fits here because the destination set
+is a cluster of candidates around their measurement (provided by the
+candidate query above). So the algorithm can estimate the heuristic
+cost by targeting at the measurement's position.
 
 The SP algorithm only focuses on *limited distance* path finding. If
 it hasn't found the destination after exploring 2000 meters
 (`breakage_distance`), it will give up without saying
-anything. Apparently we can't infer the path if no path is found
-between two successive measurements. However they still have chances
-to find the correct match road, if the former measurement can find a
-path from its preceding measurement, and the later measurement can
-find a path to its succeeding measurement, respectively.
-
-The SP algorithm is based on AStar, and it routes from single origin
-to multiple destinations. AStar fits here because the destination set
-is a cluster of candidates within a radius around their measurement
-location (provided by the candidate query above). So the algorithm can
-estimate the heuristic cost by targeting at the measurement's
-location.
+anything.
 
 The SP algorithm doesn't construct the paths for you. Instead it gives
 back the search tree (i.e. `LabelSet`) directly. Then we store the
@@ -118,11 +116,11 @@ search tree in the origin state for path construction later.
 
 Turn cost between road segments along the path is aggregated during
 the path finding. This cost contributes as an independent part of the
-transition cost (`MapMatching::TransitionCost`) to penalize U-turns in
-modes that enables U-turns, such as `pedestrian`.
+transition cost (`MapMatching::TransitionCost`) to penalize paths with
+turns.
 
-Unlike SP algorithms in Thor, this SP algorithm scans nodes instead of
-edges, so turn restriction is not considered here.
+Unlike path algorithms in Thor, the SP algorithm scans nodes instead
+of edges, so turn restriction is not considered here.
 
 ### Viterbi Search VS. Routing
 
@@ -178,22 +176,21 @@ of map matching it, this issue can be avoided.
 ### Match Result
 `valhalla/meili/match_result.h`
 
-Each measurement should correspond to a match result. The match result
-tells you which road segment candidate the measurement gets matched or
-interpolated, the match position on the road segment, and the distance
-from the measurement to the position, etc. The corresponding state ID
-is also attached to the result if the measurement gets matched. Since
-we have stored route search trees to states, so you can find the state
-with this ID and reconstruct the route with the helpers from
-`valhalla/meili/match_route.h`.
+Each measurement corresponds to a match result. The match result tells
+you on which road segment the measurement gets matched or
+interpolated, the match position, and the distance to the position,
+etc. The corresponding state ID is attached to the result if the
+measurement gets matched. Since we have stored route search trees to
+states, so you can find the state with this ID and reconstruct the
+route with the helpers from `valhalla/meili/match_route.h`.
 
 ## Map Matcher Factory
 `valhalla/meili/map_matcher_factory.h`
 
 The map matcher factory can facilitate map matcher creating. Pass it
 the Valhalla configuration and the travel mode, it reads the
-parameters for the mode and creates the corresponding map matcher for
-you. It also maintains a graph tile reader instance and a candidate
-query instance, and share the references among all its matchers, so
-creating a matcher is cheap. Note that both factory and matcher are
-not thread-safe.
+parameters and creates a map matcher for this mode. The factory also
+maintains a graph tile reader instance and a candidate query instance
+and shares them among all its matchers. Because of the data sharing it
+is cheap to create a map matcher from a factory. Note that both
+factory and matcher are not thread-safe.
