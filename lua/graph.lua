@@ -939,18 +939,18 @@ function filter_tags_generic(kv)
         use = 20
      elseif kv["highway"] == "footway" then
         use = 25
+     elseif kv["highway"] == "steps" then
+        use = 26 --steps/stairs     
+     elseif kv["highway"] == "path" then
+        use = 27
      elseif kv["highway"] == "pedestrian" then
-        use = 26
+        use = 28
      elseif kv["pedestrian"] == "true" and
             kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
             kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
             kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
             kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
-        use = 26
-     elseif kv["highway"] == "path" then
-        use = 27
-     elseif kv["highway"] == "steps" then
-        use = 28 --steps/stairs
+        use = 28
      elseif kv["highway"] == "bridleway" then
         use = 29
      end
