@@ -27,14 +27,40 @@ using namespace valhalla::baldr;
 
 namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+}
 
-  //TODO: throw this in the header to make it testable?
-  class odin_worker_t {
-   public:
-    odin_worker_t(const boost::property_tree::ptree& config):config(config) {
+namespace valhalla {
+  namespace odin {
 
+    worker_t::result_t odin_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
+
+      //build up the json map
+      auto json_error = json::map({});
+      json_error->emplace("error", error);
+      json_error->emplace("status", status);
+      json_error->emplace("code", code);
+
+      //serialize it
+      std::stringstream ss;
+      ss << *json_error;
+
+      worker_t::result_t result{false};
+      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+
+      return result;
     }
-    worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+
+    odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config):
+        config(config){
+    }
+
+    odin_worker_t::~odin_worker_t(){}
+
+    worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
       try{
@@ -46,11 +72,7 @@ namespace {
           boost::property_tree::read_json(stream, request);
         }
         catch(...) {
-          worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info);
         }
 
         // Grab language from options and set
@@ -82,11 +104,7 @@ namespace {
             trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            worker_t::result_t result{false};
-            http_response_t response(500, "Internal Server Error", "Failed to parse TripPath", headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
+            return jsonify_error(500, "Internal Server Error", "Failed to parse TripPath", info);
           }
 
           //get some annotated directions
@@ -96,11 +114,7 @@ namespace {
             trip_directions = directions.Build(directions_options, trip_path);
           }
           catch(...) {
-            worker_t::result_t result{false};
-            http_response_t response(500, "Internal Server Error", "Could not build directions for TripPath", headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
+            return jsonify_error(500, "Internal Server Error", "Could not build directions for TripPath", info);
           }
 
           LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
@@ -112,20 +126,10 @@ namespace {
         return result;
       }
       catch(const std::exception& e) {
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-        return result;
+        return jsonify_error(400, "Bad Request", std::string(e.what()), info);
       }
     }
-   protected:
-    boost::property_tree::ptree config;
-  };
-}
 
-namespace valhalla {
-  namespace odin {
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from odin proxy
       auto upstream_endpoint = config.get<std::string>("odin.service.proxy") + "_out";
