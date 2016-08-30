@@ -5774,7 +5774,7 @@ void TestBuildEnterRoundabout_0_miles_en_US() {
 ///////////////////////////////////////////////////////////////////////////////
 // FormEnterRoundaboutInstruction
 // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
-// "0": "Enter the roundabout.",
+// "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 void TestBuildEnterRoundabout_1_miles_en_US() {
   std::string country_code = "US";
@@ -5802,7 +5802,7 @@ void TestBuildEnterRoundabout_1_miles_en_US() {
     SetExpectedManeuverInstructions(
         expected_maneuvers,
         "Enter the roundabout and take the " + ordinal_value + " exit.",
-        "Enter the roundabout.",
+        "Enter the roundabout and take the " + ordinal_value + " exit.",
         "Enter the roundabout and take the " + ordinal_value + " exit.", "");
 
     TryBuild(directions_options, maneuvers, expected_maneuvers);
