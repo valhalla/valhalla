@@ -30,8 +30,6 @@ BidirectionalAStar::BidirectionalAStar() {
   allow_transitions_ = false;
   adjacencylist_forward_ = nullptr;
   edgestatus_forward_ = nullptr;
-  edgelabels_forward_.reserve(kInitialEdgeLabelCountBD);
-  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
 }
 
 // Destructor
@@ -77,6 +75,11 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
   // Set the threshold to 0 (used to extend search once an initial
   // connection has been found).
   threshold_ = 0;
+
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_forward_.reserve(kInitialEdgeLabelCountBD);
+  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
 
   // Support for hierarchy transitions
   allow_transitions_ = costing->AllowTransitions();
