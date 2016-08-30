@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdint>
 #include <cmath>
 #include <sstream>
@@ -10,35 +11,33 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-using namespace prime_server;
 
 #include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
 #include "skadi/service.h"
 #include "skadi/sample.h"
 
+using namespace prime_server;
 using namespace valhalla;
-using namespace valhalla::baldr;
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
+using namespace valhalla::skadi;
 
 
 namespace {
-  enum ACTION_TYPE {HEIGHT};
-  const std::unordered_map<std::string, ACTION_TYPE> ACTION {
-    {"/height", HEIGHT}
+
+  const std::unordered_map<std::string, skadi_worker_t::ACTION_TYPE> ACTION{
+    {"/height", skadi_worker_t::HEIGHT}
   };
+
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
+  boost::property_tree::ptree from_request(const skadi_worker_t::ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
+
     //throw the json into the ptree
     try {
       auto json = request.query.find("json");
@@ -121,17 +120,40 @@ namespace {
     }
     return array;
   }
+}
 
-  //TODO: throw this in the header to make it testable?
-  class skadi_worker_t {
-    public:
-    skadi_worker_t (const boost::property_tree::ptree& config):
+namespace valhalla {
+  namespace skadi {
+
+    worker_t::result_t skadi_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
+
+      //build up the json map
+      auto json_error = json::map({});
+      json_error->emplace("error", error);
+      json_error->emplace("status", status);
+      json_error->emplace("code", code);
+
+      //serialize it
+      std::stringstream ss;
+      ss << *json_error;
+
+      worker_t::result_t result{false};
+      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+
+      return result;
+    }
+
+    skadi_worker_t::skadi_worker_t (const boost::property_tree::ptree& config):
       sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
       max_shape(config.get<size_t>("service_limits.skadi.max_shape")), min_resample(config.get<float>("service_limits.skadi.min_resample")),
       long_request(config.get<float>("skadi.logging.long_request")){
     }
 
-    worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+    skadi_worker_t::~skadi_worker_t(){}
+
+    worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
       //request should look like:
@@ -140,13 +162,9 @@ namespace {
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
         auto action = ACTION.find(request.path);
-        if(action == ACTION.cend()) {
-          worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/height'", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+        if(action == ACTION.cend())
+          return jsonify_error(404, "Not Found", "Try any of: '/height'", info);
+
         //parse the query's json
         auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
@@ -155,23 +173,15 @@ namespace {
             return elevation(request_pt, info);
             break;
         }
-        worker_t::result_t result{false};
-        http_response_t response(501, "Not Implemented", "", headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-        return result;
+        return jsonify_error(501, "Not Implemented", "", info);
       }
       catch(const std::exception& e) {
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return result;
+        return jsonify_error(400, "Bad Request", std::string(e.what()), info);
       }
     }
 
-    void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+    void skadi_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //get some parameters
       range = request.get<bool>("range", false);
       auto input_shape = request.get_child_optional("shape");
@@ -223,14 +233,13 @@ namespace {
       }
     }
 
-
     /* example height with range response:
     {
       "shape": [ {"lat": 40.712433, "lon": -76.504913}, {"lat": 40.712276, "lon": -76.605263} ],
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t skadi_worker_t::elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       //get the elevation of each posting
@@ -289,23 +298,11 @@ namespace {
       return result;
     }
 
-    void cleanup() {
+    void skadi_worker_t::cleanup() {
       shape.clear();
       encoded_polyline.reset();
     }
-    protected:
-      std::list<PointLL> shape;
-      boost::optional<std::string> encoded_polyline;
-      bool range;
-      skadi::sample sample;
-      size_t max_shape;
-      float min_resample;
-      float long_request;
-  };
-}
 
-namespace valhalla {
-  namespace skadi {
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from the http server
       auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
