@@ -13,8 +13,6 @@
 #include <valhalla/baldr/json.h>
 #include "skadi/sample.h"
 
-using namespace prime_server;
-
 
 namespace valhalla {
   namespace skadi {
@@ -31,10 +29,10 @@ namespace valhalla {
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const;
+      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, prime_server::http_request_t::info_t& request_info) const;
       void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request);
 
-      prime_server::worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t elevation(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       std::list<midgard::PointLL> shape;
       boost::optional<std::string> encoded_polyline;
