@@ -907,7 +907,7 @@ namespace {
         }
         catch(const std::exception& e) {
           LOG_INFO(std::string("Bad Request: ") + e.what());
-          return jsonify_error(400, "Bad Request", std::string(e.what()), info);
+          return jsonify_error(400, "Bad Request", e.what(), info);
         }
       }
 
