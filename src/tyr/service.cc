@@ -797,135 +797,135 @@ namespace {
   }
 }
 
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  namespace valhalla {
-    namespace tyr {
+namespace valhalla {
+  namespace tyr {
 
-      worker_t::result_t tyr_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
+    worker_t::result_t tyr_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
 
-        //build up the json map
-        auto json_error = json::map({});
-        json_error->emplace("error", error);
-        json_error->emplace("status", status);
-        json_error->emplace("code", code);
+      //build up the json map
+      auto json_error = json::map({});
+      json_error->emplace("error", error);
+      json_error->emplace("status", status);
+      json_error->emplace("code", code);
 
-        //serialize it
-        std::stringstream ss;
-        ss << *json_error;
+      //serialize it
+      std::stringstream ss;
+      ss << *json_error;
+
+      worker_t::result_t result{false};
+      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+
+      return result;
+    }
+
+    tyr_worker_t::tyr_worker_t(const boost::property_tree::ptree& config):
+      config(config),
+      long_request(config.get<float>("tyr.logging.long_request")){}
+
+    tyr_worker_t::~tyr_worker_t(){}
+
+    worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
+      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      LOG_INFO("Got Tyr Request " + std::to_string(info.id));
+      try{
+        //get some info about what we need to do
+        std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
+        std::stringstream stream(request_str);
+        boost::property_tree::ptree request;
+
+        try{
+          boost::property_tree::read_json(stream, request);
+        }
+        catch(...) {
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info);
+        }
+
+        //see if we can get some options
+        valhalla::odin::DirectionsOptions directions_options;
+        auto options = request.get_child_optional("directions_options");
+        if(options)
+          directions_options = valhalla::odin::GetDirectionsOptions(*options);
+
+        midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
+
+        //get the legs
+        std::list<odin::TripDirections> legs;
+        for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
+          legs.emplace_back();
+          try {
+            legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+          }
+          catch(...) {
+            return jsonify_error(500, "Internal Server Error", "Failed to parse TripDirections", info);
+          }
+        }
+
+        //jsonp callback if need be
+        std::ostringstream json_stream;
+        auto jsonp = request.get_optional<std::string>("jsonp");
+        if(jsonp)
+          json_stream << *jsonp << '(';
+        //serialize them
+        if(request.get_optional<std::string>("osrm"))
+          osrm_serializers::serialize(directions_options, legs, json_stream);
+        else
+          valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
+        if(jsonp)
+          json_stream << ')';
+
+        //log request if greater than X (ms)
+        auto trip_directions_length = 0.f;
+        for(const auto& leg : legs) {
+          trip_directions_length += leg.summary().length();
+        }
+        //get processing time for tyr
+        auto e = std::chrono::system_clock::now();
+        std::chrono::duration<float, std::milli> elapsed_time = e - s;
+        //log request if greater than X (ms)
+        if (!info.do_not_track && (elapsed_time.count() / trip_directions_length) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request, false);
+          LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("tyr::request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("valhalla_tyr_long_request", " [ANALYTICS] ");
+        }
 
         worker_t::result_t result{false};
-        http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
-        response.from_info(request_info);
+        http_response_t response(200, "OK", json_stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+        response.from_info(info);
         result.messages.emplace_back(response.to_string());
 
         return result;
       }
-
-      tyr_worker_t::tyr_worker_t(const boost::property_tree::ptree& config):
-        config(config),
-        long_request(config.get<float>("tyr.logging.long_request")){}
-
-      tyr_worker_t::~tyr_worker_t(){}
-
-      worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
-        //get time for start of request
-        auto s = std::chrono::system_clock::now();
-        auto& info = *static_cast<http_request_t::info_t*>(request_info);
-        LOG_INFO("Got Tyr Request " + std::to_string(info.id));
-        try{
-          //get some info about what we need to do
-          std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-          std::stringstream stream(request_str);
-          boost::property_tree::ptree request;
-
-          try{
-            boost::property_tree::read_json(stream, request);
-          }
-          catch(...) {
-            return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info);
-          }
-
-          //see if we can get some options
-          valhalla::odin::DirectionsOptions directions_options;
-          auto options = request.get_child_optional("directions_options");
-          if(options)
-            directions_options = valhalla::odin::GetDirectionsOptions(*options);
-
-          midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
-
-          //get the legs
-          std::list<odin::TripDirections> legs;
-          for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
-            legs.emplace_back();
-            try {
-              legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
-            }
-            catch(...) {
-              return jsonify_error(500, "Internal Server Error", "Failed to parse TripDirections", info);
-            }
-          }
-
-          //jsonp callback if need be
-          std::ostringstream json_stream;
-          auto jsonp = request.get_optional<std::string>("jsonp");
-          if(jsonp)
-            json_stream << *jsonp << '(';
-          //serialize them
-          if(request.get_optional<std::string>("osrm"))
-            osrm_serializers::serialize(directions_options, legs, json_stream);
-          else
-            valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
-          if(jsonp)
-            json_stream << ')';
-
-          //log request if greater than X (ms)
-          auto trip_directions_length = 0.f;
-          for(const auto& leg : legs) {
-            trip_directions_length += leg.summary().length();
-          }
-          //get processing time for tyr
-          auto e = std::chrono::system_clock::now();
-          std::chrono::duration<float, std::milli> elapsed_time = e - s;
-          //log request if greater than X (ms)
-          if (!info.do_not_track && (elapsed_time.count() / trip_directions_length) > long_request) {
-            std::stringstream ss;
-            boost::property_tree::json_parser::write_json(ss, request, false);
-            LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-            LOG_WARN("tyr::request exceeded threshold::"+ ss.str());
-            midgard::logging::Log("valhalla_tyr_long_request", " [ANALYTICS] ");
-          }
-
-          worker_t::result_t result{false};
-          http_response_t response(200, "OK", json_stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-
-          return result;
-        }
-        catch(const std::exception& e) {
-          LOG_INFO(std::string("Bad Request: ") + e.what());
-          return jsonify_error(400, "Bad Request", e.what(), info);
-        }
-      }
-
-      void run_service(const boost::property_tree::ptree& config) {
-        //gets requests from thor proxy
-        auto upstream_endpoint = config.get<std::string>("tyr.service.proxy") + "_out";
-        //sends them on to odin
-        //auto downstream_endpoint = config.get<std::string>("tyr.service.proxy_multi") + "_in";
-        //or returns just location information back to the server
-        auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
-
-        //listen for requests
-        zmq::context_t context;
-        prime_server::worker_t worker(context, upstream_endpoint, "ipc://NO_ENDPOINT", loopback_endpoint,
-          std::bind(&tyr_worker_t::work, tyr_worker_t(config), std::placeholders::_1, std::placeholders::_2));
-        worker.work();
-
-        //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+      catch(const std::exception& e) {
+        LOG_INFO(std::string("Bad Request: ") + e.what());
+        return jsonify_error(400, "Bad Request", e.what(), info);
       }
     }
+
+    void run_service(const boost::property_tree::ptree& config) {
+      //gets requests from thor proxy
+      auto upstream_endpoint = config.get<std::string>("tyr.service.proxy") + "_out";
+      //sends them on to odin
+      //auto downstream_endpoint = config.get<std::string>("tyr.service.proxy_multi") + "_in";
+      //or returns just location information back to the server
+      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+
+      //listen for requests
+      zmq::context_t context;
+      prime_server::worker_t worker(context, upstream_endpoint, "ipc://NO_ENDPOINT", loopback_endpoint,
+        std::bind(&tyr_worker_t::work, tyr_worker_t(config), std::placeholders::_1, std::placeholders::_2));
+      worker.work();
+
+      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+    }
   }
+}
