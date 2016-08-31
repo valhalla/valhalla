@@ -55,8 +55,7 @@ namespace valhalla {
     }
 
     odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config):
-        config(config){
-    }
+      config(config){}
 
     odin_worker_t::~odin_worker_t(){}
 
@@ -126,7 +125,7 @@ namespace valhalla {
         return result;
       }
       catch(const std::exception& e) {
-        return jsonify_error(400, "Bad Request", std::string(e.what()), info);
+        return jsonify_error(400, "Bad Request", e.what(), info);
       }
     }
 
