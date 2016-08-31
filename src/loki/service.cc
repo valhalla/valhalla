@@ -251,23 +251,29 @@ namespace valhalla {
         //let further processes more easily know what kind of request it was
         request_pt.put<int>("action", action->second);
 
+        worker_t::result_t result{false};
         //do request specific processing
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            return route(request_pt, info);
+            result = route(request_pt, info);
+            break;
           case LOCATE:
-            return locate(request_pt, info);
+            result = locate(request_pt, info);
+            break;
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
           case OPTIMIZED_ROUTE:
-            return matrix(action->second, request_pt, info);
+            result = matrix(action->second, request_pt, info);
+            break;
           case ISOCHRONE:
-            return isochrones(request_pt, info);
+            result = isochrones(request_pt, info);
+            break;
           case ATTRIBUTES:
-            return attributes(request_pt, info);
+            result = attributes(request_pt, info);
+            break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
             return jsonify_error(501, "Not Implemented", "Not Implemented", info);
@@ -284,10 +290,12 @@ namespace valhalla {
           LOG_WARN("loki::request exceeded threshold::"+ ss.str());
           midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
+
+        return result;
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", std::string(e.what()), info);
+        return jsonify_error(400, "Bad Request", e.what(), info);
       }
     }
 

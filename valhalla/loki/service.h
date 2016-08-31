@@ -13,8 +13,6 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
 
-using namespace prime_server;
-
 
 namespace valhalla {
   namespace loki {
@@ -30,7 +28,7 @@ namespace valhalla {
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const;
+      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, prime_server::http_request_t::info_t& request_info) const;
       void parse_locations(const boost::property_tree::ptree& request);
       void parse_costing(const boost::property_tree::ptree& request);
 
