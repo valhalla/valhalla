@@ -352,7 +352,8 @@ bool IsEnteringEdgeOfContractedNode(const GraphId& node, const GraphId& edge,
   }
 }
 
-uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, const std::list<PointLL>& shape, const float length, const bool forward) {
+std::tuple<double, double, double> GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample,
+                    const std::list<PointLL>& shape, const float length, const bool forward) {
   //evenly sample the shape
   std::list<PointLL> resampled;
   //if it was really short just do both ends
@@ -368,7 +369,7 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
   if(!forward)
     std::reverse(heights.begin(), heights.end());
   //compute the grade valid range is between -10 and +15
-  return static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+  return valhalla::skadi::weighted_grade(heights, interval);;
 }
 
 // Add shortcut edges (if they should exist) from the specified node
@@ -509,7 +510,16 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
 
       // Update the length, elevation, curvature, restriction, and end node
       newedge.set_length(length);
-      newedge.set_weighted_grade(sample ? GetGrade(sample, shape, length, forward) : 6); //6 is flat
+      if (sample) {
+        auto grades = GetGrade(sample, shape, length, forward);
+        newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) + 10.0) / 25.0 + .5);
+        newedge.set_max_up_slope(std::get<1>(grades));
+        newedge.set_max_down_slope(std::get<2>(grades));
+      } else {
+        newedge.set_weighted_grade(6);  // 6 is flat
+        newedge.set_max_up_slope(0.0f);
+        newedge.set_max_down_slope(0.0f);
+      }
       newedge.set_curvature(0); //TODO:
       newedge.set_endnode(nodeb);
       newedge.set_restrictions(rst);

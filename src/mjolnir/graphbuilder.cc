@@ -36,7 +36,7 @@ using namespace valhalla::mjolnir;
 namespace {
 
 //how many meters to resample shape to when checking elevations
-constexpr double POSTING_INTERVAL = 60.0;
+constexpr double POSTING_INTERVAL = 60;
 
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
@@ -383,7 +383,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> > geo_attribute_cache;
+  std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t,
+                        float, float, float, float> > geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -596,8 +597,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             //length
             auto length = valhalla::midgard::length(shape);
 
-            //grade estimation
+            //grade estimation and max slopes
             uint32_t forward_grade = 6, reverse_grade = 6;
+            float forward_max_up_slope = 0.0f, forward_max_down_slope = 0.0f;
+            float reverse_max_up_slope = 0.0f, reverse_max_down_slope = 0.0f;
             if(sample && !w.tunnel()) {
               //evenly sample the shape
               std::list<PointLL> resampled;
@@ -607,15 +610,23 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
                 resampled = {shape.front(), shape.back()};
                 interval = length;
               }
-              else
-                resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
+              else {
+                resampled = valhalla::midgard::resample_spherical_polyline(shape, interval);
+              }
               //get the heights at each point
               auto heights = sample->get_all(resampled);
+
               //compute grades in both directions, valid range is between -10 and +15, which we then
               //map to a value between 0 and 15 (to use for indices into a factor array)
-              forward_grade = static_cast<uint32_t>(valhalla::skadi::weighted_grade(heights, interval) * .6 + 6.5);
+              auto grades = valhalla::skadi::weighted_grade(heights, interval);
+              forward_grade = static_cast<uint32_t>(std::get<0>(grades)  * .6 + 6.5);
+              forward_max_up_slope = std::get<1>(grades);
+              forward_max_down_slope = std::get<2>(grades);
               std::reverse(heights.begin(), heights.end());
-              reverse_grade = static_cast<uint32_t>(valhalla::skadi::weighted_grade(heights, interval) * .6 + 6.5);
+              grades = valhalla::skadi::weighted_grade(heights, interval);
+              reverse_grade = static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5);
+              reverse_max_up_slope = std::get<1>(grades);
+              reverse_max_down_slope = std::get<2>(grades);
             }
 
             //TODO: curvature
@@ -623,7 +634,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
             //add it in
             auto inserted = geo_attribute_cache.insert({edge_info_offset,
-              std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade, reverse_grade, curvature)});
+              std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade,
+                              reverse_grade, curvature,
+                              forward_max_up_slope, forward_max_down_slope,
+                              reverse_max_up_slope, reverse_max_down_slope)});
             found = inserted.first;
           }//now we have the edge info offset
           else {
@@ -647,6 +661,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           //if this is against the direction of the shape we must use the second one
           directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
           directededge.set_curvature(std::get<3>(found->second));
+          directededge.set_max_up_slope(forward ? std::get<4>(found->second) : std::get<6>(found->second));
+          directededge.set_max_down_slope(forward ? std::get<5>(found->second) : std::get<7>(found->second));
 
           // Set use to ramp or turn channel
           if (edge.attributes.turn_channel) {
