@@ -25,8 +25,6 @@
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/thor/isochrone.h>
 
-using namespace prime_server;
-
 
 namespace valhalla {
   namespace thor {
@@ -44,7 +42,7 @@ namespace valhalla {
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const;
+      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, prime_server::http_request_t::info_t& request_info) const;
       void update_origin(baldr::PathLocation& origin, bool prior_is_node, const baldr::GraphId& through_edge);
       void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin, baldr::PathLocation& destination, std::vector<thor::PathInfo>& path_edges);
       valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);

@@ -98,7 +98,7 @@ namespace valhalla {
         }
         catch(const std::exception& e) {
           valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
-          return jsonify_error(500, "Internal Server Error", std::string(e.what()), info);
+          return jsonify_error(500, "Internal Server Error", e.what(), info);
         }
         catch(...) {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
@@ -129,7 +129,7 @@ namespace valhalla {
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", std::string(e.what()), info);
+        return jsonify_error(400, "Bad Request", e.what(), info);
       }
     }
 
