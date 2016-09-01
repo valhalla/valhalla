@@ -18,15 +18,20 @@ namespace valhalla {
      * Returns the normalized grade using the weighting method provided. Each sections
      * grade is computed. The provided weighting function is applied to each grade. The
      * weightings are then normalized. The result is approximate most important grade
-     * for the given stretch of heights.
+     * for the given stretch of heights. Also returns the maximum upward grade and the
+     * maximum downward grade.
      *
      * @param    heights            the height reading at each sampled location
      * @param    interval_distance  the distance between each sampled location
      * @param    grade_weighting    the function which provides the weight that should be applied to a specific grade
      *                              the grade is pass by reference so you may clamp it to a range if you like
-     * @return   the approximate grade on a scale from -100 to +100
+     * @return   the approximate grade on a scale from -100 to +100,
+     *           maximum upward slope (or 0 if all downward),
+     *           maximum downward slope (or 0 if all upward)
      */
-    double weighted_grade(const std::vector<double>& heights, const double interval_distance, const std::function<double (double&)>& grade_weighting = energy_weighting);
+    std::tuple<double, double, double> weighted_grade(const std::vector<double>& heights,
+               const double interval_distance,
+               const std::function<double (double&)>& grade_weighting = energy_weighting);
 
   }
 }
