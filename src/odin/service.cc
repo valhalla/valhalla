@@ -11,8 +11,8 @@
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
-using namespace prime_server;
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/logging.h>
 
 #include "proto/directions_options.pb.h"
@@ -21,6 +21,7 @@ using namespace prime_server;
 #include "odin/util.h"
 #include "odin/directionsbuilder.h"
 
+using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
