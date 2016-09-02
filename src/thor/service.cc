@@ -1,6 +1,11 @@
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-using namespace prime_server;
+#include <vector>
+#include <functional>
+#include <string>
+#include <stdexcept>
+#include <vector>
+#include <unordered_map>
+#include <cstdint>
+#include <sstream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -9,9 +14,12 @@ using namespace prime_server;
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/geojson.h>
 
+#include <prime_server/prime_server.hpp>
+
 #include "thor/service.h"
 #include "thor/isochrone.h"
 
+using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -43,30 +51,29 @@ namespace {
     return correlated;
   }
 
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+
+    //build up the json map
+    auto json_error = json::map({});
+    json_error->emplace("error", error);
+    json_error->emplace("status", status);
+    json_error->emplace("code", code);
+
+    //serialize it
+    std::stringstream ss;
+    ss << *json_error;
+
+    worker_t::result_t result{false};
+    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+
+    return result;
+  }
 }
 
 namespace valhalla {
   namespace thor {
-
-    worker_t::result_t thor_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
-
-      //build up the json map
-      auto json_error = json::map({});
-      json_error->emplace("error", error);
-      json_error->emplace("status", status);
-      json_error->emplace("code", code);
-
-      //serialize it
-      std::stringstream ss;
-      ss << *json_error;
-
-      worker_t::result_t result{false};
-      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
-    }
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), reader(config.get_child("mjolnir")),

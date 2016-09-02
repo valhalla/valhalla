@@ -1,18 +1,8 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
-#include <vector>
-#include <functional>
-#include <string>
-#include <stdexcept>
-#include <vector>
-#include <unordered_map>
-#include <cstdint>
-#include <sstream>
-
 #include <boost/property_tree/ptree.hpp>
 
-#include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/pathlocation.h>
@@ -42,7 +32,6 @@ namespace valhalla {
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, prime_server::http_request_t::info_t& request_info) const;
       void update_origin(baldr::PathLocation& origin, bool prior_is_node, const baldr::GraphId& through_edge);
       void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin, baldr::PathLocation& destination, std::vector<thor::PathInfo>& path_edges);
       valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);
