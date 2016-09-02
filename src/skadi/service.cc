@@ -11,8 +11,12 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
+#include <prime_server/prime_server.hpp>
+#include <prime_server/http_protocol.hpp>
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/location.h>
 #include <valhalla/midgard/util.h>
 
 #include "skadi/service.h"
@@ -120,30 +124,30 @@ namespace {
     }
     return array;
   }
+
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+
+    //build up the json map
+    auto json_error = json::map({});
+    json_error->emplace("error", error);
+    json_error->emplace("status", status);
+    json_error->emplace("code", code);
+
+    //serialize it
+    std::stringstream ss;
+    ss << *json_error;
+
+    worker_t::result_t result{false};
+    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+
+    return result;
+  }
 }
 
 namespace valhalla {
   namespace skadi {
-
-    worker_t::result_t skadi_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
-
-      //build up the json map
-      auto json_error = json::map({});
-      json_error->emplace("error", error);
-      json_error->emplace("status", status);
-      json_error->emplace("code", code);
-
-      //serialize it
-      std::stringstream ss;
-      ss << *json_error;
-
-      worker_t::result_t result{false};
-      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
-    }
 
     skadi_worker_t::skadi_worker_t (const boost::property_tree::ptree& config):
       sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
@@ -154,6 +158,8 @@ namespace valhalla {
     skadi_worker_t::~skadi_worker_t(){}
 
     worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
       //request should look like:
@@ -168,17 +174,37 @@ namespace valhalla {
         //parse the query's json
         auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
+        worker_t::result_t result{false};
         switch (action->second) {
           case HEIGHT:
-            return elevation(request_pt, info);
+            result = elevation(request_pt, info);
             break;
+          default:
+            return jsonify_error(501, "Not Implemented", "Not Implemented", info);
         }
-        return jsonify_error(501, "Not Implemented", "", info);
+        //get processing time for skadi
+        auto e = std::chrono::system_clock::now();
+        std::chrono::duration<float, std::milli> elapsed_time = e - s;
+        //log request if greater than X (ms)
+        if (!info.do_not_track && (elapsed_time.count() / shape.size()) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request_pt, false);
+          LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("skadi::request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("valhalla_skadi_long_request", " [ANALYTICS] ");
+        }
+
+        return result;
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return jsonify_error(400, "Bad Request", e.what(), info);
       }
+    }
+
+    void skadi_worker_t::cleanup() {
+      shape.clear();
+      encoded_polyline.reset();
     }
 
     void skadi_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
@@ -240,8 +266,6 @@ namespace valhalla {
     }
     */
     worker_t::result_t skadi_worker_t::elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
@@ -279,28 +303,12 @@ namespace valhalla {
       if(jsonp)
         stream << ')';
 
-      //get processing time for skadi
-      auto e = std::chrono::system_clock::now();
-      std::chrono::duration<float, std::milli> elapsed_time = e - s;
-      //log request if greater than X (ms)
-      if (!request_info.do_not_track && (elapsed_time.count() / shape.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("skadi::request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("valhalla_skadi_long_request", " [ANALYTICS] ");
-      }
-
       worker_t::result_t result{false};
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
-      return result;
-    }
 
-    void skadi_worker_t::cleanup() {
-      shape.clear();
-      encoded_polyline.reset();
+      return result;
     }
 
     void run_service(const boost::property_tree::ptree& config) {
