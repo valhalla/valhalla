@@ -369,7 +369,7 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
           {"properties", json::map
            ({
             {"type", std::string("Node")},
-            {"key", hasher(*it)}
+            {"key", static_cast<uint64_t>(hasher(*it))}
            })},
           {"type", std::string("Feature")},
           {"instruction", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
