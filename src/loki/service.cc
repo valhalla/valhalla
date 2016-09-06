@@ -12,6 +12,7 @@
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
+#include <valhalla/baldr/json.h>
 
 #include "loki/service.h"
 #include "loki/search.h"
@@ -103,6 +104,26 @@ namespace {
 
 namespace valhalla {
   namespace loki {
+
+   worker_t::result_t loki_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
+
+      //build up the json map
+      auto json_error = json::map({});
+      json_error->emplace("error", error);
+      json_error->emplace("status", status);
+      json_error->emplace("code", code);
+
+      //serialize it
+      std::stringstream ss;
+      ss << *json_error;
+
+      worker_t::result_t result{false};
+      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+
+      return result;
+    }
 
     void loki_worker_t::parse_locations(const boost::property_tree::ptree& request) {
       //we require locations
@@ -217,35 +238,20 @@ namespace valhalla {
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
 
         //block all but get and post
-        if(request.method != method_t::POST && request.method != method_t::GET) {
-          worker_t::result_t result{false};
-          http_response_t response(405, "Method Not Allowed", "Try a POST or GET request instead", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+        if(request.method != method_t::POST && request.method != method_t::GET)
+          return jsonify_error(405, "Method Not Allowed", "Try a POST or GET request instead", info);
 
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
-        if (action == PATH_TO_ACTION.cend()) {
-            worker_t::result_t result{false};
-            http_response_t response(404, "Action Not Found", "Try any of: " + action_str, headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
-        }
-
-        //apparently you wanted something that we figured we'd support but havent written yet
-        worker_t::result_t result{false};
-        http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
+        if (action == PATH_TO_ACTION.cend())
+          return jsonify_error(404, "Not Found", "Try any of: " + action_str, info);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
         //let further processes more easily know what kind of request it was
         request_pt.put<int>("action", action->second);
 
+        worker_t::result_t result{false};
         //do request specific processing
         switch (action->second) {
           case ROUTE:
@@ -268,8 +274,10 @@ namespace valhalla {
           case ATTRIBUTES:
             result = attributes(request_pt, info);
             break;
+          default:
+            //apparently you wanted something that we figured we'd support but havent written yet
+            return jsonify_error(501, "Not Implemented", "Not Implemented", info);
         }
-
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
@@ -286,12 +294,8 @@ namespace valhalla {
         return result;
       }
       catch(const std::exception& e) {
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return result;
+        return jsonify_error(400, "Bad Request", e.what(), info);
       }
     }
 

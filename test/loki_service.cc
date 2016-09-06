@@ -56,39 +56,39 @@ namespace {
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
-    {405, std::string("Try a POST or GET request instead")},
-    {405, std::string("Try a POST or GET request instead")},
-    {405, std::string("Try a POST or GET request instead")},
-    {405, std::string("Try a POST or GET request instead")},
-    {405, std::string("Try a POST or GET request instead")},
-    {405, std::string("Try a POST or GET request instead")},
-    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' '/sources_to_targets' '/optimized_route' ")},
-    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' '/sources_to_targets' '/optimized_route' ")},
-    {400, std::string("Failed to parse json request")},
-    {400, std::string("Failed to parse json request")},
-    {400, std::string("Insufficiently specified required parameter 'locations'")},
-    {400, std::string("Insufficiently specified required parameter 'locations'")},
-    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
-    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
-    {400, std::string("Failed to parse location")},
-    {400, std::string("Failed to parse location")},
-    {400, std::string("Insufficient number of locations provided")},
-    {400, std::string("Insufficient number of locations provided")},
-    {400, std::string("No edge/node costing provided")},
-    {400, std::string("No edge/node costing provided")},
-    {400, std::string("No edge/node costing provided")},
-    {400, std::string("No edge/node costing provided")},
-    {400, std::string("Path distance exceeds the max distance limit")},
-    {400, std::string("Path distance exceeds the max distance limit")},
-    {400, std::string("No costing method found for 'yak'")},
-    {400, std::string("No costing method found for 'yak'")},
-    {400, std::string("Exceeded max locations of 20.")},
-    {400, std::string("Exceeded max locations of 20.")},
-    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
-    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
-    {400, std::string("Insufficient number of locations provided")},
-    {400, std::string("Insufficiently specified required parameter 'locations' or 'sources & targets'")},
-    {400, std::string("Insufficient number of locations provided")}
+    {405, std::string("{\"code\":405,\"status\":\"Method Not Allowed\",\"error\":\"Try a POST or GET request instead\"}")},
+    {405, std::string("{\"code\":405,\"status\":\"Method Not Allowed\",\"error\":\"Try a POST or GET request instead\"}")},
+    {405, std::string("{\"code\":405,\"status\":\"Method Not Allowed\",\"error\":\"Try a POST or GET request instead\"}")},
+    {405, std::string("{\"code\":405,\"status\":\"Method Not Allowed\",\"error\":\"Try a POST or GET request instead\"}")},
+    {405, std::string("{\"code\":405,\"status\":\"Method Not Allowed\",\"error\":\"Try a POST or GET request instead\"}")},
+    {405, std::string("{\"code\":405,\"status\":\"Method Not Allowed\",\"error\":\"Try a POST or GET request instead\"}")},
+    {404, std::string("{\"code\":404,\"status\":\"Not Found\",\"error\":\"Try any of: \'\\/locate\' \'\\/route\' \'\\/one_to_many\' \'\\/many_to_one\' \'\\/many_to_many\' \'\\/sources_to_targets\' \'\\/optimized_route\' \'\\/isochrone\' \"}")},
+    {404, std::string("{\"code\":404,\"status\":\"Not Found\",\"error\":\"Try any of: \'\\/locate\' \'\\/route\' \'\\/one_to_many\' \'\\/many_to_one\' \'\\/many_to_many\' \'\\/sources_to_targets\' \'\\/optimized_route\' \'\\/isochrone\' \"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Failed to parse json request\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Failed to parse json request\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Failed to parse location\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Failed to parse location\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficient number of locations provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficient number of locations provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"No edge\\/node costing provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"No edge\\/node costing provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"No edge\\/node costing provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"No edge\\/node costing provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Path distance exceeds the max distance limit\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Path distance exceeds the max distance limit\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"No costing method found for 'yak'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"No costing method found for 'yak'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Exceeded max locations of 20.\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Exceeded max locations of 20.\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficient number of locations provided\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\"}")},
+    {400, std::string("{\"code\":400,\"status\":\"Bad Request\",\"error\":\"Insufficient number of locations provided\"}")}
   };
 
 
@@ -107,7 +107,7 @@ namespace {
     boost::property_tree::ptree config;
     std::stringstream json; json << "{ \
       \"mjolnir\": { \"tile_dir\": \"test/tiles\" }, \
-      \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\",\"sources_to_targets\",\"optimized_route\" ], \
+      \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\",\"sources_to_targets\",\"optimized_route\",\"isochrone\" ], \
                   \"logging\": { \"long_request\": 100.0 }, \
                   \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
       \"thor\": { \"service\": { \"proxy\": \"ipc:///tmp/test_thor_proxy\" } }, \
@@ -153,9 +153,9 @@ namespace {
       [&request](const void* data, size_t size) {
         auto response = http_response_t::from_string(static_cast<const char*>(data), size);
         if(response.code != responses[request - requests.cbegin() - 1].first)
-          throw std::runtime_error("Expected Response Code: '" + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code) + ", " + response.body);
+          throw std::runtime_error("Expected Response Code: " + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code));
         if(response.body != responses[request - requests.cbegin() - 1].second)
-          throw std::runtime_error("Expected Response: '" + responses[request - requests.cbegin() - 1].second +", Actual Response: " + std::to_string(responses[request - requests.cbegin() - 1].first) + ", " + response.body);
+          throw std::runtime_error("Expected Response: " + responses[request - requests.cbegin() - 1].second +", Actual Response: " + response.body);
 
         return request != requests.cend();
       }, 1

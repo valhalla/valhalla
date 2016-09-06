@@ -144,11 +144,8 @@ namespace valhalla {
     worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action,boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
-      if (costing == "multimodal") {
-        http_response_t response(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing",  headers_t{CORS});
-        response.from_info(request_info);
-        return {false, {response.to_string()}};
-      }
+      if (costing == "multimodal")
+        return jsonify_error(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing", request_info);
 
       //check that location size does not exceed max.
       auto max = max_locations.find("sources_to_targets")->second;
