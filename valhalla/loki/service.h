@@ -28,7 +28,7 @@ namespace valhalla {
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, prime_server::http_request_t::info_t& request_info) const;
+      prime_server::worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, prime_server::http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) const;
       void parse_locations(const boost::property_tree::ptree& request);
       void parse_costing(const boost::property_tree::ptree& request);
 
@@ -39,8 +39,8 @@ namespace valhalla {
       void init_attributes(const boost::property_tree::ptree& request);
 
       prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t route(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t matrix(ACTION_TYPE action,boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t route(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info, boost::optional<std::string> jsonp);
+      prime_server::worker_t::result_t matrix(ACTION_TYPE action,boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info, boost::optional<std::string> jsonp);
       prime_server::worker_t::result_t isochrones(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t attributes(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
