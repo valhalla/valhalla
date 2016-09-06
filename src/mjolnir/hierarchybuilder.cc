@@ -369,7 +369,7 @@ std::tuple<double, double, double> GetGrade(const std::unique_ptr<const valhalla
   if(!forward)
     std::reverse(heights.begin(), heights.end());
   //compute the grade valid range is between -10 and +15
-  return valhalla::skadi::weighted_grade(heights, interval);;
+  return valhalla::skadi::weighted_grade(heights, interval);
 }
 
 // Add shortcut edges (if they should exist) from the specified node
@@ -512,7 +512,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
       newedge.set_length(length);
       if (sample) {
         auto grades = GetGrade(sample, shape, length, forward);
-        newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) + 10.0) / 25.0 + .5);
+        newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
         newedge.set_max_up_slope(std::get<1>(grades));
         newedge.set_max_down_slope(std::get<2>(grades));
       } else {
