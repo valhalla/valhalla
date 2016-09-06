@@ -150,7 +150,7 @@ namespace skadi {
     if(!has_data)
       return NO_DATA_VALUE;
     //if we were missing some we need to adjust by that
-    return value * (1 - adjust);
+    return value / (1 - adjust);
   }
 
   template <class coords_t>
