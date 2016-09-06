@@ -1,7 +1,10 @@
 #ifndef __VALHALLA_SKADI_SERVICE_H__
 #define __VALHALLA_SKADI_SERVICE_H__
 
+#include <list>
+#include <string>
 #include <boost/property_tree/ptree.hpp>
+#include <prime_server/prime_server.hpp>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/skadi/sample.h>
