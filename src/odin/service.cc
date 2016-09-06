@@ -30,30 +30,30 @@ namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+
+    //build up the json map
+    auto json_error = json::map({});
+    json_error->emplace("error", error);
+    json_error->emplace("status", status);
+    json_error->emplace("code", code);
+
+    //serialize it
+    std::stringstream ss;
+    ss << *json_error;
+
+    worker_t::result_t result{false};
+    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+
+    return result;
+  }
 }
 
 namespace valhalla {
   namespace odin {
-
-    worker_t::result_t odin_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
-
-      //build up the json map
-      auto json_error = json::map({});
-      json_error->emplace("error", error);
-      json_error->emplace("status", status);
-      json_error->emplace("code", code);
-
-      //serialize it
-      std::stringstream ss;
-      ss << *json_error;
-
-      worker_t::result_t result{false};
-      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
-    }
 
     odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config):
       config(config){}
