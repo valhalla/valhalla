@@ -1,18 +1,8 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
-#include <vector>
-#include <functional>
-#include <string>
-#include <stdexcept>
-#include <vector>
-#include <unordered_map>
-#include <cstdint>
-#include <sstream>
-
 #include <boost/property_tree/ptree.hpp>
 
-#include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/pathlocation.h>
