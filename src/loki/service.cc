@@ -106,7 +106,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-   worker_t::result_t loki_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) const {
+   worker_t::result_t loki_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
 
       //build up the json map
       auto json_error = json::map({});
@@ -244,16 +244,16 @@ namespace valhalla {
 
         //block all but get and post
         if(request.method != method_t::POST && request.method != method_t::GET)
-          return jsonify_error(405, "Method Not Allowed", "Try a POST or GET request instead", info, nullptr);
+          return jsonify_error(405, "Method Not Allowed", "Try a POST or GET request instead", info);
 
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
         if (action == PATH_TO_ACTION.cend())
-          return jsonify_error(404, "Not Found", "Try any of: " + action_str, info, nullptr);
+          return jsonify_error(404, "Not Found", "Try any of: " + action_str, info);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
-        auto jsonp = request_pt.get_optional<std::string>("jsonp");
+        jsonp = request_pt.get_optional<std::string>("jsonp");
         //let further processes more easily know what kind of request it was
         request_pt.put<int>("action", action->second);
 
@@ -262,7 +262,7 @@ namespace valhalla {
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            result = route(request_pt, info, jsonp);
+            result = route(request_pt, info);
             break;
           case LOCATE:
             result = locate(request_pt, info);
@@ -272,7 +272,7 @@ namespace valhalla {
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
           case OPTIMIZED_ROUTE:
-            result = matrix(action->second, request_pt, info, jsonp);
+            result = matrix(action->second, request_pt, info);
             break;
           case ISOCHRONE:
             result = isochrones(request_pt, info);
@@ -282,7 +282,7 @@ namespace valhalla {
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
-            return jsonify_error(501, "Not Implemented", "Not Implemented", info, jsonp);
+            return jsonify_error(501, "Not Implemented", "Not Implemented", info);
         }
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
@@ -301,7 +301,7 @@ namespace valhalla {
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", e.what(), info, nullptr);
+        return jsonify_error(400, "Bad Request", e.what(), info);
       }
     }
 

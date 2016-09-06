@@ -45,7 +45,7 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::route(boost::property_tree::ptree& request, http_request_t::info_t& request_info, boost::optional<std::string> jsonp) {
+    worker_t::result_t loki_worker_t::route(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       init_route(request);
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);
@@ -82,7 +82,7 @@ namespace valhalla {
       if (date_type) {
         //not yet on this
         if(date_type == 2 && (costing == "multimodal" || costing == "transit"))
-          return jsonify_error(501, "Not Implemented", "Arrive by for multimodal not implemented yet", request_info, jsonp);
+          return jsonify_error(501, "Not Implemented", "Arrive by for multimodal not implemented yet", request_info);
 
         //what kind
         switch(*date_type) {
