@@ -4,9 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/midgard/pointll.h>
-
-#include "skadi/sample.h"
-
+#include <valhalla/skadi/sample.h>
 
 namespace valhalla {
   namespace skadi {
