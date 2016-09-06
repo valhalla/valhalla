@@ -3,6 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <prime_server/prime_server.hpp>
 
 namespace valhalla {
   namespace tyr {
