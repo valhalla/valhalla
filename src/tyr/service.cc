@@ -10,20 +10,19 @@
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
-using namespace prime_server;
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/odin/util.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/midgard/util.h>
-
 
 #include "tyr/service.h"
 
+using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -795,34 +794,36 @@ namespace {
       stream << *json;
     }
   }
+
+
+  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+
+    //build up the json map
+    auto json_error = json::map({});
+    json_error->emplace("error", error);
+    json_error->emplace("status", status);
+    json_error->emplace("code", code);
+
+    //serialize it
+    std::stringstream ss;
+    ss << *json_error;
+
+    worker_t::result_t result{false};
+    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+
+    return result;
+  }
 }
 
-const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
 namespace valhalla {
   namespace tyr {
-
-    worker_t::result_t tyr_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
-
-      //build up the json map
-      auto json_error = json::map({});
-      json_error->emplace("error", error);
-      json_error->emplace("status", status);
-      json_error->emplace("code", code);
-
-      //serialize it
-      std::stringstream ss;
-      ss << *json_error;
-
-      worker_t::result_t result{false};
-      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
-    }
 
     tyr_worker_t::tyr_worker_t(const boost::property_tree::ptree& config):
       config(config),
