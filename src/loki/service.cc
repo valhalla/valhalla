@@ -7,7 +7,6 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/info_parser.hpp>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/sif/autocost.h>
@@ -306,7 +305,7 @@ namespace valhalla {
     }
 
     void loki_worker_t::cleanup() {
-      jsonp.clear();
+      jsonp = boost::none;
       locations.clear();
       sources.clear();
       targets.clear();
