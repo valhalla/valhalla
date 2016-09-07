@@ -306,6 +306,7 @@ namespace valhalla {
     }
 
     void loki_worker_t::cleanup() {
+      jsonp.clear();
       locations.clear();
       sources.clear();
       targets.clear();
