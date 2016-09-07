@@ -42,7 +42,7 @@ test-suite.log
 test-driver
 test/*.log
 test/*.trs
-test/*.hgt
+test/data/*.hgt
 test/sample
 test/service
 test/util_skadi

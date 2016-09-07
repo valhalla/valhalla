@@ -115,21 +115,42 @@ namespace skadi {
     //coefficients
     double u_ratio = u - x;
     double v_ratio = v - y;
-    double u_opposite = 1 - u_ratio;
-    double v_opposite = 1 - v_ratio;
+    double u_inv = 1 - u_ratio;
+    double v_inv = 1 - v_ratio;
+    double a_coef = u_inv * v_inv;
+    double b_coef = u_ratio * v_inv;
+    double c_coef = u_inv * v_ratio;
+    double d_coef = u_ratio * v_ratio;
+
+    //values
+    double adjust = 0;
+    auto a = flip(t[y * HGT_DIM + x]);
+    auto b = flip(t[y * HGT_DIM + x + 1]);
+    if(a == NO_DATA_VALUE) a_coef = 0;
+    if(b == NO_DATA_VALUE) b_coef = 0;
 
     //first part of the bilinear interpolation
-    auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite;
-    //LOG_INFO('{' + std::to_string(y * HGT_DIM + x) + ',' + std::to_string(t[y * HGT_DIM + x]) + '}');
-    //LOG_INFO('{' + std::to_string(y * HGT_DIM + x + 1) + ',' + std::to_string(t[y * HGT_DIM + x + 1]) + '}');
+    auto value = a * a_coef + b * b_coef;
+    adjust += a_coef + b_coef;
+    //LOG_INFO('{' + std::to_string(y * HGT_DIM + x) + ',' + std::to_string(a) + '}');
+    //LOG_INFO('{' + std::to_string(y * HGT_DIM + x + 1) + ',' + std::to_string(b) + '}');
     //only need the second part if you aren't right on the row
     //this also protects from a corner case where you sample past the end of the image
     if(y < HGT_DIM - 1) {
-      //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x) + ',' + std::to_string(t[(y + 1) * HGT_DIM + x]) + '}');
-      //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x + 1) + ',' + std::to_string(t[(y + 1) * HGT_DIM + x + 1]) + '}');
-      return value + (flip(t[(y + 1) * HGT_DIM + x]) * u_opposite + flip(t[(y + 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
+      auto c = flip(t[(y + 1) * HGT_DIM + x]);
+      auto d = flip(t[(y + 1) * HGT_DIM + x + 1]);
+      if(c == NO_DATA_VALUE) c_coef = 0;
+      if(d == NO_DATA_VALUE) d_coef = 0;
+      //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x) + ',' + std::to_string(c) + '}');
+      //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x + 1) + ',' + std::to_string(d) + '}');
+      value += c * c_coef + d * d_coef;
+      adjust += c_coef + d_coef;
     }
-    return value;
+    //if we are missing everything then give up
+    if(adjust == 0)
+      return NO_DATA_VALUE;
+    //if we were missing some we need to adjust by that
+    return value / adjust;
   }
 
   template <class coords_t>

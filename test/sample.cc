@@ -1,6 +1,10 @@
 #include "test.h"
 #include "skadi/sample.h"
 #include "pixels.h"
+
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/midgard/util.h>
+
 using namespace valhalla;
 
 #include <cmath>
@@ -66,6 +70,40 @@ void get() {
     throw std::runtime_error("Area under discretized curve isn't right");
 }
 
+struct testable_sample_t : public skadi::sample {
+  testable_sample_t(const std::string& dir):sample(dir){
+    {
+      midgard::sequence<int16_t> s("test/data/blah.hgt", true);
+      //first row is 1's second is 2's
+      for(size_t i = 0; i < 3601 * 2; ++i)
+        s.push_back(((i/3601 + 1) & 0xFF) << 8);
+      for(size_t i = 0; i < 3601 * 4; ++i)
+        s.push_back(((-32768 & 0xFF) << 8) | ((-32768 >> 8) & 0xFF));
+    }
+    cache.front().map("test/data/blah.hgt", 3601*6);
+  }
+};
+
+void edges() {
+  testable_sample_t s("test/data/sample");
+
+  //check 4 pixels
+  auto n = .5f/3600;
+  float v = s.get(std::make_pair(-180.f + n, -89.f - n));
+  if(!midgard::equal(v,1.5f,0.1f))
+    throw std::runtime_error("Wrong value at location");
+
+  //check 2 pixels
+  v = s.get(std::make_pair(-180.f + n, -89.f - n * 3));
+  if(!midgard::equal(v,2.f,0.1f))
+    throw std::runtime_error("Wrong value at location");
+
+  //check 0 pixels
+  v = s.get(std::make_pair(-180.f + n, -89.f - n * 5));
+  if(v != s.get_no_data_value())
+    throw std::runtime_error("Wrong value at location");
+}
+
 }
 
 int main() {
@@ -76,6 +114,8 @@ int main() {
   suite.test(TEST_CASE(create_tile));
 
   suite.test(TEST_CASE(get));
+
+  suite.test(TEST_CASE(edges));
 
   return suite.tear_down();
 }
