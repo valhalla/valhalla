@@ -29,7 +29,7 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string> jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
@@ -39,10 +39,14 @@ namespace {
 
     //serialize it
     std::stringstream ss;
+    if(jsonp)
+      ss << *jsonp << '(';
     ss << *json_error;
+    if(jsonp)
+      ss << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
@@ -68,9 +72,10 @@ namespace valhalla {
         boost::property_tree::ptree request;
         try{
           boost::property_tree::read_json(stream, request);
+          jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(...) {
-          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info);
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info, jsonp);
         }
 
         // Grab language from options and set
@@ -102,7 +107,7 @@ namespace valhalla {
             trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error(500, "Internal Server Error", "Failed to parse TripPath", info);
+            return jsonify_error(500, "Internal Server Error", "Failed to parse TripPath", info, jsonp);
           }
 
           //get some annotated directions
@@ -112,7 +117,7 @@ namespace valhalla {
             trip_directions = directions.Build(directions_options, trip_path);
           }
           catch(...) {
-            return jsonify_error(500, "Internal Server Error", "Could not build directions for TripPath", info);
+            return jsonify_error(500, "Internal Server Error", "Could not build directions for TripPath", info, jsonp);
           }
 
           LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
@@ -124,8 +129,12 @@ namespace valhalla {
         return result;
       }
       catch(const std::exception& e) {
-        return jsonify_error(400, "Bad Request", e.what(), info);
+        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
       }
+    }
+
+    void odin_worker_t::cleanup() {
+      jsonp = boost::none;
     }
 
     void run_service(const boost::property_tree::ptree& config) {
