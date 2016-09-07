@@ -207,8 +207,8 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     //correlate its evil twin
     const GraphTile* other_tile;
     auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id, other_tile);
-    const auto* other_edge = other_tile->directededge(opposing_edge_id);
-    if(edge_filter(other_edge) != 0.0f) {
+    const DirectedEdge* other_edge;
+    if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
       if(heading_filter(other_edge, closest_edge_info, closest_point, location.heading_))
         heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), flip_side(side));
       else
@@ -385,8 +385,11 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
       bins += static_cast<size_t>(edges.size() > 0);
       for(auto e : edges) {
         //get the tile and edge
-        if(e.tileid() != tile->id().tileid())
+        if(!tile || e.tileid() != tile->id().tileid()) {
           tile = reader.GetGraphTile(e);
+          if(!tile)
+            continue;
+        }
         const auto* edge = tile->directededge(e);
         //no thanks on this one or its evil twin
         if(edge_filter(edge) == 0.0f && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
@@ -424,12 +427,16 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
   //it was the begin node
   if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
     const GraphTile* other_tile;
+    if(!other_tile)
+      throw std::runtime_error("No suitable edges near location");
     auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
     return correlate_node(reader, location, edge_filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
   }
   //it was the end node
   if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
     const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
+    if(!other_tile)
+      throw std::runtime_error("No suitable edges near location");
     return correlate_node(reader, location, edge_filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
   }
   //it was along the edge
