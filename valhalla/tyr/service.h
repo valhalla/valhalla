@@ -20,6 +20,7 @@ namespace valhalla {
      protected:
 
       boost::property_tree::ptree config;
+      boost::optional<std::string> jsonp;
       float long_request;
     };
   }
