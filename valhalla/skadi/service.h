@@ -29,6 +29,7 @@ namespace valhalla {
 
       prime_server::worker_t::result_t elevation(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
+      boost::optional<std::string> jsonp;
       std::list<midgard::PointLL> shape;
       boost::optional<std::string> encoded_polyline;
       bool range;
