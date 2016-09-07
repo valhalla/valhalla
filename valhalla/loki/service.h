@@ -45,6 +45,7 @@ namespace valhalla {
       prime_server::worker_t::result_t attributes(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
 
       boost::property_tree::ptree config;
+      boost::optional<std::string> jsonp;
       std::vector<baldr::Location> locations;
       std::vector<baldr::Location> sources;
       std::vector<baldr::Location> targets;

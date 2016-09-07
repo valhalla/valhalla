@@ -115,10 +115,14 @@ namespace valhalla {
 
       //serialize it
       std::stringstream ss;
+      if(jsonp)
+        ss << *jsonp << '(';
       ss << *json_error;
+      if(jsonp)
+        ss << ')';
 
       worker_t::result_t result{false};
-      http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+      http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
 
@@ -248,6 +252,7 @@ namespace valhalla {
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
+        jsonp = request_pt.get_optional<std::string>("jsonp");
         //let further processes more easily know what kind of request it was
         request_pt.put<int>("action", action->second);
 
@@ -300,6 +305,7 @@ namespace valhalla {
     }
 
     void loki_worker_t::cleanup() {
+      jsonp = boost::none;
       locations.clear();
       sources.clear();
       targets.clear();
