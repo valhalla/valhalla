@@ -125,7 +125,7 @@ namespace {
     return array;
   }
 
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string> jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
@@ -135,10 +135,14 @@ namespace {
 
     //serialize it
     std::stringstream ss;
+    if(jsonp)
+      ss << *jsonp << '(';
     ss << *json_error;
+    if(jsonp)
+      ss << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
@@ -169,10 +173,11 @@ namespace valhalla {
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend())
-          return jsonify_error(404, "Not Found", "Try any of: '/height'", info);
+          return jsonify_error(404, "Not Found", "Try any of: '/height'", info, jsonp);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
+        jsonp = request_pt.get_optional<std::string>("jsonp");
         init_request(action->second, request_pt);
         worker_t::result_t result{false};
         switch (action->second) {
@@ -180,7 +185,7 @@ namespace valhalla {
             result = elevation(request_pt, info);
             break;
           default:
-            return jsonify_error(501, "Not Implemented", "Not Implemented", info);
+            return jsonify_error(501, "Not Implemented", "Not Implemented", info, jsonp);
         }
         //get processing time for skadi
         auto e = std::chrono::system_clock::now();
@@ -198,11 +203,12 @@ namespace valhalla {
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", e.what(), info);
+        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
       }
     }
 
     void skadi_worker_t::cleanup() {
+      jsonp = boost::none;
       shape.clear();
       encoded_polyline.reset();
     }
