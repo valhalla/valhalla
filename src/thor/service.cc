@@ -51,7 +51,7 @@ namespace {
     return correlated;
   }
 
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) {
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string> jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
@@ -61,10 +61,14 @@ namespace {
 
     //serialize it
     std::stringstream ss;
+    if(jsonp)
+      ss << *jsonp << '(';
     ss << *json_error;
+    if(jsonp)
+      ss << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(code, status, ss.str(), headers_t{CORS, JSON_MIME});
+    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
@@ -102,14 +106,15 @@ namespace valhalla {
         std::stringstream stream(request_str);
         try {
           boost::property_tree::read_json(stream, request);
+          jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(const std::exception& e) {
           valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
-          return jsonify_error(500, "Internal Server Error", e.what(), info);
+          return jsonify_error(500, "Internal Server Error", e.what(), info, jsonp);
         }
         catch(...) {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
-          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info);
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info, jsonp);
         }
 
         // Initialize request - get the PathALgorithm to use
@@ -136,7 +141,7 @@ namespace valhalla {
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", e.what(), info);
+        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
       }
     }
 
@@ -228,6 +233,7 @@ namespace valhalla {
     }
 
     void thor_worker_t::cleanup() {
+      jsonp = boost::none;
       astar.Clear();
       bidir_astar.Clear();
       multi_modal_astar.Clear();
