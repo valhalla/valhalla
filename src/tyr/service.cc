@@ -10,20 +10,19 @@
 
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
-using namespace prime_server;
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/odin/util.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/midgard/util.h>
-
 
 #include "tyr/service.h"
 
+using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -796,17 +795,47 @@ namespace {
     }
   }
 
+
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  //TODO: throw this in the header to make it testable?
-  class tyr_worker_t {
-   public:
-    tyr_worker_t(const boost::property_tree::ptree& config):config(config),
-      long_request(config.get<float>("tyr.logging.long_request")){
-    }
-    worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
+
+    //build up the json map
+    auto json_error = json::map({});
+    json_error->emplace("error", error);
+    json_error->emplace("status", status);
+    json_error->emplace("code", code);
+
+    //serialize it
+    std::stringstream ss;
+    if(jsonp)
+      ss << *jsonp << '(';
+    ss << *json_error;
+    if(jsonp)
+      ss << ')';
+
+    worker_t::result_t result{false};
+    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+
+    return result;
+  }
+}
+
+
+namespace valhalla {
+  namespace tyr {
+
+    tyr_worker_t::tyr_worker_t(const boost::property_tree::ptree& config):
+      config(config),
+      long_request(config.get<float>("tyr.logging.long_request")){}
+
+    tyr_worker_t::~tyr_worker_t(){}
+
+    worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -819,13 +848,10 @@ namespace {
 
         try{
           boost::property_tree::read_json(stream, request);
+          jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(...) {
-          worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info, jsonp);
         }
 
         //see if we can get some options
@@ -844,11 +870,7 @@ namespace {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            worker_t::result_t result{false};
-            http_response_t response(500, "Internal Server Error", "Failed to parse TripDirections", headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
+            return jsonify_error(500, "Internal Server Error", "Failed to parse TripDirections", info, jsonp);
           }
         }
 
@@ -891,21 +913,14 @@ namespace {
       }
       catch(const std::exception& e) {
         LOG_INFO(std::string("Bad Request: ") + e.what());
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-        return result;
+        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
       }
     }
-   protected:
-    boost::property_tree::ptree config;
-    float long_request;
-  };
-}
 
-namespace valhalla {
-  namespace tyr {
+    void tyr_worker_t::cleanup() {
+      jsonp = boost::none;
+    }
+
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from thor proxy
       auto upstream_endpoint = config.get<std::string>("tyr.service.proxy") + "_out";
