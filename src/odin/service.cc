@@ -8,11 +8,9 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-
-#include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
-using namespace prime_server;
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/logging.h>
 
 #include "proto/directions_options.pb.h"
@@ -21,20 +19,50 @@ using namespace prime_server;
 #include "odin/util.h"
 #include "odin/directionsbuilder.h"
 
+using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  //TODO: throw this in the header to make it testable?
-  class odin_worker_t {
-   public:
-    odin_worker_t(const boost::property_tree::ptree& config):config(config) {
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
 
-    }
-    worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+    //build up the json map
+    auto json_error = json::map({});
+    json_error->emplace("error", error);
+    json_error->emplace("status", status);
+    json_error->emplace("code", code);
+
+    //serialize it
+    std::stringstream ss;
+    if(jsonp)
+      ss << *jsonp << '(';
+    ss << *json_error;
+    if(jsonp)
+      ss << ')';
+
+    worker_t::result_t result{false};
+    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+
+    return result;
+  }
+}
+
+namespace valhalla {
+  namespace odin {
+
+    odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config):
+      config(config){}
+
+    odin_worker_t::~odin_worker_t(){}
+
+    worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
       try{
@@ -44,13 +72,10 @@ namespace {
         boost::property_tree::ptree request;
         try{
           boost::property_tree::read_json(stream, request);
+          jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(...) {
-          worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
+          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info, jsonp);
         }
 
         // Grab language from options and set
@@ -82,11 +107,7 @@ namespace {
             trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            worker_t::result_t result{false};
-            http_response_t response(500, "Internal Server Error", "Failed to parse TripPath", headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
+            return jsonify_error(500, "Internal Server Error", "Failed to parse TripPath", info, jsonp);
           }
 
           //get some annotated directions
@@ -96,11 +117,7 @@ namespace {
             trip_directions = directions.Build(directions_options, trip_path);
           }
           catch(...) {
-            worker_t::result_t result{false};
-            http_response_t response(500, "Internal Server Error", "Could not build directions for TripPath", headers_t{CORS});
-            response.from_info(info);
-            result.messages.emplace_back(response.to_string());
-            return result;
+            return jsonify_error(500, "Internal Server Error", "Could not build directions for TripPath", info, jsonp);
           }
 
           LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
@@ -112,20 +129,14 @@ namespace {
         return result;
       }
       catch(const std::exception& e) {
-        worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-        return result;
+        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
       }
     }
-   protected:
-    boost::property_tree::ptree config;
-  };
-}
 
-namespace valhalla {
-  namespace odin {
+    void odin_worker_t::cleanup() {
+      jsonp = boost::none;
+    }
+
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from odin proxy
       auto upstream_endpoint = config.get<std::string>("odin.service.proxy") + "_out";
