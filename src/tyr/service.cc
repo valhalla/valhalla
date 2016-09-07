@@ -33,6 +33,8 @@ using namespace std;
 
 namespace {
 
+  constexpr int VIAROUTE = 1;
+
   namespace osrm_serializers {
     /*
     OSRM output looks like this:
@@ -858,7 +860,7 @@ namespace {
         if(jsonp)
           json_stream << *jsonp << '(';
         //serialize them
-        if(request.get_optional<std::string>("osrm"))
+        if(request.get<int>("action") == VIAROUTE)
           osrm_serializers::serialize(directions_options, legs, json_stream);
         else
           valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
