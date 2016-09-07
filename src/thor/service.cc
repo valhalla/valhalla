@@ -51,7 +51,7 @@ namespace {
     return correlated;
   }
 
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string> jsonp) {
+  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
