@@ -3,6 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/pathlocation.h>
@@ -52,6 +53,7 @@ namespace valhalla {
 
       valhalla::sif::TravelMode mode;
       boost::property_tree::ptree config;
+      boost::optional<std::string> jsonp;
       std::vector<baldr::Location> locations;
       std::vector<baldr::Location> sources;
       std::vector<baldr::Location> targets;
