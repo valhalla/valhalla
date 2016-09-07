@@ -2178,15 +2178,27 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver)
 std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
     Maneuver& maneuver, uint32_t element_max_count, const std::string& delim) {
   // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
+  std::string ordinal_value;
+  if ((maneuver.roundabout_exit_count() >= kRoundaboutExitCountLowerBound)
+      && (maneuver.roundabout_exit_count() <= kRoundaboutExitCountUpperBound)) {
+    phrase_id = 1;
+    // Set ordinal_value
+    ordinal_value = dictionary_.enter_roundabout_verbal_subset.ordinal_values.at(
+        maneuver.roundabout_exit_count()-1);
+  }
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.enter_roundabout_verbal_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
 
   return instruction;
 
