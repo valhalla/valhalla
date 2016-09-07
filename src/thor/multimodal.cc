@@ -37,6 +37,8 @@ uint32_t GetOperatorId(const GraphTile* tile, uint32_t routeid,
 namespace valhalla {
 namespace thor {
 
+constexpr uint64_t kInitialEdgeLabelCount = 200000;
+
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
     : AStarPathAlgorithm(),
@@ -61,6 +63,10 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new AdjacencyList(0.0f, range, bucketsize));
   edgestatus_.reset(new EdgeStatus());
+
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_.reserve(kInitialEdgeLabelCount);
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
