@@ -126,12 +126,12 @@ namespace skadi {
     double adjust = 0;
     auto a = flip(t[y * HGT_DIM + x]);
     auto b = flip(t[y * HGT_DIM + x + 1]);
-    if(a == NO_DATA_VALUE) { adjust += a_coef; a_coef = 0; };
-    if(b == NO_DATA_VALUE) { adjust += b_coef; b_coef = 0; };
-    bool has_data = a != NO_DATA_VALUE || b != NO_DATA_VALUE;
+    if(a == NO_DATA_VALUE) a_coef = 0;
+    if(b == NO_DATA_VALUE) b_coef = 0;
 
     //first part of the bilinear interpolation
     auto value = a * a_coef + b * b_coef;
+    adjust += a_coef + b_coef;
     //LOG_INFO('{' + std::to_string(y * HGT_DIM + x) + ',' + std::to_string(a) + '}');
     //LOG_INFO('{' + std::to_string(y * HGT_DIM + x + 1) + ',' + std::to_string(b) + '}');
     //only need the second part if you aren't right on the row
@@ -139,18 +139,18 @@ namespace skadi {
     if(y < HGT_DIM - 1) {
       auto c = flip(t[(y + 1) * HGT_DIM + x]);
       auto d = flip(t[(y + 1) * HGT_DIM + x + 1]);
-      if(c == NO_DATA_VALUE) { adjust += c_coef; c_coef = 0; };
-      if(d == NO_DATA_VALUE) { adjust += d_coef; d_coef = 0; };
-      bool has_data = c != NO_DATA_VALUE || d != NO_DATA_VALUE;
+      if(c == NO_DATA_VALUE) c_coef = 0;
+      if(d == NO_DATA_VALUE) d_coef = 0;
       //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x) + ',' + std::to_string(c) + '}');
       //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x + 1) + ',' + std::to_string(d) + '}');
-      value += (c * c_coef + d * d_coef);
+      value += c * c_coef + d * d_coef;
+      adjust += c_coef + d_coef;
     }
     //if we are missing everything then give up
-    if(!has_data)
+    if(adjust == 0)
       return NO_DATA_VALUE;
     //if we were missing some we need to adjust by that
-    return value / (1 - adjust);
+    return value / adjust;
   }
 
   template <class coords_t>
