@@ -74,8 +74,8 @@ RouteToString(baldr::GraphReader& graphreader,
 }
 
 
-// Validate a route. It check if all edge segments of the route are
-// valid and successive, and no loop
+// Check if all edge segments of the route are successive, and
+// contain no loop
 template <typename segment_iterator_t>
 bool ValidateRoute(baldr::GraphReader& graphreader,
                    segment_iterator_t segment_begin,
@@ -86,29 +86,10 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
     return true;
   }
 
-  // The first segment must be dummy
-  if (!(!segment_begin->edgeid.Is_Valid()
-        && segment_begin->source == 0.f
-        && segment_begin->target == 0.f)) {
-    LOG_ERROR("Found the first edge segment is not dummy");
-    LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
-    return false;
-  }
-
-  for (auto segment = std::next(segment_begin);  // Skip the first dummy segment
-       segment != segment_end; segment++) {
-    // The rest of segments must have valid edgeid
-    if (!segment->edgeid.Is_Valid()) {
-      LOG_ERROR("Found invalid edgeid at segment " + std::to_string(segment - segment_begin));
-      LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
-      return false;
-    }
-
-    // Skip the first non-dummy segment
-    const auto prev_segment = std::prev(segment);
-    if (prev_segment == segment_begin) {
-      continue;
-    }
+  for (auto prev_segment = segment_begin,
+                 segment = std::next(segment_begin);
+       segment != segment_end;
+       prev_segment = segment, segment++) {
 
     // Successive segments must be adjacent and no loop absolutely!
     if (prev_segment->edgeid == segment->edgeid) {
@@ -139,9 +120,7 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
     } else {
       const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile),
                startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
-      if (!(prev_segment->target == 1.f
-            && segment->source == 0.f
-            && endnodeid == startnodeid)) {
+      if (!(prev_segment->target == 1.f && segment->source == 0.f && endnodeid == startnodeid)) {
         LOG_ERROR("Found disconnected segments at " + std::to_string(segment - segment_begin));
         LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
         return false;
