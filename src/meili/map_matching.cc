@@ -30,6 +30,7 @@ State::State(const StateId id, const Time time, const Candidate& candidate)
       labelset_(nullptr),
       label_idx_() {}
 
+
 void
 State::route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
@@ -194,7 +195,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
   const auto label = left.last_label(right);
   if (label) {
     const auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
-    return (label->turn_cost + std::abs(label->cost - mmt_distance)) * inv_beta_;
+    return CalculateTransitionCost(label->turn_cost, label->cost, mmt_distance);
   }
 
   return -1.f;
@@ -203,7 +204,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
 
 inline float
 MapMatching::EmissionCost(const State& state) const
-{ return state.candidate().sq_distance() * inv_double_sq_sigma_z_; }
+{ return CalculateEmissionCost(state.candidate().sq_distance()); }
 
 
 inline double

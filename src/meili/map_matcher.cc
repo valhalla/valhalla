@@ -26,15 +26,21 @@ GreatCircleDistance(const Measurement& left,
 { return left.lnglat().Distance(right.lnglat()); }
 
 
-// Find the projected point along the route where the route distance
-// of this point to the beginning of the route is closest to the match
-// measurement distance.
+struct Interpolation {
+  midgard::PointLL projected;
+  baldr::GraphId edgeid;
+  float sq_distance;
+  float route_distance;
 
-// Return the projected point, projected edgeid, squared distance to
-// the projected point, and the route distance of the projected
-// point. If nothing found the invalid edgeid will return
+  float sortcost(const MapMatching& mm, float mmt_dist) const
+  { return mm.CalculateTransitionCost(0.f, route_distance, mmt_dist) + mm.CalculateEmissionCost(sq_distance); }
+};
+
+
+// Find the interpolation along the route where the transitin cost +
+// emission cost is minimal
 template <typename segment_iterator_t>
-std::tuple<midgard::PointLL, baldr::GraphId, float, float>
+Interpolation
 InterpolateMeasurement(const MapMatching& mapmatching,
                        segment_iterator_t begin,
                        segment_iterator_t end,
@@ -47,12 +53,9 @@ InterpolateMeasurement(const MapMatching& mapmatching,
 
   // Route distance from each segment begin to the beginning segment
   float segment_begin_route_distance = 0.f;
-  float minimal_delta = std::numeric_limits<float>::infinity();
+  float minimal_cost = std::numeric_limits<float>::infinity();
 
-  midgard::PointLL interpolated_at_point;
-  baldr::GraphId interpolated_at_edgeid;
-  float interpolated_sq_distance = 0.f,
-     interpolated_route_distance = 0.f;
+  Interpolation best_interp;
 
   for (auto segment = begin; segment != end; segment++) {
     const auto directededge = helpers::edge_directededge(mapmatching.graphreader(), segment->edgeid, tile);
@@ -84,29 +87,19 @@ InterpolateMeasurement(const MapMatching& mapmatching,
     // beginning segment
     const auto route_distance = segment_begin_route_distance + distance_to_segment_ends;
 
-    const auto delta = std::abs(route_distance - match_measurement_distance);
-    if (delta < minimal_delta) {
-      minimal_delta = delta;
-      interpolated_at_point = projected_point;
-      interpolated_at_edgeid = segment->edgeid;
-      interpolated_sq_distance = sq_distance;
-      interpolated_route_distance = route_distance;
-    }
-
-    // Since route_distance is increasing, the delta at next iteration
-    // (next_route_distance - match_measurement_distance) must be
-    // larger than this delta (route_distance -
-    // match_measurement_distance), so the next delta is impossible to
-    // be the minimal delta, hence the break
-    if (match_measurement_distance < route_distance) {
-      break;
+    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance};
+    const auto cost = interp.sortcost(mapmatching, match_measurement_distance);
+    if (cost < minimal_cost) {
+      minimal_cost = cost;
+      best_interp = std::move(interp);
     }
 
     // Assume segments are connected
     segment_begin_route_distance += directededge->length() * (segment->target - segment->source);
   }
 
-  return {interpolated_at_point, interpolated_at_edgeid, std::sqrt(interpolated_sq_distance), interpolated_route_distance};
+  // {interpolated_at_point, interpolated_at_edgeid, std::sqrt(interpolated_sq_distance), interpolated_route_distance};
+  return best_interp;
 }
 
 
@@ -153,7 +146,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
     const auto& match_measurement = mapmatching.measurement(state->time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
 
-    const auto& upstream_interpolation = InterpolateMeasurement(
+    const auto& up_interp = InterpolateMeasurement(
         mapmatching,
         upstream_route.rbegin(),
         upstream_route.rend(),
@@ -161,7 +154,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
         match_measurement_distance,
         true);
 
-    const auto& downstream_interpolation = InterpolateMeasurement(
+    const auto& down_interp = InterpolateMeasurement(
         mapmatching,
         downstream_route.begin(),
         downstream_route.end(),
@@ -169,32 +162,20 @@ InterpolateMeasurements(const MapMatching& mapmatching,
         match_measurement_distance,
         false);
 
-    const auto &upstream_edge = std::get<1>(upstream_interpolation),
-             &downstream_edge = std::get<1>(downstream_interpolation);
-
-    if (upstream_edge.Is_Valid() && downstream_edge.Is_Valid()) {
-      const auto upstream_delta = std::abs(std::get<3>(upstream_interpolation) - match_measurement_distance),
-               downstream_delta = std::abs(std::get<3>(downstream_interpolation) - match_measurement_distance);
-
-      if (downstream_delta < upstream_delta) {
-        results.emplace_back(std::get<0>(downstream_interpolation),
-                             std::get<2>(downstream_interpolation),
-                             downstream_edge);
+    if (up_interp.edgeid.Is_Valid() && down_interp.edgeid.Is_Valid()) {
+      const auto down_cost = down_interp.sortcost(mapmatching, match_measurement_distance),
+                   up_cost = up_interp.sortcost(mapmatching, match_measurement_distance);
+      if (down_cost < up_cost) {
+        results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
       } else {
-        results.emplace_back(std::get<0>(upstream_interpolation),
-                             std::get<2>(upstream_interpolation),
-                             upstream_edge);
+        results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
       }
 
-    } else if (upstream_edge.Is_Valid()) {
-      results.emplace_back(std::get<0>(upstream_interpolation),
-                           std::get<2>(upstream_interpolation),
-                           upstream_edge);
+    } else if (up_interp.edgeid.Is_Valid()) {
+      results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
 
-    } else if (downstream_edge.Is_Valid()) {
-      results.emplace_back(std::get<0>(downstream_interpolation),
-                           std::get<2>(downstream_interpolation),
-                           downstream_edge);
+    } else if (down_interp.edgeid.Is_Valid()) {
+      results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
 
     } else {
       results.emplace_back(measurement.lnglat());
