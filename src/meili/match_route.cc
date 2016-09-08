@@ -260,15 +260,7 @@ ConstructRoute(const MapMatching& mapmatching,
                match_iterator_t begin,
                match_iterator_t end)
 {
-  // Find the first match result with state attached
-  match_iterator_t previous_match = end;
-  for (auto match = begin; match != end; match++) {
-    if (match->HasState()) {
-      previous_match = match;
-      break;
-    }
-  }
-  if (previous_match == end) {
+  if (begin == end) {
     return {};
   }
 
@@ -276,21 +268,24 @@ ConstructRoute(const MapMatching& mapmatching,
   const baldr::GraphTile* tile = nullptr;
 
   // Merge segments into route
-  for (auto match = std::next(previous_match); match != end; match++) {
+  for (auto prev_match = end, match = begin; match != end; match++) {
     if (!match->HasState()) {
       continue;
     }
-    const auto& previous_state = mapmatching.state(previous_match->stateid()),
-                         state = mapmatching.state(match->stateid());
-    const auto& segments = MergeRoute(previous_state.RouteBegin(state), previous_state.RouteEnd());
 
-    if (!ValidateRoute(mapmatching.graphreader(), segments.begin(), segments.end(), tile)) {
-      throw std::runtime_error("Found invalid route");
+    if (prev_match != end) {
+      const auto& prev_state = mapmatching.state(prev_match->stateid()),
+                     state = mapmatching.state(match->stateid());
+      const auto& segments = MergeRoute(prev_state, state);
+
+      if (!ValidateRoute(mapmatching.graphreader(), segments.begin(), segments.end(), tile)) {
+        throw std::runtime_error("Found invalid route");
+      }
+
+      MergeEdgeSegments(route, segments.begin(), segments.end());
     }
 
-    MergeEdgeSegments(route, segments.begin(), segments.end());
-
-    previous_match = match;
+    prev_match = match;
   }
 
   return route;
