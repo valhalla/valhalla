@@ -10,9 +10,9 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/adjacencylist.h>
 #include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
@@ -22,7 +22,6 @@ namespace thor {
 // thresholds for quick rejection
 constexpr float kCostThresholdDefault = 14400.0f;   // 4 hours
 constexpr float kMaxCost = 99999999.9999f;
-
 
 // Time and Distance structure
 struct TimeDistance {
@@ -146,14 +145,14 @@ class CostMatrix {
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // source location (forward traversal)
   std::vector<std::vector<sif::HierarchyLimits>> source_hierarchy_limits_;
-  std::vector<std::shared_ptr<AdjacencyList>> source_adjacency_;
+  std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> source_adjacency_;
   std::vector<std::vector<sif::EdgeLabel>> source_edgelabel_;
   std::vector<EdgeStatus> source_edgestatus_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // target location (reverse traversal)
   std::vector<std::vector<sif::HierarchyLimits>> target_hierarchy_limits_;
-  std::vector<std::shared_ptr<AdjacencyList>> target_adjacency_;
+  std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> target_adjacency_;
   std::vector<std::vector<sif::EdgeLabel>> target_edgelabel_;
   std::vector<EdgeStatus> target_edgestatus_;
 

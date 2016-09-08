@@ -108,10 +108,16 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
 void Isochrone::Initialize(const uint32_t bucketsize) {
-  float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new AdjacencyList(0.0f, range, bucketsize));
-  edgestatus_.reset(new EdgeStatus());
   edgelabels_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_[label].sortcost();
+  };
+
+  float range = kBucketCount * bucketsize;
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
+  edgestatus_.reset(new EdgeStatus());
 }
 
 // Compute iso-tile that we can use to generate isochrones.
@@ -139,7 +145,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       return isotile_;
     }
@@ -237,7 +243,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       return isotile_;
     }
@@ -324,7 +330,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels_.size();
-      adjacencylist_->Add(idx, newcost.cost);
+      adjacencylist_->add(idx, newcost.cost);
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       edgelabels_.emplace_back(predindex, edgeid, oppedge,
                     directededge, newcost, newcost.cost, 0.0f,
@@ -387,7 +393,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       return isotile_;
     }
@@ -631,7 +637,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
           float newsortcost = oldsortcost - dc;
           edgelabels_[idx].Update(predindex, newcost, newsortcost,
                                   walking_distance, tripid, blockid);
-          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
         }
         continue;
       }
@@ -701,7 +707,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
 void Isochrone::AddToAdjacencyList(const GraphId& edgeid,
                                    const float sortcost) {
   uint32_t idx = edgelabels_.size();
-  adjacencylist_->Add(idx, sortcost);
+  adjacencylist_->add(idx, sortcost);
   edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -716,7 +722,7 @@ void Isochrone::CheckIfLowerCostPath(const uint32_t idx,
     float oldsortcost = edgelabels_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
     edgelabels_[idx].Update(predindex, newcost, newsortcost);
-    adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+    adjacencylist_->decrease(idx, newsortcost, oldsortcost);
   }
 }
 
@@ -762,7 +768,7 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // of the path.
       uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-      adjacencylist_->Add(idx, cost.cost);
+      adjacencylist_->add(idx, cost.cost);
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
               cost.cost, 0.0f, directededge->restrictions(),
@@ -823,7 +829,7 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = edgelabels_.size();
-      adjacencylist_->Add(idx, cost.cost);
+      adjacencylist_->add(idx, cost.cost);
       edgestatus_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
                opp_dir_edge, cost, cost.cost, 0.0f, opp_dir_edge->restrictions(),

@@ -203,7 +203,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
   // Get the next edge from the adjacency list for this source location
   auto adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
-  uint32_t predindex = adj->Remove(edgelabels);
+  uint32_t predindex = adj->pop();
   if (predindex == kInvalidLabel) {
     // Forward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
@@ -274,7 +274,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
         // edge labels using the predecessor information. Transition
         // edges have no length.
         uint32_t idx = edgelabels.size();
-        adj->Add(idx, pred.sortcost());
+        adj->add(idx, pred.sortcost());
         edgestate.Set(edgeid, EdgeSet::kTemporary, idx);
         edgelabels.emplace_back(predindex, edgeid, pred.opp_edgeid(),
                         directededge, pred.cost(), pred.restrictions(),
@@ -315,7 +315,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
       if (newcost.cost < edgelabels[idx].cost().cost) {
         float oldsortcost = edgelabels[idx].sortcost();
         edgelabels[idx].Update(predindex, newcost, newcost.cost, tc, distance);
-        adj->DecreaseCost(idx, newcost.cost, oldsortcost);
+        adj->decrease(idx, newcost.cost, oldsortcost);
       }
       continue;
     }
@@ -329,7 +329,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
     // Add edge label, add to the adjacency list and set edge status
-    adj->Add(edgelabels.size(), newcost.cost);
+    adj->add(edgelabels.size(), newcost.cost);
     edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
     edgelabels.emplace_back(predindex, edgeid, oppedge, directededge,
                     newcost, directededge->restrictions(),
@@ -454,7 +454,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
   // Get the next edge from the adjacency list for this target location
   auto adj = target_adjacency_[index];
   auto& edgelabels = target_edgelabel_[index];
-  uint32_t predindex = adj->Remove(edgelabels);
+  uint32_t predindex = adj->pop();
   if (predindex == kInvalidLabel) {
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
@@ -531,7 +531,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
         // Allow the transition edge. Add it to the adjacency list and
         // edge labels using the predecessor information. Transition
         // edges have no length.
-        adj->Add(edgelabels.size(), pred.sortcost());
+        adj->add(edgelabels.size(), pred.sortcost());
         edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
         edgelabels.emplace_back(predindex, edgeid, pred.opp_edgeid(),
                         directededge, pred.cost(), pred.restrictions(),
@@ -586,14 +586,14 @@ void CostMatrix::BackwardSearch(const uint32_t index,
       if (newcost.cost < edgelabels[idx].cost().cost) {
         float oldsortcost = edgelabels[idx].sortcost();
         edgelabels[idx].Update(predindex, newcost, newcost.cost, tc, distance);
-        adj->DecreaseCost(idx, newcost.cost, oldsortcost);
+        adj->decrease(idx, newcost.cost, oldsortcost);
       }
       continue;
     }
 
     // Add edge label, add to the adjacency list and set edge status
     // Add to the list or targets that have reached this edge
-    adj->Add(edgelabels.size(), newcost.cost);
+    adj->add(edgelabels.size(), newcost.cost);
     edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
     edgelabels.emplace_back(predindex, edgeid, oppedge,
        directededge, newcost, directededge->restrictions(),
@@ -618,10 +618,15 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& origin : sources) {
+    // Set up lambda to get sort costs
+    const auto edgecost = [this, index](const uint32_t label) -> float {
+      return source_edgelabel_[index][label].sortcost();
+    };
+
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(new AdjacencyList(0, cost_threshold_,
-                                         costing->UnitSize()));
+    source_adjacency_[index].reset(new DoubleBucketQueue(0, cost_threshold_,
+                                         costing->UnitSize(), edgecost));
     source_hierarchy_limits_[index] = costing->GetHierarchyLimits();
 
     // Since there is no distance to destination lets increase the
@@ -656,7 +661,7 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
-      source_adjacency_[index]->Add(source_edgelabel_[index].size(), cost.cost);
+      source_adjacency_[index]->add(source_edgelabel_[index].size(), cost.cost);
       EdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
                            directededge->restrictions(),
                            directededge->opp_local_idx(), mode_, ec, d);
@@ -687,10 +692,15 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& dest : targets) {
+    // Set up lambda to get sort costs
+    const auto edgecost = [this, index](const uint32_t label) {
+      return target_edgelabel_[index][label].sortcost();
+    };
+
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(new AdjacencyList(0, cost_threshold_,
-                                             costing->UnitSize()));
+    target_adjacency_[index].reset(new DoubleBucketQueue(0, cost_threshold_,
+                                             costing->UnitSize(), edgecost));
     target_hierarchy_limits_[index] = costing->GetHierarchyLimits();
 
     // Since there is no distance to destination lets increase the
@@ -733,7 +743,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path. Set the origin flag
-      target_adjacency_[index]->Add(target_edgelabel_[index].size(), cost.cost);
+      target_adjacency_[index]->add(target_edgelabel_[index].size(), cost.cost);
       EdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
               opp_dir_edge->restrictions(), opp_dir_edge->opp_local_idx(),
               mode_, ec, d);
