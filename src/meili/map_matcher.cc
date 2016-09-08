@@ -98,7 +98,6 @@ InterpolateMeasurement(const MapMatching& mapmatching,
     segment_begin_route_distance += directededge->length() * (segment->target - segment->source);
   }
 
-  // {interpolated_at_point, interpolated_at_edgeid, std::sqrt(interpolated_sq_distance), interpolated_route_distance};
   return best_interp;
 }
 
@@ -254,8 +253,8 @@ FindMatchResult(const MapMatching::state_iterator& previous_state,
     }
   }
 
-  // Although we failed to infer the route and the edge, at least we
-  // know which point it matches
+  // If we failed to infer the route and the edge, at least we know
+  // which point it matches
   const auto& c = state.candidate();
   //Note: technically a candidate can have correlated to more than one place in the graph
   //but the way its used in meili we only correlated it to one place so .front() is safe
@@ -344,7 +343,6 @@ MapMatcher::~MapMatcher() {}
 std::vector<MatchResult>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
-  // Clear all previous measurements and states TODO: should we do it?
   mapmatching_.Clear();
 
   const auto begin = measurements.begin(),
