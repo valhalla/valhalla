@@ -17,32 +17,27 @@ class MatchResult
   MatchResult(const midgard::PointLL& lnglat,
               float distance,
               const baldr::GraphId edgeid,
-              StateId stateid)
+              StateId stateid = kInvalidStateId)
       : lnglat_(lnglat),
         distance_(distance),
         edgeid_(edgeid),
         stateid_(stateid) {}
 
   MatchResult(const midgard::PointLL& lnglat)
-      : lnglat_(lnglat),
-        distance_(0.f),
-        edgeid_(),
-        stateid_(kInvalidStateId) {}
+      : MatchResult(lnglat, 0.f, {}, kInvalidStateId) {}
 
-  // Coordinate of the matched point
+  // Coordinate of the match point
   const midgard::PointLL& lnglat() const
   { return lnglat_; }
 
-  // Distance from measurement to the matched point
+  // Distance from measurement to the match point
   float distance() const
   { return distance_; }
 
-  // Which edge/node this matched point stays
+  // Which edge this match point stays
   const baldr::GraphId& edgeid() const
   { return edgeid_; }
 
-  // Attach the state pointer for other information (e.g. reconstruct
-  // the route path) and debugging
   StateId stateid() const
   { return stateid_; }
 
