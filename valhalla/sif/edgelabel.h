@@ -9,8 +9,6 @@
 namespace valhalla {
 namespace sif {
 
-constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
-
 /**
  * Labeling information for shortest path algorithm. Contains cost,
  * predecessor, current time, and assorted information required during
