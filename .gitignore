@@ -41,7 +41,6 @@ libvalhalla_thor.la
 test-suite.log
 test-driver
 test/edgestatus
-test/adjacencylist
 test/optimizer
 test/*.log
 test/*.trs

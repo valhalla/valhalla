@@ -55,16 +55,21 @@ void AStarPathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   // Get the initial cost based on A* heuristic from origin
   float mincost = astarheuristic_.Get(origll);
 
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_[label].sortcost();
+  };
+
   // Construct adjacency list, edge status, and done set
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new AdjacencyList(mincost, range, bucketsize));
+  adjacencylist_.reset(new DoubleBucketQueue(mincost, range, bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
-
-  // Reserve size for edge labels - do this here rather than in constructor so
-  // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(kInitialEdgeLabelCount);
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
@@ -134,7 +139,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " +
                      std::to_string(edgelabels_.size()));
@@ -288,7 +293,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
 void AStarPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
   uint32_t idx = edgelabels_.size();
-  adjacencylist_->Add(idx, sortcost);
+  adjacencylist_->add(idx, sortcost);
   edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -303,7 +308,7 @@ void AStarPathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
     float oldsortcost = edgelabels_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
     edgelabels_[idx].Update(predindex, newcost, newsortcost);
-    adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+    adjacencylist_->decrease(idx, newsortcost, oldsortcost);
   }
 }
 
@@ -385,7 +390,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-    adjacencylist_->Add(edgelabels_.size(), sortcost);
+    adjacencylist_->add(edgelabels_.size(), sortcost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_, d);
