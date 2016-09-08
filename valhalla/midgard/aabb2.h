@@ -154,7 +154,7 @@ class AABB2 {
    * @return  Returns true if the circle intersects (or lies completely
    *          within) the bounding box.
    */
-  bool Intersects(const coord_t& center, const float radius) const;
+  bool Intersects(const coord_t& center, float radius) const;
 
   /**
    * Clips the input set of vertices to the specified boundary.  Uses a
