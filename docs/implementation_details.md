@@ -82,9 +82,9 @@ objectives as it's Dijkstra-based.
 
 We derive `MapMatching` from `ViterbiSearch` for it has better
 performance in theory. You can develop your own map matching algorithm
-to work with other road network sources (e.g. pgRouting) by inheriting
-from either implementation (depending on your objectives), and
-implement `IViterbiSearch::TransitionCost` and
+to work with other road network sources (e.g. pgRouting) as
+`MapMatching` does: inherit from either implementation (depending on
+your objectives) and implement `IViterbiSearch::TransitionCost` and
 `IViterbiSearch::EmissionCost`.
 
 The details about these algorithms are described
@@ -104,11 +104,6 @@ to multiple destinations. AStar fits here because the destination set
 is a cluster of candidates around their measurement (provided by the
 candidate query above). So the algorithm can estimate the heuristic
 cost by targeting at the measurement's position.
-
-The SP algorithm only focuses on *limited distance* path finding. If
-it hasn't found the destination after exploring 2000 meters
-(`breakage_distance`), it will give up without saying
-anything.
 
 The SP algorithm doesn't construct the paths for you. Instead it gives
 back the search tree (i.e. `LabelSet`) directly. Then we store the
