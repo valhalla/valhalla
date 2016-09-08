@@ -9,11 +9,11 @@
 #include <valhalla/sif/edgelabel.h>
 #include "config.h"
 
-#include <valhalla/thor/adjacencylist.h>
+#include <valhalla/baldr/double_bucket_queue.h>
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 using namespace valhalla::sif;
-using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
@@ -63,16 +63,21 @@ int Benchmark(const uint32_t n, const float maxcost,
 
   // Test performance of double bucket adjacency list. Set the bucket maxcost
   // such that EmptyOverflow is called once
+  std::vector<EdgeLabel> edgelabels;
+  // Set up lambda to get sort costs
+  const auto edgecost = [&edgelabels](const uint32_t label) {
+    return edgelabels[label].sortcost();
+  };
   start = std::clock();
-  AdjacencyList adjlist(0, maxcost / 2, bucketsize);
+  DoubleBucketQueue adjlist(0, maxcost / 2, bucketsize, edgecost);
 
   // Construct EdgeLabels and add to adjacency list
-  std::vector<EdgeLabel> edgelabels;
+
   for (uint32_t i = 0; i < n; i++) {
     EdgeLabel el;
     el.SetSortCost(costs[i]);
     edgelabels.push_back(std::move(el));
-    adjlist.Add(i, costs[i]);
+    adjlist.add(i, costs[i]);
   }
 
   // Get edge label indexes from the adj list. Accumulate total cost to make
@@ -80,7 +85,7 @@ int Benchmark(const uint32_t n, const float maxcost,
   count = 0;
   std::vector<uint32_t> ordered_cost2;
   while (true) {
-    uint32_t idx = adjlist.Remove(edgelabels);
+    uint32_t idx = adjlist.pop();
     if (idx == kInvalidLabel) {
       break;
     }
