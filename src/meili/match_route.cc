@@ -208,6 +208,10 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
       source(the_source),
       target(the_target)
 {
+  if (!edgeid.Is_Valid()) {
+    throw std::invalid_argument("Invalid edgeid");
+  }
+
   if (!(0.f <= source && source <= target && target <= 1.f)) {
     throw std::invalid_argument("Expect 0.f <= source <= target <= 1.f, but you got source = "
                                 + std::to_string(source)
@@ -238,11 +242,6 @@ EdgeSegment::Shape(baldr::GraphReader& graphreader) const
 
 bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& other) const
 {
-  // Skip dummy segments
-  if (!edgeid.Is_Valid() || !other.edgeid.Is_Valid()) {
-    return false;
-  }
-
   if (edgeid != other.edgeid) {
     if (target == 1.f && other.source == 0.f) {
       const auto endnode = helpers::edge_endnodeid(graphreader, edgeid);
