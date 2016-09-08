@@ -163,27 +163,12 @@ MergeEdgeSegments(std::vector<EdgeSegment>& route,
     return route;
   }
 
-  for (auto segment = std::next(segment_begin);  // Skip the first dummy segment
-       segment != segment_end; segment++) {
-    if (!segment->edgeid.Is_Valid()) {
-      throw std::runtime_error("Still found an invalid edgeid in route segments");
-    }
+  for (auto segment = segment_begin; segment != segment_end; segment++) {
     if(!route.empty()) {
       auto& last_segment = route.back();
-      if (last_segment.edgeid == segment->edgeid) {
-        if (last_segment.target != segment->source
-            && segment != std::next(segment_begin)) {
-          // TODO should throw runtime error. See the temporary fix
-          LOG_ERROR("Still found a disconnected route in which segment "
-                    + std::to_string(segment - segment_begin) + " ends at "
-                    + std::to_string(last_segment.target)
-                    + " but the next segment starts at "
-                    + std::to_string(segment->source));
-        }
-        // and here we should extend last_segment.target =
-        // segment->target since last_segment.target <=
-        // segment->target but see the temporary fix
-        last_segment.target = std::max(last_segment.target, segment->target);
+      if (last_segment.edgeid == segment->edgeid && last_segment.target == segment->source) {
+        // Extend last segment
+        last_segment.target = segment->target;
       } else {
         route.push_back(*segment);
       }
