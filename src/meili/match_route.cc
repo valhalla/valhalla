@@ -220,14 +220,26 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
 
 
 std::vector<EdgeSegment>&
-MergeRoute(std::vector<EdgeSegment>& route,
-           const RoutePathIterator& route_begin,
-           const RoutePathIterator& route_end)
+MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target)
 {
+  const auto route_rbegin = source.RouteBegin(target),
+               route_rend = source.RouteEnd();
+
+  if (route_rbegin == route_rend) {
+    return route;
+  }
+
   std::vector<EdgeSegment> segments;
 
-  for (auto label = route_begin; label != route_end; label++) {
+  auto label = route_rbegin;
+
+  // Skip the first dummy edge std::prev(route_rend)
+  for (; std::next(label) != route_rend; label++) {
     segments.emplace_back(label->edgeid, label->source, label->target);
+  }
+
+  if (label->edgeid.Is_Valid()) {
+    throw std::logic_error("The first edge must be dummy");
   }
 
   return MergeEdgeSegments(route, segments.rbegin(), segments.rend());
@@ -235,11 +247,10 @@ MergeRoute(std::vector<EdgeSegment>& route,
 
 
 std::vector<EdgeSegment>
-MergeRoute(const RoutePathIterator& route_begin,
-           const RoutePathIterator& route_end)
+MergeRoute(const State& source, const State& target)
 {
-  std::vector<EdgeSegment> segments;
-  return MergeRoute(segments, route_begin, route_end);
+  std::vector<EdgeSegment> route;
+  return MergeRoute(route, source, target);
 }
 
 

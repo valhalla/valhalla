@@ -37,14 +37,11 @@ struct EdgeSegment
 
 
 std::vector<EdgeSegment>&
-MergeRoute(std::vector<EdgeSegment>& route,
-           const RoutePathIterator& route_begin,
-           const RoutePathIterator& route_end);
+MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);
 
 
 std::vector<EdgeSegment>
-MergeRoute(const RoutePathIterator& route_begin,
-           const RoutePathIterator& route_end);
+MergeRoute(const State& source, const State& target);
 
 
 template <typename match_iterator_t>
