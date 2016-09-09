@@ -64,7 +64,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->Remove();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -199,7 +199,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->Remove();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();

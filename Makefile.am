@@ -40,7 +40,6 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_thor.la
 nobase_include_HEADERS = \
-	valhalla/thor/adjacencylist.h \
 	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/bidirectional_astar.h \
@@ -55,7 +54,6 @@ nobase_include_HEADERS = \
 	valhalla/thor/service.h \
 	valhalla/thor/trafficalgorithm.h
 libvalhalla_thor_la_SOURCES = \
-	src/thor/adjacencylist.cc \
 	src/thor/astar.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/attributes_action.cc \
@@ -80,7 +78,6 @@ libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_
 check_PROGRAMS = \
 	test/edgestatus \
 	test/optimizer \
-	test/adjacencylist \
 	test/thor_service
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
 test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
@@ -88,9 +85,6 @@ test_edgestatus_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libva
 test_optimizer_SOURCES = test/optimizer.cc test/test.cc
 test_optimizer_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_optimizer_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
-test_adjacencylist_SOURCES = test/adjacencylist.cc test/test.cc
-test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_adjacencylist_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 test_thor_service_SOURCES = test/thor_service.cc test/test.cc
 test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_thor_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la

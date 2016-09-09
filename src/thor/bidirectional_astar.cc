@@ -30,8 +30,6 @@ BidirectionalAStar::BidirectionalAStar() {
   allow_transitions_ = false;
   adjacencylist_forward_ = nullptr;
   edgestatus_forward_ = nullptr;
-  edgelabels_forward_.reserve(kInitialEdgeLabelCountBD);
-  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
 }
 
 // Destructor
@@ -58,16 +56,31 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
   astarheuristic_forward_.Init(destll, factor);
   astarheuristic_reverse_.Init(origll, factor);
 
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_forward_.reserve(kInitialEdgeLabelCountBD);
+  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
+
+  // Set up lambdas to get sort costs
+  const auto forward_edgecost = [this](const uint32_t label) {
+    return edgelabels_forward_[label].sortcost();
+  };
+  const auto reverse_edgecost = [this](const uint32_t label) {
+    return edgelabels_reverse_[label].sortcost();
+  };
+
   // Construct adjacency list, edge status, and done set
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
   float mincost = astarheuristic_forward_.Get(origll);
-  adjacencylist_forward_.reset(new AdjacencyList(mincost, range, bucketsize));
+  adjacencylist_forward_.reset(new DoubleBucketQueue(mincost, range, bucketsize,
+                                                 forward_edgecost));
   edgestatus_forward_.reset(new EdgeStatus());
 
   mincost = astarheuristic_reverse_.Get(destll);
-  adjacencylist_reverse_.reset(new AdjacencyList(mincost, range, bucketsize));
+  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincost, range, bucketsize,
+                                                 reverse_edgecost));
   edgestatus_reverse_.reset(new EdgeStatus());
 
   // Initialize best connection with max cost
@@ -77,6 +90,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
   // Set the threshold to 0 (used to extend search once an initial
   // connection has been found).
   threshold_ = 0;
+
 
   // Support for hierarchy transitions
   allow_transitions_ = costing->AllowTransitions();
@@ -103,11 +117,14 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
+  Init(origin.edges.front().projected, destination.edges.front().projected,
+               costing);
+
   // Set origin and destination locations - seeds the adj. lists
-  //Note: because we can correlate to more than one place for a given PathLocation
-  //using edges.front here means we are only setting the heuristics to one of them
-  //alternate paths using the other correlated points to may be harder to find
-  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
+  // Note: because we can correlate to more than one place for a given
+  // PathLocation using edges.front here means we are only setting the
+  // heuristics to one of them alternate paths using the other correlated
+  // points to may be harder to find
   SetOrigin(graphreader, origin, costing);
   SetDestination(graphreader, destination, costing);
 
@@ -128,7 +145,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     // Get the next predecessor (based on which direction was
     // expanded in prior step)
     if (expand_forward) {
-      forward_pred_idx = adjacencylist_forward_->Remove(edgelabels_forward_);
+      forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         // Check if the edge on the forward search connects to a
         // reached edge on the reverse search tree.
@@ -148,7 +165,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       }
     }
     if (expand_reverse) {
-      reverse_pred_idx = adjacencylist_reverse_->Remove(edgelabels_reverse_);
+      reverse_pred_idx = adjacencylist_reverse_->pop();
       if (reverse_pred_idx != kInvalidLabel) {
         // Check if the edge on the reverse search connects to a
         // reached edge on the forward search tree.
@@ -428,7 +445,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 void BidirectionalAStar::AddToForwardAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
   uint32_t idx = edgelabels_forward_.size();
-  adjacencylist_forward_->Add(idx, sortcost);
+  adjacencylist_forward_->add(idx, sortcost);
   edgestatus_forward_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -437,7 +454,7 @@ void BidirectionalAStar::AddToForwardAdjacencyList(const GraphId& edgeid,
 void BidirectionalAStar::AddToReverseAdjacencyList(const GraphId& edgeid,
                                         const float sortcost) {
   uint32_t idx = edgelabels_reverse_.size();
-  adjacencylist_reverse_->Add(idx, sortcost);
+  adjacencylist_reverse_->add(idx, sortcost);
   edgestatus_reverse_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -454,7 +471,7 @@ void BidirectionalAStar::CheckIfLowerCostPathForward(const uint32_t idx,
     float newsortcost = oldsortcost - dc;
     edgelabels_forward_[idx].Update(predindex, newcost, newsortcost);
     edgelabels_forward_[idx].set_transition_cost(tc);
-    adjacencylist_forward_->DecreaseCost(idx, newsortcost, oldsortcost);
+    adjacencylist_forward_->decrease(idx, newsortcost, oldsortcost);
   }
 }
 
@@ -472,7 +489,7 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
     float newsortcost = oldsortcost - dc;
     edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost);
     edgelabels_reverse_[idx].set_transition_cost(tc);
-    adjacencylist_reverse_->DecreaseCost(idx, newsortcost, oldsortcost);
+    adjacencylist_reverse_->decrease(idx, newsortcost, oldsortcost);
   }
 }
 

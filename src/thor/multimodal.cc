@@ -37,6 +37,8 @@ uint32_t GetOperatorId(const GraphTile* tile, uint32_t routeid,
 namespace valhalla {
 namespace thor {
 
+constexpr uint64_t kInitialEdgeLabelCount = 200000;
+
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
     : AStarPathAlgorithm(),
@@ -55,11 +57,20 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
   // Disable A* for multimodal
   astarheuristic_.Init(destll, 0.0f);
 
-  // Construct adjacency list, edge status, and done set
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects
+  edgelabels_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_[label].sortcost();
+  };
+
+  // Construct adjacency list and edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new AdjacencyList(0.0f, range, bucketsize));
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -132,7 +143,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " +
                      std::to_string(edgelabels_.size()));
@@ -426,7 +437,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           float newsortcost = oldsortcost - dc;
           edgelabels_[idx].Update(predindex, newcost, newsortcost,
                                   walking_distance_, tripid, blockid);
-          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
         }
         continue;
       }
@@ -470,12 +481,17 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
   // Assume pedestrian mode for now
   mode_ = dest_mode;
 
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_[label].sortcost();
+  };
+
   // Use a simple Dijkstra method - no need to recover the path just need to
   // make sure we can get to a transit stop within the specified max. walking
   // distance
   uint32_t label_idx = 0;
   uint32_t bucketsize = costing->UnitSize();
-  AdjacencyList adjlist(0.0f, kBucketCount * bucketsize, bucketsize);
+  DoubleBucketQueue adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgecost);
   std::vector<EdgeLabel> edgelabels;
   EdgeStatus edgestatus;
 
@@ -491,7 +507,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     edgelabels.emplace_back(kInvalidLabel, oppedge,
             diredge, cost, cost.cost, 0.0f, 0,
             diredge->opp_local_idx(), mode_, length);
-    adjlist.Add(label_idx, cost.cost);
+    adjlist.add(label_idx, cost.cost);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
     label_idx++;
   }
@@ -503,14 +519,14 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjlist.Remove(edgelabels);
+    uint32_t predindex = adjlist.pop();
     if (predindex == kInvalidLabel) {
       // Throw an exception so the message is returned in the service
       throw std::runtime_error("Cannot reach destination - too far from a transit stop");
       return false;
     }
 
-    // Remove label from adjacency list, mark it as done - copy the EdgeLabel
+    // Mark the edge as as permanently labeled - copy the EdgeLabel
     // for use in costing
     EdgeLabel pred = edgelabels[predindex];
     edgestatus.Set(pred.edgeid(), EdgeSet::kPermanent, pred.edgeid());
@@ -564,7 +580,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
           float newsortcost = oldsortcost - dc;
           edgelabels[idx].Update(predindex, newcost, newsortcost,
                                   walking_distance, 0, 0);
-          adjlist.DecreaseCost(idx, newsortcost, oldsortcost);
+          adjlist.decrease(idx, newsortcost, oldsortcost);
         }
         continue;
       }
@@ -573,7 +589,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       edgelabels.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_, walking_distance);
-      adjlist.Add(label_idx, newcost.cost);
+      adjlist.add(label_idx, newcost.cost);
       edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
       label_idx++;
     }
