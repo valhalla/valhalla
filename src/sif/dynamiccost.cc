@@ -85,11 +85,9 @@ void DynamicCost::SetAllowTransitConnections(const bool allow) {
   allow_transit_connections_ = allow;
 }
 
-/**
- * Returns the maximum transfer distance between stops that you are willing
- * to travel for this mode.  It is the max distance you are willing to
- * travel between transfers.
- */
+// Returns the maximum transfer distance between stops that you are willing
+// to travel for this mode.  It is the max distance you are willing to
+// travel between transfers.
 uint32_t DynamicCost::GetMaxTransferDistanceMM() {
   return 0;
 }
@@ -136,6 +134,17 @@ void DynamicCost::set_travelmode(const TravelMode mode) {
 // Get the current travel mode.
 TravelMode DynamicCost::travelmode() const {
   return travelmode_;
+}
+
+// Add to the exclude list.
+void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+  ;
+}
+
+// Checks if we should exclude or not.
+bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
+                             const baldr::DirectedEdge* edge) {
+  return false;
 }
 
 }

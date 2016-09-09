@@ -281,6 +281,19 @@ class DynamicCost {
    */
   void ResetHierarchyLimits();
 
+  /**
+   * Checks if we should exclude or not.
+   * @return  Returns true if we should exclude, false if not.
+   */
+  virtual void AddToExcludeList(const baldr::GraphTile*& tile);
+
+  /**
+   * Checks if we should exclude or not.
+   * @return  Returns true if we should exclude, false if not.
+   */
+  virtual bool IsExcluded(const baldr::GraphTile*& tile,
+                          const baldr::DirectedEdge* edge);
+
  protected:
   // Flag indicating whether transit connections are allowed.
   bool allow_transit_connections_;
