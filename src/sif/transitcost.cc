@@ -413,10 +413,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 // determine if we should not route on a line.
 bool TransitCost::IsExcluded(const baldr::GraphTile*& tile,
                              const baldr::DirectedEdge* edge) {
-  if (exclude_.find(tile_line_pair(tile->id().tileid(),edge->lineid())) != exclude_.end())
-    return true;
-
-  return false;
+  return (exclude_.find(tile_line_pair(tile->id().tileid(),edge->lineid())) != exclude_.end());
 }
 
 // Check if access is allowed on the specified edge.
