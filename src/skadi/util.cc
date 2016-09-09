@@ -7,7 +7,10 @@ namespace {
     return std::min<T>(std::max<T>(val, low), high);
   }
 
-  constexpr int16_t NO_DATA_VALUE = -32768;
+  constexpr double NO_DATA_VALUE = -32768;
+
+  // Do not compute grade for intervals less than 10 meters.
+  constexpr double kMinimumInterval = 10.0f;
 }
 
 namespace valhalla {
@@ -31,7 +34,8 @@ namespace valhalla {
       auto scale = 100.0 / interval_distance;
       for(auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
         //get the grade for this section. Ignore any invalid elevation postings
-        if (*h == NO_DATA_VALUE || *std::prev(h) == NO_DATA_VALUE) {
+        if (*h == NO_DATA_VALUE || *std::prev(h) == NO_DATA_VALUE ||
+            interval_distance < kMinimumInterval) {
           grade = 0.0;
         } else {
           grade = (*h - *std::prev(h)) * scale;
