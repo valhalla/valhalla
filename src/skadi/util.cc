@@ -7,6 +7,7 @@ namespace {
     return std::min<T>(std::max<T>(val, low), high);
   }
 
+  constexpr double NO_DATA_VALUE = -32768;
 }
 
 namespace valhalla {
@@ -21,6 +22,7 @@ namespace valhalla {
 
     std::tuple<double,double,double> weighted_grade(const std::vector<double>& heights, const double interval_distance, const std::function<double (double&)>& grade_weighting){
       //grab the scaled grade for each section
+      double grade = 0.0;
       double total_grade = 0;
       double total_weight = 0;
       double max_up_grade = 0.0;
@@ -28,8 +30,12 @@ namespace valhalla {
       //multiply grades by 100 to move from 0-1 into 0-100 for grade percentage
       auto scale = 100.0 / interval_distance;
       for(auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
-        //get the grade for this section
-        auto grade = (*h - *std::prev(h)) * scale;
+        //get the grade for this section. Ignore any invalid elevation postings
+        if (*h == NO_DATA_VALUE || *std::prev(h) == NO_DATA_VALUE) {
+          grade = 0.0;
+        } else {
+          grade = (*h - *std::prev(h)) * scale;
+        }
 
         // Update max grades. TODO - do we need to filter or smooth these?
         max_up_grade   = std::max(grade, max_up_grade);
