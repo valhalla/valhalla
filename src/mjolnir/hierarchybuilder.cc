@@ -35,6 +35,9 @@ namespace {
 //how many meters to resample shape to when checking elevations
 constexpr double POSTING_INTERVAL = 60.0;
 
+// Do not compute grade for intervals less than 10 meters.
+constexpr double kMinimumInterval = 10.0f;
+
 // Simple structure to describe a connection between 2 levels
 struct NodeConnection {
   GraphId basenode;
@@ -354,6 +357,11 @@ bool IsEnteringEdgeOfContractedNode(const GraphId& node, const GraphId& edge,
 
 std::tuple<double, double, double> GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample,
                     const std::list<PointLL>& shape, const float length, const bool forward) {
+  // For very short lengths just return 0 grades
+  if (length < kMinimumInterval) {
+    return std::make_tuple(0.0, 0.0, 0.0);
+  }
+
   //evenly sample the shape
   std::list<PointLL> resampled;
   //if it was really short just do both ends
