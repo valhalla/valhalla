@@ -190,7 +190,6 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   const auto& tile_level = hierarchy.levels().rbegin()->second;
   curler_t curler;
   auto feeds = curler(url("/api/v1/feeds.geojson?", pt), "features");
-
   for(const auto& feature : feeds.get_child("features")) {
     //use the following logic if you only want certain feeds
     //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
@@ -1249,7 +1248,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     GraphId stopid = stop_edges.second.origin_pbf_graphid;
     uint32_t stop_index = stopid.id();
     const Transit_Stop& stop = transit.stops(stop_index);
-
     if (GraphId(stop.graphid()) != stopid) {
       LOG_ERROR("Stop key not equal!");
     }
