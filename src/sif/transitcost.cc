@@ -30,6 +30,7 @@ constexpr float kDefaultUseRailFactor = 0.6f;
 constexpr float kDefaultUseTransfersFactor = 0.3f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
+
 }
 
 /**
@@ -193,6 +194,18 @@ class TransitCost : public DynamicCost {
     };
   }
 
+  /**This method adds to the exclude list based on the
+   * user inputed exclude and include lists.
+   */
+  virtual void AddToExcludeList(const baldr::GraphTile*& tile);
+
+  /**
+   * Checks if we should exclude or not.
+   * @return  Returns true if we should exclude, false if not.
+   */
+  virtual bool IsExcluded(const baldr::GraphTile*& tile,
+                          const baldr::DirectedEdge* edge);
+
  protected:
 
   // This is the weight for this mode.  The higher the value the more the
@@ -215,6 +228,32 @@ class TransitCost : public DynamicCost {
 
   float transfer_cost_;     // Transfer cost
   float transfer_penalty_;  // Transfer penalty
+
+  struct TileLineHasher {
+    std::size_t operator()(const tile_line_pair& tile_line) const {
+      std::size_t seed = 13;
+      boost::hash_combine(seed, id_hasher(tile_line.first));
+      boost::hash_combine(seed, id_hasher(tile_line.second));
+      return seed;
+    }
+    //function to hash each id
+    std::hash<uint32_t> id_hasher;
+  };
+
+  // operator exclude list
+  std::unordered_set<std::string> oper_exclude_onestops_;
+
+  // operator include list
+  std::unordered_set<std::string> oper_include_onestops_;
+
+  // route excluded list
+  std::unordered_set<std::string> route_exclude_onestops_;
+
+  // route include list
+  std::unordered_set<std::string> route_include_onestops_;
+
+  //our final one exclude list of pairs
+  std::unordered_set<tile_line_pair, TileLineHasher> exclude_;
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -266,6 +305,27 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
 
+
+  std::string operator_action = pt.get("filters.operators.action", "");
+  if (operator_action.size()) {
+    for (const auto& kv : pt.get_child("filters.operators.ids")) {
+      if (operator_action == "none")
+        oper_exclude_onestops_.emplace(kv.second.get_value<std::string>());
+      else if (operator_action == "only")
+        oper_include_onestops_.emplace(kv.second.get_value<std::string>());
+    }
+  }
+
+  std::string routes_action = pt.get("filters.routes.action", "");
+  if (routes_action.size()) {
+    for (const auto& kv : pt.get_child("filters.routes.ids")) {
+      if (routes_action == "none")
+        route_exclude_onestops_.emplace(kv.second.get_value<std::string>());
+      else if (routes_action == "only")
+        route_include_onestops_.emplace(kv.second.get_value<std::string>());
+    }
+  }
+
   // Normalize so the favored mode has factor == 1
   if (rail_factor_ < bus_factor_) {
     float ratio = bus_factor_ / rail_factor_;
@@ -286,6 +346,74 @@ TransitCost::~TransitCost() {
 // the more the mode is favored.
 float TransitCost::GetModeWeight() {
   return mode_weight_;
+}
+
+// This method adds tile_line_pairs to the exclude list based on the
+// operator and route exclude_onestops and include_onestops lists.
+// The exclude_onestops and include_onestops lists are set by the user.
+void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+
+  //do we have operator work to do?
+  if (oper_exclude_onestops_.size() || oper_include_onestops_.size()) {
+    const std::unordered_map<std::string, std::list<tile_line_pair>> oper_onestops =
+        tile->GetOperatorOneStops();
+
+    //avoid these operators
+    if (oper_onestops.size()) {
+      for (const auto& e : oper_exclude_onestops_ ) {
+        const auto& one_stop = oper_onestops.find(e);
+        if (one_stop != oper_onestops.end()) {
+          for (const auto& tls : one_stop->second)
+            exclude_.emplace(tls);
+        }
+      }
+
+      //exclude all operators but the ones the users wants to use
+      if (oper_include_onestops_.size()) {
+        for(auto const& onestop: oper_onestops) {
+          if (oper_include_onestops_.find(onestop.first) == oper_include_onestops_.end()) {
+            for (const auto& tls : onestop.second)
+              exclude_.emplace(tls);
+          }
+        }
+      }
+    }
+  }
+
+  //do we have route work to do?
+  if (route_exclude_onestops_.size() || route_include_onestops_.size()) {
+
+    const std::unordered_map<std::string, std::list<tile_line_pair>> route_onestops =
+        tile->GetRouteOneStops();
+
+    //avoid these routes
+    if (route_onestops.size()) {
+      for (const auto& e : route_exclude_onestops_ ) {
+        const auto& one_stop = route_onestops.find(e);
+        if (one_stop != route_onestops.end()) {
+          for (const auto& tls : one_stop->second)
+            exclude_.emplace(tls);
+        }
+      }
+
+      //exclude all routes but the ones the users wants to use
+      if (route_include_onestops_.size()) {
+        for(auto const& onestop: route_onestops) {
+          if (route_include_onestops_.find(onestop.first) == route_include_onestops_.end()) {
+            for (const auto& tls : onestop.second)
+              exclude_.emplace(tls);
+          }
+        }
+      }
+    }
+  }
+}
+
+// This method acts like an allowed function; however, it uses the exclude list to
+// determine if we should not route on a line.
+bool TransitCost::IsExcluded(const baldr::GraphTile*& tile,
+                             const baldr::DirectedEdge* edge) {
+  return (exclude_.find(tile_line_pair(tile->id().tileid(),edge->lineid())) != exclude_.end());
 }
 
 // Check if access is allowed on the specified edge.
