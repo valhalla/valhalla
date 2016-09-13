@@ -50,7 +50,8 @@ namespace {
     try {
       //throw the json into the ptree
       auto json = request.query.find("json");
-      if(json != request.query.end() && json->second.size()) {
+    if (json != request.query.end() && json->second.size()
+        && json->second.front().size()) {
         std::istringstream is(json->second.front());
         boost::property_tree::read_json(is, pt);
       }//no json parameter, check the body
