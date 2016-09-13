@@ -786,6 +786,18 @@ struct OSMWay {
   bool link() const;
 
   /**
+   * Sets the turn channel tag.
+   * @param  turn channel       Turn channel.
+   */
+  void set_turn_channel(const bool turn_channel);
+
+  /**
+   * Get the turn channel flag.
+   * @return  Returns turn channel flag.
+   */
+  bool turn_channel() const;
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  ref_offset_map   map of unique refs from ways.
@@ -862,7 +874,8 @@ struct OSMWay {
       uint32_t lanes             :4;
       uint32_t forward_lanes     :4;
       uint32_t backward_lanes    :4;
-      uint32_t spare             :10;    // Spare
+      uint32_t turn_channel      :1;     // *link tag - turn channel (no ramp)
+      uint32_t spare             :9;     // Spare
     } fields;
     uint32_t v;
   };

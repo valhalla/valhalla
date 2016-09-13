@@ -400,6 +400,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_roundabout(tag.second == "true" ? true : false);
       else if (tag.first == "link")
         w.set_link(tag.second == "true" ? true : false);
+      else if (tag.first == "link_type")
+        w.set_turn_channel(tag.second == "slip" ? true : false);
       else if (tag.first == "ferry")
         w.set_ferry(tag.second == "true" ? true : false);
       else if (tag.first == "rail")

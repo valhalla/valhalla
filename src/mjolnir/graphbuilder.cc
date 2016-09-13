@@ -864,7 +864,11 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
-  ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, stats);
+  if (pt.get<bool>("mjolnir.reclassify_links", true)) {
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, stats);
+  } else {
+    LOG_WARN("Not reclassifying link graph edges");
+  }
 
   // Reclassify ferry connection edges - use the highway classification cutoff
   RoadClass rc = RoadClass::kPrimary;

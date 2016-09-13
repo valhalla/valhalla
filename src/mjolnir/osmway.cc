@@ -660,6 +660,16 @@ bool OSMWay::link() const {
   return classification_.fields.link;
 }
 
+// Set turn channel flag.
+void OSMWay::set_turn_channel(const bool turn_channel) {
+  classification_.fields.turn_channel = turn_channel;
+}
+
+// Get the turn channel flag.
+bool OSMWay::turn_channel() const {
+  return classification_.fields.turn_channel;
+}
+
 // Get the names for the edge info based on the road class.
 std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           const UniqueNames& ref_offset_map,
