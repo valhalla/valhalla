@@ -427,9 +427,9 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
   //it was the begin node
   if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
     const GraphTile* other_tile;
+    auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
     if(!other_tile)
       throw std::runtime_error("No suitable edges near location");
-    auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
     return correlate_node(reader, location, edge_filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
   }
   //it was the end node
