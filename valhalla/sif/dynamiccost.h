@@ -294,6 +294,13 @@ class DynamicCost {
   virtual bool IsExcluded(const baldr::GraphTile*& tile,
                           const baldr::DirectedEdge* edge);
 
+  /**
+   * Checks if we should exclude or not.
+   * @return  Returns true if we should exclude, false if not.
+   */
+  virtual bool IsExcluded(const baldr::GraphTile*& tile,
+                          const baldr::NodeInfo* node);
+
  protected:
   // Flag indicating whether transit connections are allowed.
   bool allow_transit_connections_;

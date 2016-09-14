@@ -147,5 +147,11 @@ bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
   return false;
 }
 
+// Checks if we should exclude or not.
+bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
+                             const baldr::NodeInfo* node) {
+  return false;
+}
+
 }
 }
