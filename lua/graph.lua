@@ -982,6 +982,7 @@ function filter_tags_generic(kv)
 
   if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
      kv["link"] = "true"  --do we need to add more?  turnlane?
+     kv["link_type"] = kv["link_type"]
   end
 
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"

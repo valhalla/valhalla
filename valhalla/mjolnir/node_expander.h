@@ -91,6 +91,7 @@ struct Edge {
                            || way.official_name_index_ != 0
                            || way.ref_index_ != 0
                            || way.int_ref_index_ != 0);
+    e.attributes.turn_channel = way.turn_channel();
     return e;
   }
 
