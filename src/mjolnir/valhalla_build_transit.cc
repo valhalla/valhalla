@@ -191,6 +191,10 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   curler_t curler;
   auto feeds = curler(url("/api/v1/feeds.geojson?", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
+    //use the following logic if you only want certain feeds
+    //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
+    //if (feed && *feed == "f-9q9-bart")
+
     //should be a polygon
     auto type = feature.second.get_optional<std::string>("geometry.type");
     if(!type || *type != "Polygon") {
@@ -298,13 +302,14 @@ void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
     set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
     std::string vehicle_type = route_pt.second.get<std::string>("vehicle_type", "null");
     Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
-    if (vehicle_type == "tram")
+    if (vehicle_type == "tram" || vehicle_type == "tram_service")
       type = Transit_VehicleType::Transit_VehicleType_kTram;
     else if (vehicle_type == "metro")
       type = Transit_VehicleType::Transit_VehicleType_kMetro;
     else if (vehicle_type == "rail")
       type = Transit_VehicleType::Transit_VehicleType_kRail;
-    else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" || vehicle_type == "express_bus_service")
+    else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
+             vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service")
       type = Transit_VehicleType::Transit_VehicleType_kBus;
     else if (vehicle_type == "ferry")
       type = Transit_VehicleType::Transit_VehicleType_kFerry;
