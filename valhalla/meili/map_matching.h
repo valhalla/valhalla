@@ -13,6 +13,7 @@
 namespace valhalla{
 namespace meili {
 
+
 class State
 {
  public:
@@ -127,6 +128,14 @@ class MapMatching: public ViterbiSearch<State>
 
     return time;
   }
+
+  float
+  CalculateEmissionCost(float sq_distance) const
+  { return sq_distance * inv_double_sq_sigma_z_; }
+
+  float
+  CalculateTransitionCost(float turncost, float route_distance, float measurement_distance) const
+  { return (turncost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
 
  protected:
   virtual float MaxRouteDistance(const State& left, const State& right) const;

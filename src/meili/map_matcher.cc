@@ -1,6 +1,10 @@
-#include <vector>
+#include <valhalla/midgard/distanceapproximator.h>
 
 #include "meili/graph_helpers.h"
+#include "meili/routing.h"
+#include "meili/geometry_helpers.h"
+#include "meili/graph_helpers.h"
+#include "meili/match_route.h"
 #include "meili/map_matcher.h"
 
 
@@ -16,264 +20,303 @@ GreatCircleDistanceSquared(const Measurement& left,
 { return left.lnglat().DistanceSquared(right.lnglat()); }
 
 
-// Collect a nodeid set of a path location
-std::unordered_set<baldr::GraphId>
-collect_nodes(baldr::GraphReader& graphreader, const Candidate& location)
-{
-  std::unordered_set<baldr::GraphId> results;
-  const baldr::GraphTile* tile = nullptr;
+inline float
+GreatCircleDistance(const Measurement& left,
+                    const Measurement& right)
+{ return left.lnglat().Distance(right.lnglat()); }
 
-  for (const auto& edge : location.edges) {
-    if (!edge.id.Is_Valid()) continue;
-    if (edge.dist == 0.f) {
-      const auto& startnodeid = helpers::edge_startnodeid(graphreader, edge.id, tile);
-      if (startnodeid.Is_Valid()) {
-        results.insert(startnodeid);
-      }
-    } else if (edge.dist == 1.f) {
-      const auto& endnodeid = helpers::edge_endnodeid(graphreader, edge.id, tile);
-      if (endnodeid.Is_Valid()) {
-        results.insert(endnodeid);
-      }
+
+struct Interpolation {
+  midgard::PointLL projected;
+  baldr::GraphId edgeid;
+  float sq_distance;
+  float route_distance;
+
+  float sortcost(const MapMatching& mm, float mmt_dist) const
+  { return mm.CalculateTransitionCost(0.f, route_distance, mmt_dist) + mm.CalculateEmissionCost(sq_distance); }
+};
+
+
+// Find the interpolation along the route where the transitin cost +
+// emission cost is minimal
+template <typename segment_iterator_t>
+Interpolation
+InterpolateMeasurement(const MapMatching& mapmatching,
+                       segment_iterator_t begin,
+                       segment_iterator_t end,
+                       const Measurement& measurement,
+                       float match_measurement_distance,
+                       bool reverse)
+{
+  const baldr::GraphTile* tile(nullptr);
+  midgard::DistanceApproximator approximator(measurement.lnglat());
+
+  // Route distance from each segment begin to the beginning segment
+  float segment_begin_route_distance = 0.f;
+  float minimal_cost = std::numeric_limits<float>::infinity();
+
+  // Invalid edgeid indicates that no interpolation found
+  Interpolation best_interp{{}, {}, 0.f, 0.f};
+
+  for (auto segment = begin; segment != end; segment++) {
+    const auto directededge = helpers::edge_directededge(mapmatching.graphreader(), segment->edgeid, tile);
+    if (!directededge) {
+      continue;
     }
+
+    const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+
+    const auto& shape = edgeinfo->shape();
+    if (shape.empty()) {
+      continue;
+    }
+
+    midgard::PointLL projected_point;
+    float sq_distance, offset;
+    std::tie(projected_point, sq_distance, std::ignore, offset) = helpers::Project(measurement.lnglat(), shape, approximator);
+
+    // Find out the correct offset
+    if (!directededge->forward()) {
+      offset = 1.f - offset;
+    }
+
+    // Distance from the projected point to the segment begin, or
+    // segment begin if we walk reversely
+    const auto distance_to_segment_ends = std::abs(directededge->length() * (reverse? (segment->target - offset) : (offset - segment->source)));
+
+    // The absolute route distance from projected point to the
+    // beginning segment
+    const auto route_distance = segment_begin_route_distance + distance_to_segment_ends;
+
+    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance};
+    const auto cost = interp.sortcost(mapmatching, match_measurement_distance);
+    if (cost < minimal_cost) {
+      minimal_cost = cost;
+      best_interp = std::move(interp);
+    }
+
+    // Assume segments are connected
+    segment_begin_route_distance += directededge->length() * (segment->target - segment->source);
   }
 
-  return results;
+  return best_interp;
 }
 
 
-MatchResult
-guess_source_result(const MapMatching::state_iterator source,
-                    const MapMatching::state_iterator target,
-                    const Measurement& source_measurement)
-{
-  if (source.IsValid() && target.IsValid()) {
-    baldr::GraphId last_valid_id;
-    GraphType last_valid_type = GraphType::kUnknown;
-    for (auto label = source->RouteBegin(*target);
-         label != source->RouteEnd(); label++) {
-      if (label->nodeid.Is_Valid()) {
-        last_valid_id = label->nodeid;
-        last_valid_type = GraphType::kNode;
-      } else if (label->edgeid.Is_Valid()) {
-        last_valid_id = label->edgeid;
-        last_valid_type = GraphType::kEdge;
-      }
-    }
-    const auto& c = source->candidate();
-    //Note: technically a candidate can have correlated to more than one place in the graph
-    //but the way its used in meili we only correlated it to one place so .front() is safe
-    return {c.edges.front().projected, c.distance(), last_valid_id, last_valid_type, source->id()};
-  } else if (source.IsValid()) {
-    return {source_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, source->id()};
-  }
-
-  return {source_measurement.lnglat()};
-}
-
-
-MatchResult
-guess_target_result(const MapMatching::state_iterator source,
-                    const MapMatching::state_iterator target,
-                    const Measurement& target_measurement)
-{
-  if (source.IsValid() && target.IsValid()) {
-    auto label = source->RouteBegin(*target);
-    baldr::GraphId graphid;
-    GraphType graphtype = GraphType::kUnknown;
-    if (label != source->RouteEnd()) {
-      if (label->nodeid.Is_Valid()) {
-        graphid = label->nodeid;
-        graphtype = GraphType::kNode;
-      } else if (label->edgeid.Is_Valid()) {
-        graphid = label->edgeid;
-        graphtype = GraphType::kEdge;
-      }
-    }
-    const auto& c = target->candidate();
-    //Note: technically a candidate can have correlated to more than one place in the graph
-    //but the way its used in meili we only correlated it to one place so .front() is safe
-    return {c.edges.front().projected, c.distance(), graphid, graphtype, target->id()};
-  } else if (target.IsValid()) {
-    return {target_measurement.lnglat(), 0.f, baldr::GraphId(), GraphType::kUnknown, target->id()};
-  }
-
-  return {target_measurement.lnglat()};
-}
-
-
-template <typename candidate_iterator_t>
-MatchResult
-interpolate(baldr::GraphReader& reader,
-            const std::unordered_set<baldr::GraphId>& graphset,
-            candidate_iterator_t begin,
-            candidate_iterator_t end,
-            const Measurement& measurement)
-{
-  auto closest_candidate = end;
-  float closest_sq_distance = std::numeric_limits<float>::infinity();
-  baldr::GraphId closest_graphid;
-  GraphType closest_graphtype = GraphType::kUnknown;
-
-  for (auto candidate = begin; candidate != end; candidate++) {
-    if (candidate->sq_distance() < closest_sq_distance) {
-      //Note: technically a candidate can have correlated to more than one place in the graph
-      //but the way its used in meili we only correlated it to one place so .front() is safe
-      if (!candidate->edges.front().begin_node() && !candidate->edges.front().end_node()) {
-        for (const auto& edge : candidate->edges) {
-          const auto it = graphset.find(edge.id);
-          if (it != graphset.end()) {
-            closest_candidate = candidate;
-            closest_sq_distance = candidate->sq_distance();
-            closest_graphid = edge.id;
-            closest_graphtype = GraphType::kEdge;
-          }
-        }
-      } else {
-        for (const auto nodeid : collect_nodes(reader, *candidate)) {
-          const auto it = graphset.find(nodeid);
-          if (it != graphset.end()) {
-            closest_candidate = candidate;
-            closest_sq_distance = candidate->sq_distance();
-            closest_graphid = nodeid;
-            closest_graphtype = GraphType::kNode;
-          }
-        }
-      }
-    }
-  }
-
-  if (closest_candidate != end) {
-    //Note: technically a candidate can have correlated to more than one place in the graph
-    //but the way its used in meili we only correlated it to one place so .front() is safe
-    return {closest_candidate->edges.front().projected, closest_candidate->distance(), closest_graphid, closest_graphtype, kInvalidStateId};
-  }
-
-  return {measurement.lnglat()};
-}
-
-
-std::unordered_set<baldr::GraphId>
-collect_graphset(baldr::GraphReader& reader,
-                 const MapMatching::state_iterator source,
-                 const MapMatching::state_iterator target)
-{
-  std::unordered_set<baldr::GraphId> graphset;
-  if (source.IsValid() && target.IsValid()) {
-    for (auto label = source->RouteBegin(*target);
-         label != source->RouteEnd();
-         ++label) {
-      if (label->edgeid.Is_Valid()) {
-        graphset.insert(label->edgeid);
-      }
-      if (label->nodeid.Is_Valid()) {
-        graphset.insert(label->nodeid);
-      }
-    }
-  } else if (source.IsValid()) {
-    const auto& location = source->candidate();
-    //Note: technically a location can have correlated to more than one place in the graph
-    //but the way its used in meili we only correlated it to one place so .front() is safe
-    if (!location.edges.front().begin_node() && !location.edges.front().end_node()) {
-      for (const auto& edge : location.edges) {
-        if (edge.id.Is_Valid()) {
-          graphset.insert(edge.id);
-        }
-      }
-    } else {
-      for (const auto nodeid : collect_nodes(reader, location)) {
-        if (nodeid.Is_Valid()) {
-          graphset.insert(nodeid);
-        }
-      }
-    }
-  }
-
-  return graphset;
-}
-
-
+// Iterpolate measurements along the route from prevous state to
+// current state, or along the route from current state to next state
 std::vector<MatchResult>
-OfflineMatch_(MapMatching& mm,
-              const CandidateQuery& cq,
-              const std::vector<Measurement>& measurements,
-              float interpolation_distance)
+InterpolateMeasurements(const MapMatching& mapmatching,
+                        const MapMatching::state_iterator& previous_state,
+                        const MapMatching::state_iterator& state,
+                        const MapMatching::state_iterator& next_state,
+                        const std::vector<Measurement>& interpolated_measurements)
 {
-  mm.Clear();
-
-  if (measurements.empty()) {
+  if (interpolated_measurements.empty()) {
     return {};
   }
 
-  using mmt_size_t = std::vector<Measurement>::size_type;
-  Time time = 0;
-  const float sq_interpolation_distance = interpolation_distance * interpolation_distance;
-  std::unordered_map<Time, std::vector<mmt_size_t>> proximate_measurements;
-
-  // Load states
-  for (mmt_size_t idx = 0,
-             last_idx = 0,
-              end_idx = measurements.size() - 1;
-       idx <= end_idx; idx++) {
-    const auto& measurement = measurements[idx];
-    auto sq_distance = GreatCircleDistanceSquared(measurements[last_idx], measurement);
-    // Always match the first and the last measurement
-    if (sq_interpolation_distance <= sq_distance || idx == 0 || idx == end_idx) {
-      const auto& candidates = cq.Query(measurement.lnglat(),
-                                        measurement.sq_search_radius(),
-                                        mm.costing()->GetEdgeFilter());
-      time = mm.AppendState(measurement, candidates.begin(), candidates.end());
-      last_idx = idx;
-    } else {
-      proximate_measurements[time].push_back(idx);
-    }
-  }
-
-  // Search viterbi path
-  std::vector<MapMatching::state_iterator> iterpath;
-  iterpath.reserve(mm.size());
-  for (auto it = mm.SearchPath(time); it != mm.PathEnd(); it++) {
-    iterpath.push_back(it);
-  }
-  std::reverse(iterpath.begin(), iterpath.end());
-  if (!(iterpath.size() == mm.size())) {
-    std::logic_error("Every measurement should have matched a state");
-  }
-
-  // Interpolate proximate measurements and merge their states into
-  // the results
   std::vector<MatchResult> results;
-  results.reserve(measurements.size());
-  results.emplace_back(measurements.front().lnglat());
 
-  for (Time time = 1; time < mm.size(); time++) {
-    const auto &source_state = iterpath[time - 1],
-               &target_state = iterpath[time];
-
-    if (!results.back().graphid().Is_Valid()) {
-      results.pop_back();
-      results.push_back(guess_source_result(source_state, target_state, measurements[results.size()]));
+  if (!state.IsValid()) {
+    for (const auto& measurement: interpolated_measurements) {
+      results.emplace_back(measurement.lnglat());
     }
+    return results;
+  }
 
-    auto it = proximate_measurements.find(time - 1);
-    if (it != proximate_measurements.end()) {
-      const auto& graphset = collect_graphset(mm.graphreader(), source_state, target_state);
-      for (const auto idx : it->second) {
-        const auto& candidates = cq.Query(measurements[idx].lnglat(),
-                                          measurements[idx].sq_search_radius(),
-                                          mm.costing()->GetEdgeFilter());
-        results.push_back(interpolate(mm.graphreader(), graphset,
-                                      candidates.begin(), candidates.end(),
-                                      measurements[idx]));
+  std::vector<EdgeSegment> upstream_route;
+  if (previous_state.IsValid()) {
+    MergeRoute(upstream_route, *previous_state, *state);
+  }
+
+  std::vector<EdgeSegment> downstream_route;
+  if (next_state.IsValid()) {
+    MergeRoute(downstream_route, *state, *next_state);
+  }
+
+  if (upstream_route.empty() && downstream_route.empty()) {
+    for (const auto& measurement: interpolated_measurements) {
+      results.emplace_back(measurement.lnglat());
+    }
+    return results;
+  }
+
+  for (const auto& measurement: interpolated_measurements) {
+    const auto& match_measurement = mapmatching.measurement(state->time());
+    const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
+
+    const auto& up_interp = InterpolateMeasurement(
+        mapmatching,
+        upstream_route.rbegin(),
+        upstream_route.rend(),
+        measurement,
+        match_measurement_distance,
+        true);
+
+    const auto& down_interp = InterpolateMeasurement(
+        mapmatching,
+        downstream_route.begin(),
+        downstream_route.end(),
+        measurement,
+        match_measurement_distance,
+        false);
+
+    if (up_interp.edgeid.Is_Valid() && down_interp.edgeid.Is_Valid()) {
+      const auto down_cost = down_interp.sortcost(mapmatching, match_measurement_distance),
+                   up_cost = up_interp.sortcost(mapmatching, match_measurement_distance);
+      if (down_cost < up_cost) {
+        results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
+      } else {
+        results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
+      }
+
+    } else if (up_interp.edgeid.Is_Valid()) {
+      results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
+
+    } else if (down_interp.edgeid.Is_Valid()) {
+      results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
+
+    } else {
+      results.emplace_back(measurement.lnglat());
+    }
+  }
+
+  return results;
+}
+
+
+// Interplolate measurements grouped by previous match measurement
+// time
+std::unordered_map<Time, std::vector<MatchResult>>
+InterpolateTimedMeasurements(const MapMatching& mapmatching,
+                             const MapMatching::state_iterator& state_rbegin,
+                             const MapMatching::state_iterator& state_rend,
+                             const std::unordered_map<Time, std::vector<Measurement>>& interpolated_measurements,
+                             Time time)
+{
+  std::unordered_map<Time, std::vector<MatchResult>> resultmap;
+
+  for (auto previous_state = std::next(state_rbegin),
+                     state = state_rbegin,
+                next_state = MapMatching::state_iterator(nullptr);
+       state != state_rend;
+       next_state = state, state++, previous_state = std::next(state)) {
+
+    const auto it = interpolated_measurements.find(time);
+    if (it != interpolated_measurements.end()) {
+      if (state.IsValid()) {
+        const auto& results = InterpolateMeasurements(mapmatching, previous_state, state, next_state, it->second);
+        resultmap.emplace(time, results);
+      } else {
+        auto& results = resultmap[time];
+        for (const auto& measurement: it->second) {
+          results.push_back(MatchResult(measurement.lnglat()));
+        }
       }
     }
 
-    results.push_back(guess_target_result(source_state, target_state, measurements[results.size()]));
+    time--;
   }
-  if(results.size() != measurements.size())
-    throw std::logic_error("The number of matched points does not match the number of input points.");
 
+  return resultmap;
+}
+
+
+// Find the match result of a state, given its previous state and next
+// state
+MatchResult
+FindMatchResult(const MapMatching::state_iterator& previous_state,
+                const State& state,
+                const MapMatching::state_iterator& next_state)
+{
+  baldr::GraphId edgeid;
+
+  // Construct the route from previous state to current state, and
+  // find out which edge it matches
+  if (previous_state.IsValid()) {
+    // It must stay on the last edge of the route
+    const auto rbegin = previous_state->RouteBegin(state),
+                 rend = previous_state->RouteEnd();
+    if (rbegin != rend) {
+      edgeid = rbegin->edgeid;
+    }
+  }
+
+  // Do the same from current state to next state
+  if (!edgeid.Is_Valid() && next_state.IsValid()) {
+    // It must stay on the first edge of the route
+    for (auto label = state.RouteBegin(*next_state);
+         label != state.RouteEnd(); label++) {
+      if (label->edgeid.Is_Valid()) {
+        edgeid = label->edgeid;
+      }
+    }
+  }
+
+  // If we failed to infer the route and the edge, at least we know
+  // which point it matches
+  const auto& c = state.candidate();
+  //Note: technically a candidate can have correlated to more than one place in the graph
+  //but the way its used in meili we only correlated it to one place so .front() is safe
+  return {c.edges.front().projected, c.distance(), edgeid, state.id()};
+}
+
+
+// Find the corresponding match results of a list of states
+std::vector<MatchResult>
+FindMatchResults(const MapMatching& mapmatching,
+                 const MapMatching::state_iterator& state_rbegin,
+                 const MapMatching::state_iterator& state_rend,
+                 Time time)
+{
+  if (state_rbegin == state_rend) {
+    return {};
+  }
+
+  std::vector<MatchResult> results;
+
+  for (auto previous_state = std::next(state_rbegin),
+                     state = state_rbegin,
+                next_state = MapMatching::state_iterator(nullptr);
+       state != state_rend;
+       next_state = state, state++, previous_state = std::next(state)) {
+    if (state.IsValid()) {
+      results.push_back(FindMatchResult(previous_state, *state, next_state));
+    } else {
+      results.emplace_back(mapmatching.measurement(time).lnglat());
+    }
+    time--;
+  }
+
+  std::reverse(results.begin(), results.end());
   return results;
+}
+
+
+// Insert the interpolated results into the result list, and
+// return a new result list
+std::vector<MatchResult>
+MergeMatchResults(const std::vector<MatchResult>& results,
+                  const std::unordered_map<Time, std::vector<MatchResult>>& interpolated_results)
+{
+  std::vector<MatchResult> merged_results;
+
+  Time time = 0;
+  for (const auto& result: results) {
+    merged_results.push_back(result);
+
+    const auto it = interpolated_results.find(time);
+    if (it != interpolated_results.end()) {
+      for (const auto& result: it->second) {
+        merged_results.push_back(result);
+      }
+    }
+
+    time++;
+  }
+
+  return merged_results;
 }
 
 }
@@ -301,8 +344,66 @@ MapMatcher::~MapMatcher() {}
 std::vector<MatchResult>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
-  const auto interpolation_distance = config_.get<float>("interpolation_distance");
-  return OfflineMatch_(mapmatching_, candidatequery_, measurements, interpolation_distance);
+  mapmatching_.Clear();
+
+  const auto begin = measurements.begin(),
+               end = measurements.end();
+
+  if (begin == end) {
+    return {};
+  }
+
+  const auto interpolation_distance = config_.get<float>("interpolation_distance"),
+          sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  std::unordered_map<Time, std::vector<Measurement>> interpolated_measurements;
+
+  // Always match the first measurement
+  auto time = AppendMeasurement(*begin);
+  auto latest_match_measurement = begin;
+  std::size_t match_count = 1;
+
+  for (auto measurement = next(begin); measurement != end; measurement++) {
+    const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
+    // Always match the last measurement
+    if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
+      time = AppendMeasurement(*measurement);
+      latest_match_measurement = measurement;
+      match_count++;
+    } else {
+      interpolated_measurements[time].push_back(*measurement);
+    }
+  }
+
+  const auto state_rbegin = mapmatching_.SearchPath(time),
+               state_rend = std::next(state_rbegin, match_count);
+  const auto& results = FindMatchResults(mapmatching_, state_rbegin, state_rend, time);
+
+  // Done if no measurements to interpolate
+  if (interpolated_measurements.empty()) {
+    return results;
+  }
+
+  // Find results for all interpolated measurements
+  const auto& interpolated_results = InterpolateTimedMeasurements(
+      mapmatching_,
+      state_rbegin,
+      state_rend,
+      interpolated_measurements,
+      time);
+
+  // Insert the interpolated results into the result list
+  return MergeMatchResults(results, interpolated_results);
+}
+
+
+Time
+MapMatcher::AppendMeasurement(const Measurement& measurement)
+{
+  const auto& candidates = candidatequery_.Query(
+      measurement.lnglat(),
+      measurement.sq_search_radius(),
+      mapmatching_.costing()->GetEdgeFilter());
+  return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
 }
 
 }

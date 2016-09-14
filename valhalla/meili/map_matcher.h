@@ -48,6 +48,8 @@ public:
   OfflineMatch(const std::vector<Measurement>& measurements);
 
 private:
+  Time AppendMeasurement(const Measurement& measurement);
+
   boost::property_tree::ptree config_;
 
   baldr::GraphReader& graphreader_;

@@ -8,7 +8,8 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphid.h>
 
-#include <valhalla/meili/map_matcher.h>
+#include <valhalla/meili/routing.h>
+#include <valhalla/meili/map_matching.h>
 
 
 namespace valhalla {
@@ -35,10 +36,17 @@ struct EdgeSegment
 };
 
 
+std::vector<EdgeSegment>&
+MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);
+
+
+std::vector<EdgeSegment>
+MergeRoute(const State& source, const State& target);
+
+
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
-ConstructRoute(baldr::GraphReader& graphreader,
-               const MapMatcher& mapmatcher,
+ConstructRoute(const MapMatching& mapmaching,
                match_iterator_t begin,
                match_iterator_t end);
 
