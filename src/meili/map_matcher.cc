@@ -55,7 +55,8 @@ InterpolateMeasurement(const MapMatching& mapmatching,
   float segment_begin_route_distance = 0.f;
   float minimal_cost = std::numeric_limits<float>::infinity();
 
-  Interpolation best_interp;
+  // Invalid edgeid indicates that no interpolation found
+  Interpolation best_interp{{}, {}, 0.f, 0.f};
 
   for (auto segment = begin; segment != end; segment++) {
     const auto directededge = helpers::edge_directededge(mapmatching.graphreader(), segment->edgeid, tile);
