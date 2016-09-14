@@ -146,6 +146,14 @@ InterpolateMeasurements(const MapMatching& mapmatching,
     const auto& match_measurement = mapmatching.measurement(state->time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
 
+    const auto& up_interp = InterpolateMeasurement(
+        mapmatching,
+        upstream_route.rbegin(),
+        upstream_route.rend(),
+        measurement,
+        match_measurement_distance,
+        true);
+
     const auto& down_interp = InterpolateMeasurement(
         mapmatching,
         downstream_route.begin(),
@@ -154,15 +162,21 @@ InterpolateMeasurements(const MapMatching& mapmatching,
         match_measurement_distance,
         false);
 
-    if (down_interp.edgeid.Is_Valid()) {
-      results.emplace_back(down_interp.projected,
-                           std::sqrt(down_interp.sq_distance),
-                           down_interp.edgeid);
-    } else if (!upstream_route.empty()) {
-      // Match the end point of the upstream route
-      results.emplace_back(state->candidate().edges.front().projected,
-                           state->candidate().distance(),
-                           upstream_route.back().edgeid);
+    if (up_interp.edgeid.Is_Valid() && down_interp.edgeid.Is_Valid()) {
+      const auto down_cost = down_interp.sortcost(mapmatching, match_measurement_distance),
+                   up_cost = up_interp.sortcost(mapmatching, match_measurement_distance);
+      if (down_cost < up_cost) {
+        results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
+      } else {
+        results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
+      }
+
+    } else if (up_interp.edgeid.Is_Valid()) {
+      results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
+
+    } else if (down_interp.edgeid.Is_Valid()) {
+      results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
+
     } else {
       results.emplace_back(measurement.lnglat());
     }
