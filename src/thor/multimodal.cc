@@ -207,6 +207,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     GraphId prior_stop = pred.prior_stopid();
     uint32_t operator_id = pred.transit_operator();
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+
       // Get the transfer penalty when changing stations
       if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
         transfer_cost = tc->TransferCost();
@@ -216,6 +217,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         tc->AddToExcludeList(tile);
         processed_tiles.emplace(tile->id().tileid());
       }
+
+      //check if excluded.
+      if (tc->IsExcluded(tile, nodeinfo))
+        continue;
 
       // Add transfer time to the local time when entering a stop
       // as a pedestrian. This is a small added cost on top of
@@ -301,7 +306,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         if (!tc->Allowed(directededge, pred, tile, edgeid)) {
           continue;
         }
-
         //check if excluded.
         if (tc->IsExcluded(tile, directededge))
           continue;
