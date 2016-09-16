@@ -22,7 +22,7 @@ Czech `aliases` entry example:
 5. Please translate the JSON values. As needed, reorder the phrase words and tags - the tags must remain in the phrase. An example using the ramp instruction:  
 ![Alt text](/locales/img/translate.png)
 
-6. Run `make check` on the [odin](https://github.com/valhalla/odin) repo to verify the tests pass OR move on to step#6 and we can help verify.
+6. Run `make check` on the [odin](https://github.com/valhalla/odin) repo to verify the tests pass OR move on to step#7 and we can help verify.
 
 7. Submit a pull request for review. Thank you!
 
