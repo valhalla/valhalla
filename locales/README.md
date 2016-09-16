@@ -12,7 +12,7 @@ Czech/Czech Republic `posix_locale` example:
 `cs_CZ.UTF-8`
 
 3. Update the `aliases` array in your new file. A typical alias entry is the [ISO 639 two-letter language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) without the    
-[ISO 3166 two-letter country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2). The alias entry must be unique across language files.    
+[ISO 3166 two-letter country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2). The alias entry must be unique across language files.  
 Czech `aliases` entry example:  
 `cs`
 
