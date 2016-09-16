@@ -8,7 +8,7 @@
         "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Weigh anchor and hoist the mizzen! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
         "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "8": "Saunter <CARDINAL_DIRECTION> on solid ground.",
         "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
@@ -24,7 +24,7 @@
         "1": ["Head southwest on 5th Avenue.", "Head west on solid ground", "Head east on th' bike pirate way", "Head north on th' treasure trail"],
         "2": ["Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."],
         "4": ["Set sail east.", "Set sail north."],
-        "5": ["Weigh anchor and hoist the mizzen! Set sail southwest on 5th Avenue."],
+        "5": ["Point yer bow southwest and set sail on 5th Avenue."],
         "6": ["Weigh anchor! Set sail south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."],
         "8": ["Saunter east on solid ground.", "Saunter north on solid ground."],
         "9": ["Saunter southwest on 5th Avenue.", "Saunter west on solid ground"],
@@ -36,17 +36,17 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "0": "Head <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION> for <LENGTH>.",
-        "5": "Weigh anchor and hoist the mizzen! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "4": "Set sail <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES> fer <LENGTH>.",
         "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> for <LENGTH>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "8": "Saunter <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
         "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION> for <LENGTH>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "16": "Ride <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
         "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
@@ -54,17 +54,17 @@
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "example_phrases": {
-        "0": ["Head east for a half mile.", "Head north for 1 kilometer."],
-        "1": ["Head southwest on 5th Avenue for 1 tenth of a mile."],
+        "0": ["Head east fer a half mile.", "Head north fer 1 kilometer."],
+        "1": ["Head southwest on 5th Avenue fer 1 tenth of a mile."],
         "2": ["Head south on North Prince Street, U.S. 2 22."],
-        "4": ["Set sail east for a half mile.", "Drvie north for 1 kilometer."],
-        "5": ["Weigh anchor and hoist the mizzen! Set sail southwest on 5th Avenue for 1 tenth of a mile."],
+        "4": ["Set sail east fer a half mile.", "Drvie north fer 1 kilometer."],
+        "5": ["Point yer bow southwest and set sail on 5th Avenue fer 1 tenth of a mile."],
         "6": ["Weigh anchor! Set sail south on North Prince Street, U.S. 2 22."],
-        "8": ["Saunter east for a half mile.", "Saunter north for 1 kilometer."],
-        "9": ["Saunter southwest on 5th Avenue for 1 tenth of a mile."],
+        "8": ["Saunter east fer a half mile.", "Saunter north fer 1 kilometer."],
+        "9": ["Saunter southwest on 5th Avenue fer 1 tenth of a mile."],
         "10": ["Saunter south on North Prince Street, U.S. 2 22."],
-        "16": ["Ride east for a half mile.", "Ride north for 1 kilometer."],
-        "17": ["Ride southwest on 5th Avenue for 1 tenth of a mile."],
+        "16": ["Ride east fer a half mile.", "Ride north fer 1 kilometer."],
+        "17": ["Ride southwest on 5th Avenue fer 1 tenth of a mile."],
         "18": ["Ride south on North Prince Street, U.S. 2 22."]
       }
     },
@@ -153,15 +153,15 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Aye, continue for <LENGTH>.",
-        "1": "Heave ho on <STREET_NAMES> for <LENGTH>."
+        "0": "Aye, continue fer <LENGTH>.",
+        "1": "Heave ho on <STREET_NAMES> fer <LENGTH>."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "example_phrases": {
-        "0": ["Aye, continue for 300 feet."],
-        "1": ["Heave ho on 10th Avenue for 3 tenths of a mile."]
+        "0": ["Aye, continue fer 300 feet."],
+        "1": ["Heave ho on 10th Avenue fer 3 tenths of a mile."]
       }
     },
     "bear": {
@@ -199,7 +199,7 @@
     "turn": {
       "phrases": {
         "0": "Turn <RELATIVE_DIRECTION> bucko.",
-        "1": "Avast ye, turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
         "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
@@ -207,7 +207,7 @@
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Turn port bucko."],
-        "1": ["Avast ye, turn starboard onto Flatbush Avenue."],
+        "1": ["Turn starboard onto Flatbush Avenue me hearties."],
         "2": ["Arrr, turn port onto North Bond Street/US 1 Business/MD 924. Aye, continue on MD 924."],
         "3": ["Turn starboard matey to stay on Sunstone Drive."]
       }
@@ -215,7 +215,7 @@
     "turn_verbal": {
       "phrases": {
         "0": "Turn <RELATIVE_DIRECTION> bucko.",
-        "1": "Avast ye, turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
         "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
@@ -223,7 +223,7 @@
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Turn port bucko."],
-        "1": ["Avast ye, turn starboard onto Flatbush Avenue."],
+        "1": ["Turn starboard onto Flatbush Avenue me hearties."],
         "2": ["Arrr, turn port onto North Bond Street, U.S. 1 Business."],
         "3": ["Turn starboard matey to stay on Sunstone Drive."]
       }
@@ -231,7 +231,7 @@
     "sharp": {
       "phrases": {
         "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
-        "1": "Avast ye, turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
         "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
         "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
@@ -239,7 +239,7 @@
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Turn sharp left bucko."],
-        "1": ["Avast ye, turn sharp right onto Flatbush Avenue."],
+        "1": ["Turn sharp right onto Flatbush Avenue ye scallywag."],
         "2": ["Arrr, turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."],
         "3": ["Turn sharp right matey to stay on Sunstone Drive."]
       }
@@ -247,7 +247,7 @@
     "sharp_verbal": {
       "phrases": {
         "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
-        "1": "Avast ye, turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
         "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
         "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
@@ -255,7 +255,7 @@
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Turn sharp left bucko."],
-        "1": ["Avast ye, turn sharp right onto Flatbush Avenue."],
+        "1": ["Turn sharp right onto Flatbush Avenue ye scallywag."],
         "2": ["Arrr, turn sharp left onto North Bond Street, U.S. 1 Business."],
         "3": ["Turn sharp right matey to stay on Sunstone Drive."]
       }
@@ -531,23 +531,23 @@
     "merge": {
       "phrases": {
         "0": "Avast ye, merge.",
-        "1": "Avast ye, merge onto <STREET_NAMES>."
+        "1": "Merge onto <STREET_NAMES> me matey."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Avast ye, merge."],
-        "1": ["Avast ye, merge onto I 76 West/Pennsylvania Turnpike."]
+        "1": ["Merge onto I 76 West/Pennsylvania Turnpike me matey."]
       }
     },
     "merge_verbal": {
       "phrases": {
         "0": "Avast ye, merge.",
-        "1": "Avast ye, merge onto <STREET_NAMES>."
+        "1": "Merge onto <STREET_NAMES> me matey."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Avast ye, merge."],
-        "1": ["Avast ye, merge onto Interstate 76 West, Pennsylvania Turnpike."]
+        "1": ["Merge onto Interstate 76 West, Pennsylvania Turnpike me matey."]
       }
     },
     "enter_roundabout": {
@@ -596,28 +596,28 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Exit thee Cap'n wheel.",
-        "1": "Exit thee Cap'n wheel onto <STREET_NAMES>.",
-        "2": "Exit thee Cap'n wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
-        "0": ["Exit thee Cap'n wheel."],
-        "1": ["Exit thee Cap'n wheel onto Philadelphia Road/MD 7."],
-        "2": ["Exit thee Cap'n wheel onto Catoctin Mountain Highway/US 15. Aye, continue on US 15."]
+        "0": ["Exit thee wheel."],
+        "1": ["Exit thee wheel onto Philadelphia Road/MD 7."],
+        "2": ["Exit thee wheel onto Catoctin Mountain Highway/US 15. Aye, continue on US 15."]
       }
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Exit thee Cap'n wheel.",
-        "1": "Exit thee Cap'n wheel onto <STREET_NAMES>.",
-        "2": "Exit thee Cap'n wheel onto <BEGIN_STREET_NAMES>."
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
-        "0": ["Exit thee Cap'n wheel."],
-        "1": ["Exit thee Cap'n wheel onto Philadelphia Road, Maryland 7."],
-        "2": ["Exit thee Cap'n wheel onto Catoctin Mountain Highway, U.S. 15."]
+        "0": ["Exit thee wheel."],
+        "1": ["Exit thee wheel onto Philadelphia Road, Maryland 7."],
+        "2": ["Exit thee wheel onto Catoctin Mountain Highway, U.S. 15."]
       }
     },
     "enter_ferry": {
@@ -652,32 +652,32 @@
       "phrases": {
         "0": "Head <CARDINAL_DIRECTION>.",
         "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
         "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "5": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "6": "Point yer bow <CARDINAL_DIRECTION> and set sail on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
         "8": "Saunter <CARDINAL_DIRECTION>.",
         "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
         "16": "Ride <CARDINAL_DIRECTION>.",
         "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
         "0": ["Head southeast."],
         "1": ["Head west on Ferry Lane"],
-        "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."],
+        "2": ["Head south on Summerfield Place/NY 114. Aye, continue on NY 114."],
         "4": ["Set sail southeast."],
-        "5": ["Set sail west on Ferry Lane"],
-        "6": ["Set sail south on Summerfield Place/NY 114. Continue on NY 114."],
+        "5": ["Weigh anchor! Set sail west on Ferry Lane"],
+        "6": ["Point yer bow south and set sail on Summerfield Place/NY 114. Aye, continue on NY 114."],
         "8": ["Saunter southeast."],
         "9": ["Saunter west on Ferry Lane"],
-        "10": ["Saunter south on Summerfield Place/NY 114. Continue on NY 114."],
+        "10": ["Saunter south on Summerfield Place/NY 114. Aye, continue on NY 114."],
         "16": ["Ride southeast."],
         "17": ["Ride west on Ferry Lane"],
-        "18": ["Ride south on Summerfield Place/NY 114. Continue on NY 114."]
+        "18": ["Ride south on Summerfield Place/NY 114. Aye, continue on NY 114."]
       }
     },
     "exit_ferry_verbal": {
@@ -686,8 +686,8 @@
         "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
         "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
         "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "5": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "6": "Point yer bow <CARDINAL_DIRECTION> and set sail on <BEGIN_STREET_NAMES>.",
         "8": "Saunter <CARDINAL_DIRECTION>.",
         "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
         "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
@@ -702,8 +702,8 @@
         "1": ["Head west on Ferry Lane"],
         "2": ["Head south on Summerfield Place, New York 1 14."],
         "4": ["Set sail southeast."],
-        "5": ["Set sail west on Ferry Lane"],
-        "6": ["Set sail south on Summerfield Place, New York 1 14."],
+        "5": ["Weigh anchor! Set sail west on Ferry Lane"],
+        "6": ["Point yer bow south and set sail on Summerfield Place, New York 1 14."],
         "8": ["Saunter southeast."],
         "9": ["Saunter west on Ferry Lane"],
         "10": ["Saunter south on Summerfield Place, New York 1 14."],
@@ -965,15 +965,15 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Aye, continue for <LENGTH>.",
-        "1": "Avast ye, continue on <STREET_NAMES> for <LENGTH>."
+        "0": "Aye, continue fer <LENGTH>.",
+        "1": "Avast ye, continue on <STREET_NAMES> fer <LENGTH>."
       },
       "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
       "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
-        "0": ["Aye, continue for 300 feet.", "Aye, continue for 9 miles."],
-        "1": ["Avast ye, continue on Pennsylvania 7 43 for 6.2 miles.", "Avast ye, continue on Main Street, Vermont 30 for 1 tenth of a mile."]
+        "0": ["Aye, continue fer 300 feet.", "Aye, continue fer 9 miles."],
+        "1": ["Avast ye, continue on Pennsylvania 7 43 fer 6.2 miles.", "Avast ye, continue on Main Street, Vermont 30 fer 1 tenth of a mile."]
       }
     },
     "post_transition_transit_verbal": {
