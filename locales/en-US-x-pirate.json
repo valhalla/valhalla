@@ -596,28 +596,28 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Exit thee Cap'n wheel.",
-        "1": "Exit thee Cap'n wheel onto <STREET_NAMES>.",
-        "2": "Exit thee Cap'n wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
-        "0": ["Exit thee Cap'n wheel."],
-        "1": ["Exit thee Cap'n wheel onto Philadelphia Road/MD 7."],
-        "2": ["Exit thee Cap'n wheel onto Catoctin Mountain Highway/US 15. Aye, continue on US 15."]
+        "0": ["Exit thee wheel."],
+        "1": ["Exit thee wheel onto Philadelphia Road/MD 7."],
+        "2": ["Exit thee wheel onto Catoctin Mountain Highway/US 15. Aye, continue on US 15."]
       }
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Exit thee Cap'n wheel.",
-        "1": "Exit thee Cap'n wheel onto <STREET_NAMES>.",
-        "2": "Exit thee Cap'n wheel onto <BEGIN_STREET_NAMES>."
+        "0": "Exit thee wheel.",
+        "1": "Exit thee wheel onto <STREET_NAMES>.",
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>."
       },
       "empty_street_name_labels": ["solid ground", "th' bike pirate way", "th' treasure trail"],
       "example_phrases": {
-        "0": ["Exit thee Cap'n wheel."],
-        "1": ["Exit thee Cap'n wheel onto Philadelphia Road, Maryland 7."],
-        "2": ["Exit thee Cap'n wheel onto Catoctin Mountain Highway, U.S. 15."]
+        "0": ["Exit thee wheel."],
+        "1": ["Exit thee wheel onto Philadelphia Road, Maryland 7."],
+        "2": ["Exit thee wheel onto Catoctin Mountain Highway, U.S. 15."]
       }
     },
     "enter_ferry": {
