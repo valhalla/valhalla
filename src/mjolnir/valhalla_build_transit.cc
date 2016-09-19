@@ -55,6 +55,7 @@ struct Departure {
   float    dest_dist_traveled;
   uint16_t elapsed_time;
   bool     wheelchair_accessible;
+  bool     bicycle_accessible;
 };
 
 // Unique route and stop
@@ -961,6 +962,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           stop_access[dep.orig_pbf_graphid] = bikes_allowed;
           stop_access[dep.dest_pbf_graphid] = bikes_allowed;
 
+          dep.bicycle_accessible = bikes_allowed;
+          dep.wheelchair_accessible = sp.wheelchair_accessible();
+
           // Compute days of week mask
           uint32_t dow_mask = kDOWNone;
           for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
@@ -1585,7 +1589,8 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
         // Form transit departures
         TransitDeparture td(lineid, dep.trip, dep.route,
                     dep.blockid, dep.headsign_offset, dep.dep_time,
-                    dep.elapsed_time, dep.schedule_index);
+                    dep.elapsed_time, dep.schedule_index,
+                    dep.wheelchair_accessible, dep.bicycle_accessible);
         tilebuilder_transit.AddTransitDeparture(std::move(td));
       }
 
