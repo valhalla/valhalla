@@ -335,7 +335,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
       edgelabels_.emplace_back(predindex, edgeid, oppedge,
                     directededge, newcost, newcost.cost, 0.0f,
                     directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, tc);
+                    directededge->opp_local_idx(), mode_, tc, false);
     }
   }
   return isotile_;      // Should never get here
@@ -833,7 +833,7 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       edgestatus_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
                opp_dir_edge, cost, cost.cost, 0.0f, opp_dir_edge->restrictions(),
-               opp_dir_edge->opp_local_idx(), mode_, c);
+               opp_dir_edge->opp_local_idx(), mode_, c, false);
     }
   }
 }
