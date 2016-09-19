@@ -138,7 +138,7 @@ void serialize_state(rapidjson::Writer<buffer_t>& writer,
   writer.Uint(state.time());
 
   writer.String("distance");
-  writer.Double(state.candidate().distance());
+  writer.Double(state.candidate().edges.front().score);
 
   //Note: technically a candidate can have correlated to more than one place in the graph
   //but the way its used in meili we only correlated it to one place so .front() is safe

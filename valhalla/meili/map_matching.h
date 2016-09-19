@@ -3,8 +3,8 @@
 #define MMP_MAP_MATCHING_H_
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/costconstants.h>
+#include <valhalla/baldr/pathlocation.h>
 
-#include <valhalla/meili/candidate.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/viterbi_search.h>
 #include <valhalla/meili/routing.h>
@@ -17,7 +17,7 @@ namespace meili {
 class State
 {
  public:
-  State(const StateId id, const Time time, const Candidate& candidate);
+  State(const StateId id, const Time time, const baldr::PathLocation& candidate);
 
   StateId id() const
   { return id_; }
@@ -25,7 +25,7 @@ class State
   Time time() const
   { return time_; }
 
-  const Candidate& candidate() const
+  const baldr::PathLocation& candidate() const
   { return candidate_; }
 
   bool routed() const
@@ -59,7 +59,7 @@ class State
 
   const Time time_;
 
-  const Candidate candidate_;
+  const baldr::PathLocation candidate_;
 
   mutable std::shared_ptr<LabelSet> labelset_;
 

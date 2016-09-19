@@ -259,7 +259,7 @@ FindMatchResult(const MapMatching::state_iterator& previous_state,
   const auto& c = state.candidate();
   //Note: technically a candidate can have correlated to more than one place in the graph
   //but the way its used in meili we only correlated it to one place so .front() is safe
-  return {c.edges.front().projected, c.distance(), edgeid, state.id()};
+  return {c.edges.front().projected, std::sqrt(c.edges.front().score), edgeid, state.id()};
 }
 
 

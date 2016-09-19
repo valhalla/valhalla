@@ -23,7 +23,7 @@ GreatCircleDistance(const valhalla::meili::Measurement& left,
 namespace valhalla {
 namespace meili {
 
-State::State(const StateId id, const Time time, const Candidate& candidate)
+State::State(const StateId id, const Time time, const baldr::PathLocation& candidate)
     : id_(id),
       time_(time),
       candidate_(candidate),
@@ -204,7 +204,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
 
 inline float
 MapMatching::EmissionCost(const State& state) const
-{ return CalculateEmissionCost(state.candidate().sq_distance()); }
+{ return CalculateEmissionCost(std::sqrt(state.candidate().edges.front().score)); }
 
 
 inline double

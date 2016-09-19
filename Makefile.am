@@ -52,7 +52,6 @@ endif
 # libvalhalla_meili compilation etc
 lib_LTLIBRARIES = libvalhalla_meili.la
 nobase_include_HEADERS = \
-	valhalla/meili/candidate.h \
 	valhalla/meili/universal_cost.h \
 	valhalla/meili/candidate_search.h \
 	valhalla/meili/geometry_helpers.h \

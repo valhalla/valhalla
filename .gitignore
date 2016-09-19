@@ -40,6 +40,8 @@ test/routing
 test/viterbi_search
 test/geojson_reader
 test/geojson_writer
+test/grid_traversal
+test/map_matcher_factory
 *.o
 .deps/
 .dirstamp

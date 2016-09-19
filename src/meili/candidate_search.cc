@@ -10,12 +10,12 @@ CandidateQuery::CandidateQuery(baldr::GraphReader& graphreader):
     reader_(graphreader) {}
 
 
-std::vector<std::vector<Candidate>>
+std::vector<std::vector<baldr::PathLocation>>
 CandidateQuery::QueryBulk(const std::vector<midgard::PointLL>& locations,
                           float radius,
                           sif::EdgeFilter filter)
 {
-  std::vector<std::vector<Candidate>> results;
+  std::vector<std::vector<baldr::PathLocation>> results;
   results.reserve(locations.size());
   for (const auto& location : locations) {
     results.push_back(Query(location, radius, filter));
@@ -25,14 +25,14 @@ CandidateQuery::QueryBulk(const std::vector<midgard::PointLL>& locations,
 
 
 template <typename edgeid_iterator_t>
-std::vector<Candidate>
+std::vector<baldr::PathLocation>
 CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
                                       float sq_search_radius,
                                       edgeid_iterator_t edgeid_begin,
                                       edgeid_iterator_t edgeid_end,
                                       sif::EdgeFilter edgefilter) const
 {
-  std::vector<Candidate> candidates;
+  std::vector<baldr::PathLocation> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
   DistanceApproximator approximator(location);
   const baldr::GraphTile* tile = nullptr;
@@ -69,7 +69,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     float offset;
 
     baldr::GraphId snapped_node;
-    Candidate correlated(baldr::Location(location, baldr::Location::StopType::BREAK));
+    baldr::PathLocation correlated(baldr::Location(location, baldr::Location::StopType::BREAK));
 
     // For avoiding recomputing projection later
     const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
@@ -84,7 +84,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.f) {
           snapped_node = opp_edge->endnode();
         }
-        correlated.edges.emplace_back(edgeid, dist, point);
+        correlated.edges.emplace_back(edgeid, dist, point, sq_distance);
       }
     }
 
@@ -103,7 +103,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
         } else if (dist == 0.f) {
           snapped_node = edge->endnode();
         }
-        correlated.edges.emplace_back(opp_edgeid, dist, point);
+        correlated.edges.emplace_back(opp_edgeid, dist, point, sq_distance);
       }
     }
 
@@ -111,8 +111,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       // Add back if it is an edge correlated or it's a node correlated
       // but it's not added yet
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
-        correlated.set_sq_distance(sq_distance);
-        candidates.push_back(correlated);
+        candidates.emplace_back(std::move(correlated));
       }
     }
   }
@@ -268,7 +267,7 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
 }
 
 
-std::vector<Candidate>
+std::vector<baldr::PathLocation>
 CandidateGridQuery::Query(const midgard::PointLL& location,
                           float sq_search_radius,
                           sif::EdgeFilter filter) const

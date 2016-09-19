@@ -13,12 +13,12 @@
 #include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include <valhalla/meili/candidate.h>
 #include <valhalla/meili/grid_range_query.h>
 
 namespace valhalla{
@@ -33,14 +33,14 @@ class CandidateQuery
 
   virtual ~CandidateQuery() {}
 
-  virtual std::vector<Candidate>
+  virtual std::vector<baldr::PathLocation>
   Query(const midgard::PointLL& point, float radius, sif::EdgeFilter filter = nullptr) const = 0;
 
-  virtual std::vector<std::vector<Candidate>>
+  virtual std::vector<std::vector<baldr::PathLocation>>
   QueryBulk(const std::vector<midgard::PointLL>& points, float radius, sif::EdgeFilter filter = nullptr);
 
  protected:
-  template <typename edgeid_iterator_t> std::vector<Candidate>
+  template <typename edgeid_iterator_t> std::vector<baldr::PathLocation>
   WithinSquaredDistance(const midgard::PointLL& location,
                         float sq_search_radius,
                         edgeid_iterator_t edgeid_begin,
@@ -60,7 +60,7 @@ class CandidateGridQuery final: public CandidateQuery
 
   ~CandidateGridQuery();
 
-  std::vector<Candidate>
+  std::vector<baldr::PathLocation>
   Query(const midgard::PointLL& location, float sq_search_radius, sif::EdgeFilter filter) const override;
 
   std::unordered_map<baldr::GraphId, grid_t>::size_type
