@@ -150,7 +150,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
 
     //do we want this edge
     if(edge_filter(edge) != 0.0f) {
-      PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), PathLocation::NONE};
+      PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
       std::get<2>(closest_point) = edge->forward() ? 0 : info->shape().size() - 2;
       if(!heading_filter(edge, info, closest_point, location.heading_))
         correlated.edges.push_back(std::move(path_edge));
@@ -160,7 +160,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
 
     //do we want the evil twin
     if(edge_filter(other_edge) != 0.0f) {
-      PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(),PathLocation::NONE};
+      PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
       std::get<2>(closest_point) = other_edge->forward() ? 0 : info->shape().size() - 2;
       if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
         correlated.edges.push_back(std::move(path_edge));
@@ -203,16 +203,16 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     if(heading_filter(closest_edge, closest_edge_info, closest_point, location.heading_))
       heading_filtered.emplace_back(closest_edge_id, length_ratio, std::get<0>(closest_point), side);
     else
-      correlated.edges.push_back(PathLocation::PathEdge{closest_edge_id, length_ratio, std::get<0>(closest_point), side});
+      correlated.edges.push_back(PathLocation::PathEdge{closest_edge_id, length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), side});
     //correlate its evil twin
     const GraphTile* other_tile;
     auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id, other_tile);
     const DirectedEdge* other_edge;
     if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
       if(heading_filter(other_edge, closest_edge_info, closest_point, location.heading_))
-        heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), flip_side(side));
+        heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), flip_side(side));
       else
-        correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), flip_side(side)});
+        correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), flip_side(side)});
     }
 
     //if we have nothing because of heading we'll just ignore it

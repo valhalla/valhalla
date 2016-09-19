@@ -162,11 +162,12 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     throw std::runtime_error("Found wrong point");
 
   valhalla::baldr::PathLocation answer(location);
-  for(const auto& expected_edge : expected_edges)
-    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist, expected_point, expected_edge.sos});
-  if(!(answer == p)) {
-    throw std::runtime_error("Did not find expected edges");
+  for(const auto& expected_edge : expected_edges) {
+    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
+      expected_point, location.latlng_.Distance(expected_point), expected_edge.sos});
   }
+  if(!(answer == p))
+    throw std::runtime_error("Did not find expected edges");
 }
 
 void TestEdgeSearch() {
@@ -176,46 +177,46 @@ void TestEdgeSearch() {
   using PE = PathLocation::PathEdge;
 
   //snap to node searches
-  search({a.second}, true, a.second, { PE{{t, l, 2}, 0, a.second, S::NONE}, PE{{t, l, 3}, 0, a.second, S::NONE}, PE{{t, l, 4}, 0, a.second, S::NONE} });
-  search({d.second}, true, d.second, { PE{{t, l, 7}, 0, d.second, S::NONE}, PE{{t, l, 8}, 0, d.second, S::NONE}, PE{{t, l, 9}, 0, d.second, S::NONE} });
+  search({a.second}, true, a.second, { PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE}, PE{{t, l, 4}, 0, a.second, 0, S::NONE} });
+  search({d.second}, true, d.second, { PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE}, PE{{t, l, 9}, 0, d.second, 0, S::NONE} });
   //snap to end of edge degenerates to node searches
   search({{d.second.first + .049, d.second.second}}, true, d.second,
-    { PE{{t, l, 7}, 0, d.second, S::NONE}, PE{{t, l, 8}, 0, d.second, S::NONE}, PE{{t, l, 9}, 0, d.second, S::NONE}, //leaving edges
-      PE{{t, l, 0}, 1, d.second, S::NONE}, PE{{t, l, 3}, 1, d.second, S::NONE}, PE{{t, l, 6}, 1, d.second, S::NONE}  //arriving edges
+    { PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE}, PE{{t, l, 9}, 0, d.second, 0, S::NONE}, //leaving edges
+      PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE}, PE{{t, l, 6}, 1, d.second, 0, S::NONE}  //arriving edges
     });
 
   //mid point search
   auto answer = a.second.MidPoint(d.second);
-  search({a.second.MidPoint(d.second)}, false, a.second.MidPoint(d.second), { PE{{t, l, 3}, .5f, answer, S::NONE}, PE{{t, l, 8}, .5f, answer, S::NONE} });
+  search({a.second.MidPoint(d.second)}, false, a.second.MidPoint(d.second), { PE{{t, l, 3}, .5f, answer, 0, S::NONE}, PE{{t, l, 8}, .5f, answer, 0, S::NONE} });
 
   //set a point 40% along the edge runs with the shape direction
   answer = a.second.AffineCombination(.6f, .4f, d.second);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
-  search({answer}, false, answer, { PE{{t, l, 3}, ratio, answer, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, S::NONE} });
+  search({answer}, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
 
   //with heading
   Location x{answer};
   x.heading_ = 90;
-  search(x, false, answer, { PE{{t, l, 3}, ratio, answer, S::NONE} });
+  search(x, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE} });
   x.heading_ = 0;
-  search(x, false, answer, { PE{{t, l, 3}, ratio, answer, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, S::NONE} });
+  search(x, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
   x.heading_ = 269;
-  search(x, false, answer, { PE{{t, l, 8}, 1.f - ratio, answer, S::NONE} });
+  search(x, false, answer, { PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
 
   //check for side of street by offsetting the test point from the line orthogonally
   auto ortho = (d.second - a.second).GetPerpendicular(true).Normalize() * .01;
   PointLL test{answer.first + ortho.x(), answer.second + ortho.y()};
-  search({test}, false, answer, { PE{{t, l, 3}, ratio, answer, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, S::LEFT} });
+  search({test}, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT} });
 
   //set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
-  search({answer}, false, answer, { PE{{t, l, 0}, ratio, answer, S::NONE}, PE{{t, l, 7}, 1.f - ratio, answer, S::NONE} });
+  search({answer}, false, answer, { PE{{t, l, 0}, ratio, answer, 0, S::NONE}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::NONE} });
 
   //check for side of street by offsetting the test point from the line orthogonally
   ortho = (d.second - b.second).GetPerpendicular(false).Normalize() * .01;
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
-  search({test}, false, answer, { PE{{t, l, 0}, ratio, answer, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, S::RIGHT} });
+  search({test}, false, answer, { PE{{t, l, 0}, ratio, answer, 0, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT} });
 
   //TODO: add more tests that are not actually on the geometry
 }
