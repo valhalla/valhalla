@@ -44,7 +44,7 @@ class EdgeLabel {
             const TravelMode mode, const uint32_t path_distance);
 
   /**
-   * Constructor with values - used in bidrectional A*.
+   * Constructor with values - used in bidirectional A*.
    * @param predecessor  Index into the edge label list for the predecessor
    *                     directed edge in the shortest path.
    * @param edgeid       Directed edge.
@@ -58,13 +58,15 @@ class EdgeLabel {
    *                     to be carried across different hierarchy levels.
    * @param mode         Mode of travel along this edge.
    * @param tc           Transition cost entering this edge.
+   * @param not_thru_pruning  Is not thru pruning enabled.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& oppedgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
             const uint32_t restrictions, const uint32_t opp_local_idx,
-            const TravelMode mode, const Cost& tc);
+            const TravelMode mode, const Cost& tc,
+            bool not_thru_pruning);
 
   /**
    * Constructor with values.  Used for multi-modal path.
@@ -112,13 +114,14 @@ class EdgeLabel {
    * @param mode          Mode of travel along this edge.
    * @param tc            Transition cost entering this edge.
    * @param path_distance Accumulated path distance.
+   * @param not_thru_pruning  Is not thru pruning enabled.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& oppedgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const Cost& tc,
-            const uint32_t path_distance);
+            const uint32_t path_distance, bool not_thru_pruning);
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -313,6 +316,12 @@ class EdgeLabel {
   baldr::RoadClass classification() const;
 
   /**
+   * Should not thru pruning be enabled on this path?
+   * @return Returns true if not thru pruning should be enabled.
+   */
+  bool not_thru_pruning() const;
+
+  /**
    * Get the transit trip Id.
    * @return   Returns the transit trip Id of the prior edge.
    */
@@ -436,8 +445,10 @@ class EdgeLabel {
 
   // tripid_:          Transit trip Id.
   // classification_:  Road classification
-  uint32_t tripid_           : 29;
+  // not_thru_pruning_:Is not thru pruning enabled?
+  uint32_t tripid_           : 28;
   uint32_t classification_   : 3;
+  uint32_t not_thru_pruning_ : 1;
 
   // Block Id and prior operator (index to an internal mapping).
   // 0 indicates no prior.
