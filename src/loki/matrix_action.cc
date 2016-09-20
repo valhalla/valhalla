@@ -52,7 +52,7 @@ namespace {
         }
 
         if (path_distance > matrix_max_distance)
-          throw std::runtime_error("Path distance exceeds the max distance limit");
+          throw valhalla_exception_t{400, 164};
         }
      }
   }
@@ -69,7 +69,7 @@ namespace valhalla {
       //we require locations
       if (!request_locations) {
         if (!request_sources || !request_targets) {
-          throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+          throw valhalla_exception_t{400, 112};
         }
       }
 
@@ -77,7 +77,7 @@ namespace valhalla {
       //deprecated way of specifying
       if (!request_sources && !request_targets) {
         if (request_locations->size() < 2)
-          throw std::runtime_error("Insufficient number of locations provided");
+          throw valhalla_exception_t{400, 130};
 
         //create new sources and targets ptree from locations
         boost::property_tree::ptree sources_child, targets_child;
@@ -115,7 +115,7 @@ namespace valhalla {
           sources.back().heading_.reset();
         }
         catch (...) {
-          throw std::runtime_error("Failed to parse source");
+          throw valhalla_exception_t{400, 141};
         }
       }
       for(const auto& target : *request_targets) {
@@ -124,15 +124,15 @@ namespace valhalla {
           targets.back().heading_.reset();
         }
         catch (...) {
-          throw std::runtime_error("Failed to parse target");
+          throw valhalla_exception_t{400, 142};
         }
       }
       if(sources.size() < 1)
-         throw std::runtime_error("Insufficient number of sources provided");
+        throw valhalla_exception_t{400, 131};
       valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
 
       if(targets.size() < 1)
-        throw std::runtime_error("Insufficient number of targets provided");
+        throw valhalla_exception_t{400, 132};
       valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
 
       //no locations!
@@ -145,12 +145,12 @@ namespace valhalla {
       init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal")
-        return jsonify_error(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing", request_info);
+        return jsonify_error({400, 151, ":" + ACTION_TO_STRING.find(action)->second}, request_info);
 
       //check that location size does not exceed max.
       auto max = max_locations.find("sources_to_targets")->second;
       if (sources.size() > max || targets.size() > max)
-        throw std::runtime_error("Exceeded max locations of " + std::to_string(max) + ".");
+        throw valhalla_exception_t{400, 160, ":" + std::to_string(max)};
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
@@ -194,7 +194,7 @@ namespace valhalla {
         }
       }
       if(!connected)
-        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
+        throw valhalla_exception_t{400, 180};
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
       std::stringstream stream;

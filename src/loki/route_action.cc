@@ -17,7 +17,7 @@ namespace {
   void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
     if (location_count > max_locations)
-      throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations) + ".");
+      throw valhalla_exception_t{400, 160, ":" + std::to_string(max_locations)};
   }
 
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, float max_distance){
@@ -28,7 +28,7 @@ namespace {
       auto path_distance = std::prev(location)->latlng_.Distance(location->latlng_);
       max_distance-=path_distance;
       if (max_distance < 0)
-        throw std::runtime_error("Path distance exceeds the max distance limit");
+        throw valhalla_exception_t{400, 164};
 
       valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
@@ -41,7 +41,7 @@ namespace valhalla {
     void loki_worker_t::init_route(const boost::property_tree::ptree& request) {
       parse_locations(request);
       if(locations.size() < 2)
-        throw std::runtime_error("Insufficient number of locations provided");
+        throw valhalla_exception_t{400, 130};
       parse_costing(request);
     }
 
@@ -59,14 +59,12 @@ namespace valhalla {
             request.get<int>("costing_options.pedestrian.transit_transfer_max_distance", min_transit_walking_dis);
 
         if (transit_start_end_max_distance < min_transit_walking_dis || transit_start_end_max_distance > max_transit_walking_dis) {
-          throw std::runtime_error("Outside the valid walking distance at the beginning or end of a multimodal route.  Min: " +
-                                   std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
-                                   " (Meters)");
+          throw valhalla_exception_t{400, 165, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                   " (Meters)"};
         }
         if (transit_transfer_max_distance < min_transit_walking_dis || transit_transfer_max_distance > max_transit_walking_dis) {
-          throw std::runtime_error("Outside the valid walking distance between stops of a multimodal route.  Min: " +
-                                   std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
-                                   " (Meters)");
+          throw valhalla_exception_t{400, 166, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+                                   " (Meters)"};
         }
       }
 
@@ -82,7 +80,7 @@ namespace valhalla {
       if (date_type) {
         //not yet on this
         if(date_type == 2 && (costing == "multimodal" || costing == "transit"))
-          return jsonify_error(501, "Not Implemented", "Arrive by for multimodal not implemented yet", request_info);
+          return jsonify_error({501, 152}, request_info);
 
         //what kind
         switch(*date_type) {
@@ -91,20 +89,20 @@ namespace valhalla {
           break;
         case 1: //depart
           if(!date_time_value)
-            throw std::runtime_error("Date and time required for origin for date_type of depart at.");
+            throw valhalla_exception_t{400, 170};
           if (!DateTime::is_iso_local(*date_time_value))
-            throw std::runtime_error("Date and time is invalid.  Format is YYYY-MM-DDTHH:MM");
+            throw valhalla_exception_t{400, 172};
           request.get_child("locations").front().second.add("date_time", *date_time_value);
           break;
         case 2: //arrive
           if(!date_time_value)
-            throw std::runtime_error("Date and time required for destination for date_type of arrive by");
+            throw valhalla_exception_t{400, 171};
           if (!DateTime::is_iso_local(*date_time_value))
-            throw std::runtime_error("Date and time is invalid.  Format is YYYY-MM-DDTHH:MM");
+            throw valhalla_exception_t{400, 172};
           request.get_child("locations").back().second.add("date_time", *date_time_value);
           break;
         default:
-          throw std::runtime_error("Invalid date_type");
+          throw valhalla_exception_t{400, 173};
           break;
         }
       }
@@ -135,7 +133,7 @@ namespace valhalla {
         }
       }
       if(!connected)
-        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
+        throw valhalla_exception_t{400, 180};
 
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);

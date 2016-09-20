@@ -5,7 +5,9 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/sif/dynamiccost.h>
+
 
 #include <functional>
 
