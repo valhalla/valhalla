@@ -32,6 +32,7 @@ namespace {
                   (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
               },
               {"percent_along", json::fp_t{edge.dist, 5} },
+              {"score", json::fp_t{edge.score, 1}},
               {"edge_id", edge.id.json()},
               {"edge", directed_edge->json()},
               {"edge_info", edge_info->json()},
