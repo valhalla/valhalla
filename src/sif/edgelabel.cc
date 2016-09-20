@@ -1,8 +1,6 @@
 #include <string.h>
 #include "sif/edgelabel.h"
 
-#include <valhalla/midgard/logging.h>
-
 using namespace valhalla::baldr;
 
 namespace valhalla {
