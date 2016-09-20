@@ -119,12 +119,12 @@ void CountryAccess(const std::string& config_file) {
       // trunk that has pedestrian and bike access.
       } else if (e_offset->wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess)))
+          if (forward != (kAutoAccess | kPedestrianAccess | kBicycleAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
           if (reverse != kPedestrianAccess)
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess)))
+          if (reverse != (kAutoAccess | kPedestrianAccess | kBicycleAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
           if (forward != kPedestrianAccess)
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
@@ -182,12 +182,12 @@ void CountryAccess(const std::string& config_file) {
       // trunk should have no kPedestrianAccess
       } else if (e_offset->wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess | kPedestrianAccess)))
+          if (forward != (kAutoAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
           if (reverse != 0)
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAllAccess & ~(kEmergencyAccess | kTaxiAccess | kHOVAccess | kBicycleAccess | kPedestrianAccess)))
+          if (reverse != (kAutoAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
           if (forward != 0)
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
