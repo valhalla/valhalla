@@ -229,7 +229,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
   CheckForwardConnections(index, pred, n);
 
   // Prune path if predecessor is not a through edge
-  if (pred.not_thru()) {
+  if (pred.not_thru() && pred.not_thru_pruning()) {
     return;
   }
 
@@ -280,7 +280,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
                         directededge, pred.cost(), pred.restrictions(),
                         pred.opp_local_idx(), mode_,
                         Cost(pred.transition_cost(), pred.transition_secs()),
-                        pred.path_distance());
+                        pred.path_distance(), pred.not_thru_pruning());
       }
       continue;
     }
@@ -333,7 +333,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
     edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
     edgelabels.emplace_back(predindex, edgeid, oppedge, directededge,
                     newcost, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, tc, distance);
+                    directededge->opp_local_idx(), mode_, tc, distance,
+                    (pred.not_thru_pruning() || !directededge->not_thru()));
   }
 }
 
@@ -477,7 +478,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Prune path if predecessor is not a through edge
-  if (pred.not_thru()) {
+  if (pred.not_thru() && pred.not_thru_pruning()) {
     return;
   }
 
@@ -537,7 +538,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
                         directededge, pred.cost(), pred.restrictions(),
                         pred.opp_local_idx(), mode_,
                         Cost(pred.transition_cost(), pred.transition_secs()),
-                        pred.path_distance());
+                        pred.path_distance(), pred.not_thru_pruning());
       }
       continue;
     }
@@ -597,7 +598,8 @@ void CostMatrix::BackwardSearch(const uint32_t index,
     edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
     edgelabels.emplace_back(predindex, edgeid, oppedge,
        directededge, newcost, directededge->restrictions(),
-       directededge->opp_local_idx(), mode_, tc, distance);
+       directededge->opp_local_idx(), mode_, tc, distance,
+       (pred.not_thru_pruning() || !directededge->not_thru()));
     targets_[edgeid].push_back(index);
   }
 }
@@ -664,7 +666,7 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
       source_adjacency_[index]->add(source_edgelabel_[index].size(), cost.cost);
       EdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
                            directededge->restrictions(),
-                           directededge->opp_local_idx(), mode_, ec, d);
+                           directededge->opp_local_idx(), mode_, ec, d, false);
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
@@ -746,7 +748,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       target_adjacency_[index]->add(target_edgelabel_[index].size(), cost.cost);
       EdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
               opp_dir_edge->restrictions(), opp_dir_edge->opp_local_idx(),
-              mode_, ec, d);
+              mode_, ec, d, false);
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
