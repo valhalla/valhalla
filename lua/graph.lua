@@ -206,6 +206,24 @@ foot = {
 ["footway"] = "true"
 }
 
+wheelchair = {
+["no"] = "false",
+["yes"] = "true",
+["designated"] = "true",
+["limited"] = "true",
+["official"] = "true",
+["destination"] = "true",
+["public"] = "true",
+["permissive"] = "true",
+["only"] = "true",
+["private"] = "true",
+["impassable"] = "false",
+["partial"] = "false",
+["bad"] = "false",
+["half"] = "false",
+["assisted"] = "true"
+}
+
 bus = {
 ["no"] = "false",
 ["yes"] = "true",
@@ -999,6 +1017,7 @@ function filter_tags_generic(kv)
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
   kv["surface"] = kv["surface"]
+  kv["wheelchair"] = wheelchair[kv["wheelchair"]]
 
   --lower the default speed for tracks
   if kv["highway"] == "track" then
