@@ -15,8 +15,9 @@
 #include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/json.h>
-#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/errorcode_util.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
 #include "skadi/service.h"
@@ -55,7 +56,7 @@ namespace {
       }
     }
     catch(...) {
-      throw std::runtime_error("Failed to parse json request");
+      throw valhalla_exception_t{400, 300};
     }
 
     //throw the query params into the ptree
@@ -125,13 +126,14 @@ namespace {
     return array;
   }
 
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp, const boost::optional<std::string>& extra=boost::none) {
 
     //build up the json map
     auto json_error = json::map({});
-    json_error->emplace("error", error);
-    json_error->emplace("status", status);
-    json_error->emplace("code", code);
+    json_error->emplace("error", std::string(exception.error_code_message + (exception.extra ? *exception.extra : "")));
+    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
+    json_error->emplace("status", exception.status_code_body);
+    json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
 
     //serialize it
     std::stringstream ss;
@@ -142,7 +144,7 @@ namespace {
       ss << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
@@ -173,7 +175,7 @@ namespace valhalla {
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend())
-          return jsonify_error(404, "Not Found", "Try any of: '/height'", info, jsonp);
+          return jsonify_error({404, 301}, info, jsonp);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
@@ -185,7 +187,7 @@ namespace valhalla {
             result = elevation(request_pt, info);
             break;
           default:
-            return jsonify_error(501, "Not Implemented", "Not Implemented", info, jsonp);
+            return jsonify_error({501, 302}, info, jsonp);
         }
         //get processing time for skadi
         auto e = std::chrono::system_clock::now();
@@ -203,7 +205,7 @@ namespace valhalla {
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
+        return jsonify_error({400, 399}, info, jsonp, std::string(e.what()));
       }
     }
 
@@ -231,21 +233,21 @@ namespace valhalla {
           shape = midgard::decode<std::list<midgard::PointLL> >(*encoded_polyline);
         }//no shape
         else
-          throw std::runtime_error("No shape provided");
+          throw valhalla_exception_t{400, 310};
 
         //not enough shape
         if (shape.size() < 1)
-          throw std::runtime_error("Insufficient shape provided");
+          throw valhalla_exception_t{400, 311};
       }
       catch (...) {
-        throw std::runtime_error("Insufficiently specified required parameter 'shape' or 'encoded_polyline'");
+        throw valhalla_exception_t{400, 312};
       }
 
       //resample the shape
       bool resampled = false;
       if(resample_distance) {
         if(*resample_distance < min_resample)
-          throw std::runtime_error("'resample_distance' must be >= " + std::to_string(min_resample) + " meters");
+          throw valhalla_exception_t{400, 313, " " + std::to_string(min_resample) + " meters"};
         if(shape.size() > 1) {
           //resample the shape but make sure to keep the first and last shapepoint
           auto last = shape.back();
@@ -260,8 +262,8 @@ namespace valhalla {
 
       //there are limits though
       if(shape.size() > max_shape) {
-        throw std::runtime_error("Too many shape points (" + std::to_string(shape.size()) +
-            (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape));
+        throw valhalla_exception_t{400, 314, " (" + std::to_string(shape.size()) +
+            (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape)};
       }
     }
 
