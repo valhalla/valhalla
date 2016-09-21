@@ -12,9 +12,32 @@ namespace sif {
 // Default options/values
 namespace {
 
-// User propensity to use ferries. Range of values from 0 (avoid ferries) to
-// 1 (totally comfortable riding on ferries).
-constexpr float kDefaultUseFerryFactor = 1.0f;
+// Maximum route distances
+constexpr uint32_t kMaxDistanceFoot        = 100000; // 100 km
+constexpr uint32_t kMaxDistanceWheelchair  = 10000;  // 10 km
+
+// Default speeds
+constexpr float kDefaultSpeedFoot          = 5.1f;   // 3.16 MPH
+constexpr float kDefaultSpeedWheelchair    = 4.0f;   // 2.5  MPH  TODO
+
+// Penalty to take steps
+constexpr float kDefaultStepPenaltyFoot       = 30.0f;   // 30 seconds
+constexpr float kDefaultStepPenaltyWheelchair = 600.0f;  // 10 minutes
+
+// Maximum grade30
+constexpr uint32_t kDefaultMaxGradeFoot = 90;
+constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
+
+// Other defaults (not dependent on type)
+constexpr float kModeWeight             = 1.5f;   // Favor this mode?
+constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
+constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
+constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
+constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
+constexpr float kDefaultDrivewayFactor  = 5.0f;   // Avoid driveways
+constexpr float kDefaultFerryCost               = 300.0f; // Seconds
+constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
+constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
@@ -26,28 +49,17 @@ constexpr uint32_t kTransitStartEndMaxDistance    = 2415;   // 1.5 miles
 // distance you are willing to walk between transfers.
 constexpr uint32_t kTransitTransferMaxDistance   = 805;   // 0.5 miles
 
-// Maximum distance of a walking route
-constexpr uint32_t kMaxDistance        = 100000; // 100 km
-
-constexpr float kModeWeight             = 1.5f;   // Favor this mode?
-constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
-constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
-constexpr float kDefaultWalkingSpeed    = 5.1f;   // 3.16 MPH
-constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
-constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
-constexpr float kDefaultDrivewayFactor  = 5.0f;   // Avoid driveways
-constexpr float kDefaultStepPenalty     = 30.0f;  // 30 seconds
-constexpr float kDefaultFerryCost               = 300.0f; // Seconds
-constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
-constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+// User propensity to use ferries. Range of values from 0 (avoid ferries) to
+// 1 (totally comfortable riding on ferries).
+constexpr float kDefaultUseFerryFactor = 1.0f;
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 8.0f * 3600.0f; // 8 hours
 
-// Minimum and maximum average walking speed (to validate input).
-constexpr float kMinWalkingSpeed = 0.5f;
-constexpr float kMaxWalkingSpeed = 25.0f;
+// Minimum and maximum average pedestrian speed (to validate input).
+constexpr float kMinPedestrianSpeed = 0.5f;
+constexpr float kMaxPedestrianSpeed = 25.0f;
 }
 
 /**
@@ -206,33 +218,41 @@ class PedestrianCost : public DynamicCost {
    */
   virtual const NodeFilter GetNodeFilter() const {
     //throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node){
+    return [this](const baldr::NodeInfo* node){
       return !(node->access() & kPedestrianAccess);
     };
   }
 
  private:
-  // Maximum walking distance
+  // Type: foot (default), wheelchair, etc.
+  std::string type_;
+  uint32_t access_mask_;
+
+  // Maximum pedestrian distance.
   uint32_t max_distance_;
 
   // This is the weight for this mode.  The higher the value the more the
   // mode is favored.
   float mode_weight_;
 
-  // Maximum walking distance in meters for multimodal routes.
+  // Maximum pedestrian distance in meters for multimodal routes.
   // Maximum distance at the beginning or end of a multimodal route
   // that you are willing to travel for this mode.  In this case,
   // it is the max walking distance.
   uint32_t transit_start_end_max_distance_;
 
-  // Maximum transfer, walking distance in meters for multimodal routes.
+  // Maximum transfer, distance in meters for multimodal routes.
   // Maximum transfer distance between stops that you are willing
-  // to travel for this mode.  In this case, it is the max walking
-  // distance you are willing to walk between transfers.
+  // to travel for this mode.  In this case, it is the max distance
+  // you are willing to walk between transfers.
   uint32_t transit_transfer_max_distance_;
 
-  float walking_speed_;   // Walking speed (default to 5.1 km / hour)
-  float speedfactor_;     // Speed factor for costing. Based on walking speed.
+  // Minimal surface type usable by the pedestrian type
+  Surface minimal_allowed_surface_;
+
+  uint32_t max_grade_;    // Maximum grade (percent).
+  float speed_;           // Pedestrian speed.
+  float speedfactor_;     // Speed factor for costing. Based on speed.
   float walkway_factor_;  // Factor for favoring walkways and paths.
   float alley_factor_;    // Avoid alleys factor.
   float driveway_factor_; // Avoid driveways factor.
@@ -250,18 +270,53 @@ class PedestrianCost : public DynamicCost {
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
-  allow_transit_connections_      = false;
+  allow_transit_connections_ = false;
+
+  // Get the type (defaults to foot)
+  type_ = pt.get<std::string>("type", "foot");
+
+  // Set type specific defaults, override with URL inputs
+  if (type_ == "wheelchair") {
+    access_mask_ = kWheelchairAccess;
+    max_distance_  = pt.get<uint32_t>("max_distance", kMaxDistanceWheelchair);
+    speed_ = pt.get<float>("walking_speed", kDefaultSpeedWheelchair);
+    step_penalty_  = pt.get<float>("step_penalty", kDefaultStepPenaltyWheelchair);
+    walkway_factor_ = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+    max_grade_ = pt.get<float>("max_grade", kDefaultMaxGradeWheelchair);
+    minimal_allowed_surface_ = Surface::kCompacted;
+
+    // Validate speed (make sure it is in the accepted range)
+    if (speed_ < kMinPedestrianSpeed || speed_ > kMaxPedestrianSpeed) {
+      LOG_WARN("Outside valid pedestrian speed range " +
+                std::to_string(speed_) + ": using default");
+      speed_ = kDefaultSpeedWheelchair;
+    }
+  } else {
+    // Assume type = foot
+    access_mask_ = kPedestrianAccess;
+    max_distance_  = pt.get<uint32_t>("max_distance", kMaxDistanceFoot);
+    speed_ = pt.get<float>("walking_speed", kDefaultSpeedFoot);
+    step_penalty_  = pt.get<float>("step_penalty", kDefaultStepPenaltyFoot);
+    walkway_factor_ = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+    max_grade_ = pt.get<float>("max_grade", kDefaultMaxGradeFoot);
+    minimal_allowed_surface_ = Surface::kPath;
+
+    // Validate speed (make sure it is in the accepted range)
+    if (speed_ < kMinPedestrianSpeed || speed_ > kMaxPedestrianSpeed) {
+     LOG_WARN("Outside valid pedestrian speed range " +
+               std::to_string(speed_) + ": using default");
+     speed_ = kDefaultSpeedFoot;
+    }
+  }
+
   mode_weight_                    = pt.get<float>("mode_weight", kModeWeight);
-  max_distance_                   = pt.get<uint32_t>("max_distance", kMaxDistance);
   transit_start_end_max_distance_ = pt.get<uint32_t>("transit_start_end_max_distance",
                                                      kTransitStartEndMaxDistance);
   transit_transfer_max_distance_  = pt.get<uint32_t>("transit_transfer_max_distance",
                                                      kTransitTransferMaxDistance);
-  walking_speed_                  = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
-  walkway_factor_                 = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
   alley_factor_                   = pt.get<float>("alley_factor", kDefaultAlleyFactor);
   driveway_factor_                = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
-  step_penalty_                   = pt.get<float>("step_penalty", kDefaultStepPenalty);
+
   gate_penalty_                   = pt.get<float>("gate_penalty", kDefaultGatePenalty);
   maneuver_penalty_               = pt.get<float>("maneuver_penalty",
                                                   kDefaultManeuverPenalty);
@@ -292,15 +347,8 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     ferry_weight_  = 1.0f - (use_ferry - 0.5f);
   }
 
-  // Validate speed (make sure it is in the accepted range)
-  if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
-    LOG_WARN("Outside valid walking speed range " +
-              std::to_string(walking_speed_) + ": using default");
-    walking_speed_ = kDefaultWalkingSpeed;
-  }
-
   // Set the speed factor (to avoid division in costing)
-  speedfactor_ = (kSecPerHour * 0.001f) / walking_speed_;
+  speedfactor_ = (kSecPerHour * 0.001f) / speed_;
 }
 
 // Destructor
@@ -329,19 +377,19 @@ float PedestrianCost::GetModeWeight() {
   return mode_weight_;
 }
 
-// Check if access is allowed on the specified edge. Disallow if no pedestrian
-// access. Do not allow if surface is impassable. Disallow edges
-// where max. walking distance will be exceeded.
+// Check if access is allowed on the specified edge. Disallow if no
+// access for this pedestrian type, if surface type exceeds (worse than)
+// the minimum allowed surface type, or if max grade is exceeded.
+// Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
-  // Disallow if no pedestrian access, surface marked as impassible,
-  // or if max walking distance is exceeded.
-  if (!(edge->forwardaccess() & kPedestrianAccess) ||
-       (edge->surface() == Surface::kImpassable) ||
+  if (!(edge->forwardaccess() & access_mask_) ||
+       (edge->surface() > minimal_allowed_surface_) ||
+ //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
   }
@@ -362,12 +410,12 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid) const {
   // TODO - obtain and check the access restrictions.
 
-  // Disallow if no pedestrian access or surface marked as impassible.
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
-  if (!(opp_edge->forwardaccess() & kPedestrianAccess) ||
-        opp_edge->surface() == Surface::kImpassable ||
+  if (!(opp_edge->forwardaccess() & access_mask_) ||
+       (opp_edge->surface() > minimal_allowed_surface_) ||
+ //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
         opp_edge->use() == Use::kTransitConnection) {
     return false;
   }
@@ -376,7 +424,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 // Check if access is allowed at the specified node.
 bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kPedestrianAccess);
+  return (node->access() & access_mask_);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
