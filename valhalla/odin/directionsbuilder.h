@@ -8,6 +8,7 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/baldr/errorcode_util.h>
 
 namespace valhalla {
 namespace odin {

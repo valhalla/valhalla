@@ -69,7 +69,7 @@ TripDirections DirectionsBuilder::Build(
     const DirectionsOptions& directions_options, TripPath& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
-    throw std::runtime_error("Trip path does not have any nodes");
+    throw valhalla_exception_t{400, 210};
   }
 
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);

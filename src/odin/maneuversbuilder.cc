@@ -18,6 +18,7 @@
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 #include <valhalla/baldr/verbal_text_formatter_factory.h>
+#include <valhalla/baldr/errorcode_util.h>
 
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"
@@ -113,7 +114,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 //    LOG_TRACE(std::string("shape lng/lat[") + std::to_string(i++) + "]=" + std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
 //  }
   if (shape.empty() || (trip_path_->node_size() < 2))
-    throw std::runtime_error("Error - No shape or invalid node count");
+    throw valhalla_exception_t{400, 213};
   const auto& orig = trip_path_->GetOrigin();
   const auto& dest = trip_path_->GetDestination();
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
@@ -136,18 +137,18 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
 
   // Validate trip path node list
   if (trip_path_->node_size() < 1) {
-    throw std::runtime_error("Trip path does not have any nodes");
+    throw valhalla_exception_t{400, 210};
   }
 
   // Check for a single node
   if (trip_path_->node_size() == 1) {
     // TODO - handle origin and destination are the same
-    throw std::runtime_error("Trip path has only one node");
+    throw valhalla_exception_t{400, 211};
   }
 
   // Validate location count
   if (trip_path_->location_size() < 2) {
-    throw std::runtime_error("Trip must have at least 2 locations");
+    throw valhalla_exception_t{400, 212};
   }
 
   LOG_INFO(
@@ -1436,7 +1437,7 @@ TripDirections_Maneuver_CardinalDirection ManeuversBuilder::DetermineCardinalDir
   } else if ((heading > 293) && (heading < 337)) {
     return TripDirections_Maneuver_CardinalDirection_kNorthWest;
   }
-  throw std::runtime_error("Turn degree out of range for cardinal direction.");
+  throw valhalla_exception_t{400, 220};
 }
 
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
