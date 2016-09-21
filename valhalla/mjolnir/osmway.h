@@ -628,6 +628,30 @@ struct OSMWay {
   bool hov() const;
 
   /**
+   * Set wheelchair flag.
+   * @param  wheelchair   Is this wheelchair?
+   */
+  void set_wheelchair(const bool wheelchair);
+
+  /**
+   * Get the wheelchair flag.
+   * @return  Returns wheelchair flag.
+   */
+  bool wheelchair() const;
+
+  /**
+   * Set wheelchair_tag flag.
+   * @param  wheelchair_tag   Did the user set the wheelchair_tag?
+   */
+  void set_wheelchair_tag(const bool wheelchair_tag);
+
+  /**
+   * Get the wheelchair_tag flag.
+   * @return  Returns wheelchair_tag flag.
+   */
+  bool wheelchair_tag() const;
+
+  /**
    * Set drive_on_right flag.
    * @param  drive_on_right   Is a country that we drive on the right?
    */
@@ -860,7 +884,9 @@ struct OSMWay {
       uint32_t forward_tagged_lanes   :1;
       uint32_t backward_tagged_lanes  :1;
       uint32_t truck_route            :1;
-      uint32_t spare                  :3;
+      uint32_t wheelchair             :1;
+      uint32_t wheelchair_tag         :1;
+      uint32_t spare                  :1;
     } fields;
     uint32_t v;
   };
