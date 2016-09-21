@@ -49,7 +49,7 @@ class CostFactory {
                     const boost::property_tree::ptree& config) const {
     auto itr = factory_funcs_.find(name);
     if (itr == factory_funcs_.end()) {
-      throw std::runtime_error("Please provide a valid costing: " + name);
+      throw std::runtime_error("No costing method found for '" + name + "'");
     }
     //create the cost using the function pointer
     return itr->second(config);
