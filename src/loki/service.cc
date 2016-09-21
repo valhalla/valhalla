@@ -187,24 +187,17 @@ namespace valhalla {
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
-        max_locations.emplace(kv.first, config.get<size_t>(kv.first + ".max_locations"));
-        max_distance.emplace(kv.first, config.get<float>(kv.first + ".max_distance"));
+        if (kv.first != "skadi")
+          max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
+        if (kv.first != "skadi" && kv.first != "isochrone")
+          max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
+      //this should never happen
+      if (max_locations.empty())
+        throw std::runtime_error("Missing max_locations configuration.");
+      if (max_distance.empty())
+        throw std::runtime_error("Missing max_distance configuration.");
 
-      auto skadi_config = config.get_child_optional("service_limits.skadi");
-      auto isochrone_config = config.get_child_optional("service_limits.isochrone");
-      if (skadi_config) {
-        //do nothing
-      } else {
-        if (max_locations.empty())
-          throw std::runtime_error("Missing max_locations configuration.");
-      }
-      if (skadi_config || isochrone_config) {
-        //do nothing
-      } else {
-        if (max_distance.empty())
-          throw std::runtime_error("Missing max_distance configuration.");
-      }
       min_transit_walking_dis =
         config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
       max_transit_walking_dis =
