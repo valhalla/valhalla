@@ -145,28 +145,13 @@ namespace valhalla {
       }
     }
 
-    // Get the costing options. Get the base options from the config and the
-    // options for the specified costing method. Merge in any request costing
-    // options.
+    // Get the costing options if in the config or get the empty default.
+    // Creates the cost in the cost factory
     valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const boost::property_tree::ptree& request,
                                           const std::string& costing) {
       std::string method_options = "costing_options." + costing;
-      auto config_costing = config.get_child_optional(method_options);
-      if(!config_costing)
-        throw std::runtime_error("No costing method found for '" + costing + "'");
-      auto request_costing = request.get_child_optional(method_options);
-      if(request_costing) {
-        // If the request has any options for this costing type, merge the 2
-        // costing options - override any config options that are in the request.
-        // and add any request options not in the config.
-        boost::property_tree::ptree overridden = *config_costing;
-        for (const auto& r : *request_costing) {
-          overridden.put_child(r.first, r.second);
-        }
-        return factory.Create(costing, overridden);
-      }
-      // No options to override so use the config options verbatim
-      return factory.Create(costing, *config_costing);
+      auto costing_options = request.get_child(method_options, {});
+      return factory.Create(costing, costing_options);
     }
 
     std::string thor_worker_t::parse_costing(const boost::property_tree::ptree& request) {
