@@ -525,9 +525,29 @@ void OSMWay::set_hov(const bool hov) {
   attributes_.fields.hov = hov;
 }
 
-// Get the seasonal flag.
+// Get the hov flag.
 bool OSMWay::hov() const {
   return attributes_.fields.hov;
+}
+
+// Set wheelchair flag.
+void OSMWay::set_wheelchair(const bool wheelchair) {
+  attributes_.fields.wheelchair = wheelchair;
+}
+
+// Get the wheelchair flag.
+bool OSMWay::wheelchair() const {
+  return attributes_.fields.wheelchair;
+}
+
+// Set wheelchair_tag flag.
+void OSMWay::set_wheelchair_tag(const bool wheelchair_tag) {
+  attributes_.fields.wheelchair_tag = wheelchair_tag;
+}
+
+// Get the wheelchair_tag flag.
+bool OSMWay::wheelchair_tag() const {
+  return attributes_.fields.wheelchair_tag;
 }
 
 // Set drive_on_right flag.

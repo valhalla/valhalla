@@ -109,6 +109,12 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
     forward_access |= kPedestrianAccess;
     reverse_access |= kPedestrianAccess;
   }
+  if (way.use() != Use::kSteps &&
+      ((way.wheelchair_tag() && way.wheelchair()) ||
+          (!way.wheelchair_tag() && way.pedestrian()))) {
+      forward_access |= kWheelchairAccess;
+      reverse_access |= kWheelchairAccess;
+  }
 
   // Set access modes
   set_forwardaccess(forward_access);

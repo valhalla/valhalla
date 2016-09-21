@@ -317,6 +317,11 @@ struct graph_callback : public OSMPBF::Callback {
         has_user_tags = true;
       }
 
+      else if (tag.first == "wheelchair") {
+        w.set_wheelchair_tag(true);
+        w.set_wheelchair(tag.second == "true" ? true : false);
+      }
+
       else if (tag.first == "auto_forward")
         w.set_auto_forward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_forward")

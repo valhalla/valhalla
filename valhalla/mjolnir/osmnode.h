@@ -11,7 +11,7 @@ namespace valhalla {
 namespace mjolnir {
 
 struct NodeAttributes {
-  uint32_t access_mask      : 8;
+  uint32_t access_mask      : 12;
   uint32_t type             : 4;
   uint32_t exit_to          : 1;
   uint32_t ref              : 1;
@@ -25,7 +25,7 @@ struct NodeAttributes {
   uint32_t shortlink        : 1;  // Link edge < kMaxInternalLength
   uint32_t non_ferry_edge   : 1;
   uint32_t ferry_edge       : 1;
-  uint32_t spare            : 8;
+  uint32_t spare            : 4;
 };
 
 /**

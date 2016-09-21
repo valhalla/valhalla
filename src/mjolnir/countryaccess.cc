@@ -29,7 +29,7 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
   uint32_t new_access = current_access;
 
   if (!user_access.foot_tag())
-    new_access = ProcessAccess(new_access,country_access,kPedestrianAccess);
+    new_access = ProcessAccess(new_access,country_access,(kPedestrianAccess | kWheelchairAccess));
 
   if (!oneway_bicycle && !user_access.bike_tag())
     new_access = ProcessAccess(new_access,country_access,kBicycleAccess);
