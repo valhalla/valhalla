@@ -7,15 +7,23 @@
 #include <vector>
 #include <type_traits>
 #include <iterator>
-#include <cmath>
 #include <memory>
-#include <cerrno>
-#include <stdexcept>
 #include <functional>
 #include <algorithm>
 #include <list>
 #include <map>
+#include <unordered_map>
+#include <string>
+#include <utility>
+#include <cmath>
+#include <cstring>
+#include <cstdint>
+#include <cstdlib>
+#include <cerrno>
+#include <stdexcept>
+#include <iostream>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -350,6 +358,80 @@ class sequence {
   std::string file_name;
   std::vector<T> write_buffer;
   mem_map<T> memmap;
+};
+
+struct tar {
+  struct header_t {
+    char name[100]; char mode[8]; char uid[8]; char gid[8]; char size[12]; char mtime[12]; char chksum[8];
+    char typeflag; char linkname[100]; char magic[6]; char version[2]; char uname[32]; char gname[32];
+    char devmajor[8]; char devminor[8]; char prefix[155]; char padding[12];
+
+    static uint64_t octal_to_int(const char* data, size_t size = 12) {
+      const unsigned char* ptr = (const unsigned char*) data + size;
+      uint64_t sum = 0;
+      uint64_t multiplier = 1;
+      //Skip everything after the last NUL/space character
+      //In some TAR archives the size field has non-trailing NULs/spaces, so this is neccessary
+      const unsigned char* check = ptr; //This is used to check where the last NUL/space char is
+      for (; check >= (unsigned char*) data; check--)
+        if ((*check) == 0 || (*check) == ' ')
+          ptr = check - 1;
+      for (; ptr >= (unsigned char*) data; ptr--) {
+        sum += ((*ptr) - 48) * multiplier;
+        multiplier *= 8;
+      }
+      return sum;
+    }
+    bool is_ustar() const { return (memcmp("ustar", magic, 5) == 0); }
+    size_t get_file_size() const { return octal_to_int(size); }
+    bool verify() const {
+      //make a copy and blank the checksum
+      header_t temp = *this; memset(temp.chksum, ' ', 8); int64_t usum = 0, sum = 0;
+      //compute the checksum
+      for(int i = 0; i < sizeof(header_t); i++) {
+        usum += ((unsigned char*)&temp)[i];
+        sum += ((char*)&temp)[i];
+      }
+      //check if its right
+      uint64_t rsum = octal_to_int(chksum);
+      return rsum == usum || rsum == sum;
+    }
+  };
+
+  tar(const std::string& tar_file, bool regular_files_only = true):tar_file(tar_file) {
+    //map the file
+    struct stat s;
+    if(stat(tar_file.c_str(), &s) || s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0)
+      return;
+    try { mm.map(tar_file, s.st_size); } catch (...) { return; }
+    //most tars end with 2 blocks of binary zeros
+    static constexpr header_t END_OF_ARCHIVE[2] = {{}, {}};
+    size_t eoa_size = memcmp(mm.get() + mm.size() - 2 * sizeof(header_t), &END_OF_ARCHIVE, 2 * sizeof(header_t)) ? 0 : 2 * sizeof(header_t);
+    //fill out the contents
+    const char* position = mm.get();
+    while(position < mm.get() + mm.size() - eoa_size) {
+      //get the header for this file
+      const header_t* h = static_cast<const header_t*>(static_cast<const void*>(position));
+      if(!h->verify()) {
+        mm.unmap();
+        return;
+      }
+      position += sizeof(header_t);
+      auto size = h->get_file_size();
+      //do we record entry file or not
+      if(!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0'))
+        contents.emplace(std::piecewise_construct, std::forward_as_tuple(std::string{h->name}), std::forward_as_tuple(position, size));
+      //every entry's data is rounded to the nearst header_t sized "block"
+      size_t blocks = std::ceil(static_cast<double>(size) / sizeof(header_t));
+      position += blocks * sizeof(header_t);
+    }
+  }
+
+  std::string tar_file;
+  mem_map<char> mm;
+  using entry_name_t = std::string;
+  using entry_location_t = std::pair<const char*, size_t>;
+  std::unordered_map<entry_name_t, entry_location_t> contents;
 };
 
 }
