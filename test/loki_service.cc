@@ -80,8 +80,8 @@ namespace {
     {400, std::string("{\"error_code\":134,\"error\":\"No edge\\/node costing provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":164,\"error\":\"Path distance exceeds the max distance limit\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":164,\"error\":\"Path distance exceeds the max distance limit\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":135,\"error\":\"No costing method found for 'yak'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":135,\"error\":\"No costing method found for 'yak'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
+    {400, std::string("{\"error_code\":199,\"error\":\"Unknown, runtime error - No costing method found for 'yak'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
+    {400, std::string("{\"error_code\":199,\"error\":\"Unknown, runtime error - No costing method found for 'yak'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":160,\"error\":\"Exceeded max locations:20\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":160,\"error\":\"Exceeded max locations:20\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
@@ -116,13 +116,10 @@ namespace {
         \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
         \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50, \
         \"min_transit_walking_distance\": 1, \"max_transit_walking_distance\": 10000 }, \
-        \"sources_to_targets\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
-        \"optimized_route\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
-        \"isochrone\": { \"max_contours\": 4, \"max_time\": 120, \"max_locations\": 1}, \
-        \"max_shape\": 750000,\
-        \"min_resample\": 10.0 \
-      }, \
-     \"costing_options\": { \"auto\": {}, \"pedestrian\": {} } \
+        \"sources_to_targets\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
+        \"isochrone\": { \"max_contours\": 4, \"max_time\": 120, \"max_locations\": 1 }, \
+        \"skadi\": { \"max_shape\": 750000, \"min_resample\": 10.0 } \
+      } \
       }";
     boost::property_tree::json_parser::read_json(json, config);
 
