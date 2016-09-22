@@ -390,10 +390,7 @@ bool TransitCost::wheelchair() const {
   return wheelchair_;
 }
 
-/**
- * Get the bicycle required flag.
- * @return  Returns true if bicycle is required.
- */
+// Get the bicycle required flag.
 bool TransitCost::bicycle() const {
   return bicycle_;
 }
