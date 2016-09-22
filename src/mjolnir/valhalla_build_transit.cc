@@ -194,7 +194,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   for(const auto& feature : feeds.get_child("features")) {
     //use the following logic if you only want certain feeds
     //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
-    //if (feed && *feed == "f-9q9-bart")
+    //if (feed && *feed == "f-drt-mbta") {
 
     //should be a polygon
     auto type = feature.second.get_optional<std::string>("geometry.type");
@@ -223,6 +223,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     for(auto i = min_c; i <= max_c; ++i)
       for(auto j = min_r; j <= max_r; ++j)
         tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
+
   }
   //we want slowest to build tiles first, routes query is slowest so we weight by that
   //stop pairs is most numerous so that might want to be factored in as well
@@ -281,7 +282,7 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     stop->set_lat(lat);
     set_no_null(std::string, stop_pt.second, "onestop_id", "null", stop->set_onestop_id);
     set_no_null(std::string, stop_pt.second, "name", "null", stop->set_name);
-    stop->set_wheelchair_boarding(stop_pt.second.get<bool>("wheelchair_boarding", false));
+    stop->set_wheelchair_boarding(stop_pt.second.get<bool>("wheelchair_boarding", true));
     set_no_null(uint64_t, stop_pt.second, "tags.osm_way_id", 0, stop->set_osm_way_id);
     GraphId stop_id = tile_id;
     stop_id.fields.id = stops.size();
@@ -477,7 +478,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       uniques.lock.unlock();
     }
 
-    pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
+    pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", true));
 
     set_no_null(std::string, pair_pt.second, "trip_headsign", "null", pair->set_trip_headsign);
     pair->set_bikes_allowed(pair_pt.second.get<bool>("bikes_allowed", false));
@@ -956,12 +957,12 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           dep.dep_time = sp.origin_departure_time();
           dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
 
-          if (sp.bikes_allowed()) {
+          if (!sp.bikes_allowed()) {
             stop_access[dep.orig_pbf_graphid] |= kBicycleAccess;
             stop_access[dep.dest_pbf_graphid] |= kBicycleAccess;
           }
 
-          if (sp.wheelchair_accessible()) {
+          if (!sp.wheelchair_accessible()) {
             stop_access[dep.orig_pbf_graphid] |= kWheelchairAccess;
             stop_access[dep.dest_pbf_graphid] |= kWheelchairAccess;
           }
@@ -1267,17 +1268,17 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     GraphId origin_node = GetGraphId(stopid, all_tiles);
 
     // Build the node info. Use generic transit stop type
-    uint32_t access = 0;
-    auto s_access = stop_access.find(stopid);
-    if (s_access != stop_access.end())
-      access = s_access->second;
-    access |= kPedestrianAccess;
+    uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
 
+    auto s_access = stop_access.find(stopid);
+    if (s_access != stop_access.end()) {
+      n_access &= ~s_access->second;
+    }
     // TODO - parent/child flags
     bool child  = false; // (stop.parent.Is_Valid());  // TODO verify if this is sufficient
     bool parent = false; // (stop.type == 1);          // TODO verify if this is sufficient
     PointLL stopll = { stop.lon(), stop.lat() };
-    NodeInfo node(stopll, RoadClass::kServiceOther, access,
+    NodeInfo node(stopll, RoadClass::kServiceOther, n_access,
                         NodeType::kMultiUseTransitStop, false);
     node.set_child(child);
     node.set_parent(parent);
@@ -1376,8 +1377,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - node.edge_index());
-      directededge.set_forwardaccess(kPedestrianAccess);  // TODO - bikes?
-      directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
+      directededge.set_forwardaccess(n_access);
+      directededge.set_reverseaccess(n_access);
       directededge.set_lineid(transitedge.lineid);
 
       LOG_DEBUG("Add transit directededge - lineId = " + std::to_string(transitedge.lineid) +
