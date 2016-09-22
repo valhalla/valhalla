@@ -249,13 +249,13 @@ class DynamicCost {
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
-  bool wheelchair() const;
+  virtual bool wheelchair() const;
 
   /**
    * Get the bicycle required flag.
    * @return  Returns true if bicycle is required.
    */
-  bool bicycle() const;
+  virtual bool bicycle() const;
 
   /**
    * Returns a function/functor to be used in location searching which will
