@@ -149,40 +149,23 @@ namespace valhalla {
 
     void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
-       auto costing = request.get_optional<std::string>("costing");
-       if (costing)
-         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
-       else
-         throw std::runtime_error("No edge/node costing provided");
+      auto costing = request.get_optional<std::string>("costing");
+      if (costing)
+        valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
+      else
+        throw std::runtime_error("No edge/node costing provided");
 
-       // TODO - have a way of specifying mode at the location
-       if(*costing == "multimodal")
-         *costing = "pedestrian";
+      // TODO - have a way of specifying mode at the location
+      if(*costing == "multimodal")
+        *costing = "pedestrian";
 
-       // Get the costing options. Get the base options from the config and the
-       // options for the specified costing method
-       std::string method_options = "costing_options." + *costing;
-       auto config_costing = config.get_child_optional(method_options);
-       if(!config_costing)
-         throw std::runtime_error("No costing method found for '" + *costing + "'");
-       auto request_costing = request.get_child_optional(method_options);
-       if(request_costing) {
-         // If the request has any options for this costing type, merge the 2
-         // costing options - override any config options that are in the request.
-         // and add any request options not in the config.
-         // TODO: suboptions are probably getting smashed when we do this, preserve them
-         boost::property_tree::ptree overridden = *config_costing;
-         for(const auto& r : *request_costing)
-           overridden.put_child(r.first, r.second);
-         auto c = factory.Create(*costing, overridden);
-         edge_filter = c->GetEdgeFilter();
-         node_filter = c->GetNodeFilter();
-       }// No options to override so use the config options verbatim
-       else {
-         auto c = factory.Create(*costing, *config_costing);
-         edge_filter = c->GetEdgeFilter();
-         node_filter = c->GetNodeFilter();
-       }
+      // Get the costing options if in the config or get the empty default.
+      // Creates the cost in the cost factory
+      std::string method_options = "costing_options." + *costing;
+      auto costing_options = request.get_child(method_options,{});
+      auto c = factory.Create(*costing, costing_options);
+      edge_filter = c->GetEdgeFilter();
+      node_filter = c->GetNodeFilter();
     }
 
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
@@ -203,13 +186,13 @@ namespace valhalla {
         throw std::runtime_error("The config actions for Loki are incorrectly loaded.");
 
       //Build max_locations and max_distance maps
-      for (const auto& kv : config.get_child("costing_options")) {
-        max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
-        max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
+      for (const auto& kv : config.get_child("service_limits")) {
+        if (kv.first != "skadi")
+          max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
+        if (kv.first != "skadi" && kv.first != "isochrone")
+          max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
-      max_locations.emplace("sources_to_targets", config.get<size_t>("service_limits.sources_to_targets.max_locations"));
-      max_distance.emplace("sources_to_targets", config.get<float>("service_limits.sources_to_targets.max_distance"));
-      max_locations.emplace("isochrone", config.get<size_t>("service_limits.isochrone.max_locations"));
+      //this should never happen
       if (max_locations.empty())
         throw std::runtime_error("Missing max_locations configuration.");
       if (max_distance.empty())
