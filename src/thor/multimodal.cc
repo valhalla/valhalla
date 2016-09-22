@@ -103,8 +103,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
-  bool wheelchair = false;  // Can take departures without wheelchair
-  bool bicycle = false;     // Can take departures without bicycle
+  bool wheelchair = tc->wheelchair();
+  bool bicycle = tc->bicycle();
 
   // Get maximum transfer distance
   uint32_t max_transfer_distance = costing->GetMaxTransferDistanceMM();
