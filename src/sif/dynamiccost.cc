@@ -136,6 +136,16 @@ TravelMode DynamicCost::travelmode() const {
   return travelmode_;
 }
 
+// Get the wheelchair required flag.
+bool DynamicCost::wheelchair() const {
+  return false;
+}
+
+// Get the bicycle required flag.
+bool DynamicCost::bicycle() const {
+  return false;
+}
+
 // Add to the exclude list.
 void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
   ;
