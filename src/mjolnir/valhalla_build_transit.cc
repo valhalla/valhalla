@@ -1377,8 +1377,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - node.edge_index());
-      directededge.set_forwardaccess(n_access);
-      directededge.set_reverseaccess(n_access);
+      directededge.set_forwardaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+      directededge.set_reverseaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
       directededge.set_lineid(transitedge.lineid);
 
       LOG_DEBUG("Add transit directededge - lineId = " + std::to_string(transitedge.lineid) +
