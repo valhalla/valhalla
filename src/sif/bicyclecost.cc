@@ -20,9 +20,9 @@ enum class BicycleType {
   kMountain = 3
 };
 
-constexpr float kDefaultManeuverPenalty         = 20.0f;  // Seconds
+constexpr float kDefaultManeuverPenalty         = 5.0f;    // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
-constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
+constexpr float kDefaultAlleyPenalty            = 60.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
