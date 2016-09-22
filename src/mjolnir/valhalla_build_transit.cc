@@ -193,8 +193,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   auto feeds = curler(url("/api/v1/feeds.geojson?", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
     //use the following logic if you only want certain feeds
-    //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
-    //if (feed && *feed == "f-drt-mbta") {
+  //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
+  //if (feed && *feed == "f-drt-mbta") {
 
     //should be a polygon
     auto type = feature.second.get_optional<std::string>("geometry.type");
@@ -223,7 +223,6 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     for(auto i = min_c; i <= max_c; ++i)
       for(auto j = min_r; j <= max_r; ++j)
         tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
-
   }
   //we want slowest to build tiles first, routes query is slowest so we weight by that
   //stop pairs is most numerous so that might want to be factored in as well
@@ -1492,9 +1491,13 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 
     lock.unlock();
 
+    std::unordered_map<GraphId, uint16_t> stop_access;
     std::unordered_multimap<GraphId, GraphId> children;
     for (uint32_t i = 0; i < transit.stops_size(); i++) {
       const Transit_Stop& stop = transit.stops(i);
+
+      if (!stop.wheelchair_boarding())
+        stop_access[GraphId(stop.graphid())] |= kWheelchairAccess;
 
       // Store stop information in TransitStops
       tilebuilder_transit.AddTransitStop( { tilebuilder_transit.AddName(stop.onestop_id()),
@@ -1542,7 +1545,6 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Create a map of stop key to index in the stop vector
 
     // Process schedule stop pairs (departures)
-    std::unordered_map<GraphId, uint16_t> stop_access;
     std::unordered_multimap<GraphId, Departure> departures =
                 ProcessStopPairs(tilebuilder_transit,tile_creation_date,
                                  transit, stop_access, file, tile_id, lock);
