@@ -49,6 +49,18 @@ class TransitCost : public DynamicCost {
   virtual ~TransitCost();
 
   /**
+   * Get the wheelchair required flag.
+   * @return  Returns true if wheelchair is required.
+   */
+  bool wheelchair() const;
+
+  /**
+   * Get the bicycle required flag.
+   * @return  Returns true if bicycle is required.
+   */
+  bool bicycle() const;
+
+  /**
    * This method overrides the weight for this mode.  The higher the value
    * the more the mode is favored.
    */
@@ -214,6 +226,9 @@ class TransitCost : public DynamicCost {
                           const baldr::NodeInfo* node);
 
  protected:
+  // Are wheelchair or bicycle required
+  bool wheelchair_;
+  bool bicycle_;
 
   // This is the weight for this mode.  The higher the value the more the
   // mode is favored.
@@ -278,6 +293,9 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
 
   mode_weight_ = pt.get<float>("mode_weight", kModeWeight);
+
+  wheelchair_ = pt.get<bool>("wheelchair", false);
+  bicycle_ = pt.get<bool>("bicycle", false);
 
   // Willingness to use buses. Make sure this is within range [0, 1].
   use_bus_ = pt.get<float>("use_bus", kDefaultUseBusFactor);
@@ -365,6 +383,19 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
 // Destructor
 TransitCost::~TransitCost() {
+}
+
+// Get the wheelchair required flag.
+bool TransitCost::wheelchair() const {
+  return wheelchair_;
+}
+
+/**
+ * Get the bicycle required flag.
+ * @return  Returns true if bicycle is required.
+ */
+bool TransitCost::bicycle() const {
+  return bicycle_;
 }
 
 // This method overrides the weight for this mode.  The higher the value
