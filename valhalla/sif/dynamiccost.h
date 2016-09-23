@@ -252,6 +252,18 @@ class DynamicCost {
   virtual uint8_t travel_type() const;
 
   /**
+   * Get the wheelchair required flag.
+   * @return  Returns true if wheelchair is required.
+   */
+  virtual bool wheelchair() const;
+
+  /**
+   * Get the bicycle required flag.
+   * @return  Returns true if bicycle is required.
+   */
+  virtual bool bicycle() const;
+
+  /**
    * Returns a function/functor to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
