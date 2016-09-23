@@ -51,7 +51,7 @@ namespace {
     try {
       //throw the json into the ptree
       auto json = request.query.find("json");
-    if (json != request.query.end() && json->second.size()
+      if (json != request.query.end() && json->second.size()
         && json->second.front().size()) {
         std::istringstream is(json->second.front());
         boost::property_tree::read_json(is, pt);
@@ -62,7 +62,7 @@ namespace {
       }
     }
     catch(...) {
-      valhalla_exception_t{400, 100};
+      throw valhalla_exception_t{400, 100};
     }
 
     //throw the query params into the ptree
@@ -112,7 +112,7 @@ namespace valhalla {
       auto json_error = json::map({});
       json_error->emplace("status", exception.status_code_body);
       json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
-      json_error->emplace("error", std::string(exception.error_code_message + (exception.extra ? *exception.extra : "")));
+      json_error->emplace("error", std::string(exception.error_code_message));
       json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
 
       //serialize it
@@ -284,11 +284,11 @@ namespace valhalla {
 
         return result;
       }
-      catch(const valhalla_exception_t& e){
+      catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({e.status_code, e.error_code}, info);
+        return jsonify_error({e.status_code, e.error_code, e.extra}, info);
       }
-      catch(const std::runtime_error& e){
+      catch(const std::runtime_error& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return jsonify_error({400, 199, ", runtime error - " + std::string(e.what())}, info);
       }
