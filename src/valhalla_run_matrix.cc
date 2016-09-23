@@ -222,7 +222,7 @@ int main(int argc, char *argv[]) {
     // Assign costing method
     std::shared_ptr<DynamicCost> cost = get_costing(factory, pt,
                                   json_ptree, routetype);
-    mode = cost->travelmode();
+    mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
 
