@@ -143,7 +143,7 @@ MapMatcherFactory::register_costing(const std::string& mode_name,
                                     const boost::property_tree::ptree& config)
 {
   auto costing = factory(config);
-  auto index = static_cast<size_t>(costing->travelmode());
+  auto index = static_cast<size_t>(costing->travel_mode());
   if (!(index < kModeCostingCount)) {
     throw std::out_of_range("Configuration error: out of bounds");
   }
