@@ -403,21 +403,20 @@ namespace {
     const std::unordered_map<int, std::string> vehicle_to_string {
       { static_cast<int>(TripDirections_VehicleType_kCar), "car" },
       { static_cast<int>(TripDirections_VehicleType_kMotorcycle), "motorcycle" },
-      { static_cast<int>(TripDirections_VehicleType_kFourWheelDrive), "four_wheel_drive" },
-      { static_cast<int>(TripDirections_VehicleType_kTractorTrailers), "tractor_trailer" },
+      { static_cast<int>(TripDirections_VehicleType_kAutoBus), "bus" },
+      { static_cast<int>(TripDirections_VehicleType_kTractorTrailer), "tractor_trailer" },
     };
 
     std::unordered_map<int, std::string> pedestrian_to_string {
       { static_cast<int>(TripDirections_PedestrianType_kFoot), "foot" },
-      { static_cast<int>(TripDirections_PedestrianType_kWheelChair), "wheelchair" },
+      { static_cast<int>(TripDirections_PedestrianType_kWheelchair), "wheelchair" },
       { static_cast<int>(TripDirections_PedestrianType_kSegway), "segway" },
     };
 
     std::unordered_map<int, std::string> bicycle_to_string {
       { static_cast<int>(TripDirections_BicycleType_kRoad), "road" },
-      { static_cast<int>(TripDirections_BicycleType_kHybrid), "hybrid" },
-      { static_cast<int>(TripDirections_BicycleType_kCity), "city" },
       { static_cast<int>(TripDirections_BicycleType_kCross), "cross" },
+      { static_cast<int>(TripDirections_BicycleType_kHybrid), "hybrid" },
       { static_cast<int>(TripDirections_BicycleType_kMountain), "mountain" },
     };
 
