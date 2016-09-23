@@ -76,7 +76,7 @@ private:
 
   size_t register_costing(const std::string&, factory_function_t, const boost::property_tree::ptree&);
 
-  sif::cost_ptr_t* init_costings(const boost::property_tree::ptree&);
+  sif::cost_ptr_t* init_costings();
 };
 
 }

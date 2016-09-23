@@ -38,7 +38,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
                       local_tile_size(graphreader_)/root.get<size_t>("meili.grid.size"),
                       local_tile_size(graphreader_)/root.get<size_t>("meili.grid.size")),
       max_grid_cache_size_(root.get<float>("meili.grid.cache_size"))
-      { init_costings(root); }
+{ init_costings(); }
 
 
 MapMatcherFactory::~MapMatcherFactory() {}
@@ -145,7 +145,7 @@ MapMatcherFactory::register_costing(const std::string& mode_name,
   auto costing = factory(config);
   auto index = static_cast<size_t>(costing->travelmode());
   if (!(index < kModeCostingCount)) {
-    throw std::out_of_range("Configuration error: out of bounds");
+    throw std::runtime_error("Configuration error: out of bounds");
   }
   if (mode_costing_[index]) {
     throw std::runtime_error("Configuration error: found duplicate travel mode");
@@ -157,12 +157,14 @@ MapMatcherFactory::register_costing(const std::string& mode_name,
 
 
 sif::cost_ptr_t*
-MapMatcherFactory::init_costings(const boost::property_tree::ptree& root)
+MapMatcherFactory::init_costings()
 {
-  register_costing("auto", sif::CreateAutoCost, root.get_child("costing_options.auto"));
-  register_costing("bicycle", sif::CreateBicycleCost, root.get_child("costing_options.bicycle"));
-  register_costing("pedestrian", sif::CreatePedestrianCost, root.get_child("costing_options.pedestrian"));
-  register_costing("multimodal", CreateUniversalCost, root.get_child("costing_options.multimodal"));
+  // Initialize costings with empty config (customization not allowed
+  // yet)
+  register_costing("auto", sif::CreateAutoCost, {});
+  register_costing("bicycle", sif::CreateBicycleCost, {});
+  register_costing("pedestrian", sif::CreatePedestrianCost, {});
+  register_costing("multimodal", CreateUniversalCost, {});
 
   return mode_costing_;
 }
