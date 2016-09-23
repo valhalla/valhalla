@@ -600,14 +600,15 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   std::unordered_set<GraphId> tiles;
 
   // Bail if nothing
-  auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
+  auto hierarchy_properties = pt.get_child("mjolnir");
+  auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
   if(!transit_dir || !boost::filesystem::exists(*transit_dir) || !boost::filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
   // Also bail if nothing inside
   transit_dir->push_back('/');
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphReader reader(hierarchy_properties);
   const auto& hierarchy = reader.GetTileHierarchy();
   auto local_level = hierarchy.levels().rbegin()->first;
   if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
@@ -617,7 +618,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
         auto graph_id = TransitToTile(pt, transit_file_itr->path().string());
         auto local_graph_id = graph_id;
         local_graph_id.fields.level -= 1;
-        if(GraphReader::DoesTileExist(hierarchy, local_graph_id)) {
+        if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + '/' + GraphTile::FileSuffix(graph_id, hierarchy);

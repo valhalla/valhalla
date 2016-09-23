@@ -1243,7 +1243,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
+    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
       tempqueue.push_back(tile_id);
     }
   }
@@ -1258,7 +1258,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
-                 std::cref(pt.get_child("mjolnir")),
+                 std::cref(hierarchy_properties),
                  std::cref(access_file),
                  std::ref(hierarchy_properties), std::ref(tilequeue),
                  std::ref(lock), std::ref(results.back())));
