@@ -72,6 +72,7 @@ test/data/bin_tiles/bin/*
 test/data/amsterdam_tiles
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
+loop_ways.txt
 
 # test coverage stuff
 *.gcno
