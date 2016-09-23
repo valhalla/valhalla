@@ -61,3 +61,11 @@ Now the service is up and listening on `localhost:8002`. You may refer
 to the
 [service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
 for more information.
+
+
+## Set up Demo
+
+Open
+http://valhalla.github.io/demos/map_matching/index-internal.html. Simulate
+a trace by clicking on the map. You will see the trace is map matched
+immediately.
