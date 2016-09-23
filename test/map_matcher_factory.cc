@@ -19,7 +19,7 @@ using ptree = boost::property_tree::ptree;
 void TestMapMatcherFactory()
 {
   ptree root;
-  boost::property_tree::read_json("test/mm.json", root);
+  boost::property_tree::read_json("test/valhalla.json", root);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
