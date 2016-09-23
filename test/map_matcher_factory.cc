@@ -155,7 +155,7 @@ void TestMapMatcherFactory()
 void TestMapMatcher()
 {
   ptree root;
-  boost::property_tree::read_json("test/mm.json", root);
+  boost::property_tree::read_json("test/valhalla.json", root);
 
   // Nothing special to test for the moment
 
