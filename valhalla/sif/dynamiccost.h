@@ -237,13 +237,19 @@ class DynamicCost {
    * Set the current travel mode.
    * @param  mode  Travel mode
    */
-  void set_travelmode(const TravelMode mode);
+  void set_travel_mode(const TravelMode mode);
 
   /**
    * Get the current travel mode.
    * @return  Returns the current travel mode.
    */
-  TravelMode travelmode() const;
+  TravelMode travel_mode() const;
+
+  /**
+   * Get the current travel type.
+   * @return  Returns the current travel type.
+   */
+  virtual uint8_t travel_type() const;
 
   /**
    * Get the wheelchair required flag.
@@ -318,7 +324,7 @@ class DynamicCost {
   bool allow_transit_connections_;
 
   // Travel mode
-  TravelMode travelmode_;
+  TravelMode travel_mode_;
 
   // Hierarchy limits.
   std::vector<HierarchyLimits> hierarchy_limits_;

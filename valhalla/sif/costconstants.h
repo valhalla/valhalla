@@ -12,8 +12,42 @@ enum class TravelMode : uint8_t {
    kPublicTransit = 3
 };
 
-// TODO - add specific types (car, foot, road bike, etc.)
+// Vehicle travel type
+enum class VehicleType : uint8_t {
+  kCar = 0,
+  kMotorcycle = 1,
+  kBus = 2,
+  kTractorTrailer = 3
+};
 
+// Pedestrian travel type
+enum class PedestrianType : uint8_t {
+  kFoot = 0,
+  kWheelchair = 1,
+  kSegway = 2
+};
+
+// Bicycle travel type
+enum class BicycleType : uint8_t {
+  kRoad     = 0,
+  kCross    = 1,    // Cyclocross bike - road bike setup with wider tires
+  kHybrid   = 2,    // Hybrid or city bike
+  kMountain = 3
+};
+
+// Transit travel type
+// TODO: these are in graphconstants
+// decide what to do
+//enum class TransitType : uint8_t {
+//  kTram = 0,
+//  kMetro = 1,
+//  kRail = 2,
+//  kBus = 3,
+//  kFerry = 4,
+//  kCableCar = 5,
+//  kGondola = 6,
+//  kFunicular = 7
+//};
 
 /**
  * Simple structure for returning costs. Includes cost and true elapsed time
