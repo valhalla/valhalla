@@ -36,6 +36,8 @@ class GridRangeQuery
   {
 #ifdef GRID_USE_VECTOR
     items_.resize(ncols_ * nrows_);
+#else
+    items_.reserve((ncols_ + nrows_) / 2);
 #endif
   }
 
