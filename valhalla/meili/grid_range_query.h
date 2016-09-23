@@ -28,7 +28,11 @@ class GridRangeQuery
       ncols_((bbox.maxx() - bbox.minx()) / square_width),
       nrows_((bbox.maxy() - bbox.miny()) / square_height),
       grid_(bbox.minx(), bbox.miny(), square_width, square_height, ncols_, nrows_),
+#ifdef GRID_USE_VECTOR
       items_()
+#else
+      items_(), empty_item_()
+#endif
   {
 #ifdef GRID_USE_VECTOR
     items_.resize(ncols_ * nrows_);
