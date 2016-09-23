@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
@@ -27,8 +28,18 @@ class GridRangeQuery
       ncols_((bbox.maxx() - bbox.minx()) / square_width),
       nrows_((bbox.maxy() - bbox.miny()) / square_height),
       grid_(bbox.minx(), bbox.miny(), square_width, square_height, ncols_, nrows_),
+#ifdef GRID_USE_VECTOR
       items_()
-  { items_.resize(ncols_ * nrows_); }
+#else
+      items_(), empty_item_()
+#endif
+  {
+#ifdef GRID_USE_VECTOR
+    items_.resize(ncols_ * nrows_);
+#else
+    items_.reserve((ncols_ + nrows_) / 2);
+#endif
+  }
 
   const midgard::AABB2<coord_t>& bbox() const
   { return bbox_; }
@@ -53,7 +64,17 @@ class GridRangeQuery
                                + ") is out of the grid bounds (" + std::to_string(ncols_) + "x"
                                + std::to_string(nrows_) + " squares)");
     }
+
+#ifdef GRID_USE_VECTOR
     return items_[col + row * ncols_];
+#else
+    const auto it = items_.find(col + row * ncols_);
+    if (it == items_.end()) {
+      return empty_item_;
+    } else {
+      return it->second;
+    }
+#endif
   }
 
   void AddLineSegment(const item_t& item, const coord_t& origin, const coord_t& dest)
@@ -103,6 +124,7 @@ class GridRangeQuery
                                + ") is out of the grid bounds (" + std::to_string(ncols_) + "x"
                                + std::to_string(nrows_) + " squares)");
     }
+
     return items_[col + row * ncols_];
   }
 
@@ -110,7 +132,15 @@ class GridRangeQuery
   float square_width_, square_height_;
   int ncols_, nrows_;
   GridTraversal<coord_t> grid_;
+
+  // Using vector to represent the grid would be faster than using
+  // unordered map but it consumes (much) more memeory as well
+#ifdef GRID_USE_VECTOR
   std::vector<std::vector<item_t> > items_;
+#else
+  std::unordered_map<unsigned, std::vector<item_t>> items_;
+  const std::vector<item_t> empty_item_;
+#endif
 };
 
 }
