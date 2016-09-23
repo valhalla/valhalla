@@ -169,7 +169,7 @@ namespace valhalla {
     }
 
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
-        config(config), reader(config.get_child("mjolnir")), connectivity_map(reader.GetTileHierarchy()),
+        config(config), reader(config.get_child("mjolnir")), connectivity_map(config.get_child("mjolnir")),
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
         max_time(config.get<unsigned int>("service_limits.isochrone.max_time")) {
