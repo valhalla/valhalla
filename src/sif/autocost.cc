@@ -1,4 +1,5 @@
 #include "sif/autocost.h"
+#include "sif/costconstants.h"
 
 #include <iostream>
 #include <valhalla/midgard/constants.h>
@@ -169,6 +170,12 @@ class AutoCost : public DynamicCost {
   virtual float AStarCostFactor() const;
 
   /**
+   * Get the current travel type.
+   * @return  Returns the current travel type.
+   */
+  virtual uint8_t travel_type() const;
+
+  /**
    * Returns a function/functor to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
@@ -201,6 +208,7 @@ class AutoCost : public DynamicCost {
   }
 
  protected:
+  VehicleType type_;                // Vehicle type: car (default), motorcycle, etc
   float speedfactor_[256];
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
@@ -228,6 +236,19 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
                              1.0f, 1.1f, 1.2f, 1.3f,
                              1.4f, 1.6f, 1.9f, 2.2f,
                              2.5f, 2.8f, 3.1f, 3.5f } {
+
+  // Get the vehicle type - enter as string and convert to enum
+  std::string type = pt.get<std::string>("type", "car");
+  if (type == "motorcycle") {
+    type_ = VehicleType::kMotorcycle;
+  } else if (type == "bus") {
+    type_ = VehicleType::kBus;
+  } else if (type == "tractor_trailer") {
+    type_ = VehicleType::kTractorTrailer;
+  } else {
+    type_ = VehicleType::kCar;
+  }
+
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
   destination_only_penalty_ = pt.get<float>("destination_only_penalty",
@@ -471,6 +492,11 @@ float AutoCost::AStarCostFactor() const {
   return speedfactor_[kMaxSpeedKph];
 }
 
+// Returns the current travel type.
+uint8_t AutoCost::travel_type() const {
+  return static_cast<uint8_t>(type_);
+}
+
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoCost>(config);
 }
@@ -638,6 +664,7 @@ class BusCost : public AutoCost {
 // Constructor
 BusCost::BusCost(const boost::property_tree::ptree& pt)
     : AutoCost(pt) {
+  type_ = VehicleType::kBus;
 }
 
 // Destructor

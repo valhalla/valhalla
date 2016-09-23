@@ -1,4 +1,6 @@
 #include "sif/bicyclecost.h"
+#include "sif/costconstants.h"
+
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
@@ -12,13 +14,6 @@ namespace sif {
 
 // Default options/values
 namespace {
-
-enum class BicycleType {
-  kRoad     = 0,
-  kCross    = 1,    // Cyclocross bike - road bike setup with wider tires
-  kHybrid   = 2,    // Hybrid or city bike
-  kMountain = 3
-};
 
 constexpr float kDefaultManeuverPenalty         = 5.0f;    // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
@@ -272,6 +267,12 @@ class BicycleCost : public DynamicCost {
    */
   virtual float AStarCostFactor() const;
 
+  /**
+   * Get the current travel type.
+   * @return  Returns the current travel type.
+   */
+  virtual uint8_t travel_type() const;
+
  protected:
 
   float speedfactor_[100];          // Cost factors based on speed in kph
@@ -294,7 +295,7 @@ class BicycleCost : public DynamicCost {
   float speed_;
 
   // Bicycle type
-  BicycleType bicycletype_;
+  BicycleType type_;
 
   // Minimal surface type usable by the bicycle type
   Surface minimal_allowed_surface_;
@@ -333,7 +334,7 @@ class BicycleCost : public DynamicCost {
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    uint32_t b = static_cast<uint32_t>(bicycletype_);
+    uint32_t b = static_cast<uint32_t>(type_);
     return [b](const baldr::DirectedEdge* edge) {
       if ( edge->trans_up() || edge->trans_down() ||
           !(edge->forwardaccess() & kBicycleAccess) ||
@@ -386,30 +387,30 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Get the bicycle type - enter as string and convert to enum
   std::string bicycle_type = pt.get("bicycle_type", "Road");
   if (bicycle_type == "Cross") {
-    bicycletype_ = BicycleType::kCross;
+    type_ = BicycleType::kCross;
   } else if (bicycle_type == "Hybrid" || bicycle_type == "City") {
-    bicycletype_ = BicycleType::kHybrid;
+    type_ = BicycleType::kHybrid;
   } else if (bicycle_type == "Mountain") {
-    bicycletype_ = BicycleType::kMountain;
+    type_ = BicycleType::kMountain;
   } else {
-    bicycletype_ = BicycleType::kRoad;
+    type_ = BicycleType::kRoad;
   }
 
   // Get default speed from the config. This is the average speed on smooth,
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
-  uint32_t t = static_cast<uint32_t>(bicycletype_);
+  uint32_t t = static_cast<uint32_t>(type_);
   speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
 
   // Set the minimal surface type usable by the bicycle type and the
   // surface speed factors.
-  if (bicycletype_ == BicycleType::kRoad) {
+  if (type_ == BicycleType::kRoad) {
     minimal_allowed_surface_ = Surface::kCompacted;
     surface_speed_factor_ = kRoadSurfaceSpeedFactors;
-  } else if (bicycletype_ == BicycleType::kHybrid) {
+  } else if (type_ == BicycleType::kHybrid) {
     minimal_allowed_surface_ =  Surface::kDirt;
     surface_speed_factor_ = kHybridSurfaceSpeedFactors;
-  } else if (bicycletype_ == BicycleType::kCross) {
+  } else if (type_ == BicycleType::kCross) {
     minimal_allowed_surface_ =  Surface::kGravel;
     surface_speed_factor_ = kCrossSurfaceSpeedFactors;
   } else {
@@ -571,7 +572,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     // traffic. Most cyclists would use them though.
     factor = 0.75f + (useroads_ * 0.5f);
   } else if (edge->use() == Use::kMountainBike &&
-             bicycletype_ == BicycleType::kMountain) {
+             type_ == BicycleType::kMountain) {
     factor = 0.5f;
   } else if (edge->use() == Use::kDriveway) {
     // Heavily penalize driveways
@@ -739,6 +740,11 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 float BicycleCost::AStarCostFactor() const {
   // Assume max speed of 80 kph (50 MPH)
   return speedfactor_[80];
+}
+
+// Returns the current travel type.
+uint8_t BicycleCost::travel_type() const {
+  return static_cast<uint8_t>(type_);
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {

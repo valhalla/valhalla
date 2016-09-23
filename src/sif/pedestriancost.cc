@@ -1,4 +1,5 @@
 #include "sif/pedestriancost.h"
+#include "sif/costconstants.h"
 
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/midgard/constants.h>
@@ -191,6 +192,12 @@ class PedestrianCost : public DynamicCost {
   virtual float AStarCostFactor() const;
 
   /**
+   * Get the current travel type.
+   * @return  Returns the current travel type.
+   */
+  virtual uint8_t travel_type() const;
+
+  /**
    * Returns a function/functor to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
@@ -225,7 +232,8 @@ class PedestrianCost : public DynamicCost {
 
  private:
   // Type: foot (default), wheelchair, etc.
-  std::string type_;
+  PedestrianType type_;
+
   uint32_t access_mask_;
 
   // Maximum pedestrian distance.
@@ -272,11 +280,18 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
   allow_transit_connections_ = false;
 
-  // Get the type (defaults to foot)
-  type_ = pt.get<std::string>("type", "foot");
+  // Get the pedestrian type - enter as string and convert to enum
+  std::string type = pt.get<std::string>("type", "foot");
+  if (type == "wheelchair") {
+    type_ = PedestrianType::kWheelchair;
+  } else if (type == "segway") {
+    type_ = PedestrianType::kSegway;
+  } else {
+    type_ = PedestrianType::kFoot;
+  }
 
   // Set type specific defaults, override with URL inputs
-  if (type_ == "wheelchair") {
+  if (type == "wheelchair") {
     access_mask_ = kWheelchairAccess;
     max_distance_  = pt.get<uint32_t>("max_distance", kMaxDistanceWheelchair);
     speed_ = pt.get<float>("walking_speed", kDefaultSpeedWheelchair);
@@ -539,6 +554,11 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 float PedestrianCost::AStarCostFactor() const {
   // Use the factor to favor walkways/paths if < 1.0f
   return (walkway_factor_ < 1.0f) ? walkway_factor_ * speedfactor_ : speedfactor_;
+}
+
+// Returns the current travel type.
+uint8_t PedestrianCost::travel_type() const {
+  return static_cast<uint8_t>(type_);
 }
 
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {

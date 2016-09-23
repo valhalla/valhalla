@@ -8,7 +8,7 @@ namespace sif {
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
                          const TravelMode mode)
     : allow_transit_connections_(false),
-      travelmode_(mode) {
+      travel_mode_(mode) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) /
@@ -127,13 +127,18 @@ void DynamicCost::DisableHighwayTransitions() {
 }
 
 // Set the current travel mode.
-void DynamicCost::set_travelmode(const TravelMode mode) {
-  travelmode_ = mode;
+void DynamicCost::set_travel_mode(const TravelMode mode) {
+  travel_mode_ = mode;
 }
 
 // Get the current travel mode.
-TravelMode DynamicCost::travelmode() const {
-  return travelmode_;
+TravelMode DynamicCost::travel_mode() const {
+  return travel_mode_;
+}
+
+// Get the current travel type.
+uint8_t DynamicCost::travel_type() const {
+  return 0;
 }
 
 // Add to the exclude list.
