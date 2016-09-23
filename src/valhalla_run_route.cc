@@ -603,7 +603,7 @@ int main(int argc, char *argv[]) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   std::unordered_map<size_t, size_t> color_counts;
-  connectivity_map_t connectivity_map(reader.GetTileHierarchy());
+  connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
   std::vector<PathLocation> path_location;
   for (auto loc : locations) {
     try {
