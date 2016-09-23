@@ -400,7 +400,7 @@ find_shortest_path(baldr::GraphReader& reader,
   // Load destinations
   set_destinations(reader, destinations, node_dests, edge_dests);
 
-  const sif::TravelMode travelmode = costing? costing->travelmode() : static_cast<sif::TravelMode>(0);
+  const sif::TravelMode travelmode = costing? costing->travel_mode() : static_cast<sif::TravelMode>(0);
 
   // Load origin to the queue of the labelset
   set_origin(reader, destinations, origin_idx, labelset, travelmode, costing, edgelabel);
