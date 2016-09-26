@@ -39,27 +39,14 @@ using namespace valhalla::thor;
 namespace bpo = boost::program_options;
 
 // Returns the costing method (created from the dynamic cost factory).
-// Get the costing options. Get the base options from the config and the
-// options for the specified costing method. Merge in any request costing
-// options that override those in the config.
+// Get the costing options. Merge in any request costing options that
+// override those in the config.
 valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
-                                      boost::property_tree::ptree& config,
                                       boost::property_tree::ptree& request,
                                       const std::string& costing) {
- std::string method_options = "costing_options." + costing;
- auto config_costing = config.get_child_optional(method_options);
- if (!config_costing)
-   throw std::runtime_error("No costing method found for '" + costing + "'");
- auto request_costing = request.get_child_optional(method_options);
- if (request_costing) {
-   // If the request has any options for this costing type, merge the 2
-   // costing options - override any config options that are in the request.
-   // and add any request options not in the config.
-   for (const auto& r : *request_costing) {
-     config_costing->put_child(r.first, r.second);
-   }
- }
- return factory.Create(costing, *config_costing);
+  std::string method_options = "costing_options." + costing;
+  auto costing_options = request.get_child(method_options, {});
+  return factory.Create(costing, costing_options);
 }
 
 // Main method for testing a single path
@@ -201,15 +188,15 @@ int main(int argc, char *argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = get_costing(factory, pt, json_ptree, "auto");
-    mode_costing[1] = get_costing(factory, pt, json_ptree, "pedestrian");
-    mode_costing[2] = get_costing(factory, pt, json_ptree, "bicycle");
-    mode_costing[3] = get_costing(factory, pt, json_ptree, "transit");
+    mode_costing[0] = get_costing(factory, json_ptree, "auto");
+    mode_costing[1] = get_costing(factory, json_ptree, "pedestrian");
+    mode_costing[2] = get_costing(factory, json_ptree, "bicycle");
+    mode_costing[3] = get_costing(factory, json_ptree, "transit");
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = get_costing(factory, pt,
+    std::shared_ptr<DynamicCost> cost = get_costing(factory,
                               json_ptree, routetype);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;

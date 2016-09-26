@@ -350,9 +350,8 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
 }
 
 // Returns the costing method (created from the dynamic cost factory).
-// Get the costing options. Get the base options from the config and the
-// options for the specified costing method. Merge in any request costing
-// options that override those in the config.
+// Get the costing options. Merge in any request costing options that
+// override those in the config.
 valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
                                       boost::property_tree::ptree& request,
                                       const std::string& costing) {
