@@ -1,5 +1,6 @@
 {
   "posix_locale": "hi_IN.UTF-8",
+  "aliases": ["hi"],
   "instructions": {
     "start": {
       "phrases": {
@@ -835,7 +836,7 @@
         "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["ट्राम", "मेट्रो", "ट्रेन", "बस", "नौका", "केबलकार", "गोंडोला", "रज्जु रेल"],
-      "transit_stop_count_labels": {"एक": "स्टॉप", "अन्य": "स्टॉप"},
+      "transit_stop_count_labels": {"one": "स्टॉप", "other": "स्टॉप"},
       "example_phrases": {
         "0": ["New Haven लें. (एक स्टॉप)", "मेट्रो पकड़ें. (दो स्टॉप)", "बस पकड़ें. (12 स्टॉप)"],
         "1": ["JAMAICA - 179 ST की ओर F लें. (10 स्टॉप)", "Staten Island की ओर नौका लें. (एक स्टॉप)"]
@@ -858,7 +859,7 @@
         "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> पर बने रहें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["ट्राम", "मेट्रो", "ट्रेन", "बस", "नौका", "केबलकार", "गोंडोला", "रज्जु रेल"],
-      "transit_stop_count_labels": {"एक": "स्टॉप", "अन्य": "स्टॉप"},
+      "transit_stop_count_labels": {"one": "स्टॉप", "other": "स्टॉप"},
       "example_phrases": {
         "0": ["New Haven पर बने रहें. (1 स्टॉप)", "ट्रेन पर बने रहें. (3 स्टॉप)"],
         "1": ["JAMAICA - 179 ST की ओर F पर बने रहें. (10 स्टॉप)"]
@@ -881,7 +882,7 @@
         "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लेने के लिए स्थानांतरण. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["ट्राम", "मेट्रो", "ट्रेन", "बस", "नौका", "केबलकार", "गोंडोला", "रज्जु रेल"],
-      "transit_stop_count_labels": {"एक": "स्टॉप", "अन्य": "स्टॉप"},
+      "transit_stop_count_labels": {"one": "स्टॉप", "other": "स्टॉप"},
       "example_phrases": {
         "0": ["New Haven लेने के लिए स्थानांतरण. (1 स्टॉप)", "ट्राम लेने के लिए स्थानांतरण. (4 स्टॉप)"],
         "1": ["JAMAICA - 179 ST की ओर F लेने के लिए स्थानांतरण. (10 स्टॉप)"]
@@ -979,7 +980,7 @@
       "phrases": {
         "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> के लिए यात्रा."
       },
-      "transit_stop_count_labels": {"एक": "स्टॉप", "अन्य": "स्टॉप"},
+      "transit_stop_count_labels": {"one": "स्टॉप", "other": "स्टॉप"},
       "example_phrases": {
         "0": ["1 स्टॉप के लिए यात्रा.", "3 स्टॉप के लिए यात्रा."]
       }
