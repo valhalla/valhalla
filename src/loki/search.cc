@@ -1,5 +1,6 @@
 #include "loki/search.h"
 #include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/distanceapproximator.h>
 
 #include <unordered_set>
 #include <list>
@@ -231,8 +232,9 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
 
 std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<PointLL>& shape) {
   size_t closest_segment = 0;
-  float closest_distance = std::numeric_limits<float>::max();
+  float sq_closest_distance = std::numeric_limits<float>::max();
   PointLL closest_point{};
+  DistanceApproximator approx(p);
 
   //for each segment
   for(size_t i = 0; i < shape.size() - 1; ++i) {
@@ -260,15 +262,15 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
     }
     //check if this point is better
     PointLL point(bx, by);
-    const auto distance = p.Distance(point);
-    if(distance < closest_distance) {
+    const auto sq_distance = approx.DistanceSquared(point);
+    if(sq_distance < sq_closest_distance) {
       closest_segment = i;
-      closest_distance = distance;
+      sq_closest_distance = sq_distance;
       closest_point = std::move(point);
     }
   }
 
-  return std::make_tuple(std::move(closest_point), closest_distance, closest_segment);
+  return std::make_tuple(std::move(closest_point), sqrt(sq_closest_distance), closest_segment);
 }
 
 //TODO: this is frought with peril. to properly to this we need to know
@@ -414,6 +416,9 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
       throw std::runtime_error("No data found for location");
     }
   }
+
+  // recalculate accurate distance
+  std::get<1>(closest_point) = location.latlng_.Distance(std::get<0>(closest_point));
 
   //keep track of bins we looked in but only the ones that had something
   //would rather log this in the service only, so lets figure a way to pass it back
