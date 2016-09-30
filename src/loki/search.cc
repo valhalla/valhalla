@@ -248,11 +248,13 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
     const auto& u = shape[i];
     const auto& v = shape[i + 1];
     auto bx = v.first - u.first;
-    auto bx2 = bx * lon_scale;
     auto by = v.second - u.second;
+
+    // Scale longitude when finding the projection. Avoid divided-by-zero
+    // which gives a NaN scale, otherwise comparisons below will fail
+    auto bx2 = bx * lon_scale;
     auto sq = bx2*bx2 + by*by;
-    //avoid divided-by-zero which gives a NaN scale, otherwise comparisons below will fail
-    auto scale = sq > 0? (((p.first - u.first)*bx2*lon_scale + (p.second - u.second)*by) / sq) : 0.f;
+    auto scale = sq > 0 ?  (((p.first - u.first)*lon_scale*bx2 + (p.second - u.second)*by) / sq) : 0.f;
 
     //projects along the ray before u
     if(scale <= 0.f) {
