@@ -690,8 +690,7 @@ int main(int argc, char *argv[]) {
       for (auto& edge : path_location[i].edges) {
         const GraphTile* tile = reader.GetGraphTile(edge.id);
         const DirectedEdge* directededge = tile->directededge(edge.id);
-        std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
-                    directededge->edgeinfo_offset());
+        auto ei = tile->edgeinfo(directededge->edgeinfo_offset());
         if (directededge->unreachable()) {
           LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei->wayid()));
           unreachable_origin = true;
@@ -704,8 +703,7 @@ int main(int argc, char *argv[]) {
       for (auto& edge : path_location[i+1].edges) {
         const GraphTile* tile = reader.GetGraphTile(edge.id);
         const DirectedEdge* directededge = tile->directededge(edge.id);
-        std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
-                      directededge->edgeinfo_offset());
+        auto ei = tile->edgeinfo(directededge->edgeinfo_offset());
         if (directededge->unreachable()) {
           LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei->wayid()));
           unreachable_dest = true;
