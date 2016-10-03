@@ -7,6 +7,7 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
+#include "mjolnir/shortcutbuilder.h"
 #include <valhalla/baldr/tilehierarchy.h>
 #include "config.h"
 
@@ -143,6 +144,9 @@ int main(int argc, char** argv) {
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
   HierarchyBuilder::Build(pt);
+
+  // Build shortcuts
+  ShortcutBuilder::Build(pt);
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.

@@ -80,6 +80,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
+	valhalla/mjolnir/shortcutbuilder.h \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
@@ -111,6 +112,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \
 	src/mjolnir/pbfgraphparser.cc \
+	src/mjolnir/shortcutbuilder.cc \
 	src/mjolnir/transitbuilder.cc \
 	src/mjolnir/util.cc \
 	src/mjolnir/graph_lua_proc.h \
