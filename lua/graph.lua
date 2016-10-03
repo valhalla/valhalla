@@ -157,6 +157,24 @@ no_thru_traffic = {
 ["delivery"] = "true"
 }
 
+sidewalk = {
+["both"] = "true",
+["none"] = "false",
+["no"] = "false",
+["right"] = "true",
+["left"] = "true",
+["separate"] = "false",
+["yes"] = "true",
+["shared"] = "true",
+["this"] = "true",
+["detached"] = "false",
+["raised"] = "true",
+["separate_double"] = "false",
+["seperate"] = "false",
+["sidepath"] = "false",
+["explicit"] = "false"
+}
+
 use = {
 ["driveway"] = 4,
 ["alley"] = 5,
@@ -973,7 +991,7 @@ function filter_tags_generic(kv)
         use = 20
      elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
         use = 20
-     elseif (kv["highway"] == "footway" and kv["footway"] == "sidewalk") or (kv["sidewalk"] == "true") then
+     elseif (kv["highway"] == "footway" and kv["footway"] == "sidewalk") or (sidewalk[kv["sidewalk"]] == "true") then
         use = 24
      elseif kv["highway"] == "footway" then
         use = 25
