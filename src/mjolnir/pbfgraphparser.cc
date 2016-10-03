@@ -41,7 +41,7 @@ struct graph_callback : public OSMPBF::Callback {
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata) :
     shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), tile_hierarchy_(pt.get<std::string>("tile_dir")),
-    osmdata_(osmdata), lua_(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len)){
+    osmdata_(osmdata), lua_(get_lua(pt)){
 
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
@@ -52,6 +52,19 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
+  }
+
+  static std::string get_lua(const boost::property_tree::ptree& pt) {
+    auto graph_lua_name = pt.get_optional<std::string>("graph_lua_name");
+    if (graph_lua_name) {
+      LOG_INFO("Using LUA script: " + *graph_lua_name);
+      std::ifstream lua(*graph_lua_name);
+      if (!lua.is_open())
+        throw std::runtime_error("Failed to open: " + *graph_lua_name);
+      return std::string((std::istreambuf_iterator<char>(lua)),
+        std::istreambuf_iterator<char>());
+    }
+    return std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len);
   }
 
   void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) {

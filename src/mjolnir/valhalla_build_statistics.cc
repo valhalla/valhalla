@@ -479,7 +479,8 @@ void build(const boost::property_tree::ptree& pt,
 void BuildStatistics(const boost::property_tree::ptree& pt) {
 
   // Graphreader
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  auto hierarchy_properties = pt.get_child("mjolnir");
+  TileHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
   // Make sure there are at least 2 levels!
   if (hierarchy.levels().size() < 2)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
@@ -492,7 +493,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
+      if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
@@ -503,7 +504,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
+        if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }

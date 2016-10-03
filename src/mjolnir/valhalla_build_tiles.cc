@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
   }
 
   //set up the directories and purge old tiles
+  pt.get_child("mjolnir").erase("tile_extract");
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   valhalla::baldr::TileHierarchy hierarchy(tile_dir);
   for(const auto& level : hierarchy.levels()) {

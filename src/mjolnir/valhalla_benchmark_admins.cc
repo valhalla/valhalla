@@ -164,7 +164,7 @@ std::cout << "In Benchmark" << std::endl;
 
     // loading SpatiaLite as an extension
     sqlite3_enable_load_extension(db_handle, 1);
-#if SQLITE_VERSION_NUMBER > 3008002
+#if SQLITE_VERSION_NUMBER > 3008007
     sql = "SELECT load_extension('mod_spatialite')";
 #else
     sql = "SELECT load_extension('libspatialite')";
@@ -184,7 +184,8 @@ std::cout << "In Benchmark" << std::endl;
   }
 
   // Graphreader
-  GraphReader reader(pt.get_child("hierarchy"));
+  auto hierarchy_properties = pt.get_child("mjolnir");
+  GraphReader reader(hierarchy_properties);
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
@@ -195,7 +196,7 @@ std::cout << "In Benchmark" << std::endl;
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
+    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id));
       LOG_INFO("polys: " + std::to_string(polys.size()));
       if (polys.size() < 128) {

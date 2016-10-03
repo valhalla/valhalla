@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 
   // Get something we can use to fetch tiles
   valhalla::baldr::TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
-  valhalla::baldr::connectivity_map_t connectivity_map(tile_hierarchy);
+  valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
 
   uint32_t transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {
