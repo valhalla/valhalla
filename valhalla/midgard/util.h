@@ -112,6 +112,8 @@ std::string encode7(const container_t& points);
  */
 template<class container_t>
 container_t decode(const std::string& encoded);
+template<class container_t>
+container_t decode(const char* encoded, size_t length);
 
 /**
  * Varint decode a string into a container of points
@@ -121,6 +123,8 @@ container_t decode(const std::string& encoded);
  */
 template<class container_t>
 container_t decode7(const std::string& encoded);
+template<class container_t>
+container_t decode7(const char* encoded, size_t length);
 
 //useful in converting from one iteratable map to another
 //for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string> >(some_ptree)

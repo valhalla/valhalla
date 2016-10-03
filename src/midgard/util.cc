@@ -90,7 +90,7 @@ std::string encode(const container_t& points) {
 }
 
 template<class container_t>
-void decode(const std::string& encoded, container_t& output) {
+void decode(const char* encoded, size_t length, container_t& output) {
   //what byte are we looking at
   size_t i = 0;
 
@@ -111,7 +111,7 @@ void decode(const std::string& encoded, container_t& output) {
 
   //make sure to go over all the characters
   int last_lon = 0, last_lat = 0;
-  while (i < encoded.length()) {
+  while (i < length) {
     //decode the coordinates, lat first for some reason
     int lat = deserialize(last_lat);
     int lon = deserialize(last_lon);
@@ -166,7 +166,7 @@ std::string encode7(const container_t& points) {
 }
 
 template<class container_t>
-void decode7(const std::string& encoded, container_t& output) {
+void decode7(const char* encoded, size_t length, container_t& output) {
   //what byte are we looking at
   size_t i = 0;
 
@@ -187,7 +187,7 @@ void decode7(const std::string& encoded, container_t& output) {
 
   //make sure to go over all the characters
   int last_lon = 0, last_lat = 0;
-  while (i < encoded.length()) {
+  while (i < length) {
     //decode the coordinates, lat first for some reason
     int lat = deserialize(last_lat);
     int lon = deserialize(last_lon);
@@ -202,71 +202,135 @@ void decode7(const std::string& encoded, container_t& output) {
 
 //specialize for list
 template <>
+std::list<PointLL> decode<std::list<PointLL> >(const char* encoded, size_t length)
+{ std::list<PointLL> l; decode(encoded, length, l); return l; }
+
+template <>
+std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const char* encoded, size_t length)
+{ std::list<std::pair<double,double> > l; decode(encoded, length, l); return l; }
+
+template <>
+std::list<Point2> decode<std::list<Point2> >(const char* encoded, size_t length)
+{ std::list<Point2> l; decode(encoded, length, l); return l; }
+
+template <>
+std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const char* encoded, size_t length)
+{ std::list<std::pair<float,float> > l; decode(encoded, length, l); return l; }
+
+template <>
+std::list<PointLL> decode7<std::list<PointLL> >(const char* encoded, size_t length)
+{ std::list<PointLL> l; decode7(encoded, length, l); return l; }
+
+template <>
+std::list<std::pair<double,double> > decode7<std::list<std::pair<double,double> > >(const char* encoded, size_t length)
+{ std::list<std::pair<double,double> > l; decode7(encoded, length, l); return l; }
+
+template <>
+std::list<Point2> decode7<std::list<Point2> >(const char* encoded, size_t length)
+{ std::list<Point2> l; decode7(encoded, length, l); return l; }
+
+template <>
+std::list<std::pair<float,float> > decode7<std::list<std::pair<float,float> > >(const char* encoded, size_t length)
+{ std::list<std::pair<float,float> > l; decode7(encoded, length, l); return l; }
+
+template <>
 std::list<PointLL> decode<std::list<PointLL> >(const std::string& encoded)
-{ std::list<PointLL> l; decode(encoded, l); return l; }
+{ std::list<PointLL> l; decode(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string& encoded)
-{ std::list<std::pair<double,double> > l; decode(encoded, l); return l; }
+{ std::list<std::pair<double,double> > l; decode(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<Point2> decode<std::list<Point2> >(const std::string& encoded)
-{ std::list<Point2> l; decode(encoded, l); return l; }
+{ std::list<Point2> l; decode(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const std::string& encoded)
-{ std::list<std::pair<float,float> > l; decode(encoded, l); return l; }
+{ std::list<std::pair<float,float> > l; decode(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<PointLL> decode7<std::list<PointLL> >(const std::string& encoded)
-{ std::list<PointLL> l; decode7(encoded, l); return l; }
+{ std::list<PointLL> l; decode7(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<std::pair<double,double> > decode7<std::list<std::pair<double,double> > >(const std::string& encoded)
-{ std::list<std::pair<double,double> > l; decode7(encoded, l); return l; }
+{ std::list<std::pair<double,double> > l; decode7(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<Point2> decode7<std::list<Point2> >(const std::string& encoded)
-{ std::list<Point2> l; decode7(encoded, l); return l; }
+{ std::list<Point2> l; decode7(encoded.c_str(), encoded.length(), l); return l; }
 
 template <>
 std::list<std::pair<float,float> > decode7<std::list<std::pair<float,float> > >(const std::string& encoded)
-{ std::list<std::pair<float,float> > l; decode7(encoded, l); return l; }
+{ std::list<std::pair<float,float> > l; decode7(encoded.c_str(), encoded.length(), l); return l; }
 
 //specialize for vector with a preallocation
 //based on the length of the string we can make a guess at how many points are in it
 //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
 template <>
+std::vector<PointLL> decode<std::vector<PointLL> >(const char* encoded, size_t length)
+{ std::vector<PointLL> v; v.reserve(length * .25f); decode(encoded, length, v); return v; }
+
+template <>
+std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const char* encoded, size_t length)
+{ std::vector<std::pair<double,double> > v; v.reserve(length * .25f); decode(encoded, length, v); return v; }
+
+template <>
+std::vector<Point2> decode<std::vector<Point2> >(const char* encoded, size_t length)
+{ std::vector<Point2> v; v.reserve(length * .25f); decode(encoded, length, v); return v; }
+
+template <>
+std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const char* encoded, size_t length)
+{ std::vector<std::pair<float,float> > v; v.reserve(length * .25f); decode(encoded, length, v); return v; }
+
+template <>
+std::vector<PointLL> decode7<std::vector<PointLL> >(const char* encoded, size_t length)
+{ std::vector<PointLL> v; v.reserve(length * .25f); decode7(encoded, length, v); return v; }
+
+template <>
+std::vector<std::pair<double,double> > decode7<std::vector<std::pair<double,double> > >(const char* encoded, size_t length)
+{ std::vector<std::pair<double,double> > v; v.reserve(length * .25f); decode7(encoded, length, v); return v; }
+
+template <>
+std::vector<Point2> decode7<std::vector<Point2> >(const char* encoded, size_t length)
+{ std::vector<Point2> v; v.reserve(length * .25f); decode7(encoded, length, v); return v; }
+
+template <>
+std::vector<std::pair<float,float> > decode7<std::vector<std::pair<float,float> > >(const char* encoded, size_t length)
+{ std::vector<std::pair<float,float> > v; v.reserve(length * .25f); decode7(encoded, length, v); return v; }
+
+template <>
 std::vector<PointLL> decode<std::vector<PointLL> >(const std::string& encoded)
-{ std::vector<PointLL> v; v.reserve(encoded.size() * .25f); decode(encoded, v); return v; }
+{ std::vector<PointLL> v; v.reserve(encoded.length() * .25f); decode(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string& encoded)
-{ std::vector<std::pair<double,double> > v; v.reserve(encoded.size() * .25f); decode(encoded, v); return v; }
+{ std::vector<std::pair<double,double> > v; v.reserve(encoded.length() * .25f); decode(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<Point2> decode<std::vector<Point2> >(const std::string& encoded)
-{ std::vector<Point2> v; v.reserve(encoded.size() * .25f); decode(encoded, v); return v; }
+{ std::vector<Point2> v; v.reserve(encoded.length() * .25f); decode(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const std::string& encoded)
-{ std::vector<std::pair<float,float> > v; v.reserve(encoded.size() * .25f); decode(encoded, v); return v; }
+{ std::vector<std::pair<float,float> > v; v.reserve(encoded.length() * .25f); decode(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<PointLL> decode7<std::vector<PointLL> >(const std::string& encoded)
-{ std::vector<PointLL> v; v.reserve(encoded.size() * .25f); decode7(encoded, v); return v; }
+{ std::vector<PointLL> v; v.reserve(encoded.length() * .25f); decode7(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<std::pair<double,double> > decode7<std::vector<std::pair<double,double> > >(const std::string& encoded)
-{ std::vector<std::pair<double,double> > v; v.reserve(encoded.size() * .25f); decode7(encoded, v); return v; }
+{ std::vector<std::pair<double,double> > v; v.reserve(encoded.length() * .25f); decode7(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<Point2> decode7<std::vector<Point2> >(const std::string& encoded)
-{ std::vector<Point2> v; v.reserve(encoded.size() * .25f); decode7(encoded, v); return v; }
+{ std::vector<Point2> v; v.reserve(encoded.length() * .25f); decode7(encoded.c_str(), encoded.length(), v); return v; }
 
 template <>
 std::vector<std::pair<float,float> > decode7<std::vector<std::pair<float,float> > >(const std::string& encoded)
-{ std::vector<std::pair<float,float> > v; v.reserve(encoded.size() * .25f); decode7(encoded, v); return v; }
+{ std::vector<std::pair<float,float> > v; v.reserve(encoded.length() * .25f); decode7(encoded.c_str(), encoded.length(), v); return v; }
 
 //explicit instantiations, we should probably just move the implementation to the header so that
 //projects that depend on this library aren't limited in the instantiations made here
@@ -290,25 +354,25 @@ template std::string encode7<std::list<std::pair<double,double> > >(const std::l
 template std::string encode7<std::list<Point2> >(const std::list<Point2>&);
 template std::string encode7<std::list<std::pair<float,float> > >(const std::list<std::pair<float,float> >&);
 
-template std::vector<PointLL> decode<std::vector<PointLL> >(const std::string&);
-template std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string&);
-template std::vector<Point2> decode<std::vector<Point2> >(const std::string&);
-template std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const std::string&);
+template std::vector<PointLL> decode<std::vector<PointLL> >(const char*, size_t);
+template std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const char*, size_t);
+template std::vector<Point2> decode<std::vector<Point2> >(const char*, size_t);
+template std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const char*, size_t);
 
-template std::list<PointLL> decode<std::list<PointLL> >(const std::string&);
-template std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string&);
-template std::list<Point2> decode<std::list<Point2> >(const std::string&);
-template std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const std::string&);
+template std::list<PointLL> decode<std::list<PointLL> >(const char*, size_t);
+template std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const char*, size_t);
+template std::list<Point2> decode<std::list<Point2> >(const char*, size_t);
+template std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const char*, size_t);
 
-template std::vector<PointLL> decode7<std::vector<PointLL> >(const std::string&);
-template std::vector<std::pair<double,double> > decode7<std::vector<std::pair<double,double> > >(const std::string&);
-template std::vector<Point2> decode7<std::vector<Point2> >(const std::string&);
-template std::vector<std::pair<float,float> > decode7<std::vector<std::pair<float,float> > >(const std::string&);
+template std::vector<PointLL> decode7<std::vector<PointLL> >(const char*, size_t);
+template std::vector<std::pair<double,double> > decode7<std::vector<std::pair<double,double> > >(const char*, size_t);
+template std::vector<Point2> decode7<std::vector<Point2> >(const char*, size_t);
+template std::vector<std::pair<float,float> > decode7<std::vector<std::pair<float,float> > >(const char*, size_t);
 
-template std::list<PointLL> decode7<std::list<PointLL> >(const std::string&);
-template std::list<std::pair<double,double> > decode7<std::list<std::pair<double,double> > >(const std::string&);
-template std::list<Point2> decode7<std::list<Point2> >(const std::string&);
-template std::list<std::pair<float,float> > decode7<std::list<std::pair<float,float> > >(const std::string&);
+template std::list<PointLL> decode7<std::list<PointLL> >(const char*, size_t);
+template std::list<std::pair<double,double> > decode7<std::list<std::pair<double,double> > >(const char*, size_t);
+template std::list<Point2> decode7<std::list<Point2> >(const char*, size_t);
+template std::list<std::pair<float,float> > decode7<std::list<std::pair<float,float> > >(const char*, size_t);
 
 memory_status::memory_status(const std::unordered_set<std::string> interest){
   //grab the vm stats from the file
