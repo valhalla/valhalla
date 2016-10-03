@@ -322,6 +322,17 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_wheelchair(tag.second == "true" ? true : false);
       }
 
+      else if (tag.first == "sidewalk") {
+        if (tag.second == "both" || tag.second == "yes" ||
+            tag.second == "shared" || tag.second == "raised") {
+          w.set_sidewalk_left(true);
+          w.set_sidewalk_right(true);
+        } else if (tag.second == "left")
+          w.set_sidewalk_left(true);
+        else if (tag.second == "right")
+          w.set_sidewalk_right(true);
+      }
+
       else if (tag.first == "auto_forward")
         w.set_auto_forward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_forward")
