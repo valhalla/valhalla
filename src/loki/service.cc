@@ -288,10 +288,6 @@ namespace valhalla {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return jsonify_error({e.status_code, e.error_code, e.extra}, info);
       }
-      catch(const std::runtime_error& e) {
-        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({400, 199, ", runtime error - " + std::string(e.what())}, info);
-      }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return jsonify_error({400, 199, std::string(e.what())}, info);

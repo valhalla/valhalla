@@ -1,13 +1,12 @@
-#include "loki/search.h"
-#include <valhalla/midgard/linesegment2.h>
-#include <valhalla/midgard/distanceapproximator.h>
 
 #include <unordered_set>
 #include <list>
 #include <math.h>
 
 #include "loki/search.h"
+
 #include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/errorcode_util.h>
 
 using namespace valhalla::midgard;
