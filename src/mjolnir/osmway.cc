@@ -532,22 +532,42 @@ bool OSMWay::hov() const {
 
 // Set wheelchair flag.
 void OSMWay::set_wheelchair(const bool wheelchair) {
-  attributes_.fields.wheelchair = wheelchair;
+  access_.fields.wheelchair = wheelchair;
 }
 
 // Get the wheelchair flag.
 bool OSMWay::wheelchair() const {
-  return attributes_.fields.wheelchair;
+  return access_.fields.wheelchair;
 }
 
 // Set wheelchair_tag flag.
 void OSMWay::set_wheelchair_tag(const bool wheelchair_tag) {
-  attributes_.fields.wheelchair_tag = wheelchair_tag;
+  access_.fields.wheelchair_tag = wheelchair_tag;
 }
 
 // Get the wheelchair_tag flag.
 bool OSMWay::wheelchair_tag() const {
-  return attributes_.fields.wheelchair_tag;
+  return access_.fields.wheelchair_tag;
+}
+
+// Set sidewalk left flag.
+void OSMWay::set_sidewalk_left(const bool sidewalk_left) {
+  attributes_.fields.sidewalk_left = sidewalk_left;
+}
+
+// Get the sidewalk left flag.
+bool OSMWay::sidewalk_left() const {
+  return attributes_.fields.sidewalk_left;
+}
+
+// Set sidewalk right flag.
+void OSMWay::set_sidewalk_right(const bool sidewalk_right) {
+  attributes_.fields.sidewalk_right = sidewalk_right;
+}
+
+// Get the sidewalk right flag.
+bool OSMWay::sidewalk_right() const {
+  return attributes_.fields.sidewalk_right;
 }
 
 // Set drive_on_right flag.
