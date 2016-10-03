@@ -236,7 +236,12 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
   PointLL closest_point{};
   DistanceApproximator approx(p);
 
+  // Longitude (x) is scaled by the cos of the latitude so that distances are
+  // correct in lat,lon space
+  float lon_scale = cosf(p.lat() * kRadPerDeg);
+
   //for each segment
+  PointLL point;
   for(size_t i = 0; i < shape.size() - 1; ++i) {
     //project a onto b where b is the origin vector representing this segment
     //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
@@ -244,24 +249,24 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
     const auto& v = shape[i + 1];
     auto bx = v.first - u.first;
     auto by = v.second - u.second;
-    auto sq = bx*bx + by*by;
-    //avoid divided-by-zero which gives a NaN scale, otherwise comparisons below will fail
-    const auto scale = sq > 0? (((p.first - u.first)*bx + (p.second - u.second)*by) / sq) : 0.f;
+
+    // Scale longitude when finding the projection. Avoid divided-by-zero
+    // which gives a NaN scale, otherwise comparisons below will fail
+    auto bx2 = bx * lon_scale;
+    auto sq = bx2*bx2 + by*by;
+    auto scale = sq > 0 ?  (((p.first - u.first)*lon_scale*bx2 + (p.second - u.second)*by) / sq) : 0.f;
+
     //projects along the ray before u
     if(scale <= 0.f) {
-      bx = u.first;
-      by = u.second;
+      point = { u.first, u.second };
     }//projects along the ray after v
     else if(scale >= 1.f) {
-      bx = v.first;
-      by = v.second;
+      point = { v.first, v.second };
     }//projects along the ray between u and v
     else {
-      bx = bx*scale + u.first;
-      by = by*scale + u.second;
+      point = { u.first+bx*scale, u.second+by*scale };
     }
     //check if this point is better
-    PointLL point(bx, by);
     const auto sq_distance = approx.DistanceSquared(point);
     if(sq_distance < sq_closest_distance) {
       closest_segment = i;
@@ -269,7 +274,6 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
       closest_point = std::move(point);
     }
   }
-
   return std::make_tuple(std::move(closest_point), sqrt(sq_closest_distance), closest_segment);
 }
 
