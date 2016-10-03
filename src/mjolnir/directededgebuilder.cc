@@ -58,6 +58,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
   set_restrictions(restrictions);
   set_traffic_signal(signal);
 
+  set_sidewalk_left(way.sidewalk_left());
+  set_sidewalk_right(way.sidewalk_right());
+
   set_speed_type(way.tagged_speed() ?
         SpeedType::kTagged : SpeedType::kClassified);
 

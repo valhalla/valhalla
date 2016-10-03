@@ -652,6 +652,30 @@ struct OSMWay {
   bool wheelchair_tag() const;
 
   /**
+   * Set sidewalk_left flag.
+   * @param  sidewalk_left   Is there a sidewalk on the left?
+   */
+  void set_sidewalk_left(const bool sidewalk_left);
+
+  /**
+   * Get the sidewalk_left flag.
+   * @return  Returns sidewalk_left flag.
+   */
+  bool sidewalk_left() const;
+
+  /**
+   * Set sidewalk_right flag.
+   * @param  sidewalk_right   Is there a sidewalk on the right?
+   */
+  void set_sidewalk_right(const bool sidewalk_right);
+
+  /**
+   * Get the sidewalk_right flag.
+   * @return  Returns sidewalk_right flag.
+   */
+  bool sidewalk_right() const;
+
+  /**
    * Set drive_on_right flag.
    * @param  drive_on_right   Is a country that we drive on the right?
    */
@@ -884,8 +908,8 @@ struct OSMWay {
       uint32_t forward_tagged_lanes   :1;
       uint32_t backward_tagged_lanes  :1;
       uint32_t truck_route            :1;
-      uint32_t wheelchair             :1;
-      uint32_t wheelchair_tag         :1;
+      uint32_t sidewalk_right         :1;
+      uint32_t sidewalk_left          :1;
       uint32_t spare                  :1;
     } fields;
     uint32_t v;
@@ -924,7 +948,8 @@ struct OSMWay {
       uint16_t emergency_backward :1;
       uint16_t pedestrian         :1;
       uint16_t has_user_tags      :1;
-      uint16_t spare              :2;
+      uint16_t wheelchair         :1;
+      uint16_t wheelchair_tag     :1;
     } fields;
     uint16_t v;
   };
