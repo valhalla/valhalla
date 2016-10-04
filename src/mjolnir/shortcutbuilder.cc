@@ -349,7 +349,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     const std::unique_ptr<const valhalla::skadi::sample>& sample) {
 
   // Check if the edge is entering a contracted node
-  auto IsEnteringEdgeOfContractedNode = [info](const GraphId& node, const GraphId& edge) {
+  auto IsEnteringEdgeOfContractedNode = [&info](const GraphId& node, const GraphId& edge) {
     auto edgepairs = info.contractions_.find(node);
     if (edgepairs == info.contractions_.cend()) {
       return false;
@@ -609,7 +609,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(const TileHierarchy::TileLevel& leve
 
       // Set the edge count for the new node
       nodeinfo.set_edge_count(tilebuilder.directededges().size() - edge_count);
-      tilebuilder.nodes().push_back(nodeinfo);
+      tilebuilder.nodes().emplace_back(std::move(nodeinfo));
     }
 
     // Store the new tile
@@ -686,8 +686,8 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
     sample.reset(new skadi::sample(*elevation));
   }
 
-  auto level = tile_hierarchy.levels().rbegin() + 1;
-//  level++;
+  auto level = tile_hierarchy.levels().rbegin();
+  level++;
   for ( ; level != tile_hierarchy.levels().rend(); ++level) {
     // Mark nodes on the hierarchy level that can be contracted
     ShortcutInfo info;
