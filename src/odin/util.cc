@@ -28,7 +28,7 @@ namespace {
       boost::property_tree::read_json(ss, narrative_pt);
       LOG_TRACE("JSON read");
       //parse it into an object and add it to the map
-      auto narrative_dictionary = std::make_shared<valhalla::odin::NarrativeDictionary>(narrative_pt);
+      auto narrative_dictionary = std::make_shared<valhalla::odin::NarrativeDictionary>(json.first, narrative_pt);
       LOG_TRACE("NarrativeDictionary created");
       locales.insert(std::make_pair(json.first, narrative_dictionary));
       //insert all the aliases as this same object
