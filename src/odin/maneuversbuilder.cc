@@ -1206,7 +1206,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       default: {
-        LOG_ERROR(
+        LOG_INFO(
             std::string("EXIT RelativeDirection=")
                 + std::to_string(
                     static_cast<int>(maneuver.begin_relative_direction())));
@@ -1237,7 +1237,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       default: {
-        LOG_ERROR(
+        LOG_INFO(
             std::string("RAMP RelativeDirection=")
                 + std::to_string(
                     static_cast<int>(maneuver.begin_relative_direction())));
