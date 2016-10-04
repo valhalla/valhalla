@@ -3561,6 +3561,11 @@ std::string NarrativeBuilder_csCZ::GetPluralCategory(size_t count) {
   return kPluralCategoryOtherKey;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+std::string NarrativeBuilder_hiIN::GetPluralCategory(size_t count) {
+  return kPluralCategoryOtherKey;
+}
+
 
 }
 }
