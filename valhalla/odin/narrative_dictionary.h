@@ -225,7 +225,8 @@ struct PostTransitionTransitVerbalSubset : PhraseSet {
  */
 class NarrativeDictionary {
  public:
-  NarrativeDictionary(const boost::property_tree::ptree& narrative_pt);
+  NarrativeDictionary(const std::string language_tag,
+                      const boost::property_tree::ptree& narrative_pt);
 
   // Start
   StartSubset start_subset;
@@ -355,6 +356,13 @@ class NarrativeDictionary {
    * @return the locale based on the posix_locale string from language file.
    */
   const std::locale& GetLocale() const;
+
+  /**
+   * Returns the language tag of this dictionary.
+   *
+   * @return the language tag of this dictionary.
+   */
+  const std::string& GetLanguageTag() const;
 
  protected:
 
@@ -532,6 +540,10 @@ class NarrativeDictionary {
 
   // Locale
   std::locale locale;
+
+  // Language tag
+  std::string language_tag;
+
 };
 
 }

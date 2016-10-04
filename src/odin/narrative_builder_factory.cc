@@ -26,8 +26,11 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
 
   // if a NarrativeBuilder is derived with specific code for a particular
   // language then add logic here and return derived NarrativeBuilder
-  if (directions_options.language() == "cs-CZ") {
+  if (phrase_dictionary->second->GetLanguageTag() == "cs-CZ") {
     return midgard::make_unique<NarrativeBuilder_csCZ>(
+        directions_options, trip_path, *phrase_dictionary->second);
+  } else if (phrase_dictionary->second->GetLanguageTag() == "hi-IN") {
+    return midgard::make_unique<NarrativeBuilder_hiIN>(
         directions_options, trip_path, *phrase_dictionary->second);
   }
 

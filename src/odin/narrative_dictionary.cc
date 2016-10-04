@@ -37,7 +37,9 @@ namespace valhalla {
 namespace odin {
 
 NarrativeDictionary::NarrativeDictionary(
+    const std::string language_tag,
     const boost::property_tree::ptree& narrative_pt) {
+  this->language_tag = language_tag;
   Load(narrative_pt);
 }
 
@@ -551,6 +553,10 @@ void NarrativeDictionary::Load(
 
 const std::locale& NarrativeDictionary::GetLocale() const {
   return locale;
+}
+
+const std::string& NarrativeDictionary::GetLanguageTag() const {
+  return language_tag;
 }
 
 }
