@@ -35,14 +35,14 @@ namespace {
               {"score", json::fp_t{edge.score, 1}},
               {"edge_id", edge.id.json()},
               {"edge", directed_edge->json()},
-              {"edge_info", edge_info->json()},
+              {"edge_info", edge_info.json()},
             })
           );
         }//they want it lean and mean
         else {
           array->emplace_back(
             json::map({
-              {"way_id", edge_info->wayid()},
+              {"way_id", edge_info.wayid()},
               {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
               {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
               {"side_of_street",
@@ -126,7 +126,7 @@ namespace valhalla {
     void loki_worker_t::init_locate(const boost::property_tree::ptree& request) {
       parse_locations(request);
       if(locations.size() < 1)
-        throw valhalla_exception_t{400, 120};
+        throw std::runtime_error("Insufficient number of locations provided");
       auto costing = request.get_optional<std::string>("costing");
       if (costing)
         parse_costing(request);
