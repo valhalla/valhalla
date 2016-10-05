@@ -230,7 +230,7 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
   return correlated;
 }
 
-std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<PointLL>& shape) {
+std::tuple<PointLL, float, size_t> project(const PointLL& p, Shape7Decoder<PointLL> shape) {
   size_t closest_segment = 0;
   float sq_closest_distance = std::numeric_limits<float>::max();
   PointLL closest_point{};
@@ -241,12 +241,16 @@ std::tuple<PointLL, float, size_t> project(const PointLL& p, const std::vector<P
   float lon_scale = cosf(p.lat() * kRadPerDeg);
 
   //for each segment
-  PointLL point;
-  for(size_t i = 0; i < shape.size() - 1; ++i) {
+  PointLL point, v;
+  if (! shape.empty()) {
+    v = shape.pop();
+  }
+  for(size_t i = 0; ! shape.empty(); ++i) {
     //project a onto b where b is the origin vector representing this segment
     //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    const auto& u = shape[i];
-    const auto& v = shape[i + 1];
+    const auto u = v;
+    v = shape.pop();
+
     auto bx = v.first - u.first;
     auto by = v.second - u.second;
 
@@ -404,7 +408,7 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
         }
         //get some info about the edge
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-        auto candidate = project(location.latlng_, edge_info->shape());
+        auto candidate = project(location.latlng_, edge_info->lazy_shape());
 
         //does this look better than the current edge
         if(std::get<1>(candidate) < std::get<1>(closest_point)) {
