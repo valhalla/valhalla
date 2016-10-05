@@ -2,7 +2,7 @@
 #include <ostream>
 #include <iostream>
 
-#include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include "mjolnir/edgeinfobuilder.h"
