@@ -84,14 +84,14 @@ float tangent_angle(size_t index, const PointLL& point, const std::vector<PointL
   return u.Heading(v);
 }
 
-bool heading_filter(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info,
+bool heading_filter(const DirectedEdge* edge, const EdgeInfo& info,
   const std::tuple<PointLL, float, int>& point, boost::optional<int> heading) {
   //if its far enough away from the edge, the heading is pretty useless
   if(!heading || std::get<1>(point) > NO_HEADING)
     return false;
 
   //get the angle of the shape from this point
-  auto angle = tangent_angle(std::get<2>(point), std::get<0>(point), info->shape(), edge->forward());
+  auto angle = tangent_angle(std::get<2>(point), std::get<0>(point), info.shape(), edge->forward());
   //we want the closest distance between two angles which can be had
   //across 0 or between the two so we just need to know which is bigger
   if(*heading > angle)
@@ -105,7 +105,7 @@ PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
   return side;
 }
 
-PathLocation::SideOfStreet get_side(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info,
+PathLocation::SideOfStreet get_side(const DirectedEdge* edge, const EdgeInfo& info,
   const std::tuple<PointLL, float, int>& point, const PointLL& original){
 
   //its so close to the edge that its basically on the edge
@@ -114,8 +114,8 @@ PathLocation::SideOfStreet get_side(const DirectedEdge* edge, const std::unique_
 
   //if the projected point is way too close to the begin or end of the shape
   //TODO: if the original point is really far away side of street may also not make much sense..
-  if(std::get<0>(point).Distance(info->shape().front()) < SIDE_OF_STREET_SNAP ||
-     std::get<0>(point).Distance(info->shape().back()) < SIDE_OF_STREET_SNAP)
+  if(std::get<0>(point).Distance(info.shape().front()) < SIDE_OF_STREET_SNAP ||
+     std::get<0>(point).Distance(info.shape().back()) < SIDE_OF_STREET_SNAP)
     return PathLocation::SideOfStreet::NONE;
 
   //get the side TODO: this can technically fail for longer segments..
@@ -123,7 +123,7 @@ PathLocation::SideOfStreet get_side(const DirectedEdge* edge, const std::unique_
   //through the center of the earth and the two shape points and test
   //whether the original point is above or below the plane (depending on winding)
   auto index = std::get<2>(point);
-  LineSegment2<PointLL> segment(info->shape()[index], info->shape()[index + 1]);
+  LineSegment2<PointLL> segment(info.shape()[index], info.shape()[index + 1]);
   return (segment.IsLeft(original) > 0) == edge->forward()  ? PathLocation::SideOfStreet::LEFT : PathLocation::SideOfStreet::RIGHT;
 }
 
@@ -152,7 +152,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
     //do we want this edge
     if(edge_filter(edge) != 0.0f) {
       PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
-      std::get<2>(closest_point) = edge->forward() ? 0 : info->shape().size() - 2;
+      std::get<2>(closest_point) = edge->forward() ? 0 : info.shape().size() - 2;
       if(!heading_filter(edge, info, closest_point, location.heading_))
         correlated.edges.push_back(std::move(path_edge));
       else
@@ -162,7 +162,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
     //do we want the evil twin
     if(edge_filter(other_edge) != 0.0f) {
       PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
-      std::get<2>(closest_point) = other_edge->forward() ? 0 : info->shape().size() - 2;
+      std::get<2>(closest_point) = other_edge->forward() ? 0 : info.shape().size() - 2;
       if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
         correlated.edges.push_back(std::move(path_edge));
       else
@@ -184,15 +184,15 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
 }
 
 PathLocation correlate_edge(GraphReader& reader, const Location& location, const EdgeFilter& edge_filter, const std::tuple<PointLL, float, size_t>& closest_point,
-    const DirectedEdge* closest_edge, const GraphId& closest_edge_id, const std::unique_ptr<const EdgeInfo>&closest_edge_info) {
+    const DirectedEdge* closest_edge, const GraphId& closest_edge_id, const EdgeInfo& closest_edge_info) {
   //now that we have an edge we can pass back all the info about it
   PathLocation correlated(location);
   if(closest_edge != nullptr){
     //we need the ratio in the direction of the edge we are correlated to
     double partial_length = 0;
     for(size_t i = 0; i < std::get<2>(closest_point); ++i)
-      partial_length += closest_edge_info->shape()[i].Distance(closest_edge_info->shape()[i + 1]);
-    partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
+      partial_length += closest_edge_info.shape()[i].Distance(closest_edge_info.shape()[i + 1]);
+    partial_length += closest_edge_info.shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
     partial_length = std::min(partial_length, static_cast<double>(closest_edge->length()));
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
     if(!closest_edge->forward())
@@ -369,7 +369,7 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
   const GraphTile* closest_tile = nullptr;
   const DirectedEdge* closest_edge = nullptr;
   GraphId closest_edge_id;
-  std::unique_ptr<const EdgeInfo> closest_edge_info;
+  std::unique_ptr<EdgeInfo> closest_edge_info;
   std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
 
   //give up if we find nothing after a while
@@ -408,13 +408,18 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
         }
         //get some info about the edge
         auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-        auto candidate = project(location.latlng_, edge_info->lazy_shape());
+        auto candidate = project(location.latlng_, edge_info.lazy_shape());
 
         //does this look better than the current edge
         if(std::get<1>(candidate) < std::get<1>(closest_point)) {
           closest_edge = edge;
           closest_edge_id = e;
-          closest_edge_info.swap(edge_info);
+          if (closest_edge_info) {
+              using std::swap;
+              swap(*closest_edge_info, edge_info);
+          } else {
+              closest_edge_info.reset(new EdgeInfo(std::move(edge_info)));
+          }
           closest_point = std::move(candidate);
           closest_tile = tile;
         }
@@ -453,7 +458,7 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
     return correlate_node(reader, location, edge_filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
   }
   //it was along the edge
-  return correlate_edge(reader, location, edge_filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
+  return correlate_edge(reader, location, edge_filter, closest_point, closest_edge, closest_edge_id, *closest_edge_info);
 }
 
 }
