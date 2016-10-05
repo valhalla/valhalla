@@ -64,12 +64,12 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, cons
     for(size_t i = 0; i < ah->directededgecount(); ++i) {
       auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
       auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
-      if(a_info->encoded_shape() != b_info->encoded_shape())
+      if(a_info.encoded_shape() != b_info.encoded_shape())
         return false;
-      if(a_info->GetNames().size() != b_info->GetNames().size())
+      if(a_info.GetNames().size() != b_info.GetNames().size())
         return false;
-      for(size_t j = 0; j < a_info->GetNames().size(); ++j)
-        if(a_info->GetNames()[j] != b_info->GetNames()[j])
+      for(size_t j = 0; j < a_info.GetNames().size(); ++j)
+        if(a_info.GetNames()[j] != b_info.GetNames()[j])
           return false;
     }
     //check that the bins contain what was just added to them

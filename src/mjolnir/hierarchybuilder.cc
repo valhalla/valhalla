@@ -327,7 +327,7 @@ uint32_t ConnectEdges(const GraphId& basenode,
   restrictions = directededge->restrictions();
 
   // Get the shape for this edge. Reverse if directed edge is not forward.
-  auto encoded = tile->edgeinfo(directededge->edgeinfo_offset())->encoded_shape();
+  auto encoded = tile->edgeinfo(directededge->edgeinfo_offset()).encoded_shape();
   std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL> >(encoded);
   if (!directededge->forward()) {
     std::reverse(edgeshape.begin(), edgeshape.end());
@@ -432,8 +432,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
-      std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo->encoded_shape());
+      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo.encoded_shape());
       if (!directededge->forward())
         std::reverse(shape.begin(), shape.end());
 
@@ -667,10 +667,9 @@ std::pair<uint32_t, uint32_t> FormTilesInNewLevel(
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
-          std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-                              directededge->edgeinfo_offset());
+          auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                             nodea, nodeb, edgeinfo->wayid(), edgeinfo->shape(),
+                             nodea, nodeb, edgeinfo.wayid(), edgeinfo.shape(),
                              tile->GetNames(directededge->edgeinfo_offset()),
                              added);
           newedge.set_edgeinfo_offset(edge_info_offset);

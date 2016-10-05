@@ -116,7 +116,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     // transit edges and wayid matching
     if (startnode.level() == 2) {
       if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection) {
-        if (tile->edgeinfo(edge.edgeinfo_offset())->wayid() == end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid()) {
+        if (tile->edgeinfo(edge.edgeinfo_offset()).wayid() == end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
           opp_index = i;
         }
       }
@@ -131,7 +131,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
           // Match wayids and length. Also need to match edge info offset
           // or shape (if not in same tile)
           wayid2 = (directededge->trans_down() || directededge->trans_up()) ?
-                0 : end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid();
+                0 : end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid();
           if (wayid == wayid2 &&
               edge.length() == directededge->length()) {
             if (sametile) {
@@ -141,8 +141,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
               }
             } else {
               // Get shape for the edges
-              auto shape1 = tile->edgeinfo(edge.edgeinfo_offset())->shape();
-              auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset())->shape();
+              auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
+              auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
               if (ShapesMatch(shape1, shape2)) {
                 match = true;
               }
@@ -177,7 +177,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
         }
       }
       if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection) {
-        if (tile->edgeinfo(edge.edgeinfo_offset())->wayid() == end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid()) {
+        if (tile->edgeinfo(edge.edgeinfo_offset()).wayid() == end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
           opp_index = i;
         }
       }
@@ -370,7 +370,7 @@ void validate(const boost::property_tree::ptree& pt,
           bool deadend = false;
           std::string end_node_iso;
           uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
-                 0 : tile->edgeinfo(directededge.edgeinfo_offset())->wayid();
+                 0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
           uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
                  wayid, tile, endnode_tile, dupcount, end_node_iso, deadend);
           directededge.set_opp_index(opp_index);
