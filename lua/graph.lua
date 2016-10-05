@@ -991,7 +991,7 @@ function filter_tags_generic(kv)
         use = 20
      elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
         use = 20
-     elseif (kv["highway"] == "footway" and kv["footway"] == "sidewalk") or (sidewalk[kv["sidewalk"]] == "true") then
+     elseif (kv["highway"] == "footway" and kv["footway"] == "sidewalk") then
         use = 24
      elseif kv["highway"] == "footway" then
         use = 25

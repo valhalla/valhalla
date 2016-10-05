@@ -380,6 +380,9 @@ struct graph_callback : public OSMPBF::Callback {
           case Use::kFootway:
             w.set_use(Use::kFootway);
             break;
+          case Use::kSidewalk:
+            w.set_use(Use::kSidewalk);
+            break;
           case Use::kPedestrian:
             w.set_use(Use::kPedestrian);
             break;
@@ -667,6 +670,7 @@ struct graph_callback : public OSMPBF::Callback {
           switch (w.use()) {
           case Use::kFootway:
           case Use::kPedestrian:
+          case Use::kSidewalk:
           case Use::kPath:
           case Use::kBridleway:
             w.set_surface(Surface::kCompacted);
