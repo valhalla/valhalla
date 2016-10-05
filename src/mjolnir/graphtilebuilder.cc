@@ -688,7 +688,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Til
 
     //intersect the shape
     auto info = tile->edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = info->shape();
+    const auto& shape = info.shape();
     auto intersection = tiles.Intersect(shape);
 
     //bin some in, save some for later, ignore some

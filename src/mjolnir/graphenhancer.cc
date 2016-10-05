@@ -435,7 +435,7 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
 
     // Exclude edges that are nearly straight to go onto directed edge
     // Unfortunately don't have headings at the end node...
-    auto shape = tile->edgeinfo(diredge->edgeinfo_offset())->shape();
+    auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
     if (!diredge->forward())
       std::reverse(shape.begin(), shape.end());
     uint32_t to_heading = std::round(
@@ -1024,7 +1024,7 @@ void enhance(const boost::property_tree::ptree& pt,
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
-        auto shape = e_offset->shape();
+        auto shape = e_offset.shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
         heading[j] = std::round(
@@ -1081,7 +1081,7 @@ void enhance(const boost::property_tree::ptree& pt,
           // OpenStreetMap community.  Therefore, we will not override this tag with the
           // country defaults.  Otherwise, country specific access wins.
           // Currently, overrides only exist for Trunk RC and Uses below.
-          OSMAccess target{e_offset->wayid()};
+          OSMAccess target{e_offset.wayid()};
 
           if (admin_index != 0 && country_access.find(country_code) != country_access.end() &&
               (directededge.classification() == RoadClass::kTrunk ||
@@ -1091,7 +1091,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
             if (directededge.leaves_tile())
               access_tags.find(target,less_than);
-            else target = OSMAccess{e_offset->wayid()};
+            else target = OSMAccess{e_offset.wayid()};
 
             std::vector<int> access = country_access.at(country_code);
             SetCountryAccess(directededge, access, target);
@@ -1113,8 +1113,8 @@ void enhance(const boost::property_tree::ptree& pt,
                       nodeinfo.edge_index() + k);
             if (directededge.link() ||
                 ConsistentNames(country_code,
-                    tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
-                    tilebuilder.edgeinfo(fromedge.edgeinfo_offset())->GetNames())) {
+                    tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames(),
+                    tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
               // Set name consistency to true when entering a link (ramp or
               // turn channel) to avoid double penalizing.
               nodeinfo.set_name_consistency(j, k, true);
