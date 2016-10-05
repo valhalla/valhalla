@@ -85,7 +85,7 @@ edge_t next(const std::unordered_map<uint32_t, uint64_t>& tile_set, const bitset
        candidate.e->trans_down() || candidate.e->IsTransitLine()) //these should never happen
       continue;
     //names have to match
-    auto candidate_names = tile->edgeinfo(candidate.e->edgeinfo_offset())->GetNames();
+    auto candidate_names = tile->edgeinfo(candidate.e->edgeinfo_offset()).GetNames();
     if(names.size() == candidate_names.size() && std::equal(names.cbegin(), names.cend(), candidate_names.cbegin()))
       return candidate;
   }
@@ -99,7 +99,7 @@ void extend(GraphReader& reader, const GraphTile*& tile, const edge_t& edge, std
     tile = reader.GetGraphTile(edge.i);
   //get the shape
   auto info = tile->edgeinfo(edge.e->edgeinfo_offset());
-  auto more = valhalla::midgard::decode7<std::list<PointLL> >(info->encoded_shape());
+  auto more = valhalla::midgard::decode7<std::list<PointLL> >(info.encoded_shape());
   //this shape runs the other way
   if(!edge.e->forward())
     more.reverse();
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 
       //no name no thanks
       auto edge_info = tile->edgeinfo(edge.e->edgeinfo_offset());
-      auto names = edge_info->GetNames();
+      auto names = edge_info.GetNames();
       if(names.size() == 0 && !unnamed)
         continue;
 

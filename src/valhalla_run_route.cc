@@ -692,10 +692,10 @@ int main(int argc, char *argv[]) {
         const DirectedEdge* directededge = tile->directededge(edge.id);
         auto ei = tile->edgeinfo(directededge->edgeinfo_offset());
         if (directededge->unreachable()) {
-          LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+          LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei.wayid()));
           unreachable_origin = true;
         }
-        LOG_INFO("Origin wayId = " + std::to_string(ei->wayid()));
+        LOG_INFO("Origin wayId = " + std::to_string(ei.wayid()));
       }
 
       // Check if destinations are unreachable
@@ -705,10 +705,10 @@ int main(int argc, char *argv[]) {
         const DirectedEdge* directededge = tile->directededge(edge.id);
         auto ei = tile->edgeinfo(directededge->edgeinfo_offset());
         if (directededge->unreachable()) {
-          LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+          LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei.wayid()));
           unreachable_dest = true;
         }
-        LOG_INFO("Destination wayId = " + std::to_string(ei->wayid()));
+        LOG_INFO("Destination wayId = " + std::to_string(ei.wayid()));
       }
 
       // Route was unsuccessful
