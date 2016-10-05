@@ -34,6 +34,7 @@ constexpr float kModeWeight             = 1.5f;   // Favor this mode?
 constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
 constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
 constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
+constexpr float kDefaultSideWalkFactor  = 0.95f;  // Slightly favor sidewalks
 constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
 constexpr float kDefaultDrivewayFactor  = 5.0f;   // Avoid driveways
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
@@ -260,6 +261,7 @@ class PedestrianCost : public DynamicCost {
   float speed_;           // Pedestrian speed.
   float speedfactor_;     // Speed factor for costing. Based on speed.
   float walkway_factor_;  // Factor for favoring walkways and paths.
+  float sidewalk_factor_; // Factor for favoring sidewalks.
   float alley_factor_;    // Avoid alleys factor.
   float driveway_factor_; // Avoid driveways factor.
   float step_penalty_;    // Penalty applied to steps/stairs (seconds).
@@ -295,6 +297,7 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     speed_ = pt.get<float>("walking_speed", kDefaultSpeedWheelchair);
     step_penalty_  = pt.get<float>("step_penalty", kDefaultStepPenaltyWheelchair);
     walkway_factor_ = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+    sidewalk_factor_ = pt.get<float>("sidewalk_factor", kDefaultSideWalkFactor);
     max_grade_ = pt.get<float>("max_grade", kDefaultMaxGradeWheelchair);
     minimal_allowed_surface_ = Surface::kCompacted;
 
@@ -311,6 +314,7 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     speed_ = pt.get<float>("walking_speed", kDefaultSpeedFoot);
     step_penalty_  = pt.get<float>("step_penalty", kDefaultStepPenaltyFoot);
     walkway_factor_ = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+    sidewalk_factor_ = pt.get<float>("sidewalk_factor", kDefaultSideWalkFactor);
     max_grade_ = pt.get<float>("max_grade", kDefaultMaxGradeFoot);
     minimal_allowed_surface_ = Surface::kPath;
 
@@ -444,6 +448,7 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const uint32_t density) const {
+
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     float sec = edge->length() * (kSecPerHour * 0.001f) /
@@ -459,6 +464,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     return { sec * alley_factor_, sec };
   } else if (edge->use() == Use::kDriveway) {
     return { sec * driveway_factor_, sec };
+  } else if (edge->use() == Use::kSidewalk) {
+    return { sec * sidewalk_factor_, sec };
   } else {
     return { sec, sec };
   }
