@@ -2027,6 +2027,12 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
       return true;
     }
 
+    // Process simple straight "turn channel"
+    if ((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight)
+        && (new_turn_type == Turn::Type::kStraight)) {
+      return true;
+    }
+
   }
   return false;
 }
