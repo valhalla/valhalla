@@ -18,6 +18,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
 
 #include "skadi/service.h"
 #include "skadi/sample.h"
