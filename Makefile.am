@@ -54,6 +54,8 @@ nobase_include_HEADERS = \
 	valhalla/midgard/distanceapproximator.h \
 	valhalla/midgard/ellipse.h \
 	valhalla/midgard/sequence.h \
+	valhalla/midgard/shape_decoder.h \
+	valhalla/midgard/encoded.h \
 	valhalla/midgard/logging.h
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \

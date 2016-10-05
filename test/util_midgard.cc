@@ -1,5 +1,6 @@
 #include "test.h"
 #include "midgard/util.h"
+#include "midgard/encoded.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/constants.h"
 
