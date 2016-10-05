@@ -56,7 +56,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     // NOTE a pointer to edgeinfo is needed here because it returns
     // an unique ptr
     const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = edgeinfo->shape();
+    const auto& shape = edgeinfo.shape();
     if (shape.empty()) {
       // Otherwise Project will fail
       continue;
@@ -139,7 +139,7 @@ void IndexTile(const baldr::GraphTile& tile, CandidateGridQuery::grid_t& grid)
     const auto offset = directededge->edgeinfo_offset();
     if (visited.insert(offset).second) {
       const auto edgeinfo = tile.edgeinfo(offset);
-      const auto& shape = edgeinfo->shape();
+      const auto& shape = edgeinfo.shape();
       for (decltype(shape.size()) j = 1; j < shape.size(); ++j) {
         grid.AddLineSegment(edgeid, {shape[j - 1], shape[j]});
       }

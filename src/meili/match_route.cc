@@ -192,7 +192,7 @@ EdgeSegment::Shape(baldr::GraphReader& graphreader) const
   const auto edge = helpers::edge_directededge(graphreader, edgeid, tile);
   if (edge) {
     const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
-    const auto& shape = edgeinfo->shape();
+    const auto& shape = edgeinfo.shape();
     if (edge->forward()) {
       return helpers::ClipLineString(shape.cbegin(), shape.cend(), source, target);
     } else {

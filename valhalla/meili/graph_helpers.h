@@ -177,7 +177,10 @@ edge_edgeinfo(baldr::GraphReader& graphreader,
               const baldr::GraphTile*& tile)
 {
   const auto directededge = edge_directededge(graphreader, edgeid, tile);
-  return directededge? tile->edgeinfo(directededge->edgeinfo_offset()) : nullptr;
+  std::unique_ptr<const baldr::EdgeInfo> result;
+  if (directededge)
+      result.reset(new baldr::EdgeInfo(tile->edgeinfo(directededge->edgeinfo_offset())));
+  return result;
 }
 
 

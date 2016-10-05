@@ -310,7 +310,7 @@ get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
   } else {
     const auto directededge = helpers::edge_directededge(graphreader, edgelabel.edgeid(), tile);
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-    const auto& shape = edgeinfo->shape();
+    const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
       float heading;
       if (directededge->forward()) {
@@ -336,7 +336,7 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
     return nodeinfo.heading(idx);
   } else {
     const auto edgeinfo = tile->edgeinfo(outbound_edge->edgeinfo_offset());
-    const auto& shape = edgeinfo->shape();
+    const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
       float heading;
       if (outbound_edge->forward()) {

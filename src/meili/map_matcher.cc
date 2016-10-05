@@ -66,7 +66,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
 
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
 
-    const auto& shape = edgeinfo->shape();
+    const auto& shape = edgeinfo.shape();
     if (shape.empty()) {
       continue;
     }
