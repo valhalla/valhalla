@@ -414,12 +414,10 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
         if(std::get<1>(candidate) < std::get<1>(closest_point)) {
           closest_edge = edge;
           closest_edge_id = e;
-          if (closest_edge_info) {
-              using std::swap;
-              swap(*closest_edge_info, edge_info);
-          } else {
+          if (closest_edge_info)
+              std::swap(*closest_edge_info, edge_info);
+          else 
               closest_edge_info.reset(new EdgeInfo(std::move(edge_info)));
-          }
           closest_point = std::move(candidate);
           closest_tile = tile;
         }
