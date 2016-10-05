@@ -48,7 +48,7 @@ Building and Running Valhalla
 
 To build, install and run valhalla on Ubuntu (or other Debian based systems) try the following bash commands:
 
-```console
+```bash
 #grab all of the dependencies
 sudo add-apt-repository ppa:kevinkreiser/prime-server
 sudo apt-get update
