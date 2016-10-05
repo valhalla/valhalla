@@ -304,13 +304,13 @@ uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
                       std::list<PointLL>& shape, GraphId& endnode,
                       uint32_t& opp_local_idx,  uint32_t& restrictions,
                       std::unordered_map<GraphId, EdgePairs>& contractions) {
-  // Get the tile and directed edge. Set the opp_local_idx
+  // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
-  opp_local_idx = directededge->opp_local_idx();
 
-  // Copy the restrictions - we want to set the shortcut edge's restrictions
-  // to the last directed edge in the chain
+  // Copy the restrictions and opposing local index. Want to set the shortcut
+  // edge's restrictions and opp_local_idx to the last directed edge in the chain
+  opp_local_idx = directededge->opp_local_idx();
   restrictions = directededge->restrictions();
 
   // Get the shape for this edge. Reverse if directed edge is not forward.
@@ -398,6 +398,8 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
       uint32_t opp_local_idx = 0;
       GraphId next_edge_id = edge_id;
       while (true) {
+        // Get the edge pairs at the end node. Break once the node
+        // is not contracted.
         auto edgepairs = contractions.find(end_node);
         if (edgepairs == contractions.end()) {
           break;
@@ -600,7 +602,7 @@ uint32_t FormShortcuts(GraphReader& reader,
     LOG_DEBUG((boost::format("ShortcutBuilder created tile %1%: %2% bytes") %
          tile % tilebuilder.size()).str());
 
-    // Check if we need to clear the tile cache
+    // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {
       reader.Clear();
     }
