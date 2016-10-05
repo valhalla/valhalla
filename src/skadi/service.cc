@@ -1,27 +1,25 @@
-#include <functional>
-#include <string>
-#include <stdexcept>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <cstdint>
-#include <cmath>
-#include <sstream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "skadi/service.h"
+
 #include <boost/property_tree/info_parser.hpp>
-
-#include <prime_server/prime_server.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
-
+#include <prime_server/prime_server.hpp>
+#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
+#include <cmath>
+#include <cstdint>
+#include <functional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-#include "skadi/service.h"
-#include "skadi/sample.h"
 
 using namespace prime_server;
 using namespace valhalla;
@@ -126,14 +124,14 @@ namespace {
     return array;
   }
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp, const boost::optional<std::string>& extra=boost::none) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
-    json_error->emplace("error", std::string(exception.error_code_message + (exception.extra ? *exception.extra : "")));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
     json_error->emplace("status", exception.status_code_body);
     json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
+    json_error->emplace("error", std::string(exception.error_code_message));
+    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
 
     //serialize it
     std::stringstream ss;
@@ -173,9 +171,14 @@ namespace valhalla {
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+
+        //block all but get and post
+        if(request.method != method_t::POST && request.method != method_t::GET)
+          return jsonify_error({405, 301}, info, jsonp);
+
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend())
-          return jsonify_error({404, 301}, info, jsonp);
+          return jsonify_error({404, 304, action->first}, info, jsonp);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
@@ -187,7 +190,7 @@ namespace valhalla {
             result = elevation(request_pt, info);
             break;
           default:
-            return jsonify_error({501, 302}, info, jsonp);
+            return jsonify_error({501, 305}, info, jsonp);
         }
         //get processing time for skadi
         auto e = std::chrono::system_clock::now();
@@ -203,9 +206,13 @@ namespace valhalla {
 
         return result;
       }
+      catch(const valhalla_exception_t& e) {
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+        return jsonify_error({e.status_code, e.error_code, e.extra}, info, jsonp);
+      }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({400, 399}, info, jsonp, std::string(e.what()));
+        return jsonify_error({400, 399, std::string(e.what())}, info, jsonp);
       }
     }
 

@@ -66,6 +66,7 @@ namespace {
 
     //service worker
     boost::property_tree::ptree config;
+    config.add("skadi.actions", "['height']");
     config.add("skadi.service.proxy", "ipc:///tmp/test_skadi_proxy");
     config.add("skadi.logging.long_request", "5.0");
     config.add("httpd.service.loopback", "ipc:///tmp/test_skadi_results");
