@@ -9,7 +9,8 @@ enum class TravelMode : uint8_t {
    kDrive = 0,
    kPedestrian = 1,
    kBicycle = 2,
-   kPublicTransit = 3
+   kPublicTransit = 3,
+   kMaxTravelMode = 4
 };
 
 // Vehicle travel type
