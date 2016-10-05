@@ -145,10 +145,9 @@ void FormTilesInNewLevel(const TileHierarchy::TileLevel& base_level,
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
-          std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-                              directededge->edgeinfo_offset());
+          auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                             nodea, nodeb, edgeinfo->wayid(), edgeinfo->shape(),
+                             nodea, nodeb, edgeinfo.wayid(), edgeinfo.shape(),
                              tile->GetNames(directededge->edgeinfo_offset()),
                              added);
           newedge.set_edgeinfo_offset(edge_info_offset);

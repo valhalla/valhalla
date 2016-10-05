@@ -372,14 +372,14 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
       const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
 
-      if (edgeinfo->wayid() == wayid) {
+      if (edgeinfo.wayid() == wayid) {
 
         // Get shape and find closest point
-        auto this_shape = edgeinfo->shape();
+        auto this_shape = edgeinfo.shape();
         auto this_closest = stop_ll.ClosestPoint(this_shape);
 
         // Get names
-        names = edgeinfo->GetNames();
+        names = edgeinfo.GetNames();
 
         if (std::get<1>(this_closest) < mindist) {
           startnode.Set(tile->header()->graphid().tileid(),

@@ -14,6 +14,7 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -170,12 +171,20 @@ std::string EndNodeIso(const DirectedEdge* edge, GraphReader& reader) {
   return tile->admininfo(nodeinfo->admin_index()).country_iso();
 }
 
-// Test if the node is eligible to be contracted (part of a shortcut) in
-// the new level.
+/**
+ * Test if the node is eligible to be contracted (part of a shortcut).
+ * @param reader    Graph reader.
+ * @param tile      Current tile.
+ * @param nodeinfo  Node information.
+ * @param node      Node id.
+ * @param edgepairs Ingoing and outgoing edge Ids (if node can be contracted).
+ * @return  Returns true if the node can be contracted (part of shortcut),
+ *          false if not.
+ */
 bool CanContract(GraphReader& reader, const GraphTile* tile,
-                 const NodeInfo* nodeinfo, const GraphId& node,
-                 std::unordered_map<GraphId, EdgePairs>& contractions) {
+                 const GraphId& node, EdgePairs& edgepairs) {
   // Return false if only 1 edge
+  const NodeInfo* nodeinfo = tile->node(node);
   if (nodeinfo->edge_count() < 2) {
     return false;
   }
@@ -291,10 +300,8 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   }
 
   // Store the pairs of base edges entering and exiting this node
-  EdgePairs edgepairs;
   edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
   edgepairs.edge2 = std::make_pair(oppedge2, edges[match.first]);
-  contractions[node] = edgepairs;
   return true;
 }
 
@@ -302,8 +309,7 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
 uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
                       const GraphId& edgeid,
                       std::list<PointLL>& shape, GraphId& endnode,
-                      uint32_t& opp_local_idx,  uint32_t& restrictions,
-                      std::unordered_map<GraphId, EdgePairs>& contractions) {
+                      uint32_t& opp_local_idx,  uint32_t& restrictions) {
   // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -314,7 +320,7 @@ uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
   restrictions = directededge->restrictions();
 
   // Get the shape for this edge. Reverse if directed edge is not forward.
-  auto encoded = tile->edgeinfo(directededge->edgeinfo_offset())->encoded_shape();
+  auto encoded = tile->edgeinfo(directededge->edgeinfo_offset()).encoded_shape();
   std::list<PointLL> edgeshape = valhalla::midgard::decode7<std::list<PointLL> >(encoded);
   if (!directededge->forward()) {
     std::reverse(edgeshape.begin(), edgeshape.end());
@@ -330,25 +336,28 @@ uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
   return directededge->length();
 }
 
+// Check if the edge is entering a contracted node
+bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid,
+                                    const GraphId& edge) {
+  EdgePairs edgepairs;
+  const GraphTile* tile = reader.GetGraphTile(nodeid);
+  bool c = CanContract(reader, tile, nodeid, edgepairs);
+  return c && (edgepairs.edge1.first == edge || edgepairs.edge2.first == edge);
+}
+
 // Add shortcut edges (if they should exist) from the specified node
 // TODO - need to add access restrictions?
-uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
+uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
+              GraphTileBuilder& tilebuilder, const GraphId& start_node,
               const uint32_t edge_index, const uint32_t edge_count,
-              const GraphTile* tile, GraphTileBuilder& tilebuilder,
               std::unordered_map<uint32_t, uint32_t>& shortcuts,
-              std::unordered_map<GraphId, EdgePairs>& contractions,
               const std::unique_ptr<const valhalla::skadi::sample>& sample) {
-
-  // Check if the edge is entering a contracted node
-  auto IsEnteringEdgeOfContractedNode = [&contractions](const GraphId& node, const GraphId& edge) {
-    auto edgepairs = contractions.find(node);
-    if (edgepairs == contractions.cend()) {
-      return false;
-    } else {
-      return (edgepairs->second.edge1.first == edge ||
-              edgepairs->second.edge2.first == edge);
-    }
-  };
+  // Shortcut edges have to start at a node that is not contracted - return if
+  // this node can be contracted.
+  EdgePairs edgepairs;
+  if (CanContract(reader, tile, start_node, edgepairs)) {
+    return 0;
+  }
 
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
@@ -365,7 +374,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
     // Get the end node and check if the edge is set as a matching, entering
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
-    if (IsEnteringEdgeOfContractedNode(end_node, edge_id)) {
+    if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
@@ -374,7 +383,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo->encoded_shape());
+      std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL> >(edgeinfo.encoded_shape());
       if (!directededge->forward())
         std::reverse(shape.begin(), shape.end());
 
@@ -398,23 +407,23 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
       uint32_t opp_local_idx = 0;
       GraphId next_edge_id = edge_id;
       while (true) {
-        // Get the edge pairs at the end node. Break once the node
-        // is not contracted.
-        auto edgepairs = contractions.find(end_node);
-        if (edgepairs == contractions.end()) {
+        EdgePairs edgepairs;
+        const GraphTile* tile = reader.GetGraphTile(end_node);
+        if (!CanContract(reader, tile, end_node, edgepairs)) {
           break;
         }
 
         // Edge should match one of the 2 first (inbound) edges in the
         // pair. Choose the matching outgoing (second) edge.
-        if (edgepairs->second.edge1.first == next_edge_id) {
-          next_edge_id = edgepairs->second.edge1.second;
-        } else if (edgepairs->second.edge2.first == next_edge_id) {
-          next_edge_id = edgepairs->second.edge2.second;
+        if (edgepairs.edge1.first == next_edge_id) {
+          next_edge_id = edgepairs.edge1.second;
+        } else if (edgepairs.edge2.first == next_edge_id) {
+          next_edge_id = edgepairs.edge2.second;
         } else {
           // Break out of loop. This case can happen when a shortcut edge
           // enters another shortcut edge (but is not driveable in reverse
           // direction from the node).
+          LOG_INFO("Edge not found in edge pairs?");
           break;
         }
 
@@ -423,7 +432,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node,
-                               opp_local_idx, rst, contractions);
+                               opp_local_idx, rst);
       }
 
       // Add the edge info. Use length and number of shape points to match an
@@ -489,7 +498,6 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphId& start_node,
 // Form shortcuts for tiles in this level.
 uint32_t FormShortcuts(GraphReader& reader,
             const TileHierarchy::TileLevel& level,
-            std::unordered_map<GraphId, EdgePairs>& contractions,
             const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
@@ -531,14 +539,10 @@ uint32_t FormShortcuts(GraphReader& reader,
       // Current edge count
       size_t edge_count = tilebuilder.directededges().size();
 
-      // Add shortcut edges first. Shortcut edges can only start/end at
-      // nodes that are not contracted
+      // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      if (contractions.find(node_id) == contractions.end()) {
-        shortcut_count += AddShortcutEdges(reader, node_id, old_edge_index,
-                     old_edge_count, tile, tilebuilder, shortcuts,
-                     contractions, sample);
-      }
+      shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id,
+                   old_edge_index, old_edge_count, shortcuts, sample);
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
@@ -577,7 +581,7 @@ uint32_t FormShortcuts(GraphReader& reader,
           // edges that have same end nodes but different lengths
           auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
           uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                          node_id, directededge->endnode(), edgeinfo->wayid(), edgeinfo->shape(),
+                          node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.shape(),
                           tile->GetNames(directededge->edgeinfo_offset()), added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -608,38 +612,6 @@ uint32_t FormShortcuts(GraphReader& reader,
     }
   }
   return shortcut_count;
-}
-
-// Mark nodes that can be contracted.
-void MarkNodesForContraction(GraphReader& reader,
-             const TileHierarchy::TileLevel& level,
-             std::unordered_map<GraphId, EdgePairs>& contractions) {
-  // Iterate through all tiles in this level
-  // TODO - can be concurrent if we divide by rows for example
-  uint32_t ntiles = level.tiles.TileCount();
-  uint32_t tile_level = level.level;
-  const GraphTile* tile = nullptr;
-  for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
-    // Get the graph tile. Skip if no tile exists (common case)
-    tile = reader.GetGraphTile(GraphId(tileid, tile_level, 0));
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
-      continue;
-    }
-
-    // Iterate through the nodes. Mark nodes that are eligible for contracting
-    // when creating shortcuts.
-    GraphId nodeid(tileid, tile_level, 0);
-    const NodeInfo* nodeinfo = tile->node(nodeid);
-    for (uint32_t i = 0; i < tile->header()->nodecount();
-              i++, nodeinfo++, nodeid++) {
-      CanContract(reader, tile, nodeinfo, nodeid, contractions);
-    }
-
-    // Check if we need to clear the tile cache
-    if (reader.OverCommitted()) {
-      reader.Clear();
-    }
-  }
 }
 
 }
@@ -673,14 +645,10 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   auto level = tile_hierarchy.levels().rbegin();
   level++;
   for ( ; level != tile_hierarchy.levels().rend(); ++level) {
-    // Mark nodes on the hierarchy level that can be contracted and form
-    // shortcuts in this level
+    // Create shortcuts on this level
     auto tile_level = level->second;
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level.level));
-    std::unordered_map<GraphId, EdgePairs> contractions;
-    MarkNodesForContraction(reader, tile_level, contractions);
-    LOG_INFO("Marked " + std::to_string(contractions.size()) + " nodes for contraction");
-    uint32_t count = FormShortcuts(reader, tile_level,  contractions, sample);
+    uint32_t count = FormShortcuts(reader, tile_level, sample);
     LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
   }
 }
