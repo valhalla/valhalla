@@ -120,8 +120,8 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
 
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
-  TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin,
-                                              dest, through_loc);
+  TripPath trip_path = TripPathBuilder::Build(reader, mode_costing, pathedges,
+                                              origin, dest, through_loc);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
