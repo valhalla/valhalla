@@ -4,7 +4,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
 
 #include <unordered_map>
 #include <algorithm>
