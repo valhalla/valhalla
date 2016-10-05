@@ -142,7 +142,7 @@ namespace valhalla {
           locations.push_back(baldr::Location::FromPtree(location.second));
         }
         catch (...) {
-          throw valhalla_exception_t{400, 140};
+          throw valhalla_exception_t{400, 130};
         }
       }
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
@@ -154,7 +154,7 @@ namespace valhalla {
       if (costing)
         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
       else
-        throw valhalla_exception_t{400, 134};
+        throw valhalla_exception_t{400, 124};
 
       // TODO - have a way of specifying mode at the location
       if(*costing == "multimodal")
@@ -179,12 +179,12 @@ namespace valhalla {
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
         if(PATH_TO_ACTION.find(path) == PATH_TO_ACTION.cend())
-          throw valhalla_exception_t{400, 150, ":" + path};
+          throw valhalla_exception_t{400, 105, path};
         action_str.append("'" + path + "' ");
       }
       // Make sure we have at least something to support!
       if(action_str.empty())
-        throw valhalla_exception_t{400, 120};
+        throw valhalla_exception_t{400, 102};
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
@@ -195,10 +195,10 @@ namespace valhalla {
       }
       //this should never happen
       if (max_locations.empty())
-        throw valhalla_exception_t{400, 121};
+        throw valhalla_exception_t{400, 103};
 
       if (max_distance.empty())
-        throw valhalla_exception_t{400, 122};
+        throw valhalla_exception_t{400, 104};
 
       min_transit_walking_dis =
         config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
@@ -234,7 +234,7 @@ namespace valhalla {
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
         if (action == PATH_TO_ACTION.cend())
-          return jsonify_error({404, 102, action_str}, info);
+          return jsonify_error({404, 106, action_str}, info);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
@@ -267,7 +267,7 @@ namespace valhalla {
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
-            return jsonify_error({501, 103}, info);
+            return jsonify_error({501, 107}, info);
         }
         //get processing time for loki
         auto e = std::chrono::system_clock::now();

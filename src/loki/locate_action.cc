@@ -126,7 +126,7 @@ namespace valhalla {
     void loki_worker_t::init_locate(const boost::property_tree::ptree& request) {
       parse_locations(request);
       if(locations.size() < 1)
-        throw valhalla_exception_t{400, 130};
+        throw valhalla_exception_t{400, 120};
       auto costing = request.get_optional<std::string>("costing");
       if (costing)
         parse_costing(request);

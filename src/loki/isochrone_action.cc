@@ -17,7 +17,7 @@ namespace valhalla {
       //strip off unused information
       parse_locations(request);
       if(locations.size() < 1)
-        throw valhalla_exception_t{400, 130};
+        throw valhalla_exception_t{400, 120};
       for(auto& l : locations)
         l.heading_.reset();
 
@@ -27,14 +27,14 @@ namespace valhalla {
         throw valhalla_exception_t{400, 113};
       //check that the number of contours is ok
       if(contours->size() > max_contours)
-        throw valhalla_exception_t{400, 162, ":" + std::to_string(max_contours)};
+        throw valhalla_exception_t{400, 152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
         auto c = contour.second.get<size_t>("time", -1);
         if(c < prev || c == -1)
           throw valhalla_exception_t{400, 111};
         if(c > max_time)
-          throw valhalla_exception_t{400, 161, ":" + std::to_string(max_time)};
+          throw valhalla_exception_t{400, 151, std::to_string(max_time)};
         prev = c;
       }
       parse_costing(request);
@@ -44,7 +44,7 @@ namespace valhalla {
       init_isochrones(request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
-        throw valhalla_exception_t{400, 160, ":" + std::to_string(max_locations.find("isochrone")->second)};
+        throw valhalla_exception_t{400, 150, std::to_string(max_locations.find("isochrone")->second)};
 
       auto costing = request.get<std::string>("costing");
       auto date_type = request.get_optional<int>("date_time.type");
@@ -59,7 +59,7 @@ namespace valhalla {
       if (date_type) {
         //not yet on this
         if(date_type == 2) {
-          jsonify_error({501, 153}, request_info);
+          jsonify_error({501, 142}, request_info);
         }
         //what kind
         switch(*date_type) {
@@ -68,13 +68,13 @@ namespace valhalla {
           break;
         case 1: //depart
           if(!date_time_value)
-            throw valhalla_exception_t{400, 170};
+            throw valhalla_exception_t{400, 160};
           if (!DateTime::is_iso_local(*date_time_value))
-            throw valhalla_exception_t{400, 172};
+            throw valhalla_exception_t{400, 162};
           request.get_child("locations").front().second.add("date_time", *date_time_value);
           break;
         default:
-          throw valhalla_exception_t{400, 173};
+          throw valhalla_exception_t{400, 163};
           break;
         }
       }
