@@ -24,7 +24,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
 
 #include "mjolnir/graphtilebuilder.h"
 #include "proto/transit.pb.h"

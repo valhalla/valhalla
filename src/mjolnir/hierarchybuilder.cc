@@ -11,6 +11,7 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
