@@ -14,7 +14,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/odin/util.h>
 #include <valhalla/proto/tripdirections.pb.h>
