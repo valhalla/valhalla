@@ -30,7 +30,7 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # require other valhalla dependencies
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable libvalhalla_skadi = unstable libvalhalla_loki = unstable libvalhalla_thor = unstable libvalhalla_odin = unstable libvalhalla_tyr = unstable])
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable libvalhalla_meili = unstable libvalhalla_skadi = unstable libvalhalla_loki = unstable libvalhalla_thor = unstable libvalhalla_odin = unstable libvalhalla_tyr = unstable])
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tools. Please install libboost-dev.])])
