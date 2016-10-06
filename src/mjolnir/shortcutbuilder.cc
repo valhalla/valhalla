@@ -152,7 +152,7 @@ GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
                  nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-      i++, directededge++, edgeid++) {
+                i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
         directededge->classification() == edge->classification() &&
         directededge->length() == edge->length() &&
@@ -160,7 +160,9 @@ GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
       return edgeid;
     }
   }
-  LOG_ERROR("Opposing directed edge not found!");
+  LOG_ERROR("Opposing directed edge not found at LL= " +
+                  std::to_string(nodeinfo->latlng().lat()) + "," +
+                  std::to_string(nodeinfo->latlng().lng()));
   return GraphId(0, 0, 0);
 }
 
@@ -197,13 +199,15 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   }
 
   // Get list of valid edges, excluding transition and transit connection
-  // edges.
+  // edges. Also skip shortcut edge - this can happen if tile cache is cleared
+  // and this enters a tile where shortcuts have already been created.
   std::vector<GraphId> edges;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
     if (!directededge->trans_down() && !directededge->trans_up() &&
-        directededge->use() != Use::kTransitConnection) {
+        directededge->use() != Use::kTransitConnection &&
+        !directededge->is_shortcut()) {
       edges.push_back(edgeid);
     }
   }
