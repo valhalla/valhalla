@@ -164,26 +164,32 @@ namespace valhalla {
 
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
-      for(size_t i = 0; i < sources_targets.size(); ++i) {
-        auto& l = sources_targets[i];
-        auto found = searched.find(l);
-        if(found == searched.cend()) {
-          auto correlated = loki::Search(l, reader, edge_filter, node_filter);
-          found = searched.insert({l, std::move(correlated)}).first;
-        }
-        request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));
+      try{
+        for(size_t i = 0; i < sources_targets.size(); ++i) {
+          auto& l = sources_targets[i];
+          auto found = searched.find(l);
+            if(found == searched.cend()) {
+              auto correlated = loki::Search(l, reader, edge_filter, node_filter);
+              found = searched.insert({l, std::move(correlated)}).first;
+            }
+            request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));
 
-        //TODO: get transit level for transit costing
-        //TODO: if transit send a non zero radius
-        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, found->second, 0);
-        for(auto& color : colors){
-          auto itr = color_counts.find(color);
-          if(itr == color_counts.cend())
-            color_counts[color] = 1;
-          else
-            ++itr->second;
+          //TODO: get transit level for transit costing
+          //TODO: if transit send a non zero radius
+          auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, found->second, 0);
+          for(auto& color : colors){
+            auto itr = color_counts.find(color);
+            if(itr == color_counts.cend())
+              color_counts[color] = 1;
+            else
+              ++itr->second;
+          }
         }
       }
+      catch(const std::runtime_error&) {
+        throw valhalla_exception_t{400, 170};
+      }
+
 
       //are all the locations in the same color regions
       bool connected = false;

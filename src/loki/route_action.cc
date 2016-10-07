@@ -109,20 +109,26 @@ namespace valhalla {
 
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
-      for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
-        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
-        //TODO: get transit level for transit costing
-        //TODO: if transit send a non zero radius
-        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
-        for(auto color : colors){
-          auto itr = color_counts.find(color);
-          if(itr == color_counts.cend())
-            color_counts[color] = 1;
-          else
-            ++itr->second;
+      try{
+        for(size_t i = 0; i < locations.size(); ++i) {
+          auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
+          request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+          //TODO: get transit level for transit costing
+          //TODO: if transit send a non zero radius
+          auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
+          for(auto color : colors){
+            auto itr = color_counts.find(color);
+            if(itr == color_counts.cend())
+              color_counts[color] = 1;
+            else
+              ++itr->second;
+          }
         }
       }
+      catch(const std::runtime_error&) {
+        throw valhalla_exception_t{400, 170};
+      }
+
 
       //are all the locations in the same color regions
       bool connected = false;

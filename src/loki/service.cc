@@ -164,9 +164,14 @@ namespace valhalla {
       // Creates the cost in the cost factory
       std::string method_options = "costing_options." + *costing;
       auto costing_options = request.get_child(method_options,{});
-      auto c = factory.Create(*costing, costing_options);
-      edge_filter = c->GetEdgeFilter();
-      node_filter = c->GetNodeFilter();
+      try{
+        auto c = factory.Create(*costing, costing_options);
+        edge_filter = c->GetEdgeFilter();
+        node_filter = c->GetNodeFilter();
+      }
+      catch(const std::runtime_error&) {
+        throw valhalla_exception_t{400, 125, "'" + *costing + "'"};
+      }
     }
 
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
