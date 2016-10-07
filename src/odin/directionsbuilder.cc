@@ -22,21 +22,20 @@ namespace odin {
 const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type {
   { static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar },
   { static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle },
-  { static_cast<int>(TripPath_VehicleType_kFourWheelDrive), TripDirections_VehicleType_kFourWheelDrive },
-  { static_cast<int>(TripPath_VehicleType_kTractorTrailers), TripDirections_VehicleType_kTractorTrailers },
+  { static_cast<int>(TripPath_VehicleType_kAutoBus), TripDirections_VehicleType_kAutoBus },
+  { static_cast<int>(TripPath_VehicleType_kTractorTrailer), TripDirections_VehicleType_kTractorTrailer },
 };
 
 const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type {
   { static_cast<int>(TripPath_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot },
-  { static_cast<int>(TripPath_PedestrianType_kWheelChair), TripDirections_PedestrianType_kWheelChair },
+  { static_cast<int>(TripPath_PedestrianType_kWheelchair), TripDirections_PedestrianType_kWheelchair },
   { static_cast<int>(TripPath_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway },
 };
 
 const std::unordered_map<int, TripDirections_BicycleType> translate_bicycle_type {
   { static_cast<int>(TripPath_BicycleType_kRoad), TripDirections_BicycleType_kRoad },
-  { static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid },
-  { static_cast<int>(TripPath_BicycleType_kCity), TripDirections_BicycleType_kCity },
   { static_cast<int>(TripPath_BicycleType_kCross), TripDirections_BicycleType_kCross },
+  { static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid },
   { static_cast<int>(TripPath_BicycleType_kMountain), TripDirections_BicycleType_kMountain },
 };
 

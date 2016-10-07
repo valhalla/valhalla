@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/turn.h>
@@ -109,10 +110,20 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #ifdef LOGGING_LEVEL_DEBUG
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(
       trip_path_->shape());
+// Shape by index
 //  int i = 0;
 //  for (PointLL ll : shape) {
 //    LOG_TRACE(std::string("shape lng/lat[") + std::to_string(i++) + "]=" + std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
 //  }
+// Shape by lat/lon pairs
+//  std::string shape_json("\"shape\":[");
+//  for (PointLL ll : shape) {
+//    shape_json += "{\"lat\":" + std::to_string(ll.lat()) + ",\"lon\":" + std::to_string(ll.lng()) + "},";
+//  }
+//  shape_json.pop_back();
+//  shape_json += "]";
+//  LOG_TRACE(shape_json);
+
   if (shape.empty() || (trip_path_->node_size() < 2))
     throw valhalla_exception_t{400, 213};
   const auto& orig = trip_path_->GetOrigin();
@@ -1207,7 +1218,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       default: {
-        LOG_ERROR(
+        LOG_INFO(
             std::string("EXIT RelativeDirection=")
                 + std::to_string(
                     static_cast<int>(maneuver.begin_relative_direction())));
@@ -1238,7 +1249,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
         break;
       }
       default: {
-        LOG_ERROR(
+        LOG_INFO(
             std::string("RAMP RelativeDirection=")
                 + std::to_string(
                     static_cast<int>(maneuver.begin_relative_direction())));
@@ -2025,6 +2036,12 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
             || (new_turn_type == Turn::Type::kLeft)
             || (new_turn_type == Turn::Type::kSharpLeft)
             || (new_turn_type == Turn::Type::kStraight))) {
+      return true;
+    }
+
+    // Process simple straight "turn channel"
+    if ((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight)
+        && (new_turn_type == Turn::Type::kStraight)) {
       return true;
     }
 

@@ -73,23 +73,22 @@ message TripPath {
   enum VehicleType {
     kCar = 0;
     kMotorcycle = 1;
-    kFourWheelDrive = 2;
-    kTractorTrailers = 3;
+    kAutoBus = 2;
+    kTractorTrailer = 3;
   }
 
   // TODO: review and update as needed
   enum PedestrianType {
     kFoot = 0;
-    kWheelChair = 1;
+    kWheelchair = 1;
     kSegway = 2;
   }
 
   enum BicycleType {
     kRoad = 0;
-    kHybrid = 1;
-    kCity = 2;
-    kCross = 3;
-    kMountain = 4;
+    kCross = 1;
+    kHybrid = 2;
+    kMountain = 3;
   }
   
   enum TransitType {
