@@ -3,7 +3,6 @@
 
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/baldr/errorcode_util.h>
 
 namespace valhalla {
 namespace odin {

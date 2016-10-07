@@ -8,6 +8,7 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_builder_factory.h"
+#include <valhalla/baldr/errorcode_util.h>
 
 namespace {
 // Minimum edge length
