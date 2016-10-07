@@ -109,10 +109,20 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #ifdef LOGGING_LEVEL_DEBUG
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(
       trip_path_->shape());
+// Shape by index
 //  int i = 0;
 //  for (PointLL ll : shape) {
 //    LOG_TRACE(std::string("shape lng/lat[") + std::to_string(i++) + "]=" + std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
 //  }
+// Shape by lat/lon pairs
+//  std::string shape_json("\"shape\":[");
+//  for (PointLL ll : shape) {
+//    shape_json += "{\"lat\":" + std::to_string(ll.lat()) + ",\"lon\":" + std::to_string(ll.lng()) + "},";
+//  }
+//  shape_json.pop_back();
+//  shape_json += "]";
+//  LOG_TRACE(shape_json);
+
   if (shape.empty() || (trip_path_->node_size() < 2))
     throw std::runtime_error("Error - No shape or invalid node count");
   const auto& orig = trip_path_->GetOrigin();
