@@ -16,6 +16,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/encoded.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/odin/util.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
@@ -801,13 +802,14 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
-    json_error->emplace("error", error);
-    json_error->emplace("status", status);
-    json_error->emplace("code", code);
+    json_error->emplace("status", exception.status_code_body);
+    json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
+    json_error->emplace("error", std::string(exception.error_code_message));
+    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
 
     //serialize it
     std::stringstream ss;
@@ -818,7 +820,7 @@ namespace {
       ss << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
@@ -852,7 +854,7 @@ namespace valhalla {
           jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(...) {
-          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info, jsonp);
+          return jsonify_error({500, 500}, info, jsonp);
         }
 
         //see if we can get some options
@@ -871,7 +873,7 @@ namespace valhalla {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error(500, "Internal Server Error", "Failed to parse TripDirections", info, jsonp);
+            return jsonify_error({500, 501}, info, jsonp);
           }
         }
 
@@ -914,7 +916,7 @@ namespace valhalla {
       }
       catch(const std::exception& e) {
         LOG_INFO(std::string("Bad Request: ") + e.what());
-        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
+        return jsonify_error({400, 599, std::string(e.what())}, info, jsonp);
       }
     }
 
