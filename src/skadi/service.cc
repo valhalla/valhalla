@@ -1,25 +1,28 @@
-#include "skadi/service.h"
-
-#include <boost/property_tree/info_parser.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
-#include <cmath>
-#include <cstdint>
 #include <functional>
-#include <sstream>
-#include <stdexcept>
 #include <string>
+#include <stdexcept>
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
+#include <cstdint>
+#include <cmath>
+#include <sstream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/info_parser.hpp>
 
+#include <prime_server/prime_server.hpp>
+#include <prime_server/http_protocol.hpp>
+
+#include <valhalla/baldr/json.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/location.h>
+#include <valhalla/baldr/errorcode_util.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/midgard/encoded.h>
+
+#include "skadi/service.h"
+#include "skadi/sample.h"
 
 using namespace prime_server;
 using namespace valhalla;
