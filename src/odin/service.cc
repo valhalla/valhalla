@@ -30,14 +30,14 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp, const boost::optional<std::string>& extra=boost::none) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
-    json_error->emplace("error", std::string(exception.error_code_message + (exception.extra ? *exception.extra : "")));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
     json_error->emplace("status", exception.status_code_body);
     json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
+    json_error->emplace("error", std::string(exception.error_code_message));
+    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
 
     //serialize it
     std::stringstream ss;
@@ -131,7 +131,7 @@ namespace valhalla {
         return result;
       }
       catch(const std::exception& e) {
-        return jsonify_error({400, 299}, info, jsonp, std::string(e.what()));
+        return jsonify_error({400, 299, std::string(e.what())}, info, jsonp);
       }
     }
 
