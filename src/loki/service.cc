@@ -13,6 +13,7 @@
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/errorcode_util.h>
 
 #include "loki/service.h"
 #include "loki/search.h"
@@ -50,7 +51,7 @@ namespace {
     try {
       //throw the json into the ptree
       auto json = request.query.find("json");
-    if (json != request.query.end() && json->second.size()
+      if (json != request.query.end() && json->second.size()
         && json->second.front().size()) {
         std::istringstream is(json->second.front());
         boost::property_tree::read_json(is, pt);
@@ -61,7 +62,7 @@ namespace {
       }
     }
     catch(...) {
-      throw std::runtime_error("Failed to parse json request");
+      throw valhalla_exception_t{400, 100};
     }
 
     //throw the query params into the ptree
@@ -105,14 +106,14 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-
-   worker_t::result_t loki_worker_t::jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info) const {
+    worker_t::result_t loki_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info) const {
 
       //build up the json map
       auto json_error = json::map({});
-      json_error->emplace("error", error);
-      json_error->emplace("status", status);
-      json_error->emplace("code", code);
+      json_error->emplace("status", exception.status_code_body);
+      json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
+      json_error->emplace("error", std::string(exception.error_code_message));
+      json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
 
       //serialize it
       std::stringstream ss;
@@ -123,7 +124,7 @@ namespace valhalla {
         ss << ')';
 
       worker_t::result_t result{false};
-      http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+      http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
 
@@ -134,14 +135,14 @@ namespace valhalla {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if (!request_locations)
-        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+        throw valhalla_exception_t{400, 110};
 
       for(const auto& location : *request_locations) {
         try{
           locations.push_back(baldr::Location::FromPtree(location.second));
         }
         catch (...) {
-          throw std::runtime_error("Failed to parse location");
+          throw valhalla_exception_t{400, 130};
         }
       }
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
@@ -153,7 +154,7 @@ namespace valhalla {
       if (costing)
         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
       else
-        throw std::runtime_error("No edge/node costing provided");
+        throw valhalla_exception_t{400, 124};
 
       // TODO - have a way of specifying mode at the location
       if(*costing == "multimodal")
@@ -163,9 +164,14 @@ namespace valhalla {
       // Creates the cost in the cost factory
       std::string method_options = "costing_options." + *costing;
       auto costing_options = request.get_child(method_options,{});
-      auto c = factory.Create(*costing, costing_options);
-      edge_filter = c->GetEdgeFilter();
-      node_filter = c->GetNodeFilter();
+      try{
+        auto c = factory.Create(*costing, costing_options);
+        edge_filter = c->GetEdgeFilter();
+        node_filter = c->GetNodeFilter();
+      }
+      catch(const std::runtime_error&) {
+        throw valhalla_exception_t{400, 125, "'" + *costing + "'"};
+      }
     }
 
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
@@ -178,12 +184,12 @@ namespace valhalla {
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
         if(PATH_TO_ACTION.find(path) == PATH_TO_ACTION.cend())
-          throw std::runtime_error("Path action '" + path + "' not supported");
+          throw valhalla_exception_t{400, 105, path};
         action_str.append("'" + path + "' ");
       }
       // Make sure we have at least something to support!
       if(action_str.empty())
-        throw std::runtime_error("The config actions for Loki are incorrectly loaded.");
+        throw valhalla_exception_t{400, 102};
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
@@ -194,9 +200,10 @@ namespace valhalla {
       }
       //this should never happen
       if (max_locations.empty())
-        throw std::runtime_error("Missing max_locations configuration.");
+        throw valhalla_exception_t{400, 103};
+
       if (max_distance.empty())
-        throw std::runtime_error("Missing max_distance configuration.");
+        throw valhalla_exception_t{400, 104};
 
       min_transit_walking_dis =
         config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
@@ -227,12 +234,12 @@ namespace valhalla {
 
         //block all but get and post
         if(request.method != method_t::POST && request.method != method_t::GET)
-          return jsonify_error(405, "Method Not Allowed", "Try a POST or GET request instead", info);
+          return jsonify_error({405, 101}, info);
 
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
         if (action == PATH_TO_ACTION.cend())
-          return jsonify_error(404, "Not Found", "Try any of: " + action_str, info);
+          return jsonify_error({404, 106, action_str}, info);
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
@@ -265,7 +272,7 @@ namespace valhalla {
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
-            return jsonify_error(501, "Not Implemented", "Not Implemented", info);
+            return jsonify_error({501, 107}, info);
         }
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
@@ -282,9 +289,13 @@ namespace valhalla {
 
         return result;
       }
+      catch(const valhalla_exception_t& e) {
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+        return jsonify_error({e.status_code, e.error_code, e.extra}, info);
+      }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", e.what(), info);
+        return jsonify_error({400, 199, std::string(e.what())}, info);
       }
     }
 

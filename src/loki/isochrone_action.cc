@@ -17,24 +17,24 @@ namespace valhalla {
       //strip off unused information
       parse_locations(request);
       if(locations.size() < 1)
-        throw std::runtime_error("Insufficient number of locations provided");
+        throw valhalla_exception_t{400, 120};
       for(auto& l : locations)
         l.heading_.reset();
 
       //make sure the isoline definitions are valid
       auto contours = request.get_child_optional("contours");
       if(!contours)
-        throw std::runtime_error("Insufficiently specified required parameter 'contours'");
+        throw valhalla_exception_t{400, 113};
       //check that the number of contours is ok
       if(contours->size() > max_contours)
-        throw std::runtime_error("Exceeded max contours of " + std::to_string(max_contours) + ".");
+        throw valhalla_exception_t{400, 152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
         auto c = contour.second.get<size_t>("time", -1);
         if(c < prev || c == -1)
-          throw std::runtime_error("Insufficiently specified required parameter 'time'");
+          throw valhalla_exception_t{400, 111};
         if(c > max_time)
-          throw std::runtime_error("Exceeded max time of " + std::to_string(max_time) + ".");
+          throw valhalla_exception_t{400, 151, std::to_string(max_time)};
         prev = c;
       }
       parse_costing(request);
@@ -44,7 +44,7 @@ namespace valhalla {
       init_isochrones(request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
-        throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations.find("isochrone")->second) + ".");
+        throw valhalla_exception_t{400, 150, std::to_string(max_locations.find("isochrone")->second)};
 
       auto costing = request.get<std::string>("costing");
       auto date_type = request.get_optional<int>("date_time.type");
@@ -59,9 +59,7 @@ namespace valhalla {
       if (date_type) {
         //not yet on this
         if(date_type == 2) {
-          http_response_t response(501, "Not Implemented", "Arrive by not implemented for isochrones", headers_t{CORS});
-          response.from_info(request_info);
-          return {false, {response.to_string()}};
+          jsonify_error({501, 142}, request_info);
         }
         //what kind
         switch(*date_type) {
@@ -70,21 +68,26 @@ namespace valhalla {
           break;
         case 1: //depart
           if(!date_time_value)
-            throw std::runtime_error("Date and time required for origin for date_type of depart at.");
+            throw valhalla_exception_t{400, 160};
           if (!DateTime::is_iso_local(*date_time_value))
-            throw std::runtime_error("Date and time is invalid.  Format is YYYY-MM-DDTHH:MM");
+            throw valhalla_exception_t{400, 162};
           request.get_child("locations").front().second.add("date_time", *date_time_value);
           break;
         default:
-          throw std::runtime_error("Invalid date_type");
+          throw valhalla_exception_t{400, 163};
           break;
         }
       }
 
-      //correlate the various locations to the underlying graph
-      for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
-        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+      try{
+        //correlate the various locations to the underlying graph
+        for(size_t i = 0; i < locations.size(); ++i) {
+          auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
+          request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+        }
+      }
+      catch(const std::runtime_error&) {
+        throw valhalla_exception_t{400, 170};
       }
 
       //pass it on

@@ -126,7 +126,7 @@ namespace valhalla {
     void loki_worker_t::init_locate(const boost::property_tree::ptree& request) {
       parse_locations(request);
       if(locations.size() < 1)
-        throw std::runtime_error("Insufficient number of locations provided");
+        throw valhalla_exception_t{400, 120};
       auto costing = request.get_optional<std::string>("costing");
       if (costing)
         parse_costing(request);
@@ -146,6 +146,9 @@ namespace valhalla {
         try {
           auto correlated = loki::Search(location, reader, edge_filter, node_filter);
           json->emplace_back(serialize(request.get_optional<std::string>("id"), correlated, reader, verbose));
+        }
+        catch(const std::runtime_error&) {
+          throw valhalla_exception_t{400, 170};
         }
         catch(const std::exception& e) {
           json->emplace_back(serialize(request.get_optional<std::string>("id"), location.latlng_, e.what(), verbose));

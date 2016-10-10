@@ -7,6 +7,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/sif/dynamiccost.h>
 
+
 #include <functional>
 
 namespace valhalla{

@@ -52,7 +52,7 @@ namespace {
         }
 
         if (path_distance > matrix_max_distance)
-          throw std::runtime_error("Path distance exceeds the max distance limit");
+          throw valhalla_exception_t{400, 154};
         }
      }
   }
@@ -69,7 +69,7 @@ namespace valhalla {
       //we require locations
       if (!request_locations) {
         if (!request_sources || !request_targets) {
-          throw std::runtime_error("Insufficiently specified required parameter 'locations' or 'sources & targets'");
+          throw valhalla_exception_t{400, 112};
         }
       }
 
@@ -77,7 +77,7 @@ namespace valhalla {
       //deprecated way of specifying
       if (!request_sources && !request_targets) {
         if (request_locations->size() < 2)
-          throw std::runtime_error("Insufficient number of locations provided");
+          throw valhalla_exception_t{400, 120};
 
         //create new sources and targets ptree from locations
         boost::property_tree::ptree sources_child, targets_child;
@@ -115,7 +115,7 @@ namespace valhalla {
           sources.back().heading_.reset();
         }
         catch (...) {
-          throw std::runtime_error("Failed to parse source");
+          throw valhalla_exception_t{400, 131};
         }
       }
       for(const auto& target : *request_targets) {
@@ -124,15 +124,15 @@ namespace valhalla {
           targets.back().heading_.reset();
         }
         catch (...) {
-          throw std::runtime_error("Failed to parse target");
+          throw valhalla_exception_t{400, 132};
         }
       }
       if(sources.size() < 1)
-         throw std::runtime_error("Insufficient number of sources provided");
+        throw valhalla_exception_t{400, 121};
       valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
 
       if(targets.size() < 1)
-        throw std::runtime_error("Insufficient number of targets provided");
+        throw valhalla_exception_t{400, 122};
       valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
 
       //no locations!
@@ -145,12 +145,12 @@ namespace valhalla {
       init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal")
-        return jsonify_error(400, "Bad Request", ACTION_TO_STRING.find(action)->second + " does not support multimodal costing", request_info);
+        return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
 
       //check that location size does not exceed max.
       auto max = max_locations.find("sources_to_targets")->second;
       if (sources.size() > max || targets.size() > max)
-        throw std::runtime_error("Exceeded max locations of " + std::to_string(max) + ".");
+        throw valhalla_exception_t{400, 150, std::to_string(max)};
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
@@ -164,26 +164,32 @@ namespace valhalla {
 
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
-      for(size_t i = 0; i < sources_targets.size(); ++i) {
-        auto& l = sources_targets[i];
-        auto found = searched.find(l);
-        if(found == searched.cend()) {
-          auto correlated = loki::Search(l, reader, edge_filter, node_filter);
-          found = searched.insert({l, std::move(correlated)}).first;
-        }
-        request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));
+      try{
+        for(size_t i = 0; i < sources_targets.size(); ++i) {
+          auto& l = sources_targets[i];
+          auto found = searched.find(l);
+            if(found == searched.cend()) {
+              auto correlated = loki::Search(l, reader, edge_filter, node_filter);
+              found = searched.insert({l, std::move(correlated)}).first;
+            }
+            request.put_child("correlated_" + std::to_string(i), found->second.ToPtree(i));
 
-        //TODO: get transit level for transit costing
-        //TODO: if transit send a non zero radius
-        auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, found->second, 0);
-        for(auto& color : colors){
-          auto itr = color_counts.find(color);
-          if(itr == color_counts.cend())
-            color_counts[color] = 1;
-          else
-            ++itr->second;
+          //TODO: get transit level for transit costing
+          //TODO: if transit send a non zero radius
+          auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, found->second, 0);
+          for(auto& color : colors){
+            auto itr = color_counts.find(color);
+            if(itr == color_counts.cend())
+              color_counts[color] = 1;
+            else
+              ++itr->second;
+          }
         }
       }
+      catch(const std::runtime_error&) {
+        throw valhalla_exception_t{400, 170};
+      }
+
 
       //are all the locations in the same color regions
       bool connected = false;
@@ -194,7 +200,7 @@ namespace valhalla {
         }
       }
       if(!connected)
-        throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
+        throw valhalla_exception_t{400, 170};
       valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
       std::stringstream stream;
