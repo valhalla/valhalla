@@ -8,26 +8,21 @@
 // strategy: highway, arterial, local. Any changes to this will require
 // updates to the defaults.
 namespace {
+
+constexpr uint32_t kUnlimitedTransitions = std::numeric_limits<uint32_t>::max();
 constexpr float kMaxDistance = std::numeric_limits<float>::max();
 
-// Default default maximum upward transitions (per level)
+// Default default maximum upward transitions (per level). These are optimized
+// for bidirectional to allow enough expansion on local and arterial to account
+// for routes where more direct paths are available near the origin and
+// destination.
 constexpr uint32_t kDefaultMaxUpTransitions[] = {
-    0, 250, 50, 0, 0, 0, 0, 0 };
+    0, 2000, 100, 0, 0, 0, 0, 0 };
 
 // Default distances within which expansion is always allowed
-// (per level)
+// (per level). Used only for A*.
 constexpr float kDefaultExpansionWithinDist[] = {
     kMaxDistance, 100000.0f, 5000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-
-// Default distances outside which upward transitions are allowed
-// (per level)
-constexpr float kDefaultUpwardUntilDist[] = {
-    0.0f, 10000.0f, 5000.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-
-// Default distances within which downward transitions are allowed
-// (per level)
-constexpr float kDefaultDownwardWithinDist[] = {
-    10000.0f, 5000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 }
 
 namespace valhalla {
@@ -48,11 +43,7 @@ struct HierarchyLimits {
                                  // expansion is stopped on a level.
   float expansion_within_dist;   // Distance (m) to destination within which
                                  // expansion of a hierarchy level is
-                                 // always allowed.
-  float upward_until_dist;       // Distance (m) to destination outside which
-                                 // upward hierarchy transitions are allowed.
-  float downward_within_dist;    // Distance (m) to destination within which
-                                 // downward transitions are allowed.
+                                 // always allowed. Used for A*.
 
   /**
    * Set hierarchy limits for the specified level using a property tree.
@@ -72,14 +63,6 @@ struct HierarchyLimits {
     // Set distance within which expansion is always allowed for this level
     expansion_within_dist = pt.get<float>(hl + ".expansion_within_dist",
                     kDefaultExpansionWithinDist[level]);
-
-    // Set distance outside which upward transitions are allowed
-    upward_until_dist = pt.get<float>(hl +".upward_until_dist",
-                    kDefaultUpwardUntilDist[level]);
-
-    // Set distance within which downward transitions are allowed
-    downward_within_dist = pt.get<float>(hl + ".downward_within_dist",
-                    kDefaultDownwardWithinDist[level]);
   }
 
   /**
@@ -107,37 +90,11 @@ struct HierarchyLimits {
   }
 
   /**
-   * Determines if an upward transition should be allowed. Allows upward
-   * transitions outside the upward_until_dist distance.
-   * @param  dist  Distance (meters) from the destination.
+   * Relax hierarchy limits to try to find a route when initial attempt fails.
    */
-  bool AllowUpwardTransition(const float dist) const {
-    return dist > upward_until_dist;
-  }
-
-  /**
-   * Determines if an downward transition should be allowed. Downward
-   * transitions are allowed only within downward_within_dist from the
-   * destination.
-   * @param  dist  Distance (meters) from the destination.
-   */
-  bool AllowDownwardTransition(const float dist) const {
-    return dist < downward_within_dist;
-  }
-
   void Relax(const float factor, const float expansion_within_factor) {
-    up_transition_count *= factor;
     max_up_transitions *= factor;
-    upward_until_dist *= factor;
-    downward_within_dist *= factor;
     expansion_within_dist *= expansion_within_factor;
-  }
-
-  void DisableHighwayTransitions() {
-    up_transition_count = 0;
-    max_up_transitions = 0;
-    expansion_within_dist = kMaxDistance;
-    upward_until_dist = kMaxDistance;
   }
 };
 
