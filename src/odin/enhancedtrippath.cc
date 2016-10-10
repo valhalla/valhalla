@@ -4,12 +4,14 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/baldr/errorcode_util.h>
 
 #include "proto/trippath.pb.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
@@ -80,7 +82,7 @@ std::string EnhancedTripPath::GetStateCode(int node_index) {
 const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetOrigin() const {
   // Validate location count
   if (location_size() < 2) {
-    throw std::runtime_error("Trip must have at least 2 locations");
+    throw valhalla_exception_t{400, 212};
   }
 
   return location(0);
@@ -89,7 +91,7 @@ const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetOrigin() const {
 const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetDestination() const {
   // Validate location count
   if (location_size() < 2) {
-    throw std::runtime_error("Trip must have at least 2 locations");
+    throw valhalla_exception_t{400, 212};
   }
 
   return location(location_size() - 1);

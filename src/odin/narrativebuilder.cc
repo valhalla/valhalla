@@ -9,6 +9,7 @@
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/baldr/errorcode_util.h>
 
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_dictionary.h"
@@ -961,7 +962,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
         subset = &dictionary_.sharp_subset;
         break;
       default:
-        throw std::runtime_error("Invalid TripDirections_Maneuver_Type in method FormTurnInstruction.");
+        throw valhalla_exception_t{400, 230};
   }
 
   std::string instruction;
@@ -1037,7 +1038,7 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
         subset = &dictionary_.sharp_verbal_subset;
         break;
       default:
-        throw std::runtime_error("Invalid TripDirections_Maneuver_Type in method FormTurnInstruction.");
+        throw valhalla_exception_t{400, 230};
   }
 
   std::string instruction;
@@ -3374,8 +3375,7 @@ std::string NarrativeBuilder::FormRelativeTwoDirection(
       return relative_directions.at(1); // "right"
     }
     default: {
-      throw std::runtime_error(
-          "Invalid TripDirections_Maneuver_Type in method FormRelativeTwoDirection.");
+      throw valhalla_exception_t{400, 231};
     }
   }
 }
@@ -3394,8 +3394,7 @@ std::string NarrativeBuilder::FormRelativeThreeDirection(
       return relative_directions.at(2); // "right"
     }
     default: {
-      throw std::runtime_error(
-          "Invalid TripDirections_Maneuver_Type in method FormRelativeThreeDirection.");
+      throw valhalla_exception_t{400, 232};
     }
   }
 }
