@@ -11,8 +11,8 @@
 #include <valhalla/baldr/errorcode_util.h>
 
 namespace {
-// Minimum edge length
-constexpr auto kMinEdgeLength = 0.0003f;
+// Minimum edge length (~10 feet)
+constexpr auto kMinEdgeLength = 0.003f;
 
 }
 
