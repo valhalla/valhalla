@@ -371,7 +371,7 @@ struct tar {
       uint64_t sum = 0;
       uint64_t multiplier = 1;
       //Skip everything after the last NUL/space character
-      //In some TAR archives the size field has non-trailing NULs/spaces, so this is neccessary
+      //In some TAR archives the size field has non-trailing NULs/spaces, so this is necessary
       const unsigned char* check = ptr; //This is used to check where the last NUL/space char is
       for (; check >= (unsigned char*) data; check--)
         if ((*check) == 0 || (*check) == ' ')
