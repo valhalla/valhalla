@@ -187,7 +187,7 @@ namespace valhalla {
         }
       }
       catch(const std::runtime_error&) {
-        throw valhalla_exception_t{400, 170};
+        throw valhalla_exception_t{400, 171};
       }
 
 
