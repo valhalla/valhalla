@@ -38,7 +38,7 @@ void read_nodes(const std::string& file_name, const uint64_t count) {
     element = node;
     //find the same element with binary search (far slower)
     osm_node target{i};
-    if(!sequence.find(target, less_than))
+    if(sequence.find(target, less_than) == sequence.end())
       throw std::runtime_error("Didn't find node " + std::to_string(i));
   }
 }
