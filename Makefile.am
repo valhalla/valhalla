@@ -4,8 +4,8 @@ ACLOCAL_AMFLAGS = -I m4
 # a builtin flag of gcc (see man gcc). It seems to be ok without this
 # flag. Since both c++ and c compilers accepts this flag, so we append
 # it to AM_CPPFLAGS
-AM_CPPFLAGS = @BOOST_CPPFLAGS@ @PTHREAD_CFLAGS@
-AM_CXXFLAGS = @COVERAGE_CXXFLAGS@
+AM_CPPFLAGS = @BOOST_CPPFLAGS@ @PTHREAD_CFLAGS@ -Igenfiles
+AM_CXXFLAGS = @COVERAGE_CXXFLAGS@ -Igenfiles
 
 # PTHREAD_LIBS should give -lpthread or -pthread however it also could
 # be empty for unknown reason. Since it is required by the linker, so
@@ -46,8 +46,13 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-genfiles
+else
+clean-local: clean-genfiles
 endif
+
+clean-genfiles:
+	-rm -rf genfiles
 
 # libvalhalla_meili compilation etc
 lib_LTLIBRARIES = libvalhalla_meili.la
