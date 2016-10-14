@@ -11,8 +11,11 @@
 
 void get_samples(const valhalla::skadi::sample& sample, const std::list<std::pair<double, double> >& postings, size_t id) {
   LOG_INFO("Thread" + std::to_string(id) + " sampling " + std::to_string(postings.size()) + " postings");
-  sample.get_all(postings);
-  LOG_INFO("Thread" + std::to_string(id) + " finished");
+  auto values = sample.get_all(postings);
+  size_t no_data_value = 0;
+  for(auto v : values)
+    no_data_value += v == sample.get_no_data_value();
+  LOG_INFO("Thread" + std::to_string(id) + " finished with " + std::to_string(no_data_value) + " no data values");
 }
 
 int main(int argc, char** argv) {
