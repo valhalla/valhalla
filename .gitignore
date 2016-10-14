@@ -31,7 +31,7 @@ libvalhalla_odin.pc
 # built objects
 valhalla/proto
 src/proto
-src/odin/locales.h
+genfiles/
 locales/*.UTF-8
 odin_service
 *.o
