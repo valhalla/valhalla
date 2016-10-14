@@ -103,6 +103,9 @@ void extend(GraphReader& reader, const GraphTile*& tile, const edge_t& edge, std
   //this shape runs the other way
   if(!edge.e->forward())
     more.reverse();
+  //connecting another shape we dont want dups where they meet
+  if(shape.size())
+    more.pop_front();
   shape.splice(shape.end(), more);
 }
 
