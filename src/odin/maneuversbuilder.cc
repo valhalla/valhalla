@@ -381,7 +381,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // and current and next maneuvers have a common base name
       else if ((next_man->begin_relative_direction()
           == Maneuver::RelativeDirection::kKeepStraight)
-          && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
+          && (next_man_begin_edge && !next_man_begin_edge->IsTurnChannelUse())
           && !next_man->internal_intersection() && !curr_man->ramp()
           && !next_man->ramp() && !curr_man->roundabout()
           && !next_man->roundabout() && !common_base_names->empty()) {
@@ -406,7 +406,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           == Maneuver::RelativeDirection::kKeepStraight)
           && !curr_man->HasStreetNames() && !next_man->HasStreetNames()
           && !curr_man->IsTransit() && !next_man->IsTransit()
-          && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
+          && (next_man_begin_edge && !next_man_begin_edge->IsTurnChannelUse())
           && !next_man->internal_intersection() && !curr_man->ramp()
           && !next_man->ramp() && !curr_man->roundabout()
           && !next_man->roundabout()) {
@@ -786,22 +786,22 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_end_shape_index(prev_edge->end_shape_index());
 
   // Ramp
-  if (prev_edge->ramp()) {
+  if (prev_edge->IsRampUse()) {
     maneuver.set_ramp(true);
   }
 
   // Turn Channel
-  if (prev_edge->turn_channel()) {
+  if (prev_edge->IsTurnChannelUse()) {
     maneuver.set_turn_channel(true);
   }
 
   // Ferry
-  if (prev_edge->ferry()) {
+  if (prev_edge->IsFerryUse()) {
     maneuver.set_ferry(true);
   }
 
   // Rail Ferry
-  if (prev_edge->rail_ferry()) {
+  if (prev_edge->IsRailFerryUse()) {
     maneuver.set_rail_ferry(true);
   }
 
@@ -850,8 +850,8 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   // Transit info
   if (prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
-    maneuver.set_rail(prev_edge->rail());
-    maneuver.set_bus(prev_edge->bus());
+    maneuver.set_rail(prev_edge->IsRailUse());
+    maneuver.set_bus(prev_edge->IsBusUse());
     auto* transit_info = maneuver.mutable_transit_info();
     const auto& pe_transit_info = prev_edge->transit_route_info();
     transit_info->onestop_id = pe_transit_info.onestop_id();
@@ -870,7 +870,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Transit connection
-  if (prev_edge->transit_connection()) {
+  if (prev_edge->IsTransitConnectionUse()) {
     maneuver.set_transit_connection(true);
     // If current edge is transit then mark maneuver as transit connection start
     if (curr_edge
@@ -1154,7 +1154,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     }
   }
   // Process post transit connection destination
-  else if (prev_edge && prev_edge->transit_connection()
+  else if (prev_edge && prev_edge->IsTransitConnectionUse()
       && (maneuver.travel_mode() != TripPath_TravelMode_kTransit)) {
     maneuver.set_type(
         TripDirections_Maneuver_Type_kPostTransitConnectionDestination);
@@ -1260,7 +1260,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     }
   }
   // Process merge
-  else if (curr_edge->IsHighway() && prev_edge && prev_edge->ramp()) {
+  else if (curr_edge->IsHighway() && prev_edge && prev_edge->IsRampUse()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
     LOG_TRACE("ManeuverType=MERGE");
   }
@@ -1270,7 +1270,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=FERRY_ENTER");
   }
   // Process exit ferry
-  else if (prev_edge && (prev_edge->ferry() || prev_edge->rail_ferry())) {
+  else if (prev_edge && (prev_edge->IsFerryUse() || prev_edge->IsRailFerryUse())) {
     maneuver.set_type(TripDirections_Maneuver_Type_kFerryExit);
     LOG_TRACE("ManeuverType=FERRY_EXIT");
   }
@@ -1300,7 +1300,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
         // and the relative direction is not a keep straight
         // then set as slight right based on a relative keep right direction
         //  OR  set as slight left based on a relative keep left direction
-        if (man_begin_edge && man_begin_edge->turn_channel()
+        if (man_begin_edge && man_begin_edge->IsTurnChannelUse()
             && (maneuver.begin_relative_direction()
                 != Maneuver::RelativeDirection::kKeepStraight)) {
           if (maneuver.begin_relative_direction()
@@ -1484,12 +1484,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit connection
-  if (maneuver.transit_connection() && prev_edge->transit_connection()
+  if (maneuver.transit_connection() && prev_edge->IsTransitConnectionUse()
       && !(maneuver.transit_connection_stop().name.empty())
       && (maneuver.transit_connection_stop().name
           == prev_node->transit_stop_info().name())) {
     return true;
-  } else if (maneuver.transit_connection() || prev_edge->transit_connection()) {
+  } else if (maneuver.transit_connection() || prev_edge->IsTransitConnectionUse()) {
     return false;
   }
 
@@ -1541,11 +1541,11 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process simple turn channel
-  if (prev_edge->turn_channel() && !maneuver.turn_channel()) {
+  if (prev_edge->IsTurnChannelUse() && !maneuver.turn_channel()) {
     return false;
-  } else if (!prev_edge->turn_channel() && maneuver.turn_channel()) {
+  } else if (!prev_edge->IsTurnChannelUse() && maneuver.turn_channel()) {
     return false;
-  } else if (prev_edge->turn_channel() && maneuver.turn_channel()) {
+  } else if (prev_edge->IsTurnChannelUse() && maneuver.turn_channel()) {
     return true;
   }
 
@@ -1557,37 +1557,37 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process ramps
-  if (maneuver.ramp() && !prev_edge->ramp()) {
+  if (maneuver.ramp() && !prev_edge->IsRampUse()) {
     return false;
   }
-  if (prev_edge->ramp() && !maneuver.ramp()) {
+  if (prev_edge->IsRampUse() && !maneuver.ramp()) {
     return false;
   }
-  if (maneuver.ramp() && prev_edge->ramp()) {
+  if (maneuver.ramp() && prev_edge->IsRampUse()) {
     return true;
   }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process ferries
-  if (maneuver.ferry() && !prev_edge->ferry()) {
+  if (maneuver.ferry() && !prev_edge->IsFerryUse()) {
     return false;
   }
-  if (prev_edge->ferry() && !maneuver.ferry()) {
+  if (prev_edge->IsFerryUse() && !maneuver.ferry()) {
     return false;
   }
-  if (maneuver.ferry() && prev_edge->ferry()) {
+  if (maneuver.ferry() && prev_edge->IsFerryUse()) {
     return true;
   }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process rail ferries
-  if (maneuver.rail_ferry() && !prev_edge->rail_ferry()) {
+  if (maneuver.rail_ferry() && !prev_edge->IsRailFerryUse()) {
     return false;
   }
-  if (prev_edge->rail_ferry() && !maneuver.rail_ferry()) {
+  if (prev_edge->IsRailFerryUse() && !maneuver.rail_ferry()) {
     return false;
   }
-  if (maneuver.rail_ferry() && prev_edge->rail_ferry()) {
+  if (maneuver.rail_ferry() && prev_edge->IsRailFerryUse()) {
     return true;
   }
 
@@ -1696,7 +1696,7 @@ bool ManeuversBuilder::IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
     if (((xedge_counts.left_similar_traversable_outbound > 0)
         || (xedge_counts.right_similar_traversable_outbound > 0))
         || (((xedge_counts.left_traversable_outbound > 0)
-            || (xedge_counts.right_traversable_outbound > 0)) && curr_edge->ramp())) {
+            || (xedge_counts.right_traversable_outbound > 0)) && curr_edge->IsRampUse())) {
       return true;
     }
 
