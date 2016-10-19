@@ -153,7 +153,7 @@ namespace valhalla {
     void loki_worker_t::parse_trace(boost::property_tree::ptree& request) {
       //we require uncompressed shape or encoded polyline
       auto input_shape = request.get_child_optional("shape");
-      boost::optional<std::string> encoded_polyline = request.get_optional<std::string>("encoded_polyline");
+      auto encoded_polyline = request.get_optional<std::string>("encoded_polyline");
       boost::property_tree::ptree shape_child;
       size_t shape_count = 0;
 
@@ -172,7 +172,7 @@ namespace valhalla {
         //if we receive as encoded then we need to add as shape to request
         else if (encoded_polyline) {
           auto shape = midgard::decode<std::list<midgard::PointLL> >(*encoded_polyline);
-          shape_count = input_shape->size();
+          shape_count = shape.size();
           for(const auto& pt : shape) {
             boost::property_tree::ptree point_child;
             point_child.put("lon", pt.first);
