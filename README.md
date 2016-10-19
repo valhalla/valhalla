@@ -49,26 +49,28 @@ Building and Running Valhalla
 To build, install and run valhalla on Ubuntu (or other Debian based systems) try the following bash commands:
 
 ```bash
-#grab all of the dependencies
+#grab all of the valhalla software from ppa
 sudo add-apt-repository ppa:kevinkreiser/prime-server
+sudo add-apt-repository ppa:valhalla-routing/valhalla
 sudo apt-get update
-sudo apt-get install autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server-dev
+sudo apt-get install valhalla-bin
 
-#build and install all valhalla includes, libraries and binaries
-for repo in midgard baldr sif meili skadi mjolnir loki odin thor tyr tools; do
-  git clone --recurse-submodules https://github.com/valhalla/$repo.git
-  pushd $repo
-  ./autogen.sh
-  ./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
-  make -j$(nproc)
-  sudo make install
-  popd
-done
-git clone --recurse-submodules https://github.com/valhalla/conf.git
+#or you could build it from source like by uncommenting the stuff below
+#sudo apt-get install git autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server-dev
+#for repo in midgard baldr sif meili skadi mjolnir loki odin thor tyr tools; do
+#  git clone --recurse-submodules https://github.com/valhalla/$repo.git
+#  pushd $repo
+#  ./autogen.sh
+#  ./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
+#  make -j$(nproc)
+#  sudo make install
+#  popd
+#done
 
 #download some data and make tiles out of it
 #note: you can feed multiple extracts into pbfgraphbuilder
 wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+git clone --recurse-submodules https://github.com/valhalla/conf.git
 sudo mkdir -p /data/valhalla
 sudo chown `whoami` /data/valhalla
 rm -rf /data/valhalla/*
