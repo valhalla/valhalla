@@ -2,10 +2,11 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
+    - bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
+    - (rc=0; for f in locales/*.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
 
 dependencies:
   override:
-    - sudo rm -rf /etc/apt/sources.list.d/google*.list
     - scripts/dependencies.sh
 
 test:
