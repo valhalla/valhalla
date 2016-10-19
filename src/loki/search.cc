@@ -127,55 +127,70 @@ PathLocation::SideOfStreet get_side(const DirectedEdge* edge, const EdgeInfo& in
   return (segment.IsLeft(original) > 0) == edge->forward()  ? PathLocation::SideOfStreet::LEFT : PathLocation::SideOfStreet::RIGHT;
 }
 
-const NodeInfo* get_end_node(GraphReader& reader, const DirectedEdge* edge) {
-  //the node could be in another tile so we grab that
-  const auto tile = reader.GetGraphTile(edge->endnode());
-  return tile->node(edge->endnode());
-}
-
-PathLocation correlate_node(GraphReader& reader, const Location& location, const EdgeFilter& edge_filter, const GraphTile* tile, const NodeInfo* node, const float sqdist){
+PathLocation correlate_node(GraphReader& reader, const Location& location, const EdgeFilter& edge_filter, const GraphId& found_node, std::tuple<PointLL, float, int> closest_point){
   PathLocation correlated(location);
   std::list<PathLocation::PathEdge> heading_filtered;
-  //now that we have a node we can pass back all the edges leaving and entering it
-  const auto* start_edge = tile->directededge(node->edge_index());
-  const auto* end_edge = start_edge + node->edge_count();
-  auto closest_point = std::make_tuple(node->latlng(), sqdist, 0);
-  for(const auto* edge = start_edge; edge < end_edge; ++edge) {
-    //get some info about this edge and the opposing
-    GraphId id = tile->id();
-    id.fields.id = node->edge_index() + (edge - start_edge);
-    const GraphTile* other_tile;
-    const auto other_id = reader.GetOpposingEdgeId(id, other_tile);
-    const auto* other_edge = other_tile->directededge(other_id);
-    auto info = tile->edgeinfo(edge->edgeinfo_offset());
 
-    //do we want this edge
-    if(edge_filter(edge) != 0.0f) {
-      PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
-      std::get<2>(closest_point) = edge->forward() ? 0 : info.shape().size() - 2;
-      if(!heading_filter(edge, info, closest_point, location.heading_))
-        correlated.edges.push_back(std::move(path_edge));
-      else
-        heading_filtered.emplace_back(std::move(path_edge));
+  //we need this because we might need to go to different levels
+  std::function<void (const GraphId& node_id, bool transition)> crawl;
+  crawl = [&](const GraphId& node_id, bool follow_transitions) {
+    //now that we have a node we can pass back all the edges leaving and entering it
+    const auto* tile = reader.GetGraphTile(node_id);
+    if(!tile)
+      return;
+    const auto* node = tile->node(node_id);
+    const auto* start_edge = tile->directededge(node->edge_index());
+    const auto* end_edge = start_edge + node->edge_count();
+    for(const auto* edge = start_edge; edge < end_edge; ++edge) {
+      //if this is an edge leaving this level then we should go do that level awhile
+      if(follow_transitions && (edge->trans_down() || edge->trans_up()))
+        crawl(edge->endnode(), false);
+
+      //get some info about this edge and the opposing
+      GraphId id = tile->id();
+      id.fields.id = node->edge_index() + (edge - start_edge);
+      auto info = tile->edgeinfo(edge->edgeinfo_offset());
+
+      //do we want this edge
+      if(edge_filter(edge) != 0.0f) {
+        PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
+        std::get<2>(closest_point) = edge->forward() ? 0 : info.shape().size() - 2;
+        if(!heading_filter(edge, info, closest_point, location.heading_))
+          correlated.edges.push_back(std::move(path_edge));
+        else
+          heading_filtered.emplace_back(std::move(path_edge));
+      }
+
+      //do we want the evil twin
+      const GraphTile* other_tile;
+      const auto other_id = reader.GetOpposingEdgeId(id, other_tile);
+      if(!other_tile)
+        continue;
+      const auto* other_edge = other_tile->directededge(other_id);
+      if(edge_filter(other_edge) != 0.0f) {
+        LOG_INFO(info.name_count() ? info.GetNames().front() : std::string(" BLANK "));
+        LOG_INFO(std::to_string(other_id.level()) + " " + std::to_string(other_id.id()));
+        PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
+        std::get<2>(closest_point) = other_edge->forward() ? 0 : info.shape().size() - 2;
+        if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
+          correlated.edges.push_back(std::move(path_edge));
+        else
+          heading_filtered.emplace_back(std::move(path_edge));
+      }
     }
 
-    //do we want the evil twin
-    if(edge_filter(other_edge) != 0.0f) {
-      PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
-      std::get<2>(closest_point) = other_edge->forward() ? 0 : info.shape().size() - 2;
-      if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
+    //if we have nothing because of heading we'll just ignore it
+    if(correlated.edges.size() == 0 && heading_filtered.size())
+      for(auto& path_edge : heading_filtered)
         correlated.edges.push_back(std::move(path_edge));
-      else
-        heading_filtered.emplace_back(std::move(path_edge));
-    }
-  }
 
-  //if we have nothing because of heading we'll just ignore it
-  if(correlated.edges.size() == 0 && heading_filtered.size())
-    for(auto& path_edge : heading_filtered)
-      correlated.edges.push_back(std::move(path_edge));
+    //if we still found nothing that is no good..
+    if(correlated.edges.size() == 0)
+      throw std::runtime_error("No suitable edges near location");
+  };
 
-  //if we still found nothing that is no good..
+  //start where we are and crawl from there
+  crawl(found_node, true);
   if(correlated.edges.size() == 0)
     throw std::runtime_error("No suitable edges near location");
 
@@ -446,15 +461,12 @@ PathLocation search(const Location& location, GraphReader& reader, const EdgeFil
     auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
     if(!other_tile)
       throw std::runtime_error("No suitable edges near location");
-    return correlate_node(reader, location, edge_filter, closest_tile, closest_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
+    return correlate_node(reader, location, edge_filter, opposing_edge->endnode(), closest_point);
   }
   //it was the end node
-  if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
-    const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
-    if(!other_tile)
-      throw std::runtime_error("No suitable edges near location");
-    return correlate_node(reader, location, edge_filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
-  }
+  if((back && closest_edge->forward()) || (front && !closest_edge->forward()))
+    return correlate_node(reader, location, edge_filter, closest_edge->endnode(), closest_point);
+
   //it was along the edge
   return correlate_edge(reader, location, edge_filter, closest_point, closest_edge, closest_edge_id, *closest_edge_info);
 }
