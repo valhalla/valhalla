@@ -9,6 +9,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
@@ -37,7 +38,8 @@ namespace {
     {"/sources_to_targets", loki_worker_t::SOURCES_TO_TARGETS},
     {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE},
     {"/isochrone", loki_worker_t::ISOCHRONE},
-    {"/attributes", loki_worker_t::ATTRIBUTES},
+    {"/trace_route", loki_worker_t::TRACE_ROUTE},
+    {"/trace_attributes", loki_worker_t::TRACE_ATTRIBUTES}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -148,6 +150,60 @@ namespace valhalla {
       valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
     }
 
+    void loki_worker_t::parse_trace(boost::property_tree::ptree& request) {
+      //we require uncompressed shape or encoded polyline
+      auto input_shape = request.get_child_optional("shape");
+      boost::optional<std::string> encoded_polyline = request.get_optional<std::string>("encoded_polyline");
+      boost::property_tree::ptree shape_child;
+      size_t shape_count = 0;
+
+      //we require shape or encoded polyline but we dont know which at first
+      try {
+        //uncompressed shape
+        //we dont need to do this unless we want to add some validation
+        if (input_shape) {
+          shape_count = input_shape->size();
+          for (auto& latlng : *input_shape) {
+            auto ll = baldr::Location::FromPtree(latlng.second).latlng_;
+            latlng.second.put("lon", ll.first);
+            latlng.second.put("lat", ll.second);
+          }
+        }//compressed shape
+        //if we receive as encoded then we need to add as shape to request
+        else if (encoded_polyline) {
+          auto shape = midgard::decode<std::list<midgard::PointLL> >(*encoded_polyline);
+          shape_count = input_shape->size();
+          for(const auto& pt : shape) {
+            boost::property_tree::ptree point_child;
+            point_child.put("lon", pt.first);
+            point_child.put("lat", pt.second);
+            shape_child.push_back(std::make_pair("",point_child));
+          }
+          request.add_child("shape", shape_child);
+        }/* else if (gpx) {
+          //TODO:Add support
+        } else if (geojson){
+          //TODO:Add support
+        }*/
+        else
+          throw valhalla_exception_t{400, 126};
+      }
+      catch (const std::exception& e) {
+        //TODO: pass on e.what() to generic exception
+        throw valhalla_exception_t{400, 114};
+      }
+
+      //not enough
+      if(shape_count < 2)
+        throw valhalla_exception_t{400, 123};
+      //too much
+      else if(shape_count > max_shape)
+        throw valhalla_exception_t{400, 153, "(" + std::to_string(shape_count) +"). The limit is " + std::to_string(max_shape)};
+
+      valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape_count), " [ANALYTICS] ");
+
+    }
+
     void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
@@ -178,7 +234,8 @@ namespace valhalla {
         config(config), reader(config.get_child("mjolnir")), connectivity_map(config.get_child("mjolnir")),
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
-        max_time(config.get<unsigned int>("service_limits.isochrone.max_time")) {
+        max_time(config.get<unsigned int>("service_limits.isochrone.max_time")),
+        max_shape(config.get<size_t>("service_limits.trace_route.max_shape")) {
 
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
@@ -193,9 +250,9 @@ namespace valhalla {
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
-        if (kv.first != "skadi")
+        if (kv.first != "skadi" && kv.first != "trace_route")
           max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
-        if (kv.first != "skadi" && kv.first != "isochrone")
+        if (kv.first != "skadi" && kv.first != "isochrone" && kv.first != "trace_route")
           max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
       //this should never happen
@@ -267,8 +324,9 @@ namespace valhalla {
           case ISOCHRONE:
             result = isochrones(request_pt, info);
             break;
-          case ATTRIBUTES:
-            result = attributes(request_pt, info);
+          case TRACE_ATTRIBUTES:
+          case TRACE_ROUTE:
+            result = trace_route(request_pt, info);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet

@@ -40,6 +40,7 @@ namespace valhalla {
 
     void loki_worker_t::init_route(const boost::property_tree::ptree& request) {
       parse_locations(request);
+      //need to check location size here instead of in parse_locations because of locate action needing a different size
       if(locations.size() < 2)
         throw valhalla_exception_t{400, 120};
       parse_costing(request);
