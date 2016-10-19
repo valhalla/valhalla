@@ -52,6 +52,34 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsUnnamed() const;
 
+  // Use
+  bool IsRoadUse() const;
+  bool IsRampUse() const;
+  bool IsTurnChannelUse() const;
+  bool IsTrackUse() const;
+  bool IsDrivewayUse() const;
+  bool IsAlleyUse() const;
+  bool IsParkingAisleUse() const;
+  bool IsEmergencyAccessUse() const;
+  bool IsDriveThruUse() const;
+  bool IsCuldesacUse() const;
+  bool IsCyclewayUse() const;
+  bool IsMountainBikeUse() const;
+  bool IsSidewalkUse() const;
+  bool IsFootwayUse() const;
+  bool IsStepsUse() const;
+  bool IsPathUse() const;
+  bool IsPedestrianUse() const;
+  bool IsBridlewayUse() const;
+  bool IsOtherUse() const;
+  bool IsFerryUse() const;
+  bool IsRailFerryUse() const;
+  bool IsRailUse() const;
+  bool IsBusUse() const;
+  bool IsRailConnectionUse() const;
+  bool IsBusConnectionUse() const;
+  bool IsTransitConnectionUse() const;
+
   bool IsUnnamedWalkway() const;
 
   bool IsUnnamedCycleway() const;

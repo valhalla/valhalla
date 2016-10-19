@@ -411,6 +411,7 @@ void TryCombine(ManeuversBuilderTest& mbTest, std::list<Maneuver>& maneuvers,
   }
 }
 
+// Deprecated
 void PopulateEdge(TripPath_Edge* edge, std::vector<std::string> names,
                   float length, float speed, TripPath_RoadClass road_class,
                   ::google::protobuf::uint32 begin_heading,
@@ -438,10 +439,15 @@ void PopulateEdge(TripPath_Edge* edge, std::vector<std::string> names,
   edge->set_begin_shape_index(begin_shape_index);
   edge->set_end_shape_index(end_shape_index);
   edge->set_traversability(traversability);
-  edge->set_ramp(ramp);
-  edge->set_turn_channel(turn_channel);
-  edge->set_ferry(ferry);
-  edge->set_rail_ferry(rail_ferry);
+  if (ramp) {
+    edge->set_use(TripPath_Use::TripPath_Use_kRampUse);
+  } else if (turn_channel) {
+    edge->set_use(TripPath_Use::TripPath_Use_kTurnChannelUse);
+  } else if (ferry) {
+    edge->set_use(TripPath_Use::TripPath_Use_kFerryUse);
+  } else if (rail_ferry) {
+    edge->set_use(TripPath_Use::TripPath_Use_kRailFerryUse);
+  }
   edge->set_toll(toll);
   edge->set_unpaved(unpaved);
   edge->set_tunnel(tunnel);

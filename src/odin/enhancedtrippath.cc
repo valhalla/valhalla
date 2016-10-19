@@ -117,20 +117,124 @@ bool EnhancedTripPath_Edge::IsUnnamed() const {
   return (name_size() == 0);
 }
 
+bool EnhancedTripPath_Edge::IsRoadUse() const {
+  return (use() == TripPath_Use_kRoadUse);
+}
+
+bool EnhancedTripPath_Edge::IsRampUse() const {
+  return (use() == TripPath_Use_kRampUse);
+}
+
+bool EnhancedTripPath_Edge::IsTurnChannelUse() const {
+  return (use() == TripPath_Use_kTurnChannelUse);
+}
+
+bool EnhancedTripPath_Edge::IsTrackUse() const {
+  return (use() == TripPath_Use_kTrackUse);
+}
+
+bool EnhancedTripPath_Edge::IsDrivewayUse() const {
+  return (use() == TripPath_Use_kDrivewayUse);
+}
+
+bool EnhancedTripPath_Edge::IsAlleyUse() const {
+  return (use() == TripPath_Use_kAlleyUse);
+}
+
+bool EnhancedTripPath_Edge::IsParkingAisleUse() const {
+  return (use() == TripPath_Use_kParkingAisleUse);
+}
+
+bool EnhancedTripPath_Edge::IsEmergencyAccessUse() const {
+  return (use() == TripPath_Use_kEmergencyAccessUse);
+}
+
+bool EnhancedTripPath_Edge::IsDriveThruUse() const {
+  return (use() == TripPath_Use_kDriveThruUse);
+}
+
+bool EnhancedTripPath_Edge::IsCuldesacUse() const {
+  return (use() == TripPath_Use_kCuldesacUse);
+}
+
+bool EnhancedTripPath_Edge::IsCyclewayUse() const {
+  return (use() == TripPath_Use_kCyclewayUse);
+}
+
+bool EnhancedTripPath_Edge::IsMountainBikeUse() const {
+  return (use() == TripPath_Use_kMountainBikeUse);
+}
+
+bool EnhancedTripPath_Edge::IsSidewalkUse() const {
+  return (use() == TripPath_Use_kSidewalkUse);
+}
+
+bool EnhancedTripPath_Edge::IsFootwayUse() const {
+  return (use() == TripPath_Use_kFootwayUse);
+}
+
+bool EnhancedTripPath_Edge::IsStepsUse() const {
+  return (use() == TripPath_Use_kStepsUse);
+}
+
+bool EnhancedTripPath_Edge::IsPathUse() const {
+  return (use() == TripPath_Use_kPathUse);
+}
+
+bool EnhancedTripPath_Edge::IsPedestrianUse() const {
+  return (use() == TripPath_Use_kPedestrianUse);
+}
+
+bool EnhancedTripPath_Edge::IsBridlewayUse() const {
+  return (use() == TripPath_Use_kBridlewayUse);
+}
+
+bool EnhancedTripPath_Edge::IsOtherUse() const {
+  return (use() == TripPath_Use_kOtherUse);
+}
+
+bool EnhancedTripPath_Edge::IsFerryUse() const {
+  return (use() == TripPath_Use_kFerryUse);
+}
+
+bool EnhancedTripPath_Edge::IsRailFerryUse() const {
+  return (use() == TripPath_Use_kRailFerryUse);
+}
+
+bool EnhancedTripPath_Edge::IsRailUse() const {
+  return (use() == TripPath_Use_kRailUse);
+}
+
+bool EnhancedTripPath_Edge::IsBusUse() const {
+  return (use() == TripPath_Use_kBusUse);
+}
+
+bool EnhancedTripPath_Edge::IsRailConnectionUse() const {
+  return (use() == TripPath_Use_kRailConnectionUse);
+}
+
+bool EnhancedTripPath_Edge::IsBusConnectionUse() const {
+  return (use() == TripPath_Use_kBusConnectionUse);
+}
+
+bool EnhancedTripPath_Edge::IsTransitConnectionUse() const {
+  return (use() == TripPath_Use_kTransitConnectionUse);
+}
+
 bool EnhancedTripPath_Edge::IsUnnamedWalkway() const {
-  return (IsUnnamed() && footway());
+  return (IsUnnamed() && IsFootwayUse());
 }
 
 bool EnhancedTripPath_Edge::IsUnnamedCycleway() const {
-  return (IsUnnamed() && cycleway());
+  return (IsUnnamed() && IsCyclewayUse());
 }
 
 bool EnhancedTripPath_Edge::IsUnnamedMountainBikeTrail() const {
-  return (IsUnnamed() && mountain_bike());
+  return (IsUnnamed() && IsMountainBikeUse());
 }
 
 bool EnhancedTripPath_Edge::IsHighway() const {
-  return ((road_class() == TripPath_RoadClass_kMotorway) && (!ramp()));
+  return ((road_class() == TripPath_RoadClass_kMotorway) && (!IsRampUse()));
 }
 
 bool EnhancedTripPath_Edge::IsOneway() const {
@@ -221,17 +325,8 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | traversability=";
   str += std::to_string(traversability());
 
-  str += " | ramp=";
-  str += std::to_string(ramp());
-
-  str += " | turn_channel=";
-  str += std::to_string(turn_channel());
-
-  str += " | ferry=";
-  str += std::to_string(ferry());
-
-  str += " | rail_ferry=";
-  str += std::to_string(rail_ferry());
+  str += " | use=";
+  str += std::to_string(use());
 
   str += " | toll=";
   str += std::to_string(toll());
@@ -288,54 +383,6 @@ std::string EnhancedTripPath_Edge::ToString() const {
 
   str += " | drive_on_right=";
   str += std::to_string(drive_on_right());
-
-  str += " | road=";
-  str += std::to_string(road());
-
-  str += " | track=";
-  str += std::to_string(track());
-
-  str += " | driveway=";
-  str += std::to_string(driveway());
-
-  str += " | alley=";
-  str += std::to_string(alley());
-
-  str += " | parking_aisle=";
-  str += std::to_string(parking_aisle());
-
-  str += " | emergency_access=";
-  str += std::to_string(emergency_access());
-
-  str += " | drive_thru=";
-  str += std::to_string(drive_thru());
-
-  str += " | culdesac=";
-  str += std::to_string(culdesac());
-
-  str += " | footway=";
-  str += std::to_string(footway());
-
-  str += " | stairs=";
-  str += std::to_string(stairs());
-
-  str += " | cycleway=";
-  str += std::to_string(cycleway());
-
-  str += " | mountain_bike=";
-  str += std::to_string(mountain_bike());
-
-  str += " | rail=";
-  str += std::to_string(rail());
-
-  str += " | bus=";
-  str += std::to_string(bus());
-
-  str += " | transit_connection=";
-  str += std::to_string(transit_connection());
-
-  str += " | other=";
-  str += std::to_string(other());
 
   // Process transit route info, if needed
   if (has_transit_route_info()) {
@@ -415,16 +462,8 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
       ->name();
 
   str += delim;
-  str += std::to_string(ramp());
-
-  str += delim;
-  str += std::to_string(turn_channel());
-
-  str += delim;
-  str += std::to_string(ferry());
-
-  str += delim;
-  str += std::to_string(rail_ferry());
+  str += "TripPath_Use_";
+  str += TripPath_Use_descriptor()->FindValueByNumber(use())->name();
 
   str += delim;
   str += std::to_string(toll());
@@ -498,54 +537,6 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += std::to_string(drive_on_right());
-
-  str += delim;
-  str += std::to_string(road());
-
-  str += delim;
-  str += std::to_string(track());
-
-  str += delim;
-  str += std::to_string(driveway());
-
-  str += delim;
-  str += std::to_string(alley());
-
-  str += delim;
-  str += std::to_string(parking_aisle());
-
-  str += delim;
-  str += std::to_string(emergency_access());
-
-  str += delim;
-  str += std::to_string(drive_thru());
-
-  str += delim;
-  str += std::to_string(culdesac());
-
-  str += delim;
-  str += std::to_string(footway());
-
-  str += delim;
-  str += std::to_string(stairs());
-
-  str += delim;
-  str += std::to_string(cycleway());
-
-  str += delim;
-  str += std::to_string(mountain_bike());
-
-  str += delim;
-  str += std::to_string(rail());
-
-  str += delim;
-  str += std::to_string(bus());
-
-  str += delim;
-  str += std::to_string(transit_connection());
-
-  str += delim;
-  str += std::to_string(other());
 
   str += delim;
   if (transit_route_info().has_onestop_id()) {
