@@ -2,7 +2,7 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - [[ $(grep -cE "^ " Makefile.am) -eq 0 ]]
+    - bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
 
 dependencies:
   override:
