@@ -45,7 +45,7 @@ clean-genfiles:
 # libvalhalla_midgard compilation etc
 lib_LTLIBRARIES = libvalhalla_midgard.la
 nobase_include_HEADERS = \
-        valhalla/midgard/linesegment2.h \
+	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
 	valhalla/midgard/gridded_data.h \
 	valhalla/midgard/polyline2.h \
