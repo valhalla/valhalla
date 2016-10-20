@@ -15,7 +15,6 @@
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
-using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace odin {
@@ -80,9 +79,9 @@ Maneuver::Maneuver()
       unnamed_cycleway_(false),
       unnamed_mountain_bike_trail_(false),
       verbal_multi_cue_(false) {
-  street_names_ = make_unique<StreetNames>();
-  begin_street_names_ = make_unique<StreetNames>();
-  cross_street_names_ = make_unique<StreetNames>();
+  street_names_ = midgard::make_unique<StreetNames>();
+  begin_street_names_ = midgard::make_unique<StreetNames>();
+  cross_street_names_ = midgard::make_unique<StreetNames>();
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {
@@ -98,7 +97,7 @@ const StreetNames& Maneuver::street_names() const {
 }
 
 void Maneuver::set_street_names(const std::vector<std::string>& names) {
-  street_names_ = make_unique<StreetNamesUs>(names);
+  street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
@@ -160,7 +159,7 @@ const StreetNames& Maneuver::begin_street_names() const {
 }
 
 void Maneuver::set_begin_street_names(const std::vector<std::string>& names) {
-  begin_street_names_ = make_unique<StreetNamesUs>(names);
+  begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_begin_street_names(
@@ -177,7 +176,7 @@ const StreetNames& Maneuver::cross_street_names() const {
 }
 
 void Maneuver::set_cross_street_names(const std::vector<std::string>& names) {
-  cross_street_names_ = make_unique<StreetNamesUs>(names);
+  cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_cross_street_names(
@@ -203,7 +202,7 @@ void Maneuver::set_instruction(std::string&& instruction) {
 
 float Maneuver::length(const DirectionsOptions::Units& units) const {
   if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
-    return (length_ * kMilePerKm);
+    return (length_ * midgard::kMilePerKm);
   }
   return length_;
 }
