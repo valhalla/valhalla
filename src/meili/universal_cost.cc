@@ -36,8 +36,7 @@ class UniversalCost : public sif::DynamicCost
   bool Allowed(const baldr::NodeInfo* node) const override
   { return true; }
 
-  sif::Cost EdgeCost(const baldr::DirectedEdge* edge,
-                     const uint32_t density) const override
+  sif::Cost EdgeCost(const baldr::DirectedEdge* edge) const override
   {
     float length = edge->length();
     return { length, length };
