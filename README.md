@@ -70,16 +70,20 @@ sudo apt-get install valhalla-bin
 #download some data and make tiles out of it
 #note: you can feed multiple extracts into pbfgraphbuilder
 wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+#get the config and setup for it
 git clone --recurse-submodules https://github.com/valhalla/conf.git
 sudo mkdir -p /data/valhalla
 sudo chown `whoami` /data/valhalla
 rm -rf /data/valhalla/*
+#build routing tiles
 #TODO: run valhalla_build_addmins?
 LD_LIBRARY_PATH=/usr/lib:/usr/local/lib valhalla_build_tiles -c conf/valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
+#tar it up for running the server
+find /data/valhalla/* | sort -n | tar cf /data/valhalla/tiles.tar --no-recursion -T -
 
 #grab the demos repo and open up the point and click routing sample
 git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
-firefox demos/routing/index.html &
+firefox demos/routing/index-internal.html &
 #NOTE: set the environment pulldown to 'localhost' to point it at your own server
 
 #start up the server
