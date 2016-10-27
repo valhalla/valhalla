@@ -13,7 +13,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 Coming Soon - Valhalla version 2.0 Release
 --------
-In the coming week we hope to package and release version 2.0 of Valhalla. This major release updates the Valhalla graph tile structure to remove the duplication of edges across the hierarchy levels. This leads to smaller tiles (by about 20%) and paves the way for new features. We also will be supporting via-way restrictions. In addition, this release will finish the work required to use memory mapping of tar'd Valhalla tiles - which should yield improved caching and performance with concurrent requests.
+In the coming week (first week of November) we hope to package and release version 2.0 of Valhalla. This major release updates the Valhalla graph tile structure to remove the duplication of edges across the hierarchy levels. This leads to smaller tiles (by about 20%) and paves the way for new features. We also will be supporting via-way restrictions. In addition, this release will finish the work required to use memory mapping of tar'd Valhalla tiles - which should yield improved caching and performance with concurrent requests.
 
 Note that this upcoming release will require updated Valhalla tiles. So once you update Valhalla software to version 2.0, you will also need to build new Valhalla graph tiles (old versions will no longer work with new software).
 
