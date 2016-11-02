@@ -2,6 +2,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/encoded.h>
@@ -28,13 +29,13 @@ namespace {
 
 //a place we can mark what edges we've seen, even for the planet we should need < 100mb
 struct bitset_t {
-  bitset_t(size_t size) {bits.resize(size);}
+  bitset_t(size_t size) {bits.resize(std::ceil(size / 64.0));}
   void set(const uint64_t id) {
-    if (id > static_cast<uint64_t>(bits.size() - 1) * 64) throw std::runtime_error("id out of bounds");
+    if (id >= bits.size() * 64) throw std::runtime_error("id out of bounds");
     bits[id / 64] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
   }
   bool get(const uint64_t id) const {
-    if (id > static_cast<uint64_t>(bits.size() - 1) * 64) throw std::runtime_error("id out of bounds");
+    if (id >= bits.size() * 64) throw std::runtime_error("id out of bounds");
     return bits[id / 64] & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
   }
 protected:
@@ -59,7 +60,7 @@ edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* 
   return {id, tile->directededge(id)};
 }
 
-edge_t next(const std::unordered_map<uint32_t, uint64_t>& tile_set, const bitset_t& edge_set, GraphReader& reader,
+edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set, const bitset_t& edge_set, GraphReader& reader,
             const GraphTile*& tile, const edge_t& edge, const std::vector<std::string>& names) {
   //get the right tile
   if(tile->id() != edge.e->endnode().Tile_Base())
@@ -74,12 +75,13 @@ edge_t next(const std::unordered_map<uint32_t, uint64_t>& tile_set, const bitset
     GraphId id = tile->id();
     id.fields.id = node->edge_index() + i;
     //already used
-    if(edge_set.get(tile_set.find(tile->id().tileid())->second + id.id()))
+    if(edge_set.get(tile_set.find(tile->id())->second + id.id()))
       continue;
     edge_t candidate{id, tile->directededge(id)};
     //dont need these
     if(!ferries && candidate.e->use() == Use::kFerry)
       continue;
+    //TODO: dont skip transition edges but rather follow them to other levels
     //skip these
     if(candidate.e->trans_up() || candidate.e->use() == Use::kTransitConnection ||
        candidate.e->trans_down() || candidate.e->IsTransitLine()) //these should never happen
@@ -168,21 +170,22 @@ int main(int argc, char *argv[]) {
 
   //get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
-  auto level = reader.GetTileHierarchy().levels().rbegin()->second;
 
   //keep the global number of edges encountered at the point we encounter each tile
   //this allows an edge to have a sequential global id and makes storing it very small
   LOG_INFO("Enumerating edges...");
-  std::unordered_map<uint32_t, uint64_t> tile_set(level.tiles.ncolumns() * level.tiles.nrows());
+  std::unordered_map<GraphId, uint64_t> tile_set(kMaxGraphTileId * reader.GetTileHierarchy().levels().size());
   uint64_t edge_count = 0;
-  for(uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
-    GraphId tile_id{i, level.level, 0};
-    if(reader.DoesTileExist(tile_id)) {
-      //TODO: just read the header, parsing the whole thing isnt worth it at this point
-      tile_set.emplace(i, edge_count);
-      const auto* tile = reader.GetGraphTile(tile_id);
-      edge_count += tile->header()->directededgecount();
-      reader.Clear();
+  for(const auto& level : reader.GetTileHierarchy().levels()) {
+    for(uint32_t i = 0; i < level.second.tiles.TileCount(); ++i) {
+      GraphId tile_id{i, level.first, 0};
+      if(reader.DoesTileExist(tile_id)) {
+        //TODO: just read the header, parsing the whole thing isnt worth it at this point
+        tile_set.emplace(tile_id, edge_count);
+        const auto* tile = reader.GetGraphTile(tile_id);
+        edge_count += tile->header()->directededgecount();
+        reader.Clear();
+      }
     }
   }
 
@@ -197,19 +200,22 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Exporting " + std::to_string(edge_count) + " edges");
   int progress = -1;
   uint64_t set = 0;
-  for(const auto& id_count_pair : tile_set) {
+  for(const auto& tile_count_pair : tile_set) {
     //for each edge in the tile
     reader.Clear();
-    GraphId tile_id{id_count_pair.first, level.level, 0};
-    const auto* tile = reader.GetGraphTile(tile_id);
+    const auto* tile = reader.GetGraphTile(tile_count_pair.first);
     for(uint32_t i = 0; i < tile->header()->directededgecount(); ++i) {
       //we've seen this one already
-      if(edge_set.get(id_count_pair.second + i))
+      if(edge_set.get(tile_count_pair.second + i))
         continue;
 
+      //TODO: dont mark transition edges since we may need to use them to change levels multiple times
+      //maybe we should mark them though once every normal edge connected there has been marked
+
       //make sure we dont ever look at this again
-      edge_t edge{{id_count_pair.first, level.level, i}, tile->directededge(i)};
-      edge_set.set(id_count_pair.second + i);
+      edge_t edge{tile_count_pair.first, tile->directededge(i)};
+      edge.i.fields.id = i;
+      edge_set.set(tile_count_pair.second + i);
       ++set;
 
       //these wont have opposing edges that we care about
@@ -219,7 +225,7 @@ int main(int argc, char *argv[]) {
 
       //get the opposing edge as well
       edge_t opposing_edge = opposing(reader, tile, edge);
-      edge_set.set(tile_set.find(opposing_edge.i.tileid())->second + opposing_edge.i.id());
+      edge_set.set(tile_set.find(opposing_edge.i.Tile_Base())->second + opposing_edge.i.id());
       ++set;
 
       //shortcuts arent real and maybe we dont want ferries
@@ -247,9 +253,9 @@ int main(int argc, char *argv[]) {
       const auto* t = tile;
       while((edge = next(tile_set, edge_set, reader, t, edge, names))) {
         //mark them to never be used again
-        edge_set.set(tile_set.find(edge.i.tileid())->second + edge.i.id());
+        edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());
         edge_t other = opposing(reader, t, edge);
-        edge_set.set(tile_set.find(other.i.tileid())->second + other.i.id());
+        edge_set.set(tile_set.find(other.i.Tile_Base())->second + other.i.id());
         set += 2;
         //keep this
         edges.push_back(edge);
@@ -259,9 +265,9 @@ int main(int argc, char *argv[]) {
       edge = opposing_edge;
       while((edge = next(tile_set, edge_set, reader, t, edge, names))) {
         //mark them to never be used again
-        edge_set.set(tile_set.find(edge.i.tileid())->second + edge.i.id());
+        edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());
         edge_t other = opposing(reader, t, edge);
-        edge_set.set(tile_set.find(other.i.tileid())->second + other.i.id());
+        edge_set.set(tile_set.find(other.i.Tile_Base())->second + other.i.id());
         set += 2;
         //keep this
         edges.push_front(other);
