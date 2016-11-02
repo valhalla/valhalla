@@ -100,20 +100,10 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
     }
   }
   if (pathedges.size() == 0) {
-    // Third pass only if using astar
-    if (!using_astar) {
-      // Return an empty trip path
-      return TripPath();
-    }
-    cost->DisableHighwayTransitions();
-    pathalgorithm->Clear();
-    pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
-    data.incPasses();
-    if (pathedges.size() == 0) {
-      // Return an empty trip path
-      return TripPath();
-    }
+    // Return an empty trip path
+    return TripPath();
   }
+
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
