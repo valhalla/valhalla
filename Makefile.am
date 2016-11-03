@@ -181,6 +181,7 @@ valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFL
 # tests
 check_PROGRAMS = \
 	test/utrecht \
+	test/countryaccess \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
@@ -189,9 +190,9 @@ check_PROGRAMS = \
 	test/names \
 	test/refs \
 	test/signinfo
-#test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
-#test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-#test_countryaccess_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
+test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_countryaccess_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

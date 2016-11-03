@@ -289,6 +289,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_schedulecount(schedule_builder_.size());
+    header_builder_.set_transfercount(0); // TODO add later
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_complex_restriction_forward_offset(
@@ -300,6 +301,7 @@ void GraphTileBuilder::StoreTileData() {
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
             + (schedule_builder_.size() * sizeof(TransitSchedule))
+            // TODO - once transit transfers are added need to update here
             + (signs_builder_.size() * sizeof(Sign))
             + (admins_builder_.size() * sizeof(Admin)));
 
