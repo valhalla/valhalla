@@ -95,6 +95,12 @@ class TruckCost : public DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
+   * Get the access mode used by this costing method.
+   * @return  Returns access mode.
+   */
+  uint32_t access_mode() const;
+
+  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -139,11 +145,9 @@ class TruckCost : public DynamicCost {
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
-   * @param   density  Relative road density.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const uint32_t density) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -200,7 +204,7 @@ class TruckCost : public DynamicCost {
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->trans_up() || edge->trans_down() ||
+      if (edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
          !(edge->forwardaccess() & kTruckAccess))
         return 0.0f;
       else {
@@ -307,6 +311,11 @@ bool TruckCost::AllowTransitions() const {
 // limits).
 bool TruckCost::AllowMultiPass() const {
   return true;
+}
+
+// Get the access mode used by this costing method.
+uint32_t TruckCost::access_mode() const {
+  return kTruckAccess;
 }
 
 // Check if access is allowed on the specified edge.
@@ -429,10 +438,9 @@ bool TruckCost::Allowed(const baldr::NodeInfo* node) const  {
 }
 
 // Get the cost to traverse the edge in seconds
-Cost TruckCost::EdgeCost(const DirectedEdge* edge,
-                        const uint32_t density) const {
+Cost TruckCost::EdgeCost(const DirectedEdge* edge) const {
 
-  float factor = density_factor_[density];
+  float factor = density_factor_[edge->density()];
 
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;

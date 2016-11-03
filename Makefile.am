@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
-AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla @BOOST_CPPFLAGS@ -Igenfiles
+AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -34,8 +34,13 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-genfiles
+else
+clean-local: clean-genfiles
 endif
+
+clean-genfiles:
+	-rm -rf genfiles
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_sif.la

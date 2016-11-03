@@ -13,7 +13,7 @@ namespace sif {
  * Labeling information for shortest path algorithm. Contains cost,
  * predecessor, current time, and assorted information required during
  * construction of the shortest path (stored in AdjacencyList) and for
- * reconstructing the path upon completion .
+ * reconstructing the path upon completion.
  */
 class EdgeLabel {
  public:
@@ -26,21 +26,17 @@ class EdgeLabel {
    * Constructor with values.
    * @param predecessor   Index into the edge label list for the predecessor
    *                      directed edge in the shortest path.
-   * @param edgeid        Directed edge.
-   * @param endnode       End node of the directed edge.
+   * @param edgeid        Directed edge Id.
+   * @param edge          Directed edge.
    * @param cost          True cost (cost and time in seconds) to the edge.
    * @param sortcost      Cost for sorting (includes A* heuristic)
    * @param dist          Distance meters to the destination
-   * @param restrictions  Restriction mask from prior edge - this is used
-   *                      if edge is a transition edge. Allows restrictions
-   *                      to be carried across different hierarchy levels.
    * @param mode          Mode of travel along this edge.
    * @param path_distance Accumulated path distance
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
-            const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const uint32_t path_distance);
 
   /**
@@ -53,9 +49,6 @@ class EdgeLabel {
    * @param cost         True cost (cost and time in seconds) to the edge.
    * @param sortcost     Cost for sorting (includes A* heuristic)
    * @param dist         Distance meters to the destination
-   * @param restrictions Restriction mask from prior edge - this is used
-   *                     if edge is a transition edge. Allows restrictions
-   *                     to be carried across different hierarchy levels.
    * @param mode         Mode of travel along this edge.
    * @param tc           Transition cost entering this edge.
    * @param not_thru_pruning  Is not thru pruning enabled.
@@ -64,7 +57,6 @@ class EdgeLabel {
             const baldr::GraphId& oppedgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
-            const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const Cost& tc,
             bool not_thru_pruning);
 
@@ -77,9 +69,6 @@ class EdgeLabel {
    * @param cost          True cost (cost and time in seconds) to the edge.
    * @param sortcost      Cost for sorting (includes A* heuristic)
    * @param dist          Distance meters to the destination
-   * @param restrictions  Restriction mask from prior edge - this is used
-   *                      if edge is a transition edge. Allows restrictions
-   *                      to be carried across different hierarchy levels.
    * @param mode          Mode of travel along this edge.
    * @param path_distance Accumulated distance.
    * @param tripid        Trip Id for a transit edge.
@@ -91,7 +80,6 @@ class EdgeLabel {
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
-            const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const uint32_t path_distance,
             const uint32_t tripid, const baldr::GraphId& prior_stopid,
             const uint32_t blockid, const uint32_t transit_operator,
@@ -107,10 +95,6 @@ class EdgeLabel {
    * @param oppedgeid     Opposing directed edge Id.
    * @param endnode       End node of the directed edge.
    * @param cost          True cost (cost and time in seconds) to the edge.
-   * @param restrictions  Restriction mask from prior edge - this is used
-   *                      if edge is a transition edge. This allows
-   *                      restrictions to be carried across different
-   *                      hierarchy levels.
    * @param mode          Mode of travel along this edge.
    * @param tc            Transition cost entering this edge.
    * @param path_distance Accumulated path distance.
@@ -119,9 +103,21 @@ class EdgeLabel {
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& oppedgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
-            const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const Cost& tc,
             const uint32_t path_distance, bool not_thru_pruning);
+
+  /**
+   * Constructor given a predecessor edge label. This is used for hierarchy
+   * transitions where the attributes at the predecessor are needed (rather
+   * than attributes from the directed edge).
+   * @param predecessor  Index into the edge label list for the predecessor
+   *                     directed edge in the shortest path.
+   * @param edgeid       Directed edge id.
+   * @param endnode      End node of the transition edge.
+   * @param pred         Predecessor edge label (to copy attributes from)
+   */
+  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+            const baldr::GraphId& endnode, const EdgeLabel& pred);
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -247,19 +243,6 @@ class EdgeLabel {
    * @return  Returns the restriction mask.
    */
   uint32_t restrictions() const;
-
-  /**
-   * Get the transition up flag.
-   * @return  Returns true if the prior edge was a transition up, false if not.
-   */
-  bool trans_up() const;
-
-  /**
-   * Get the transition down flag.
-   * @return  Returns true if the prior edge was a transition down,
-   *          false if not.
-   */
-  bool trans_down() const;
 
   /**
    * Get the shortcut flag.
@@ -388,64 +371,64 @@ class EdgeLabel {
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
-  // GraphId of the end node of the edge. This allows the expansion
-  // to occur by reading the node and not having to re-read the directed
-  // edge
+  // GraphId of the end node of the edge. This allows the expansion to occur
+  // by reading the node and not having to re-read the directed edge.
   baldr::GraphId endnode_;
 
   // Graph Id of the opposing edge (for bidirectional A*). Stores the
-  // predecessor transit stop graph Id for multi-modal routes
+  // predecessor transit stop graph Id for multi-modal routes.
   baldr::GraphId opp_edgeid_;
 
-  // Cost and elapsed time along the path
+  // Cost and elapsed time along the path.
   Cost cost_;
 
-  // Sort cost - includes A* heuristic
+  // Sort cost - includes A* heuristic.
   float sortcost_;
 
-  // Distance to the destination
+  // Distance to the destination.
   float distance_;
 
   /**
    * Attributes to carry along with the edge label.
-   * path_distance: Accumulated path distance in meters.
-   * use            Use of the prior edge.
-   * opp_index      Index at the end node of the opposing directed edge.
-   * opp_local_idx  Index at the end node of the opposing local edge. This
-   *                value can be compared to the directed edge local_edge_idx
-   *                for edge transition costing and Uturn detection.
-   * restrictions   Bit mask of edges (by local edge index at the end node)
-   *                that are restricted (simple turn restrictions)
-   * trans_up       Was the prior edge a transition up to a higher level?
-   * trans_down     Was the prior edge a transition down to a lower level?
-   * shortcut       Was the prior edge a shortcut edge?
-   * dest_only      Was the prior edge destination only?
-   * has_transit    True if any transit taken along the path to this edge.
-   * origin         True if this is an origin edge.
-   * toll           Edge is toll.
+   * path_distance_: Accumulated path distance in meters.
+   * use_:           Use of the prior edge.
+   * opp_index_:     Index at the end node of the opposing directed edge.
+   * opp_local_idx_: Index at the end node of the opposing local edge. This
+   *                 value can be compared to the directed edge local_edge_idx
+   *                 for edge transition costing and Uturn detection.
+   * restriction_:   Bit mask of edges (by local edge index at the end node)
+   *                 that are restricted (simple turn restrictions)
+   * shortcut_:      Was the prior edge a shortcut edge?
+   * mode_:          Current transport mode.
+   * dest_only_:     Was the prior edge destination only?
+   * has_transit_:   True if any transit taken along the path to this edge.
+   * origin_:        True if this is an origin edge.
+   * toll_"          Edge is toll.
+   * not_thru_:      Flag indicating edge is not_thru.
+   * deadend_:       Flag indicating edge is a dead-end.
    */
   uint64_t path_distance_    : 26;
   uint64_t use_              : 6;
   uint64_t opp_index_        : 7;
   uint64_t opp_local_idx_    : 7;
   uint64_t restrictions_     : 7;
-  uint64_t trans_up_         : 1;
-  uint64_t trans_down_       : 1;
   uint64_t shortcut_         : 1;
   uint64_t mode_             : 4;
   uint64_t dest_only_        : 1;
   uint64_t has_transit_      : 1;
   uint64_t origin_           : 1;
   uint64_t toll_             : 1;
+  uint32_t not_thru_         : 1;
+  uint32_t deadend_          : 1;
 
-  // predecessor_:     Index to the predecessor edge label information.
+  // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
   // be part of a bit field make sure kInvalidLabel is changed.
   uint32_t predecessor_;
 
-  // tripid_:          Transit trip Id.
-  // classification_:  Road classification
-  // not_thru_pruning_:Is not thru pruning enabled?
+  // tripid_:           Transit trip Id.
+  // classification_:   Road classification
+  // not_thru_pruning_: Is not thru pruning enabled?
   uint32_t tripid_           : 28;
   uint32_t classification_   : 3;
   uint32_t not_thru_pruning_ : 1;
@@ -458,13 +441,9 @@ class EdgeLabel {
   /**
    * transition_cost_: Transition cost (used in bidirectional path search).
    * transition_secs_: Transition time (used in bidirectional path search).
-   * not_thru_:        Flag indicating edge is not_thru.
-   * deadend_:         Flag indicating edge is a deadend.
    */
-  uint32_t transition_cost_ : 15;
-  uint32_t transition_secs_ : 15;
-  uint32_t not_thru_        : 1;
-  uint32_t deadend_         : 1;
+  uint32_t transition_cost_ : 16;
+  uint32_t transition_secs_ : 16;
 };
 
 }

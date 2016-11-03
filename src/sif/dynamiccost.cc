@@ -21,12 +21,6 @@ DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
 DynamicCost::~DynamicCost() {
 }
 
-// Does the costing allow hierarchy transitions? Defaults to false. Costing
-// methods that wish to use hierarchy transitions must override this method.
-bool DynamicCost::AllowTransitions() const {
-  return false;
-}
-
 // Does the costing method allow multiple passes (with relaxed hierarchy
 // limits). Defaults to false. Costing methods that wish to allow multiple
 // passes with relaxed hierarchy transitions must override this method.
@@ -118,12 +112,6 @@ void DynamicCost::RelaxHierarchyLimits(const float factor,
   for (auto& hierarchy : hierarchy_limits_) {
     hierarchy.Relax(factor, expansion_within_factor);
   }
-}
-
-// Do not transition up to highway level - remain on arterial. Used as last
-// resort.
-void DynamicCost::DisableHighwayTransitions() {
-  hierarchy_limits_[1].DisableHighwayTransitions();
 }
 
 // Set the current travel mode.

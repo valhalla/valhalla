@@ -61,12 +61,6 @@ class DynamicCost {
   virtual ~DynamicCost();
 
   /**
-   * Does the costing allow hierarchy transitions?
-   * @return  Returns true if the costing model allows hierarchy transitions).
-   */
-  virtual bool AllowTransitions() const;
-
-  /**
    * Does the costing method allow multiple passes (with relaxed
    * hierarchy limits).
    * @return  Returns true if the costing model allows multiple passes.
@@ -96,6 +90,12 @@ class DynamicCost {
    * transit stop to the destination).
    */
   virtual void UseMaxMultiModalDistance();
+
+  /**
+   * Get the access mode used by this costing method.
+   * @return  Returns access mode.
+   */
+  virtual uint32_t access_mode() const = 0;
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -141,12 +141,10 @@ class DynamicCost {
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge     Pointer to a directed edge.
-   * @param   density  Relative road density.
+   * @param   edge  Pointer to a directed edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const uint32_t density) const = 0;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const = 0;
 
   /**
    * Get the cost to traverse the specified directed edge using a transit
@@ -287,17 +285,6 @@ class DynamicCost {
    * Relax hierarchy limits.
    */
   void RelaxHierarchyLimits(const float factor, const float expansion_within_factor);
-
-  /**
-   * Do not transition up to highway level - remain on arterial. Used as last
-   * resort.
-   */
-  void DisableHighwayTransitions();
-
-  /**
-   * Reset hierarchy limits.
-   */
-  void ResetHierarchyLimits();
 
   /**
    * Checks if we should exclude or not.

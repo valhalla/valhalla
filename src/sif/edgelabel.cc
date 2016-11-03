@@ -15,8 +15,6 @@ EdgeLabel::EdgeLabel() {
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const DirectedEdge* edge, const Cost& cost,
                      const float sortcost, const float dist,
-                     const uint32_t restrictions,
-                     const uint32_t opp_local_idx,
                      const TravelMode mode, const uint32_t path_distance)
     : predecessor_(predecessor),
       edgeid_(edgeid),
@@ -28,10 +26,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       path_distance_(path_distance),
       use_(static_cast<uint32_t>(edge->use())),
       opp_index_(edge->opp_index()),
-      opp_local_idx_(opp_local_idx),
-      restrictions_(restrictions),
-      trans_up_(edge->trans_up()),
-      trans_down_(edge->trans_down()),
+      opp_local_idx_(edge->opp_local_idx()),
+      restrictions_(edge->restrictions()),
       shortcut_(edge->shortcut()),
       mode_(static_cast<uint32_t>(mode)),
       dest_only_(edge->destonly()),
@@ -53,7 +49,6 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const GraphId& oppedgeid, const DirectedEdge* edge,
                      const Cost& cost, const float sortcost, const float dist,
-                     const uint32_t restrictions, const uint32_t opp_local_idx,
                      const TravelMode mode, const Cost& tc,
                      bool not_thru_pruning)
     : predecessor_(predecessor),
@@ -66,10 +61,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       path_distance_(0),
       use_(static_cast<uint32_t>(edge->use())),
       opp_index_(edge->opp_index()),
-      opp_local_idx_(opp_local_idx),
-      restrictions_(restrictions),
-      trans_up_(edge->trans_up()),
-      trans_down_(edge->trans_down()),
+      opp_local_idx_(edge->opp_local_idx()),
+      restrictions_(edge->restrictions()),
       shortcut_(edge->shortcut()),
       mode_(static_cast<uint32_t>(mode)),
       dest_only_(edge->destonly()),
@@ -91,7 +84,6 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
           const DirectedEdge* edge, const Cost& cost,
           const float sortcost, const float dist,
-          const uint32_t restrictions, const uint32_t opp_local_idx,
           const TravelMode mode, const uint32_t path_distance,
           const uint32_t tripid, const GraphId& prior_stopid,
           const uint32_t blockid, const uint32_t transit_operator,
@@ -106,10 +98,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       path_distance_(path_distance),
       use_(static_cast<uint32_t>(edge->use())),
       opp_index_(edge->opp_index()),
-      opp_local_idx_(opp_local_idx),
-      restrictions_(restrictions),
-      trans_up_(edge->trans_up()),
-      trans_down_(edge->trans_down()),
+      opp_local_idx_(edge->opp_local_idx()),
+      restrictions_(edge->restrictions()),
       shortcut_(edge->shortcut()),
       mode_(static_cast<uint32_t>(mode)),
       dest_only_(edge->destonly()),
@@ -132,8 +122,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
 // sortcost to the true cost.
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                 const GraphId& oppedgeid, const DirectedEdge* edge,
-                const Cost& cost, const uint32_t restrictions,
-                const uint32_t opp_local_idx, const TravelMode mode,
+                const Cost& cost, const TravelMode mode,
                 const Cost& tc, const uint32_t path_distance,
                 bool not_thru_pruning)
     :  predecessor_(predecessor),
@@ -146,10 +135,8 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
        path_distance_(path_distance),
        use_(static_cast<uint32_t>(edge->use())),
        opp_index_(edge->opp_index()),
-       opp_local_idx_(opp_local_idx),
-       restrictions_(restrictions),
-       trans_up_(edge->trans_up()),
-       trans_down_(edge->trans_down()),
+       opp_local_idx_(edge->opp_local_idx()),
+       restrictions_(edge->restrictions()),
        shortcut_(edge->shortcut()),
        mode_(static_cast<uint32_t>(mode)),
        dest_only_(edge->destonly()),
@@ -165,6 +152,22 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
        not_thru_(edge->not_thru()),
        not_thru_pruning_(not_thru_pruning),
        deadend_(edge->deadend()) {
+}
+
+// Constructor given a predecessor edge label. This is used for hierarchy
+// transitions where the attributes at the predecessor are needed (rather
+// than attributes from the directed edge.
+EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
+                     const GraphId& endnode, const EdgeLabel& pred) {
+  *this        = pred;
+  predecessor_ = predecessor;
+  edgeid_      = edgeid;
+  endnode_     = endnode;
+  origin_      = 0;
+
+  // Set the use so we know this is a transition edge. For now we only need to
+  // know it is a transition edge so we can skip it in complex restrictions.
+  use_ = static_cast<uint32_t>(Use::kTransitionUp);
 }
 
 // Update predecessor and cost values in the label.
@@ -264,16 +267,6 @@ uint32_t EdgeLabel::opp_local_idx() const {
 // turn restriction onto the directed edge with matching local edge index.
 uint32_t EdgeLabel::restrictions() const {
   return restrictions_;
-}
-
-// Get the transition up flag.
-bool EdgeLabel::trans_up() const {
-  return trans_up_;
-}
-
-// Get the transition down flag.
-bool EdgeLabel::trans_down() const {
-  return trans_down_;
 }
 
 // Get the shortcut flag.

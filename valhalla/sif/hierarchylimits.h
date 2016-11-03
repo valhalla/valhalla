@@ -17,7 +17,7 @@ constexpr float kMaxDistance = std::numeric_limits<float>::max();
 // for routes where more direct paths are available near the origin and
 // destination.
 constexpr uint32_t kDefaultMaxUpTransitions[] = {
-    0, 2000, 100, 0, 0, 0, 0, 0 };
+    0, 400, 100, 0, 0, 0, 0, 0 };
 
 // Default distances within which expansion is always allowed
 // (per level). Used only for A*.

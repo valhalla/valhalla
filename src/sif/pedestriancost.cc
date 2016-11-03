@@ -101,6 +101,12 @@ class PedestrianCost : public DynamicCost {
   virtual float GetModeWeight();
 
   /**
+   * Get the access mode used by this costing method.
+   * @return  Returns access mode.
+   */
+  uint32_t access_mode() const;
+
+  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -145,11 +151,9 @@ class PedestrianCost : public DynamicCost {
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
-   * @param   density  Relative road density.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const uint32_t density) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -209,7 +213,7 @@ class PedestrianCost : public DynamicCost {
      // Throw back a lambda that checks the access for this type of costing
      auto access_mask = access_mask_;
      return [access_mask](const baldr::DirectedEdge* edge) {
-       return !(edge->trans_up() || edge->trans_down() ||
+       return !(edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
            edge->use() >= Use::kRail ||
           !(edge->forwardaccess() & access_mask));
      };
@@ -278,6 +282,11 @@ class PedestrianCost : public DynamicCost {
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
+  // Set hierarchy to allow unlimited transitions
+  for (auto& h : hierarchy_limits_) {
+    h.max_up_transitions = kUnlimitedTransitions;
+  }
+
   allow_transit_connections_ = false;
 
   // Get the pedestrian type - enter as string and convert to enum
@@ -394,6 +403,11 @@ float PedestrianCost::GetModeWeight() {
   return mode_weight_;
 }
 
+// Get the access mode used by this costing method.
+uint32_t PedestrianCost::access_mode() const {
+  return access_mask_;
+}
+
 // Check if access is allowed on the specified edge. Disallow if no
 // access for this pedestrian type, if surface type exceeds (worse than)
 // the minimum allowed surface type, or if max grade is exceeded.
@@ -406,6 +420,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
 
   if (!(edge->forwardaccess() & access_mask_) ||
        (edge->surface() > minimal_allowed_surface_) ||
+        edge->is_shortcut() ||
  //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
@@ -432,6 +447,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // multimodal routes).
   if (!(opp_edge->forwardaccess() & access_mask_) ||
        (opp_edge->surface() > minimal_allowed_surface_) ||
+        opp_edge->is_shortcut() ||
  //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
         opp_edge->use() == Use::kTransitConnection) {
     return false;
@@ -446,8 +462,7 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
 
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
-Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
-                              const uint32_t density) const {
+Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
