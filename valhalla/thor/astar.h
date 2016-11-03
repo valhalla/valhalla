@@ -61,11 +61,11 @@ class AStarPathAlgorithm : public PathAlgorithm {
   virtual void Clear();
 
  protected:
-  // Allow transitions (set from the costing model)
-  bool allow_transitions_;
-
   // Current travel mode
   sif::TravelMode mode_;
+
+  // Current travel type
+  uint8_t travel_type_;
 
   // Tile creation date
   uint32_t tile_creation_date_;
@@ -117,20 +117,6 @@ class AStarPathAlgorithm : public PathAlgorithm {
   void CheckIfLowerCostPath(const uint32_t idx,
                             const uint32_t predindex,
                             const sif::Cost& newcost);
-
-  /**
-   * Handle transition edges. Will add any that are allowed to the
-   * adjacency list.
-   * @param level      Current hierarchy level
-   * @param edge       Directed edge (a transition edge)
-   * @param pred       Predecessor information
-   * @param predindex  Predecessor index in the edge labels.
-   * @param dist       Distance to the destination.
-   */
-  void HandleTransitionEdge(const uint32_t level,const baldr::GraphId& edgeid,
-                      const baldr::DirectedEdge* edge,
-                      const sif::EdgeLabel& pred, const uint32_t predindex,
-                      const float dist);
 
   /**
    * Modify hierarchy limits based on distance between origin and destination

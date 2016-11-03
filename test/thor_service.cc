@@ -46,6 +46,10 @@ namespace {
     config.add_child("costing_options.pedestrian", {});
     config.add_child("costing_options.transit", {});
     config.add("thor.logging.long_request", "110.0");
+    config.add("meili.default.gps_accuracy", "4.07");
+    config.add("meili.default.search_radius", "40");
+    config.add("meili.grid.size", "500");
+    config.add("meili.grid.cache_size", "64");
 
     thor_worker_t worker(config);
     for (auto& req_resp : failure_request_responses) {

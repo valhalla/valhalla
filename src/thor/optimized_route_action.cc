@@ -56,7 +56,7 @@ namespace valhalla {
       // If any location is completely unreachable then we cant have a connected path
       if(i % correlated.size() == 0) {
         if(!reachable)
-          throw std::runtime_error("Location at index " + std::to_string(i / correlated.size()) + " is unreachable");
+          throw valhalla_exception_t{400, 441, " at index " + std::to_string(i / correlated.size())};
         reachable = false;
       }
       reachable = reachable || td[i].time != kMaxCost;

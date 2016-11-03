@@ -6,6 +6,23 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
+namespace {
+static bool IsTrivial(const GraphId& edgeid,
+                              const PathLocation& origin,
+                              const PathLocation& destination) {
+  for (const auto& destination_edge : destination.edges) {
+    if (destination_edge.id == edgeid) {
+      for (const auto& origin_edge : origin.edges) {
+        if (origin_edge.id == edgeid &&
+            origin_edge.dist <= destination_edge.dist) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+}
 namespace valhalla {
 namespace thor {
 
@@ -50,8 +67,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   // factor (needed for setting the origin).
   astarheuristic_.Init(locations[origin_index].latlng_, 0.0f);
   uint32_t bucketsize = costing->UnitSize();
-  adjacencylist_.reset(new AdjacencyList(0.0f, initial_cost_threshold_,
-                                         bucketsize));
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_[label].sortcost();
+  };
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, initial_cost_threshold_,
+                                             bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
   // Initialize the origin and destination locations
@@ -64,7 +85,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove();
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -114,16 +135,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
-      // Do not allow transitions so should never see downward transitions
-      // or shortcuts (always remain on local hierarchy)
-      if (directededge->trans_up()) {
-        continue;
-      }
-
-      // Skip if no access is allowed to this edge (based on costing method)
-      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+      // Skip shortcut edges
+      if (directededge->is_shortcut()) {
         continue;
       }
 
@@ -134,9 +148,21 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
         continue;
       }
 
+      // Handle transition edges - add to adjacency set.
+      if (directededge->trans_up() || directededge->trans_down()) {
+        AddToAdjacencyList(edgeid, pred.sortcost());
+        edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        continue;
+      }
+
+      // Skip if no access is allowed to this edge (based on costing method)
+      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+        continue;
+      }
+
       // Get cost and update distance
       Cost newcost = pred.cost() +
-                     costing->EdgeCost(directededge, nodeinfo->density()) +
+                     costing->EdgeCost(directededge) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
       uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -151,7 +177,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
           float newsortcost = oldsortcost - dc;
           edgelabels_[idx].Update(predindex, newcost, newsortcost,
                                   distance, 0, 0);
-          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
         }
         continue;
       }
@@ -159,11 +185,17 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       // Add to the adjacency list and edge labels.
       AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
-                    newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, distance);
+                    newcost, newcost.cost, 0.0f, mode_, distance);
     }
   }
   return {};      // Should never get here
+}
+
+void TimeDistanceMatrix::AddToAdjacencyList(const baldr::GraphId& edgeid,
+                                            const float sortcost) {
+  uint32_t idx = edgelabels_.size();
+  adjacencylist_->add(idx, sortcost);
+  edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
 // Many to one time and distance cost matrix. Computes time and distance
@@ -185,8 +217,11 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   // factor (needed for setting the origin).
   astarheuristic_.Init(locations[dest_index].latlng_, 0.0f);
   uint32_t bucketsize = costing->UnitSize();
-  adjacencylist_.reset(new AdjacencyList(0.0f, initial_cost_threshold_,
-                                         bucketsize));
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_[label].sortcost();
+  };
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, initial_cost_threshold_,
+                                         bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
   // Initialize the origin and destination locations
@@ -199,7 +234,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove();
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -258,9 +293,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
-      // Do not allow transitions so should never see downward transitions
-      // or shortcuts (always remain on local hierarchy)
-      if (directededge->trans_up()) {
+      // Skip shortcut edges
+      if (directededge->is_shortcut()) {
         continue;
       }
 
@@ -268,6 +302,13 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
       if (edgestatus.set() == EdgeSet::kPermanent) {
+        continue;
+      }
+
+      // Handle transition edges. Add to adjacency list.
+      if (directededge->trans_up() || directededge->trans_down()) {
+        AddToAdjacencyList(edgeid, pred.sortcost());
+        edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;
       }
 
@@ -280,7 +321,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
 
       // Get cost. Use the opposing edge for EdgeCost.
       Cost newcost = pred.cost() +
-                    costing->EdgeCost(opp_edge, nodeinfo->density()) +
+                    costing->EdgeCost(opp_edge) +
                     costing->TransitionCostReverse(directededge->localedgeidx(),
                                         nodeinfo, opp_edge, opp_pred_edge);
       uint32_t distance = pred.path_distance() + directededge->length();
@@ -296,7 +337,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
           float newsortcost = oldsortcost - dc;
           edgelabels_[idx].Update(predindex, newcost, newsortcost,
                                   distance, 0, 0);
-          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
         }
         continue;
       }
@@ -304,8 +345,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // Add to the adjacency list and edge labels.
       AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
-                    newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, distance);
+                    newcost, newcost.cost, 0.0f, mode_, distance);
     }
   }
   return {};      // Should never get here
@@ -354,18 +394,16 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
-    Cost cost = costing->EdgeCost(directededge,
-                  graphreader.GetEdgeDensity(edgeid)) * (1.0f - edge.dist);
+    Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
     uint32_t d = static_cast<uint32_t>(directededge->length() *
                              (1.0f - edge.dist));
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
-    adjacencylist_->Add(edgelabels_.size(), cost.cost);
+    adjacencylist_->add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
-            cost.cost, 0.0f, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_, d);
+                         cost.cost, 0.0f, mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
   }
@@ -398,17 +436,16 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
-    Cost cost = costing->EdgeCost(opp_dir_edge,
-                         graphreader.GetEdgeDensity(opp_edge_id)) * edge.dist;
+    Cost cost = costing->EdgeCost(opp_dir_edge) * edge.dist;
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.dist);
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     // TODO - restrictions?
-    adjacencylist_->Add(edgelabels_.size(), cost.cost);
+    adjacencylist_->add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost,
-            cost.cost, 0.0f, 0, opp_dir_edge->opp_local_idx(), mode_, d);
+                         cost.cost, 0.0f, mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
   }
@@ -442,8 +479,7 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
 
         // Form a threshold cost (the total cost to traverse the edge)
         const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        float c = costing->EdgeCost(tile->directededge(edge.id),
-                    graphreader.GetEdgeDensity(edge.id)).cost;
+        float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
         if (c > d.threshold) {
           d.threshold = c;
         }
@@ -490,8 +526,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
 
         // Form a threshold cost (the total cost to traverse the edge)
         const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        float c = costing->EdgeCost(tile->directededge(edge.id),
-                    graphreader.GetEdgeDensity(edge.id)).cost;
+        float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
         if (c > d.threshold) {
           d.threshold = c;
         }
@@ -541,11 +576,10 @@ bool TimeDistanceMatrix::UpdateDestinations(const uint32_t origin_index,
       continue;
     }
 
-// TODO - need density for edgecost method...
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
-    Cost newcost = pred.cost() - (costing->EdgeCost(edge, 0.0f) * remainder);
+    Cost newcost = pred.cost() - (costing->EdgeCost(edge) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

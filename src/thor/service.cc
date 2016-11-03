@@ -13,6 +13,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/geojson.h>
+#include <valhalla/baldr/errorcode_util.h>
 
 #include <prime_server/prime_server.hpp>
 
@@ -23,6 +24,7 @@ using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::meili;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
@@ -45,43 +47,22 @@ namespace {
         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
       }
       catch (...) {
-        throw std::runtime_error("Failed to parse correlated location");
+        throw valhalla_exception_t{400, 420};
       }
     }while(++i);
     return correlated;
-  }
-
-  worker_t::result_t jsonify_error(uint64_t code, const std::string& status, const std::string& error, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
-
-    //build up the json map
-    auto json_error = json::map({});
-    json_error->emplace("error", error);
-    json_error->emplace("status", status);
-    json_error->emplace("code", code);
-
-    //serialize it
-    std::stringstream ss;
-    if(jsonp)
-      ss << *jsonp << '(';
-    ss << *json_error;
-    if(jsonp)
-      ss << ')';
-
-    worker_t::result_t result{false};
-    http_response_t response(code, status, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-
-    return result;
   }
 }
 
 namespace valhalla {
   namespace thor {
 
-    thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), reader(config.get_child("mjolnir")),
-      long_request(config.get<float>("thor.logging.long_request")){
+    thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
+      mode(valhalla::sif::TravelMode::kPedestrian),
+      config(config), matcher_factory(config), reader(config.get_child("mjolnir")),
+      long_request(config.get<float>("thor.logging.long_request")),
+      gps_accuracy(config.get<float>("meili.default.gps_accuracy")),
+      search_radius(config.get<float>("meili.default.search_radius")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -93,6 +74,31 @@ namespace valhalla {
     }
 
     thor_worker_t::~thor_worker_t(){}
+
+    worker_t::result_t thor_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info) const {
+
+       //build up the json map
+      auto json_error = json::map({});
+      json_error->emplace("status", exception.status_code_body);
+      json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
+      json_error->emplace("error", std::string(exception.error_code_message));
+      json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
+
+      //serialize it
+      std::stringstream ss;
+      if(jsonp)
+        ss << *jsonp << '(';
+      ss << *json_error;
+      if(jsonp)
+        ss << ')';
+
+      worker_t::result_t result{false};
+      http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+
+      return result;
+    }
 
     worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
       //get time for start of request
@@ -110,11 +116,11 @@ namespace valhalla {
         }
         catch(const std::exception& e) {
           valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
-          return jsonify_error(500, "Internal Server Error", e.what(), info, jsonp);
+          return jsonify_error({500, 499, std::string(e.what())}, info);
         }
         catch(...) {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
-          return jsonify_error(500, "Internal Server Error", "Failed to parse intermediate request format", info, jsonp);
+          return jsonify_error({500, 401}, info);
         }
 
         // Initialize request - get the PathALgorithm to use
@@ -133,15 +139,20 @@ namespace valhalla {
           case ROUTE:
           case VIAROUTE:
             return route(request, request_str, request.get_optional<int>("date_time.type"), info.do_not_track);
-          case ATTRIBUTES:
-            return attributes(request, info);
+          case TRACE_ATTRIBUTES:
+          case TRACE_ROUTE:
+            return trace_route(request, request_str);
           default:
-            throw std::runtime_error("Unknown action"); //this should never happen
+            throw valhalla_exception_t{400, 400}; //this should never happen
         }
+      }
+      catch(const valhalla_exception_t& e) {
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+        return jsonify_error({e.status_code, e.error_code, e.extra}, info);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(400, "Bad Request", e.what(), info, jsonp);
+        return jsonify_error({400, 499, std::string(e.what())}, info);
       }
     }
 
@@ -159,7 +170,7 @@ namespace valhalla {
       auto costing = request.get<std::string>("costing");
 
       // Set travel mode and construct costing
-      if (costing == "multimodal") {
+      if (costing == "multimodal" || costing == "transit") {
         // For multi-modal we construct costing for all modes and set the
         // initial mode to pedestrian. (TODO - allow other initial modes)
         mode_costing[0] = get_costing(request, "auto");
@@ -169,7 +180,7 @@ namespace valhalla {
         mode = valhalla::sif::TravelMode::kPedestrian;
       } else {
         valhalla::sif::cost_ptr_t cost = get_costing(request, costing);
-        mode = cost->travelmode();
+        mode = cost->travel_mode();
         mode_costing[static_cast<uint32_t>(mode)] = cost;
       }
       valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)), " [ANALYTICS] ");
@@ -184,18 +195,18 @@ namespace valhalla {
       if(request_locations) {
         for(const auto& location : *request_locations) {
           try{ locations.push_back(baldr::Location::FromPtree(location.second)); }
-          catch (...) { throw std::runtime_error("Failed to parse location"); }
+          catch (...) { throw valhalla_exception_t{400, 421}; }
         }
         correlated = store_correlated_locations(request, locations);
       }//if we have a sources and targets request here we will divvy up the correlated amongst them
       else if(request_sources && request_targets) {
         for(const auto& s : *request_sources) {
           try{ locations.push_back(baldr::Location::FromPtree(s.second)); }
-          catch (...) { throw std::runtime_error("Failed to parse source"); }
+          catch (...) { throw valhalla_exception_t{400, 422}; }
         }
         for(const auto& t : *request_targets) {
           try{ locations.push_back(baldr::Location::FromPtree(t.second)); }
-          catch (...) { throw std::runtime_error("Failed to parse target"); }
+          catch (...) { throw valhalla_exception_t{400, 423}; }
         }
         correlated = store_correlated_locations(request, locations);
 
@@ -203,7 +214,7 @@ namespace valhalla {
         correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
       }//we need something
       else
-        throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+        throw valhalla_exception_t{400, 410};
 
       //type - 0: current, 1: depart, 2: arrive
       auto date_time_type = request.get_optional<int>("date_time.type");
@@ -217,6 +228,21 @@ namespace valhalla {
         locations.back().date_time_ = date_time_value;
     }
 
+    void thor_worker_t::parse_shape(const boost::property_tree::ptree& request) {
+      //we require locations
+      auto request_shape = request.get_child("shape");
+
+      for(const auto& pt : request_shape) {
+        try{
+          shape.push_back(baldr::Location::FromPtree(pt.second).latlng_);
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse shape");
+        }
+      }
+
+    }
+
     void thor_worker_t::cleanup() {
       jsonp = boost::none;
       astar.Clear();
@@ -227,6 +253,7 @@ namespace valhalla {
       correlated_s.clear();
       correlated_t.clear();
       isochrone_gen.Clear();
+      matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
     }

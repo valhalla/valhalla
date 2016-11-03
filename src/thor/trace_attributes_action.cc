@@ -15,12 +15,12 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::attributes(const boost::property_tree::ptree &request, prime_server::http_request_t::info_t& request_info) {
+    worker_t::result_t  thor_worker_t::trace_attributes(const boost::property_tree::ptree &request, prime_server::http_request_t::info_t& request_info) {
       parse_costing(request);
+      parse_shape(request);
 
-      //TODO: map match
-      //TODO: map a trip path
-      //TODO: serialize the trip path
+      //TODO: call Meili for map matching to get a collection of pathLocation Edges
+      //TODO: serialize the trip path and return in Thor
 
       //turn it into json
       auto json = baldr::json::map({});

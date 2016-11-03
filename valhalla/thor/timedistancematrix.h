@@ -15,40 +15,15 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/costmatrix.h>
+#include <valhalla/thor/astar.h>
 
 namespace valhalla {
 namespace thor {
 
-constexpr float kMaxCost = 99999999.9999f;
 constexpr float kDefaultCostThreshold = 7200.0f;  // 2 hours
 
-// Time and Distance structure
-struct TimeDistance {
-  uint32_t time;  // Time in seconds
-  uint32_t dist;  // Distance in meters
 
-  TimeDistance()
-      : time(0),
-        dist(0) {
-  }
-
-  TimeDistance(const uint32_t secs, const uint32_t meters)
-      : time(secs),
-        dist(meters) {
-  }
-};
-
-// Structure to hold time distance results from a thread (for many to many
-// time distance matrix)
-struct TimeDistanceResults {
-  uint32_t origin_index;  // Origin index of the one to many result
-  std::vector<TimeDistance> time_distance;
-
-  // Sorting method to sort by origin_index
-  bool operator < (const TimeDistanceResults& other) const {
-    return origin_index < other.origin_index;
-  }
-};
 
 // Structure to hold information about each destination.
 struct Destination {
@@ -73,7 +48,7 @@ struct Destination {
 };
 
 // Class to compute time + distance matrices among locations.
-class TimeDistanceMatrix : public PathAlgorithm {
+class TimeDistanceMatrix {
  public:
   /**
    * Constructor with cost threshold.
@@ -132,7 +107,7 @@ class TimeDistanceMatrix : public PathAlgorithm {
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  virtual void Clear();
+  void Clear();
 
  protected:
   // Number of destinations that have been found and settled (least cost path
@@ -152,6 +127,18 @@ class TimeDistanceMatrix : public PathAlgorithm {
   // has a vector of indexes into the destinations vector
   std::unordered_map<baldr::GraphId, std::vector<uint32_t>> dest_edges_;
 
+  // Vector of edge labels (requires access by index).
+  std::vector<sif::EdgeLabel> edgelabels_;
+
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
+
+  // Edge status. Mark edges that are in adjacency list or settled.
+  std::shared_ptr<EdgeStatus> edgestatus_;
+
+  AStarHeuristic astarheuristic_;
+
+  sif::TravelMode mode_;
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
@@ -221,6 +208,8 @@ class TimeDistanceMatrix : public PathAlgorithm {
    * @return  Returns a time distance matrix among locations.
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix();
+
+  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
 };
 
 }

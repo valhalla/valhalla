@@ -33,9 +33,6 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
-  // Disable hierarchy transitions
-  allow_transitions_ = false;
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.edges.front().projected, destination.edges.front().projected, costing);
   float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
@@ -135,7 +132,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       Cost edge_cost;
       Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
       if (speeds.size() == 0 || speeds[edgeid.id()] == 0) {
-        edge_cost = costing->EdgeCost(directededge, nodeinfo->density());
+        edge_cost = costing->EdgeCost(directededge);
       } else {
         // Traffic exists for this edge
         float sec = directededge->length() * (kSecPerHour * 0.001f) /
@@ -162,7 +159,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        CheckIfLowerCostPath(edgestatus.status.index, predindex, newcost);
+        CheckIfLowerCostPath(edgestatus.index(), predindex, newcost);
         continue;
       }
 
@@ -184,8 +181,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       // Add to the adjacency list and edge labels.
       AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
-                    newcost, sortcost, dist, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, 0);
+                    newcost, sortcost, dist, mode_, 0);
     }
   }
   return {};      // Should never get here

@@ -1,6 +1,7 @@
 #include <map>
 #include <algorithm>
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/midgard/logging.h>
 #include "thor/multimodal.h"
 
@@ -75,7 +76,6 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
-  allow_transitions_ = costing->AllowTransitions();
   hierarchy_limits_  = costing->GetHierarchyLimits();
 }
 
@@ -278,12 +278,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-
-    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
-      // Skip transition edges for now. Should not see any shortcuts since we
-      // never transition upwards.
-      if (directededge->trans_up() || directededge->trans_down()) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+      // Skip shortcuts
+      if (directededge->is_shortcut()) {
         continue;
       }
 
@@ -291,6 +288,15 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
       if (edgestatus.set() == EdgeSet::kPermanent) {
+        continue;
+      }
+
+      if (directededge->trans_up() || directededge->trans_down()) {
+        // Add the transition edge to the adjacency list and edge labels
+        // using the predecessor information. Transition edges have
+        // no length.
+        AddToAdjacencyList(edgeid, pred.sortcost());
+        edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;
       }
 
@@ -384,8 +390,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           continue;
         }
 
-        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
-            directededge, nodeinfo->density());
+        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge);
         c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeWeight();
         newcost += c;
 
@@ -438,7 +443,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        uint32_t idx = edgestatus.status.index;
+        uint32_t idx = edgestatus.index();
         float dc = edgelabels_[idx].cost().cost - newcost.cost;
         if (dc > 0) {
           float oldsortcost = edgelabels_[idx].sortcost();
@@ -470,8 +475,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // Add edge label, add to the adjacency list and set edge status
       AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
-                    newcost, sortcost, dist, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_,  walking_distance_,
+                    newcost, sortcost, dist, mode_, walking_distance_,
                     tripid, prior_stop, blockid, operator_id, has_transit);
     }
   }
@@ -511,10 +515,9 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     const GraphTile* tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
-    Cost cost = costing->EdgeCost(diredge, 0.0f) * ratio;
+    Cost cost = costing->EdgeCost(diredge) * ratio;
     edgelabels.emplace_back(kInvalidLabel, oppedge,
-            diredge, cost, cost.cost, 0.0f, 0,
-            diredge->opp_local_idx(), mode_, length);
+            diredge, cost, cost.cost, 0.0f, mode_, length);
     adjlist.add(label_idx, cost.cost);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
     label_idx++;
@@ -530,7 +533,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     uint32_t predindex = adjlist.pop();
     if (predindex == kInvalidLabel) {
       // Throw an exception so the message is returned in the service
-      throw std::runtime_error("Cannot reach destination - too far from a transit stop");
+      throw valhalla_exception_t{400, 440};
       return false;
     }
 
@@ -557,15 +560,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     // Expand edges from the node
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
-
-      // Skip transition edges or if not allowed for htis mode
-      if (directededge->trans_up() || directededge->trans_down() ||
-          !costing->Allowed(directededge, pred, tile, edgeid)) {
-        continue;
-      }
-
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo es = edgestatus.Get(edgeid);
@@ -573,15 +568,30 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
         continue;
       }
 
+      // Handle transition edges
+      if (directededge->trans_up() || directededge->trans_down()) {
+        // Add the transition edge to the adjacency list and edge labels
+        // using the predecessor information.
+        edgelabels.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        adjlist.add(label_idx, pred.sortcost());
+        edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
+        label_idx++;
+        continue;
+      }
+
+      // Skip if access is not allowed for this mode
+      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+        continue;
+      }
+
       // Get cost
-      Cost newcost = pred.cost() +
-                     costing->EdgeCost(directededge, nodeinfo->density()) +
+      Cost newcost = pred.cost() + costing->EdgeCost(directededge) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
       uint32_t walking_distance = pred.path_distance() + directededge->length();
 
       // Check if lower cost path
       if (es.set() == EdgeSet::kTemporary) {
-        uint32_t idx = es.status.index;
+        uint32_t idx = es.index();
         float dc = edgelabels[idx].cost().cost - newcost.cost;
         if (dc > 0) {
           float oldsortcost = edgelabels[idx].sortcost();
@@ -595,8 +605,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
 
       // Add edge label, add to the adjacency list and set edge status
       edgelabels.emplace_back(predindex, edgeid, directededge,
-                    newcost, newcost.cost, 0.0f, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, walking_distance);
+                    newcost, newcost.cost, 0.0f, mode_, walking_distance);
       adjlist.add(label_idx, newcost.cost);
       edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
       label_idx++;

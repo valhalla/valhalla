@@ -37,6 +37,10 @@ struct EdgeStatusInfo {
     status.index = index;
   }
 
+  uint32_t index() const {
+    return status.index;
+  }
+
   EdgeSet set() const {
     return static_cast<EdgeSet>(status.set);
   }

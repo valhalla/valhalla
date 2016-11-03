@@ -108,13 +108,8 @@ namespace valhalla {
 
   thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
         const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
-    if (routetype == "multimodal") {
+    if (routetype == "multimodal" || routetype == "transit") {
       return &multi_modal_astar;
-    } else if (routetype == "bus") {
-      // TODO - can we use bidirectional A*?
-      return &astar;
-    } else if (routetype == "pedestrian") {
-      return &bidir_astar;
     } else {
       // Use A* if any origin and destination edges are the same - otherwise
       // use bidirectional A*. Bidirectional A* does not handle trivial cases
@@ -150,15 +145,6 @@ namespace valhalla {
         midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
         path_edges = path_algorithm->GetBestPath(origin, destination,
                                   reader, mode_costing, mode);
-
-        // 3rd pass (only for A*)
-        if (path_edges.size() == 0 && using_astar) {
-          path_algorithm->Clear();
-          cost->DisableHighwayTransitions();
-          midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
-          path_edges = path_algorithm->GetBestPath(origin, destination,
-                                   reader, mode_costing, mode);
-        }
       }
     }
   }
@@ -195,14 +181,14 @@ namespace valhalla {
       if (path_edges.size() == 0) {
         get_path(path_algorithm, origin, destination, path_edges);
         if (path_edges.size() == 0) {
-          throw std::runtime_error("No path could be found for input");
+          throw valhalla_exception_t{400, 442};
         }
       } else {
         // Get the path in a temporary vector
         std::vector<thor::PathInfo> temp_path;
         get_path(path_algorithm, origin, destination, temp_path);
         if (temp_path.size() == 0) {
-          throw std::runtime_error("No path could be found for input");
+          throw valhalla_exception_t{400, 442};
         }
 
         // Append the temp_path edges to path_edges, adding the elapsed
@@ -227,8 +213,8 @@ namespace valhalla {
             last_break_dest.date_time_ = origin_date_time;
 
           // Form output information based on path edges
-          auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                              origin, last_break_dest, through_loc);
+          auto trip_path = thor::TripPathBuilder::Build(reader, mode_costing,
+                       path_edges, origin, last_break_dest, through_loc);
 
           if (origin.date_time_)
             origin_date_time = *origin.date_time_;
@@ -296,7 +282,7 @@ namespace valhalla {
       if (path_edges.size() == 0) {
         get_path(path_algorithm, origin, destination, path_edges);
         if (path_edges.size() == 0) {
-          throw std::runtime_error("No path could be found for input");
+          throw valhalla_exception_t{400, 442};
         }
 
         if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
@@ -307,7 +293,7 @@ namespace valhalla {
         std::vector<thor::PathInfo> temp_path;
         get_path(path_algorithm, origin, destination, temp_path);
         if (temp_path.size() == 0) {
-          throw std::runtime_error("No path could be found for input");
+          throw valhalla_exception_t{400, 442};
         }
 
         if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
@@ -332,8 +318,8 @@ namespace valhalla {
       if (destination.stoptype_ == Location::StopType::BREAK ||
           path_location == --correlated.cend()) {
           // Form output information based on path edges
-          auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                                                        last_break_origin, destination, through_loc);
+          auto trip_path = thor::TripPathBuilder::Build(reader, mode_costing,
+                   path_edges, last_break_origin, destination, through_loc);
 
           if (date_time_type) {
             origin_date_time = *last_break_origin.date_time_;

@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
-AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla @BOOST_CPPFLAGS@ -Igenfiles
+AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -34,8 +34,13 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-genfiles
+else
+clean-local: clean-genfiles
 endif
+
+clean-genfiles:
+	-rm -rf genfiles
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_thor.la
@@ -47,29 +52,34 @@ nobase_include_HEADERS = \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/isochrone.h \
 	valhalla/thor/optimizer.h \
+	valhalla/thor/mapmatching_route.h \
 	valhalla/thor/multimodal.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
 	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/service.h \
-	valhalla/thor/trafficalgorithm.h
+	valhalla/thor/trafficalgorithm.h \
+	valhalla/thor/timedistancematrix.h
 libvalhalla_thor_la_SOURCES = \
 	src/thor/astar.cc \
 	src/thor/astarheuristic.cc \
-	src/thor/attributes_action.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
 	src/thor/edgestatus.cc \
 	src/thor/isochrone.cc \
 	src/thor/isochrone_action.cc \
+	src/thor/mapmatching_route.cc \
 	src/thor/matrix_action.cc \
 	src/thor/multimodal.cc \
 	src/thor/optimized_route_action.cc \
 	src/thor/optimizer.cc \
 	src/thor/route_action.cc \
+	src/thor/trace_attributes_action.cc \
+	src/thor/trace_route_action.cc \
 	src/thor/trippathbuilder.cc \
 	src/thor/service.cc \
-	src/thor/trafficalgorithm.cc
+	src/thor/trafficalgorithm.cc \
+	src/thor/timedistancematrix.cc
 
 libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@

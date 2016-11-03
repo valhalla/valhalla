@@ -64,11 +64,17 @@ class BidirectionalAStar : public PathAlgorithm {
   void Clear();
 
  protected:
-  // Allow transitions (set from the costing model)
-  bool allow_transitions_;
+  // Access mode used by the costing method
+  uint32_t access_mode_;
 
   // Current travel mode
   sif::TravelMode mode_;
+
+  // Current travel type
+  uint8_t travel_type_;
+
+  // Current costing mode
+  std::shared_ptr<sif::DynamicCost> costing_;
 
   // Hierarchy limits
   std::vector<sif::HierarchyLimits> hierarchy_limits_forward_;
@@ -101,8 +107,26 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const PointLL& origll, const PointLL& destll,
-            const std::shared_ptr<sif::DynamicCost>& costing);
+  void Init(const PointLL& origll, const PointLL& destll);
+
+  /**
+   * Expand from the node along the forward search path.
+   */
+  void ExpandForward(baldr::GraphReader& graphreader,
+           const baldr::GraphTile* tile,
+           const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
+           sif::EdgeLabel& pred, const uint32_t pred_idx,
+           const bool from_transition);
+
+  /**
+   * Expand from the node along the reverse search path.
+   */
+  void ExpandReverse(baldr::GraphReader& graphreader,
+           const baldr::GraphTile* tile,
+           const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
+           sif::EdgeLabel& pred, const uint32_t pred_idx,
+           const baldr::DirectedEdge* opp_pred_edge,
+           const bool from_transition);
 
   /**
    * Add edges at the origin to the forward adjacency list.
@@ -111,8 +135,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  costing      Dynamic costing
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 baldr::PathLocation& origin,
-                 const std::shared_ptr<sif::DynamicCost>& costing);
+                 baldr::PathLocation& origin);
 
   /**
    * Add destination edges to the reverse path adjacency list.
@@ -120,43 +143,23 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param   costing      Dynamic costing
    */
   void SetDestination(baldr::GraphReader& graphreader,
-                       const baldr::PathLocation& dest,
-                       const std::shared_ptr<sif::DynamicCost>& costing);
+                       const baldr::PathLocation& dest);
 
   /**
-   * Check if the edge on the forward search connects to a reached edge
-   * on the reverse search tree.
+   * The edge on the forward search connects to a reached edge on the reverse
+   * search tree. Check if this is the best connection so far and set the
+   * search threshold.
    * @param  pred  Edge label of the predecessor.
    */
-  void CheckForwardConnection(const sif::EdgeLabel& pred);
+  void SetForwardConnection(const sif::EdgeLabel& pred);
 
   /**
-   * Check if the edge on the reverse search connects to a reached edge
-   * on the forward search tree.
+   * The edge on the reverse search connects to a reached edge on the forward
+   * search tree. Check if this is the best connection so far and set the
+   * search threshold.
    * @param  pred  Edge label of the predecessor.
    */
-  void CheckReverseConnection(const sif::EdgeLabel& pred);
-
-  /**
-   * Convenience method to add an edge to the adjacency list and temporarily
-   * label it. This must be called before adding the edge label (so it uses
-   * the correct index).
-   * @param  edgeid    Edge to add to the adjacency list.
-   * @param  sortcost  Sort cost.
-   */
-  void AddToForwardAdjacencyList(const baldr::GraphId& edgeid,
-                                 const float sortcost);
-
-  /**
-   * Convenience method to add an edge to the adjacency list and temporarily
-   * label it. This must be called before adding the edge label (so it uses
-   * the correct index). Adds to the reverse path from destination towards
-   * the origin.
-   * @param  edgeid    Edge to add to the adjacency list.
-   * @param  sortcost  Sort cost.
-   */
-  void AddToReverseAdjacencyList(const baldr::GraphId& edgeid,
-                                 const float sortcost);
+  void SetReverseConnection(const sif::EdgeLabel& pred);
 
   /**
    * Check if edge is temporarily labeled and this path has less cost. If
@@ -171,7 +174,6 @@ class BidirectionalAStar : public PathAlgorithm {
                             const uint32_t predindex,
                             const sif::Cost& newcost,
                             const sif::Cost& tc);
-
 
   /**
    * Check if edge is temporarily labeled and this path has less cost. If

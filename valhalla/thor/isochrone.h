@@ -91,6 +91,7 @@ class Isochrone {
  protected:
   float shape_interval_;        // Interval along shape to mark time
   sif::TravelMode mode_;        // Current travel mode
+  uint32_t access_mode_;        // Access mode used by the costing method
   uint32_t tile_creation_date_; // Tile creation date
 
   // Vector of edge labels (requires access by index).
@@ -133,15 +134,6 @@ class Isochrone {
   void UpdateIsoTile(const sif::EdgeLabel& pred,
                      baldr::GraphReader& graphreader,
                      const midgard::PointLL& ll);
-
-  /**
-   * Convenience method to add an edge to the adjacency list and temporarily
-   * label it. This must be called before adding the edge label (so it uses
-   * the correct index).
-   * @param  edgeid    Edge to add to the adjacency list.
-   * @param  sortcost  Sort cost.
-   */
-  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
 
   /**
    * Check if edge is temporarily labeled and this path has less cost. If

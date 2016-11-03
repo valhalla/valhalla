@@ -25,14 +25,16 @@ namespace valhalla {
         contours.push_back(contour.second.get<float>("time"));
         colors.push_back(contour.second.get<std::string>("color", ""));
       }
+      auto rings_only = request.get<bool>("rings_only", true);
+      auto denoise = std::max(std::min(request.get<float>("denoise", 1.f), 1.f), 0.f);
 
       //get the raster
-      auto grid = costing == "multimodal" ?
+      auto grid = (costing == "multimodal" || costing == "transit") ?
         isochrone_gen.ComputeMultiModal(correlated, contours.back(), reader, mode_costing, mode) :
         isochrone_gen.Compute(correlated, contours.back(), reader, mode_costing, mode);
 
       //turn it into geojson
-      auto isolines = grid->GenerateContours(contours);
+      auto isolines = grid->GenerateContours(contours, rings_only, denoise);
       auto geojson = baldr::json::to_geojson<PointLL>(isolines, colors);
       auto id = request.get_optional<std::string>("id");
       if(id)
