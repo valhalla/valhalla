@@ -33,6 +33,7 @@ namespace valhalla {
       void parse_locations(const boost::property_tree::ptree& request);
       void parse_trace(boost::property_tree::ptree& request);
       void parse_costing(const boost::property_tree::ptree& request);
+      void locations_from_shape(boost::property_tree::ptree& request);
 
       void init_locate(const boost::property_tree::ptree& request);
       void init_route(const boost::property_tree::ptree& request);

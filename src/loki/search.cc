@@ -168,8 +168,6 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
         continue;
       const auto* other_edge = other_tile->directededge(other_id);
       if(edge_filter(other_edge) != 0.0f) {
-        LOG_INFO(info.name_count() ? info.GetNames().front() : std::string(" BLANK "));
-        LOG_INFO(std::to_string(other_id.level()) + " " + std::to_string(other_id.id()));
         PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
         std::get<2>(closest_point) = other_edge->forward() ? 0 : info.shape().size() - 2;
         if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
