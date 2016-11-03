@@ -54,7 +54,7 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(uint64_t);
   size += sizeof(baldr::EdgeInfo::PackedItem);
-  size += (name_info_list_.size() * sizeof(uint32_t));
+  size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   return size;
 }
@@ -95,7 +95,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   os.write(reinterpret_cast<const char*>(&eib.wayid_), sizeof(uint64_t));
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
   os.write(reinterpret_cast<const char*>(&eib.name_info_list_[0]),
-            (name_count * sizeof(uint32_t)));
+            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
 
   // Pad to an 8 byte boundary
