@@ -26,6 +26,10 @@ class UniversalCost : public sif::DynamicCost
     return true;
   }
 
+  uint32_t access_mode() const override {
+    return 0;
+  }
+
   bool AllowedReverse(const baldr::DirectedEdge* edge,
                       const sif::EdgeLabel& pred,
                       const baldr::DirectedEdge* opp_edge,

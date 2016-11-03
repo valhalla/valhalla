@@ -99,8 +99,6 @@ struct Label
                                                          sif::Cost(the_cost, the_cost), // Cost
                                                          sortcost, // Sortcost
                                                          the_cost, // Distance
-                                                         the_edge->restrictions(),
-                                                         the_edge->opp_local_idx(),
                                                          the_travelmode,
                                                          0);
     }

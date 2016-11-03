@@ -197,6 +197,7 @@ Project(const coord_t& p,
   decltype(shape.size()) closest_segment = 0;
   float closest_partial_length = 0.f;
   float total_length = 0.f;
+  float lon_scale = cosf(p.lat() * midgard::kRadPerDeg);
 
   //for each segment
   for(decltype(shape.size()) i = 0; i < shape.size() - 1; ++i) {
@@ -206,8 +207,9 @@ Project(const coord_t& p,
     const auto& v = shape[i + 1];
     auto bx = v.first - u.first;
     auto by = v.second - u.second;
-    auto sq = bx*bx + by*by;
-    const auto scale = sq > 0? (((p.first - u.first)*bx + (p.second - u.second)*by) / sq) : 0.f;
+    auto bx2 = bx * lon_scale;
+    auto sq = bx2*bx2 + by*by;
+    const auto scale = sq > 0? (((p.first - u.first)*lon_scale*bx2 + (p.second - u.second)*by) / sq) : 0.f;
     //projects along the ray before u
     if (scale <= 0.f) {
       bx = u.first;

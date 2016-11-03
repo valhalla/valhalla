@@ -379,7 +379,6 @@ heuristic(const midgard::DistanceApproximator& approximator,
   return std::max(0.f, distance - search_radius);
 }
 
-
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
@@ -448,7 +447,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
-      // Need the graphreeader to get the tile of edgelabel
+      // Need the graphreader to get the tile of edgelabel
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
                                    get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
       // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
@@ -457,19 +456,17 @@ find_shortest_path(baldr::GraphReader& reader,
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
-        if (other_edge->trans_up()
-            || other_edge->trans_down()
-            || other_edge->use() == baldr::Use::kTransitConnection) continue;
-        if (nodeid.level() != other_edge->endnode().level()) {
-          throw std::logic_error("edges in expansion should be at the same level as its endnode");
-        }
+        // Skip it if its a shortcut or transit connection
+        if (other_edge->is_shortcut() || other_edge->use() == baldr::Use::kTransitConnection) continue;
 
-        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, tile)) continue;
+        // Skip it if its not allowed
+        const auto* other_tile = other_edgeid.Tile_Base() != tile->header()->graphid() ? reader.GetGraphTile(other_edgeid) : tile;
+        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, other_tile)) continue;
 
-        // Turn cost
+        // Turn cost only for non transition edges
         float turn_cost = 0.f;
-        if (pred_edgelabel && turn_cost_table) {
-          const auto other_heading = get_outbound_edge_heading(tile, other_edge, *nodeinfo);
+        if (pred_edgelabel && turn_cost_table && !other_edge->trans_up() && !other_edge->trans_down()) {
+          const auto other_heading = get_outbound_edge_heading(other_tile, other_edge, *nodeinfo);
           // TODO: test it assert(0 <= other_heading && other_heading < 360);
           const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
           // TODO: test it assert(0 <= turn_degree && turn_degree <= 180);
@@ -495,10 +492,8 @@ find_shortest_path(baldr::GraphReader& reader,
           }
         }
 
-        const baldr::GraphTile* endtile = tile;
-        if (other_edge->leaves_tile()) {
-          endtile = reader.GetGraphTile(other_edge->endnode());
-        }
+        const baldr::GraphTile* endtile = other_edge->endnode().Tile_Base() != other_tile->header()->graphid() ?
+            reader.GetGraphTile(other_edge->endnode()) : other_tile;
         const auto other_nodeinfo = endtile->node(other_edge->endnode());
         const float cost = label_cost + other_edge->length(),
                 sortcost = cost + heuristic(approximator, other_nodeinfo->latlng(), search_radius);

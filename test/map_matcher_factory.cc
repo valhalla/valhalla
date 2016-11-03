@@ -60,7 +60,7 @@ void TestMapMatcherFactory()
       preferences.put<std::string>("hello", "preferred world");
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
-      auto matcher = factory.Create(sif::TravelMode::kPedestrian, preferences);
+      auto matcher = factory.Create("pedestrian", preferences);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
                         "travel mode should be pedestrian");
       test::assert_bool(matcher->config().get<std::string>("hello") == "preferred world",
@@ -86,7 +86,7 @@ void TestMapMatcherFactory()
       meili::MapMatcherFactory factory(root);
       ptree preferences;
       auto matcher = factory.Create(preferences);
-      test::assert_bool(matcher->travelmode() == factory.NameToTravelMode(root.get<std::string>("meili.mode")),
+      test::assert_bool(matcher->travelmode() == meili::kUniversalTravelMode,
                         "should read default mode in the meili.mode correctly");
       delete matcher;
     }
@@ -108,45 +108,19 @@ void TestMapMatcherFactory()
       delete matcher;
     }
 
-    // Transport names
-    {
-      meili::MapMatcherFactory factory(root);
-
-      test::assert_bool(factory.NameToTravelMode("auto") == sif::TravelMode::kDrive,
-                        "NameToTravelMode auto should be fine");
-      test::assert_bool(factory.NameToTravelMode("bicycle") == sif::TravelMode::kBicycle,
-                        "NameToTravelMode bicycle should be fine");
-      test::assert_bool(factory.NameToTravelMode("pedestrian") == sif::TravelMode::kPedestrian,
-                        "NameToTravelMode pedestrian should be fine");
-      test::assert_bool(factory.NameToTravelMode("multimodal") == meili::kUniversalTravelMode,
-                        "NameToTravelMode universal should found");
-
-      test::assert_bool(factory.TravelModeToName(sif::TravelMode::kDrive) == "auto",
-                        "TravelModeToName auto should be fine");
-      test::assert_bool(factory.TravelModeToName(sif::TravelMode::kBicycle) == "bicycle",
-                        "TravelModeToName bicycle should be fine");
-      test::assert_bool(factory.TravelModeToName(sif::TravelMode::kPedestrian) == "pedestrian",
-                        "TravelModeToName pedestrian should be fine");
-      test::assert_bool(factory.TravelModeToName(meili::kUniversalTravelMode) == "multimodal",
-                        "TravelModeToName multimodal should be fine");
-    }
-
     // Invalid transport mode name
     {
       meili::MapMatcherFactory factory(root);
 
-      test::assert_throw<std::invalid_argument>([&factory]() {
+      test::assert_throw<std::runtime_error>([&factory]() {
           factory.Create("invalid_mode");
         }, "invalid_mode shuold be invalid mode");
 
 
-      test::assert_throw<std::invalid_argument>([&factory]() {
+      test::assert_throw<std::runtime_error>([&factory]() {
           factory.Create("");
         }, "empty string should be invalid mode");
 
-      test::assert_throw<std::invalid_argument>([&factory]() {
-          factory.Create(static_cast<sif::TravelMode>(7));
-        }, "7 should be a bad number");
     }
   }
 }

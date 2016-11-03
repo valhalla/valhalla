@@ -122,27 +122,27 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
-void IndexTile(const baldr::GraphTile& tile, CandidateGridQuery::grid_t& grid)
+void IndexTile(const baldr::GraphTile& tile, baldr::GraphReader& reader, CandidateGridQuery::grid_t& grid)
 {
-  auto edgecount = tile.header()->directededgecount();
-  if (edgecount <= 0) {
-    return;
-  }
-
-  std::unordered_set<uint32_t> visited(edgecount);
-  auto edgeid = tile.header()->graphid();
-  auto directededge = tile.directededge(0);
-  for (size_t idx = 0; idx < edgecount; edgeid++, directededge++, idx++) {
-    if (directededge->trans_up()
-        || directededge->trans_down()
-        || directededge->use() == baldr::Use::kTransitConnection) continue;
-    const auto offset = directededge->edgeinfo_offset();
-    if (visited.insert(offset).second) {
-      const auto edgeinfo = tile.edgeinfo(offset);
-      const auto& shape = edgeinfo.shape();
-      for (decltype(shape.size()) j = 1; j < shape.size(); ++j) {
-        grid.AddLineSegment(edgeid, {shape[j - 1], shape[j]});
-      }
+  //for each bin
+  std::unordered_set<uint64_t> visited;
+  for(size_t i = 0; i < baldr::kBinCount; ++i) {
+    //for each edge
+    auto edge_ids = tile.GetBin(i);
+    for(const auto& edge_id : edge_ids) {
+      //skip ones we did already
+      if(!visited.insert(edge_id).second)
+        continue;
+      //need the right tile
+      const auto* bin_tile = edge_id.tileid() == tile.header()->graphid().tileid() ? &tile : reader.GetGraphTile(edge_id);
+      if(bin_tile == nullptr) continue;
+      //skip these
+      const auto* edge = bin_tile->directededge(edge_id);
+      if(edge->trans_up() || edge->trans_down() || edge->use() == baldr::Use::kTransitConnection) continue;
+      //get some shape
+      const auto& shape = bin_tile->edgeinfo(edge->edgeinfo_offset()).shape();
+      for(decltype(shape.size()) j = 1; j < shape.size(); ++j)
+        grid.AddLineSegment(edge_id, {shape[j - 1], shape[j]});
     }
   }
 }
@@ -179,7 +179,7 @@ CandidateGridQuery::GetGrid(const baldr::GraphTile* tile) const
   }
 
   const auto inserted = grid_cache_.emplace(tile_id, grid_t(tile->BoundingBox(hierarchy_), cell_width_, cell_height_));
-  IndexTile(*tile, inserted.first->second);
+  IndexTile(*tile, reader_, inserted.first->second);
   return &(inserted.first->second);
 }
 
