@@ -1582,12 +1582,16 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
            lineid = m->second;
          }
 
-        // Form transit departures
-        TransitDeparture td(lineid, dep.trip, dep.route,
-                    dep.blockid, dep.headsign_offset, dep.dep_time,
-                    dep.elapsed_time, dep.schedule_index,
-                    dep.wheelchair_accessible, dep.bicycle_accessible);
-        tilebuilder_transit.AddTransitDeparture(std::move(td));
+         try {
+           // Form transit departures
+           TransitDeparture td(lineid, dep.trip, dep.route,
+                               dep.blockid, dep.headsign_offset, dep.dep_time,
+                               dep.elapsed_time, dep.schedule_index,
+                               dep.wheelchair_accessible, dep.bicycle_accessible);
+           tilebuilder_transit.AddTransitDeparture(std::move(td));
+         } catch(const std::exception& e) {
+           LOG_ERROR(e.what());
+         }
       }
 
       // TODO Get any transfers from this stop (no transfers currently
