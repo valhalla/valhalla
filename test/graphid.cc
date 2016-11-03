@@ -113,7 +113,7 @@ void TestOpLessThan() {
   TryOpLessThan(GraphId(0, 0, 0), GraphId(0, 0, 1));
   TryOpLessThan(GraphId(10, 5, 1), GraphId(10, 6, 1));
   TryOpLessThan(GraphId(5, 1, 50), GraphId(6, 1, 50));
-  TryOpLessThan(GraphId(111, 222, 333), GraphId(112, 223, 334));
+  TryOpLessThan(GraphId(111, 6, 333), GraphId(112, 7, 334));
 }
 
 void TryOpEqualTo(const GraphId& gid, const GraphId& expected) {

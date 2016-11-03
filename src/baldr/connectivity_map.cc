@@ -1,6 +1,7 @@
 #include "baldr/connectivity_map.h"
 #include "baldr/json.h"
 #include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
 
 #include <valhalla/midgard/pointll.h>
 #include <boost/filesystem.hpp>
@@ -207,35 +208,26 @@ namespace {
 
 namespace valhalla {
   namespace baldr {
-    connectivity_map_t::connectivity_map_t(const TileHierarchy& tile_hierarchy):tile_hierarchy(tile_hierarchy) {
-      // Set the transit level
+    connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt)
+      :tile_hierarchy(pt.get<std::string>("tile_dir")) {
+      // See what kind of tiles we are dealing with here by getting a graphreader
+      GraphReader reader(pt);
+      auto tiles = reader.GetTileSet();
       transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
 
       // Populate a map for each level of the tiles that exist
-      for (uint32_t tile_level = 0; tile_level <= transit_level; tile_level++) {
-        try {
-          auto& level_colors = colors.insert({tile_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
-          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level) + '/');
-          if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
-            for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-              if (!boost::filesystem::is_directory(i->path())) {
-                GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy.tile_dir());
-                level_colors.insert({id.tileid(), 0});
-              }
-            }
-          }
+      for(const auto& t : tiles) {
+        auto& level_colors = colors.insert({t.level(), std::unordered_map<uint32_t, size_t>{}}).first->second;
+        level_colors.insert({t.tileid(), 0});
+      }
 
-          // All tiles have color 0 (not connected), go through and connect
-          // (build the ColorMap). Transit level uses local hierarchy tiles
-          auto c = colors.find(tile_level);
-          if (tile_level == transit_level) {
-            tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(c->second);
-          } else {
-            tile_hierarchy.levels().find(tile_level)->second.tiles.ColorMap(c->second);
-          }
-        }
-        catch(...) {
-        }
+      // All tiles have color 0 (not connected), go through and connect
+      // (build the ColorMap). Transit level uses local hierarchy tiles
+      for (auto& color : colors) {
+        if (color.first == transit_level)
+          tile_hierarchy.levels().rbegin()->second.tiles.ColorMap(color.second);
+        else
+          tile_hierarchy.levels().find(color.first)->second.tiles.ColorMap(color.second);
       }
     }
 
@@ -276,19 +268,21 @@ namespace valhalla {
       //bail if we dont have the level
       auto bbox = tile_hierarchy.levels().find(
         hierarchy_level == transit_level ? transit_level - 1 : hierarchy_level);
-      auto level = colors.find(hierarchy_level);
-      if(bbox == tile_hierarchy.levels().cend() || level == colors.cend())
+      if(bbox == tile_hierarchy.levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
       //make a region map (inverse mapping of color to lists of tiles)
       //could cache this but shouldnt need to call it much
       std::unordered_map<size_t, std::unordered_set<uint32_t> > regions;
-      for(const auto& tile : level->second) {
-        auto region = regions.find(tile.second);
-        if(region == regions.end())
-          regions.emplace(tile.second, std::unordered_set<uint32_t>{tile.first});
-        else
-          region->second.emplace(tile.first);
+      auto level = colors.find(hierarchy_level);
+      if(level != colors.cend()) {
+        for(const auto& tile : level->second) {
+          auto region = regions.find(tile.second);
+          if(region == regions.end())
+            regions.emplace(tile.second, std::unordered_set<uint32_t>{tile.first});
+          else
+            region->second.emplace(tile.first);
+        }
       }
 
       //record the arity of each region so we can put the biggest ones first
@@ -309,21 +303,19 @@ namespace valhalla {
     }
 
     std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
-      auto level = colors.find(hierarchy_level);
-      if (level == colors.cend()) {
-        throw std::runtime_error("No connectivity map for level");
-      }
-
       uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
       auto bbox = tile_hierarchy.levels().find(tile_level);
       if (bbox == tile_hierarchy.levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
       std::vector<size_t> tiles(bbox->second.tiles.nrows() * bbox->second.tiles.ncolumns(), static_cast<uint32_t>(0));
-      for(size_t i = 0; i < tiles.size(); ++i) {
-        const auto color = level->second.find(static_cast<uint32_t>(i));
-        if(color != level->second.cend())
-          tiles[i] = color->second;
+      auto level = colors.find(hierarchy_level);
+      if (level != colors.cend()) {
+        for(size_t i = 0; i < tiles.size(); ++i) {
+          const auto color = level->second.find(static_cast<uint32_t>(i));
+          if(color != level->second.cend())
+            tiles[i] = color->second;
+        }
       }
 
       return tiles;

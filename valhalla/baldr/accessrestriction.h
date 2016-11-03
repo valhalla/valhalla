@@ -15,7 +15,6 @@ class AccessRestriction {
   AccessRestriction(const uint32_t edgeindex,
                     const AccessType type,
                     const uint32_t modes,
-                    const uint32_t dow,
                     const uint64_t value);
 
   /**
@@ -43,12 +42,6 @@ class AccessRestriction {
   uint32_t modes() const;
 
   /**
-   * Gets the days of the week for this access restriction.
-   * @return  Returns the days of the week bit mask.
-   */
-  uint32_t days_of_week() const;
-
-  /**
    * Get the value for this restriction.
    * @return  Returns the value
    */
@@ -69,11 +62,11 @@ class AccessRestriction {
 
  protected:
 
-  uint64_t edgeindex_   : 22;  // Directed edge index. Max index is:
-                               // kMaxTileEdgeCount in nodeinfo.h: 22 bits.
-  uint64_t type_        : 6;   // Access type
-  uint64_t modes_       : 12;  // Mode(s) this access restriction applies to
-  uint64_t days_of_week_ : 7;  // Days of week this access restriction applies
+  uint64_t edgeindex_ : 22;  // Directed edge index. Max index is:
+                             // kMaxTileEdgeCount in nodeinfo.h: 22 bits.
+  uint64_t type_      : 6;   // Access type
+  uint64_t modes_     : 12;  // Mode(s) this access restriction applies to
+  uint64_t spare_     : 24;
 
   uint64_t value_;        // Value for this restriction. Can take on
                           // different meanings per type

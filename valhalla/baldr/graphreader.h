@@ -18,9 +18,8 @@ namespace baldr {
 class GraphReader {
  public:
   /**
-   * Constructor
-   *
-   * @param ptree  the configuration for the tilehierarchy
+   * Constructor using tiles as separate files.
+   * @param pt  Property tree listing the configuration for the tile hierarchy
    */
   GraphReader(const boost::property_tree::ptree& pt);
 
@@ -29,7 +28,7 @@ class GraphReader {
    * @param  graphid  GraphId of the tile to test (tile id and level).
    */
   bool DoesTileExist(const GraphId& graphid) const;
-  static bool DoesTileExist(const TileHierarchy& tile_hierarchy, const GraphId& graphid);
+  static bool DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid);
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
@@ -108,7 +107,18 @@ class GraphReader {
    */
   uint32_t GetEdgeDensity(const GraphId& edgeid);
 
+  /**
+   * Gets back a set of available tiles
+   * @return  returns the list of available tiles
+   */
+  std::unordered_set<GraphId> GetTileSet() const;
+
  protected:
+  // (Tar) extract of tiles - the contents are empty if not being used
+  struct tile_extract_t;
+  std::shared_ptr<const tile_extract_t> tile_extract_;
+  static std::shared_ptr<const GraphReader::tile_extract_t> get_extract_instance(const boost::property_tree::ptree& pt);
+
   // Information about where the tiles are kept
   const TileHierarchy tile_hierarchy_;
 

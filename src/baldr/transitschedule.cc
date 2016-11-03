@@ -1,5 +1,7 @@
 #include "baldr/transitschedule.h"
 
+#include <valhalla/midgard/logging.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -15,8 +17,20 @@ namespace baldr {
 TransitSchedule::TransitSchedule(const uint64_t days, const uint32_t dow,
                 const uint32_t end_day)
     : days_(days),
-      days_of_week_(dow),
-      end_day_(end_day) {
+      spare_(0) {
+    // Validate inputs
+    if (dow > kAllDaysOfWeek) {
+      throw std::runtime_error("TransitSchedule: Exceeded days of week mask");
+    }
+    days_of_week_ = dow;
+
+    // If exceeds kMaxEndDay
+    if (dow > kMaxEndDay) {
+      LOG_ERROR("TransitSchedule: Exceeded maximum end day");
+      end_day_ = kMaxEndDay;
+    } else {
+      end_day_ = end_day;
+    }
   }
 
 // Gets the days that this departure is valid.  Supports 64 days from tile

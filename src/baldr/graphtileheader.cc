@@ -15,7 +15,8 @@ namespace baldr {
 GraphTileHeader::GraphTileHeader() {
   memset(this, 0, sizeof(GraphTileHeader));
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
-  version_[kMaxVersionSize-1] = 0;
+  version_[kMaxVersionSize - 1] = 0;
+  empty_slots_[0] = 0;
 }
 
 // Get the GraphId (tileid and level) of this tile.
@@ -47,6 +48,16 @@ std::string GraphTileHeader::version() const {
 void GraphTileHeader::set_version(const std::string& version) {
   strncpy(version_, version.c_str(), kMaxVersionSize);
   version_[kMaxVersionSize-1] = 0;
+}
+
+// Returns the data set Id (latest OSM changeset Id).
+uint64_t GraphTileHeader::dataset_id() const {
+  return dataset_id_;
+}
+
+// Set the data set Id (latest OSM changeset Id).
+void GraphTileHeader::set_dataset_id(const uint64_t id) {
+  dataset_id_ = id;
 }
 
 // Get the relative road density within this tile.
@@ -142,7 +153,7 @@ uint32_t GraphTileHeader::stopcount() const {
 // Sets the number of transit stops in this tile.
 void GraphTileHeader::set_stopcount(const uint32_t stops) {
   // Check against limit
-  if (stops >= kMaxTransitStops) {
+  if (stops > kMaxTransitStops) {
     throw std::runtime_error(
         "Exceeding maximum number of transit stops per tile");
   }
@@ -157,7 +168,7 @@ uint32_t GraphTileHeader::routecount() const {
 // Sets the number of transit routes in this tile.
 void GraphTileHeader::set_routecount(const uint32_t routes) {
   // Check against limit
-  if (routes >= kMaxTransitRoutes) {
+  if (routes > kMaxTransitRoutes) {
     throw std::runtime_error(
         "Exceeding maximum number of transit routes per tile");
   }
@@ -172,11 +183,26 @@ uint32_t GraphTileHeader::schedulecount() const {
 // Sets the number of transit schedules in this tile.
 void GraphTileHeader::set_schedulecount(const uint32_t schedules) {
   // Check against limit
-  if (schedules >= kMaxTransitSchedules) {
+  if (schedules > kMaxTransitSchedules) {
     throw std::runtime_error(
         "Exceeding maximum number of transit schedule entries per tile");
   }
   schedulecount_ = schedules;
+}
+
+// Gets the number of transit transfers in this tile.
+uint32_t GraphTileHeader::transfercount() const {
+  return transfercount_;
+}
+
+// Sets the number of transit transfers in this tile.
+void GraphTileHeader::set_transfercount(const uint32_t transfers) {
+  // Check against limit
+  if (transfers > kMaxTransfers) {
+    throw std::runtime_error(
+     "Exceeding maximum number of transit transfer entries per tile");
+  }
+  transfercount_ = transfers;
 }
 
 // Gets the number of access restrictions in this tile.
@@ -199,6 +225,26 @@ void GraphTileHeader::set_admincount(const uint32_t count) {
   admincount_ = count;
 }
 
+// Get the offset in bytes to the start of the cr in the forward direction.
+uint32_t GraphTileHeader::complex_restriction_forward_offset() const {
+  return complex_restriction_forward_offset_;
+}
+
+// Sets the offset to the cr in the forward direction.
+void GraphTileHeader::set_complex_restriction_forward_offset(const uint32_t offset) {
+  complex_restriction_forward_offset_ = offset;
+}
+
+// Get the offset in bytes to the start of the cr in the reverse direction.
+uint32_t GraphTileHeader::complex_restriction_reverse_offset() const {
+  return complex_restriction_reverse_offset_;
+}
+
+// Sets the offset to the cr in the reverse direction.
+void GraphTileHeader::set_complex_restriction_reverse_offset(const uint32_t offset) {
+  complex_restriction_reverse_offset_ = offset;
+}
+
 // Get the offset in bytes to the start of the edge information.
 uint32_t GraphTileHeader::edgeinfo_offset() const {
   return edgeinfo_offset_;
@@ -219,16 +265,6 @@ void GraphTileHeader::set_textlist_offset(const uint32_t offset) {
   textlist_offset_ = offset;
 }
 
-// Get the offset in bytes to the complex restriction list.
-uint32_t GraphTileHeader::complex_restriction_offset() const {
-  return complex_restriction_offset_;
-}
-
-// Sets the offset to the list of complex restrictions.
-void GraphTileHeader::set_complex_restriction_offset(const uint32_t offset) {
-  complex_restriction_offset_ = offset;
-}
-
 // Sets the edge bin offsets
 void GraphTileHeader::set_edge_bin_offsets(const uint32_t (&offsets)[kBinCount]) {
   memcpy(bin_offsets_, offsets, sizeof(bin_offsets_));
@@ -244,6 +280,14 @@ std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t index) const {
   if(index < kBinCount)
     return std::make_pair(index == 0 ? 0 : bin_offsets_[index - 1], bin_offsets_[index]);
   throw std::runtime_error("Bin out of bounds");
+}
+
+uint32_t GraphTileHeader::end_offset() const {
+  return empty_slots_[0];
+}
+
+void GraphTileHeader::set_end_offset(uint32_t offset) {
+  empty_slots_[0] = offset;
 }
 
 }

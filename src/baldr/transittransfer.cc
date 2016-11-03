@@ -1,5 +1,7 @@
 #include "baldr/transittransfer.h"
 
+#include <valhalla/midgard/logging.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -9,9 +11,16 @@ TransitTransfer::TransitTransfer(const uint32_t from_stopid,
                                  const TransferType type,
                                  const uint32_t mintime)
     : from_stopid_(from_stopid),
-      to_stopid_(to_stopid) {
-  transfer_.type = static_cast<uint32_t>(type);
-  transfer_.mintime = mintime;
+      to_stopid_(to_stopid),
+      spare_(0) {
+  type_ = static_cast<uint32_t>(type);
+
+  if (mintime > kMaxTransferTime) {
+    LOG_ERROR("TransitTransfer: Exceeded maximum transfer time");
+    mintime_ = kMaxTransferTime;
+  } else {
+    mintime_ = mintime;
+  }
 }
 
 // Get the from stop Id.
@@ -26,12 +35,12 @@ uint32_t TransitTransfer::to_stopid() const {
 
 // Gets the transfer type.
 TransferType TransitTransfer::type() const {
-  return static_cast<TransferType>(transfer_.type);
+  return static_cast<TransferType>(type_);
 }
 
 // Get the minimum time (seconds) to make the transfer.
 uint32_t TransitTransfer::mintime() const {
-  return transfer_.mintime;
+  return mintime_;
 }
 
 // operator < - for sorting. Sort by from stop Id and to stop Id.

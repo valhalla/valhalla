@@ -15,10 +15,10 @@ namespace valhalla {
     class connectivity_map_t {
      public:
       /**
-       * Constructus the connectivity map
-       *
+       * Constructs the connectivity map
+       * @param pt   the ptree sub child labeled mjolnir in the valhalla json config
        */
-      connectivity_map_t(const TileHierarchy& tile_hierarchy);
+      connectivity_map_t(const boost::property_tree::ptree& pt);
 
       /**
        * Returns the color for the given graphid

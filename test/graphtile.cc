@@ -25,7 +25,7 @@ void file_suffix() {
   if(GraphTile::FileSuffix(GraphId(4, 2, 0), h) != "2/000/000/004.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
-  if(GraphTile::FileSuffix(GraphId(6897468, 2, 0), h) != "2/006/897/468.gph")
+  if(GraphTile::FileSuffix(GraphId(1197468, 2, 0), h) != "2/001/197/468.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
   if(GraphTile::FileSuffix(GraphId(64799, 1, 0), h) != "1/064/799.gph")

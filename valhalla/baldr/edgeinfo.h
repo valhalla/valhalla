@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/shape_decoder.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
@@ -19,6 +20,27 @@ namespace baldr {
 constexpr size_t kMaxNamesPerEdge = 15;
 constexpr size_t kMaxEncodedShapeSize = 65535;
 
+// Name information. Information about names added to the names list within
+// the tile. A name can have a textual representation followed by optional
+// fields that provide additional information about the name.
+struct NameInfo {
+  uint32_t name_offset_       : 24;   // Offset to start of text string
+  uint32_t additional_fields_ : 4;    // Additional text fields following
+                                      // the name. These can be used for
+                                      // additional information like language
+                                      // phonetic string, etc.
+  uint32_t spare_             : 4;
+
+  bool operator == (const NameInfo& other) const {
+    return (name_offset_ == other.name_offset_);
+  }
+
+  // operator < for sorting
+  bool operator < (const NameInfo& other) const {
+    return (name_offset_ < other.name_offset_);
+  }
+};
+
 /**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
@@ -27,6 +49,9 @@ class EdgeInfo {
  public:
   EdgeInfo() = delete;
   EdgeInfo(const EdgeInfo& other) = delete;
+  EdgeInfo& operator=(const EdgeInfo&) = delete;
+  EdgeInfo(EdgeInfo&&) = default;
+  EdgeInfo& operator=(EdgeInfo&&) = default;
 
   /**
    * Constructor
@@ -64,7 +89,14 @@ class EdgeInfo {
    * @param  index  Index into the name list.
    * @return  Returns the offset into the text/name list.
    */
-  uint32_t GetStreetNameOffset(uint8_t index) const;
+  uint32_t GetNameOffset(uint8_t index) const;
+
+  /**
+   * Get the name info for the specified name index.
+   * @param  index  Index into the name list.
+   * @return  Returns the name info.
+   */
+  NameInfo GetNameInfo(uint8_t index) const;
 
   /**
    * Convenience method to get the names for an edge
@@ -78,6 +110,10 @@ class EdgeInfo {
    *          shape of the edge.
    */
   const std::vector<PointLL>& shape() const;
+
+  midgard::Shape7Decoder<PointLL> lazy_shape() const {
+    return midgard::Shape7Decoder<PointLL>(encoded_shape_, item_->encoded_shape_size);
+  }
 
   /**
    * Returns the encoded shape string.
@@ -105,13 +141,13 @@ class EdgeInfo {
   uint64_t wayid_;
 
   // Where we keep the statistics about how large the vectors below are
-  PackedItem* item_;
+  const PackedItem* item_;
 
-  // List of roadname indexes
-  uint32_t* street_name_offset_list_;
+  // List of name information (offsets, etc.)
+  const NameInfo* name_info_list_;
 
   // The encoded shape of the edge
-  mutable char* encoded_shape_;
+  const char* encoded_shape_;
 
   // Lng, lat shape of the edge
   mutable std::vector<PointLL> shape_;
@@ -120,7 +156,7 @@ class EdgeInfo {
   const char* names_list_;
 
   // The size of the names list
-  const size_t names_list_length_;
+  size_t names_list_length_;
 
 };
 

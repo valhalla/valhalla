@@ -9,6 +9,13 @@
 namespace valhalla {
 namespace baldr {
 
+// Number of expansion slots remaining in this tile including the one used
+// to mark the end of the tile. If you want to add something to the tile
+// simply subtract one from this number and add it just before the
+// empty_slots_ array below. NOTE that it can ONLY be an offset in bytes
+// and NOT a bitfield or union or anything of that sort
+constexpr size_t kEmptySlots = 16;
+
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
 constexpr size_t kMaxVersionSize = 16;
@@ -63,6 +70,18 @@ class GraphTileHeader {
    * @param  version Version string.
    */
   void set_version(const std::string& version);
+
+  /**
+   * Returns the data set Id (latest OSM changeset Id).
+   * @return  Returns the data set Id.
+   */
+  uint64_t dataset_id() const;
+
+  /**
+   * Set the data set Id (latest OSM changeset Id).
+   * @param  id  Data set Id.
+   */
+  void set_dataset_id(const uint64_t id);
 
   /**
    * Get the relative road density within this tile.
@@ -197,6 +216,18 @@ class GraphTileHeader {
   void set_schedulecount(const uint32_t schedules);
 
   /**
+   * Gets the number of transit transfers in this tile.
+   * @return  Returns the number of transit transfers.
+   */
+  uint32_t transfercount() const;
+
+  /**
+   * Sets the number of transit transfers in this tile.
+   * @param  schedules   The number of transit transfers.
+   */
+  void set_transfercount(const uint32_t transfers);
+
+  /**
    * Gets the number of access restrictions in this tile.
    * @return  Returns the number of restrictions.
    */
@@ -219,6 +250,34 @@ class GraphTileHeader {
    * @param count Number of admin records within the tile.
    */
   void set_admincount(const uint32_t count);
+
+  /**
+   * Get the offset to the Complex Restriction list in the forward direction.
+   * @return  Returns the number of bytes to offset to the the list of
+   *          complex restrictions.
+   */
+  uint32_t complex_restriction_forward_offset() const;
+
+  /**
+   * Sets the offset to the list of complex restrictions in the forward direction.
+   * @param offset Offset in bytes to the start of the complex restriction
+   *               list.
+   */
+  void set_complex_restriction_forward_offset(const uint32_t offset);
+
+  /**
+   * Get the offset to the Complex Restriction list in the reverse direction.
+   * @return  Returns the number of bytes to offset to the the list of
+   *          complex restrictions.
+   */
+  uint32_t complex_restriction_reverse_offset() const;
+
+  /**
+   * Sets the offset to the list of complex restrictions in the reverse direction.
+   * @param offset Offset in bytes to the start of the complex restriction
+   *               list.
+   */
+  void set_complex_restriction_reverse_offset(const uint32_t offset);
 
   /**
    * Gets the offset to the edge info.
@@ -245,20 +304,6 @@ class GraphTileHeader {
   void set_textlist_offset(const uint32_t offset);
 
   /**
-   * Get the offset to the Complex Restriction list.
-   * @return  Returns the number of bytes to offset to the the list of
-   *          complex restrictions.
-   */
-  uint32_t complex_restriction_offset() const;
-
-  /**
-   * Sets the offset to the list of complex restrictions.
-   * @param offset Offset in bytes to the start of the complex restriction
-   *               list.
-   */
-  void set_complex_restriction_offset(const uint32_t offset);
-
-  /**
    * Get the offset to the given bin in the 5x5 grid, the bins contain
    * graphids for all the edges that intersect the bin
    * @param  column of the grid
@@ -281,12 +326,28 @@ class GraphTileHeader {
    */
   void set_edge_bin_offsets(const uint32_t (&offsets)[baldr::kBinCount]);
 
+  /**
+   * Get the offset to the end of the tile
+   * @return the number of bytes in the tile, unless the last slot is used
+   */
+  uint32_t end_offset() const;
+
+  /**
+   * Sets the offset to the end of the tile
+   * @param the offset in bytes to the end of the tile
+   */
+  void set_end_offset(uint32_t offset);
+
+
  protected:
   // GraphId (tileid and level) of this tile
   GraphId graphid_;
 
   // baldr version.
   char version_[kMaxVersionSize];
+
+  // Dataset Id
+  uint64_t dataset_id_;
 
   // Quality metrics. These are 4 bit (0-15) relative quality indicators.
   uint64_t density_       : 4;
@@ -301,6 +362,10 @@ class GraphTileHeader {
   uint64_t routecount_     : 12;
   uint64_t schedulecount_  : 12;
 
+  // Another spot for spare
+  uint64_t transfercount_  : 16;
+  uint64_t spare2_         : 48;
+
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;
 
@@ -312,12 +377,22 @@ class GraphTileHeader {
   uint32_t admincount_;                 // Number of admin records
 
   // Offsets to beginning of data (for variable size records)
+  uint32_t complex_restriction_forward_offset_; // Offset to complex restriction list
+  uint32_t complex_restriction_reverse_offset_; // Offset to complex restriction list
   uint32_t edgeinfo_offset_;            // Offset to edge info
   uint32_t textlist_offset_;            // Offset to text list
-  uint32_t complex_restriction_offset_; // Offset to complex restriction list
 
   // Offsets for each bin of the 5x5 grid (for search/lookup)
   uint32_t bin_offsets_[kBinCount];
+
+  // Marks the end of this version of the tile with the rest of the slots
+  // being available for growth. The first item in this will be the size
+  // in bytes of the tile, marking the end of the tile. If you want to use
+  // one of the empty slots, simply add a uint32_t some_offset_; just above
+  // empty_slots_ and decrease kEmptySlots by 1. Note that you can ONLY add
+  // an offset here and NOT a bitfield or union or anything like that
+  uint32_t empty_slots_[kEmptySlots];
+
 };
 
 }

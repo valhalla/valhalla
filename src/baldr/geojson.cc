@@ -59,8 +59,8 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
           })},
           {"properties", map({
             {"contour", static_cast<uint64_t>(contours.first)},
-            {"fill", hex.str()},
-            {"fill-opacity", json::fp_t{.33f, 2}},
+            { polygon ? "fill" : "color", hex.str()},
+            { polygon ? "fill-opacity" : "opacity", json::fp_t{.33f, 2}},
           })},
         })
       );

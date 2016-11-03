@@ -33,5 +33,16 @@ GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const unsigne
   return id;
 }
 
+// Gets the hierarchy level given the road class.
+uint8_t TileHierarchy::get_level(const RoadClass roadclass) const {
+  if (roadclass <= levels_.find(0)->second.importance) {
+    return 0;
+  } else if (roadclass <= levels_.find(1)->second.importance) {
+    return 1;
+  } else {
+    return 2;
+  };
+}
+
 }
 }

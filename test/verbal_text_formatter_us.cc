@@ -410,6 +410,8 @@ void TestFormat() {
   TryFormat("North 28000th Avenue", "North 28 thousandth Avenue");
   TryFormat("North 28000TH Avenue", "North 28 thousandth Avenue");
 
+  TryFormat("905 203rd Street", "9 o5 203rd Street");
+
   TryFormat("T609", "T6 o9");
 }
 

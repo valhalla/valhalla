@@ -25,7 +25,7 @@ struct PathLocation : public Location {
    */
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
-    PathEdge(const GraphId& id, const float dist, const midgard::PointLL& projected, const SideOfStreet sos = NONE);
+    PathEdge(const GraphId& id, const float dist, const midgard::PointLL& projected, const float score, const SideOfStreet sos = NONE);
     //the directed edge it appears on
     GraphId id;
     //how far along the edge it is (as a percentage  from 0 - 1)
@@ -39,9 +39,9 @@ struct PathLocation : public Location {
     //whether or not this correlation point is the end node of this edge
     bool end_node() const;
 
-    //a confidence interval of how good the correlation is
-    //proportional to the distance between the input point and the correlated one
-    //float correlation_quality;
+    //a measure of how close the result is to the original input where the
+    //lower the score the better the match, maybe there's a better word for this?
+    float score;
   };
 
   //list of edges this location appears on within the graph

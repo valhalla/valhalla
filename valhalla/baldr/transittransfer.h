@@ -49,17 +49,13 @@ class TransitTransfer {
 
 
  protected:
-  // From stop Id (internal)
-  uint32_t from_stopid_;
+  uint32_t from_stopid_;    // From stop Id (internal)
 
-  // To stop Id (internal)
-  uint32_t to_stopid_;
+  uint32_t to_stopid_;      // To stop Id (internal)
 
-  struct Transfer {
-    uint32_t type     : 4;   // Transfer type
-    uint32_t mintime : 28;   // Minimum transfer time (seconds)
-  };
-  Transfer transfer_;
+  uint32_t type_    : 4;   // Transfer type
+  uint32_t mintime_ : 16;  // Minimum transfer time (seconds)
+  uint32_t spare_   : 12;
 };
 
 }

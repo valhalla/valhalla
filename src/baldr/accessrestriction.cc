@@ -8,12 +8,11 @@ namespace baldr {
 AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const AccessType type,
                                      const uint32_t modes,
-                                     const uint32_t dow,
                                      const uint64_t value)
   : edgeindex_(edgeindex),
     type_(static_cast<uint32_t>(type)),
     modes_(modes),
-    days_of_week_(dow),
+    spare_(0),
     value_(value) {
 }
 
@@ -35,11 +34,6 @@ AccessType AccessRestriction::type() const {
 // Get the modes impacted by access restriction.
 uint32_t AccessRestriction::modes() const {
   return modes_;
-}
-
-// Gets the days of the week for this access restriction.
-uint32_t AccessRestriction::days_of_week() const {
-  return days_of_week_;
 }
 
 // Get the value

@@ -1,5 +1,7 @@
 #include "baldr/edgeinfo.h"
 
+#include <valhalla/midgard/encoded.h>
+
 using namespace valhalla::baldr;
 
 namespace {
@@ -26,9 +28,9 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list,
   item_ = reinterpret_cast<PackedItem*>(ptr);
   ptr += sizeof(PackedItem);
 
-  // Set street_name_offset_list_ pointer
-  street_name_offset_list_ = reinterpret_cast<uint32_t*>(ptr);
-  ptr += (name_count() * sizeof(uint32_t));
+  // Set name info list pointer
+  name_info_list_ = reinterpret_cast<NameInfo*>(ptr);
+  ptr += (name_count() * sizeof(NameInfo));
 
   // Set encoded_shape_ pointer
   encoded_shape_ = ptr;
@@ -55,9 +57,17 @@ uint32_t EdgeInfo::encoded_shape_size() const {
   return item_->encoded_shape_size;
 }
 
-uint32_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
+uint32_t EdgeInfo::GetNameOffset(uint8_t index) const {
   if(index < item_->name_count)
-    return street_name_offset_list_[index];
+    return name_info_list_[index].name_offset_;
+  else
+    throw std::runtime_error("StreetNameOffset index was out of bounds");
+}
+
+// Get the name info for the specified name index.
+NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
+  if(index < item_->name_count)
+    return name_info_list_[index];
   else
     throw std::runtime_error("StreetNameOffset index was out of bounds");
 }
@@ -67,7 +77,7 @@ std::vector<std::string> EdgeInfo::GetNames() const {
   // Get each name
   std::vector<std::string> names; names.reserve(name_count());
   for (uint32_t i = 0; i < name_count(); i++) {
-    uint32_t offset = GetStreetNameOffset(i);
+    uint32_t offset = GetNameOffset(i);
 
     if (offset < names_list_length_) {
       names.push_back(names_list_ + offset);
@@ -81,13 +91,8 @@ std::vector<std::string> EdgeInfo::GetNames() const {
 // Returns shape as a vector of PointLL
 const std::vector<PointLL>& EdgeInfo::shape() const {
   //if we haven't yet decoded the shape, do so
-  if(encoded_shape_ != nullptr) {
-    shape_ = midgard::decode7<std::vector<PointLL> >(std::string(encoded_shape_,
-                                  item_->encoded_shape_size));
-    encoded_shape_ = nullptr;
-  }
-
-  //hand it back
+  if(encoded_shape_ != nullptr && shape_.empty())
+    shape_ = midgard::decode7<std::vector<PointLL> >(encoded_shape_, item_->encoded_shape_size);
   return shape_;
 }
 
@@ -97,13 +102,10 @@ std::string EdgeInfo::encoded_shape() const {
 }
 
 json::MapPtr EdgeInfo::json() const {
-  auto encoded = midgard::encode(nullptr ? shape_ :
-    midgard::decode7<std::vector<PointLL> >(std::string(encoded_shape_, item_->encoded_shape_size)));
-
   return json::map({
     {"way_id", static_cast<uint64_t>(wayid_)},
     {"names", names_json(GetNames())},
-    {"shape", encoded},
+    {"shape", midgard::encode(shape())},
   });
 }
 

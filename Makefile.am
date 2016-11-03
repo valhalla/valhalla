@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
-AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla @BOOST_CPPFLAGS@ -Igenfiles
+AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -29,20 +29,23 @@ coverage.info:
 coverage/index.html: coverage.info
 	$(GENHTML) --prefix $(top_builddir) --output-directory $(@D) --title "Test Coverage" --legend --show-details $<
 
-
 .PHONY: clean-gcno
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-genfiles
+else
+clean-local: clean-genfiles
 endif
 
+clean-genfiles:
+	-rm -rf genfiles
+
 #timezone info from boost
-src/baldr/date_time_zonespec.h:
-	-xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c | xargs) date_time/zonespec.csv > src/baldr/date_time_zonespec.h
-BUILT_SOURCES = src/baldr/date_time_zonespec.h
-nodist_libvalhalla_baldr_la_SOURCES = src/baldr/date_time_zonespec.h
-CLEANFILES = src/baldr/date_time_zonespec.h
+genfiles/date_time_zonespec.h:
+	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@ && xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c | xargs) date_time/zonespec.csv > @abs_builddir@/genfiles/date_time_zonespec.h
+BUILT_SOURCES = genfiles/date_time_zonespec.h
+nodist_libvalhalla_baldr_la_SOURCES = genfiles/date_time_zonespec.h
 
 # libvalhalla-baldr compilation etc
 lib_LTLIBRARIES = libvalhalla_baldr.la
@@ -50,10 +53,13 @@ nobase_include_HEADERS = \
 	valhalla/baldr/accessrestriction.h \
 	valhalla/baldr/admin.h \
 	valhalla/baldr/admininfo.h \
+	valhalla/baldr/complexrestriction.h \
 	valhalla/baldr/connectivity_map.h \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
+	valhalla/baldr/double_bucket_queue.h \
 	valhalla/baldr/edgeinfo.h \
+	valhalla/baldr/errorcode_util.h \
 	valhalla/baldr/geojson.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
@@ -87,9 +93,11 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/accessrestriction.cc \
 	src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
+	src/baldr/complexrestriction.cc \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
+	src/baldr/double_bucket_queue.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
@@ -128,6 +136,7 @@ check_PROGRAMS = \
 	test/admin \
 	test/datetime \
 	test/directededge \
+	test/double_bucket_queue \
 	test/graphid \
 	test/tilehierarchy \
 	test/graphtile \
@@ -147,6 +156,9 @@ check_PROGRAMS = \
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) 
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
+test_double_bucket_queue_SOURCES = test/double_bucket_queue.cc test/test.cc
+test_double_bucket_queue_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_double_bucket_queue_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_baldr.la
 test_admin_SOURCES = test/admin.cc test/test.cc
 test_admin_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_admin_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_baldr.la

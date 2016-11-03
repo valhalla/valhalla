@@ -10,6 +10,9 @@
 namespace valhalla {
 namespace baldr {
 
+// Maximum of 8 (0-7) graph hierarchies are supported.
+constexpr uint32_t kMaxGraphHierarchy = 7;
+
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.
  * Includes the tile Id, hierarchy level, and a unique identifier within
@@ -32,7 +35,7 @@ union GraphId {
    * @param  level  Hierarchy level
    * @param  id     Unique identifier within the level.
    */
-  GraphId(const uint32_t tileid, const uint32_t level, const uint64_t id);
+  GraphId(const uint32_t tileid, const uint32_t level, const uint32_t id);
 
   /**
    * Constructor
@@ -56,7 +59,7 @@ union GraphId {
    * Gets the identifier within the hierarchy level.
    * @return   Returns the unique identifier within the level.
    */
-  uint64_t id() const;
+  uint32_t id() const;
 
 
   /**
@@ -66,7 +69,7 @@ union GraphId {
    * @param  id     Unique identifier within the level
    */
   void Set(const uint32_t tileid, const uint32_t level,
-           const uint64_t id);
+           const uint32_t id);
 
   /**
    * Returns true if the id is valid
@@ -88,12 +91,6 @@ union GraphId {
    * @return  json
    */
   json::Value json() const;
-
-  /**
-   * Get the computed version of GraphId attributes.
-   * @return   Returns internal version.
-   */
-  static const uint64_t internal_version();
 
   /**
    * Post increments the id.
@@ -121,12 +118,13 @@ union GraphId {
   operator uint64_t() const;
 
   struct Fields {
-    //the tile id
-    uint64_t tileid :24;
     //the hierarchy level
     uint64_t level :3;
+    //the tile id
+    uint64_t tileid :22;
     //the id of the element within the tile
-    uint64_t id :37;
+    uint64_t id :21;
+    uint64_t spare :18;
   } fields;
   //a single 64 bit value representing the graph id.
   uint64_t value;

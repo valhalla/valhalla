@@ -56,6 +56,68 @@ namespace {
     }
   }
 
+  void TestMaxSlope() {
+    // Test building a directed edge and reading back values
+    DirectedEdge directededge;
+    directededge.set_max_up_slope(5.0f);
+    if (directededge.max_up_slope() != 5) {
+      throw runtime_error("DirectedEdge max_up_slope test 1 failed");
+    }
+    directededge.set_max_up_slope(15.0f);
+    if (directededge.max_up_slope() != 15) {
+      throw runtime_error("DirectedEdge max_up_slope test 2 failed");
+    }
+    directededge.set_max_up_slope(-5.0f);
+    if (directededge.max_up_slope() != 0) {
+      throw runtime_error("DirectedEdge max_up_slope test 3 failed");
+    }
+    directededge.set_max_up_slope(25.0f);
+    if (directededge.max_up_slope() != 28) {
+      throw runtime_error("DirectedEdge max_up_slope test 4 failed");
+    }
+    directededge.set_max_up_slope(71.5f);
+    if (directededge.max_up_slope() != 72) {
+      throw runtime_error("DirectedEdge max_up_slope test 5 failed");
+    }
+    directededge.set_max_up_slope(88.0f);
+    if (directededge.max_up_slope() != 76) {
+      throw runtime_error("DirectedEdge max_up_slope test 6 failed");
+    }
+    directededge.set_max_up_slope(15.7f);
+    if (directededge.max_up_slope() != 16) {
+      throw runtime_error("DirectedEdge max_up_slope test 7 failed");
+    }
+
+    directededge.set_max_down_slope(-5.5f);
+    if (directededge.max_down_slope() != -6) {
+      throw runtime_error("DirectedEdge max_down_slope test 1 failed");
+    }
+    directededge.set_max_down_slope(-15.0f);
+    if (directededge.max_down_slope() != -15) {
+      throw runtime_error("DirectedEdge max_down_slope test 2 failed");
+    }
+    directededge.set_max_down_slope(5.0f);
+    if (directededge.max_down_slope() != 0) {
+      throw runtime_error("DirectedEdge max_down_slope test 3 failed");
+    }
+    directededge.set_max_down_slope(-25.0f);
+    if (directededge.max_down_slope() != -28) {
+      throw runtime_error("DirectedEdge max_down_slope test 4 failed");
+    }
+    directededge.set_max_down_slope(-71.5f);
+    if (directededge.max_down_slope() != -72) {
+      throw runtime_error("DirectedEdge max_down_slope test 5 failed");
+    }
+    directededge.set_max_down_slope(-88.0f);
+    if (directededge.max_down_slope() != -76) {
+      throw runtime_error("DirectedEdge max_down_slope test 6 failed");
+    }
+    directededge.set_max_down_slope(-15.7f);
+    if (directededge.max_down_slope() != -16) {
+      throw runtime_error("DirectedEdge max_down_slope test 7 failed");
+    }
+  }
+
 }
 
 int main(void)
@@ -66,6 +128,9 @@ int main(void)
 
   // Write to file and read into DirectedEdge
   suite.test(TEST_CASE(TestWriteRead));
+
+  // Test max slope
+  suite.test(TEST_CASE(TestMaxSlope));
 
   return suite.tear_down();
 }

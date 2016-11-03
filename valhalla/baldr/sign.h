@@ -60,6 +60,7 @@ class Sign {
   uint32_t edgeindex_  : 22;     // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t type_       :  8;
   uint32_t spare_      :  2;
+
   uint32_t text_offset_;
 };
 

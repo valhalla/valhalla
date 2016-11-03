@@ -36,7 +36,7 @@ libvalhalla_baldr.pc
 .libs/
 libvalhalla_baldr.la
 date_time_zonespec.csv
-src/baldr/date_time_zonespec.h
+genfiles/
 
 # tests
 test-suite.log
@@ -45,6 +45,7 @@ test/location
 test/admin
 test/datetime
 test/directededge
+test/double_bucket_queue
 test/graphid
 test/tilehierarchy
 test/graphtile

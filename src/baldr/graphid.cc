@@ -1,20 +1,11 @@
 #include <limits>
 
 #include "baldr/graphid.h"
-#include <boost/functional/hash.hpp>
+#include "baldr/graphconstants.h"
 
 namespace {
 // Invalid graphid.
 constexpr uint32_t kInvalidId = std::numeric_limits<uint32_t>::max();
-
-// Maximum number of tiles supported.
-constexpr uint32_t kMaxGraphTileId = 16777215;
-
-// Maximum of 8 (0-7) graph hierarchies are supported.
-constexpr uint32_t kMaxGraphHierarchy = 7;
-
-// Maximum unique identifier within a graph hierarchy.
-constexpr uint64_t kMaxGraphId = 68719476735;
 }
 
 namespace valhalla {
@@ -27,7 +18,7 @@ GraphId::GraphId() {
 
 // Constructor with values for each field of the GraphId.
 GraphId::GraphId(const uint32_t tileid, const uint32_t level,
-                 const uint64_t id) {
+                 const uint32_t id) {
   Set(tileid, level, id);
 }
 
@@ -45,16 +36,20 @@ uint32_t GraphId::level() const {
 }
 
 // Get the Id
-uint64_t GraphId::id() const {
+uint32_t GraphId::id() const {
   return fields.id;
 }
 
 // Set the fields of the GraphId
 void GraphId::Set(const uint32_t tileid, const uint32_t level,
-                  const uint64_t id) {
-  fields.tileid = (tileid < kMaxGraphTileId) ? tileid : 0;
-  fields.level = (level < kMaxGraphHierarchy) ? level : 0;
-  fields.id = (id < kMaxGraphId) ? id : 0;
+                  const uint32_t id) {
+  if(tileid <= kMaxGraphTileId) fields.tileid = tileid;
+  else throw std::logic_error("Tile id out of valid range");
+  if(level <= kMaxGraphHierarchy) fields.level = level;
+  else throw std::logic_error("Level out of valid range");
+  if(id <= kMaxGraphId) fields.id = id;
+  else throw std::logic_error("Id out of valid range");
+  fields.spare = 0;
 }
 
 bool GraphId::Is_Valid() const {
@@ -106,26 +101,6 @@ GraphId::operator uint64_t() const {
 std::ostream& operator<<(std::ostream& os, const GraphId& id)
 {
     return os << id.fields.level << '/' << id.fields.tileid << '/' << id.fields.id;
-}
-
-// Get the internal version
-const uint64_t GraphId::internal_version() {
-
-  GraphId id{};
-
-  size_t seed = 0;
-
-  id.fields.id = ~id.fields.id;
-  boost::hash_combine(seed,ffs(id.fields.id+1)-1);
-  id.fields.level = ~id.fields.level;
-  boost::hash_combine(seed,ffs(id.fields.level+1)-1);
-  id.fields.tileid = ~id.fields.tileid;
-  boost::hash_combine(seed,ffs(id.fields.tileid+1)-1);
-
-  boost::hash_combine(seed,sizeof(GraphId));
-
-  return seed;
-
 }
 
 }

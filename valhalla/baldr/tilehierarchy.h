@@ -16,6 +16,11 @@ namespace valhalla {
 namespace baldr {
 
 
+//TODO: hack and slash this. this should just be the levels and operations we commonly do
+//with them like getting the transit level or getting the highest or lowest non transit level
+//this can be static and accessed through a singleton or just static functions on the struct
+//tile_dir doesnt belong here anyway
+
 /**
  * class used to get information about a given hierarchy of tiles
  */
@@ -59,6 +64,13 @@ class TileHierarchy {
    * @param level   the level of the requested tile
    */
   GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level) const;
+
+  /**
+   * Gets the hierarchy level given the road class.
+   * @param  road_class  Road classification.
+   * @return Returns the level.
+   */
+  uint8_t get_level(const RoadClass roadclass) const;
 
  private:
   explicit TileHierarchy();

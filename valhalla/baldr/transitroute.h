@@ -14,7 +14,7 @@ namespace baldr {
 class TransitRoute {
  public:
   // Constructor with arguments
-  TransitRoute(const uint32_t route_type, const uint32_t one_stop_offset,
+  TransitRoute(const TransitType route_type, const uint32_t one_stop_offset,
                const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
                const uint32_t op_by_website_offset, const uint32_t route_color,
                const uint32_t route_text_color, const uint32_t short_name_offset,
@@ -24,7 +24,7 @@ class TransitRoute {
    * Get the route type.
    * @return  Returns the route type.
    */
-  uint32_t route_type() const;
+  TransitType route_type() const;
 
   /**
    * Get the TransitLand one stop Id offset for this route.
@@ -88,18 +88,25 @@ class TransitRoute {
   bool operator < (const TransitRoute& other) const;
 
  protected:
-  uint32_t route_type_;       // Internal route type
-  uint32_t route_color_;      // Route color
-  uint32_t route_text_color_; // Route text color
+  uint32_t route_color_;                   // Route color
+  uint32_t route_text_color_;              // Route text color
 
   // Offsets in the text/name list
-  uint32_t one_stop_offset_;          // TransitLand onestop Id for this route.
-  uint32_t op_by_onestop_id_offset_;  // TransitLand operated by onestop id.
-  uint32_t op_by_name_offset_;        // TransitLand operated by name.
-  uint32_t op_by_website_offset_;     // TransitLand operated by website.
-  uint32_t short_name_offset_;        // Short route name.
-  uint32_t long_name_offset_;         // Long route name.
-  uint32_t desc_offset_;              // Route description.
+  uint64_t route_type_              : 8;   // Internal route type
+  uint64_t one_stop_offset_         : 24;  // TransitLand onestop Id for this route.
+  uint64_t spare1_                  : 32;
+
+  uint64_t op_by_onestop_id_offset_ : 24;  // TransitLand operated by onestop id.
+  uint64_t op_by_name_offset_       : 24;  // TransitLand operated by name.
+  uint64_t spare2_                  : 16;
+
+  uint64_t op_by_website_offset_    : 24; // TransitLand operated by website.
+  uint64_t short_name_offset_       : 24; // Short route name.
+  uint64_t spare3_                  : 16;
+
+  uint64_t long_name_offset_        : 24; // Long route name.
+  uint64_t desc_offset_             : 24; // Route description.
+  uint64_t spare4_                  : 16;
 };
 
 }

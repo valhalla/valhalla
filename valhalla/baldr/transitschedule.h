@@ -64,8 +64,10 @@ class TransitSchedule {
   uint64_t days_;          // Days this departure is active relative to the
                            // tile's creation date. Stores bit field with 1's
                            // meaning the departure applies to the day.
-  uint32_t days_of_week_;  // Days of the week.
-  uint32_t end_day_;       // End day (what is our end day in the days_).
+
+  uint64_t days_of_week_ : 7;  // Days of the week. Bit mask.
+  uint64_t end_day_      : 6;  // End day (what is our end day in the days_).
+  uint64_t spare_        : 51;
 };
 
 }

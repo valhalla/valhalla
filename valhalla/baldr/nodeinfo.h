@@ -14,7 +14,6 @@ namespace baldr {
 
 class GraphTile;
 
-constexpr uint32_t kMaxTileEdgeCount    = 4194303;  // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode     = 127;      // Maximum edges per node
 constexpr uint32_t kMaxAdminsPerTile    = 63;       // Maximum Admins per tile
 constexpr uint32_t kMaxTimeZonesPerTile = 511;      // Maximum TimeZones index
@@ -89,18 +88,6 @@ class NodeInfo {
    * @param  edge_count  the number of outbound directed edges.
    */
   void set_edge_count(const uint32_t edge_count);
-
-  /**
-   * Get the best road class of the outbound directed edges.
-   * @return   Returns road class.
-   */
-  RoadClass bestrc() const;
-
-  /**
-   * Sets the best road class of the outbound directed edges.
-   * @param  bestrc  Best road class / importance (lowest value).
-   */
-  void set_bestrc(const baldr::RoadClass bestrc);
 
   /**
    * Get the access modes (bit mask) allowed to pass through the node.
@@ -200,7 +187,9 @@ class NodeInfo {
   bool is_transit() const;
 
   /**
-   * Get the number of edges on the local level (up to kMaxLocalEdgeIndex+1).
+   * Get the number of regular edges across all levels (up to
+   * kMaxLocalEdgeIndex+1). Does not include shortcut edges,
+   * transit edges and transit connections, and transition edges.
    * @return  Returns the number of edges on the local level.
    */
   uint32_t local_edge_count() const;
@@ -210,30 +199,6 @@ class NodeInfo {
    * @param  n  Number of edges on the local level.
    */
   void set_local_edge_count(const uint32_t n);
-
-  /**
-   * Is this a parent node (e.g. a parent transit stop).
-   * @return  Returns true if this is a parent node.
-   */
-  bool parent() const;
-
-  /**
-   * Set the parent node flag (e.g. a parent transit stop).
-   * @param  parent  parent node flag.
-   */
-  void set_parent(const bool parent);
-
-  /**
-   * Is this a child node (e.g. a child transit stop).
-   * @return  Returns true if this is a child node.
-   */
-  bool child() const;
-
-  /**
-   * Set the child node flag (e.g. a child transit stop).
-   * @param  child  child node flag.
-   */
-  void set_child(const bool child);
 
   /**
    * Is a mode change allowed at this node? The access data tells which
@@ -325,27 +290,25 @@ class NodeInfo {
   std::pair<float, float> latlng_;
 
   // Node attributes and admin information
-  uint64_t edge_index_   : 22;  // Index within the node's tile of its first
-                                // outbound directed edge
-  uint64_t access_       : 12;  // Access through the node - bit field
-  uint64_t edge_count_   : 7;   // Number of outbound edges (on this level)
-  uint64_t bestrc_       : 3;   // Best directed edge road class
-  uint64_t admin_index_  : 6;   // Index into this tile's list of admin data
-  uint64_t timezone_     : 9;   // Time zone
-  uint64_t intersection_ : 5;   // Intersection type
+  uint64_t edge_index_       : 21;  // Index within the node's tile of its
+                                    // first outbound directed edge
+  uint64_t access_           : 12;  // Access through the node - bit field
+  uint64_t edge_count_       : 7;   // Number of outbound edges (on this level)
+  uint32_t local_edge_count_ : 3;   // # of regular edges across all levels
+                                    // (up to kMaxLocalEdgeIndex+1)
+  uint64_t admin_index_      : 6;   // Index into this tile's admin data list
+  uint64_t timezone_         : 9;   // Time zone
+  uint64_t intersection_     : 5;   // Intersection type
+  uint64_t spare_0           : 1;   //maybe add to admin_index?
 
   // Node type and additional node attributes
-  uint32_t local_driveability_ : 16; // Driveability for local edges (up to
+  uint32_t local_driveability_ : 16; // Driveability for regular edges (up to
                                      // kMaxLocalEdgeIndex+1 edges)
   uint32_t density_            : 4;  // Relative road density
   uint32_t type_               : 4;  // NodeType, see graphconstants
-  uint32_t local_edge_count_   : 3;  // # of edges on local level (up to
-                                     // kMaxLocalEdgeIndex+1)
-  uint32_t parent_             : 1;  // Is this a parent node
-  uint32_t child_              : 1;  // Is this a child node
   uint32_t mode_change_        : 1;  // Mode change allowed?
   uint32_t traffic_signal_     : 1;  // Traffic signal
-  uint32_t spare1_             : 1;
+  uint32_t spare_1             : 6;
 
   // Transit stop index
   union NodeStop {

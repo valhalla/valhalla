@@ -104,7 +104,7 @@ void TestConnectivityMap() {
   touch_tile(d1, th);
 
   //check that it looks right
-  connectivity_map_t conn(th);
+  connectivity_map_t conn(pt);
   if(conn.get_color({a0, 2, 0}) != conn.get_color({a1, 2, 0}))
     throw std::runtime_error("a's should be connected");
   if(conn.get_color({a0, 2, 0}) != conn.get_color({a2, 2, 0}))

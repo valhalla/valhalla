@@ -14,14 +14,15 @@ const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
 
 json::MapPtr access_json(uint16_t access) {
   return json::map({
-    {"bicycle", static_cast<bool>(access && kBicycleAccess)},
-    {"bus", static_cast<bool>(access && kBusAccess)},
-    {"car", static_cast<bool>(access && kAutoAccess)},
-    {"emergency", static_cast<bool>(access && kEmergencyAccess)},
-    {"HOV", static_cast<bool>(access && kHOVAccess)},
-    {"pedestrian", static_cast<bool>(access && kPedestrianAccess)},
-    {"taxi", static_cast<bool>(access && kTaxiAccess)},
-    {"truck", static_cast<bool>(access && kTruckAccess)},
+    {"bicycle", static_cast<bool>(access & kBicycleAccess)},
+    {"bus", static_cast<bool>(access & kBusAccess)},
+    {"car", static_cast<bool>(access & kAutoAccess)},
+    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
+    {"HOV", static_cast<bool>(access & kHOVAccess)},
+    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
+    {"taxi", static_cast<bool>(access & kTaxiAccess)},
+    {"truck", static_cast<bool>(access & kTruckAccess)},
+    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)}
   });
 }
 
@@ -78,7 +79,6 @@ NodeInfo::NodeInfo(const std::pair<float, float>& ll,
                    const NodeType type, const bool traffic_signal) {
   memset(this, 0, sizeof(NodeInfo));
   set_latlng(ll);
-  set_bestrc(rc);
   set_access(access);
   set_type(type);
   set_traffic_signal(traffic_signal);
@@ -101,7 +101,7 @@ uint32_t NodeInfo::edge_index() const {
 
 // Set the index in the node's tile of its first outbound edge.
 void NodeInfo::set_edge_index(const uint32_t edge_index) {
-  if (edge_index > kMaxTileEdgeCount) {
+  if (edge_index > kMaxGraphId) {
     // Consider this a catastrophic error
     throw std::runtime_error("NodeInfo: edge index exceeds max");
   }
@@ -125,16 +125,6 @@ void NodeInfo::set_edge_count(const uint32_t edge_count) {
   }
 }
 
-// Get the best road class of any outbound edges.
-RoadClass NodeInfo::bestrc() const {
-  return static_cast<RoadClass>(bestrc_);
-}
-
-// Set the best road class of the outbound directed edges.
-void NodeInfo::set_bestrc(const RoadClass bestrc) {
-   bestrc_ = static_cast<uint32_t>(bestrc);
-}
-
 // Get the access modes (bit mask) allowed to pass through the node.
 // See graphconstants.h
 uint16_t NodeInfo::access() const {
@@ -143,7 +133,13 @@ uint16_t NodeInfo::access() const {
 
 // Set the access modes (bit mask) allowed to pass through the node.
 void NodeInfo::set_access(const uint32_t access) {
-  access_ = access;
+  if (access > kAllAccess) {
+    LOG_ERROR("NodeInfo: access exceeds maximum allowed: " +
+              std::to_string(access));
+    access_ = (access & kAllAccess);
+  } else {
+    access_ = access;
+  }
 }
 
 // Get the intersection type.
@@ -258,26 +254,6 @@ void NodeInfo::set_local_edge_count(const uint32_t n) {
   }
 }
 
-// Is this a parent node (e.g. a parent transit stop).
-bool NodeInfo::parent() const {
-  return parent_;
-}
-
-// Set the parent node flag (e.g. a parent transit stop).
-void NodeInfo::set_parent(const bool parent) {
-  parent_ = parent;
-}
-
-// Is this a child node (e.g. a child transit stop).
-bool NodeInfo::child() const {
-  return child_;
-}
-
-// Set the child node flag (e.g. a child transit stop).
-void NodeInfo::set_child(const bool child) {
-  child_ = child;
-}
-
 // Is a mode change allowed at this node? The access data tells which
 // modes are allowed at the node. Examples include transit stops, bike
 // share locations, and parking locations.
@@ -379,16 +355,13 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
   auto m = json::map({
     {"lon", json::fp_t{latlng_.first, 6}},
     {"lat", json::fp_t{latlng_.second, 6}},
-    {"best_road_class", to_string(static_cast<RoadClass>(bestrc_))},
     {"edge_count", static_cast<uint64_t>(edge_count_)},
     {"access", access_json(access_)},
     {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
     {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
-    {"child", static_cast<uint64_t>(child_)},
     {"density", static_cast<uint64_t>(density_)},
     {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
     {"mode_change", static_cast<bool>(mode_change_)},
-    {"parent", static_cast<bool>(parent_)},
     {"traffic_signal", static_cast<bool>(traffic_signal_)},
     {"type", to_string(static_cast<NodeType>(type_))},
   });

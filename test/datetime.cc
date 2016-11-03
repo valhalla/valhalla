@@ -258,14 +258,14 @@ void TestDOW() {
 
 void TestDuration() {
 
-  TryGetDuration("20140101",30,"2014-01-01T00:00-05:00");
-  TryGetDuration("20140102",60,"2014-01-02T00:01-05:00");
-  TryGetDuration("2014-01-02",60,"2014-01-02T00:01-05:00");
+  TryGetDuration("20140101",30,"2014-01-01T00:00-05:00 EST");
+  TryGetDuration("20140102",60,"2014-01-02T00:01-05:00 EST");
+  TryGetDuration("2014-01-02",60,"2014-01-02T00:01-05:00 EST");
   TryGetDuration("19990101",89, "");
-  TryGetDuration("20140101T07:01",61,"2014-01-01T07:02-05:00");
-  TryGetDuration("20140102T15:00",61,"2014-01-02T15:01-05:00");
-  TryGetDuration("20140102T15:00",86400,"2014-01-03T15:00-05:00");
-  TryGetDuration("20160714",60,"2016-07-14T00:01-04:00");
+  TryGetDuration("20140101T07:01",61,"2014-01-01T07:02-05:00 EST");
+  TryGetDuration("20140102T15:00",61,"2014-01-02T15:01-05:00 EST");
+  TryGetDuration("20140102T15:00",86400,"2014-01-03T15:00-05:00 EST");
+  TryGetDuration("20160714",60,"2016-07-14T00:01-04:00 EDT");
 }
 
 void TestIsoDateTime() {
