@@ -25,7 +25,7 @@ TransitSchedule::TransitSchedule(const uint64_t days, const uint32_t dow,
     days_of_week_ = dow;
 
     // If exceeds kMaxEndDay
-    if (dow > kMaxEndDay) {
+    if (end_day > kMaxEndDay) {
       LOG_ERROR("TransitSchedule: Exceeded maximum end day");
       end_day_ = kMaxEndDay;
     } else {
