@@ -271,7 +271,17 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     // Copy existing directed edges from this node and update any signs using
     // the directed edge index
     size_t edge_index = tilebuilder_transit.directededges().size();
-    for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
+
+    // Temporary - kill transit edges above some number so we allow
+    // transit connections. Should be based on kMaxEdgesPerNode
+    constexpr uint32_t kMaxTransitEdges = 120;
+    if (nb.edge_count() > kMaxTransitEdges) {
+      LOG_ERROR("More than 120 transit edges");
+    }
+
+    // Reserve size for several connection edges
+    uint32_t ec = (nb.edge_count() < kMaxTransitEdges) ? nb.edge_count() : kMaxTransitEdges;
+    for (uint32_t i = 0, idx = nb.edge_index(); i < ec; i++, idx++) {
       tilebuilder_transit.directededges().emplace_back(std::move(currentedges[idx]));
     }
 
@@ -318,7 +328,13 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
           admin_set = true;
         }
 
-        tilebuilder_transit.directededges().emplace_back(std::move(directededge));
+        // TODO - this should use kMaxEdgesPerNode
+        uint32_t n = tilebuilder_transit.directededges().size() - edge_index;
+        if (n < 127) {
+          tilebuilder_transit.directededges().emplace_back(std::move(directededge));
+        } else {
+          LOG_ERROR("Could not add transit connection edge!")
+        }
 
         LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
@@ -581,13 +597,6 @@ void build(const std::string& transit_dir,
   results.set_value({});
 }
 
-GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& transit_tile) {
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
-  return GraphTile::GetTileId(graph_tile, tile_dir);
-}
-
 }
 
 namespace valhalla {
@@ -615,7 +624,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
     for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
       if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".gph") {
-        auto graph_id = TransitToTile(pt, transit_file_itr->path().string());
+        auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         auto local_graph_id = graph_id;
         local_graph_id.fields.level -= 1;
         if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {

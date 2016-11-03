@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Ivalhalla -Ivalhalla/proto @BOOST_CPPFLAGS@
-AM_CXXFLAGS = -Ivalhalla -Ivalhalla/proto @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @BOOST_CPPFLAGS@ -Igenfiles
+AM_CXXFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@ -Igenfiles
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -34,8 +34,13 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno
+clean-local: clean-coverage clean-gcno clean-genfiles
+else
+clean-local: clean-genfiles
 endif
+
+clean-genfiles:
+	-rm -rf genfiles
 
 # proto generation etc
 PROTO_FILES = proto/osmformat.proto proto/fileformat.proto proto/transit.proto
@@ -43,19 +48,20 @@ src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
 #lua code for parsing
-src/mjolnir/graph_lua_proc.h: lua/graph.lua
-	-xxd -i lua/graph.lua > src/mjolnir/graph_lua_proc.h
-src/mjolnir/admin_lua_proc.h: lua/admin.lua
-	-xxd -i lua/admin.lua > src/mjolnir/admin_lua_proc.h
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
-nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) src/mjolnir/graph_lua_proc.h src/mjolnir/admin_lua_proc.h
+genfiles/graph_lua_proc.h: lua/graph.lua
+	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@ && xxd -i lua/graph.lua > @abs_builddir@/genfiles/graph_lua_proc.h
+genfiles/admin_lua_proc.h: lua/admin.lua
+	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@ && xxd -i lua/admin.lua > @abs_builddir@/genfiles/admin_lua_proc.h
+BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h
+nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h
+CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
 	valhalla/mjolnir/admin.h \
 	valhalla/mjolnir/countryaccess.h \
+	valhalla/mjolnir/complexrestrictionbuilder.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
@@ -80,12 +86,14 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
+	valhalla/mjolnir/restrictionbuilder.h \
 	valhalla/mjolnir/shortcutbuilder.h \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/transit.pb.cc \
 	src/mjolnir/admin.cc \
+	src/mjolnir/complexrestrictionbuilder.cc \
 	src/mjolnir/countryaccess.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
@@ -112,6 +120,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \
 	src/mjolnir/pbfgraphparser.cc \
+	src/mjolnir/restrictionbuilder.cc \
 	src/mjolnir/shortcutbuilder.cc \
 	src/mjolnir/transitbuilder.cc \
 	src/mjolnir/util.cc \
@@ -171,20 +180,18 @@ valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFL
 
 # tests
 check_PROGRAMS = \
-	test/countryaccess \
 	test/utrecht \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
-	test/graphtilebuilder \
 	test/graphbuilder \
 	test/graphparser \
 	test/names \
 	test/refs \
 	test/signinfo
-test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
-test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_countryaccess_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+#test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
+#test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+#test_countryaccess_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
@@ -197,9 +204,9 @@ test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libv
 test_idtable_SOURCES = test/idtable.cc test/test.cc
 test_idtable_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_idtable_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
-test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+#test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
+#test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+#test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
 test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_graphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

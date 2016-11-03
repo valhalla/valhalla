@@ -24,10 +24,10 @@ const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  OSMWayNode target{{node_id}};
-  if(!way_nodes.find(target, node_predicate))
+  auto found = way_nodes.find({node_id}, node_predicate);
+  if(found == way_nodes.end())
     throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
-  return target.node;
+  return (*found).node;
 }
 
 auto way_predicate = [](const OSMWay& a, const OSMWay& b){
@@ -35,10 +35,10 @@ auto way_predicate = [](const OSMWay& a, const OSMWay& b){
 };
 
 OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
-  OSMWay target{way_id};
-  if(!ways.find(target, way_predicate))
+  auto found = ways.find({way_id}, way_predicate);
+  if(found == ways.end())
     throw std::runtime_error("Couldn't find way: " + std::to_string(way_id));
-  return target;
+  return *found;
 }
 
 
@@ -49,8 +49,10 @@ void Bike(const std::string& config_file) {
   std::string ways_file = "test_ways_utrecht.bin";
   std::string way_nodes_file = "test_way_nodes_utrecht.bin";
   std::string access_file = "test_access_utrecht.bin";
+  std::string restriction_file = "test_complex_restrictions_utrecht.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file,
+                                       way_nodes_file, access_file, restriction_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -132,8 +134,10 @@ void Bus(const std::string& config_file) {
   std::string ways_file = "test_ways_utrecht.bin";
   std::string way_nodes_file = "test_way_nodes_utrecht.bin";
   std::string access_file = "test_access_utrecht.bin";
+  std::string restriction_file = "test_complex_restrictions_utrecht.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 

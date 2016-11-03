@@ -19,6 +19,7 @@
 #include <google/protobuf/io/coded_stream.h>
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphtile.h>
@@ -83,15 +84,6 @@ struct builder_stats {
     no_dir_edge_count += other.no_dir_edge_count;
   }
 };
-
-GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& transit_tile) {
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
-  boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
-  graph_tile += ".gph";
-  return GraphTile::GetTileId(graph_tile, tile_dir);
-}
 
 struct logged_error_t: public std::runtime_error {
   logged_error_t(const std::string& msg):std::runtime_error(msg) {
@@ -292,6 +284,10 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
       LOG_WARN("Timezone not found for stop " + stop->name());
     stop->set_timezone(timezone);
     stops.emplace(stop->onestop_id(), stop_id);
+    if(stops.size() == kMaxGraphId) {
+      LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest")
+      break;
+    }
   }
 }
 
@@ -310,7 +306,8 @@ void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
     else if (vehicle_type == "rail")
       type = Transit_VehicleType::Transit_VehicleType_kRail;
     else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
-             vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service")
+             vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
+             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus")
       type = Transit_VehicleType::Transit_VehicleType_kBus;
     else if (vehicle_type == "ferry")
       type = Transit_VehicleType::Transit_VehicleType_kFerry;
@@ -519,6 +516,11 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       }
     }
   }
+
+  // no stop pairs due to new route type.
+  if (tile.mutable_stop_pairs()->size() == 0)
+    return false;
+
   return dangles;
 }
 
@@ -725,15 +727,6 @@ std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& 
 
   LOG_INFO("Finished");
   return dangling;
-}
-
-GraphId id(const boost::property_tree::ptree& pt, const std::string& transit_tile) {
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
-  boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
-  graph_tile += ".gph";
-  return GraphTile::GetTileId(graph_tile, tile_dir);
 }
 
 Transit read_pbf(const std::string& file_name, std::mutex& lock) {
@@ -1065,7 +1058,8 @@ std::vector<uint32_t> AddRoutes(const Transit& transit,
 
       // These should all be correctly set in the fetcher as it tosses types that we
       // don't support.  However, let's report an error if we encounter one.
-      switch (static_cast<TransitType>(r.vehicle_type())) {
+      TransitType route_type = static_cast<TransitType>(r.vehicle_type());
+      switch (route_type) {
         case TransitType::kTram:        // Tram, streetcar, lightrail
         case TransitType::kMetro:      // Subway, metro
         case TransitType::kRail:        // Rail
@@ -1076,11 +1070,13 @@ std::vector<uint32_t> AddRoutes(const Transit& transit,
         case TransitType::kFunicular:   // Funicular (steep incline)
           break;
         default:
+          // Log an unsupported vehicle type, set to bus for now
           LOG_ERROR("Unsupported vehicle type!");
+          route_type = TransitType::kBus;
           break;
       }
 
-      TransitRoute route(r.vehicle_type(),
+      TransitRoute route(route_type,
                          tilebuilder.AddName(r.onestop_id()),
                          tilebuilder.AddName(r.operated_by_onestop_id()),
                          tilebuilder.AddName(r.operated_by_name()),
@@ -1273,14 +1269,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     if (s_access != stop_access.end()) {
       n_access &= ~s_access->second;
     }
-    // TODO - parent/child flags
-    bool child  = false; // (stop.parent.Is_Valid());  // TODO verify if this is sufficient
-    bool parent = false; // (stop.type == 1);          // TODO verify if this is sufficient
+    // TODO - parent/child stop types
     PointLL stopll = { stop.lon(), stop.lat() };
     NodeInfo node(stopll, RoadClass::kServiceOther, n_access,
                         NodeType::kMultiUseTransitStop, false);
-    node.set_child(child);
-    node.set_parent(parent);
     node.set_mode_change(true);
     node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder_transit.directededges().size());
@@ -1748,7 +1740,7 @@ int main(int argc, char** argv) {
   std::unordered_set<GraphId> all_tiles;
   for(; transit_file_itr != end_file_itr; ++transit_file_itr)
     if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf")
-      all_tiles.emplace(id(pt, transit_file_itr->path().string()));
+      all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
 
   //spawn threads to connect dangling stop pairs to adjacent tiles' stops
   stitch(pt, all_tiles, dangling_tiles);

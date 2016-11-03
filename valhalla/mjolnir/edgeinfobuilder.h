@@ -29,16 +29,16 @@ class EdgeInfoBuilder {
   void set_wayid(const uint64_t wayid);
 
   /**
-   * Set the indexes to names used by this edge
-   * @param  offsets  List of name offsets.
+   * Set the name info for names used by this edge
+   * @param  offsets  List of street name info.
    */
-  void set_text_name_offset_list(const std::vector<uint32_t>& offsets);
+  void set_name_info_list(const std::vector<baldr::NameInfo>& name_info);
 
   /**
-   * Add a name offset to the list.
-   * @param  offset  Offset into the text list.
+   * Add name info to the list.
+   * @param  info  Adds name information to the list.
    */
-  void AddNameOffset(const uint32_t offset);
+  void AddNameInfo(const baldr::NameInfo& info);
 
   /**
    * Set the shape of the edge.
@@ -72,8 +72,8 @@ class EdgeInfoBuilder {
   // OSM Way Id
   uint64_t wayid_;
 
-  // List of roadname indexes
-  std::vector<uint32_t> text_name_offset_list_;
+  // List of name info (offsets, etc.)
+  std::vector<baldr::NameInfo> name_info_list_;
 
   // Lat,lng shape of the edge
   std::string encoded_shape_;

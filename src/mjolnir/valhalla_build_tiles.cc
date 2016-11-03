@@ -8,6 +8,7 @@
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/shortcutbuilder.h"
+#include "mjolnir/restrictionbuilder.h"
 #include <valhalla/baldr/tilehierarchy.h>
 #include "config.h"
 
@@ -128,10 +129,10 @@ int main(int argc, char** argv) {
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
   auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin",
-                                        "way_nodes.bin", "access.bin");
+                                        "way_nodes.bin", "access.bin", "complex_restrictions.bin");
 
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin");
+  GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin", "complex_restrictions.bin");
 
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
@@ -147,6 +148,9 @@ int main(int argc, char** argv) {
 
   // Build shortcuts
   ShortcutBuilder::Build(pt);
+
+  // Build the Complex Restrictions
+  RestrictionBuilder::Build(pt,"complex_restrictions.bin", osm_data.end_map);
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.

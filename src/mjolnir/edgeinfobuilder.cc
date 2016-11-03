@@ -15,23 +15,23 @@ void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
   wayid_ = wayid;
 }
 
-// Set the indexes to names used by this edge.
-void EdgeInfoBuilder::set_text_name_offset_list(
-    const std::vector<uint32_t>& text_name_offset_list) {
-  if (text_name_offset_list.size() > kMaxNamesPerEdge) {
+// Set the list of name info (offsets, etc.) used by this edge.
+void EdgeInfoBuilder::set_name_info_list(
+    const std::vector<NameInfo>& name_info_list) {
+  if (name_info_list.size() > kMaxNamesPerEdge) {
     LOG_WARN("Tried to exceed max names per edge: " +
-                  std::to_string(text_name_offset_list.size()));
+                  std::to_string(name_info_list.size()));
   } else {
-    text_name_offset_list_ = text_name_offset_list;
+    name_info_list_ = name_info_list;
   }
 }
 
-// Set the indexes to names used by this edge.
-void EdgeInfoBuilder::AddNameOffset(const uint32_t offset) {
-  if (text_name_offset_list_.size() == kMaxNamesPerEdge) {
+// Add street name info to the list.
+void EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
+  if (name_info_list_.size() == kMaxNamesPerEdge) {
     LOG_WARN("Tried to exceed max names per edge");
   } else {
-    text_name_offset_list_.push_back(offset);
+    name_info_list_.push_back(info);
   }
 }
 
@@ -54,7 +54,7 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(uint64_t);
   size += sizeof(baldr::EdgeInfo::PackedItem);
-  size += (text_name_offset_list_.size() * sizeof(uint32_t));
+  size += (name_info_list_.size() * sizeof(uint32_t));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   return size;
 }
@@ -75,7 +75,7 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Pack the name count and encoded shape size. Check against limits.
   baldr::EdgeInfo::PackedItem item;
-  uint32_t name_count = eib.text_name_offset_list_.size();
+  uint32_t name_count = eib.name_info_list_.size();
   if (name_count > kMaxNamesPerEdge) {
     LOG_WARN("Exceeding max names per edge: " + std::to_string(name_count));
     name_count = kMaxNamesPerEdge;
@@ -94,7 +94,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&eib.wayid_), sizeof(uint64_t));
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
-  os.write(reinterpret_cast<const char*>(&eib.text_name_offset_list_[0]),
+  os.write(reinterpret_cast<const char*>(&eib.name_info_list_[0]),
             (name_count * sizeof(uint32_t)));
   os << eib.encoded_shape_;
 

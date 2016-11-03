@@ -1,6 +1,7 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 #include "mjolnir/osmpbfparser.h"
+
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
@@ -13,6 +14,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/complexrestriction.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/sequence.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/aabb2.h>
@@ -471,37 +474,37 @@ struct graph_callback : public OSMPBF::Callback {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kHazmat);
         restriction.set_value(tag.second == "true" ? true : false);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxheight") {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kMaxHeight);
         restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxwidth") {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kMaxWidth);
         restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxlength") {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kMaxLength);
         restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxweight") {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kMaxWeight);
         restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxaxleload") {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kMaxAxleLoad);
         restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
 
       else if (tag.first == "default_speed")
@@ -773,7 +776,7 @@ struct graph_callback : public OSMPBF::Callback {
       throw std::runtime_error("Detected unsorted input data");
     last_relation_ = osmid;
 
-    OSMRestriction restriction;
+    OSMRestriction restriction{};
     uint64_t from_way_id = 0;
     bool isRestriction = false;
     bool hasRestriction = false;
@@ -782,7 +785,9 @@ struct graph_callback : public OSMPBF::Callback {
     bool isBicycle = false;
     uint32_t bike_network_mask = 0;
 
-    std::string network, ref, name;
+    std::string network, ref, name, except;
+    uint32_t modes = (kAutoAccess |  kTaxiAccess | kBusAccess | kBicycleAccess |
+                      kTruckAccess | kEmergencyAccess);
 
     for (const auto& tag : results) {
 
@@ -806,6 +811,9 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "name") {
         name = tag.second;
+      }
+      else if (tag.first == "except") {
+        except = tag.second;
       }
       else if (tag.first == "restriction" && !tag.second.empty()) {
         RestrictionType type = (RestrictionType) std::stoi(tag.second);
@@ -888,7 +896,7 @@ struct graph_callback : public OSMPBF::Callback {
       bike.ref_index = ref_index;
 
       for (const auto& member : members) {
-        osmdata_.bike_relations.insert(BikeMap::value_type(member.member_id, bike));
+        osmdata_.bike_relations.insert(BikeMultiMap::value_type(member.member_id, bike));
       }
 
     }
@@ -930,6 +938,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
     else if (isRestriction && hasRestriction) {
+      std::vector<uint64_t> vias;
 
       for (const auto& member : members) {
 
@@ -938,22 +947,70 @@ struct graph_callback : public OSMPBF::Callback {
           from_way_id = member.member_id;
         else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
           restriction.set_to(member.member_id);
-        else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
+        else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
+          if (vias.size()) { //mix of nodes and ways.  Not supported yet.
+            from_way_id = 0;
+            break;
+          }
           restriction.set_via(member.member_id);
+        }
+        else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+          if (restriction.via()) { //mix of nodes and ways.  Not supported yet.
+            from_way_id = 0;
+            break;
+          }
+          vias.push_back(member.member_id);
+          osmdata_.via_set.insert(member.member_id);
+        }
       }
 
-      // Add the restriction to the list.  For now only support simple restrictions.
-      if (from_way_id != 0 && restriction.via() && restriction.to())
-        osmdata_.restrictions.insert(RestrictionsMap::value_type(from_way_id, restriction));
+      if (vias.size() > kMaxViasPerRestriction) {
+        LOG_INFO("skipping restriction with vias > the max allowed: " + std::to_string(osmid));
+        from_way_id = 0;
+      }
+      // Add the restriction to the list.
+      if (from_way_id != 0 && (restriction.via() || vias.size()) && restriction.to()) {
+
+        // remove access as the restriction does not apply to these modes.
+        std::vector<std::string> tokens  = GetTagTokens(except);
+        for (const auto& t : tokens) {
+          if (t == "motorcar")
+            modes = modes & ~kAutoAccess;
+          else if (t == "psv")
+            modes = modes & ~(kTaxiAccess | kBusAccess);
+          else if (t == "taxi")
+            modes = modes & ~kTaxiAccess;
+          else if (t == "bus")
+            modes = modes & ~kBusAccess;
+          else if (t == "bicycle")
+            modes = modes & ~kBicycleAccess;
+          else if (t == "hgv")
+            modes = modes & ~kTruckAccess;
+          else if (t == "emergency")
+            modes = modes & ~kEmergencyAccess;
+        }
+        restriction.set_modes(modes);
+
+        // complex restrictions -- add to end map.
+        if (vias.size()) {
+          restriction.set_from(from_way_id);
+          restriction.set_vias(vias);
+          osmdata_.end_map.insert(EndMap::value_type(restriction.to(), from_way_id));
+          complex_restrictions_->push_back(restriction);
+        }
+        else osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
+      }
     }
   }
 
   //lets the sequences be set and reset
-  void reset(sequence<OSMWay>* ways, sequence<OSMWayNode>* way_nodes, sequence<OSMAccess>* access){
+  void reset(sequence<OSMWay>* ways, sequence<OSMWayNode>* way_nodes,
+             sequence<OSMAccess>* access, sequence<OSMRestriction>* complex_restrictions){
     //reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
+    complex_restrictions_.reset(complex_restrictions);
   }
 
   // Output list of wayids that have loops
@@ -997,7 +1054,10 @@ struct graph_callback : public OSMPBF::Callback {
   // List of wayids with loops
   std::vector<uint64_t> loops_;
 
+  // user entered access
   std::unique_ptr<sequence<OSMAccess> > access_;
+  // complex restrictions
+  std::unique_ptr<sequence<OSMRestriction> > complex_restrictions_;
 
 };
 
@@ -1007,7 +1067,8 @@ namespace valhalla {
 namespace mjolnir {
 
 OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::vector<std::string>& input_files,
-    const std::string& ways_file, const std::string& way_nodes_file, const std::string& access_file) {
+    const std::string& ways_file, const std::string& way_nodes_file, const std::string& access_file,
+    const std::string& complex_restriction_file) {
   //TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   //option 2: synchronize around adding things to a single osmdata. will have to test to see
   //which is the least expensive (memory and speed). leaning towards option 2
@@ -1018,7 +1079,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   graph_callback callback(pt, osmdata);
   callback.reset(new sequence<OSMWay>(ways_file, true),
     new sequence<OSMWayNode>(way_nodes_file, true),
-    new sequence<OSMAccess>(access_file, true));
+    new sequence<OSMAccess>(access_file, true),
+    new sequence<OSMRestriction>(complex_restriction_file, true));
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
   //hold open all the files so that if something else (like diff application)
@@ -1038,7 +1100,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
   }
   callback.output_loops();
-  callback.reset(nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
 
   // Parse relations.
@@ -1048,6 +1109,14 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::RELATIONS, callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
+  callback.reset(nullptr, nullptr, nullptr, nullptr);
+
+  //we need to sort the complex restrictions so that we can easily find them.
+  LOG_INFO("Sorting complex restrictions by from id...");
+  {
+    sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
+    complex_restrictions.sort([](const OSMRestriction& a, const OSMRestriction& b){return a < b;});
+  }
 
   //we need to sort the refs so that we can easily (sequentially) update them
   //during node processing, we use memory mapping here because otherwise we aren't
@@ -1061,17 +1130,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
       }
     );
   }
-  //we need to sort the access tags so that we can easily find them.
-  LOG_INFO("Sorting osm access tags by way id...");
-  {
-    sequence<OSMAccess> access(access_file, false);
-    access.sort(
-      [](const OSMAccess& a, const OSMAccess& b){
-        return a.way_id() < b.way_id();
-      }
-    );
-  }
-
   LOG_INFO("Finished");
 
   // Parse node in all the input files. Skip any that are not marked from
@@ -1081,11 +1139,11 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   for (auto& file_handle : file_handles) {
     //each time we parse nodes we have to run through the way nodes file from the beginning because
     //because osm node ids are only sorted at the single pbf file level
-    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr);
+    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::NODES, callback);
   }
-  callback.reset(nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");
 
   //done with pbf
@@ -1106,6 +1164,18 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
       }
     );
   }
+
+  //we need to sort the access tags so that we can easily find them.
+  LOG_INFO("Sorting osm access tags by way id...");
+  {
+    sequence<OSMAccess> access(access_file, false);
+    access.sort(
+        [](const OSMAccess& a, const OSMAccess& b){
+      return a.way_id() < b.way_id();
+    }
+    );
+  }
+
   LOG_INFO("Finished");
 
   // Log some information about extra node information and names

@@ -70,7 +70,7 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
     }
     return true;
   } else {
-    LOG_INFO("Neither end of the shape matches");
+    LOG_WARN("Neither end of the shape matches");
     return false;
   }
 }
@@ -153,7 +153,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
           // Check if multiple edges match - log any duplicates
           if (opp_index != absurd_index) {
             if (startnode.level() == 2) {
-              LOG_INFO("Potential duplicate: wayids " + std::to_string(wayid) +
+              LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) +
                        " and " + std::to_string(wayid2) + " level = " +
                        std::to_string(startnode.level()) +
                        " sametile = " + std::to_string(sametile));
@@ -252,7 +252,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 using tweeners_t = GraphTileBuilder::tweeners_t;
 void validate(const boost::property_tree::ptree& pt,
               std::deque<GraphId>& tilequeue, std::mutex& lock,
-              std::promise<std::tuple<std::vector<uint32_t>, std::vector<std::vector<float>>, tweeners_t>>& result) {
+              std::promise<std::tuple<std::vector<uint32_t>, std::vector<std::vector<float> >, tweeners_t> >& result) {
     // Our local copy of edges binned to tiles that they pass through (dont start or end in)
     tweeners_t tweeners;
     // Local Graphreader
@@ -312,7 +312,8 @@ void validate(const boost::property_tree::ptree& pt,
 
         // Go through directed edges and validate/update data
         uint32_t idx = ni->edge_index();
-        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++) {
+        GraphId edgeid(node.tileid(), node.level(), idx);
+        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, edgeid++) {
           auto de = tile->directededge(idx);
 
           // Validate signs
@@ -385,6 +386,29 @@ void validate(const boost::property_tree::ptree& pt,
             directededge.set_ctry_crossing(true);
           }
 
+          // Validate the complex restriction settings
+          if (de->end_restriction()) {
+            uint32_t modes = 0;
+            for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
+              if ((de->end_restriction() & mode) &&
+                  tile->GetRestrictions(true, edgeid, mode).size() > 0) {
+                modes |= mode;
+              }
+            }
+            directededge.set_end_restriction(modes);
+          }
+          // Check for complex restriction
+          if (de->start_restriction()) {
+            uint32_t modes = 0;
+            for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
+              if ((de->start_restriction() & mode) &&
+                  tile->GetRestrictions(false, edgeid, mode).size() > 0) {
+                modes |= mode;
+              }
+            }
+            directededge.set_start_restriction(modes);
+          }
+
           // Add the directed edge to the local list
           directededges.emplace_back(std::move(directededge));
         }
@@ -421,8 +445,6 @@ void validate(const boost::property_tree::ptree& pt,
 
       // Write the bins to it
       if (tile->header()->graphid().level() == hierarchy.levels().rbegin()->first) {
-
-        // TODO: we could just also make tilebuilder::Update write the bins
         auto reloaded = GraphTile(hierarchy, tile_id);
         GraphTileBuilder::AddBins(hierarchy, &reloaded, bins);
       }
@@ -471,20 +493,16 @@ void validate(const boost::property_tree::ptree& pt,
       ++start;
       lock.unlock();
 
-      //ignore transit tiles.
-      if (tile_bin.first.level() <= hierarchy.levels().rbegin()->second.level) {
+      //if there is nothing there we need to make something
+      GraphTile tile(hierarchy, tile_bin.first);
 
-        //if there is nothing there we need to make something
-        GraphTile tile(hierarchy, tile_bin.first);
-
-        if(tile.size() == 0) {
-          GraphTileBuilder empty(hierarchy, tile_bin.first, false);
-          empty.StoreTileData();
-          tile = GraphTile(hierarchy, tile_bin.first);
-        }
-        //keep the extra binned edges
-        GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
+      if(!tile.header()) {
+        GraphTileBuilder empty(hierarchy, tile_bin.first, false);
+        empty.StoreTileData();
+        tile = GraphTile(hierarchy, tile_bin.first);
       }
+      //keep the extra binned edges
+      GraphTileBuilder::AddBins(hierarchy, &tile, tile_bin.second);
     }
   }
 }
@@ -493,7 +511,6 @@ namespace valhalla {
 namespace mjolnir {
 
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
-
     // Graphreader
     auto hierarchy_properties = pt.get_child("mjolnir");
     TileHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
@@ -532,7 +549,7 @@ namespace mjolnir {
     // An mutex we can use to do the synchronization
     std::mutex lock;
 
-    LOG_INFO("Validating signs and connectivity and binning edges");
+    LOG_INFO("Validating, finishing and binning tiles...");
 
     // Setup threads
     std::vector<std::shared_ptr<std::thread> > threads(
@@ -570,7 +587,7 @@ namespace mjolnir {
     LOG_INFO("Finished");
 
     //run a pass to add the edges that binned to tweener tiles
-    LOG_INFO("Binning inter-tile edges");
+    LOG_INFO("Binning inter-tile edges...");
     auto start = tweeners.begin();
     auto end = tweeners.end();
     for (auto& thread : threads)

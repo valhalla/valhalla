@@ -330,10 +330,9 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
   // TODO - support modes (for now is just truck), days of week,
   // 64 bit values (with different meanings based on restriction type).
   uint32_t modes = kTruckAccess;
-  uint32_t days_of_week = kAllDaysOfWeek;
   for (auto r = res.first; r != res.second; ++r) {
     AccessRestriction access_restriction(edgeid, r->second.type(), modes,
-                                         days_of_week, r->second.value());
+                                         r->second.value());
     graphtile.AddAccessRestriction(access_restriction);
   }
   return modes;
@@ -341,6 +340,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
 
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
+    const std::string& complex_restriction_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
     const std::unique_ptr<const valhalla::skadi::sample>& sample,
     std::map<GraphId, size_t>::const_iterator tile_start,
@@ -353,6 +353,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
+  sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
@@ -711,6 +712,40 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             }
           }
 
+          if (osmdata.via_set.find(w.way_id()) != osmdata.via_set.end())
+            directededge.set_part_of_complex_restriction(true);
+
+          // grab all the modes if this way ends at a restriction(s)
+          auto to = osmdata.end_map.equal_range(w.way_id());
+          if (to.first != osmdata.end_map.end()) {
+            for (auto it = to.first; it != to.second; ++it) {
+
+              OSMRestriction target_res{it->second}; // this is our from way id
+              OSMRestriction restriction{};
+              sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(target_res,
+                                                          [](const OSMRestriction& a, const OSMRestriction& b) {
+                                                          return a.from() < b.from(); });
+
+              while (res_it != complex_restrictions.end() && (restriction = *res_it).from() == it->second) {
+                if (restriction.to() == w.way_id())
+                  directededge.set_end_restriction(directededge.end_restriction() | restriction.modes());
+                res_it++;
+              }
+            }
+          }
+
+          // grab all the modes if this way starts at a restriction(s)
+          OSMRestriction target_res{w.way_id()}; // this is our to way id
+          OSMRestriction restriction{};
+          sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(target_res,
+                                                      [](const OSMRestriction& a, const OSMRestriction& b) {
+                                                      return a.from() < b.from(); });
+
+          while (res_it != complex_restrictions.end() && (restriction = *res_it).from() == w.way_id()) {
+            directededge.set_start_restriction(directededge.start_restriction() | restriction.modes());
+            res_it++;
+          }
+
           // Set drive on right flag
           if (admin_index != 0)
             directededge.set_drive_on_right(drive_on_right[admin_index]);
@@ -753,7 +788,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       graphtile.StoreTileData();
 
       // Made a tile
-      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.size()).str());
+      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.header_builder().end_offset()).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
@@ -777,6 +812,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::string& ways_file, const std::string& way_nodes_file,
   const std::string& nodes_file, const std::string& edges_file,
+  const std::string& complex_restriction_file,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
   const std::unique_ptr<const valhalla::skadi::sample>& sample, const boost::property_tree::ptree& pt) {
 
@@ -807,7 +843,8 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     // Make the thread
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
-                      std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
+                      std::cref(nodes_file), std::cref(edges_file),
+                      std::cref(complex_restriction_file), (tile_hierarchy),
                       std::cref(osmdata), std::cref(sample), tile_start, tile_end, tile_creation_date,
                       std::cref(pt.get_child("mjolnir")), std::ref(results[i]))
     );
@@ -842,9 +879,11 @@ namespace mjolnir {
 
 // Build the graph from the input
 void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& osmdata,
-    const std::string& ways_file, const std::string& way_nodes_file) {
+    const std::string& ways_file, const std::string& way_nodes_file,
+    const std::string& complex_restriction_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
+
   TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   unsigned int threads = std::max(static_cast<unsigned int>(1),
                                   pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
@@ -888,7 +927,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file,
-                  edges_file, tiles, tile_hierarchy, stats, sample, pt);
+                  edges_file, complex_restriction_file, tiles, tile_hierarchy, stats, sample, pt);
 
   stats.LogStatistics();
 }

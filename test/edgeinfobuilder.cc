@@ -50,11 +50,11 @@ void TestWriteRead() {
   EdgeInfoBuilder eibuilder;
 
   // Name
-  std::vector<uint32_t> street_name_offset_list;
-  street_name_offset_list.push_back(963);
-  street_name_offset_list.push_back(957);
-  street_name_offset_list.push_back(862);
-  eibuilder.set_text_name_offset_list(street_name_offset_list);
+  std::vector<NameInfo> name_info_list;
+  name_info_list.push_back({963});
+  name_info_list.push_back({957});
+  name_info_list.push_back({862});
+  eibuilder.set_name_info_list(name_info_list);
 
   // Shape
   std::vector<PointLL> shape;
@@ -69,15 +69,15 @@ void TestWriteRead() {
   //TODO: errors thrown should say what was found and what was expected
 
   // Validate the read in fields to the original EdgeInfoBuilder
-  if (!(street_name_offset_list.size() == ei->name_count()))
+  if (!(name_info_list.size() == ei->name_count()))
     throw runtime_error("WriteRead:name_count test failed");
   if (!(shape.size() == ei->shape().size()))
     throw runtime_error("WriteRead:shape_count test failed");
 
   // Check the name indices
   for (uint8_t i = 0; i < ei->name_count(); ++i) {
-    if (!(street_name_offset_list[i] == ei->GetStreetNameOffset(static_cast<uint8_t>(i))))
-      throw runtime_error("WriteRead:GetStreetNameOffset test failed");
+    if (!(name_info_list[i].name_offset_ == ei->GetNameOffset(static_cast<uint8_t>(i))))
+      throw runtime_error("WriteRead:GetNameOffset test failed");
   }
 
   // Check the shape points

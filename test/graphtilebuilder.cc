@@ -24,7 +24,7 @@ class test_graph_tile_builder : public GraphTileBuilder {
 
 bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, const std::array<std::vector<GraphId>, kBinCount>& bins) {
   //expected size
-  if(a.size() + difference != b.size())
+  if(a.header()->end_offset() + difference != b.header()->end_offset())
     return false;
 
   //check the first chunk after the header
@@ -36,14 +36,15 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, cons
   //check the stuff after the bins
   if(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
       reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
-      b.size() - b.header()->edgeinfo_offset()))
+      b.header()->end_offset() - b.header()->edgeinfo_offset()))
     return false;
 
   //if the header is as expected
   const auto* ah = a.header(), *bh = b.header();
   if(ah->access_restriction_count() == bh->access_restriction_count() &&
      ah->admincount() == bh->admincount() &&
-     ah->complex_restriction_offset() == bh->complex_restriction_offset() &&
+     ah->complex_restriction_forward_offset() + difference == bh->complex_restriction_forward_offset() &&
+     ah->complex_restriction_reverse_offset() + difference == bh->complex_restriction_reverse_offset() &&
      ah->date_created() == bh->date_created() &&
      ah->density() == bh->density() &&
      ah->departurecount() == bh->departurecount() &&
@@ -75,8 +76,9 @@ bool tile_equalish(const GraphTile a, const GraphTile b, size_t difference, cons
     //check that the bins contain what was just added to them
     for(size_t i = 0; i < bins.size(); ++i) {
       auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
+      auto offset = bin.size() - bins[i].size();
       for(size_t j = 0; j < bins[i].size(); ++j) {
-        if(bin[j] != bins[i][j])
+        if(bin[j + offset] != bins[i][j])
           return false;
       }
     }
@@ -115,16 +117,30 @@ void TestDuplicateEdgeInfo() {
 
 void TestAddBins() {
 
-  //test a couple of tiles
+  //if you update the tile format you must regenerate test tiles. after your tile format change,
+  //run valhalla_build_tiles on a reasonable sized extract. when its done do the following:
+  /*
+    git rm -rf test/data/bin_tiles/no_bin
+    for f in $(find /data/valhalla/2 -printf '%s %P\n'| sort -n | head -n 2 | awk '{print $2}'); do
+      mkdir -p test/data/bin_tiles/no_bin/2/$(dirname ${f})
+      cp -rp /data/valhalla/2/${f} test/data/bin_tiles/no_bin/2/${f}
+    done
+    git add test/data/bin_tiles/no_bin
+    git status
+   */
+  //this will grab the 2 smallest tiles from you new tile set and make them the new test tiles
+  //note the names of the new tiles and update the list with path and index in the list just below
   for(const auto& test_tile : std::list<std::pair<std::string, size_t> >
       {
-        {"609/453.gph", 609453},
-        {"762/161.gph", 762161}
+        {"750/664.gph", 750664},
+        {"754/981.gph", 754981}
       }) {
 
     //load a tile
     GraphId id(test_tile.second,2,0);
     GraphTile t(TileHierarchy("test/data/bin_tiles/no_bin"), id);
+    if(!t.header())
+      throw std::runtime_error("Couldn't load test tile");
 
     //alter the config to point to another dir
     TileHierarchy h("test/data/bin_tiles/bin");

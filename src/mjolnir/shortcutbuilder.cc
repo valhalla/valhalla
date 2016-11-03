@@ -198,16 +198,18 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
     return false;
   }
 
-  // Get list of valid edges, excluding transition and transit connection
-  // edges. Also skip shortcut edge - this can happen if tile cache is cleared
+  // Get list of valid edges, excluding downward transition edges and transit
+  // connection edges. An upward transition edge indicates edges exist on a
+  // higher class level, so we don't want to create a shortcut there.
+  // Also skip shortcut edge - this can happen if tile cache is cleared
   // and this enters a tile where shortcuts have already been created.
   std::vector<GraphId> edges;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    if (!directededge->trans_down() && !directededge->trans_up() &&
-        directededge->use() != Use::kTransitConnection &&
-        !directededge->is_shortcut()) {
+    if (!directededge->trans_down() && !directededge->is_shortcut() &&
+         directededge->use() != Use::kTransitConnection &&
+         !directededge->start_restriction() && !directededge->end_restriction()) {
       edges.push_back(edgeid);
     }
   }
@@ -313,7 +315,8 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
 uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
                       const GraphId& edgeid,
                       std::list<PointLL>& shape, GraphId& endnode,
-                      uint32_t& opp_local_idx,  uint32_t& restrictions) {
+                      uint32_t& opp_local_idx,  uint32_t& restrictions,
+                      float& average_density) {
   // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -334,6 +337,9 @@ uint32_t ConnectEdges(GraphReader& reader, const GraphId& startnode,
   // should equal the last of the prior edge.
   edgeshape.pop_front();
   shape.splice(shape.end(), edgeshape);
+
+  // Add to the weighted average
+  average_density += directededge->length() * directededge->density();
 
   // Update the end node and return the length
   endnode = directededge->endnode();
@@ -383,6 +389,9 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
+      // For computing weighted density along the shortcut
+      float average_density = length * newedge.density();
+
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
@@ -401,7 +410,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         for (const auto& res : restrictions) {
           tilebuilder.AddAccessRestriction(
               AccessRestriction(tilebuilder.directededges().size(),
-                  res.type(), res.modes(), res.days_of_week(), res.value()));
+                  res.type(), res.modes(), res.value()));
         }
       }
 
@@ -436,7 +445,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node,
-                               opp_local_idx, rst);
+                               opp_local_idx, rst, average_density);
       }
 
       // Add the edge info. Use length and number of shape points to match an
@@ -479,6 +488,9 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       if (newedge.exitsign()) {
         LOG_ERROR("Shortcut edge with exit signs");
       }
+
+      // Compute the weighted edge density
+      newedge.set_density(average_density / (static_cast<float>(length)));
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have
@@ -576,7 +588,7 @@ uint32_t FormShortcuts(GraphReader& reader,
             for (const auto& res : restrictions) {
               tilebuilder.AddAccessRestriction(
                   AccessRestriction(tilebuilder.directededges().size(),
-                     res.type(), res.modes(), res.days_of_week(), res.value()));
+                     res.type(), res.modes(), res.value()));
             }
           }
 

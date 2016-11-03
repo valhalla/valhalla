@@ -32,9 +32,37 @@ namespace {
 // Sequence file name (as bin so it gets cleaned up)
 std::string nodes_file = std::string("new_nodes_to_old_nodes.bin");
 
+// Add a downward transition edge if the node is valid.
+bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
+  if (node.Is_Valid()) {
+    DirectedEdge downwardedge;
+    downwardedge.set_endnode(node);
+    downwardedge.set_trans_down();
+    downwardedge.set_all_forward_access();
+    tilebuilder->directededges().emplace_back(std::move(downwardedge));
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Add an upward transition edge if the node is valid.
+bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
+  if (node.Is_Valid()) {
+    DirectedEdge upwardedge;
+    upwardedge.set_endnode(node);
+    upwardedge.set_trans_up();
+    upwardedge.set_all_forward_access();
+    tilebuilder->directededges().emplace_back(std::move(upwardedge));
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // Form tiles in the new level.
 void FormTilesInNewLevel(GraphReader& reader,
-         const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId>>& old_to_new) {
+         const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
   // Use the sequence that associate new nodes to old nodes
   sequence<std::pair<GraphId, GraphId>> new_to_old(nodes_file, false);
 
@@ -51,17 +79,27 @@ void FormTilesInNewLevel(GraphReader& reader,
     }
   );
 
-  // Hierarchy level information
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  auto level = tile_hierarchy.levels().rbegin();
-  auto& base_level = level->second;
-  level++;
-  auto& arterial_level = level->second;
-  level++;
-  auto& highway_level = level->second;
-  RoadClass highway_class  = highway_level.importance;
-  RoadClass arterial_class = arterial_level.importance;
-  RoadClass local_class  = base_level.importance;
+  // lambda to indicate whether a directed edge should be included
+  auto include_edge = [&old_to_new](const DirectedEdge* directededge,
+        const GraphId& base_node, const TileHierarchy& tile_hierarchy,
+        const uint8_t current_level) {
+    if (directededge->use() == Use::kTransitConnection) {
+      // Transit connection edges should live on the lowest class level
+      // where a new node exists
+      uint8_t lowest_level;
+      auto f = old_to_new.find(base_node);
+      if (std::get<2>(f->second).Is_Valid()) {
+        lowest_level = 2;
+      } else if (std::get<1>(f->second).Is_Valid()) {
+        lowest_level = 1;
+      } else if (std::get<0>(f->second).Is_Valid()) {
+        lowest_level = 0;
+      }
+      return (lowest_level == current_level);
+    } else {
+      return (tile_hierarchy.get_level(directededge->classification()) == current_level);
+    }
+  };
 
   // Iterate through the new nodes. They have been sorted by level so that
   // highway level is done first.
@@ -69,8 +107,8 @@ void FormTilesInNewLevel(GraphReader& reader,
   bool added = false;
   uint8_t current_level;
   GraphId tile_id;
-  GraphId nodeb;
   GraphTileBuilder* tilebuilder = nullptr;
+  const auto& tile_hierarchy = reader.GetTileHierarchy();
   for (auto new_node = new_to_old.begin(); new_node != new_to_old.end(); new_node++) {
     // Get the node - check if a new tile
     GraphId nodea = (*new_node).first;
@@ -113,119 +151,104 @@ void FormTilesInNewLevel(GraphReader& reader,
     node.set_admin_index(tilebuilder->AddAdmin(admin.country_text(), admin.state_text(),
                                                admin.country_iso(), admin.state_iso()));
 
+    // Density at this node
+    uint32_t density1 = baseni.density();
+
     // Current edge count
     size_t edge_count = tilebuilder->directededges().size();
 
     // Iterate through directed edges of the base node to get remaining
     // directed edges (based on classification/importance cutoff)
-    RoadClass best_rc = RoadClass::kServiceOther;
-    GraphId nodeb;
     GraphId base_edge_id(base_node.tileid(), base_node.level(), baseni.edge_index());
     for (uint32_t i = 0; i < baseni.edge_count(); i++, base_edge_id++) {
-      // Store the directed edge if on the current level
+      // Check if the directed edge should exist on this level
       const DirectedEdge* directededge = tile->directededge(base_edge_id);
-      if (tile_hierarchy.get_level(directededge->classification()) == current_level) {
-        // Copy the directed edge information
-        DirectedEdge newedge = *directededge;
-
-        // Set the end node for this edge.
-        auto f = old_to_new.find(directededge->endnode());
-        if (current_level == 0) {
-          nodeb = std::get<0>(f->second);
-        } else if (current_level == 1) {
-          nodeb = std::get<1>(f->second);
-        } else {
-          nodeb = std::get<2>(f->second);
-        }
-        if (!nodeb.Is_Valid()) {
-          LOG_ERROR("Invalid end node - not found in old_to_new map");
-        }
-        newedge.set_endnode(nodeb);
-
-        // Set opposing edge indexes to 0 (gets set in graph validator).
-        newedge.set_opp_index(0);
-
-        // Get signs from the base directed edge
-        if (directededge->exitsign()) {
-          std::vector<SignInfo> signs = tile->GetSigns(base_edge_id.id());
-          if (signs.size() == 0) {
-            LOG_ERROR("Base edge should have signs, but none found");
-          }
-          tilebuilder->AddSigns(tilebuilder->directededges().size(), signs);
-        }
-
-        // Get access restrictions from the base directed edge. Add these to
-        // the list of access restrictions in the new tile. Update the
-        // edge index in the restriction to be the current directed edge Id
-        if (directededge->access_restriction()) {
-          auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
-          for (const auto& res : restrictions) {
-            tilebuilder->AddAccessRestriction(
-                AccessRestriction(tilebuilder->directededges().size(),
-                   res.type(), res.modes(), res.days_of_week(), res.value()));
-          }
-        }
-
-        // Get edge info, shape, and names from the old tile and add to the
-        // new. Use the current edge info offset as the "index" to properly
-        // create edge pairs in the same tile.
-        uint32_t idx = directededge->edgeinfo_offset();
-        auto edgeinfo = tile->edgeinfo(idx);
-        uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(idx,
-                           nodea, nodeb, edgeinfo.wayid(), edgeinfo.shape(),
-                           tile->GetNames(idx), added);
-        newedge.set_edgeinfo_offset(edge_info_offset);
-
-        // Update best road class at this node.
-        if (directededge->classification() < best_rc) {
-          best_rc = directededge->classification();
-        }
-
-        // Add directed edge
-        tilebuilder->directededges().emplace_back(std::move(newedge));
+      if (!include_edge(directededge, base_node, tile_hierarchy, current_level)) {
+        continue;
       }
-    }
 
-    // Update the best road class at this node
-    node.set_bestrc(best_rc);
+      // Copy the directed edge information
+      DirectedEdge newedge = *directededge;
+
+      // Set the end node for this edge. Transit connection edges
+      // remain connected to the same node on the transit level.
+      // Need to set nodeb for use in AddEdgeInfo
+      uint32_t density2 = 32;
+      GraphId nodeb;
+      if (directededge->use() == Use::kTransitConnection) {
+        nodeb = directededge->endnode();
+      } else {
+        auto new_nodes = old_to_new.find(directededge->endnode())->second;
+        if (current_level == 0) {
+          nodeb = std::get<0>(new_nodes);
+        } else if (current_level == 1) {
+          nodeb = std::get<1>(new_nodes);
+        } else {
+          nodeb = std::get<2>(new_nodes);
+        }
+        density2 = std::get<3>(new_nodes);
+      }
+      if (!nodeb.Is_Valid()) {
+        LOG_ERROR("Invalid end node - not found in old_to_new map");
+      }
+      newedge.set_endnode(nodeb);
+
+      // Set the edge density  to the average of the relative density at the
+      // end nodes.
+      uint32_t edge_density = (density2 == 32) ? density1 :
+                (density1 + density2) / 2;
+      newedge.set_density(edge_density);
+
+      // Set opposing edge indexes to 0 (gets set in graph validator).
+      newedge.set_opp_index(0);
+
+      // Get signs from the base directed edge
+      if (directededge->exitsign()) {
+        std::vector<SignInfo> signs = tile->GetSigns(base_edge_id.id());
+        if (signs.size() == 0) {
+          LOG_ERROR("Base edge should have signs, but none found");
+        }
+        tilebuilder->AddSigns(tilebuilder->directededges().size(), signs);
+      }
+
+      // Get access restrictions from the base directed edge. Add these to
+      // the list of access restrictions in the new tile. Update the
+      // edge index in the restriction to be the current directed edge Id
+      if (directededge->access_restriction()) {
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
+        for (const auto& res : restrictions) {
+          tilebuilder->AddAccessRestriction(
+              AccessRestriction(tilebuilder->directededges().size(),
+                 res.type(), res.modes(), res.value()));
+        }
+      }
+
+      // Get edge info, shape, and names from the old tile and add to the
+      // new. Use the current edge info offset as the "index" to properly
+      // create edge pairs in the same tile.
+      uint32_t idx = directededge->edgeinfo_offset();
+      auto edgeinfo = tile->edgeinfo(idx);
+      uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(idx,
+                         nodea, nodeb, edgeinfo.wayid(), edgeinfo.shape(),
+                         tile->GetNames(idx), added);
+      newedge.set_edgeinfo_offset(edge_info_offset);
+
+      // Add directed edge
+      tilebuilder->directededges().emplace_back(std::move(newedge));
+    }
 
     // Add transition edges
-    auto f = old_to_new.find(base_node);
-
-    // Downward transition edge
-    GraphId downward_end_node;
+    auto new_nodes = old_to_new.find(base_node)->second;
     if (current_level == 0) {
-      downward_end_node = std::get<1>(f->second);
-      if (!downward_end_node.Is_Valid()) {
-        downward_end_node = std::get<2>(f->second);
-      }
+      AddDownwardTransition(std::get<1>(new_nodes), tilebuilder);
+      AddDownwardTransition(std::get<2>(new_nodes), tilebuilder);
     } else if (current_level == 1) {
-      downward_end_node = std::get<2>(f->second);
+      AddDownwardTransition(std::get<2>(new_nodes), tilebuilder);
+      AddUpwardTransition(std::get<0>(new_nodes), tilebuilder);
     }
-    if (downward_end_node.Is_Valid()) {
-      DirectedEdge downwardedge;
-      downwardedge.set_endnode(downward_end_node);
-      downwardedge.set_trans_down(true);
-      downwardedge.set_all_forward_access();
-      tilebuilder->directededges().emplace_back(std::move(downwardedge));
-    }
-
-    // Upward transition edges
-    GraphId upward_end_node;
     if (current_level == 2) {
-      upward_end_node = std::get<1>(f->second);
-      if (!upward_end_node.Is_Valid()) {
-        upward_end_node = std::get<0>(f->second);
-      }
-    } else if (current_level == 1) {
-      upward_end_node = std::get<0>(f->second);
-    }
-    if (upward_end_node.Is_Valid()) {
-      DirectedEdge upwardedge;
-      upwardedge.set_endnode(upward_end_node);
-      upwardedge.set_trans_up(true);
-      upwardedge.set_all_forward_access();
-      tilebuilder->directededges().emplace_back(std::move(upwardedge));
+      AddUpwardTransition(std::get<1>(new_nodes), tilebuilder);
+      AddUpwardTransition(std::get<0>(new_nodes), tilebuilder);
     }
 
     // Set the edge count for the new node
@@ -234,6 +257,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
   // Delete the tile builder
   if (tilebuilder != nullptr) {
+    tilebuilder->StoreTileData();
     delete tilebuilder;
   }
 }
@@ -246,11 +270,11 @@ void FormTilesInNewLevel(GraphReader& reader,
  * using a sequence (file).
  */
 void CreateNodeAssociations(GraphReader& reader,
-     std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId>>& old_to_new) {
+     std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
-  // lambda to get the next node Id given a tile
+  // lambda to get the next "new" node Id given a tile
   auto get_new_node = [&new_nodes](const GraphId& tile) {
     auto itr = new_nodes.find(tile);
     if (itr == new_nodes.end()) {
@@ -299,14 +323,12 @@ void CreateNodeAssociations(GraphReader& reader,
       // Iterate through the edges to see which levels this node exists.
       levels[0] = levels[1] = levels[2] = false;
       for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, edgeid++) {
-        // Skip transit connection edges
+        // Update the flag for the level of this edge (skip transit
+        // connection edges)
         const DirectedEdge* directededge = tile->directededge(edgeid);
-        if (directededge->use() == Use::kTransitConnection) {
-          continue;
+        if (directededge->use() != Use::kTransitConnection) {
+          levels[tile_hierarchy.get_level(directededge->classification())] = true;
         }
-
-        // Update the flag for the level of this edge
-        levels[tile_hierarchy.get_level(directededge->classification())] = true;
       }
 
       // Associate new nodes to base nodes and base node to new nodes
@@ -330,14 +352,104 @@ void CreateNodeAssociations(GraphReader& reader,
         new_to_old.push_back(std::make_pair(local_node, basenode));
       }
 
+      if (!levels[0] && !levels[1] && !levels[2]) {
+        LOG_ERROR("No valid level for this node!");
+      }
+
       // Associate the old node to the new node(s). Entries in the tuple
       // that are invalid nodes indicate no node exists in the new level.
-      old_to_new[basenode] = std::make_tuple(highway_node, arterial_node, local_node);
+      old_to_new[basenode] = std::make_tuple(highway_node, arterial_node,
+                                             local_node, nodeinfo->density());
     }
 
     // Check if we need to clear the tile cache
     if(reader.OverCommitted()) {
       reader.Clear();
+    }
+  }
+}
+
+/**
+ * Update end nodes of transit connection directed edges.
+ */
+void UpdateTransitConnections(GraphReader& reader,
+            const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
+  const auto& tile_hierarchy = reader.GetTileHierarchy();
+  auto tile_level = tile_hierarchy.levels().rbegin();
+  auto& base_level = tile_level->second;
+  uint8_t transit_level = base_level.level + 1;
+  uint32_t ntiles = base_level.tiles.TileCount();
+  for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
+    // Get the graph tile. Skip if no tile exists (common case)
+    GraphId tile_id(basetileid, transit_level, 0);
+    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    if (tile == nullptr || tile->header()->nodecount() == 0) {
+      continue;
+    }
+
+    // Create a new tile builder
+    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
+
+    // Update end nodes of transit connection directed edges
+    std::vector<NodeInfo> nodes;
+    std::vector<DirectedEdge> directededges;
+    for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
+      NodeInfo nodeinfo = tilebuilder.node(i);
+      uint32_t idx = nodeinfo.edge_index();
+       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++, idx++) {
+         DirectedEdge directededge = tilebuilder.directededge(idx);
+
+        // Update the end node of any transit connection edge
+        if (directededge.use() == Use::kTransitConnection) {
+          // Get the updated end node
+          auto f = old_to_new.find(directededge.endnode());
+          GraphId new_end_node;
+          if (std::get<2>(f->second).Is_Valid()) {
+            new_end_node = std::get<2>(f->second);
+          } else if (std::get<1>(f->second).Is_Valid()) {
+            new_end_node = std::get<1>(f->second);
+          } else if (std::get<0>(f->second).Is_Valid()) {
+            new_end_node = std::get<0>(f->second);
+          } else {
+            LOG_ERROR("Transit Connection does not connect to valid node");
+          }
+          directededge.set_endnode(new_end_node);
+        }
+
+         // Add the directed edge to the local list
+         directededges.emplace_back(std::move(directededge));
+       }
+
+       // Add the node to the local list
+       nodes.emplace_back(std::move(nodeinfo));
+    }
+    tilebuilder.Update(nodes, directededges);
+  }
+}
+
+// Remove any base tiles that no longer have any data (nodes and edges
+// only exist on arterial and highway levels)
+void RemoveUnusedLocalTiles(const TileHierarchy& tile_hierarchy,
+          const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
+  std::unordered_map<GraphId, bool> tile_map;
+  for (auto itr = old_to_new.begin(); itr != old_to_new.end(); itr++) {
+    auto f = tile_map.find(itr->first.Tile_Base());
+    if (f == tile_map.end()) {
+      tile_map[itr->first.Tile_Base()] = std::get<2>(itr->second).Is_Valid();
+    } else {
+      if (std::get<2>(itr->second).Is_Valid()) {
+        f->second = true;
+      }
+    }
+  }
+  for (auto itr = tile_map.begin(); itr != tile_map.end(); itr++) {
+    if (!itr->second ) {
+      // Remove the file
+      GraphId empty_tile = itr->first;
+      std::string file_location = tile_hierarchy.tile_dir() + "/" +
+          GraphTile::FileSuffix(empty_tile.Tile_Base(), tile_hierarchy);
+      remove(file_location.c_str());
+      LOG_DEBUG("Remove file: " + file_location);
     }
   }
 }
@@ -361,42 +473,19 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   const auto& tile_hierarchy = reader.GetTileHierarchy();
 
   // Association of old nodes to new nodes
-  std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId>> old_to_new;
+  std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>> old_to_new;
   CreateNodeAssociations(reader, old_to_new);
 
   // Iterate through the hierarchy (from highway down to local) and build
   // new tiles
   FormTilesInNewLevel(reader, old_to_new);
 
-  // Store an empty tile for any base tiles that no longer have any data
-  // (nodes and edges only exist on arterial and highway levels)
-  std::unordered_map<GraphId, bool> tile_map;
-  for (auto itr = old_to_new.begin(); itr != old_to_new.end(); itr++) {
-    auto f = tile_map.find(itr->first.Tile_Base());
-    if (f == tile_map.end()) {
-      tile_map[itr->first.Tile_Base()] = std::get<2>(itr->second).Is_Valid();
-    } else {
-      if (std::get<2>(itr->second).Is_Valid()) {
-        f->second = true;
-      }
-    }
-  }
-  for (auto itr = tile_map.begin(); itr != tile_map.end(); itr++) {
-    if (!itr->second ) {
-      GraphId empty_tile = itr->first;
- //     GraphTileBuilder tilebuilder(tile_hierarchy, empty_tile, false);
- //     tilebuilder.StoreTileData();
-
-      std::string file_location = tile_hierarchy.tile_dir() + "/" +
-          GraphTile::FileSuffix(empty_tile.Tile_Base(), tile_hierarchy);
-remove(file_location.c_str());  // IF WE WANT TO REMOVE FILE
-      LOG_INFO("Remove file: " + file_location);
-    }
-  }
+  // Remove any base tiles that no longer have any data (nodes and edges
+  // only exist on arterial and highway levels)
+  RemoveUnusedLocalTiles(tile_hierarchy, old_to_new);
 
   // Update the end nodes to all transit connections in the transit hierarchy
-//TODO!!!!
-
+  UpdateTransitConnections(reader, old_to_new);
   LOG_INFO("Done HierarchyBuilder");
 }
 

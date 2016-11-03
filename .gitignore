@@ -47,8 +47,7 @@ valhalla_build_statistics
 .libs/
 conf/
 libvalhalla_mjolnir.la
-src/mjolnir/admin_lua_proc.h
-src/mjolnir/graph_lua_proc.h
+genfiles/
 *.bin
 
 # tests

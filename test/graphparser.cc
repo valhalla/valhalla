@@ -25,10 +25,10 @@ const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  OSMWayNode target{{node_id}};
-  if(!way_nodes.find(target, node_predicate))
+  auto found = way_nodes.find({node_id}, node_predicate);
+  if(found == way_nodes.end())
     throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
-  return target.node;
+  return (*found).node;
 }
 
 auto way_predicate = [](const OSMWay& a, const OSMWay& b){
@@ -36,10 +36,10 @@ auto way_predicate = [](const OSMWay& a, const OSMWay& b){
 };
 
 OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
-  OSMWay target{way_id};
-  if(!ways.find(target, way_predicate))
+  auto found = ways.find({way_id}, way_predicate);
+  if(found == ways.end())
     throw std::runtime_error("Couldn't find way: " + std::to_string(way_id));
-  return target;
+  return *found;
 }
 
 void BollardsGatesAndAccess(const std::string& config_file) {
@@ -49,8 +49,10 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -170,8 +172,10 @@ void RemovableBollards(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -193,8 +197,10 @@ void Exits(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
@@ -230,8 +236,10 @@ void Baltimore(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -305,8 +313,10 @@ void Bike(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bike.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bike.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -354,9 +364,10 @@ void Bus(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bus.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bus.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -396,8 +407,10 @@ void BicycleTrafficSignals(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string restriction_file = "test_complex_restrictions.bin";
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"}, ways_file, way_nodes_file, access_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 

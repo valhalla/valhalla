@@ -195,57 +195,6 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
 }
 
 /**
- * Update the use for a link (either a kRamp or kTurnChannel)
- * TODO - validate logic with some real world cases.
- */
-void UpdateLinkUse(const GraphTile* tile,
-                   const GraphTile* endnodetile,
-                   const NodeInfo& nodeinfo,
-                   DirectedEdge& directededge) {
-  // Assume link that has highway = motorway or trunk is a ramp.
-  // Also, if length is > kMaxTurnChannelLength or there is an exit
-  // sign on the edge we assume this is a ramp
-  RoadClass rc = directededge.classification();
-  if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
-      directededge.length() > kMaxTurnChannelLength ||
-      directededge.exitsign()) {
-    directededge.set_use(Use::kRamp);
-    return;
-  }
-
-  // Both end nodes have to connect to a non-link edge.
-  bool non_link = false;
-  const DirectedEdge* edge = tile->directededge(nodeinfo.edge_index());
-  for (uint32_t j = 0; j < nodeinfo.edge_count(); j++, edge++) {
-    if (!edge->link()) {
-      non_link = true;
-      break;
-    }
-  }
-  if (!non_link) {
-    directededge.set_use(Use::kRamp);
-    return;
-  }
-
-  // Get the tile at the end node and get the node info
-  non_link = false;
-  GraphId endnode = directededge.endnode();
-  const NodeInfo* node = endnodetile->node(endnode.id());
-  edge = endnodetile->directededge(node->edge_index());
-  for (uint32_t j = 0; j < node->edge_count(); j++, edge++) {
-    if (!edge->link()) {
-      non_link = true;
-      break;
-    }
-  }
-  if (!non_link) {
-    directededge.set_use(Use::kRamp);
-  } else {
-    directededge.set_use(Use::kTurnChannel);
-  }
-}
-
-/**
  * Tests if the directed edge is unreachable by driving. If a driveable
  * edge cannot reach higher class roads and a search cannot expand after
  * a set number of iterations the edge is considered unreachable.
@@ -981,13 +930,10 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // If this edge is a link, update its use (potentially change short
         // links to turn channels)
-        if (directededge.link()) {
-//          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
-          if (directededge.use() == Use::kTurnChannel) {
-            stats.turnchannelcount++;
-          } else {
-            stats.rampcount++;
-          }
+        if (directededge.use() == Use::kTurnChannel) {
+          stats.turnchannelcount++;
+        } else if (directededge.use() == Use::kRamp) {
+          stats.rampcount++;
         }
 
         // Set the opposing index on the local level
@@ -1051,6 +997,7 @@ void enhance(const boost::property_tree::ptree& pt,
       }
 
       // Go through directed edges and "enhance" directed edge attributes
+      uint32_t driveable_count = 0;
       const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge =
@@ -1098,6 +1045,12 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
+        // Update driveable count (do this after country access logic)
+        if ((directededge.forwardaccess() & kAutoAccess) ||
+            (directededge.reverseaccess() & kAutoAccess)) {
+          driveable_count++;
+        }
+
         // Use::kPedestrian is really a kFootway
         if (directededge.use() == Use::kPedestrian)
           directededge.set_use(Use::kFootway);
@@ -1105,86 +1058,77 @@ void enhance(const boost::property_tree::ptree& pt,
         // Update speed.
         UpdateSpeed(directededge, density);
 
-        // Name continuity - set in NodeInfo. Do not set this for transit
-        // nodes since the stop Id is stored in that field (union).
-        if (!nodeinfo.is_transit()) {
-          for (uint32_t k = (j + 1); k < ntrans; k++) {
-            DirectedEdge& fromedge = tilebuilder.directededge(
-                      nodeinfo.edge_index() + k);
-            if (directededge.link() ||
-                ConsistentNames(country_code,
-                    tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames(),
-                    tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
-              // Set name consistency to true when entering a link (ramp or
-              // turn channel) to avoid double penalizing.
-              nodeinfo.set_name_consistency(j, k, true);
-            }
+        // Name continuity - set in NodeInfo.
+        for (uint32_t k = (j + 1); k < ntrans; k++) {
+          DirectedEdge& fromedge = tilebuilder.directededge(
+                    nodeinfo.edge_index() + k);
+          if (directededge.link() ||
+              ConsistentNames(country_code,
+                  tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames(),
+                  tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
+            // Set name consistency to true when entering a link (ramp or
+            // turn channel) to avoid double penalizing.
+            nodeinfo.set_name_consistency(j, k, true);
           }
         }
 
         // Set edge transitions and unreachable, not_thru, and internal
-        // intersection flags. Do not do this for transit edges.
-        if (!directededge.IsTransitLine()) {
-          // Edge transitions.
-          if (j < kNumberOfEdgeTransitions) {
-            ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
-                                   nodeinfo, stats);
+        // intersection flags.
+        if (j < kNumberOfEdgeTransitions) {
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
+                                 nodeinfo, stats);
+        }
+
+        // Set unreachable (driving) flag
+        if (IsUnreachable(reader, lock, directededge)) {
+          directededge.set_unreachable(true);
+          stats.unreachable++;
+        }
+
+        // Check for not_thru edge (only on low importance edges). Exclude
+        // transit edges
+        if (directededge.classification() > RoadClass::kTertiary) {
+          if (IsNotThruEdge(reader, lock, startnode, directededge)) {
+            directededge.set_not_thru(true);
+            stats.not_thru++;
           }
+        }
 
-          // Set unreachable (driving) flag
-          if (IsUnreachable(reader, lock, directededge)) {
-            directededge.set_unreachable(true);
-            stats.unreachable++;
-          }
+        // Test if an internal intersection edge. Must do this after setting
+        // opposing edge index
+        if (IsIntersectionInternal(reader, lock, startnode, nodeinfo,
+                                    directededge, j)) {
+          directededge.set_internal(true);
+          stats.internalcount++;
+        }
 
-          // Check for not_thru edge (only on low importance edges). Exclude
-          // transit edges
-          if (directededge.classification() > RoadClass::kTertiary) {
-            if (IsNotThruEdge(reader, lock, startnode, directededge)) {
-              directededge.set_not_thru(true);
-              stats.not_thru++;
-            }
-          }
+        // Update access restrictions (update weight units)
+        if (directededge.access_restriction()) {
+          auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j, kAllAccess);
 
-          // Test if an internal intersection edge. Must do this after setting
-          // opposing edge index
-          if (IsIntersectionInternal(reader, lock, startnode, nodeinfo,
-                                      directededge, j)) {
-            directededge.set_internal(true);
-            stats.internalcount++;
-          }
-
-          // Update access restrictions (update weight units)
-          if (directededge.access_restriction()) {
-            auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j, kAllAccess);
-
-            // Convert any US weight values from short ton (U.S. customary)
-            // to metric and add to the tile's access restriction list
-            if (country_code == "US" || country_code == "MM" || country_code == "LR") {
-              for (auto& res : restrictions) {
-                if (res.type() == AccessType::kMaxWeight ||
-                    res.type() == AccessType::kMaxAxleLoad) {
-                  res.set_value(std::round(res.value() * kTonsShortToMetric));
-                }
+          // Convert any US weight values from short ton (U.S. customary)
+          // to metric and add to the tile's access restriction list
+          if (country_code == "US" || country_code == "MM" || country_code == "LR") {
+            for (auto& res : restrictions) {
+              if (res.type() == AccessType::kMaxWeight ||
+                  res.type() == AccessType::kMaxAxleLoad) {
+                res.set_value(std::round(res.value() * kTonsShortToMetric));
               }
             }
-            for (const auto& res : restrictions) {
-              access_restrictions.emplace_back(std::move(res));
-            }
+          }
+          for (const auto& res : restrictions) {
+            access_restrictions.emplace_back(std::move(res));
           }
         }
       }
 
-      // Set the intersection type
-      if (nodeinfo.edge_count() == 1) {
-        // TODO - does this need to be a count of driveable edges
-        // (e.g. a node that has 1 driveable edge and a walkway?)
-        nodeinfo.set_intersection(IntersectionType::kDeadEnd);
-      } else if (nodeinfo.edge_count() == 2) {
-        if (nodeinfo.type() == NodeType::kGate ||
-            nodeinfo.type() == NodeType::kTollBooth) {
-          ; // TODO??
-        } else {
+      // Set the intersection type to false or dead-end (do not override
+      // gates or toll-booths).
+      if (nodeinfo.type() != NodeType::kGate &&
+          nodeinfo.type() != NodeType::kTollBooth) {
+        if (driveable_count == 1) {
+          nodeinfo.set_intersection(IntersectionType::kDeadEnd);
+        } else if (nodeinfo.edge_count() == 2) {
           nodeinfo.set_intersection(IntersectionType::kFalse);
         }
       }

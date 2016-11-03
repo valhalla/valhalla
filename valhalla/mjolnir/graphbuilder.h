@@ -23,13 +23,15 @@ class GraphBuilder {
   /**
    * Tell the builder to build the tiles from the provided datasource
    * and configs
-   * @param  config         properties file
-   * @param  osmdata        OSM data used to build the graph.
-   * @param  ways_file      where to store the ways so they are not in memory
-   * @param  way_nodes_file where to store the nodes so they are not in memory
+   * @param  config                     properties file
+   * @param  osmdata                    OSM data used to build the graph.
+   * @param  ways_file                  where to store the ways so they are not in memory
+   * @param  way_nodes_file             where to store the nodes so they are not in memory
+   * @param  complex_restriction_file   where to store the complex restrictions so they are not in memory
    */
   static void Build(const boost::property_tree::ptree& pt, const OSMData& osmdata,
-      const std::string& ways_file, const std::string& way_nodes_file);
+                    const std::string& ways_file, const std::string& way_nodes_file,
+                    const std::string& complex_restriction_file);
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 
@@ -37,7 +39,6 @@ class GraphBuilder {
                                                       const OSMWay& way,
                                                       const OSMData& osmdata,
                                                       bool fork);
-
 };
 
 }
