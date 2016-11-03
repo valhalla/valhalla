@@ -30,6 +30,7 @@ void write_config(const std::string& filename) {
     file.open(filename, std::ios_base::trunc);
     file << "{ \
       \"mjolnir\": { \
+      \"concurrency\": 1, \
        \"tile_dir\": \"test/data/amsterdam_tiles\", \
         \"admin\": \"test/data/netherlands_admin.sqlite\", \
          \"timezone\": \"test/data/not_needed.sqlite\" \
@@ -69,6 +70,16 @@ void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
+  //setup and purge
+  GraphReader graph_reader(conf.get_child("mjolnir"));
+  const auto& hierarchy = graph_reader.GetTileHierarchy();
+  for(const auto& level : hierarchy.levels()) {
+    auto level_dir = hierarchy.tile_dir() + "/" + std::to_string(level.first);
+    if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+      boost::filesystem::remove_all(level_dir);
+    }
+  }
+
   std::string ways_file = "test_ways_amsterdam.bin";
   std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
   std::string access_file = "test_access_amsterdam.bin";
@@ -81,9 +92,6 @@ void CountryAccess(const std::string& config_file) {
   //load a tile and test the default access.
   GraphId id(820099,2,0);
   GraphTile t(TileHierarchy("test/data/amsterdam_tiles"), id);
-
-  GraphReader graph_reader(conf.get_child("mjolnir"));
-  const auto& hierarchy = graph_reader.GetTileHierarchy();
 
   GraphTileBuilder tilebuilder(hierarchy, id, true);
 

@@ -132,8 +132,8 @@ void TestAddBins() {
   //note the names of the new tiles and update the list with path and index in the list just below
   for(const auto& test_tile : std::list<std::pair<std::string, size_t> >
       {
-        {"750/664.gph", 750664},
-        {"754/981.gph", 754981}
+        {"746/337.gph", 746337},
+        {"760/724.gph", 760724}
       }) {
 
     //load a tile

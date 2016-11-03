@@ -181,7 +181,6 @@ valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFL
 # tests
 check_PROGRAMS = \
 	test/utrecht \
-	test/countryaccess \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
@@ -189,7 +188,9 @@ check_PROGRAMS = \
 	test/graphparser \
 	test/names \
 	test/refs \
-	test/signinfo
+	test/signinfo \
+	test/countryaccess \
+	test/graphtilebuilder
 test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
 test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_countryaccess_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
@@ -205,9 +206,9 @@ test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libv
 test_idtable_SOURCES = test/idtable.cc test/test.cc
 test_idtable_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_idtable_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-#test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
-#test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-#test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
+test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
 test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_graphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
