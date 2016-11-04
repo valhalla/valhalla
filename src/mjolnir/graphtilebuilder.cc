@@ -190,11 +190,13 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 
   // Text list
   for (auto ni : name_info) {
-    // Verify offsets as we add text
-    if (ni.name_offset_ != text_list_offset_) {
-      LOG_WARN("Saved offset = " + std::to_string(ni.name_offset_) +
-                " text_list_offset_= " +
-                 std::to_string(text_list_offset_));
+    // Verify offsets as we add text. Identify any strings in the text list
+    // that are not referenced by any objects.
+    while (ni.name_offset_ != text_list_offset_) {
+      std::string unused_string(textlist_ + text_list_offset_);
+      text_offset_map_.emplace(unused_string, text_list_offset_);
+      text_list_offset_ += unused_string.length() + 1;
+      LOG_WARN("Unused text string: " + unused_string);
     }
     std::string str(textlist_ + ni.name_offset_);
     textlistbuilder_.push_back(str);
