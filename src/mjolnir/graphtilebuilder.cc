@@ -194,6 +194,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     // that are not referenced by any objects.
     while (ni.name_offset_ != text_list_offset_) {
       std::string unused_string(textlist_ + text_list_offset_);
+      textlistbuilder_.push_back(unused_string);
       text_offset_map_.emplace(unused_string, text_list_offset_);
       text_list_offset_ += unused_string.length() + 1;
       LOG_WARN("Unused text string: " + unused_string);
