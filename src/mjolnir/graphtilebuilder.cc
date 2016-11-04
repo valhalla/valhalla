@@ -196,7 +196,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
       std::string unused_string(textlist_ + text_list_offset_);
       text_offset_map_.emplace(unused_string, text_list_offset_);
       text_list_offset_ += unused_string.length() + 1;
-      LOG_ERROR("Unused text string: " + unused_string);
+      LOG_WARN("Unused text string: " + unused_string);
     }
     std::string str(textlist_ + ni.name_offset_);
     textlistbuilder_.push_back(str);
