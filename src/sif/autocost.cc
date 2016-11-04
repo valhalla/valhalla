@@ -289,8 +289,7 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
 
-  // Set all edge density factors to 1.0 (until we actually set density
-  // on each directed edge. Using node densities causes issues with shortcuts
+  // Set density factors - used to penalize edges in dense, urban areas
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.025f);
   }
