@@ -1012,6 +1012,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           dep.headsign_offset = transit_tilebuilder.AddName(sp.trip_headsign());
           uint32_t end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
 
+          if (end_day > kMaxEndDay)
+            end_day = kMaxEndDay;
+
           //if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
