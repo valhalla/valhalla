@@ -37,6 +37,7 @@ constexpr uint32_t kMaxTransitElapsedTime   = 131071;
 constexpr uint32_t kMaxStartTime            = 131071;
 constexpr uint32_t kMaxEndTime              = 131071;
 constexpr uint32_t kMaxEndDay               = 63;
+constexpr uint32_t kScheduleEndDay          = 60;
 constexpr uint32_t kMaxFrequency            = 8191;
 constexpr uint32_t kMaxTransfers            = 65535;
 constexpr uint32_t kMaxTransferTime         = 65535;
