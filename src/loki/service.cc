@@ -243,6 +243,7 @@ namespace valhalla {
         if(PATH_TO_ACTION.find(path) == PATH_TO_ACTION.cend())
           throw valhalla_exception_t{400, 105, path};
         action_str.append("'" + path + "' ");
+        actions.insert(path);
       }
       // Make sure we have at least something to support!
       if(action_str.empty())
@@ -295,7 +296,7 @@ namespace valhalla {
 
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
-        if (action == PATH_TO_ACTION.cend())
+        if (action == PATH_TO_ACTION.cend() || actions.find(request.path) == actions.cend())
           return jsonify_error({404, 106, action_str}, info);
 
         //parse the query's json
