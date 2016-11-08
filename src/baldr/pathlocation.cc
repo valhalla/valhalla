@@ -42,11 +42,14 @@ namespace baldr{
       boost::property_tree::ptree e;
       e.put("id", edge.id.value);
       e.put("dist", edge.dist);
-      auto& vtx = e.put_child("projected", boost::property_tree::ptree());
-      vtx.put("lon", edge.projected.first);
-      vtx.put("lat", edge.projected.second);
       e.put("sos", edge.sos);
       e.put("score", edge.score);
+
+      // Serialize projected lat,lng as double (otherwise leads to shape
+      // artifacts at begin/end of routes as the float values are rounded
+      auto& vtx = e.put_child("projected", boost::property_tree::ptree());
+      vtx.put("lon", static_cast<double>(edge.projected.first));
+      vtx.put("lat", static_cast<double>(edge.projected.second));
       array.push_back(std::make_pair("", e));
     }
     correlated.put("location_index", index);
@@ -58,7 +61,7 @@ namespace baldr{
     PathLocation p(locations[index]);
     for(const auto& edge : path_location.get_child("edges")) {
       p.edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
-        midgard::PointLL(edge.second.get<float>("projected.lon"), edge.second.get<float>("projected.lat")),
+        midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
         edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")));
     }
     return p;
