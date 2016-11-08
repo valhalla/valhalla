@@ -15,8 +15,8 @@ namespace sif {
 // Default options/values
 namespace {
 
-constexpr float kDefaultManeuverPenalty         = 5.0f;    // Seconds
-constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
+constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
+constexpr float kDefaultDrivewayPenalty         = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 60.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
@@ -282,7 +282,7 @@ class BicycleCost : public DynamicCost {
   float speedfactor_[100];          // Cost factors based on speed in kph
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
+  float driveway_penalty_;          // Penalty (seconds) using a driveway
   float gate_cost_;                 // Cost (seconds) to go through gate
   float gate_penalty_;              // Penalty (seconds) to go through gate
   float alley_penalty_;             // Penalty (seconds) to use a alley
@@ -383,8 +383,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Transition penalties (similar to auto)
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
-  destination_only_penalty_ = pt.get<float>("destination_only_penalty",
-                                            kDefaultDestinationOnlyPenalty);
+  driveway_penalty_ = pt.get<float>("driveway", kDefaultDrivewayPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
   gate_penalty_ = pt.get<float>("gate_penalty", kDefaultGatePenalty);
   alley_penalty_ = pt.get<float>("alley_penalty",  kDefaultAlleyPenalty);
@@ -606,6 +605,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
       // penalty and road class factor
       factor = speedpenalty_[road_speed] +
               (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]);
+
+      // Slight penalty going though destination only areas if no bike lanes
+      if (edge->destonly()) {
+        factor += 0.1f;
+      }
     }
 
     // Favor bicycle networks.
@@ -643,11 +647,11 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
-    penalty += destination_only_penalty_;
-  }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
+  }
+  if (pred.use() != Use::kDriveway && edge->use() == Use::kDriveway) {
+    penalty += driveway_penalty_;
   }
   if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
     seconds += ferry_cost_;
@@ -705,9 +709,9 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (!pred->destonly() && edge->destonly()) {
-    penalty += destination_only_penalty_;
-  }
+//  if (!pred->destonly() && edge->destonly()) {
+//    penalty += destination_only_penalty_;
+//  }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
   }

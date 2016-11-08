@@ -37,6 +37,7 @@ constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultSideWalkFactor  = 0.95f;  // Slightly favor sidewalks
 constexpr float kDefaultAlleyFactor     = 2.0f;   // Avoid alleys
 constexpr float kDefaultDrivewayFactor  = 5.0f;   // Avoid driveways
+constexpr float kRoundaboutFactor       = 5.0f;   // Avoid roundabouts
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
@@ -62,6 +63,10 @@ constexpr float kMaxFerryPenalty = 8.0f * 3600.0f; // 8 hours
 // Minimum and maximum average pedestrian speed (to validate input).
 constexpr float kMinPedestrianSpeed = 0.5f;
 constexpr float kMaxPedestrianSpeed = 25.0f;
+
+// Crossing penalties. TODO - may want to lower stop impact when
+// 2 cycleways or walkways cross
+constexpr uint32_t kCrossingCosts[] = { 0, 0, 1, 1, 2, 3, 5, 15 };
 }
 
 /**
@@ -481,6 +486,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return { sec * driveway_factor_, sec };
   } else if (edge->use() == Use::kSidewalk) {
     return { sec * sidewalk_factor_, sec };
+  } else if (edge->roundabout()) {
+    return { sec * kRoundaboutFactor, sec };
   } else {
     return { sec, sec };
   }
@@ -516,10 +523,9 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
 
   // Costs for crossing an intersection.
-  // TODO - do we want any maneuver penalty?
   uint32_t idx = pred.opp_local_idx();
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-    seconds += edge->stopimpact(idx);
+    seconds += kCrossingCosts[edge->stopimpact(idx)];
   }
   return { seconds + penalty, seconds };
 }
@@ -558,9 +564,8 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Costs for crossing an intersection.
-  // TODO - do we want any maneuver penalty?
   if (opp_pred_edge->edge_to_right(idx) && opp_pred_edge->edge_to_left(idx)) {
-    seconds += opp_pred_edge->stopimpact(idx);
+    seconds += kCrossingCosts[opp_pred_edge->stopimpact(idx)];
   }
   return { seconds + penalty, seconds };
 }
