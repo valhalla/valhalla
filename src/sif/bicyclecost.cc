@@ -90,6 +90,9 @@ constexpr float kDefaultUseRoadsFactor = 0.5f;
 // Avoid driveways
 constexpr float kDrivewayFactor = 20.0f;
 
+// Additional penalty to avoid destination only
+constexpr float kDestinationOnlyFactor = 0.1f;
+
 // Weighting factor based on road class. These apply penalties to higher class
 // roads. These penalties are modulated by the useroads factor - further
 // avoiding higher class roads for those with low propensity for using roads.
@@ -608,7 +611,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
       // Slight penalty going though destination only areas if no bike lanes
       if (edge->destonly()) {
-        factor += 0.1f;
+        factor += kDestinationOnlyFactor;
       }
     }
 
