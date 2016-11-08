@@ -709,11 +709,11 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-//  if (!pred->destonly() && edge->destonly()) {
-//    penalty += destination_only_penalty_;
-//  }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
+  }
+  if (pred->use() != Use::kDriveway && edge->use() == Use::kDriveway) {
+    penalty += driveway_penalty_;
   }
   if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
     seconds += ferry_cost_;
