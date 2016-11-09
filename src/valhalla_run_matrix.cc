@@ -20,6 +20,7 @@
 #include <valhalla/midgard/logging.h>
 
 #include <valhalla/thor/costmatrix.h>
+#include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/optimizer.h>
 
 using namespace valhalla::midgard;
@@ -65,26 +66,51 @@ PointLL JitterLatLng(const PointLL& latlng, const float delta) {
            latlng.lat() + random_unit_float() * delta };
 }
 
-void LogFindings(const uint32_t n, const std::vector<TimeDistance>& res) {
-  uint32_t found = 0;
-  uint32_t idx = 0;
-  uint32_t source, target;
-  for (auto& r : res) {
-    source = idx / n;
-    target = idx % n;
-    if (r.time < 9999999.0f) {
-      LOG_TRACE("Source = " + std::to_string(source) + " to target " +
-               std::to_string(target) + " time= " + std::to_string(r.time) +
-               " distance = " + std::to_string(r.dist));
-
-      found++;
-    } else {
-      LOG_INFO("Source = " + std::to_string(source) + " to target " +
-                std::to_string(target) + " not found");
+// Log results
+void LogResults(const std::string& matrixtype,
+                const std::vector<PathLocation>& path_locations,
+                const std::vector<TimeDistance>& res) {
+  LOG_INFO("Results:");
+  if (matrixtype == "many_to_many") {
+    uint32_t idx1 = 0;
+    uint32_t idx2 = 0;
+    uint32_t nlocs = path_locations.size();
+    for (auto& td : res) {
+      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
+          ": Distance= " + std::to_string(td.dist) +
+          " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
+      idx2++;
+      if (idx2 == nlocs) {
+        idx2 = 0;
+        idx1++;
+      }
     }
-    idx++;
+
+    // Optimize the path
+    auto t10 = std::chrono::high_resolution_clock::now();
+    std::vector<float> costs;
+    for (auto& td : res) {
+      costs.push_back(static_cast<float>(td.time));
+    }
+
+    Optimizer opt;
+    auto tour = opt.Solve(nlocs, costs);
+    LOG_INFO("Optimal Tour:");
+    for (auto& loc : tour) {
+      LOG_INFO("   : " + std::to_string(loc));
+    }
+    auto t11 = std::chrono::high_resolution_clock::now();
+    uint32_t ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(t11-t10).count();
+    LOG_INFO("Optimization took " + std::to_string(ms1) + " ms");
+
+  } else {
+    uint32_t idx = 0;
+    for (auto& td : res) {
+      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
+          " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
+      idx++;
+    }
   }
-  LOG_INFO("Found: " + std::to_string(found) + " of " + std::to_string(res.size()));
 }
 
 // Main method for testing time and distance matrix methods
@@ -255,12 +281,13 @@ int main(int argc, char *argv[]) {
   // Compute the cost matrix
   t0 = std::chrono::high_resolution_clock::now();
 
+  // Timing with CostMatrix
   std::vector<TimeDistance> res;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     CostMatrix matrix;
     if (matrixtype == "one_to_many") {
-      res = matrix.SourceToTarget({path_locations.front()}, path_locations,
+     res = matrix.SourceToTarget({path_locations.front()}, path_locations,
                                   reader, mode_costing, mode);
     } else if (matrixtype == "many_to_many") {
       res = matrix.SourceToTarget(path_locations, path_locations, reader,
@@ -273,50 +300,28 @@ int main(int argc, char *argv[]) {
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
   float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
-  LOG_INFO("TDMatrix average time to compute: " + std::to_string(avg) + " sec");
+  LOG_INFO("CostMatrix average time to compute: " + std::to_string(avg) + " sec");
+  LogResults(matrixtype, path_locations, res);
 
-  // Log results
-  LOG_INFO("Results:");
-  if (matrixtype == "many_to_many") {
-    uint32_t idx1 = 0;
-    uint32_t idx2 = 0;
-    uint32_t nlocs = path_locations.size();
-    for (auto& td : res) {
-      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
-          ": Distance= " + std::to_string(td.dist) +
-          " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
-      idx2++;
-      if (idx2 == nlocs) {
-        idx2 = 0;
-        idx1++;
-      }
-    }
-
-    // Optimize the path
-    auto t10 = std::chrono::high_resolution_clock::now();
-    std::vector<float> costs;
-    for (auto& td : res) {
-      costs.push_back(static_cast<float>(td.time));
-    }
-
-    Optimizer opt;
-    auto tour = opt.Solve(nlocs, costs);
-    LOG_INFO("Optimal Tour:");
-    for (auto& loc : tour) {
-      LOG_INFO("   : " + std::to_string(loc));
-    }
-    auto t11 = std::chrono::high_resolution_clock::now();
-    uint32_t ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(t11-t10).count();
-    LOG_INFO("Optimization took " + std::to_string(ms1) + " ms");
-
-  } else {
-    uint32_t idx = 0;
-    for (auto& td : res) {
-      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
-          " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
-      idx++;
+  // Run with TimeDistanceMatrix
+  for (uint32_t n = 0; n < iterations; n++) {
+    res.clear();
+    TimeDistanceMatrix tdm(28800);
+    if (matrixtype == "one_to_many") {
+      res = tdm.OneToMany(0, path_locations, reader, mode_costing, mode);
+    } else if (matrixtype == "many_to_many") {
+      res = tdm.ManyToOne(path_locations.size()-1, path_locations, reader,
+                                  mode_costing, mode);
+    } else {
+      res = tdm.ManyToMany(path_locations, reader, mode_costing, mode);
     }
   }
+  t1 = std::chrono::high_resolution_clock::now();
+  ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
+  avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
+  LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
+  LogResults(matrixtype, path_locations, res);
+
   return EXIT_SUCCESS;
 }
 
