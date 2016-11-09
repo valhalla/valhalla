@@ -263,7 +263,8 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     }
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(),
                              nodeinfo, opp_edge, opp_pred_edge);
-    Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge);
+    newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
