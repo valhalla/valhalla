@@ -520,6 +520,12 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
+  // Disallow transit connections
+  // (except when set for multi-modal routes (FUTURE)
+  if (edge->use() == Use::kTransitConnection /* && !allow_transit_connections_*/) {
+    return false;
+  }
+
   // Prohibit certain roads based on surface type and bicycle type
   return edge->surface() <= minimal_allowed_surface_;
 }
@@ -534,8 +540,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
+  // Do not allow transit connection edges.
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
-        opp_edge->is_shortcut() ||
+        opp_edge->is_shortcut() || opp_edge->use() == Use::kTransitConnection ||
        (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) {
     return false;
