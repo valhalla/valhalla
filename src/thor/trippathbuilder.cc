@@ -296,6 +296,29 @@ TripPath_Location_SideOfStreet GetTripPathSideOfStreet(
   }
 }
 
+TripPath_Node_Type GetTripPathNodeType(NodeType node_type) {
+  switch (node_type) {
+    case NodeType::kStreetIntersection:
+      return TripPath_Node_Type_kStreetIntersection;
+    case NodeType::kGate:
+      return TripPath_Node_Type_kGate;
+    case NodeType::kBollard:
+      return TripPath_Node_Type_kBollard;
+    case NodeType::kTollBooth:
+      return TripPath_Node_Type_kTollBooth;
+    case NodeType::kMultiUseTransitStop:
+      return TripPath_Node_Type_kMultiUseTransitStop;
+    case NodeType::kBikeShare:
+      return TripPath_Node_Type_kBikeShare;
+    case NodeType::kParking:
+      return TripPath_Node_Type_kParking;
+    case NodeType::kMotorWayJunction:
+      return TripPath_Node_Type_kMotorwayJunction;
+    case NodeType::kBorderControl:
+      return TripPath_Node_Type_kBorderControl;
+  }
+}
+
 }
 
 // Default constructor
@@ -570,21 +593,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Set node attributes - only set if they are true since they are optional
     const GraphTile* start_tile = graphreader.GetGraphTile(startnode);
     const NodeInfo* node = start_tile->node(startnode);
-    if (node->type() == NodeType::kStreetIntersection) {
-      trip_node->set_street_intersection(true);
-    } else  if (node->type() == NodeType::kGate) {
-      trip_node->set_gate(true);
-    } else if (node->type() == NodeType::kBollard) {
-      trip_node->set_bollard(true);
-    } else if (node->type() == NodeType::kTollBooth) {
-      trip_node->set_toll_booth(true);
-    } else if (node->type() == NodeType::kBikeShare) {
-      trip_node->set_bike_share(true);
-    } else if (node->type() == NodeType::kParking) {
-      trip_node->set_parking(true);
-    } else if (node->type() == NodeType::kMotorWayJunction) {
-      trip_node->set_motorway_junction(true);
-    }
+    trip_node->set_type(GetTripPathNodeType(node->type()));
+
     if (node->intersection() == IntersectionType::kFork)
       trip_node->set_fork(true);
 
