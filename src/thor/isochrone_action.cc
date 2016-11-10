@@ -25,8 +25,9 @@ namespace valhalla {
         contours.push_back(contour.second.get<float>("time"));
         colors.push_back(contour.second.get<std::string>("color", ""));
       }
-      auto rings_only = request.get<bool>("rings_only", true);
+      auto polygons = request.get<bool>("polygons", false);
       auto denoise = std::max(std::min(request.get<float>("denoise", 1.f), 1.f), 0.f);
+      auto generalize = request.get<float>("generalize", .2f);
 
       //get the raster
       auto grid = (costing == "multimodal" || costing == "transit") ?
@@ -34,8 +35,8 @@ namespace valhalla {
         isochrone_gen.Compute(correlated, contours.back(), reader, mode_costing, mode);
 
       //turn it into geojson
-      auto isolines = grid->GenerateContours(contours, rings_only, denoise);
-      auto geojson = baldr::json::to_geojson<PointLL>(isolines, colors);
+      auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
+      auto geojson = baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
       auto id = request.get_optional<std::string>("id");
       if(id)
         geojson->emplace("id", *id);
