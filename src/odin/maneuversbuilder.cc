@@ -1836,7 +1836,7 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
                                        curr_edge->begin_heading());
 
-  if (node->HasIntersectingEdges() && !node->motorway_junction()
+  if (node->HasIntersectingEdges() && !node->IsMotorwayJunction()
       && !node->fork() && !(curr_edge->IsHighway() && prev_edge->IsHighway())) {
     // if path edge is not forward
     // and forward intersecting edge exists

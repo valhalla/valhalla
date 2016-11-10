@@ -194,6 +194,17 @@ class EnhancedTripPath_Node : public TripPath_Node {
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(
       uint32_t from_heading, const TripPath_TravelMode travel_mode);
 
+  // Type
+  bool IsStreetIntersection() const;
+  bool IsGate() const;
+  bool IsBollard() const;
+  bool IsTollBooth() const;
+  bool IsMultiUseTransitStop() const;
+  bool IsBikeShare() const;
+  bool IsParking() const;
+  bool IsMotorwayJunction() const;
+  bool IsBorderControl() const;
+
   std::string ToString() const;
 
 };

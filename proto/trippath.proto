@@ -212,19 +212,26 @@ message TripPath {
   }
 
   message Node {
+    enum Type {
+      kStreetIntersection = 0;    // Regular intersection of 2 roads
+      kGate = 1;                  // Gate or rising bollard
+      kBollard = 2;               // Bollard (fixed obstruction)
+      kTollBooth = 3;             // Toll booth / fare collection
+      // TODO - for now there is no differentiation between bus and rail stops...
+      kMultiUseTransitStop = 6;   // Multi-use transit stop (rail and bus)
+      kBikeShare = 7;             // Bike share location
+      kParking = 8;               // Parking location
+      kMotorwayJunction = 9;      // Highway = motorway_junction
+      kBorderControl = 10;        // Border control
+    }
+    
     optional Edge edge = 1;
     repeated IntersectingEdge intersecting_edge = 2; 
     optional uint32 elapsed_time = 3;        // seconds from start of leg
     optional uint32 admin_index = 4;         // index into the admin list
-    optional bool street_intersection = 5;   // Regular intersection of 2 roads
-    optional bool gate = 6;                  // Gate or rising bollard
-    optional bool bollard = 7;               // Bollard (fixed obstruction)
-    optional bool toll_booth = 8;            // toll booth / fare collection
-    optional bool bike_share = 9;            // Bike share location
-    optional bool parking = 10;              // Parking location
-    optional bool motorway_junction = 11;    // Motorway junction
-    optional bool fork = 12;                 // Fork
-    optional TransitStopInfo transit_stop_info = 13;
+    optional Type type = 5;                  // The type of node
+    optional bool fork = 6;                  // Fork
+    optional TransitStopInfo transit_stop_info = 7;
   }
 
   message Admin {
