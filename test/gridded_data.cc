@@ -23,7 +23,7 @@ namespace {
 
     //make the contours
     std::vector<float> iso_markers{100000,200000,300000,400000,500000,600000};
-    auto contours = g.GenerateContours(iso_markers);
+    auto contours = g.GenerateContours(iso_markers, true);
 
     //need to be the same size and all of them have to have a single ring
     if(contours.size() != iso_markers.size())
@@ -32,15 +32,16 @@ namespace {
     //because of the pattern above we should end up with concentric circles
     //every ring should have all smaller rings inside it
     size_t rings = 0;
-    for(auto contour = std::next(contours.rbegin()); contour != contours.rend(); ++contour) {
+    for(auto collection = std::next(contours.rbegin()); collection != contours.rend(); ++collection) {
       //nothing here
-      if(contour->second.empty())
+      auto& contour = collection->second.front();
+      if(contour.empty())
         continue;
       ++rings;
       //if this is a ring the iso lines with lesser units should be contained within it
-      for(const auto& p : std::prev(contour)->second.front()) {
-        if(!p.WithinConvexPolygon(contour->second.front()))
-          throw std::logic_error("Ring " + std::to_string(contour->first) + " should contain ring " + std::to_string(std::prev(contour)->first));
+      for(const auto& p : std::prev(collection)->second.front().front()) {
+        if(!p.WithinPolygon(contour.front()))
+          throw std::logic_error("Ring " + std::to_string(collection->first) + " should contain ring " + std::to_string(std::prev(collection)->first));
       }
     }
 

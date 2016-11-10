@@ -60,11 +60,14 @@ class GriddedData : public Tiles<coord_t> {
   const std::vector<float>& data() const;
 
   /**
+   * TODO: implement two versions of this, leave this one for linestring contours
+   * and make another for polygons
+   *
    * Generate contour lines from the gridded data.
    *
    * @param contour_intervals    the values at which the contour lines should occur
    *                             basically the lines on the measuring stick
-   * @param rings_only           only include geometry of contours that are polygons
+   * @param rings_only           only include geometry of contours that are polygonal
    * @param denoise              remove any contours whose size ratio is less than
    *                             this parameter with respect to the largest contour
    *                             with the same interval. by default only keep the largest
@@ -72,8 +75,10 @@ class GriddedData : public Tiles<coord_t> {
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
   using contour_t = std::list<coord_t>;
-  using contours_t = std::map<float, std::list<contour_t>, std::function<bool(const float, const float)> >;
-  contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = true, const float denoise = 1.f) const;
+  using feature_t = std::list<contour_t>;
+  using contours_t = std::map<float, std::list<feature_t>, std::function<bool(const float, const float)> >;
+  contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = false,
+    const float denoise = 1.f, const float generalize = 200.f) const;
 
  protected:
   float max_value_;             // Maximum value stored in the tile

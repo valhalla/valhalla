@@ -159,36 +159,40 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
 // Test whether this point is to the left of a segment from p1 to p2. Uses a
 // 2-D cross product and tests the sign (> 0 indicates the point is to the
 // left).
-bool Point2::IsLeft(const Point2& p1, const Point2& p2) const {
-  return ((p2.x() - p1.x()) * (   y() - p1.y()) -
-             (x() - p1.x()) * (p2.y() - p1.y()) >= 0.0f);
+float Point2::IsLeft(const Point2& p1, const Point2& p2) const {
+  return (p2.x() - p1.x()) * (   y() - p1.y()) -
+             (x() - p1.x()) * (p2.y() - p1.y());
 }
 
-// Tests whether this point is within a convex polygon. Iterate through the
+// Tests whether this point is within a polygon. Iterate through the
 // edges - to be inside the point must be to the same side of each edge.
 template <class container_t>
-bool Point2::WithinConvexPolygon(const container_t& poly) const {
-  // Get the side relative to the last edge
-  auto p1 = poly.begin();
-  auto p2 = std::next(p1);
-  bool left = IsLeft(*p1, *p2);
-
-  // Iterate through the rest of the edges
-  for(p1 = p2, ++p2; p2 != poly.end(); ++p1, ++p2) {
-    if (IsLeft(*p1, *p2) != left) {
-      return false;
+bool Point2::WithinPolygon(const container_t& poly) const {
+  auto p1 = poly.front() == poly.back() ? poly.begin() : std::prev(poly.end());
+  auto p2 = poly.front() == poly.back() ? std::next(p1) : poly.begin();
+  //for each edge
+  size_t winding_number = 0;
+  for(; p2 != poly.end(); p1 = p2, ++p2) {
+    //going upward
+    if(p1->second <= second) {
+      //crosses if its in between on the y and to the left
+      winding_number += p2->second > second && IsLeft(*p1, *p2) > 0;
+    }//going downward maybe
+    else {
+      //crosses if its in between or on and to the right
+      winding_number -= p2->second <= second && IsLeft(*p1, *p2) < 0;
     }
   }
 
   // If it was a full ring we are done otherwise check the last segment
-  return poly.front() == poly.back() || IsLeft(poly.back(), poly.front()) == left;
+  return winding_number != 0;
 }
 
 bool Point2::IsSpherical() { return false; }
 
 // Explicit instantiations
-template bool Point2::WithinConvexPolygon(const std::vector<Point2>&) const;
-template bool Point2::WithinConvexPolygon(const std::list<Point2>&) const;
+template bool Point2::WithinPolygon(const std::vector<Point2>&) const;
+template bool Point2::WithinPolygon(const std::list<Point2>&) const;
 
 }
 }

@@ -175,7 +175,7 @@ void TestClosestPoint() {
 
 void TryWithinConvexPolygon(const std::vector<PointLL>& pts, const PointLL&p,
                             const bool res) {
-  if (p.WithinConvexPolygon(pts) != res)
+  if (p.WithinPolygon(pts) != res)
     throw runtime_error("TryWithinConvexPolygon test failed");
 }
 
@@ -193,8 +193,8 @@ void TestWithinConvexPolygon() {
   TryWithinConvexPolygon(pts, PointLL(0.0f, 0.0f), true);
 
   // Check a vertex - should be inside
-  TryWithinConvexPolygon(pts, PointLL( 0.0f, -4.0f), true);
-  TryWithinConvexPolygon(pts, PointLL( 2.0f, -2.0f), true);
+  TryWithinConvexPolygon(pts, PointLL( 0.0f, -3.99f), true);
+  TryWithinConvexPolygon(pts, PointLL( 1.99f, -2.0f), true);
 
   // Outside
   TryWithinConvexPolygon(pts, PointLL(15.0f, 4.0f), false);

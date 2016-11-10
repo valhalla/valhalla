@@ -67,7 +67,8 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only, const float denoise) const {
+typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_intervals,
+  const bool rings_only, const float denoise, const float generalize) const {
   //TODO: sort and validate contour range
 
   // Values at tile corners and center (0 element is center)
@@ -84,9 +85,9 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
 
   //we need something to hold each iso-line, bigger ones first
   contours_t contours([](float a, float b){return a > b;});
-  for(auto v : contour_intervals) contours[v];
+  for(auto v : contour_intervals) contours[v].emplace_back();
   //and something to find them quickly
-  using contour_lookup_t = std::unordered_map<coord_t, typename std::list<contour_t>::iterator>;
+  using contour_lookup_t = std::unordered_map<coord_t, typename feature_t::iterator>;
   std::unordered_map<float, contour_lookup_t> lookup(contour_intervals.size());
   //TODO: preallocate the lookups for each interval
 
@@ -248,22 +249,22 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             //add b to a
             if(!head_a && head_b) {
               segment_a->splice(segment_a->end(), *segment_b);
-              contours[contour].erase(segment_b);
+              contours[contour].front().erase(segment_b);
             }//add a to b
             else if(!head_b && head_a) {
               segment_b->splice(segment_b->end(), *segment_a);
-              contours[contour].erase(segment_a);
+              contours[contour].front().erase(segment_a);
               segment_a = segment_b;
             }//flip a and add b
             else if(head_a && head_b) {
               segment_a->reverse();
               segment_a->splice(segment_a->end(), *segment_b);
-              contours[contour].erase(segment_b);
+              contours[contour].front().erase(segment_b);
             }//flip b and add to a
             else if(!head_a && !head_b) {
               segment_b->reverse();
               segment_a->splice(segment_a->end(), *segment_b);
-              contours[contour].erase(segment_b);
+              contours[contour].front().erase(segment_b);
             }
 
             //update the look up
@@ -283,9 +284,9 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             lookup[contour].erase(rec_a);
           }//this is an orphan segment for now
           else {
-            contours[contour].push_front(contour_t{pt1, pt2});
-            lookup[contour].emplace(pt1, contours[contour].begin());
-            lookup[contour].emplace(pt2, contours[contour].begin());
+            contours[contour].front().push_front(contour_t{pt1, pt2});
+            lookup[contour].emplace(pt1, contours[contour].front().begin());
+            lookup[contour].emplace(pt2, contours[contour].front().begin());
           }
 
         }
@@ -293,31 +294,38 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
     } // Each tile col
   } // Each tile row
 
-  //generalize by appx 1/3 of the meters a tile takes up
+  //some info about the area the image covers
   auto c = this->TileBounds().Center();
   auto h = this->tilesize_ / 2;
-  auto m = coord_t{c.first - h, c.second - h}.Distance({c.first + h, c.second + h});
-  m *= .2f;
   //for each contour
-  for(auto& contour : contours) {
-    //they only wanted rings!
+  for(auto& collection : contours) {
+    auto& contour = collection.second.front();
+    //they only wanted rings
     if(rings_only)
-      contour.second.remove_if([](const contour_t& line){return line.front() != line.back();});
+      contour.remove_if([](const contour_t& line){return line.front() != line.back();});
     //sort them by area (maybe length would be sufficient?) biggest first
-    std::unordered_map<const contour_t*, typename coord_t::first_type> cache(contour.second.size());
-    std::for_each(contour.second.cbegin(), contour.second.cend(), [&cache](const contour_t& c){cache[&c] = polygon_area(c);});
-    contour.second.sort([&cache](const contour_t& a, const contour_t& b) {return std::abs(cache[&a]) > std::abs(cache[&b]);});
+    std::unordered_map<const contour_t*, typename coord_t::first_type> cache(contour.size());
+    std::for_each(contour.cbegin(), contour.cend(), [&cache](const contour_t& c){cache[&c] = polygon_area(c);});
+    contour.sort([&cache](const contour_t& a, const contour_t& b) {return std::abs(cache[&a]) > std::abs(cache[&b]);});
     //they only want the most significant ones!
     if(denoise > 0.f)
-      contour.second.remove_if([&cache, &contour, denoise](const contour_t& c){return std::abs(cache[&c]/cache[&contour.second.front()]) < denoise;});
-    //generalize and wind them the same
-    for(auto& line : contour.second) {
-      Polyline2<coord_t>::Generalize(line, m);
-      //TODO: if this is an inner dont do this..
+      contour.remove_if([&cache, &contour, denoise](const contour_t& c){return std::abs(cache[&c]/cache[&contour.front()]) < denoise;});
+    //clean up the lines
+    for(auto& line : contour) {
+      //TODO: generalizing makes self intersections which makes other libraries unhappy
+      if(generalize > 0.f)
+        Polyline2<coord_t>::Generalize(line, generalize);
+      //if this ends up as an inner we'll undo this later
       if(cache[&line] > 0)
         line.reverse();
       //sampling the bottom left corner means everything is skewed, so unskew it
       for(auto& coord : line) { coord.first += h; coord.second += h; }
+    }
+    //if they just wanted linestrings we need only one per feature
+    if(!rings_only) {
+      for(auto& linestring : contour)
+        collection.second.push_back({std::move(linestring)});
+      collection.second.pop_front();
     }
   }
 

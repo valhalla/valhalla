@@ -125,18 +125,17 @@ class PointLL : public Point2 {
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual bool IsLeft(const PointLL& p1, const PointLL& p2) const;
+  virtual float IsLeft(const PointLL& p1, const PointLL& p2) const;
 
   /**
-   * Tests whether this point is within a convex polygon.
-   * @param  poly  List of vertices that form a convex polygon. Assumes
+   * Tests whether this point is within a polygon.
+   * @param  poly  List of vertices that form a polygon. Assumes
    *               the following:
-   *                  Polygon is convex.
    *                  Only the first and last vertices may be duplicated.
    * @return  Returns true if the point is within the polygon, false if not.
    */
   template <class container_t>
-  bool WithinConvexPolygon(const container_t& poly) const;
+  bool WithinPolygon(const container_t& poly) const;
 
   /**
    * Handy for templated functions that use both Point2 or PointLL to know whether or not
