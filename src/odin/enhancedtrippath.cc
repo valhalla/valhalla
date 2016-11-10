@@ -875,6 +875,43 @@ uint32_t EnhancedTripPath_Node::GetStraightestIntersectingEdgeTurnDegree(
   return staightest_turn_degree;
 }
 
+bool EnhancedTripPath_Node::IsStreetIntersection() const {
+  return (type() == TripPath_Node_Type_kStreetIntersection);
+}
+
+bool EnhancedTripPath_Node::IsGate() const {
+  return (type() == TripPath_Node_Type_kGate);
+}
+
+bool EnhancedTripPath_Node::IsBollard() const {
+  return (type() == TripPath_Node_Type_kBollard);
+}
+
+bool EnhancedTripPath_Node::IsTollBooth() const {
+  return (type() == TripPath_Node_Type_kTollBooth);
+}
+
+bool EnhancedTripPath_Node::IsMultiUseTransitStop() const {
+  return (type() == TripPath_Node_Type_kMultiUseTransitStop);
+}
+
+bool EnhancedTripPath_Node::IsBikeShare() const {
+  return (type() == TripPath_Node_Type_kBikeShare);
+}
+
+bool EnhancedTripPath_Node::IsParking() const {
+  return (type() == TripPath_Node_Type_kParking);
+}
+
+bool EnhancedTripPath_Node::IsMotorwayJunction() const {
+  return (type() == TripPath_Node_Type_kMotorwayJunction);
+}
+
+bool EnhancedTripPath_Node::IsBorderControl() const {
+  return (type() == TripPath_Node_Type_kBorderControl);
+}
+
+
 std::string EnhancedTripPath_Node::ToString() const {
   std::string str;
   str.reserve(256);
@@ -885,26 +922,8 @@ std::string EnhancedTripPath_Node::ToString() const {
   str += " | admin_index=";
   str += std::to_string(admin_index());
 
-  str += " | street_intersection=";
-  str += std::to_string(street_intersection());
-
-  str += " | gate=";
-  str += std::to_string(gate());
-
-  str += " | bollard=";
-  str += std::to_string(bollard());
-
-  str += " | toll_booth=";
-  str += std::to_string(toll_booth());
-
-  str += " | bike_share=";
-  str += std::to_string(bike_share());
-
-  str += " | parking=";
-  str += std::to_string(parking());
-
-  str += " | motorway_junction=";
-  str += std::to_string(motorway_junction());
+  str += " | type=";
+  str += std::to_string(type());
 
   str += " | fork=";
   str += std::to_string(fork());
