@@ -17,7 +17,7 @@ namespace json {
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
 template <class coord_t>
-MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours, const std::vector<std::string>& colors = {});
+MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours, bool polygons = true, const std::vector<std::string>& colors = {});
 
 }
 }
