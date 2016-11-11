@@ -109,6 +109,9 @@ struct OSMData {
   // Vector of admins.
   std::vector<OSMAdmin> admins_;
 
+  // The largest/newest changeset id encountered when parsing OSM data
+  uint64_t max_changeset_id_;
+
 };
 
 }

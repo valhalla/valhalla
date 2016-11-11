@@ -141,6 +141,9 @@ void FormTilesInNewLevel(GraphReader& reader,
       continue;
     }
 
+    // Copy the data version
+    tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
+
     // Copy node information
     NodeInfo baseni = *(tile->node(base_node.id()));
     tilebuilder->nodes().push_back(baseni);

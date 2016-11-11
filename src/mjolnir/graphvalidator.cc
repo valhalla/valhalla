@@ -480,7 +480,7 @@ void validate(const boost::property_tree::ptree& pt,
   }
 
   //crack open tiles and bin edges that pass through them but dont end or begin in them
-  void bin_tweeners(const TileHierarchy& hierarchy, tweeners_t::iterator& start, const tweeners_t::iterator& end, std::mutex& lock) {
+  void bin_tweeners(const TileHierarchy& hierarchy, tweeners_t::iterator& start, const tweeners_t::iterator& end, uint64_t dataset_id, std::mutex& lock) {
     //go while we have tiles to update
     while(true) {
       lock.lock();
@@ -498,6 +498,7 @@ void validate(const boost::property_tree::ptree& pt,
 
       if(!tile.header()) {
         GraphTileBuilder empty(hierarchy, tile_bin.first, false);
+        empty.header_builder().set_dataset_id(dataset_id);
         empty.StoreTileData();
         tile = GraphTile(hierarchy, tile_bin.first);
       }
@@ -546,6 +547,9 @@ namespace mjolnir {
     }
     std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
+    // Remember what the dataset id is in case we have to make some tiles
+    auto dataset_id = GraphTile(hierarchy, *tilequeue.begin()).header()->dataset_id();
+
     // An mutex we can use to do the synchronization
     std::mutex lock;
 
@@ -591,7 +595,7 @@ namespace mjolnir {
     auto start = tweeners.begin();
     auto end = tweeners.end();
     for (auto& thread : threads)
-      thread.reset(new std::thread(bin_tweeners, std::cref(hierarchy), std::ref(start), std::cref(end), std::ref(lock)));
+      thread.reset(new std::thread(bin_tweeners, std::cref(hierarchy), std::ref(start), std::cref(end), dataset_id, std::ref(lock)));
     for (auto& thread : threads)
       thread->join();
     LOG_INFO("Finished");

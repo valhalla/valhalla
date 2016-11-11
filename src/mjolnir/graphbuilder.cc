@@ -398,7 +398,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       GraphId tile_id = tile_start->first.Tile_Base();
       GraphTileBuilder graphtile(hierarchy, tile_id, false);
 
+      // Information about tile creation
       graphtile.AddTileCreationDate(tile_creation_date);
+      graphtile.header_builder().set_dataset_id(osmdata.max_changeset_id_);
 
       // Create a dummy admin record at index 0. Used if admin records
       // are not used/created or if none is found.

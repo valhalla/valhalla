@@ -137,45 +137,44 @@ OSMPBF::Tags get_tags(const T& object, const OSMPBF::PrimitiveBlock &primblock) 
   return result;
 }
 
-void parse_primitiveblock(char* unpack_buffer, int32_t sz, const Interest interest, Callback& callback) {
+void parse_primitive_block(char* unpack_buffer, int32_t sz, const Interest interest, Callback& callback) {
   //turn the blob bytes into a protobuf object
   PrimitiveBlock primblock;
   if (!primblock.ParseFromArray(unpack_buffer, sz))
     throw std::runtime_error("unable to parse primitive block");
 
   //for each primitive group
-  for (int i = 0, l = primblock.primitivegroup_size(); i < l; i++) {
-    const PrimitiveGroup& primitive_group = primblock.primitivegroup(i);
+  for (const auto& primitive_group : primblock.primitivegroup()) {
 
     //do the nodes
     if ((interest & NODES) == NODES) {
       // Simple Nodes
-      for (int i = 0; i < primitive_group.nodes_size(); ++i) {
-        const Node& n = primitive_group.nodes(i);
-
-        double lon = 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * n.lon()));
-        double lat = 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * n.lat()));
-        callback.node_callback(n.id(), lon, lat, get_tags<Node>(n, primblock));
+      for (const auto& node : primitive_group.nodes()) {
+        double lon = 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * node.lon()));
+        double lat = 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * node.lat()));
+        callback.node_callback(node.id(), lon, lat, get_tags<Node>(node, primblock));
+        if (node.has_info() && node.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS)
+          callback.changeset_callback(node.info().changeset());
       }
 
       // Dense Nodes
       if (primitive_group.has_dense()) {
-        const DenseNodes& dn = primitive_group.dense();
+        const DenseNodes& dense_nodes = primitive_group.dense();
         uint64_t id = 0;
         double lon = 0;
         double lat = 0;
 
         int current_kv = 0;
-        for (int i = 0; i < dn.id_size(); ++i) {
-          id += dn.id(i);
-          lon += 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * dn.lon(i)));
-          lat += 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * dn.lat(i)));
+        for (int i = 0; i < dense_nodes.id_size(); ++i) {
+          id += dense_nodes.id(i);
+          lon += 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * dense_nodes.lon(i)));
+          lat += 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * dense_nodes.lat(i)));
 
           //can't exactly preallocate because you don't know how many there are
           Tags tags;
-          while (current_kv < dn.keys_vals_size() && dn.keys_vals(current_kv) != 0) {
-            uint64_t key = dn.keys_vals(current_kv);
-            uint64_t val = dn.keys_vals(current_kv + 1);
+          while (current_kv < dense_nodes.keys_vals_size() && dense_nodes.keys_vals(current_kv) != 0) {
+            uint64_t key = dense_nodes.keys_vals(current_kv);
+            uint64_t val = dense_nodes.keys_vals(current_kv + 1);
             std::string key_string = primblock.stringtable().s(key);
             std::string val_string = primblock.stringtable().s(val);
             current_kv += 2;
@@ -184,43 +183,62 @@ void parse_primitiveblock(char* unpack_buffer, int32_t sz, const Interest intere
           ++current_kv;
           callback.node_callback(id, lon, lat, tags);
         }
+        if (dense_nodes.has_denseinfo() && (interest & CHANGESETS) == CHANGESETS) {
+          uint64_t changeset = 0;
+          for(auto changeset_id_offset : dense_nodes.denseinfo().changeset())
+            callback.changeset_callback(changeset += changeset_id_offset);
+        }
       }
     }
 
     //do the ways
     if ((interest & WAYS) == WAYS) {
-      for (int i = 0; i < primitive_group.ways_size(); ++i) {
-        const Way& w = primitive_group.ways(i);
-
+      for (const auto& way : primitive_group.ways()) {
         uint64_t node = 0;
         std::vector<uint64_t> nodes;
-        nodes.reserve(w.refs_size());
-        for (int j = 0; j < w.refs_size(); ++j) {
-          node += w.refs(j);
+        nodes.reserve(way.refs_size());
+        for (auto node_id_offset : way.refs()) {
+          node += node_id_offset;
           //TODO: skip consecutive duplicates, make this configurable
           if(nodes.size() == 0 || node != nodes.back())
             nodes.push_back(node);
         }
-        uint64_t id = w.id();
-        callback.way_callback(id, get_tags<Way>(w, primblock), nodes);
+        callback.way_callback(way.id(), get_tags<Way>(way, primblock), nodes);
+        if (way.has_info() && way.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS)
+          callback.changeset_callback(way.info().changeset());
       }
     }
 
     //do the relations
     if ((interest & RELATIONS) == RELATIONS) {
-      for (int i = 0; i < primitive_group.relations_size(); ++i) {
-        const Relation& rel = primitive_group.relations(i);
-        uint64_t id = 0;
+      for (const auto& relation : primitive_group.relations()) {
+        uint64_t member = 0;
         std::vector<Member> members;
-        members.reserve(rel.memids_size());
-        for (int l = 0; l < rel.memids_size(); ++l) {
-          id += rel.memids(l);
-          members.emplace_back(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l)));
+        members.reserve(relation.memids_size());
+        for (int l = 0; l < relation.memids_size(); ++l) {
+          member += relation.memids(l);
+          members.emplace_back(relation.types(l), member, primblock.stringtable().s(relation.roles_sid(l)));
         }
-        callback.relation_callback(rel.id(), get_tags<Relation>(rel, primblock), members);
+        callback.relation_callback(relation.id(), get_tags<Relation>(relation, primblock), members);
+        if (relation.has_info() && relation.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS)
+          callback.changeset_callback(relation.info().changeset());
       }
     }
+
+    //do the changesets
+    if ((interest & CHANGESETS) == CHANGESETS)
+     for (const auto& changeset : primitive_group.changesets())
+       callback.changeset_callback(changeset.id());
   }
+}
+
+void parse_header_block(char* unpack_buffer, int32_t sz) {
+  //turn the blob bytes into a protobuf object
+  HeaderBlock header_block;
+  if (!header_block.ParseFromArray(unpack_buffer, sz))
+    throw std::runtime_error("unable to parse header block");
+
+  //TODO: do something with replication information?
 }
 
 }
@@ -253,9 +271,11 @@ void Parser::parse(std::ifstream& file, const Interest interest, Callback& callb
       int32_t sz = read_blob(buffer, unpack_buffer, file, header);
       //if its data parse it
       if (header.type() == "OSMData")
-        parse_primitiveblock(unpack_buffer, sz, interest, callback);
+        parse_primitive_block(unpack_buffer, sz, interest, callback);
       //if its something other than a header
-      else if (header.type() != "OSMHeader")
+      else if (header.type() == "OSMHeader")
+        parse_header_block(unpack_buffer, sz);
+      else
         LOG_WARN("Unknown blob type: " + header.type());
     }
   }
