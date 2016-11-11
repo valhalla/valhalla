@@ -70,7 +70,7 @@ struct graph_callback : public OSMPBF::Callback {
     return std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len);
   }
 
-  void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) {
+  virtual void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) override {
     // Check if it is in the list of nodes used by ways
     if (!shape_.IsUsed(osmid)) {
       return;
@@ -201,7 +201,7 @@ struct graph_callback : public OSMPBF::Callback {
     }
   }
 
-  void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) {
+  virtual void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) override {
 
     // Do not add ways with < 2 nodes. Log error or add to a problem list
     // TODO - find out if we do need these, why they exist...
@@ -765,7 +765,7 @@ struct graph_callback : public OSMPBF::Callback {
     ways_->push_back(w);
   }
 
-  void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
+  virtual void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) override {
     // Get tags
     Tags results = lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0)
@@ -1003,6 +1003,10 @@ struct graph_callback : public OSMPBF::Callback {
     }
   }
 
+  virtual void changeset_callback(const uint64_t changeset_id) override {
+    osmdata_.max_changeset_id_ = std::max(osmdata_.max_changeset_id_, changeset_id);
+  }
+
   //lets the sequences be set and reset
   void reset(sequence<OSMWay>* ways, sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access, sequence<OSMRestriction>* complex_restrictions){
@@ -1097,7 +1101,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Parsing ways...")
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS | OSMPBF::Interest::CHANGESETS), callback);
   }
   callback.output_loops();
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
@@ -1106,7 +1110,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Parsing relations...")
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::RELATIONS, callback);
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS), callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
   callback.reset(nullptr, nullptr, nullptr, nullptr);
@@ -1141,7 +1145,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     //because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::NODES, callback);
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES | OSMPBF::Interest::CHANGESETS), callback);
   }
   callback.reset(nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");
@@ -1176,7 +1180,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     );
   }
 
-  LOG_INFO("Finished");
+  LOG_INFO("Finished at changeset id " + std::to_string(osmdata.max_changeset_id_));
 
   // Log some information about extra node information and names
   LOG_DEBUG("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));

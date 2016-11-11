@@ -39,7 +39,7 @@ struct admin_callback : public OSMPBF::Callback {
   : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata), lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
   }
 
-  void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) {
+  virtual void node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) override {
     // Check if it is in the list of nodes used by ways
     if (!shape_.IsUsed(osmid)) {
       return;
@@ -54,7 +54,7 @@ struct admin_callback : public OSMPBF::Callback {
     }
   }
 
-  void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) {
+  virtual void way_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) override {
 
     // Check if it is in the list of ways used by relations
     if (!members_.IsUsed(osmid)) {
@@ -70,7 +70,7 @@ struct admin_callback : public OSMPBF::Callback {
     osmdata_.way_map.emplace(osmid,std::list<uint64_t>(nodes.begin(), nodes.end()));
   }
 
-  void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
+  virtual void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) override {
     // Get tags
     auto results = lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0)
@@ -111,6 +111,10 @@ struct admin_callback : public OSMPBF::Callback {
     osmdata_.admins_.push_back(std::move(admin));
   }
 
+  virtual void changeset_callback(const uint64_t changeset_id) override {
+    osmdata_.max_changeset_id_ = std::max(osmdata_.max_changeset_id_, changeset_id);
+  }
+
   // Lua Tag Transformation class
   LuaTagTransform lua_;
 
@@ -119,7 +123,6 @@ struct admin_callback : public OSMPBF::Callback {
 
   // Pointer to all the OSM data (for use by callbacks)
   OSMData& osmdata_;
-
 };
 
 }
@@ -147,20 +150,20 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   // Parse each input file for relations
   LOG_INFO("Parsing relations...")
   for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::RELATIONS, callback);
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS), callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) + " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
 
   // Parse the ways.
   LOG_INFO("Parsing ways...");
   for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS | OSMPBF::Interest::CHANGESETS), callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " + std::to_string(osmdata.node_count) + " nodes");
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   LOG_INFO("Parsing nodes...");
   for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::NODES, callback);
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES | OSMPBF::Interest::CHANGESETS), callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 
   //done with pbf
