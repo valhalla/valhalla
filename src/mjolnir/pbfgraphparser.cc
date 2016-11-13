@@ -965,7 +965,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
 
       if (vias.size() > kMaxViasPerRestriction) {
-        LOG_INFO("skipping restriction with vias > the max allowed: " + std::to_string(osmid));
+        LOG_INFO("skipping restriction with vias > the max allowed.  OSMID: " + std::to_string(osmid));
         from_way_id = 0;
       }
       // Add the restriction to the list.
