@@ -121,10 +121,10 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
   if (end_time > kMaxEndTime) {
     throw std::runtime_error("TransitDeparture: Exceeded maximum transit schedule end time");
   }
-  departure_times_.frequency_.start_time_ = start_time;
+  departure_times_.frequency_.end_time_ = end_time;
 
-  if (end_time > kMaxFrequency) {
-    throw std::runtime_error("TransitDeparture: Exceeded maximum transit schedule end time");
+  if (frequency > kMaxFrequency) {
+    throw std::runtime_error("TransitDeparture: Exceeded maximum transit schedule frequency");
   }
   departure_times_.frequency_.frequency_ = frequency;
 
