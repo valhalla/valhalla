@@ -10,7 +10,28 @@ namespace vb = valhalla::baldr;
 namespace {
 
 struct graph_tile_builder {
-  void add_tile(vb::GraphId id) {
+  void append_node(float lon, float lat, uint32_t edge_count, uint32_t first_edge) {
+    nodes.push_back(
+      vb::NodeInfo(
+        std::make_pair(lon, lat),
+        vb::RoadClass::kResidential,
+        vb::kAllAccess,
+        vb::NodeType::kStreetIntersection,
+        false));
+    nodes.back().set_edge_count(edge_count);
+    nodes.back().set_edge_index(first_edge);
+  }
+
+  void append_edge(vb::GraphId endnode, uint32_t length) {
+    edges.emplace_back();
+    edges.back().set_endnode(endnode);
+    edges.back().set_length(length);
+    edges.back().set_forwardaccess(vb::kAllAccess);
+    edges.back().set_reverseaccess(vb::kAllAccess);
+    edges.back().set_classification(vb::RoadClass::kResidential);
+  }
+
+  void commit_tile(vb::GraphId id) {
     const size_t nodes_size = nodes.size() * sizeof(vb::NodeInfo);
     const size_t edges_size = edges.size() * sizeof(vb::DirectedEdge);
 
@@ -58,7 +79,7 @@ struct test_graph_reader : public vb::GraphReader {
   }
 };
 
-void TestCollapseEdge() {
+void TestCollapseEdgeSimple() {
   vb::TileHierarchy hier("");
   vb::GraphId base_id = hier.GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
@@ -69,65 +90,16 @@ void TestCollapseEdge() {
   //          \<--(edge 2)---/       \<--(edge 3)---/
   //
   graph_tile_builder builder;
-  builder.nodes.push_back(
-    vb::NodeInfo(
-      std::make_pair(0.00f, 0.0f),
-      vb::RoadClass::kResidential,
-      vb::kAllAccess,
-      vb::NodeType::kStreetIntersection,
-      false));
-  builder.nodes.back().set_edge_count(1);
-  builder.nodes.back().set_edge_index(0);
+  builder.append_node(0.00f, 0.0f, 1, 0);
+  builder.append_node(0.01f, 0.0f, 2, 1);
+  builder.append_node(0.02f, 0.0f, 1, 3);
 
-  builder.nodes.push_back(
-    vb::NodeInfo(
-      std::make_pair(0.01f, 0.0f),
-      vb::RoadClass::kResidential,
-      vb::kAllAccess,
-      vb::NodeType::kStreetIntersection,
-      false));
-  builder.nodes.back().set_edge_count(2);
-  builder.nodes.back().set_edge_index(1);
+  builder.append_edge(base_id + uint64_t(1), 1113);
+  builder.append_edge(base_id + uint64_t(2), 1113);
+  builder.append_edge(base_id + uint64_t(0), 1113);
+  builder.append_edge(base_id + uint64_t(1), 1113);
 
-  builder.nodes.push_back(
-    vb::NodeInfo(
-      std::make_pair(0.02f, 0.0f),
-      vb::RoadClass::kResidential,
-      vb::kAllAccess,
-      vb::NodeType::kStreetIntersection,
-      false));
-  builder.nodes.back().set_edge_count(1);
-  builder.nodes.back().set_edge_index(3);
-
-  builder.edges.emplace_back();
-  builder.edges.back().set_endnode(base_id + uint64_t(1));
-  builder.edges.back().set_length(1113);
-  builder.edges.back().set_forwardaccess(vb::kAllAccess);
-  builder.edges.back().set_reverseaccess(vb::kAllAccess);
-  builder.edges.back().set_classification(vb::RoadClass::kResidential);
-
-  builder.edges.emplace_back();
-  builder.edges.back().set_endnode(base_id + uint64_t(2));
-  builder.edges.back().set_length(1113);
-  builder.edges.back().set_forwardaccess(vb::kAllAccess);
-  builder.edges.back().set_reverseaccess(vb::kAllAccess);
-  builder.edges.back().set_classification(vb::RoadClass::kResidential);
-
-  builder.edges.emplace_back();
-  builder.edges.back().set_endnode(base_id + uint64_t(0));
-  builder.edges.back().set_length(1113);
-  builder.edges.back().set_forwardaccess(vb::kAllAccess);
-  builder.edges.back().set_reverseaccess(vb::kAllAccess);
-  builder.edges.back().set_classification(vb::RoadClass::kResidential);
-
-  builder.edges.emplace_back();
-  builder.edges.back().set_endnode(base_id + uint64_t(1));
-  builder.edges.back().set_length(1113);
-  builder.edges.back().set_forwardaccess(vb::kAllAccess);
-  builder.edges.back().set_reverseaccess(vb::kAllAccess);
-  builder.edges.back().set_classification(vb::RoadClass::kResidential);
-
-  builder.add_tile(base_id);
+  builder.commit_tile(base_id);
   assert(builder.tiles.size() == 1);
 
   test_graph_reader reader(std::move(builder.tiles));
@@ -156,12 +128,69 @@ void TestCollapseEdge() {
   }
 }
 
+void TestCollapseEdgeJunction() {
+  vb::TileHierarchy hier("");
+  vb::GraphId base_id = hier.GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
+
+  // simplest graph with a non-collapsible node:
+  //
+  //          /---(edge 0)-->\       /---(edge 1)-->\
+  //  (node 0)                (node 1)              (node 2)
+  //          \<--(edge 2)---/  /  \ \<--(edge 4)---/
+  //                           |   |
+  //                  (edge 5) ^   v (edge 3)
+  //                           |   |
+  //                            \  /
+  //                          (node 3)
+  graph_tile_builder builder;
+  builder.append_node(0.00f, 0.00f, 1, 0);
+  builder.append_node(0.01f, 0.00f, 3, 1);
+  builder.append_node(0.02f, 0.00f, 1, 4);
+  builder.append_node(0.00f, 0.01f, 1, 5);
+
+  builder.append_edge(base_id + uint64_t(1), 1113);
+  builder.append_edge(base_id + uint64_t(2), 1113);
+  builder.append_edge(base_id + uint64_t(0), 1113);
+  builder.append_edge(base_id + uint64_t(3), 1113);
+  builder.append_edge(base_id + uint64_t(1), 1113);
+  builder.append_edge(base_id + uint64_t(1), 1113);
+
+  builder.commit_tile(base_id);
+  assert(builder.tiles.size() == 1);
+
+  test_graph_reader reader(std::move(builder.tiles));
+
+  size_t count = 0;
+  std::set<vb::GraphId> edges;
+  for (uint64_t i = 0; i < 6; ++i) {
+    edges.insert(base_id + i);
+  }
+
+  vb::merge::merge(reader, [&](const vb::merge::path &p) {
+      count += 1;
+      for (auto id : p.m_edges) {
+        if (edges.count(id) != 1) {
+          throw std::runtime_error("Edge not found - either invalid or duplicate!");
+        }
+        edges.erase(id);
+      }
+    });
+
+  if (count != 6) {
+    throw std::runtime_error("Should have not collapsed, leaving 6 original paths.");
+  }
+  if (!edges.empty()) {
+    throw std::runtime_error("Some edges left over!");
+  }
+}
+
 } // anonymous namespace
 
 int main() {
   test::suite suite("edgecollapser");
 
-  suite.test(TEST_CASE(TestCollapseEdge));
+  suite.test(TEST_CASE(TestCollapseEdgeSimple));
+  suite.test(TEST_CASE(TestCollapseEdgeJunction));
 
   return suite.tear_down();
 }
