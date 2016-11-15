@@ -13,7 +13,10 @@ namespace merge {
 
 namespace {
 
-//a place we can mark what edges we've seen, even for the planet we should need < 100mb
+// a place we can mark what edges we've seen, even for the planet we should
+// need ~ 100mb, as it allocates one bit per ID. there are currently around
+// 453 million ways in OSM, and we might allocate two edge IDs per way,
+// giving something like 108mb of bits needed.
 struct bitset_t {
   bitset_t(size_t size) {bits.resize(size);}
   void set(const uint64_t id) {
@@ -28,6 +31,11 @@ protected:
   std::vector<uint64_t> bits;
 };
 
+// edge tracker wraps a bitset to provide compact storage of GraphIds.
+//
+// the GraphReader is crawled to enumerate all tiles, and the range of tile IDs
+// is used to construct a compact range by concatenating all the existing
+// compact ranges for each tile.
 struct edge_tracker {
   explicit edge_tracker(GraphReader &reader);
 
@@ -86,6 +94,10 @@ edge_tracker::edge_index_t edge_tracker::edges_in_tiles(GraphReader &reader) {
         edge_count += tile->header()->directededgecount();
         // this clears the cache, and the test relies on being able to inject
         // stuff into the cache :-(
+        //
+        // TODO: presumably this is bad when the cache doesn't behave like a
+        // cache and evict older tiles. but this shouldn't be a problem when
+        // mmapping the whole extract.
         //reader.Clear();
       }
     }
@@ -112,6 +124,17 @@ bitset_t edge_tracker::count_all_edges(GraphReader &reader, const edge_tracker::
 
 namespace iter {
 
+// edges provides a container wrapper for the edges leaving a node which is
+// compatible with C++ range-based for loops and can make reading code a bit
+// nicer. for example:
+//
+//     for (const auto &pair : iter::edges(reader, node_id)) {
+//       ...
+//     }
+//
+// the iterator can be dereferenced into a pair of const DirectedEdge * and
+// GraphId. this allows iteration over both the edge and the ID of the edge,
+// which isn't directly obtainable from the DirectedEdge structure.
 struct edges {
   struct const_iterator {
     const DirectedEdge *ptr;
@@ -191,6 +214,14 @@ struct edge_collapser {
         continue;
       }
 
+      // if we encounter any edges which have already been marked, then this
+      // node cannot be collapsible. either that edge would be one of the two
+      // needed at this node to make it collapsible, or the node has more than
+      // two edges.
+      if (m_tracker.get(edge.second)) {
+        return boost::none;
+      }
+
       if (first) {
         if (second) {
           // can't add a third, that means this node is a true junction.
@@ -245,11 +276,6 @@ struct edge_collapser {
   }
 
   void explore(GraphId node_id) {
-    if (m_seen_nodes.count(node_id) != 0) {
-      return;
-    }
-    m_seen_nodes.insert(node_id);
-
     auto nodes = nodes_reachable_from(node_id);
     if (!nodes) {
       return;
@@ -266,7 +292,6 @@ struct edge_collapser {
 
   void explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
     const auto original_node_id = prev;
-    m_seen_nodes.insert(cur);
 
     boost::optional<GraphId> maybe_next;
     do {
@@ -281,7 +306,6 @@ struct edge_collapser {
       if (maybe_next) {
         prev = cur;
         cur = *maybe_next;
-        m_seen_nodes.insert(cur);
         if (cur == original_node_id) {
           // circular!
           break;
@@ -294,7 +318,6 @@ private:
   GraphReader &m_reader;
   edge_tracker &m_tracker;
   std::function<void(const path &)> m_func;
-  std::unordered_set<GraphId> m_seen_nodes;
 };
 
 path make_single_edge_path(GraphReader &reader, GraphId edge_id) {
@@ -309,20 +332,6 @@ path make_single_edge_path(GraphReader &reader, GraphId edge_id) {
   path p(segment(start_node_id, edge_id, node_id));
   return p;
 }
-
-bool check_access(GraphReader &reader, const std::deque<GraphId> &merged) {
-  uint32_t access = kAllAccess;
-  for (auto edge_id : merged) {
-    auto edge = reader.GetGraphTile(edge_id)->directededge(edge_id);
-    access &= edge->forwardaccess();
-  }
-  // be permissive here, as we do want to collect traffoc on most vehicular
-  // routes.
-  uint32_t vehicular = kAutoAccess | kTruckAccess |
-    kTaxiAccess | kBusAccess | kHOVAccess;
-  return access & vehicular;
-}
-
 
 } // anonymous namespace
 
@@ -356,14 +365,8 @@ void path::push_front(segment s) {
 }
 
 void merge(GraphReader &reader, std::function<void(const path &)> func) {
-  auto check_func = [&](const path &p) {
-    if (check_access(reader, p.m_edges)) {
-      func(p);
-    }
-  };
-
   edge_tracker tracker(reader);
-  edge_collapser e(reader, tracker, check_func);
+  edge_collapser e(reader, tracker, func);
 
   for (auto level : reader.GetTileHierarchy().levels() | bra::map_values) {
     for (uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
@@ -389,7 +392,7 @@ void merge(GraphReader &reader, std::function<void(const path &)> func) {
           GraphId edge_id(tile_id.tileid(), tile_id.level(), i);
           if (!tracker.get(edge_id)) {
             auto p = make_single_edge_path(reader, edge_id);
-            check_func(p);
+            func(p);
           }
         }
       }
