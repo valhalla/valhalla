@@ -8,6 +8,8 @@ namespace valhalla {
 namespace baldr {
 namespace merge {
 
+// a segment is a collection of a start node, end node and the edge between
+// them. this is used when creating paths.
 struct segment {
   GraphId m_start, m_edge, m_end;
   segment(GraphId start, GraphId edge, GraphId end);
@@ -16,6 +18,8 @@ struct segment {
   GraphId edge() const { return m_edge; }
 };
 
+// a path is a start node, end node and a collection of contiguous edges between
+// them. it is created by concatenating segments.
 struct path {
   GraphId m_start, m_end;
   std::deque<GraphId> m_edges;

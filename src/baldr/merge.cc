@@ -275,6 +275,11 @@ struct edge_collapser {
     return *edge_id;
   }
 
+  // explore starts walking the graph from a single node, building a forward and
+  // reverse path of edges as long as the nodes found haven't been explored
+  // before and have exactly two out-edges.
+  //
+  // the user-defined function is called for each path found.
   void explore(GraphId node_id) {
     auto nodes = nodes_reachable_from(node_id);
     if (!nodes) {
@@ -290,6 +295,8 @@ struct edge_collapser {
     m_func(reverse);
   }
 
+  // walk in a single direction, using the "direction" given by two nodes to
+  // select which edge is considered to be "forward".
   void explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
     const auto original_node_id = prev;
 
@@ -320,6 +327,8 @@ private:
   std::function<void(const path &)> m_func;
 };
 
+// utility function to make a path out of a single edge. this is called once all
+// the collapsible paths have been found and single edges are all that's left.
 path make_single_edge_path(GraphReader &reader, GraphId edge_id) {
   auto *edge = reader.GetGraphTile(edge_id)->directededge(edge_id);
   auto node_id = edge->endnode();
