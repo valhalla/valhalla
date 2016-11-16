@@ -104,7 +104,6 @@ edge_tracker::edge_index_t edge_tracker::edges_in_tiles(GraphReader &reader) {
 
   //keep the global number of edges encountered at the point we encounter each tile
   //this allows an edge to have a sequential global id and makes storing it very small
-  LOG_INFO("Enumerating edges...");
   uint64_t edge_count = 0;
   edge_tracker::edge_index_t edges_in_tiles(tiles_in_levels);
   for (auto level : reader.GetTileHierarchy().levels() | bra::map_values) {
@@ -141,7 +140,6 @@ bitset_t edge_tracker::count_all_edges(GraphReader &reader, const edge_tracker::
 
   const auto* tile = reader.GetGraphTile(max_tile_id);
   edge_count += tile->header()->directededgecount();
-  LOG_INFO("Number of edges: " + std::to_string(edge_count));
   return bitset_t(edge_count);
 }
 
