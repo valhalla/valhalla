@@ -142,9 +142,9 @@ bitset_t edge_tracker::count_all_edges(GraphReader &reader, const edge_tracker::
 
 namespace iter {
 
-// edges provides a container wrapper for the edges leaving a node which is
-// compatible with C++ range-based for loops and can make reading code a bit
-// nicer. for example:
+// the "edges" struct provides a container wrapper for the edges leaving a node
+// which is compatible with C++ range-based for loops and can make reading code
+// a bit nicer. for example:
 //
 //     for (const auto &pair : iter::edges(reader, node_id)) {
 //       ...
