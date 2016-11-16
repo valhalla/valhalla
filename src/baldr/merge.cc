@@ -122,7 +122,7 @@ edge_tracker::edge_index_t edge_tracker::edges_in_tiles(GraphReader &reader) {
     }
   }
 
-  return std::move(edges_in_tiles);
+  return edges_in_tiles;
 }
 
 bitset_t edge_tracker::count_all_edges(GraphReader &reader, const edge_tracker::edge_index_t &edges) {
