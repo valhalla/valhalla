@@ -18,17 +18,40 @@ namespace {
 // 453 million ways in OSM, and we might allocate two edge IDs per way,
 // giving something like 108mb of bits needed.
 struct bitset_t {
-  bitset_t(size_t size) {bits.resize(size);}
+  typedef uint64_t value_type;
+  static const size_t bits_per_value = sizeof(value_type) * CHAR_BIT;
+  static const uint64_t u64_size = static_cast<uint64_t>(bits_per_value);
+  static const uint64_t u64_one = static_cast<uint64_t>(1);
+
+  bitset_t(size_t size) : bits(div_round_up(size, bits_per_value)) {}
+
   void set(const uint64_t id) {
-    if (id >= static_cast<uint64_t>(bits.size()) * 64) throw std::runtime_error("id out of bounds");
-    bits[id / 64] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
+    if (id >= end_id()) {
+      throw std::runtime_error("id out of bounds");
+    }
+    bits[id / u64_size] |= u64_one << (id % u64_size);
   }
+
   bool get(const uint64_t id) const {
-    if (id >= static_cast<uint64_t>(bits.size()) * 64) throw std::runtime_error("id out of bounds");
-    return bits[id / 64] & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
+    if (id >= end_id()) {
+      throw std::runtime_error("id out of bounds");
+    }
+    return bits[id / u64_size] & (u64_one << (id % u64_size));
   }
+
 protected:
-  std::vector<uint64_t> bits;
+  std::vector<value_type> bits;
+
+  // return ceil(n / q) = r, such that r * q >= n.
+  static inline constexpr size_t div_round_up(size_t n, size_t q) {
+    return (n / q) + ((n % q) ? 1 : 0);
+  }
+
+  // return the "end" id, one greater than the maximum id, supported by this
+  // container.
+  inline uint64_t end_id() const {
+    return static_cast<uint64_t>(bits.size() * bits_per_value);
+  }
 };
 
 // edge tracker wraps a bitset to provide compact storage of GraphIds.
