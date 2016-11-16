@@ -114,13 +114,10 @@ edge_tracker::edge_index_t edge_tracker::edges_in_tiles(GraphReader &reader) {
         edges_in_tiles.emplace(tile_id, edge_count);
         const auto* tile = reader.GetGraphTile(tile_id);
         edge_count += tile->header()->directededgecount();
-        // this clears the cache, and the test relies on being able to inject
-        // stuff into the cache :-(
-        //
-        // TODO: presumably this is bad when the cache doesn't behave like a
-        // cache and evict older tiles. but this shouldn't be a problem when
-        // mmapping the whole extract.
-        //reader.Clear();
+        // clear the cache if it is overcommitted to avoid running out of memory.
+        if (reader.OverCommitted()) {
+          reader.Clear();
+        }
       }
     }
   }
