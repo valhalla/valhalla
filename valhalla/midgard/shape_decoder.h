@@ -1,6 +1,8 @@
 #ifndef VALHALLA_MIDGARD_SHAPE_DECODER_H_
 #define VALHALLA_MIDGARD_SHAPE_DECODER_H_
 
+#include <stdexcept>
+
 namespace valhalla {
 namespace midgard {
 
@@ -29,7 +31,7 @@ class Shape7Decoder {
   int32_t next(const int32_t previous) noexcept(false) {
     int32_t byte, shift = 0, result = 0;
     do {
-      if(begin == end) throw std::runtime_error("Bad encoded polyline");
+      if(empty()) throw std::runtime_error("Bad encoded polyline");
       //take the least significant 7 bits shifted into place
       byte = int32_t(*begin++);
       result |= (byte & 0x7f) << shift;
@@ -67,8 +69,8 @@ class Shape5Decoder {
     //grab each 5 bits and mask it in where it belongs using the shift
     int byte, shift = 0, result = 0;
     do {
+      if(empty()) throw std::runtime_error("Bad encoded polyline");
       //take the least significant 5 bits shifted into place
-      if(begin == end) throw std::runtime_error("Bad encoded polyline");
       byte = int32_t(*begin++) - 63;
       result |= (byte & 0x1f) << shift;
       shift += 5;
