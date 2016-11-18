@@ -72,6 +72,17 @@ union GraphId {
            const uint32_t id);
 
   /**
+   * Conversion to bool for use in conditional statements.
+   *
+   * Note that this is explicit to avoid unexpected implicit conversions. Some
+   * statements, including "if", "&&", "||", "!" are "implicit explicit" and
+   * will result in conversion.
+   *
+   * @return boolean true if the id is valid.
+   */
+  explicit inline operator bool() const { return Is_Valid(); }
+
+  /**
    * Returns true if the id is valid
    *
    * @return boolean true if the id is valid
