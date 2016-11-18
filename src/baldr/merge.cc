@@ -3,7 +3,6 @@
 #include "valhalla/midgard/logging.h"
 
 #include <boost/range/adaptor/map.hpp>
-#include <boost/optional.hpp>
 
 namespace bra = boost::adaptors;
 
@@ -215,8 +214,9 @@ struct edge_collapser {
   // returns the pair of nodes reachable from the given @node_id where they
   // are the only two nodes reachable by non-shortcut edges, and none of the
   // edges of @node_id cross into a different level.
-  boost::optional<std::pair<GraphId, GraphId> > nodes_reachable_from(GraphId node_id) {
-    boost::optional<GraphId> first, second;
+  std::pair<GraphId, GraphId> nodes_reachable_from(GraphId node_id) {
+    static const std::pair<GraphId, GraphId> none;
+    GraphId first, second;
 
     for (const auto &edge : iter::edges(m_reader, node_id)) {
       // nodes which connect to ferries, transit or to a different level
@@ -224,7 +224,7 @@ struct edge_collapser {
       if (edge.first->use() == Use::kFerry ||
           edge.first->use() == Use::kTransitConnection ||
           edge.first->trans_up() || edge.first->trans_down()) {
-        return boost::none;
+        return none;
       }
 
       // shortcut edges should be ignored
@@ -237,13 +237,13 @@ struct edge_collapser {
       // needed at this node to make it collapsible, or the node has more than
       // two edges.
       if (m_tracker.get(edge.second)) {
-        return boost::none;
+        return none;
       }
 
       if (first) {
         if (second) {
           // can't add a third, that means this node is a true junction.
-          return boost::none;
+          return none;
 
         } else {
           second = edge.first->endnode();
@@ -254,13 +254,13 @@ struct edge_collapser {
     }
 
     if (first && second) {
-      return std::make_pair(*first, *second);
+      return std::make_pair(first, second);
     } else {
-      return boost::none;
+      return none;
     }
   }
 
-  boost::optional<GraphId> next_node_id(GraphId last_node_id, GraphId node_id) {
+  GraphId next_node_id(GraphId last_node_id, GraphId node_id) {
     //
     //        -->--     -->--
     //   \   /  e4 \   /  e1 \   /
@@ -270,19 +270,19 @@ struct edge_collapser {
     //
     // given p (last_node_id) and c (node_id), return n if there is such a node.
     auto nodes = nodes_reachable_from(node_id);
-    if (!nodes) {
-      return boost::none;
+    if (!nodes.first || !nodes.second) {
+      return GraphId();
     }
-    assert(nodes->first == last_node_id || nodes->second == last_node_id);
-    if (nodes->first == last_node_id) {
-      return nodes->second;
+    assert(nodes.first == last_node_id || nodes.second == last_node_id);
+    if (nodes.first == last_node_id) {
+      return nodes.second;
     } else {
-      return nodes->first;
+      return nodes.first;
     }
   }
 
   GraphId edge_between(GraphId cur, GraphId next) {
-    boost::optional<GraphId> edge_id;
+    GraphId edge_id;
     for (const auto &edge : iter::edges(m_reader, cur)) {
       if (edge.first->endnode() == next) {
         edge_id = edge.second;
@@ -290,7 +290,7 @@ struct edge_collapser {
       }
     }
     assert(bool(edge_id));
-    return *edge_id;
+    return edge_id;
   }
 
   // explore starts walking the graph from a single node, building a forward and
@@ -300,14 +300,14 @@ struct edge_collapser {
   // the user-defined function is called for each path found.
   void explore(GraphId node_id) {
     auto nodes = nodes_reachable_from(node_id);
-    if (!nodes) {
+    if (!nodes.first || !nodes.second) {
       return;
     }
 
     path forward(node_id), reverse(node_id);
 
-    explore(node_id, nodes->first,  forward, reverse);
-    explore(node_id, nodes->second, reverse, forward);
+    explore(node_id, nodes.first,  forward, reverse);
+    explore(node_id, nodes.second, reverse, forward);
 
     m_func(forward);
     m_func(reverse);
@@ -318,7 +318,7 @@ struct edge_collapser {
   void explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
     const auto original_node_id = prev;
 
-    boost::optional<GraphId> maybe_next;
+    GraphId maybe_next;
     do {
       auto e1 = edge_between(prev, cur);
       forward.push_back(segment(prev, e1, cur));
@@ -330,7 +330,7 @@ struct edge_collapser {
       maybe_next = next_node_id(prev, cur);
       if (maybe_next) {
         prev = cur;
-        cur = *maybe_next;
+        cur = maybe_next;
         if (cur == original_node_id) {
           // circular!
           break;
