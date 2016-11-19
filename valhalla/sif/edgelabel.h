@@ -350,6 +350,12 @@ class EdgeLabel {
   void set_transition_cost(const Cost& tc);
 
   /**
+   * Is this edge part of a complex restriction.
+   * @return  Returns true if the edge is part of a complex restriction.
+   */
+  bool on_complex_rest() const;
+
+  /**
    * Is this edge not-through
    * @return  Returns true if the edge is not thru.
    */
@@ -441,9 +447,11 @@ class EdgeLabel {
   /**
    * transition_cost_: Transition cost (used in bidirectional path search).
    * transition_secs_: Transition time (used in bidirectional path search).
+   * on_complex_rest_: Edge is part of a complex restriction.
    */
   uint32_t transition_cost_ : 16;
-  uint32_t transition_secs_ : 16;
+  uint32_t transition_secs_ : 15;
+  uint32_t on_complex_rest_ : 1;
 };
 
 }
