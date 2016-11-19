@@ -14,7 +14,7 @@ namespace baldr {
 // simply subtract one from this number and add it just before the
 // empty_slots_ array below. NOTE that it can ONLY be an offset in bytes
 // and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 16;
+constexpr size_t kEmptySlots = 17;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
