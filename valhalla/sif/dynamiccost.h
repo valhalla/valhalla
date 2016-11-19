@@ -191,6 +191,25 @@ class DynamicCost {
                               const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
+   * Test if an edge should be restricted due to a complex restriction.
+   * @param  edge  Directed edge.
+   * @param  pred        Predecessor information.
+   * @param  edgelabels  List of edge labels.
+   * @param  tile        Graph tile (to read restriction if needed).
+   * @param  edgeid      Edge Id for the directed edge.
+   * @param  forward     Forward search or reverse search.
+   * @return Returns true it there is a complex restriction onto this edge
+   *         that matches the mode and the predecessor list for the current
+   *         path matches a complex restriction.
+   */
+  virtual bool Restricted(const baldr::DirectedEdge* edge,
+                          const EdgeLabel& pred,
+                          const std::vector<EdgeLabel>& edgelabels,
+                          const baldr::GraphTile*& tile,
+                          const baldr::GraphId& edgeid,
+                          const bool forward) const;
+
+  /**
    * Returns the transfer cost between 2 transit stops.
    * @return  Returns the transfer cost and time (seconds).
    */
