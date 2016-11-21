@@ -389,8 +389,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
   uint32_t max_transfer_distance = 99999.0f; //costing->GetMaxTransferDistanceMM();
 
   // Initialize and create the isotile
-  // add 5 minutes in case the transit trip is right on the edge.
-  auto max_seconds = (max_minutes * 60) + 300;
+  auto max_seconds = max_minutes * 60;
   Initialize(costing->UnitSize());
   ConstructIsoTile(true, max_minutes, origin_locations);
 
