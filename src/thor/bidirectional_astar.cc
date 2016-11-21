@@ -165,6 +165,12 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    // Check for complex restriction
+    if (costing_->Restricted(directededge, pred, edgelabels_forward_, tile,
+                             edgeid, true)) {
+      continue;
+    }
+
     // Get end node tile (skip if tile is not found) and opposing edge Id
     const GraphTile* t2 = directededge->leaves_tile() ?
         graphreader.GetGraphTile(directededge->endnode()) : tile;
@@ -249,6 +255,12 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
     if (!costing_->AllowedReverse(directededge, pred, opp_edge,
                               tile, edgeid)) {
+      continue;
+    }
+
+    // Check for complex restriction
+    if (costing_->Restricted(directededge, pred, edgelabels_reverse_, tile,
+                             edgeid, false)) {
       continue;
     }
 
@@ -509,6 +521,13 @@ void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
 
+  // Disallow connections that are part of a cmplex restriction.
+  // TODO - validate that we do not need to "walk" the paths forward
+  // and backward to see if they match a restriction.
+  if (pred.on_complex_rest()) {
+    return;
+  }
+
   // Set a threshold to extend search
   if (threshold_ == 0) {
     threshold_ = GetThreshold(mode_, edgelabels_forward_.size() + edgelabels_reverse_.size());
@@ -531,6 +550,13 @@ void BidirectionalAStar::SetReverseConnection(const sif::EdgeLabel& pred) {
   // path has been found to the end node of this directed edge.
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_forward_->Get(oppedge);
+
+  // Disallow connections that are part of a cmplex restriction.
+  // TODO - validate that we do not need to "walk" the paths forward
+  // and backward to see if they match a restriction.
+  if (pred.on_complex_rest()) {
+    return;
+  }
 
   // Set a threshold to extend search
   if (threshold_ == 0) {
