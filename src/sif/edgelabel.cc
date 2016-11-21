@@ -40,6 +40,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       transit_operator_(0),
       transition_cost_(0),
       transition_secs_(0),
+      on_complex_rest_(edge->part_of_complex_restriction()),
       not_thru_(edge->not_thru()),
       not_thru_pruning_(false),
       deadend_(edge->deadend()) {
@@ -75,6 +76,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       transit_operator_(0),
       transition_cost_(tc.cost),
       transition_secs_(tc.secs),
+      on_complex_rest_(edge->part_of_complex_restriction()),
       not_thru_(edge->not_thru()),
       not_thru_pruning_(not_thru_pruning),
       deadend_(edge->deadend()) {
@@ -112,6 +114,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       transit_operator_(transit_operator),
       transition_cost_(0),
       transition_secs_(0),
+      on_complex_rest_(edge->part_of_complex_restriction()),
       not_thru_(edge->not_thru()),
       not_thru_pruning_(false),
       deadend_(edge->deadend()) {
@@ -149,6 +152,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
        transit_operator_(0),
        transition_cost_(tc.cost),
        transition_secs_(tc.secs),
+       on_complex_rest_(edge->part_of_complex_restriction()),
        not_thru_(edge->not_thru()),
        not_thru_pruning_(not_thru_pruning),
        deadend_(edge->deadend()) {
@@ -357,6 +361,11 @@ uint32_t EdgeLabel::transition_secs() const {
 void EdgeLabel::set_transition_cost(const Cost& tc) {
   transition_cost_ = tc.cost;
   transition_secs_ = tc.secs;
+}
+
+// Is this edge part of a complex restriction.
+bool EdgeLabel::on_complex_rest() const {
+  return on_complex_rest_;
 }
 
 // Is this edge not-through
