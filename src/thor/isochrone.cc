@@ -452,12 +452,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       continue;
     }
 
-    // Return after the time interval has been met
-    if (pred.cost().secs > max_seconds) {
-      LOG_INFO("Exceed time interval: n = " + std::to_string(n));
-      return isotile_;
-    }
-
     // Set local time. TODO: adjust for time zone.
     uint32_t localtime = start_time + pred.cost().secs;
 
@@ -511,7 +505,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
+    for (uint32_t i = 0; i < nodeinfo->edge_count();
                 i++, directededge++, edgeid++) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
@@ -538,7 +532,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // Reset cost and walking distance
       Cost newcost = pred.cost();
       uint32_t walking_distance = pred.path_distance();
-
       // If this is a transit edge - get the next departure. Do not check
       // if allowed by costing - assume if you get a transit edge you
       // walked to the transit stop
@@ -660,6 +653,13 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       if (directededge->use() == Use::kTransitConnection &&
           pred.prior_stopid().Is_Valid() &&
           walking_distance > max_transfer_distance) {
+        continue;
+      }
+
+      // Continue if the time interval has been met...
+      // this bus or rail line goes beyond the max but need to consider others
+      // so we just continue here.
+      if (newcost.secs > max_seconds) {
         continue;
       }
 
