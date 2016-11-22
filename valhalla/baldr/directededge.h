@@ -441,6 +441,18 @@ class DirectedEdge {
   void set_speed(const uint32_t speed);
 
   /**
+   * Gets the speed limit in KPH.
+   * @return  Returns the speed limit in KPH.
+   */
+  uint32_t speed_limit() const;
+
+  /**
+   * Sets the speed limit in KPH.
+   * @param  speed_limit  Speed limit in KPH.
+   */
+  void set_speed_limit(const uint32_t speed_limit);
+
+  /**
    * Gets the truck speed in KPH.
    * @return  Returns the truck speed in KPH.
    */
@@ -878,7 +890,8 @@ class DirectedEdge {
   uint64_t max_up_slope_   : 5;  // Maximum upward slope
   uint64_t max_down_slope_ : 5;  // Maximum downward slope
   uint64_t density_        : 4;  // Density along the edge
-  uint64_t spare_          : 20;
+  uint64_t speed_limit_    : 8;  // Speed limit (kph)
+  uint64_t spare_          : 12;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.
