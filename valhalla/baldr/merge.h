@@ -108,7 +108,7 @@ edge_tracker edge_tracker::create(TileSet &tiles, GraphReader &reader) {
 }
 
 struct edge_collapser {
-  edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<void(const path &)> func);
+  edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<bool(const DirectedEdge *)> edge_pred, std::function<void(const path &)> func);
   std::pair<GraphId, GraphId> nodes_reachable_from(GraphId node_id);
   GraphId next_node_id(GraphId last_node_id, GraphId node_id);
   GraphId edge_between(GraphId cur, GraphId next);
@@ -118,6 +118,7 @@ struct edge_collapser {
 private:
   GraphReader &m_reader;
   edge_tracker &m_tracker;
+  std::function<bool(const DirectedEdge *)> m_edge_predictate;
   std::function<void(const path &)> m_func;
 };
 
@@ -134,9 +135,9 @@ path make_single_edge_path(GraphReader &reader, GraphId edge_id);
  * @param func The function to execute for each discovered path.
  */
 template <typename TileSet>
-void merge(TileSet &tiles, GraphReader &reader, std::function<void(const path &)> func) {
+void merge(TileSet &tiles, GraphReader &reader, std::function<bool(const DirectedEdge *)> edge_pred, std::function<void(const path &)> func) {
   detail::edge_tracker tracker = detail::edge_tracker::create(tiles, reader);
-  detail::edge_collapser e(reader, tracker, func);
+  detail::edge_collapser e(reader, tracker, edge_pred, func);
 
   for (GraphId tile_id : tiles) {
     const auto *tile = reader.GetGraphTile(tile_id);

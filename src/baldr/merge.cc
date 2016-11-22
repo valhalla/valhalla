@@ -117,9 +117,10 @@ void edge_tracker::set(const GraphId &edge_id) {
   m_edge_set.set(edge_id.id() + itr->second);
 }
 
-edge_collapser::edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<void(const path &)> func)
+edge_collapser::edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<bool(const DirectedEdge *)> edge_pred, std::function<void(const path &)> func)
   : m_reader(reader)
   , m_tracker(tracker)
+  , m_edge_predictate(edge_pred)
   , m_func(func)
 {}
 
@@ -133,9 +134,7 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
   for (const auto &edge : iter::edges(m_reader, node_id)) {
     // nodes which connect to ferries, transit or to a different level
     // shouldn't be collapsed.
-    if (edge.first->use() == Use::kFerry ||
-        edge.first->use() == Use::kTransitConnection ||
-        edge.first->trans_up() || edge.first->trans_down()) {
+    if (!m_edge_predictate(edge.first)) {
       return none;
     }
 
