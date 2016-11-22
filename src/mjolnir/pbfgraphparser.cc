@@ -719,17 +719,19 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
-    //advisory wins over max speed.  This is the reduced speed on ramps
-    if (has_advisory_speed)
-      w.set_speed_limit(advisory_speed);
-    else if (has_max_speed)
-      w.set_speed_limit(max_speed);
-
-    // average speed wins over categorized speed
+    // set the speed
     if (has_average_speed)
       w.set_speed(average_speed);
+    else if (has_advisory_speed)
+      w.set_speed(advisory_speed);
+    else if (has_max_speed)
+      w.set_speed(max_speed);
     else if (has_default_speed && !w.forward_tagged_speed() && !w.backward_tagged_speed())
       w.set_speed(default_speed);
+
+    // set the speed limit
+    if (has_max_speed)
+      w.set_speed_limit(max_speed);
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)
