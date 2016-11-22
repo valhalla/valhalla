@@ -50,6 +50,16 @@ float OSMWay::speed() const {
   return static_cast<float>(speed_);
 }
 
+// Sets the speed limit in KPH.
+void OSMWay::set_speed_limit(const float speed_limit) {
+  speed_ = static_cast<unsigned char>(speed_limit + 0.5f);
+}
+
+// Gets the speed limit in KPH.
+float OSMWay::speed_limit() const {
+  return static_cast<float>(speed_limit_);
+}
+
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
   backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
