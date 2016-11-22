@@ -94,11 +94,7 @@ float meili::MatchResult::distance();
 
 // GraphId identify edges and nodes internally in Valhalla tiled data
 valhalla::baldr::GraphId&
-meili::MatchResult::graphid();
-
-// A GraphId never tells you if it is edge or node whereas this
-// attribute tells you
-meili::GraphType meili::MatchResult::graphtype();
+meili::MatchResult::edgeid();
 ```
 
 See the header file `valhalla/meili/match_result.h` for more
