@@ -64,7 +64,7 @@ protected:
 
 // edge tracker wraps a bitset to provide compact storage of GraphIds.
 //
-// the GraphReader is crawled to enumerate all tiles, and the range of tile IDs
+// A TileSet is used to enumerate all relevant tiles, and the range of tile IDs
 // is used to construct a compact range by concatenating all the existing
 // compact ranges for each tile.
 struct edge_tracker {
@@ -131,7 +131,9 @@ path make_single_edge_path(GraphReader &reader, GraphId edge_id);
  * with each path that has been found. Each edge in the graph will be part of
  * exactly one path, but paths may contain multiple edges.
  *
+ * @param tiles A range object over GraphId for the tiles to consider.
  * @param reader The graph to traverse.
+ * @param edge_pred A predicate function which should return true for any edge that can be collapsed.
  * @param func The function to execute for each discovered path.
  */
 template <typename TileSet>
