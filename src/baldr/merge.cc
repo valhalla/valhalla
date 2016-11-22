@@ -12,131 +12,12 @@ namespace merge {
 
 namespace {
 
-// a place we can mark what edges we've seen, even for the planet we should
-// need ~ 100mb, as it allocates one bit per ID. there are currently around
-// 453 million ways in OSM, and we might allocate two edge IDs per way,
-// giving something like 108mb of bits needed.
-struct bitset_t {
-  typedef uint64_t value_type;
-  static const size_t bits_per_value = sizeof(value_type) * CHAR_BIT;
-  static const uint64_t u64_size = static_cast<uint64_t>(bits_per_value);
-  static const uint64_t u64_one = static_cast<uint64_t>(1);
-
-  bitset_t(size_t size) : bits(div_round_up(size, bits_per_value)) {}
-
-  void set(const uint64_t id) {
-    if (id >= end_id()) {
-      throw std::runtime_error("id out of bounds");
-    }
-    bits[id / u64_size] |= u64_one << (id % u64_size);
-  }
-
-  bool get(const uint64_t id) const {
-    if (id >= end_id()) {
-      throw std::runtime_error("id out of bounds");
-    }
-    return bits[id / u64_size] & (u64_one << (id % u64_size));
-  }
-
-protected:
-  std::vector<value_type> bits;
-
-  // return ceil(n / q) = r, such that r * q >= n.
-  static inline constexpr size_t div_round_up(size_t n, size_t q) {
-    return (n / q) + ((n % q) ? 1 : 0);
-  }
-
-  // return the "end" id, one greater than the maximum id, supported by this
-  // container.
-  inline uint64_t end_id() const {
-    return static_cast<uint64_t>(bits.size() * bits_per_value);
-  }
-};
-
-// edge tracker wraps a bitset to provide compact storage of GraphIds.
-//
-// the GraphReader is crawled to enumerate all tiles, and the range of tile IDs
-// is used to construct a compact range by concatenating all the existing
-// compact ranges for each tile.
-struct edge_tracker {
-  explicit edge_tracker(GraphReader &reader);
-
-  bool get(const GraphId &edge_id) const;
-  void set(const GraphId &edge_id);
-
-  typedef std::unordered_map<GraphId, uint64_t> edge_index_t;
-  edge_index_t m_edges_in_tiles;
-  //this is how we know what i've touched and what we havent
-  bitset_t m_edge_set;
-
-  static bitset_t count_all_edges(GraphReader &reader, const edge_index_t &edges);
-  static edge_index_t edges_in_tiles(GraphReader &reader);
-};
-
-edge_tracker::edge_tracker(GraphReader &reader)
-  : m_edges_in_tiles(edges_in_tiles(reader))
-  , m_edge_set(count_all_edges(reader, m_edges_in_tiles)) {
-}
-
-bool edge_tracker::get(const GraphId &edge_id) const {
-  auto itr = m_edges_in_tiles.find(edge_id.Tile_Base());
-  assert(itr != m_edges_in_tiles.end());
-  return m_edge_set.get(edge_id.id() + itr->second);
-}
-
-void edge_tracker::set(const GraphId &edge_id) {
-  auto itr = m_edges_in_tiles.find(edge_id.Tile_Base());
-  assert(itr != m_edges_in_tiles.end());
-  m_edge_set.set(edge_id.id() + itr->second);
-}
-
 uint64_t count_tiles_in_levels(GraphReader &reader) {
   uint64_t tile_count = 0;
   for (auto level : reader.GetTileHierarchy().levels() | bra::map_values) {
     tile_count += level.tiles.ncolumns() * level.tiles.nrows();
   }
   return tile_count;
-}
-
-edge_tracker::edge_index_t edge_tracker::edges_in_tiles(GraphReader &reader) {
-  uint64_t tiles_in_levels = count_tiles_in_levels(reader);
-
-  //keep the global number of edges encountered at the point we encounter each tile
-  //this allows an edge to have a sequential global id and makes storing it very small
-  uint64_t edge_count = 0;
-  edge_tracker::edge_index_t edges_in_tiles(tiles_in_levels);
-  for (auto level : reader.GetTileHierarchy().levels() | bra::map_values) {
-    for (uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
-      GraphId tile_id{i, level.level, 0};
-      if (reader.DoesTileExist(tile_id)) {
-        //TODO: just read the header, parsing the whole thing isnt worth it at this point
-        edges_in_tiles.emplace(tile_id, edge_count);
-        const auto* tile = reader.GetGraphTile(tile_id);
-        edge_count += tile->header()->directededgecount();
-        // clear the cache if it is overcommitted to avoid running out of memory.
-        if (reader.OverCommitted()) {
-          reader.Clear();
-        }
-      }
-    }
-  }
-
-  return edges_in_tiles;
-}
-
-bitset_t edge_tracker::count_all_edges(GraphReader &reader, const edge_tracker::edge_index_t &edges) {
-  GraphId max_tile_id;
-  uint64_t edge_count = 0;
-  for (const auto &entry : edges) {
-    if (entry.second >= edge_count) {
-      edge_count = entry.second;
-      max_tile_id = entry.first;
-    }
-  }
-
-  const auto* tile = reader.GetGraphTile(max_tile_id);
-  edge_count += tile->header()->directededgecount();
-  return bitset_t(edge_count);
 }
 
 namespace iter {
@@ -204,146 +85,171 @@ private:
 
 } // namespace iter
 
-struct edge_collapser {
-  edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<void(const path &)> func)
-    : m_reader(reader)
-    , m_tracker(tracker)
-    , m_func(func)
-    {}
+} // anonymous namespace
 
-  // returns the pair of nodes reachable from the given @node_id where they
-  // are the only two nodes reachable by non-shortcut edges, and none of the
-  // edges of @node_id cross into a different level.
-  std::pair<GraphId, GraphId> nodes_reachable_from(GraphId node_id) {
-    static const std::pair<GraphId, GraphId> none;
-    GraphId first, second;
+namespace detail {
 
-    for (const auto &edge : iter::edges(m_reader, node_id)) {
-      // nodes which connect to ferries, transit or to a different level
-      // shouldn't be collapsed.
-      if (edge.first->use() == Use::kFerry ||
-          edge.first->use() == Use::kTransitConnection ||
-          edge.first->trans_up() || edge.first->trans_down()) {
-        return none;
-      }
+bitset_t::bitset_t(size_t size) : bits(div_round_up(size, bits_per_value)) {}
 
-      // shortcut edges should be ignored
-      if (edge.first->shortcut()) {
-        continue;
-      }
+void bitset_t::set(const uint64_t id) {
+  if (id >= end_id()) {
+    throw std::runtime_error("id out of bounds");
+  }
+  bits[id / u64_size] |= u64_one << (id % u64_size);
+}
 
-      // if we encounter any edges which have already been marked, then this
-      // node cannot be collapsible. either that edge would be one of the two
-      // needed at this node to make it collapsible, or the node has more than
-      // two edges.
-      if (m_tracker.get(edge.second)) {
-        return none;
-      }
+bool bitset_t::get(const uint64_t id) const {
+  if (id >= end_id()) {
+    throw std::runtime_error("id out of bounds");
+  }
+  return bits[id / u64_size] & (u64_one << (id % u64_size));
+}
 
-      if (first) {
-        if (second) {
-          // can't add a third, that means this node is a true junction.
-          return none;
+bool edge_tracker::get(const GraphId &edge_id) const {
+  auto itr = m_edges_in_tiles.find(edge_id.Tile_Base());
+  assert(itr != m_edges_in_tiles.end());
+  return m_edge_set.get(edge_id.id() + itr->second);
+}
 
-        } else {
-          second = edge.first->endnode();
-        }
-      } else {
-        first = edge.first->endnode();
-      }
-    }
+void edge_tracker::set(const GraphId &edge_id) {
+  auto itr = m_edges_in_tiles.find(edge_id.Tile_Base());
+  assert(itr != m_edges_in_tiles.end());
+  m_edge_set.set(edge_id.id() + itr->second);
+}
 
-    if (first && second) {
-      return std::make_pair(first, second);
-    } else {
+edge_collapser::edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<void(const path &)> func)
+  : m_reader(reader)
+  , m_tracker(tracker)
+  , m_func(func)
+{}
+
+// returns the pair of nodes reachable from the given @node_id where they
+// are the only two nodes reachable by non-shortcut edges, and none of the
+// edges of @node_id cross into a different level.
+std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id) {
+  static const std::pair<GraphId, GraphId> none;
+  GraphId first, second;
+
+  for (const auto &edge : iter::edges(m_reader, node_id)) {
+    // nodes which connect to ferries, transit or to a different level
+    // shouldn't be collapsed.
+    if (edge.first->use() == Use::kFerry ||
+        edge.first->use() == Use::kTransitConnection ||
+        edge.first->trans_up() || edge.first->trans_down()) {
       return none;
     }
-  }
 
-  GraphId next_node_id(GraphId last_node_id, GraphId node_id) {
-    //
-    //        -->--     -->--
-    //   \   /  e4 \   /  e1 \   /
-    //   -(p)       (c)       (n)-
-    //   /   \ e3  /   \ e2  /   \
-    //        --<--     --<--
-    //
-    // given p (last_node_id) and c (node_id), return n if there is such a node.
-    auto nodes = nodes_reachable_from(node_id);
-    if (!nodes.first || !nodes.second) {
-      return GraphId();
+    // shortcut edges should be ignored
+    if (edge.first->shortcut()) {
+      continue;
     }
-    assert(nodes.first == last_node_id || nodes.second == last_node_id);
-    if (nodes.first == last_node_id) {
-      return nodes.second;
+
+    // if we encounter any edges which have already been marked, then this
+    // node cannot be collapsible. either that edge would be one of the two
+    // needed at this node to make it collapsible, or the node has more than
+    // two edges.
+    if (m_tracker.get(edge.second)) {
+      return none;
+    }
+
+    if (first) {
+      if (second) {
+        // can't add a third, that means this node is a true junction.
+        return none;
+
+      } else {
+        second = edge.first->endnode();
+      }
     } else {
-      return nodes.first;
+      first = edge.first->endnode();
     }
   }
 
-  GraphId edge_between(GraphId cur, GraphId next) {
-    GraphId edge_id;
-    for (const auto &edge : iter::edges(m_reader, cur)) {
-      if (edge.first->endnode() == next) {
-        edge_id = edge.second;
+  if (first && second) {
+    return std::make_pair(first, second);
+  } else {
+    return none;
+  }
+}
+
+GraphId edge_collapser::next_node_id(GraphId last_node_id, GraphId node_id) {
+  //
+  //        -->--     -->--
+  //   \   /  e4 \   /  e1 \   /
+  //   -(p)       (c)       (n)-
+  //   /   \ e3  /   \ e2  /   \
+  //        --<--     --<--
+  //
+  // given p (last_node_id) and c (node_id), return n if there is such a node.
+  auto nodes = nodes_reachable_from(node_id);
+  if (!nodes.first || !nodes.second) {
+    return GraphId();
+  }
+  assert(nodes.first == last_node_id || nodes.second == last_node_id);
+  if (nodes.first == last_node_id) {
+    return nodes.second;
+  } else {
+    return nodes.first;
+  }
+}
+
+GraphId edge_collapser::edge_between(GraphId cur, GraphId next) {
+  GraphId edge_id;
+  for (const auto &edge : iter::edges(m_reader, cur)) {
+    if (edge.first->endnode() == next) {
+      edge_id = edge.second;
+      break;
+    }
+  }
+  assert(bool(edge_id));
+  return edge_id;
+}
+
+// explore starts walking the graph from a single node, building a forward and
+// reverse path of edges as long as the nodes found haven't been explored
+// before and have exactly two out-edges.
+//
+// the user-defined function is called for each path found.
+void edge_collapser::explore(GraphId node_id) {
+  auto nodes = nodes_reachable_from(node_id);
+  if (!nodes.first || !nodes.second) {
+    return;
+  }
+
+  path forward(node_id), reverse(node_id);
+
+  explore(node_id, nodes.first,  forward, reverse);
+  explore(node_id, nodes.second, reverse, forward);
+
+  m_func(forward);
+  m_func(reverse);
+}
+
+// walk in a single direction, using the "direction" given by two nodes to
+// select which edge is considered to be "forward".
+void edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
+  const auto original_node_id = prev;
+
+  GraphId maybe_next;
+  do {
+    auto e1 = edge_between(prev, cur);
+    forward.push_back(segment(prev, e1, cur));
+    m_tracker.set(e1);
+    auto e2 = edge_between(cur, prev);
+    reverse.push_front(segment(cur, e2, prev));
+    m_tracker.set(e2);
+
+    maybe_next = next_node_id(prev, cur);
+    if (maybe_next) {
+      prev = cur;
+      cur = maybe_next;
+      if (cur == original_node_id) {
+        // circular!
         break;
       }
     }
-    assert(bool(edge_id));
-    return edge_id;
-  }
-
-  // explore starts walking the graph from a single node, building a forward and
-  // reverse path of edges as long as the nodes found haven't been explored
-  // before and have exactly two out-edges.
-  //
-  // the user-defined function is called for each path found.
-  void explore(GraphId node_id) {
-    auto nodes = nodes_reachable_from(node_id);
-    if (!nodes.first || !nodes.second) {
-      return;
-    }
-
-    path forward(node_id), reverse(node_id);
-
-    explore(node_id, nodes.first,  forward, reverse);
-    explore(node_id, nodes.second, reverse, forward);
-
-    m_func(forward);
-    m_func(reverse);
-  }
-
-  // walk in a single direction, using the "direction" given by two nodes to
-  // select which edge is considered to be "forward".
-  void explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
-    const auto original_node_id = prev;
-
-    GraphId maybe_next;
-    do {
-      auto e1 = edge_between(prev, cur);
-      forward.push_back(segment(prev, e1, cur));
-      m_tracker.set(e1);
-      auto e2 = edge_between(cur, prev);
-      reverse.push_front(segment(cur, e2, prev));
-      m_tracker.set(e2);
-
-      maybe_next = next_node_id(prev, cur);
-      if (maybe_next) {
-        prev = cur;
-        cur = maybe_next;
-        if (cur == original_node_id) {
-          // circular!
-          break;
-        }
-      }
-    } while (maybe_next);
-  }
-
-private:
-  GraphReader &m_reader;
-  edge_tracker &m_tracker;
-  std::function<void(const path &)> m_func;
-};
+  } while (maybe_next);
+}
 
 // utility function to make a path out of a single edge. this is called once all
 // the collapsible paths have been found and single edges are all that's left.
@@ -360,7 +266,7 @@ path make_single_edge_path(GraphReader &reader, GraphId edge_id) {
   return p;
 }
 
-} // anonymous namespace
+} // namespace detail
 
 segment::segment(GraphId start, GraphId edge, GraphId end)
   : m_start(start)
@@ -389,42 +295,6 @@ void path::push_front(segment s) {
   assert(s.end() == m_start);
   m_start = s.start();
   m_edges.push_front(s.edge());
-}
-
-void merge(GraphReader &reader, std::function<void(const path &)> func) {
-  edge_tracker tracker(reader);
-  edge_collapser e(reader, tracker, func);
-
-  for (auto level : reader.GetTileHierarchy().levels() | bra::map_values) {
-    for (uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
-      GraphId tile_id{i, level.level, 0};
-      if (reader.DoesTileExist(tile_id)) {
-        const auto *tile = reader.GetGraphTile(tile_id);
-        uint32_t node_count = tile->header()->nodecount();
-        for (uint32_t i = 0; i < node_count; ++i) {
-          GraphId node_id(tile_id.tileid(), tile_id.level(), i);
-          e.explore(node_id);
-        }
-      }
-    }
-  }
-
-  for (auto level : reader.GetTileHierarchy().levels() | bra::map_values) {
-    for (uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
-      GraphId tile_id{i, level.level, 0};
-      if (reader.DoesTileExist(tile_id)) {
-        const auto *tile = reader.GetGraphTile(tile_id);
-        const auto num_edges = tile->header()->directededgecount();
-        for (uint32_t i = 0; i < num_edges; ++i) {
-          GraphId edge_id(tile_id.tileid(), tile_id.level(), i);
-          if (!tracker.get(edge_id)) {
-            auto p = make_single_edge_path(reader, edge_id);
-            func(p);
-          }
-        }
-      }
-    }
-  }
 }
 
 }

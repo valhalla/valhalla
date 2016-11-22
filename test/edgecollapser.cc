@@ -110,7 +110,10 @@ void TestCollapseEdgeSimple() {
     edges.insert(base_id + i);
   }
 
-  vb::merge::merge(reader, [&](const vb::merge::path &p) {
+  std::vector<vb::GraphId> tiles;
+  tiles.push_back(base_id);
+
+  vb::merge::merge(tiles, reader, [&](const vb::merge::path &p) {
       count += 1;
       for (auto id : p.m_edges) {
         if (edges.count(id) != 1) {
@@ -166,7 +169,10 @@ void TestCollapseEdgeJunction() {
     edges.insert(base_id + i);
   }
 
-  vb::merge::merge(reader, [&](const vb::merge::path &p) {
+  std::vector<vb::GraphId> tiles;
+  tiles.push_back(base_id);
+
+  vb::merge::merge(tiles, reader, [&](const vb::merge::path &p) {
       count += 1;
       for (auto id : p.m_edges) {
         if (edges.count(id) != 1) {
