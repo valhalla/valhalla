@@ -498,6 +498,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             speed = kMaxSpeedKph;
           }
 
+          uint32_t speed_limit = static_cast<uint32_t>(w.speed_limit());
+          if (speed_limit > kMaxSpeedKph) {
+            LOG_WARN("Speed limit = " + std::to_string(speed_limit) + " wayId= " +
+                       std::to_string(w.way_id()));
+            speed_limit = kMaxSpeedKph;
+          }
+
           uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
           if (truck_speed > kMaxSpeedKph) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) + " wayId= " +
@@ -642,9 +649,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             throw std::runtime_error("GeoAttributes cached object should be there!");
 
           // Add a directed edge and get a reference to it
-          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
-                        speed, truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                        n, has_signal, restrictions, bike_network);
+          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
+                                 std::get<0>(found->second), speed, speed_limit,
+                                 truck_speed, use,
+                                 static_cast<RoadClass>(edge.attributes.importance), n,
+                                 has_signal, restrictions, bike_network);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
 
