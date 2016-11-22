@@ -721,33 +721,33 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Til
     if(edge->is_shortcut() || edge->trans_up() || edge->trans_down() || edge->use() == Use::kTransitConnection)
       continue;
 
-    //already binned this
-    auto id = ids.insert(edge->edgeinfo_offset());
-    if(!id.second)
-      continue;
-
     //get the shape or bail if none
     auto info = tile->edgeinfo(edge->edgeinfo_offset());
     const auto& shape = info.shape();
     if(shape.empty())
       continue;
-    //compute the intersection with the bins
-    auto intersection = tiles.Intersect(shape);
+
+    //avoid duplicates and minimize leaving a tile for shape by:
+    //writing the edge to the tile it originates in
+    //not writing the edge to the tile it terminates in
+    //writing the edge to tweeners if originating < terminating
     auto start_id = tiles.TileId(edge->forward() ? shape.front() : shape.back());
     auto end_id = tiles.TileId(edge->forward() ? shape.back() : shape.front());
+    auto intermediate = start_id < end_id;
 
-    //bin some in, save some for later, ignore some
+    //if this starts and ends in the same tile and we've seen it already we can skip it
+    if(start_id == end_id && !ids.insert(edge->edgeinfo_offset()).second)
+      continue;
+
+    //for each bin that got intersected
+    auto intersection = tiles.Intersect(shape);
     GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(), edge - start_edge);
     for(const auto& i : intersection) {
-      //to avoid dups and minimize having to leave the tile for shape we:
-      //always write a given edge to the tile it originates in
-      bool originating = i.first == start_id;
-      //never write a given edge to the tile it terminates in
-      bool terminating = i.first == end_id;
-      //write a given edge to intermediate tiles only if its originating tile id is < its terminating tile id
-      bool intermediate = i.first < end_id;
+      //as per the rules above about when to add intersections
+      auto originating = i.first == start_id;
+      auto terminating = i.first == end_id;
       if(originating || (intermediate && !terminating)) {
-        //which set of bins
+        //which set of bins, either this local set or tweeners to be added later
         auto& out_bins = originating && max ? bins : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
         //keep the edge id
         for(auto bin : i.second)
