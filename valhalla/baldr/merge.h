@@ -52,7 +52,7 @@ protected:
 
   // return ceil(n / q) = r, such that r * q >= n.
   static inline constexpr size_t div_round_up(size_t n, size_t q) {
-    return (n / q) + ((n % q) ? 1 : 0);
+    return (n + (q - 1)) / q;
   }
 
   // return the "end" id, one greater than the maximum id, supported by this
