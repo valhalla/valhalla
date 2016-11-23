@@ -163,9 +163,9 @@ bool thor_worker_t::route_match(std::vector<PathInfo>& path_infos) {
 
       // Continue walking shape to find the end edge...
       if (ExpandFromNode::FormPath(mode_costing, mode, reader, shape, index,
-                                        end_node_tile, de->endnode(),
-                                        end_edge_start_node, prev_edge_label,
-                                        elapsed_time, path_infos, false)) {
+                                   end_node_tile, de->endnode(),
+                                   end_edge_start_node, prev_edge_label,
+                                   elapsed_time, path_infos, false)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
             de, end_edge_tile->node(end_edge_start_node), prev_edge_label).secs;

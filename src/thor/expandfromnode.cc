@@ -56,8 +56,9 @@ bool ExpandFromNode::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_cost
         if (end_node_tile == nullptr) {
           continue;
         }
-        if (FormPath(mode_costing, mode, reader, shape, correlated_index, end_node_tile, de->endnode(),
-                             stop_node, prev_edge_label, elapsed_time, path_infos, true)) {
+        if (FormPath(mode_costing, mode, reader, shape, correlated_index,
+                     end_node_tile, de->endnode(), stop_node, prev_edge_label,
+                     elapsed_time, path_infos, true)) {
           return true;
         } else {
           continue;
@@ -96,8 +97,9 @@ bool ExpandFromNode::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_cost
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        return (FormPath(mode_costing, mode, reader, shape, index, end_node_tile, de->endnode(),
-                                 stop_node, prev_edge_label, elapsed_time, path_infos, false));
+        return (FormPath(mode_costing, mode, reader, shape, index,
+                         end_node_tile, de->endnode(), stop_node,
+                         prev_edge_label, elapsed_time, path_infos, false));
 
       }
       index++;
