@@ -185,7 +185,7 @@ message TripPath {
     optional TransitType transit_type = 24;
     optional TransitRouteInfo transit_route_info = 25;
     optional uint64 id = 26;
-    optional uint64 base_data_id = 27;
+    optional uint64 way_id = 27;
     optional float weighted_grade = 28;
     optional int32 max_upward_grade = 29;
     optional int32 max_downward_grade = 30;

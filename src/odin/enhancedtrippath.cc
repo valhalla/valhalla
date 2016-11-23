@@ -426,8 +426,8 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | id=";
   str += std::to_string(id());
 
-  str += " | base_data_id=";
-  str += std::to_string(base_data_id());
+  str += " | way_id=";
+  str += std::to_string(way_id());
 
   str += " | weighted_grade=";
   str += std::to_string(weighted_grade());
@@ -605,7 +605,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(id());
 
   str += delim;
-  str += std::to_string(base_data_id());
+  str += std::to_string(way_id());
 
   str += delim;
   str += std::to_string(weighted_grade());
