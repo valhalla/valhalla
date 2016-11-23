@@ -423,6 +423,22 @@ std::string EnhancedTripPath_Edge::ToString() const {
     str += transit_route_info().operator_url();
   }
 
+  str += " | id=";
+  str += std::to_string(id());
+
+  str += " | base_data_id=";
+  str += std::to_string(base_data_id());
+
+  str += " | weighted_grade=";
+  str += std::to_string(weighted_grade());
+
+  str += " | max_upward_grade=";
+  str += std::to_string(max_upward_grade());
+
+  str += " | max_downward_grade=";
+  str += std::to_string(max_downward_grade());
+
+
   return str;
 }
 
@@ -584,6 +600,21 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
     str += transit_route_info().operator_onestop_id();
     str += "\"";
   }
+
+  str += delim;
+  str += std::to_string(id());
+
+  str += delim;
+  str += std::to_string(base_data_id());
+
+  str += delim;
+  str += std::to_string(weighted_grade());
+
+  str += delim;
+  str += std::to_string(max_upward_grade());
+
+  str += delim;
+  str += std::to_string(max_downward_grade());
 
   return str;
 }
