@@ -865,7 +865,7 @@ json::MapPtr DirectedEdge::json() const {
     {"country_crossing", static_cast<bool>(ctry_crossing_)},
     {"geo_attributes", json::map({
       {"length", static_cast<uint64_t>(length_)},
-      {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.5) / .6, 2}},
+      {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
       //{"curvature", static_cast<uint64_t>(curvature_)},
     })},
     {"access", access_json(forwardaccess_)},
