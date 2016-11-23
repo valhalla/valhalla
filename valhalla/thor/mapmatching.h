@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_MAPMATCHINGROUTE_H_
-#define VALHALLA_THOR_MAPMATCHINGROUTE_H_
+#ifndef VALHALLA_THOR_MAPMATCHING_H_
+#define VALHALLA_THOR_MAPMATCHING_H_
 
 #include <vector>
 #include <map>
@@ -21,22 +21,18 @@
 namespace valhalla {
 namespace thor {
 
-class MapMatchingRoute {
+class MapMatching {
  public:
 
-  std::vector<PathInfo> FormPath(meili::MapMatcher* matcher,
-                                 const std::vector<meili::MatchResult>& results,
-                                 const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                 const sif::TravelMode mode);
-
-  protected:
-
-  // Current travel mode
-  sif::TravelMode mode_;
+  static std::vector<PathInfo> FormPath(
+      meili::MapMatcher* matcher,
+      const std::vector<meili::MatchResult>& results,
+      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+      const sif::TravelMode mode);
 
 };
 
 }
 }
 
-#endif  // VALHALLA_THOR_MAPMATCHINGROUTE_H_
+#endif  // VALHALLA_THOR_MAPMATCHING_H_

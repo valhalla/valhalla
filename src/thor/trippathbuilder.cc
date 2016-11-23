@@ -500,7 +500,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
     // Add trip edge
-    auto trip_edge = AddTripEdge(path.front().edgeid.id(), path.front().trip_id,
+    auto trip_edge = AddTripEdge(path.front().edgeid, path.front().trip_id,
                        0, path.front().mode,
                        travel_types[static_cast<int>(path.front().mode)],
                        edge, trip_path.add_node(), tile,
@@ -724,7 +724,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, block_id, mode,
+    TripPath_Edge* trip_edge = AddTripEdge(edge, trip_id, block_id, mode,
                                            travel_type, directededge, trip_node,
                                            graphtile, length_pct);
 
@@ -912,7 +912,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 }
 
 // Add a trip edge to the trip node and set its attributes
-TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
+TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
                                             const uint32_t trip_id,
                                             const uint32_t block_id,
                                             const sif::TravelMode mode,
@@ -921,6 +921,9 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
                                             const float length_percentage) {
+
+  // Index of the directed edge within the tile
+  uint32_t idx = edge.id();
 
   TripPath_Edge* trip_edge = trip_node->mutable_edge();
 
@@ -932,7 +935,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   }
 
 #ifdef LOGGING_LEVEL_TRACE
-  LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo->wayid()));
+  LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
 
   // Set the exits (if the directed edge has exit sign information)
@@ -1083,6 +1086,21 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   } else if (mode == sif::TravelMode::kPublicTransit) {
     trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kTransit);
   }
+
+  // Set edge id (graphid value)
+  trip_edge->set_id(edge.value);
+
+  // Set way id (base data id)
+  trip_edge->set_way_id(edgeinfo.wayid());
+
+  // Set weighted grade
+  trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
+
+  // Set maximum upward grade
+  trip_edge->set_max_upward_grade(directededge->max_up_slope());
+
+  // Set maximum downward grade
+  trip_edge->set_max_downward_grade(directededge->max_down_slope());
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information

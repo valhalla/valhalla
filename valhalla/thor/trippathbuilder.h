@@ -42,7 +42,7 @@ class TripPathBuilder {
 
   /**
    * Add trip edge. (TODO more comments)
-   * @param  idx  Index of the directed edge within the tile.
+   * @param  edge          Identifier of an edge within the tiled, hierarchical graph.
    * @param  trip_id       Trip Id (0 if not a transit edge).
    * @param  block_id      Transit block Id (0 if not a transit edge)
    * @param  mode          Travel mode for the edge: Biking, walking, etc.
@@ -52,7 +52,7 @@ class TripPathBuilder {
    * @param  length_pct    Scale for the edge length for the partial distance
    *                       at begin and end edges
    */
-  static odin::TripPath_Edge* AddTripEdge(const uint32_t idx,
+  static odin::TripPath_Edge* AddTripEdge(const baldr::GraphId& edge,
                                           const uint32_t trip_id,
                                           const uint32_t block_id,
                                           const sif::TravelMode mode,
