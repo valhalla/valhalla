@@ -38,6 +38,12 @@ struct Location {
   Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK);
 
   /**
+   * Serializes this object to ptree
+   * @return ptree
+   */
+  boost::property_tree::ptree ToPtree() const;
+
+  /**
    * conversion.
    * @param  pt  a property tree representation of the location
    */

@@ -16,6 +16,36 @@ Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
       stoptype_(stoptype) {
 }
 
+boost::property_tree::ptree Location::ToPtree() const {
+  boost::property_tree::ptree location;
+  location.put("lat", latlng_.lat());
+  location.put("lon", latlng_.lng());
+  if (stoptype_ == StopType::THROUGH)
+    location.put("type", "through");
+  else location.put("type", "break");
+  if(!name_.empty())
+    location.put("name", name_);
+  if(!street_.empty())
+    location.put("street", street_);
+  if(!city_.empty())
+    location.put("city", city_);
+  if(!state_.empty())
+    location.put("state", state_);
+  if(!zip_.empty())
+    location.put("postal_code", zip_);
+  if(!country_.empty())
+    location.put("country", country_);
+
+  if(date_time_ && !(*date_time_).empty())
+    location.put("date_time", *date_time_);
+  if(heading_)
+    location.put("heading", *heading_);
+  if(way_id_)
+    location.put("way_id", *way_id_);
+
+  return location;
+}
+
 Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   float lat = pt.get<float>("lat");
