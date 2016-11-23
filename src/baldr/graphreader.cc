@@ -74,6 +74,8 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt)
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   if(tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend())
     return true;
+  if(cache_.find(graphid) != cache_.end())
+    return true;
   std::string file_location = tile_hierarchy_.tile_dir() + "/" +
     GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy_);
   struct stat buffer;

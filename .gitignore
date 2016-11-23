@@ -46,6 +46,7 @@ test/admin
 test/datetime
 test/directededge
 test/double_bucket_queue
+test/edgecollapser
 test/graphid
 test/tilehierarchy
 test/graphtile

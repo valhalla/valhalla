@@ -104,6 +104,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
 	src/baldr/graphtileheader.cc \
+	src/baldr/merge.cc \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
@@ -137,6 +138,7 @@ check_PROGRAMS = \
 	test/datetime \
 	test/directededge \
 	test/double_bucket_queue \
+	test/edgecollapser \
 	test/graphid \
 	test/tilehierarchy \
 	test/graphtile \
@@ -168,6 +170,9 @@ test_datetime_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
 test_directededge_SOURCES = test/directededge.cc test/test.cc
 test_directededge_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
 test_directededge_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
+test_edgecollapser_SOURCES = test/edgecollapser.cc test/test.cc
+test_edgecollapser_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
+test_edgecollapser_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
 test_graphid_SOURCES = test/graphid.cc test/test.cc
 test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
 test_graphid_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_baldr.la
