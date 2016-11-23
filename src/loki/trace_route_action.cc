@@ -61,10 +61,13 @@ namespace valhalla {
 
       // Add first and last locations to request
       boost::property_tree::ptree locations_child;
-      locations_child.push_back(std::make_pair("", loki::Search(first, reader, edge_filter, node_filter).ToPtree(0)));
-      locations_child.push_back(std::make_pair("", loki::Search(last, reader, edge_filter, node_filter).ToPtree(1)));
+      locations_child.push_back(std::make_pair("", first.ToPtree()));
+      locations_child.push_back(std::make_pair("", last.ToPtree()));
 
-      request.add_child("locations", locations_child);
+      request.put_child("locations", locations_child);
+
+      request.put_child("correlated_0", loki::Search(first, reader, edge_filter, node_filter).ToPtree(0));
+      request.put_child("correlated_1", loki::Search(last, reader, edge_filter, node_filter).ToPtree(1));
 
     }
 
