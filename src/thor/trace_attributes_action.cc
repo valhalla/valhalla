@@ -21,12 +21,15 @@ using namespace valhalla::thor;
 
 
 namespace {
+  constexpr double kMilePerMeter = 0.000621371;
+  constexpr double kKmPerHour = 0.277778;
+  constexpr double kMilePerHour = 0.621371;
   const headers_t::value_type CORS { "Access-Control-Allow-Origin", "*" };
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id) {
+  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double distance_scale, double speed_scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     if (trip_path.node().size() > 0) {
@@ -40,8 +43,8 @@ namespace {
             {"max_downward_grade", static_cast<int64_t>(node.edge().max_downward_grade())},
             {"max_upward_grade", static_cast<int64_t>(node.edge().max_upward_grade())},
             {"weighted_grade", json::fp_t{node.edge().weighted_grade(), 3}},
-            {"length", json::fp_t{node.edge().length(), 3}},
-            {"speed", json::fp_t{node.edge().speed(), 3}},
+            {"length", json::fp_t{node.edge().length() * distance_scale, 3}},
+            {"speed", json::fp_t{node.edge().speed() * speed_scale, 3}},
             {"way_id", static_cast<uint64_t>(node.edge().way_id())},
             {"id", static_cast<uint64_t>(node.edge().id())},
             {"names", names}
@@ -90,9 +93,16 @@ worker_t::result_t thor_worker_t::trace_attributes(
     trip_path = map_match();
   }
   json::MapPtr json;
+  auto id = request.get_optional<std::string>("id");
+  double distance_scale = kKmPerMeter;
+  double speed_scale = kKmPerHour;
+  auto units = request.get<std::string>("units", "km");
+  if (units == "mi") {
+    distance_scale = kMilePerMeter;
+    speed_scale = kMilePerHour;
+  }
   //serialize output to Thor
-  json = serialize(trip_path, request.get_optional<std::string>("id"));
-
+  json = serialize(trip_path, id, distance_scale, speed_scale);
 
   //jsonp callback if need be
   std::ostringstream stream;
