@@ -108,6 +108,14 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
       (way.emergency_backward() &&  forward)) {
     reverse_access |= kEmergencyAccess;
   }
+  if ((way.hov_forward()  &&  forward) ||
+      (way.hov_backward() && !forward)) {
+    forward_access |= kHOVAccess;
+  }
+  if ((way.hov_forward()  && !forward) ||
+      (way.hov_backward() &&  forward)) {
+    reverse_access |= kHOVAccess;
+  }
   if (way.pedestrian()) {
     forward_access |= kPedestrianAccess;
     reverse_access |= kPedestrianAccess;
@@ -123,7 +131,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
   set_forwardaccess(forward_access);
   set_reverseaccess(reverse_access);
 
-  // TODO: HOV, Taxi?
+  // TODO: Taxi?
 }
 
 }
