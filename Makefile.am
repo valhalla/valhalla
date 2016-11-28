@@ -50,15 +50,15 @@ nobase_include_HEADERS = \
 	valhalla/thor/bidirectional_astar.h \
 	valhalla/thor/costmatrix.h \
 	valhalla/thor/edgestatus.h \
-	valhalla/thor/expandfromnode.h \
 	valhalla/thor/isochrone.h \
 	valhalla/thor/optimizer.h \
-	valhalla/thor/mapmatching.h \
+	valhalla/thor/map_matcher.h \
 	valhalla/thor/multimodal.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
-	valhalla/thor/trippathbuilder.h \
+	valhalla/thor/route_matcher.h \
 	valhalla/thor/service.h \
+	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h
 libvalhalla_thor_la_SOURCES = \
@@ -67,19 +67,19 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
 	src/thor/edgestatus.cc \
-	src/thor/expandfromnode.cc \
 	src/thor/isochrone.cc \
 	src/thor/isochrone_action.cc \
-	src/thor/mapmatching.cc \
+	src/thor/map_matcher.cc \
 	src/thor/matrix_action.cc \
 	src/thor/multimodal.cc \
 	src/thor/optimized_route_action.cc \
 	src/thor/optimizer.cc \
 	src/thor/route_action.cc \
+	src/thor/route_matcher.cc \
+	src/thor/service.cc \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/thor/trippathbuilder.cc \
-	src/thor/service.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc
 

@@ -4,7 +4,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/errorcode_util.h>
 
-#include "thor/expandfromnode.h"
+#include "thor/route_matcher.h"
 #include "thor/service.h"
 
 using namespace valhalla::baldr;
@@ -21,17 +21,13 @@ namespace thor {
  * and compare to Valhalla edge’s end node positions to form the list of edges.
  *
  */
-bool ExpandFromNode::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                              const TravelMode& mode,
-                              GraphReader& reader,
-                              const std::vector<midgard::PointLL>& shape,
-                              size_t& correlated_index,
-                              const GraphTile* tile, const GraphId& node,
-                              const GraphId& stop_node,
-                              EdgeLabel& prev_edge_label,
-                              float& elapsed_time,
-                              std::vector<PathInfo>& path_infos,
-                              const bool from_transition) {
+bool RouteMatcher::FormPath(
+    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+    const TravelMode& mode, GraphReader& reader,
+    const std::vector<midgard::PointLL>& shape, size_t& correlated_index,
+    const GraphTile* tile, const GraphId& node, const GraphId& stop_node,
+    EdgeLabel& prev_edge_label, float& elapsed_time,
+    std::vector<PathInfo>& path_infos, const bool from_transition) {
 
   // If node equals stop node then when are done expanding
   if (node == stop_node) {
@@ -56,8 +52,9 @@ bool ExpandFromNode::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_cost
         if (end_node_tile == nullptr) {
           continue;
         }
-        if (FormPath(mode_costing, mode, reader, shape, correlated_index, end_node_tile, de->endnode(),
-                             stop_node, prev_edge_label, elapsed_time, path_infos, true)) {
+        if (FormPath(mode_costing, mode, reader, shape, correlated_index,
+                     end_node_tile, de->endnode(), stop_node, prev_edge_label,
+                     elapsed_time, path_infos, true)) {
           return true;
         } else {
           continue;
@@ -96,8 +93,9 @@ bool ExpandFromNode::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_cost
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        return (FormPath(mode_costing, mode, reader, shape, index, end_node_tile, de->endnode(),
-                                 stop_node, prev_edge_label, elapsed_time, path_infos, false));
+        return (FormPath(mode_costing, mode, reader, shape, index,
+                         end_node_tile, de->endnode(), stop_node,
+                         prev_edge_label, elapsed_time, path_infos, false));
 
       }
       index++;
