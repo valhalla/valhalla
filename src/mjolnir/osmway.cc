@@ -260,6 +260,16 @@ bool OSMWay::taxi_forward() const {
   return access_.fields.taxi_forward;
 }
 
+// Set hov forward flag.
+void OSMWay::set_hov_forward(const bool hov_forward) {
+  access_.fields.hov_forward = hov_forward;
+}
+
+// Get the hov forward flag.
+bool OSMWay::hov_forward() const {
+  return access_.fields.hov_forward;
+}
+
 // Set truck forward flag.
 void OSMWay::set_truck_forward(const bool truck_forward) {
   access_.fields.truck_forward = truck_forward;
@@ -320,6 +330,16 @@ bool OSMWay::taxi_backward() const {
   return access_.fields.taxi_backward;
 }
 
+// Set hov backward flag.
+void OSMWay::set_hov_backward(const bool hov_backward) {
+  access_.fields.hov_backward = hov_backward;
+}
+
+// Get the hov backward flag.
+bool OSMWay::hov_backward() const {
+  return access_.fields.hov_backward;
+}
+
 // Set truck backward flag.
 void OSMWay::set_truck_backward(const bool truck_backward) {
   access_.fields.truck_backward = truck_backward;
@@ -362,22 +382,22 @@ bool OSMWay::destination_only() const {
 
 // Set pedestrian flag.
 void OSMWay::set_pedestrian(const bool pedestrian) {
-  access_.fields.pedestrian = pedestrian;
+  classification_.fields.pedestrian = pedestrian;
 }
 
 // Get the pedestrian flag.
 bool OSMWay::pedestrian() const {
-  return access_.fields.pedestrian;
+  return classification_.fields.pedestrian;
 }
 
 // Sets the has_user_tags flag.
 void OSMWay::set_has_user_tags(const bool has_user_tags) {
-  access_.fields.has_user_tags = has_user_tags;
+  classification_.fields.has_user_tags = has_user_tags;
 }
 
 // Get the has_user_tags flag.
 bool OSMWay::has_user_tags() const {
-  return access_.fields.has_user_tags;
+  return classification_.fields.has_user_tags;
 }
 
 // Set no thru traffic flag.
@@ -520,34 +540,24 @@ bool OSMWay::seasonal() const {
   return attributes_.fields.seasonal;
 }
 
-// Set hov flag.
-void OSMWay::set_hov(const bool hov) {
-  attributes_.fields.hov = hov;
-}
-
-// Get the hov flag.
-bool OSMWay::hov() const {
-  return attributes_.fields.hov;
-}
-
 // Set wheelchair flag.
 void OSMWay::set_wheelchair(const bool wheelchair) {
-  access_.fields.wheelchair = wheelchair;
+  classification_.fields.wheelchair = wheelchair;
 }
 
 // Get the wheelchair flag.
 bool OSMWay::wheelchair() const {
-  return access_.fields.wheelchair;
+  return classification_.fields.wheelchair;
 }
 
 // Set wheelchair_tag flag.
 void OSMWay::set_wheelchair_tag(const bool wheelchair_tag) {
-  access_.fields.wheelchair_tag = wheelchair_tag;
+  classification_.fields.wheelchair_tag = wheelchair_tag;
 }
 
 // Get the wheelchair_tag flag.
 bool OSMWay::wheelchair_tag() const {
-  return access_.fields.wheelchair_tag;
+  return classification_.fields.wheelchair_tag;
 }
 
 // Set sidewalk left flag.
