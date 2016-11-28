@@ -18,7 +18,6 @@ using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-using namespace valhalla::meili;
 using namespace valhalla::thor;
 
 namespace valhalla {
@@ -229,7 +228,7 @@ odin::TripPath thor_worker_t::map_match() {
   odin::TripPath trip_path;
   // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
-  std::shared_ptr<MapMatcher> matcher;
+  std::shared_ptr<meili::MapMatcher> matcher;
   try {
     matcher.reset(matcher_factory.Create(config));
   } catch (const std::invalid_argument& ex) {
@@ -237,7 +236,7 @@ odin::TripPath thor_worker_t::map_match() {
     throw std::runtime_error(std::string(ex.what()));
   }
 
-  std::vector<Measurement> sequence;
+  std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
     sequence.emplace_back(coord, gps_accuracy, search_radius);
   }
@@ -249,7 +248,7 @@ odin::TripPath thor_worker_t::map_match() {
   }
 
   // Form the path edges based on the matched points
-  std::vector<PathInfo> path_edges = MapMatching::FormPath(matcher.get(), results,
+  std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(), results,
                                                           mode_costing, mode);
 
   // Set origin and destination from map matching results

@@ -21,7 +21,7 @@
 namespace valhalla {
 namespace thor {
 
-class MapMatching {
+class MapMatcher {
  public:
 
   static std::vector<PathInfo> FormPath(
