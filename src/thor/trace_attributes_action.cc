@@ -10,6 +10,7 @@ using namespace prime_server;
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/proto/trippath.pb.h>
 
+
 #include "thor/service.h"
 
 using namespace valhalla;
@@ -91,12 +92,13 @@ worker_t::result_t thor_worker_t::trace_attributes(
   }
   json::MapPtr json;
   auto id = request.get_optional<std::string>("id");
-  //length defaults to km, speed defaults to km/h
+  //length and speed default to km
   double scale = 1;
-  auto units = request.get<std::string>("units", "km");
-  if (units == "mi") {
+  auto units_ptr = request.get_optional<std::string>("units");
+  std::string units = *units_ptr;
+  if ((units == "mi") || (units == "miles"))
     scale = kMilePerKm;
-   }
+
   //serialize output to Thor
   json = serialize(trip_path, id, scale);
 
