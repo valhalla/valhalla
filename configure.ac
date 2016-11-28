@@ -38,7 +38,12 @@ AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 AX_BOOST_DATE_TIME
-AX_BOOST_REGEX
+
+AC_ARG_ENABLE([std_regex],
+              AS_HELP_STRING([--enable-std-regex], [Use regex from the standard library instead of boost]))
+AS_IF([test "x$enable_std_regex" = "xyes"],
+      [AC_DEFINE(USE_STD_REGEX, [], [Use regex from the standard library instead of boost])],
+      [AX_BOOST_REGEX])
 
 # optionally enable coverage information
 CHECK_COVERAGE

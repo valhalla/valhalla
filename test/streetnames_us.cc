@@ -1,6 +1,6 @@
 #include "test.h"
-#include "valhalla/baldr/streetname_us.h"
-#include "valhalla/baldr/streetnames_us.h"
+#include "baldr/streetname_us.h"
+#include "baldr/streetnames_us.h"
 
 #include <vector>
 #include <algorithm>

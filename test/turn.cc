@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "valhalla/baldr/turn.h"
+#include "baldr/turn.h"
 
 #include <string>
 

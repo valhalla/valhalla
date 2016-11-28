@@ -1,8 +1,6 @@
-#include <regex>
-
 #include "test.h"
-#include "valhalla/baldr/verbal_text_formatter.h"
-#include "valhalla/baldr/verbal_text_formatter_us.h"
+#include "baldr/verbal_text_formatter.h"
+#include "baldr/verbal_text_formatter_us.h"
 
 using namespace std;
 using namespace valhalla::baldr;

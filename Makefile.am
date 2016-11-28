@@ -88,7 +88,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
 	valhalla/baldr/verbal_text_formatter_us_tx.h \
-	valhalla/baldr/verbal_text_formatter_factory.h 
+	valhalla/baldr/verbal_text_formatter_factory.h \
+	valhalla/baldr/reutil.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/accessrestriction.cc \
 	src/baldr/admin.cc \

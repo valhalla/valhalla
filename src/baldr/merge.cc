@@ -1,6 +1,5 @@
-#include "valhalla/baldr/merge.h"
-#include "valhalla/baldr/graphreader.h"
-#include "valhalla/midgard/logging.h"
+#include "baldr/merge.h"
+#include "baldr/graphreader.h"
 
 #include <boost/range/adaptor/map.hpp>
 

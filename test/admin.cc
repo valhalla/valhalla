@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <valhalla/baldr/admin.h>
+#include "baldr/admin.h"
 #include <boost/shared_array.hpp>
 #include <memory>
 

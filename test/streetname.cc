@@ -1,5 +1,5 @@
 #include "test.h"
-#include "valhalla/baldr/streetname.h"
+#include "baldr/streetname.h"
 
 #include <vector>
 #include <algorithm>

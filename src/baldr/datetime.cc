@@ -9,8 +9,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphconstants.h>
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 
 #include "date_time_zonespec.h"
 
