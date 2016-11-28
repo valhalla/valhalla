@@ -3,9 +3,11 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <unordered_map>
 #include <utility>
 #include <memory>
+#include <cstdint>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
