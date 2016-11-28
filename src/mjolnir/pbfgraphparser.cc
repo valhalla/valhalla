@@ -281,6 +281,9 @@ struct graph_callback : public OSMPBF::Callback {
 
     for (const auto& tag : results) {
 
+      if (osmid == 225182647)
+        std::cout << tag.first << " " << tag.second << std::endl;
+
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass) std::stoi(tag.second);
         switch (roadclass) {
@@ -359,6 +362,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bike_forward(tag.second == "true" ? true : false);
       else if (tag.first == "emergency_forward")
         w.set_emergency_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "hov_forward")
+        w.set_hov_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_backward")
@@ -369,6 +374,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bike_backward(tag.second == "true" ? true : false);
       else if (tag.first == "emergency_backward")
         w.set_emergency_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "hov_backward")
+        w.set_hov_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
       else if (tag.first == "private" && tag.second == "true") {
@@ -617,8 +624,6 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bridge(tag.second == "true" ? true : false);
       else if (tag.first == "seasonal")
         w.set_seasonal(tag.second == "true" ? true : false);
-      else if (tag.first == "hov")
-        w.set_hov(tag.second == "true" ? true : false);
 
       else if (tag.first == "bike_network_mask")
         w.set_bike_network(std::stoi(tag.second));
