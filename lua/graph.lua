@@ -1104,9 +1104,41 @@ function filter_tags_generic(kv)
     kv["seasonal"] = "true"
   end
 
-  -- TODO access
+  if (kv["hov"] and kv["hov"] == "no") then
+    kv["hov_forward"] = false
+    kv["hov_backward"] = false
+  else
+    kv["hov_forward"] = kv["auto_forward"]
+    kv["hov_backward"] = kv["auto_backward"]
+  end
+
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
-    kv["hov"] = "true"
+
+    if (kv["hov"] == "designated") then
+      if (kv["auto_tag"] == nil) then
+        kv["auto_forward"] = "false"
+        kv["auto_backward"] = "false"
+      end
+
+      if (kv["truck_tag"] == nil) then
+        kv["truck_forward"] = "false"
+        kv["truck_backward"] = "false"
+      end
+
+      if (kv["bus_tag"] == nil) then
+        kv["bus_forward"] = "false"
+        kv["bus_backward"] = "false"
+      end
+
+      if (kv["foot_tag"] == nil) then
+        kv["pedestrian"] = "false"
+      end
+
+      if (kv["bike_tag"] == nil) then
+        kv["bike_forward"] = "false"
+        kv["bike_backward"] = "false"
+      end
+    end
   end
 
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
