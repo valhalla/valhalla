@@ -21,17 +21,13 @@ namespace thor {
  * and compare to Valhalla edge’s end node positions to form the list of edges.
  *
  */
-bool RouteMatcher::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                              const TravelMode& mode,
-                              GraphReader& reader,
-                              const std::vector<midgard::PointLL>& shape,
-                              size_t& correlated_index,
-                              const GraphTile* tile, const GraphId& node,
-                              const GraphId& stop_node,
-                              EdgeLabel& prev_edge_label,
-                              float& elapsed_time,
-                              std::vector<PathInfo>& path_infos,
-                              const bool from_transition) {
+bool RouteMatcher::FormPath(
+    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+    const TravelMode& mode, GraphReader& reader,
+    const std::vector<midgard::PointLL>& shape, size_t& correlated_index,
+    const GraphTile* tile, const GraphId& node, const GraphId& stop_node,
+    EdgeLabel& prev_edge_label, float& elapsed_time,
+    std::vector<PathInfo>& path_infos, const bool from_transition) {
 
   // If node equals stop node then when are done expanding
   if (node == stop_node) {

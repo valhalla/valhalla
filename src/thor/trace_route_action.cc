@@ -162,9 +162,9 @@ bool thor_worker_t::route_match(std::vector<PathInfo>& path_infos) {
 
       // Continue walking shape to find the end edge...
       if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, index,
-                                   end_node_tile, de->endnode(),
-                                   end_edge_start_node, prev_edge_label,
-                                   elapsed_time, path_infos, false)) {
+                                 end_node_tile, de->endnode(),
+                                 end_edge_start_node, prev_edge_label,
+                                 elapsed_time, path_infos, false)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
             de, end_edge_tile->node(end_edge_start_node), prev_edge_label).secs;
@@ -248,8 +248,9 @@ odin::TripPath thor_worker_t::map_match() {
   }
 
   // Form the path edges based on the matched points
-  std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(), results,
-                                                          mode_costing, mode);
+  std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
+                                                          results, mode_costing,
+                                                          mode);
 
   // Set origin and destination from map matching results
   auto first_result_with_state = std::find_if(
