@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_MAPMATCHING_H_
-#define VALHALLA_THOR_MAPMATCHING_H_
+#ifndef VALHALLA_THOR_MAP_MATCHER_H_
+#define VALHALLA_THOR_MAP_MATCHER_H_
 
 #include <vector>
 #include <map>
@@ -21,7 +21,7 @@
 namespace valhalla {
 namespace thor {
 
-class MapMatching {
+class MapMatcher {
  public:
 
   static std::vector<PathInfo> FormPath(
@@ -35,4 +35,4 @@ class MapMatching {
 }
 }
 
-#endif  // VALHALLA_THOR_MAPMATCHING_H_
+#endif  // VALHALLA_THOR_MAP_MATCHER_H_

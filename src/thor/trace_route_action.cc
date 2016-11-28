@@ -11,14 +11,13 @@ using namespace prime_server;
 #include <valhalla/proto/trippath.pb.h>
 
 #include "thor/service.h"
-#include "thor/expandfromnode.h"
-#include "thor/mapmatching.h"
+#include "thor/route_matcher.h"
+#include "thor/map_matcher.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-using namespace valhalla::meili;
 using namespace valhalla::thor;
 
 namespace valhalla {
@@ -162,10 +161,10 @@ bool thor_worker_t::route_match(std::vector<PathInfo>& path_infos) {
       prev_edge_label = {kInvalidLabel, begin_path_edge->id, de, {}, 0, 0, mode, 0};
 
       // Continue walking shape to find the end edge...
-      if (ExpandFromNode::FormPath(mode_costing, mode, reader, shape, index,
-                                        end_node_tile, de->endnode(),
-                                        end_edge_start_node, prev_edge_label,
-                                        elapsed_time, path_infos, false)) {
+      if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, index,
+                                 end_node_tile, de->endnode(),
+                                 end_edge_start_node, prev_edge_label,
+                                 elapsed_time, path_infos, false)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
             de, end_edge_tile->node(end_edge_start_node), prev_edge_label).secs;
@@ -229,7 +228,7 @@ odin::TripPath thor_worker_t::map_match() {
   odin::TripPath trip_path;
   // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
-  std::shared_ptr<MapMatcher> matcher;
+  std::shared_ptr<meili::MapMatcher> matcher;
   try {
     matcher.reset(matcher_factory.Create(config));
   } catch (const std::invalid_argument& ex) {
@@ -237,7 +236,7 @@ odin::TripPath thor_worker_t::map_match() {
     throw std::runtime_error(std::string(ex.what()));
   }
 
-  std::vector<Measurement> sequence;
+  std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
     sequence.emplace_back(coord, gps_accuracy, search_radius);
   }
@@ -249,8 +248,9 @@ odin::TripPath thor_worker_t::map_match() {
   }
 
   // Form the path edges based on the matched points
-  std::vector<PathInfo> path_edges = MapMatching::FormPath(matcher.get(), results,
-                                                          mode_costing, mode);
+  std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
+                                                          results, mode_costing,
+                                                          mode);
 
   // Set origin and destination from map matching results
   auto first_result_with_state = std::find_if(
