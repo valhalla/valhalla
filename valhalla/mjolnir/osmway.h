@@ -302,6 +302,18 @@ struct OSMWay {
   bool taxi_forward() const;
 
   /**
+   * Sets the hov_forward flag.
+   * @param  hov_forward   hov in the forward direction?
+   */
+  void set_hov_forward(const bool hov_forward);
+
+  /**
+   * Get the hov forward flag.
+   * @return  Returns hov forward flag.
+   */
+  bool hov_forward() const;
+
+  /**
    * Sets the truck_forward flag.
    * @param  truck_forward   Can a truck drive in the forward direction?
    */
@@ -373,6 +385,18 @@ struct OSMWay {
    * @return  Returns taxi backward flag.
    */
   bool taxi_backward() const;
+
+  /**
+   * Sets the hov_backward flag.
+   * @param  hov_backward   hov in the reverse direction?
+   */
+  void set_hov_backward(const bool hov_backward);
+
+  /**
+   * Get the hov backward flag.
+   * @return  Returns hov backward flag.
+   */
+  bool hov_backward() const;
 
   /**
    * Sets the truck_backward flag.
@@ -614,18 +638,6 @@ struct OSMWay {
    * @return  Returns seasonal flag.
    */
   bool seasonal() const;
-
-  /**
-   * Set hov flag.
-   * @param  hov   Is this hov?
-   */
-  void set_hov(const bool hov);
-
-  /**
-   * Get the hov flag.
-   * @return  Returns hov flag.
-   */
-  bool hov() const;
 
   /**
    * Set wheelchair flag.
@@ -897,7 +909,6 @@ struct OSMWay {
       uint32_t toll                   :1;
       uint32_t bridge                 :1;
       uint32_t seasonal               :1;
-      uint32_t hov                    :1;
       uint32_t drive_on_right         :1;
       uint32_t bike_network           :4;
       uint32_t exit                   :1;
@@ -910,7 +921,7 @@ struct OSMWay {
       uint32_t truck_route            :1;
       uint32_t sidewalk_right         :1;
       uint32_t sidewalk_left          :1;
-      uint32_t spare                  :1;
+      uint32_t spare                  :2;
     } fields;
     uint32_t v;
   };
@@ -925,7 +936,11 @@ struct OSMWay {
       uint32_t forward_lanes     :4;
       uint32_t backward_lanes    :4;
       uint32_t turn_channel      :1;     // *link tag - turn channel (no ramp)
-      uint32_t spare             :9;     // Spare
+      uint16_t wheelchair        :1;
+      uint16_t wheelchair_tag    :1;
+      uint32_t pedestrian        :1;
+      uint32_t has_user_tags     :1;
+      uint32_t spare             :5;     // Spare
     } fields;
     uint32_t v;
   };
@@ -940,16 +955,15 @@ struct OSMWay {
       uint16_t truck_forward      :1;
       uint16_t bike_forward       :1;
       uint16_t emergency_forward  :1;
+      uint16_t hov_forward        :1;
       uint16_t auto_backward      :1;
       uint16_t bus_backward       :1;
       uint16_t taxi_backward      :1;
       uint16_t truck_backward     :1;
       uint16_t bike_backward      :1;
       uint16_t emergency_backward :1;
-      uint16_t pedestrian         :1;
-      uint16_t has_user_tags      :1;
-      uint16_t wheelchair         :1;
-      uint16_t wheelchair_tag     :1;
+      uint16_t hov_backward       :1;
+      uint16_t spare              :2;
     } fields;
     uint16_t v;
   };
