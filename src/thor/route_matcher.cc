@@ -4,7 +4,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/errorcode_util.h>
 
-#include "thor/expandfromnode.h"
+#include "thor/route_matcher.h"
 #include "thor/service.h"
 
 using namespace valhalla::baldr;
@@ -21,7 +21,7 @@ namespace thor {
  * and compare to Valhalla edge’s end node positions to form the list of edges.
  *
  */
-bool ExpandFromNode::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
+bool RouteMatcher::FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
                               const TravelMode& mode,
                               GraphReader& reader,
                               const std::vector<midgard::PointLL>& shape,

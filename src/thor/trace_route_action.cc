@@ -11,8 +11,8 @@ using namespace prime_server;
 #include <valhalla/proto/trippath.pb.h>
 
 #include "thor/service.h"
-#include "thor/expandfromnode.h"
-#include "thor/mapmatching.h"
+#include "thor/route_matcher.h"
+#include "thor/map_matcher.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla;
@@ -161,7 +161,7 @@ bool thor_worker_t::route_match(std::vector<PathInfo>& path_infos) {
       prev_edge_label = {kInvalidLabel, begin_path_edge->id, de, {}, 0, 0, mode, 0};
 
       // Continue walking shape to find the end edge...
-      if (ExpandFromNode::FormPath(mode_costing, mode, reader, shape, index,
+      if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, index,
                                    end_node_tile, de->endnode(),
                                    end_edge_start_node, prev_edge_label,
                                    elapsed_time, path_infos, false)) {

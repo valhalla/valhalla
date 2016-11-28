@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_EXPANDFROMNODE_H_
-#define VALHALLA_THOR_EXPANDFROMNODE_H_
+#ifndef VALHALLA_THOR_ROUTE_MATCHER_H_
+#define VALHALLA_THOR_ROUTE_MATCHER_H_
 
 #include <vector>
 #include <map>
@@ -20,7 +20,7 @@
 namespace valhalla {
 namespace thor {
 
-class ExpandFromNode {
+class RouteMatcher {
  public:
 
   static bool FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -37,4 +37,4 @@ class ExpandFromNode {
 }
 }
 
-#endif  // VALHALLA_THOR_EXPANDFROMNODE_H_
+#endif  // VALHALLA_THOR_ROUTE_MATCHER_H_

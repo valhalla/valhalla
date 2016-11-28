@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_MAPMATCHING_H_
-#define VALHALLA_THOR_MAPMATCHING_H_
+#ifndef VALHALLA_THOR_MAP_MATCHER_H_
+#define VALHALLA_THOR_MAP_MATCHER_H_
 
 #include <vector>
 #include <map>
@@ -35,4 +35,4 @@ class MapMatcher {
 }
 }
 
-#endif  // VALHALLA_THOR_MAPMATCHING_H_
+#endif  // VALHALLA_THOR_MAP_MATCHER_H_
