@@ -61,12 +61,14 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
       ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
       ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
       ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
+      ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
       ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
   bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
       (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
       (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
       (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
+      (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
       (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
   bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
