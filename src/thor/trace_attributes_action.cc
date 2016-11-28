@@ -21,8 +21,6 @@ using namespace valhalla::thor;
 
 
 namespace {
-  constexpr double kMilePerMeter = 0.000621371;
-  constexpr double kMilePerHour = 0.621371;
   const headers_t::value_type CORS { "Access-Control-Allow-Origin", "*" };
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
@@ -93,11 +91,12 @@ worker_t::result_t thor_worker_t::trace_attributes(
   }
   json::MapPtr json;
   auto id = request.get_optional<std::string>("id");
+  //length defaults to km, speed defaults to km/h
   double distance_scale, speed_scale = 1;
   auto units = request.get<std::string>("units", "km");
   if (units == "mi") {
-    distance_scale = kMilePerMeter;
-    speed_scale = kMilePerHour;
+    distance_scale = kMilePerKm;
+    speed_scale = kMilePerKm;
   }
   //serialize output to Thor
   json = serialize(trip_path, id, distance_scale, speed_scale);
