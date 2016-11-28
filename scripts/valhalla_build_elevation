@@ -47,7 +47,7 @@ for x in $(seq ${min_x} 1 ${max_x}); do
                 dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
 		#if we dont already have it or its the wrong size
 		if [ ! -e ${dest}/${dir}/${file} ] || [ $(stat -c %s ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then
-			echo "http://s3.amazonaws.com/mapzen.valhalla/elevation/${dir}/${file}.gz ${dest}/${dir}/${file}"
+			echo "http://s3.amazonaws.com/elevation-tiles-prod/skadi/${dir}/${file}.gz ${dest}/${dir}/${file}"
 		fi
 	done
 done | parallel --progress -C ' ' -P ${para} "curl --retry 3 --retry-delay 0 --max-time 100 -s -o - {1} | gunzip > {2}"
