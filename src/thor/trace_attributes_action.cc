@@ -10,6 +10,7 @@ using namespace prime_server;
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/proto/trippath.pb.h>
 
+
 #include "thor/service.h"
 
 using namespace valhalla;
@@ -26,7 +27,7 @@ namespace {
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id) {
+  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     if (trip_path.node().size() > 0) {
@@ -40,8 +41,8 @@ namespace {
             {"max_downward_grade", static_cast<int64_t>(node.edge().max_downward_grade())},
             {"max_upward_grade", static_cast<int64_t>(node.edge().max_upward_grade())},
             {"weighted_grade", json::fp_t{node.edge().weighted_grade(), 3}},
-            {"length", json::fp_t{node.edge().length(), 3}},
-            {"speed", json::fp_t{node.edge().speed(), 3}},
+            {"length", json::fp_t{node.edge().length() * scale, 3}},
+            {"speed", json::fp_t{node.edge().speed() * scale, 3}},
             {"way_id", static_cast<uint64_t>(node.edge().way_id())},
             {"id", static_cast<uint64_t>(node.edge().id())},
             {"names", names}
@@ -90,9 +91,16 @@ worker_t::result_t thor_worker_t::trace_attributes(
     trip_path = map_match();
   }
   json::MapPtr json;
-  //serialize output to Thor
-  json = serialize(trip_path, request.get_optional<std::string>("id"));
+  auto id = request.get_optional<std::string>("id");
+  //length and speed default to km
+  double scale = 1;
+  auto units_ptr = request.get_optional<std::string>("units");
+  std::string units = *units_ptr;
+  if ((units == "mi") || (units == "miles"))
+    scale = kMilePerKm;
 
+  //serialize output to Thor
+  json = serialize(trip_path, id, scale);
 
   //jsonp callback if need be
   std::ostringstream stream;
