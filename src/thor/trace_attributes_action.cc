@@ -94,8 +94,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
   auto id = request.get_optional<std::string>("id");
   //length and speed default to km
   double scale = 1;
-  auto units_ptr = request.get_optional<std::string>("units");
-  std::string units = *units_ptr;
+  auto units = request.get<std::string>("units", "km");
   if ((units == "mi") || (units == "miles"))
     scale = kMilePerKm;
 
