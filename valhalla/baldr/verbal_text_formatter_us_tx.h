@@ -3,7 +3,6 @@
 
 #include <valhalla/baldr/verbal_text_formatter.h>
 
-#include <boost/regex.hpp>
 #include <string>
 #include <array>
 #include <utility>
@@ -12,13 +11,13 @@ namespace valhalla {
 namespace baldr {
 
 // Farm to Market
-const boost::regex kFmRegex("(\\bF[ -]?M)([ -])?(\\d{1,4})",
-                          boost::regex_constants::icase);
+const re::regex kFmRegex("(\\bF[ -]?M)([ -])?(\\d{1,4})",
+                          re::regex_constants::icase);
 const std::string kFmOutPattern = "Farm to Market Road $3";
 
 // Ranch to Market
-const boost::regex kRmRegex("(\\bR[ -]?M)([ -])?(\\d{1,4})",
-                          boost::regex_constants::icase);
+const re::regex kRmRegex("(\\bR[ -]?M)([ -])?(\\d{1,4})",
+                          re::regex_constants::icase);
 const std::string kRmOutPattern = "Ranch to Market Road $3";
 
 /**

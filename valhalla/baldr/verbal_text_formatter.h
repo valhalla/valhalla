@@ -1,14 +1,14 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 
-#include <boost/regex.hpp>
 #include <string>
+#include <valhalla/baldr/reutil.h>
 
 namespace valhalla {
 namespace baldr {
 
 // Regular expression to find numbers
-const boost::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
+const re::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
 
 /**
  * The generic verbal text formatter class that prepares strings for use with
@@ -30,7 +30,7 @@ class VerbalTextFormatter {
   virtual std::string Format(const std::string& text) const;
 
  protected:
-  virtual std::string ProcessNumberSplitMatch(const boost::smatch& m) const;
+  virtual std::string ProcessNumberSplitMatch(const re::smatch& m) const;
 
   virtual std::string FormNumberSplitTts(const std::string& source) const;
 

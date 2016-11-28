@@ -579,8 +579,8 @@ void DirectedEdge::set_max_up_slope(const float slope) {
 // Gets the maximum downward slope. Uses 1 degree precision for slopes to
 // -8 degrees, and 4 degree precision afterwards (up to a max of -76 degs).
 int DirectedEdge::max_down_slope() const {
-  return ((max_down_slope_ & 0x10) == 0) ? -max_down_slope_ :
-          -(16 + ((max_down_slope_ & 0xf) * 4));
+  return ((max_down_slope_ & 0x10) == 0) ? -static_cast<int>(max_down_slope_) :
+          -static_cast<int>(16 + ((max_down_slope_ & 0xf) * 4));
 }
 
 // Sets the maximum downward slope.

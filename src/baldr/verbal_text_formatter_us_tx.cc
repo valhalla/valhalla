@@ -27,11 +27,11 @@ std::string VerbalTextFormatterUsTx::Format(const std::string& text) const {
 
 std::string VerbalTextFormatterUsTx::FormFmTts(
     const std::string& source) const {
-  return boost::regex_replace(source, kFmRegex, kFmOutPattern);
+  return re::regex_replace(source, kFmRegex, kFmOutPattern);
 }
 std::string VerbalTextFormatterUsTx::FormRmTts(
     const std::string& source) const {
-  return boost::regex_replace(source, kRmRegex, kRmOutPattern);
+  return re::regex_replace(source, kRmRegex, kRmOutPattern);
 }
 
 }

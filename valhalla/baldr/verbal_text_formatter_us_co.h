@@ -3,7 +3,6 @@
 
 #include <valhalla/baldr/verbal_text_formatter.h>
 
-#include <boost/regex.hpp>
 #include <string>
 #include <array>
 #include <utility>
@@ -12,8 +11,8 @@ namespace valhalla {
 namespace baldr {
 
 
-const boost::regex kColoradoRegex("(\\bCO)([ -])(\\d{1,3})",
-                                  boost::regex_constants::icase);
+const re::regex kColoradoRegex("(\\bCO)([ -])(\\d{1,3})",
+                                  re::regex_constants::icase);
 const std::string kColoradoOutPattern = "Colorado $3";
 
 

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_MERGE_H_
 #define VALHALLA_BALDR_MERGE_H_
 
+#include <deque>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 

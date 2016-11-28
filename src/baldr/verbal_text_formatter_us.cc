@@ -35,7 +35,7 @@ std::string VerbalTextFormatterUs::Format(const std::string& text) const {
 }
 
 std::string VerbalTextFormatterUs::ProcessNumberSplitMatch(
-    const boost::smatch& m) const {
+    const re::smatch& m) const {
   std::string tts;
   if (m[1].matched) {
     tts += m[1].str();
@@ -68,7 +68,7 @@ std::string VerbalTextFormatterUs::FormNumberSplitTts(
     const std::string& source) const {
 
   std::string tts;
-  for (boost::sregex_iterator it(source.begin(), source.end(), kUsNumberSplitRegex),
+  for (re::sregex_iterator it(source.begin(), source.end(), kUsNumberSplitRegex),
       end_it; it != end_it; ++it) {
     tts += ProcessNumberSplitMatch(*it);
   }
@@ -77,12 +77,12 @@ std::string VerbalTextFormatterUs::FormNumberSplitTts(
 
 std::string VerbalTextFormatterUs::FormInterstateTts(
     const std::string& source) const {
-  return boost::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
+  return re::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
 }
 
 std::string VerbalTextFormatterUs::FormUsHighwayTts(
     const std::string& source) const {
-  return boost::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
+  return re::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
 }
 
 std::string VerbalTextFormatterUs::ProcessStatesTts(
@@ -100,10 +100,10 @@ std::string VerbalTextFormatterUs::ProcessStatesTts(
 }
 
 bool VerbalTextFormatterUs::FormStateTts(
-    const std::string& source, const boost::regex& state_regex,
+    const std::string& source, const re::regex& state_regex,
     const std::string& state_output_pattern, std::string& tts) const {
 
-  tts = boost::regex_replace(source, state_regex, state_output_pattern);
+  tts = re::regex_replace(source, state_regex, state_output_pattern);
 
   // Return true if transformed
   return (tts != source);
@@ -125,10 +125,10 @@ std::string VerbalTextFormatterUs::ProcessCountysTts(
 }
 
 bool VerbalTextFormatterUs::FormCountyTts(
-    const std::string& source, const boost::regex& county_regex,
+    const std::string& source, const re::regex& county_regex,
     const std::string& county_output_pattern, std::string& tts) const {
 
-  tts = boost::regex_replace(source, county_regex, county_output_pattern);
+  tts = re::regex_replace(source, county_regex, county_output_pattern);
 
   // Return true if transformed
   return (tts != source);
@@ -146,9 +146,9 @@ std::string VerbalTextFormatterUs::ProcessThousandTts(
 }
 
 std::string VerbalTextFormatterUs::FormThousandTts(
-    const std::string& source, const boost::regex& thousand_regex,
+    const std::string& source, const re::regex& thousand_regex,
     const std::string& thousand_output_pattern) const {
-  return boost::regex_replace(source, thousand_regex, thousand_output_pattern);
+  return re::regex_replace(source, thousand_regex, thousand_output_pattern);
 }
 
 std::string VerbalTextFormatterUs::ProcessHundredTts(
@@ -163,14 +163,14 @@ std::string VerbalTextFormatterUs::ProcessHundredTts(
 }
 
 std::string VerbalTextFormatterUs::FormHundredTts(
-    const std::string& source, const boost::regex& hundred_regex,
+    const std::string& source, const re::regex& hundred_regex,
     const std::string& hundred_output_pattern) const {
-  return boost::regex_replace(source, hundred_regex, hundred_output_pattern);
+  return re::regex_replace(source, hundred_regex, hundred_output_pattern);
 }
 
 std::string VerbalTextFormatterUs::FormLeadingOhTts(
     const std::string& source) const {
-  return boost::regex_replace(source, kLeadingOhRegex, kLeadingOhOutPattern);
+  return re::regex_replace(source, kLeadingOhRegex, kLeadingOhOutPattern);
 }
 
 }
