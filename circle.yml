@@ -6,6 +6,7 @@ checkout:
 
 dependencies:
   override:
+    - sudo apt-get update
     - scripts/dependencies.sh
 
 test:
