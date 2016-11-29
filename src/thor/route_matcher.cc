@@ -43,7 +43,6 @@ const PathLocation::PathEdge* find_end_edge(
     if (edge.begin_node()) {
       continue;
     }
-
     return &edge;  //TODO special case
   }
   return nullptr;
