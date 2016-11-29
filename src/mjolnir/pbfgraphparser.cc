@@ -257,7 +257,10 @@ struct graph_callback : public OSMPBF::Callback {
     ++osmdata_.osm_way_count;
     osmdata_.osm_way_node_count += nodes.size();
 
-    float default_speed;
+    float default_speed = 0.0f, max_speed = 0.0f;
+    float average_speed = 0.0f, advisory_speed = 0.0f;
+    bool has_default_speed = false, has_max_speed = false;
+    bool has_average_speed = false, has_advisory_speed = false;
     bool has_surface = true;
     std::string name;
 
@@ -458,8 +461,19 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "official_name" && !tag.second.empty())
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
 
-      else if (tag.first == "speed") {
-        w.set_speed(std::stof(tag.second));
+      else if (tag.first == "max_speed") {
+        max_speed = std::stof(tag.second);
+        has_max_speed = true;
+        w.set_tagged_speed(true);
+      }
+      else if (tag.first == "average_speed") {
+        average_speed = std::stof(tag.second);
+        has_average_speed = true;
+        w.set_tagged_speed(true);
+      }
+      else if (tag.first == "advisory_speed") {
+        advisory_speed = std::stof(tag.second);
+        has_advisory_speed = true;
         w.set_tagged_speed(true);
       }
       else if (tag.first == "forward_speed") {
@@ -514,8 +528,10 @@ struct graph_callback : public OSMPBF::Callback {
         osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
 
-      else if (tag.first == "default_speed")
+      else if (tag.first == "default_speed") {
         default_speed = std::stof(tag.second);
+        has_default_speed = true;
+      }
 
       else if (tag.first == "ref" && !tag.second.empty())
         w.set_ref_index(osmdata_.ref_offset_map.index(tag.second));
@@ -708,10 +724,19 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
-    //If no speed has been set by a user, assign a speed based on highway tag.
-    if (!w.tagged_speed() && !w.forward_tagged_speed() && !w.backward_tagged_speed()) {
+    // set the speed
+    if (has_average_speed)
+      w.set_speed(average_speed);
+    else if (has_advisory_speed)
+      w.set_speed(advisory_speed);
+    else if (has_max_speed)
+      w.set_speed(max_speed);
+    else if (has_default_speed && !w.forward_tagged_speed() && !w.backward_tagged_speed())
       w.set_speed(default_speed);
-    }
+
+    // set the speed limit
+    if (has_max_speed)
+      w.set_speed_limit(max_speed);
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)

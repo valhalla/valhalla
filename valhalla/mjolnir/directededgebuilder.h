@@ -21,8 +21,9 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  way            OSM way info generated from parsing OSM tags with Lua.
    * @param  endnode        GraphId of the end node of this directed edge.
    * @param  length         Length in meters.
-   * @param  speed          Speed in kph.
-   * @param  truck_speed    Truck speed in kph.
+   * @param  speed          Average speed in kph.
+   * @param  speed_limit    Speed limit in kph.
+   * @param  truck_speed    Truck speed limit in kph.
    * @param  use            Use of the edge.
    * @param  rc             Road class / importance
    * @param  localidx       Index of the edge (from the node) on the local level
@@ -32,7 +33,8 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    */
   DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
                       const bool forward, const uint32_t length,
-                      const uint32_t speed, const uint32_t truck_speed,
+                      const uint32_t speed, const uint32_t speed_limit,
+                      const uint32_t truck_speed,
                       const baldr::Use use, const baldr::RoadClass rc,
                       const uint32_t localidx, const bool signal,
                       const uint32_t restrictions, const uint32_t bike_network);

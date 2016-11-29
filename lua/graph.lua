@@ -1049,7 +1049,9 @@ function filter_tags_generic(kv)
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]
   kv["official_name"] = kv["official_name"]
-  kv["speed"] = normalize_speed(kv["maxspeed"])
+  kv["max_speed"] = normalize_speed(kv["maxspeed"])
+  kv["advisory_speed"] = normalize_speed(kv["maxspeed:advisory"])
+  kv["average_speed"] = normalize_speed(kv["maxspeed:practical"])
   kv["backward_speed"] = normalize_speed(kv["maxspeed:backward"])
   kv["forward_speed"] = normalize_speed(kv["maxspeed:forward"])
   kv["int"] = kv["int"]

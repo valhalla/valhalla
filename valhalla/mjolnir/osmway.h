@@ -50,6 +50,18 @@ struct OSMWay {
   float speed() const;
 
   /**
+   * Sets the speed limit
+   * @param  speed_limit   Speed limit in KPH.
+   */
+  void set_speed_limit(const float speed_limit);
+
+  /**
+   * Gets the speed limit in KPH.
+   * @return  Returns speed_limit.
+   */
+  float speed_limit() const;
+
+  /**
    * Sets the backward speed
    * @param  backward_speed   Speed in KPH.
    */
@@ -971,7 +983,10 @@ struct OSMWay {
 
   uint16_t nodecount_;
 
-  // Speed in kilometers per hour
+  // max or advisory speed limit in kilometers per hour
+  uint8_t speed_limit_;
+
+  // average/practical or default/categorized speed in kilometers per hour
   uint8_t speed_;
 
   // Speed in kilometers per hour
