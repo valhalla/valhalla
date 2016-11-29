@@ -65,19 +65,14 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   return result;
 }
 
-// Form the path from the map-matching results. This path gets sent to TripPathBuilder.
-// PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
-// of each edge. We will need to use the existing costing method to form the elapsed time
-// the path. We will start with just using edge costs and will add transition costs.
 
 /*
- * Returns true if an exact route match using an “edge-walking” algorithm.
+ * Returns trip path using an “edge-walking” algorithm.
  * This is for use when the input shape is exact shape from a prior Valhalla route.
  * This will walk the input shape and compare to Valhalla edge’s end node positions to
- * form the list of edges.
+ * form the list of edges. It will return no nodes if path not found.
  *
  */
-
 odin::TripPath thor_worker_t::route_match() {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
@@ -94,6 +89,10 @@ odin::TripPath thor_worker_t::route_match() {
   return trip_path;
 }
 
+// Form the path from the map-matching results. This path gets sent to TripPathBuilder.
+// PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
+// of each edge. We will need to use the existing costing method to form the elapsed time
+// the path. We will start with just using edge costs and will add transition costs.
 odin::TripPath thor_worker_t::map_match() {
   odin::TripPath trip_path;
   // Call Meili for map matching to get a collection of pathLocation Edges

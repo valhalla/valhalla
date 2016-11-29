@@ -65,11 +65,7 @@ class thor_worker_t {
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
   valhalla::odin::TripPath route_match();
-  bool route_match(std::vector<PathInfo>& path_infos);
   valhalla::odin::TripPath map_match();
-  const baldr::PathLocation::PathEdge* find_begin_edge() const;
-  const baldr::PathLocation::PathEdge* find_end_edge() const;
-  const baldr::GraphId find_start_node(const baldr::GraphId& edge_id);
 
   std::list<valhalla::odin::TripPath> path_arrive_by(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
@@ -78,7 +74,6 @@ class thor_worker_t {
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
       const boost::optional<int> &date_time_type,
       const std::string &request_str);
-
 
   void parse_locations(const boost::property_tree::ptree& request);
   void parse_shape(const boost::property_tree::ptree& request);
