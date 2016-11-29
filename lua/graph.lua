@@ -1200,6 +1200,11 @@ function nodes_proc (kv, nokeys)
     access = "false"
   end 
 
+  local hov_tag = 0
+  if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
+    hov_tag = 128
+  end
+
   local foot_tag = foot_node[kv["foot"]]
   local wheelchair_tag = wheelchair_node[kv["wheelchair"]]
   local bike_tag = bicycle_node[kv["bicycle"]]
@@ -1219,8 +1224,13 @@ function nodes_proc (kv, nokeys)
   end
 
   --if wheelchair was not set and foot is
-  if wheelchair_tag == nil and foot_tag == 1 then
+  if wheelchair_tag == nil and foot_tag == 2 then
     wheelchair_tag = 256
+  end
+
+  --if hov was not set and car is
+  if hov_tag == nil and auto_tag == 1 then
+    hov_tag = 128
   end
 
   --if truck was not set and car is
@@ -1244,7 +1254,7 @@ function nodes_proc (kv, nokeys)
     bike_tag = 4
   end
 
-  --if tag exists use it, otherwise access allowed for all modes unless access = false.  
+  --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated")
   local auto = auto_tag or 1
   local truck = truck_tag or 8 
   local bus = bus_tag or 64
@@ -1252,9 +1262,10 @@ function nodes_proc (kv, nokeys)
   local wheelchair = wheelchair_tag or 256
   local bike = bike_tag or 4
   local emergency = emergency_tag or 16
+  local hov = hov_tag or 128
 
   --if access = false use tag if exists, otherwise no access for that mode.
-  if access == "false" then
+  if (access == "false" or kv["hov"] == "designated") then
     auto = auto_tag or 0
     truck = truck_tag or 0
     bus = bus_tag or 0
@@ -1262,6 +1273,7 @@ function nodes_proc (kv, nokeys)
     wheelchair = wheelchair_tag or 0
     bike = bike_tag or 0
     emergency = emergency_tag or 0
+    hov = hov_tag or 0
   end 
 
   --check for gates and bollards
@@ -1286,6 +1298,7 @@ function nodes_proc (kv, nokeys)
       wheelchair = wheelchair_tag or 256
       bike = bike_tag or 4
       emergency = emergency_tag or 0
+      hov = hov_tag or 0
     end
   end
 
@@ -1302,6 +1315,7 @@ function nodes_proc (kv, nokeys)
          wheelchair = wheelchair_tag or 256
          bike = bike_tag or 4
          emergency = emergency_tag or 16
+         hov = hov_tag or 128
     end
   end
 
