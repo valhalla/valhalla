@@ -315,6 +315,10 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
+  // Disable destination only transitions (based on costing) since this
+  // algorithm is bidirectional.
+  costing_->DisableDestinationOnly();
+
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.edges.front().projected, destination.edges.front().projected);
 
