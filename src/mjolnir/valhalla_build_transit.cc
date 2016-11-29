@@ -182,7 +182,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   std::set<GraphId> tiles;
   const auto& tile_level = hierarchy.levels().rbegin()->second;
   curler_t curler;
-  auto feeds = curler(url("/api/v1/feeds.geojson?", pt), "features");
+  auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
     //use the following logic if you only want certain feeds
   //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
