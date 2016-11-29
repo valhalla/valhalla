@@ -15,4 +15,5 @@
 -j '{"locations":[{"lat":38.99487287238556,"lon":-77.0770132546022,"type":"break"},{"lat":38.996440488468075,"lon":-77.07729220433976,"type":"break"}],"costing":"auto","directions_options":{"language":"en-US"}}'
 -j '{"locations":[{"lat":39.35226931396162,"lon":-76.54266178629769,"type":"break"},{"lat":39.35219464810368,"lon":-76.54297292254341,"type":"break"}],"costing":"auto","directions_options":{"language":"en-US"}}'
 -j '{"locations":[{"lat":39.28657817651326,"lon":-76.80349498998112,"type":"break"},{"lat":39.286715192319576,"lon":-76.80373102437443,"type":"break"}],"costing":"auto","directions_options":{"language":"en-US"}}'
+-j '{"locations":[{"lat":37.393652,"lon":-121.918796,"type":"break"},{"lat":37.393793,"lon":-121.918356,"type":"break"}],"costing":"auto","directions_options":{"language":"en-US"}}'
 
