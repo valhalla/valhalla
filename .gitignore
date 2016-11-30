@@ -43,12 +43,15 @@ valhalla_run_route
 valhalla_skadi_worker
 valhalla_thor_worker
 valhalla_tyr_worker
+valhalla_associate_segments
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
 conf/
+include/proto/
+src/proto/
 
 # tests
 test-suite.log
