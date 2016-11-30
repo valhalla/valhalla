@@ -394,9 +394,9 @@ class GraphTile {
   // Traffic segment Ids. Count is the same as the directed edge count.
   uint64_t* traffic_segment_ids_;
 
-  // Traffic chunks. Each chunk has a count followed by an array of traffic
-  // segment Id and weight (combined into single uin32_t).
-  uint32_t* traffic_chunks_;
+  // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
+  // segment Id (GraphId) and weight (combined int a single uint64_t).
+  uint64_t* traffic_chunks_;
 
   // Number of bytes in the traffic chunk list
   std::size_t traffic_chunk_size_;

@@ -174,7 +174,14 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of text list and its size
   textlist_ = tile_ptr + header_->textlist_offset();
-  textlist_size_ = header_->end_offset() - header_->textlist_offset();
+  textlist_size_ = header_->traffic_segmentid_offset() - header_->textlist_offset();
+
+  // Start of the traffic segment Ids
+  traffic_segment_ids_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->traffic_segmentid_offset());
+
+  // Start of traffic chunks and their size
+  traffic_chunks_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->traffic_chunk_offset());
+  traffic_chunk_size_ = header_->end_offset() - header_->traffic_chunk_offset();
 
   // Associate one stop Ids for transit tiles
   if (graphid.level() == 3) {
@@ -712,11 +719,15 @@ std::vector<std::pair<GraphId, float>> GraphTile::GetTrafficSegments(const size_
       // This edge associates to a single traffic segment
       return { std::make_pair(GraphId(t), 1.0f) };
     } else {
+      // This represents a traffic chunk - the offset into the chunk array and
+      // the count are stored
       std::vector<std::pair<GraphId, float>> segments;
-      // This represents a traffic chunk
-
-      // Get the chunk and iterate...
-
+      uint32_t count = (t & kChunkCountMask);
+      uint64_t* chunk = traffic_chunks_ + (t & kChunkIndexMask);
+      for (uint32_t i = 0; i < count; i++, chunk++) {
+        segments.emplace_back(std::make_pair(GraphId(t & kChunkIDMask),
+                                (t & kChunkWeightMask) / 255.0f));
+      }
       return segments;
     }
   }
