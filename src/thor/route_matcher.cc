@@ -79,8 +79,17 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
   GraphId edge_id(node.tileid(), node.level(), node_info->edge_index());
   const DirectedEdge* de = tile->directededge(node_info->edge_index());
   for (uint32_t i = 0; i < node_info->edge_count(); i++, de++, edge_id++) {
-    // Skip shortcuts
-    if (de->is_shortcut()) {
+    // Skip shortcuts and transit connection edges
+    // TODO - later might allow transit connections for multi-modal
+    if (de->is_shortcut() || de->use() == Use::kTransitConnection) {
+      continue;
+    }
+
+    // Look back in path_infos by 1-2 edges to make sure we aren't in a loop.
+    // A loop can occur if we have edges shorter than the lat,lng tolerance.
+    uint32_t n = path_infos.size();
+    if (n > 1 &&  (edge_id == path_infos[n-2].edgeid ||
+        edge_id == path_infos[n-1].edgeid)) {
       continue;
     }
 
@@ -134,12 +143,13 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
-        // Continue walking shape to find the end edge...
+        // Continue walking shape to find the end edge...increment the shape
+        // index so we don't try to match against the current matching node LL.
+        index++;
         return (expand_from_node(mode_costing, mode, reader, shape, index,
                                  end_node_tile, de->endnode(), stop_node,
                                  prev_edge_label, elapsed_time, path_infos,
                                  false));
-
       }
       index++;
     }

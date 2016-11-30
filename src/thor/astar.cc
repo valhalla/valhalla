@@ -246,6 +246,12 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
         continue;
       }
 
+      // Check for complex restriction
+      if (costing->Restricted(directededge, pred, edgelabels_, tile,
+                               edgeid, true)) {
+        continue;
+      }
+
       // Update the_shortcuts mask
       shortcuts |= directededge->shortcut();
 
