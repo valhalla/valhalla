@@ -63,7 +63,10 @@ GraphTile::GraphTile()
       complex_restriction_forward_size_(0),
       complex_restriction_reverse_size_(0),
       edgeinfo_size_(0),
-      textlist_size_(0){
+      textlist_size_(0),
+      traffic_segment_ids_(nullptr),
+      traffic_chunks_(0),
+      traffic_chunk_size_(0) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -695,6 +698,35 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
+
+// Get traffic segment(s) associated to this edge.
+std::vector<std::pair<GraphId, float>> GraphTile::GetTrafficSegments(const GraphId& edge) const {
+  return GetTrafficSegments(edge.id());
+}
+
+// Get traffic segment(s) associated to this edge.
+std::vector<std::pair<GraphId, float>> GraphTile::GetTrafficSegments(const size_t idx) const {
+  if (idx < header_->traffic_id_count()) {
+    uint64_t t = traffic_segment_ids_[idx];
+    if ((t & kTrafficChunkFlag) == 0) {
+      // This edge associates to a single traffic segment
+      return { std::make_pair(GraphId(t), 1.0f) };
+    } else {
+      std::vector<std::pair<GraphId, float>> segments;
+      // This represents a traffic chunk
+
+      // Get the chunk and iterate...
+
+      return segments;
+    }
+  }
+  throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(idx)  + " traffic Id count= " +
+                           std::to_string(header_->traffic_id_count()));
+}
+
 
 }
 }

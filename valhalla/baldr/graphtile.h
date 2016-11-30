@@ -301,6 +301,23 @@ class GraphTile {
    */
   midgard::iterable_t<GraphId> GetBin(size_t index) const;
 
+  /**
+   * Get traffic segment(s) associated to this edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a list of traffic segment Ids and weights that associate
+   *          to this edge.
+   */
+  std::vector<std::pair<GraphId, float>> GetTrafficSegments(const GraphId& edge) const;
+
+  /**
+   * Get traffic segment(s) associated to this edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a list of traffic segment Ids and weights that associate
+   *          to this edge.
+   */
+  std::vector<std::pair<GraphId, float>> GetTrafficSegments(const size_t idx) const;
+
+
  protected:
 
   // Graph tile memory, this must be shared so that we can put it into cache
@@ -373,6 +390,16 @@ class GraphTile {
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
   GraphId* edge_bins_;
+
+  // Traffic segment Ids. Count is the same as the directed edge count.
+  uint64_t* traffic_segment_ids_;
+
+  // Traffic chunks. Each chunk has a count followed by an array of traffic
+  // segment Id and weight (combined into single uin32_t).
+  uint32_t* traffic_chunks_;
+
+  // Number of bytes in the traffic chunk list
+  std::size_t traffic_chunk_size_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, tile_index_pair> stop_one_stops;

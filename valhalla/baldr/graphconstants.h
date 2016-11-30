@@ -463,6 +463,9 @@ enum class CalendarExceptionType : uint8_t {
   kRemoved     = 2    // Service removed for the specified date
 };
 
+// --------------------------- Traffic association information ------------ //
+constexpr uint64_t kTrafficChunkFlag = 0x1000000000000000ull;
+
 }
 }
 
