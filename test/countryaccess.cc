@@ -129,12 +129,12 @@ void CountryAccess(const std::string& config_file) {
       // trunk that has pedestrian and bike access.
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kTruckAccess | kBusAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
           if (reverse != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAutoAccess | kPedestrianAccess | kWheelchairAccess|  kBicycleAccess | kTruckAccess | kBusAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess|  kBicycleAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
           if (forward != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
@@ -192,12 +192,12 @@ void CountryAccess(const std::string& config_file) {
       // trunk should have no kPedestrianAccess
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kTruckAccess | kBusAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
           if (reverse != 0)
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAutoAccess | kTruckAccess | kBusAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess))
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 139156014.");
           if (forward != 0)
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 139156014.");
