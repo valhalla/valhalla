@@ -96,6 +96,18 @@ struct OSMAccess {
    */
   bool truck_tag() const;
 
+  /**
+   * Sets the hov_tag flag.
+   * @param  hov_tag    hov way?
+   */
+  void set_hov_tag(const bool hov_tag);
+
+  /**
+   * Get the hov_tag flag.
+   * @return  Returns hov_tag flag.
+   */
+  bool hov_tag() const;
+
   // OSM way Id
   uint64_t osmwayid_;
 
@@ -107,7 +119,8 @@ struct OSMAccess {
       uint8_t bus_tag       :1;
       uint8_t foot_tag      :1;
       uint8_t truck_tag     :1;
-      uint8_t spare         :3;
+      uint8_t hov_tag       :1;
+      uint8_t spare         :2;
     } fields;
     uint32_t v;
   };
