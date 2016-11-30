@@ -1107,7 +1107,7 @@ function filter_tags_generic(kv)
   end
 
   if (kv["hov"] and kv["hov"] == "no") then
-    kv["hov_tag"] = "true"
+    kv["hov_tag"] = "false"
     kv["hov_forward"] = "false"
     kv["hov_backward"] = "false"
   else
