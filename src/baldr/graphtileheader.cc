@@ -282,12 +282,14 @@ std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t index) const {
   throw std::runtime_error("Bin out of bounds");
 }
 
+// Gets the offset to the end of the tile.
 uint32_t GraphTileHeader::end_offset() const {
-  return empty_slots_[0];
+  return end_offset_;
 }
 
+// Sets the offset to the end of the tile.
 void GraphTileHeader::set_end_offset(uint32_t offset) {
-  empty_slots_[0] = offset;
+  end_offset_ = offset;
 }
 
 }
