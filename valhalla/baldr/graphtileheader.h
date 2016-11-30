@@ -9,12 +9,11 @@
 namespace valhalla {
 namespace baldr {
 
-// Number of expansion slots remaining in this tile including the one used
-// to mark the end of the tile. If you want to add something to the tile
-// simply subtract one from this number and add it just before the
-// empty_slots_ array below. NOTE that it can ONLY be an offset in bytes
-// and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 17;
+// Number of expansion slots remaining in this tile. If you want to add
+// something to the tile simply subtract one from this number and add it
+// just before the empty_slots_ array below. NOTE that it can ONLY be an
+// offset in bytes  and NOT a bitfield or union or anything of that sort
+constexpr size_t kEmptySlots = 16;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -386,12 +385,14 @@ class GraphTileHeader {
   uint32_t bin_offsets_[kBinCount];
 
   // Marks the end of this version of the tile with the rest of the slots
-  // being available for growth. The first item in this will be the size
-  // in bytes of the tile, marking the end of the tile. If you want to use
-  // one of the empty slots, simply add a uint32_t some_offset_; just above
-  // empty_slots_ and decrease kEmptySlots by 1. Note that you can ONLY add
-  // an offset here and NOT a bitfield or union or anything like that
+  // being available for growth. If you want to use one of the empty slots,
+  // simply add a uint32_t some_offset_; just above empty_slots_ and decrease
+  // kEmptySlots by 1. Note that you can ONLY add an offset here and NOT a
+  // bitfield or union or anything like that
   uint32_t empty_slots_[kEmptySlots];
+
+  // End offset - fixed location in the header
+  uint32_t end_offset_;
 
 };
 
