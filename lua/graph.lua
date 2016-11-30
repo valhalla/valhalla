@@ -1108,12 +1108,12 @@ function filter_tags_generic(kv)
 
   if (kv["hov"] and kv["hov"] == "no") then
     kv["hov_tag"] = "true"
-
-    kv["hov_forward"] = false
-    kv["hov_backward"] = false
+    kv["hov_forward"] = "false"
+    kv["hov_backward"] = "false"
   else
     kv["hov_forward"] = kv["auto_forward"]
     kv["hov_backward"] = kv["auto_backward"]
+
   end
 
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
