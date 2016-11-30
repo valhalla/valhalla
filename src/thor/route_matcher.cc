@@ -125,7 +125,9 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
     PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
 
     // Process current edge until shape matches end node
-    // or shape length is longer than the current edge
+    // or shape length is longer than the current edge. Increment to the
+    // next shape point after the correlated index.
+    index++;
     while (index < shape.size()
         && (std::round(shape.at(correlated_index).Distance(shape.at(index)))
             < de_length)) {
@@ -143,9 +145,7 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
-        // Continue walking shape to find the end edge...increment the shape
-        // index so we don't try to match against the current matching node LL.
-        index++;
+        // Continue walking shape to find the end edge...
         return (expand_from_node(mode_costing, mode, reader, shape, index,
                                  end_node_tile, de->endnode(), stop_node,
                                  prev_edge_label, elapsed_time, path_infos,
