@@ -1107,6 +1107,8 @@ function filter_tags_generic(kv)
   end
 
   if (kv["hov"] and kv["hov"] == "no") then
+    kv["hov_tag"] = "true"
+
     kv["hov_forward"] = false
     kv["hov_backward"] = false
   else
@@ -1115,6 +1117,8 @@ function filter_tags_generic(kv)
   end
 
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
+
+    kv["hov_tag"] = "true"
 
     if (kv["hov"] == "designated") then
       if (kv["auto_tag"] == nil) then
@@ -1202,7 +1206,7 @@ function nodes_proc (kv, nokeys)
     access = "false"
   end 
 
-  local hov_tag = 0
+  local hov_tag = nil
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
     hov_tag = 128
   end
@@ -1374,7 +1378,7 @@ function nodes_proc (kv, nokeys)
   end
  
   --store a mask denoting access
-  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus)
+  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov)
 
   return 0, kv
 end
