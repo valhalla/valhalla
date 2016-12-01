@@ -40,6 +40,9 @@ constexpr float kTCUnfavorable      = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse          = 5.0f;
 
+// How much to favor hov roads.
+constexpr float kHOVFactor = 0.85f;
+
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
       kTCFavorable, kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -359,6 +362,7 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
   float factor = (edge->use() == Use::kFerry) ?
         ferry_weight_ : density_factor_[edge->density()];
+
   float sec = (edge->length() * speedfactor_[edge->speed()]);
   return Cost(sec * factor, sec);
 }
@@ -724,6 +728,186 @@ cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BusCost>(config);
 }
 
+/**
+ * Derived class providing an alternate costing for driving that is intended
+ * to favor HOV roads.
+ */
+class HOVCost : public AutoCost {
+ public:
+  /**
+   * Construct hov costing.
+   * Pass in configuration using property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  HOVCost(const boost::property_tree::ptree& config);
+
+  virtual ~HOVCost();
+
+  /**
+   * Get the access mode used by this costing method.
+   * @return  Returns access mode.
+   */
+  uint32_t access_mode() const;
+
+  /**
+   * Checks if access is allowed for the provided directed edge.
+   * This is generally based on mode of travel and the access modes
+   * allowed on the edge. However, it can be extended to exclude access
+   * based on other parameters.
+   * @param  edge     Pointer to a directed edge.
+   * @param  pred     Predecessor edge information.
+   * @param  tile     current tile
+   * @param  edgeid   edgeid that we care about
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const EdgeLabel& pred,
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& edgeid) const;
+
+  /**
+   * Checks if access is allowed for an edge on the reverse path
+   * (from destination towards origin). Both opposing edges are
+   * provided.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  opp_edge       Pointer to the opposing directed edge.
+   * @param  tile           current tile
+   * @param  edgeid         edgeid that we care about
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const EdgeLabel& pred,
+                 const baldr::DirectedEdge* opp_edge,
+                 const baldr::GraphTile*& tile,
+                 const baldr::GraphId& edgeid) const;
+
+  /**
+   * Returns the cost to traverse the edge and an estimate of the actual time
+   * (in seconds) to traverse the edge.
+   * @param  edge     Pointer to a directed edge.
+   * @return  Returns the cost to traverse the edge.
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+
+  /**
+   * Checks if access is allowed for the provided node. Node access can
+   * be restricted if bollards or gates are present.
+   * @param  edge  Pointer to node information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::NodeInfo* node) const;
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method. Function/functor is also used to filter
+   * edges not usable / inaccessible by hov.
+   */
+  virtual const EdgeFilter GetEdgeFilter() const {
+    // Throw back a lambda that checks the access for this type of costing
+    return [](const baldr::DirectedEdge* edge) {
+      if (edge->trans_up() || edge->trans_down() ||
+         !(edge->forwardaccess() & kHOVAccess))
+        return 0.0f;
+      else {
+        // TODO - use classification/use to alter the factor
+        return 1.0f;
+      }
+    };
+  }
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each node's attribution
+   * @return Function/functor to be used in filtering out nodes
+   */
+  virtual const NodeFilter GetNodeFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node){
+      return !(node->access() & kHOVAccess);
+    };
+  }
+};
+
+// Constructor
+HOVCost::HOVCost(const boost::property_tree::ptree& pt)
+    : AutoCost(pt) {
+}
+
+// Destructor
+HOVCost::~HOVCost() {
+}
+
+// Get the access mode used by this costing method.
+uint32_t HOVCost::access_mode() const {
+  return kHOVAccess;
+}
+
+// Check if access is allowed on the specified edge.
+bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
+                      const EdgeLabel& pred,
+                      const baldr::GraphTile*& tile,
+                      const baldr::GraphId& edgeid) const {
+  // TODO - obtain and check the access restrictions.
+
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes in case the origin is inside
+  // a not thru region and a heading selected an edge entering the
+  // region.
+  if (!(edge->forwardaccess() & kHOVAccess) ||
+      (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+       edge->surface() == Surface::kImpassable) {
+    return false;
+  }
+  return true;
+}
+
+// Checks if access is allowed for an edge on the reverse path (from
+// destination towards origin). Both opposing edges are provided.
+bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
+                             const EdgeLabel& pred,
+                             const baldr::DirectedEdge* opp_edge,
+                             const baldr::GraphTile*& tile,
+                             const baldr::GraphId& edgeid) const {
+  // TODO - obtain and check the access restrictions.
+
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes.
+  if (!(opp_edge->forwardaccess() & kHOVAccess) ||
+       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+        opp_edge->surface() == Surface::kImpassable) {
+    return false;
+  }
+  return true;
+}
+
+// Returns the cost to traverse the edge and an estimate of the actual time
+// (in seconds) to traverse the edge.
+Cost HOVCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+
+  float factor = (edge->use() == Use::kFerry) ?
+        ferry_weight_ : density_factor_[edge->density()];
+
+  if ((edge->forwardaccess() & kHOVAccess) &&
+      !(edge->forwardaccess() & kAutoAccess))
+    factor *= kHOVFactor;
+
+  float sec = (edge->length() * speedfactor_[edge->speed()]);
+  return Cost(sec * factor, sec);
+}
+
+// Check if access is allowed at the specified node.
+bool HOVCost::Allowed(const baldr::NodeInfo* node) const  {
+  return (node->access() & kHOVAccess);
+}
+
+cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<HOVCost>(config);
+}
 
 }
 }

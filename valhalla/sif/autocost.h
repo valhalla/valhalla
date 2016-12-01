@@ -29,6 +29,12 @@ cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config);
  */
 cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config);
 
+/**
+ * Create a hov cost method. This is derived from auto costing and
+ * uses the same rules except for favoring hov roads
+ */
+cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config);
+
 }
 }
 
