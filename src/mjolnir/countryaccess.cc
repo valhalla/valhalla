@@ -47,6 +47,9 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
   if (!user_access.truck_tag())
     new_access = ProcessAccess(new_access,country_access,kTruckAccess);
 
+  if (!user_access.hov_tag())
+    new_access = ProcessAccess(new_access,country_access,kHOVAccess);
+
   return new_access;
 }
 
@@ -61,19 +64,21 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
       ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
       ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
       ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
+      ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
       ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
   bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
       (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
       (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
       (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
+      (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
       (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
   bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
   bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
 
   // country_access.at(X) = -1 means that no default country overrides are needed.
-      // user_access.<type>_tag() == true means that a user set the <type> tag.
+  // user_access.<type>_tag() == true means that a user set the <type> tag.
 
   // trunk and trunk_link
   if (directededge.classification() == RoadClass::kTrunk) {

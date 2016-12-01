@@ -1106,9 +1106,45 @@ function filter_tags_generic(kv)
     kv["seasonal"] = "true"
   end
 
-  -- TODO access
+  if (kv["hov"] and kv["hov"] == "no") then
+    kv["hov_tag"] = "false"
+    kv["hov_forward"] = "false"
+    kv["hov_backward"] = "false"
+  else
+    kv["hov_forward"] = kv["auto_forward"]
+    kv["hov_backward"] = kv["auto_backward"]
+
+  end
+
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
-    kv["hov"] = "true"
+
+    kv["hov_tag"] = "true"
+
+    if (kv["hov"] == "designated") then
+      if (kv["auto_tag"] == nil) then
+        kv["auto_forward"] = "false"
+        kv["auto_backward"] = "false"
+      end
+
+      if (kv["truck_tag"] == nil) then
+        kv["truck_forward"] = "false"
+        kv["truck_backward"] = "false"
+      end
+
+      if (kv["bus_tag"] == nil) then
+        kv["bus_forward"] = "false"
+        kv["bus_backward"] = "false"
+      end
+
+      if (kv["foot_tag"] == nil) then
+        kv["pedestrian"] = "false"
+      end
+
+      if (kv["bike_tag"] == nil) then
+        kv["bike_forward"] = "false"
+        kv["bike_backward"] = "false"
+      end
+    end
   end
 
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
@@ -1170,6 +1206,11 @@ function nodes_proc (kv, nokeys)
     access = "false"
   end 
 
+  local hov_tag = nil
+  if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
+    hov_tag = 128
+  end
+
   local foot_tag = foot_node[kv["foot"]]
   local wheelchair_tag = wheelchair_node[kv["wheelchair"]]
   local bike_tag = bicycle_node[kv["bicycle"]]
@@ -1189,8 +1230,13 @@ function nodes_proc (kv, nokeys)
   end
 
   --if wheelchair was not set and foot is
-  if wheelchair_tag == nil and foot_tag == 1 then
+  if wheelchair_tag == nil and foot_tag == 2 then
     wheelchair_tag = 256
+  end
+
+  --if hov was not set and car is
+  if hov_tag == nil and auto_tag == 1 then
+    hov_tag = 128
   end
 
   --if truck was not set and car is
@@ -1214,7 +1260,7 @@ function nodes_proc (kv, nokeys)
     bike_tag = 4
   end
 
-  --if tag exists use it, otherwise access allowed for all modes unless access = false.  
+  --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated")
   local auto = auto_tag or 1
   local truck = truck_tag or 8 
   local bus = bus_tag or 64
@@ -1222,9 +1268,10 @@ function nodes_proc (kv, nokeys)
   local wheelchair = wheelchair_tag or 256
   local bike = bike_tag or 4
   local emergency = emergency_tag or 16
+  local hov = hov_tag or 128
 
   --if access = false use tag if exists, otherwise no access for that mode.
-  if access == "false" then
+  if (access == "false" or kv["hov"] == "designated") then
     auto = auto_tag or 0
     truck = truck_tag or 0
     bus = bus_tag or 0
@@ -1232,6 +1279,7 @@ function nodes_proc (kv, nokeys)
     wheelchair = wheelchair_tag or 0
     bike = bike_tag or 0
     emergency = emergency_tag or 0
+    hov = hov_tag or 0
   end 
 
   --check for gates and bollards
@@ -1256,6 +1304,7 @@ function nodes_proc (kv, nokeys)
       wheelchair = wheelchair_tag or 256
       bike = bike_tag or 4
       emergency = emergency_tag or 0
+      hov = hov_tag or 0
     end
   end
 
@@ -1272,6 +1321,7 @@ function nodes_proc (kv, nokeys)
          wheelchair = wheelchair_tag or 256
          bike = bike_tag or 4
          emergency = emergency_tag or 16
+         hov = hov_tag or 128
     end
   end
 
@@ -1328,7 +1378,7 @@ function nodes_proc (kv, nokeys)
   end
  
   --store a mask denoting access
-  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus)
+  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov)
 
   return 0, kv
 end
