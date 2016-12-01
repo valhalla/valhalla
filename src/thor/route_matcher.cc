@@ -117,6 +117,7 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
     size_t index = correlated_index;
     uint32_t shape_length = 0;
     uint32_t de_length = de->length() + 50;  // TODO make constant
+    float de2 = de_length * de_length;
 
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (end_node_tile == nullptr) {
@@ -126,11 +127,12 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
 
     // Process current edge until shape matches end node
     // or shape length is longer than the current edge. Increment to the
-    // next shape point after the correlated index.
+    // next shape point after the correlated index. Use DistanceApproximator
+    // and squared length for efficiency.
     index++;
-    while (index < shape.size()
-        && (std::round(shape.at(correlated_index).Distance(shape.at(index)))
-            < de_length)) {
+    DistanceApproximator distapprox(de_end_ll);
+    while (index < shape.size() &&
+           distapprox.DistanceSquared((shape.at(index))) < de2) {
       if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
