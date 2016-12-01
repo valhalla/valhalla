@@ -8,7 +8,7 @@ using namespace prime_server;
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/odin/enhancedtrippath.h>
 
 
 #include "thor/service.h"
@@ -27,34 +27,49 @@ namespace {
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
+  json::MapPtr serialize(valhalla::odin::EnhancedTripPath* trip_path, const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
-    if (trip_path.node().size() > 0) {
-      for(const auto& node : trip_path.node()){
-        if (node.has_edge()) {
+      for (int i = 1; i < trip_path->node().size(); i++) {
+
+        /*auto node = trip_path->node();
+        auto end_node = json::array({});
+        auto intersecting_edges = json::array({});
+        if (node.intersecting_edge_size() > 0) {
+          for (const auto& intersecting_edge : node.intersecting_edge())
+            intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
+        }
+        end_node->emplace_back(json::map({
+          {"intersecting_edges", intersecting_edges}
+        }));*/
+
+        auto edge = trip_path->GetPrevEdge(i,0);
+        if (edge) {
           auto names = json::array({});
-          for (const auto& name : node.edge().name())
+          for (const auto& name : edge->name())
             names->push_back(name);
 
-          edges->emplace_back(json::map({
-            {"max_downward_grade", static_cast<int64_t>(node.edge().max_downward_grade())},
-            {"max_upward_grade", static_cast<int64_t>(node.edge().max_upward_grade())},
-            {"weighted_grade", json::fp_t{node.edge().weighted_grade(), 3}},
-            {"length", json::fp_t{node.edge().length() * scale, 3}},
-            {"speed", json::fp_t{node.edge().speed() * scale, 3}},
-            {"way_id", static_cast<uint64_t>(node.edge().way_id())},
-            {"id", static_cast<uint64_t>(node.edge().id())},
-            {"names", names}
-          }));
+            edges->emplace_back(json::map({
+             // {"end_node", end_node},
+              {"end_shape_index", static_cast<int64_t>(edge->end_shape_index())},
+              {"begin_shape_index", static_cast<int64_t>(edge->begin_shape_index())},
+              {"max_downward_grade", static_cast<int64_t>(edge->max_downward_grade())},
+              {"max_upward_grade", static_cast<int64_t>(edge->max_upward_grade())},
+              {"weighted_grade", json::fp_t{edge->weighted_grade(), 3}},
+              {"length", json::fp_t{edge->length() * scale, 3}},
+              {"speed", json::fp_t{edge->speed() * scale, 3}},
+              {"way_id", static_cast<uint64_t>(edge->way_id())},
+              {"id", static_cast<uint64_t>(edge->id())},
+              {"names", names}
+            }));
         }
       }
-    }
     auto json = json::map({
       {"edges", edges}
     });
     if (id)
       json->emplace("id", *id);
+    json->emplace("shape", trip_path->shape());
     return json;
   }
 }
@@ -77,18 +92,17 @@ worker_t::result_t thor_worker_t::trace_attributes(
 
   //get time for start of request
   auto s = std::chrono::system_clock::now();
- // worker_t::result_t result { false  };
   // Forward the original request
- // result.messages.emplace_back(request_str);
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  auto trip_path = route_match();
-  if (trip_path.node().size() == 0) {
+  odin::TripPath tp = route_match();
+  odin::EnhancedTripPath* trip_path = static_cast<odin::EnhancedTripPath*>(&tp);
+  if (trip_path->node().size() == 0) {
     //If no Valhalla route match, then use meili map matching
     //to match to local route network. No shortcuts are used and detailed
     //information at every intersection becomes available.
-    trip_path = map_match();
+    odin::TripPath trip_path = map_match();
   }
   json::MapPtr json;
   auto id = request.get_optional<std::string>("id");
