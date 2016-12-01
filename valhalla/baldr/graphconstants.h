@@ -470,6 +470,8 @@ constexpr uint64_t kChunkIndexMask   = 0x00000000ffffffff;
 constexpr uint64_t kTrafficChunkFlag = 0x1000000000000000;
 constexpr uint64_t kChunkWeightMask  = 0xff00000000000000;
 constexpr uint64_t kChunkIDMask      = 0x00ffffffffffffff;
+constexpr uint32_t kChunkBitOffset   = 56;
+constexpr uint32_t kChunkCountOffset = 32;
 
 }
 }
