@@ -176,6 +176,8 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
   textlist_ = tile_ptr + header_->textlist_offset();
   textlist_size_ = header_->traffic_segmentid_offset() - header_->textlist_offset();
 
+  // ANY NEW EXPANSION DATA GOES HERE, TRAFFIC IS AT THE END
+
   // Start of the traffic segment Ids
   traffic_segment_ids_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->traffic_segmentid_offset());
 
