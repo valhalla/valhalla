@@ -983,10 +983,11 @@ struct OSMWay {
 
   uint16_t nodecount_;
 
-  // max or advisory speed limit in kilometers per hour
+  // max speed limit in kilometers per hour
   uint8_t speed_limit_;
 
-  // average/practical or default/categorized speed in kilometers per hour
+  // average speed if exists, else advisory speed if exists, else max_speed if exists, 
+  // else categorized speed in kilometers per hour
   uint8_t speed_;
 
   // Speed in kilometers per hour
