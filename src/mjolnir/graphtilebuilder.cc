@@ -809,6 +809,88 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
     throw std::runtime_error("Failed to open file " + filename.string());
 }
 
+/**
+ * Initialize traffic segment association. Sizes the traffic segment Id list
+ * and sets them all to Invalid.
+ */
+void GraphTileBuilder::InitializeTrafficSegmentIds() {
+  // Resize the traffic segment Id list to be the same size as the directed
+  // edge list. Initialize to all Invalid
+  GraphId inv;
+  traffic_segmentid_builder_.resize(header_builder_.directededgecount());
+  for (auto s : traffic_segmentid_builder_) {
+    s = inv.value;
+  }
+}
+
+/**
+ * Add a traffic segment association.
+ * @param  edgeid GraphId of the directed edge to which traffic segments are
+ *                associated.
+ * @param  assoc  A vector of traffic segment associations to an edge.
+ */
+void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
+                  const std::vector<std::pair<GraphId, float>>& assoc) {
+  // Check if edge Id is within range. TODO - do we also need to check tile ID
+  if (edgeid.id() >= header_builder_.directededgecount()) {
+    // TODO -
+    return;
+  }
+
+  if (assoc.size() == 1) {
+    traffic_segmentid_builder_[edgeid.id()] = assoc[0].first.value;
+  } else {
+    // Store a chunk
+  }
+}
+
+/**
+ * Updates a tile with traffic segment and chunk data.
+ */
+void GraphTileBuilder::UpdateTrafficSegments() {
+  // Update header to include the offsets to traffic segments and chunks
+  size_t current_size = header_->end_offset();
+  header_builder_.set_traffic_id_count(traffic_segmentid_builder_.size());
+  header_builder_.set_traffic_segmentid_offset(current_size);
+  header_builder_.set_traffic_chunk_offset(current_size +
+              traffic_segmentid_builder_.size() * sizeof(uint64_t));
+  uint32_t shift = traffic_segmentid_builder_.size() * sizeof(uint64_t) +
+                   traffic_chunk_builder_.size() * sizeof(uint64_t);
+  header_builder_.set_end_offset(current_size + shift);
+
+  // Get the name of the file
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
+      + GraphTile::FileSuffix(header_builder_.graphid(), hierarchy_);
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file and truncate
+  std::stringstream in_mem;
+  std::ofstream file(filename.c_str(),
+                     std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write a new header
+    file.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+
+    // Copy the rest of the tile contents
+    const auto* begin = reinterpret_cast<const char*>(&header_) + sizeof(GraphTileHeader);
+    file.write(begin, current_size);
+
+    // Append the traffic segment list
+    file.write(reinterpret_cast<const char*>(&traffic_segmentid_builder_[0]),
+               traffic_segmentid_builder_.size() * sizeof(uint64_t));
+
+    // Append the traffic chunks
+    file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
+               traffic_chunk_builder_.size() * sizeof(uint64_t));
+
+    // Close the file
+    file.close();
+  }
+}
+
 }
 }
 
