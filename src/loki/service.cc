@@ -175,8 +175,8 @@ namespace valhalla {
           shape_count = shape.size();
           for(const auto& pt : shape) {
             boost::property_tree::ptree point_child;
-            point_child.put("lon", pt.first);
-            point_child.put("lat", pt.second);
+            point_child.put("lon", static_cast<double>(pt.first));
+            point_child.put("lat", static_cast<double>(pt.second));
             shape_child.push_back(std::make_pair("",point_child));
           }
           request.add_child("shape", shape_child);
