@@ -76,6 +76,13 @@ class AutoCost : public DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
+   * Disables entrance into destination only areas. This should only be used
+   * for bidirectional path algorithms (and generally only for driving),
+   * otherwise a destination only penalty should be used.
+   */
+  virtual void DisableDestinationOnly();
+
+  /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
@@ -308,6 +315,12 @@ bool AutoCost::AllowMultiPass() const {
   return true;
 }
 
+// Set to disable destination only transitions.
+void AutoCost::DisableDestinationOnly() {
+  disable_destination_only_ = true;
+  destination_only_penalty_ = 0;
+}
+
 // Get the access mode used by this costing method.
 uint32_t AutoCost::access_mode() const {
   return kAutoAccess;
@@ -327,7 +340,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   if (!(edge->forwardaccess() & kAutoAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
-       edge->surface() == Surface::kImpassable) {
+       edge->surface() == Surface::kImpassable ||
+      (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   return true;
@@ -347,7 +361,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
-        opp_edge->surface() == Surface::kImpassable) {
+        opp_edge->surface() == Surface::kImpassable ||
+       (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
   return true;
@@ -693,7 +708,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   if (!(edge->forwardaccess() & kBusAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
-       edge->surface() == Surface::kImpassable) {
+       edge->surface() == Surface::kImpassable ||
+      (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   return true;
@@ -713,7 +729,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
-        opp_edge->surface() == Surface::kImpassable) {
+        opp_edge->surface() == Surface::kImpassable ||
+       (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
   return true;
