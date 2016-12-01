@@ -2,6 +2,8 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/merge.h>
 #include <valhalla/loki/search.h>
+#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/astar.h>
 
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -15,6 +17,8 @@
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vl = valhalla::loki;
+namespace vs = valhalla::sif;
+namespace vt = valhalla::thor;
 namespace pbf = opentraffic::osmlr;
 
 namespace bpo = boost::program_options;
@@ -22,6 +26,59 @@ namespace bpt = boost::property_tree;
 namespace bfs = boost::filesystem;
 
 namespace {
+
+vm::PointLL interp(vm::PointLL a, vm::PointLL b, double frac) {
+  return vm::PointLL(
+    a.lng() + ((b.lng() - a.lng()) * frac),
+    a.lat() + ((b.lat() - a.lat()) * frac));
+}
+
+void subsegment(std::vector<vm::PointLL> &seg, uint32_t dist) {
+  const size_t len = seg.size();
+  assert(len > 1);
+
+  double d = 0.0;
+  size_t i = 0;
+  for (; i < len - 1; ++i) {
+    auto segdist = seg[i].Distance(seg[i+1]);
+    if ((d + segdist) >= dist) {
+      double frac = (dist - d) / segdist;
+      seg[i] = interp(seg[i], seg[i+1], frac);
+      break;
+
+    } else {
+      d += segdist;
+    }
+  }
+
+  seg.erase(seg.begin(), seg.begin() + i);
+}
+
+uint16_t bearing(const std::vector<vm::PointLL> &shape) {
+  // OpenLR says to use 20m along the edge, but we could use the
+  // GetOffsetForHeading function, which adapts it to the road class.
+  float heading = vm::PointLL::HeadingAlongPolyline(shape, 20);
+  assert(heading >= 0.0);
+  assert(heading < 360.0);
+  return uint16_t(std::round(heading));
+}
+
+uint16_t bearing(const vb::GraphTile *tile, vb::GraphId edge_id, float dist) {
+  std::vector<vm::PointLL> shape;
+  const auto *edge = tile->directededge(edge_id);
+  uint32_t edgeinfo_offset = edge->edgeinfo_offset();
+  auto edgeinfo = tile->edgeinfo(edgeinfo_offset);
+  uint32_t edge_len = edge->length();
+
+  shape = edgeinfo.shape();
+  if (!edge->forward()) {
+    std::reverse(shape.begin(), shape.end());
+  }
+
+  subsegment(shape, uint32_t(dist * edge_len));
+
+  return bearing(shape);
+}
 
 struct segment_part {
   vb::GraphId segment_id;
@@ -38,6 +95,184 @@ private:
   std::unordered_map<vb::GraphId, std::list<segment_part> > m_edges;
 };
 
+struct edge_score {
+  vb::GraphId id;
+  int score;
+};
+
+bool edge_pred(const vb::DirectedEdge *edge) {
+  return (edge->use() != vb::Use::kFerry &&
+          edge->use() != vb::Use::kTransitConnection &&
+          !edge->trans_up() &&
+          !edge->trans_down());
+}
+
+bool check_access(const vb::DirectedEdge *edge) {
+  uint32_t access = vb::kAllAccess;
+  access &= edge->forwardaccess();
+
+  // if any edge is a shortcut, then drop the whole path
+  if (edge->shortcut()) {
+    return false;
+  }
+
+  // if the edge predicate is false for any edge, then drop the whole
+  // path.
+  if (edge_pred(edge) == false) {
+    return false;
+  }
+
+  // be permissive here, as we do want to collect traffic on most vehicular
+  // routes.
+  uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
+    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
+  return access & vehicular;
+}
+
+bool is_oneway(const vb::DirectedEdge *e) {
+  // TODO: don't need to find opposite edge, as this info alread in the
+  // reverseaccess mask?
+  return e->reverseaccess() == 0;
+}
+
+enum class FormOfWay {
+  kUndefined = 0,
+  kMotorway = 1,
+  kMultipleCarriageway = 2,
+  kSingleCarriageway = 3,
+  kRoundabout = 4,
+  kTrafficSquare = 5,
+  kSlipRoad = 6,
+  kOther = 7
+};
+
+std::ostream &operator<<(std::ostream &out, FormOfWay fow) {
+  switch (fow) {
+  case FormOfWay::kUndefined:           out << "undefined";            break;
+  case FormOfWay::kMotorway:            out << "motorway";             break;
+  case FormOfWay::kMultipleCarriageway: out << "multiple_carriageway"; break;
+  case FormOfWay::kSingleCarriageway:   out << "single_carriageway";   break;
+  case FormOfWay::kRoundabout:          out << "roundabout";           break;
+  case FormOfWay::kTrafficSquare:       out << "traffic_square";       break;
+  case FormOfWay::kSlipRoad:            out << "sliproad";             break;
+  default:
+    out << "other";
+  }
+  return out;
+}
+
+FormOfWay form_of_way(const vb::DirectedEdge *e) {
+  bool oneway = is_oneway(e);
+  auto rclass = e->classification();
+
+  // if it's a slip road, return that. TODO: am i doing this right?
+  if (e->link()) {
+    return FormOfWay::kSlipRoad;
+  }
+  // if it's a roundabout, return that
+  else if (e->roundabout()) {
+    return FormOfWay::kRoundabout;
+  }
+  // if it's a motorway and it's one-way, then it's likely to be grade separated
+  else if (rclass == vb::RoadClass::kMotorway && oneway) {
+    return FormOfWay::kMotorway;
+  }
+  // if it's a major road, and it's one-way then it might be a multiple
+  // carriageway road.
+  else if (rclass <= vb::RoadClass::kTertiary && oneway) {
+    return FormOfWay::kMultipleCarriageway;
+  }
+  // not one-way, so perhaps it's a single carriageway
+  else if (rclass <= vb::RoadClass::kTertiary) {
+    return FormOfWay::kSingleCarriageway;
+  }
+  // everything else
+  else {
+    return FormOfWay::kOther;
+  }
+}
+
+class DistanceOnlyCost : public vs::DynamicCost {
+public:
+  DistanceOnlyCost(vs::TravelMode travel_mode);
+  virtual ~DistanceOnlyCost();
+  uint32_t access_mode() const;
+  bool Allowed(const vb::DirectedEdge* edge,
+               const vs::EdgeLabel& pred,
+               const vb::GraphTile*& tile,
+               const vb::GraphId& edgeid) const;
+  bool AllowedReverse(const vb::DirectedEdge* edge,
+                      const vs::EdgeLabel& pred,
+                      const vb::DirectedEdge* opp_edge,
+                      const vb::GraphTile*& tile,
+                      const vb::GraphId& edgeid) const;
+  bool Allowed(const vb::NodeInfo* node) const;
+  vs::Cost EdgeCost(const vb::DirectedEdge* edge) const;
+  const vs::EdgeFilter GetEdgeFilter() const;
+  const vs::NodeFilter GetNodeFilter() const;
+  float AStarCostFactor() const;
+};
+
+DistanceOnlyCost::DistanceOnlyCost(vs::TravelMode travel_mode)
+  : DynamicCost(bpt::ptree(), travel_mode) {
+}
+
+DistanceOnlyCost::~DistanceOnlyCost() {
+}
+
+uint32_t DistanceOnlyCost::access_mode() const {
+  uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
+    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
+  return vehicular;
+}
+
+bool DistanceOnlyCost::Allowed(const vb::DirectedEdge* edge,
+                               const vs::EdgeLabel&,
+                               const vb::GraphTile*&,
+                               const vb::GraphId&) const {
+  return check_access(edge);
+}
+
+bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
+                                      const vs::EdgeLabel& pred,
+                                      const vb::DirectedEdge* opp_edge,
+                                      const vb::GraphTile*& tile,
+                                      const vb::GraphId& edgeid) const {
+  return check_access(edge);
+}
+
+bool DistanceOnlyCost::Allowed(const vb::NodeInfo*) const {
+  return true;
+}
+
+vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge) const {
+  float edge_len(edge->length());
+  return {edge_len, edge_len};
+}
+
+const vs::EdgeFilter DistanceOnlyCost::GetEdgeFilter() const {
+  return [](const vb::DirectedEdge *edge) -> float {
+    return check_access(edge) ? 1.0f : 0.0f;
+  };
+}
+
+const vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
+  return [](const vb::NodeInfo *) -> bool {
+    return false;
+  };
+}
+
+float DistanceOnlyCost::AStarCostFactor() const {
+  return 1.0f;
+}
+
+vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference &lrp) {
+  int32_t lng = lrp.coord().lng();
+  int32_t lat = lrp.coord().lat();
+  vm::PointLL coord(double(lng) / 10000000, double(lat) / 10000000);
+  return coord;
+}
+
 void edge_association::add_tile(const std::string &file_name) {
   pbf::Tile tile;
   {
@@ -47,23 +282,95 @@ void edge_association::add_tile(const std::string &file_name) {
     }
   }
 
+  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  std::shared_ptr<vt::PathAlgorithm> path_algo(new vt::AStarPathAlgorithm());
+  std::shared_ptr<vs::DynamicCost> costing(new DistanceOnlyCost(travel_mode));
+
+  std::cout.precision(16);
+  size_t entry_id = 0;
   for (auto &entry : tile.entries()) {
     if (!entry.has_marker()) {
       assert(entry.has_segment());
       auto &segment = entry.segment();
 
-      assert(segment.lrps_size() >= 2);
-      auto &lrp = segment.lrps(0);
-      int32_t lng = lrp.coord().lng();
-      int32_t lat = lrp.coord().lat();
-      vm::PointLL coord(double(lng) / 10000000, double(lat) / 10000000);
+      const size_t size = segment.lrps_size();
+      assert(size >= 2);
 
-      auto loc = vl::Search(vb::Location(coord), m_reader);
-      auto pt = loc.ToPtree(0);
-      std::cout << "====\n";
-      bpt::json_parser::write_json(std::cout, pt);
-      std::cout << "\n";
+      std::vector<std::vector<edge_score> > locs;
+      locs.resize(size - 1);
+
+      std::cout << ">> " << entry_id << "\n";
+      auto origin = vl::Search(vb::Location(coord_for_lrp(segment.lrps(0))), m_reader);
+      for (size_t i = 0; i < size - 1; ++i) {
+        auto &lrp = segment.lrps(i);
+        auto coord = coord_for_lrp(lrp);
+        auto next_coord = coord_for_lrp(segment.lrps(i+1));
+
+        vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
+
+        auto dest = vl::Search(vb::Location(next_coord), m_reader);
+
+        std::cout << " >> FROM " << coord.lat() << "/" << coord.lng() << "\n";
+        std::cout << " >>   TO " << next_coord.lat() << "/" << next_coord.lng() << "\n";
+
+        auto path = path_algo->GetBestPath(
+          origin, dest, m_reader, &costing, travel_mode);
+
+        if (path.empty()) {
+          // what to do if there's no path?
+          throw std::runtime_error("Ooops");
+        }
+
+        int score = 0;
+        uint32_t sum = 0;
+        for (auto &p : path) {
+          sum += p.elapsed_time;
+        }
+        score += std::abs(int(sum) - int(lrp.length())) / 10;
+
+        auto edge_id = path.front().edgeid;
+        auto *tile = m_reader.GetGraphTile(edge_id);
+        auto *edge = tile->directededge(edge_id);
+
+        if (!check_access(edge)) {
+          continue;
+        }
+
+        score += std::abs(int(road_class) - int(edge->classification()));
+
+        bool found = false;
+        for (auto &e : origin.edges) {
+          if (e.id == edge_id) {
+            found = true;
+            score += int(e.projected.Distance(coord));
+
+            int bear1 = bearing(tile, edge_id, e.dist);
+            int bear2 = lrp.bear();
+            int bear_diff = std::abs(bear1 - bear2);
+            if (bear_diff > 180) {
+              bear_diff = 360 - bear_diff;
+            }
+            if (bear_diff < 0) {
+              bear_diff += 360;
+            }
+            score += bear_diff / 10;
+
+            break;
+          }
+        }
+        assert(found);
+
+
+        // form of way isn't really a metric space...
+        FormOfWay fow1 = form_of_way(edge);
+        FormOfWay fow2 = FormOfWay(lrp.start_fow());
+        score += (fow1 == fow2) ? 0 : 5;
+
+        std::cout << "  " << edge_id << ":\t" << score << "\n";
+      }
     }
+
+    entry_id += 1;
   }
 }
 
