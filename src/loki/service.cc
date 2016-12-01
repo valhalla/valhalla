@@ -165,8 +165,8 @@ namespace valhalla {
           shape_count = input_shape->size();
           for (auto& latlng : *input_shape) {
             auto ll = baldr::Location::FromPtree(latlng.second).latlng_;
-            latlng.second.put("lon", ll.first);
-            latlng.second.put("lat", ll.second);
+            latlng.second.put("lon", static_cast<double>(ll.first));
+            latlng.second.put("lat", static_cast<double>(ll.second));
           }
         }//compressed shape
         //if we receive as encoded then we need to add as shape to request
@@ -175,8 +175,8 @@ namespace valhalla {
           shape_count = shape.size();
           for(const auto& pt : shape) {
             boost::property_tree::ptree point_child;
-            point_child.put("lon", pt.first);
-            point_child.put("lat", pt.second);
+            point_child.put("lon", static_cast<double>(pt.first));
+            point_child.put("lat", static_cast<double>(pt.second));
             shape_child.push_back(std::make_pair("",point_child));
           }
           request.add_child("shape", shape_child);
