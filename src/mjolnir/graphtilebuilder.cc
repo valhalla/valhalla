@@ -834,13 +834,28 @@ void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
   // Check if edge Id is within range. TODO - do we also need to check tile ID
   if (edgeid.id() >= header_builder_.directededgecount()) {
     // TODO -
+    LOG_ERROR("AddTrafficSegmentAssociation - edge is not valid for this tile");
     return;
   }
 
   if (assoc.size() == 1) {
     traffic_segmentid_builder_[edgeid.id()] = assoc[0].first.value;
   } else {
-    // Store a chunk
+    // Store a chunk. tore count and offset in the traffic segment Id along
+    // with a bit that indicates this is a chunk Id
+    uint64_t count = assoc.size();
+    uint64_t offset = traffic_chunk_builder_.size() * sizeof(uint64_t);
+    uint64_t chunkid = kTrafficChunkFlag | (count << kChunkCountOffset) | offset;
+    traffic_segmentid_builder_[edgeid.id()] = chunkid;
+
+    // Store the chunk as a set of 64 bit bit word (one for each
+    // association pair)
+    for (const auto& seg : assoc) {
+      // Combine traffic segment Id and weight into single 64 bit word
+      uint64_t w = static_cast<uint32_t>(seg.second * 255.0f);
+      uint64_t chunk = (w << kChunkBitOffset) || seg.first.value;
+      traffic_chunk_builder_.push_back(chunk);
+    }
   }
 }
 
