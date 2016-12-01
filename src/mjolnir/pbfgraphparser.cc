@@ -273,8 +273,6 @@ struct graph_callback : public OSMPBF::Callback {
 
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
-
-    const auto& emergency = results.find("use");
     if (!has_surface_tag)
       has_surface = false;
 
@@ -283,9 +281,6 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
-      if (osmid == 225182647)
-        std::cout << tag.first << " " << tag.second << std::endl;
 
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass) std::stoi(tag.second);
@@ -336,6 +331,10 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "bike_tag") {
         access.set_bike_tag(true);
+        has_user_tags = true;
+      }
+      else if (tag.first == "hov_tag") {
+        access.set_hov_tag(true);
         has_user_tags = true;
       }
 
@@ -1136,6 +1135,17 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   callback.output_loops();
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
 
+  //we need to sort the access tags so that we can easily find them.
+  LOG_INFO("Sorting osm access tags by way id...");
+  {
+    sequence<OSMAccess> access(access_file, false);
+    access.sort(
+        [](const OSMAccess& a, const OSMAccess& b){
+      return a.way_id() < b.way_id();
+    }
+    );
+  }
+
   // Parse relations.
   LOG_INFO("Parsing relations...")
   for (auto& file_handle : file_handles) {
@@ -1196,17 +1206,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
         }
         return a.way_index < b.way_index;
       }
-    );
-  }
-
-  //we need to sort the access tags so that we can easily find them.
-  LOG_INFO("Sorting osm access tags by way id...");
-  {
-    sequence<OSMAccess> access(access_file, false);
-    access.sort(
-        [](const OSMAccess& a, const OSMAccess& b){
-      return a.way_id() < b.way_id();
-    }
     );
   }
 
