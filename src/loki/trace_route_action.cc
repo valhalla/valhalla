@@ -37,35 +37,23 @@ namespace valhalla {
     }
 
     void loki_worker_t::locations_from_shape(boost::property_tree::ptree& request) {
-      auto shape = request.get_child("shape");
 
-      // TODO should we process more than two points?
-      auto first = Location::FromPtree(shape.begin()->second);
-      auto second = Location::FromPtree(std::next(shape.begin())->second);
-      auto next_to_last = Location::FromPtree(std::prev(shape.end(), 2)->second);
-      auto last = Location::FromPtree(std::prev(shape.end())->second);
 
-      // Set heading for first
-      first.heading_ = std::round(
-          PointLL::HeadingAlongPolyline(
-              { { first.latlng_.lng(), first.latlng_.lat() },
-                { second.latlng_.lng(), second.latlng_.lat() } },
-                30.f));
+      // Grab first point and set heading
+      auto first = Location(shape.front());
+      first.heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
 
-      // Set heading for last
-      last.heading_ = std::round(
-          PointLL::HeadingAtEndOfPolyline(
-              { { next_to_last.latlng_.lng(), next_to_last.latlng_.lat() },
-                { last.latlng_.lng(), last.latlng_.lat() } },
-                30.f));
+      // Grab last point and set heading
+      auto last = Location(shape.back());
+      last.heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
       // Add first and last locations to request
       boost::property_tree::ptree locations_child;
       locations_child.push_back(std::make_pair("", first.ToPtree()));
       locations_child.push_back(std::make_pair("", last.ToPtree()));
-
       request.put_child("locations", locations_child);
 
+      // Add first and last correlated locations to request
       request.put_child("correlated_0", loki::Search(first, reader, edge_filter, node_filter).ToPtree(0));
       request.put_child("correlated_1", loki::Search(last, reader, edge_filter, node_filter).ToPtree(1));
 

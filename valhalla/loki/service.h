@@ -8,11 +8,12 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
-#include <valhalla/sif/costfactory.h>
 #include <valhalla/baldr/errorcode_util.h>
+#include <valhalla/sif/costfactory.h>
 
 
 namespace valhalla {
@@ -52,6 +53,7 @@ namespace valhalla {
       std::vector<baldr::Location> locations;
       std::vector<baldr::Location> sources;
       std::vector<baldr::Location> targets;
+      std::vector<midgard::PointLL> shape;
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter edge_filter;
       sif::NodeFilter node_filter;

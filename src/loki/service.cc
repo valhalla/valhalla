@@ -154,30 +154,24 @@ namespace valhalla {
       //we require uncompressed shape or encoded polyline
       auto input_shape = request.get_child_optional("shape");
       auto encoded_polyline = request.get_optional<std::string>("encoded_polyline");
-      boost::property_tree::ptree shape_child;
-      size_t shape_count = 0;
 
       //we require shape or encoded polyline but we dont know which at first
       try {
         //uncompressed shape
-        //we dont need to do this unless we want to add some validation
         if (input_shape) {
-          shape_count = input_shape->size();
-          for (auto& latlng : *input_shape) {
-            auto ll = baldr::Location::FromPtree(latlng.second).latlng_;
-            latlng.second.put("lon", static_cast<double>(ll.first));
-            latlng.second.put("lat", static_cast<double>(ll.second));
+          for (const auto& latlng : *input_shape) {
+            shape.push_back(baldr::Location::FromPtree(latlng.second).latlng_);
           }
         }//compressed shape
         //if we receive as encoded then we need to add as shape to request
         else if (encoded_polyline) {
-          auto shape = midgard::decode<std::list<midgard::PointLL> >(*encoded_polyline);
-          shape_count = shape.size();
+          shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
+          boost::property_tree::ptree shape_child;
           for(const auto& pt : shape) {
             boost::property_tree::ptree point_child;
             point_child.put("lon", static_cast<double>(pt.first));
             point_child.put("lat", static_cast<double>(pt.second));
-            shape_child.push_back(std::make_pair("",point_child));
+            shape_child.push_back(std::make_pair("", point_child));
           }
           request.add_child("shape", shape_child);
         }/* else if (gpx) {
@@ -194,13 +188,13 @@ namespace valhalla {
       }
 
       //not enough
-      if(shape_count < 2)
+      if(shape.size() < 2)
         throw valhalla_exception_t{400, 123};
       //too much
-      else if(shape_count > max_shape)
-        throw valhalla_exception_t{400, 153, "(" + std::to_string(shape_count) +"). The limit is " + std::to_string(max_shape)};
+      else if(shape.size() > max_shape)
+        throw valhalla_exception_t{400, 153, "(" + std::to_string(shape.size()) +"). The limit is " + std::to_string(max_shape)};
 
-      valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape_count), " [ANALYTICS] ");
+      valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 
     }
 
@@ -363,6 +357,7 @@ namespace valhalla {
       locations.clear();
       sources.clear();
       targets.clear();
+      shape.clear();
       if(reader.OverCommitted())
         reader.Clear();
     }
