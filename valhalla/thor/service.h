@@ -103,8 +103,6 @@ class thor_worker_t {
   boost::property_tree::ptree config;
   boost::optional<std::string> jsonp;
   std::vector<baldr::Location> locations;
-  std::vector<baldr::Location> sources;
-  std::vector<baldr::Location> targets;
   std::vector<midgard::PointLL> shape;
   std::vector<baldr::PathLocation> correlated;
   std::vector<baldr::PathLocation> correlated_s;
