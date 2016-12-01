@@ -465,11 +465,11 @@ enum class CalendarExceptionType : uint8_t {
 
 // --------------------------- Traffic association information ------------ //
 
-constexpr uint64_t kChunkCountMask   = 0x00000fff00000000ull;
-constexpr uint64_t kChunkIndexMask   = 0x00000000ffffffffull;
-constexpr uint64_t kTrafficChunkFlag = 0x1000000000000000ull;
-constexpr uint64_t kChunkWeightMask  = 0xff00000000000000ull;
-constexpr uint64_t kChunkIDMask      = 0x00ffffffffffffffull;
+constexpr uint64_t kChunkCountMask   = 0x00000fff00000000;
+constexpr uint64_t kChunkIndexMask   = 0x00000000ffffffff;
+constexpr uint64_t kTrafficChunkFlag = 0x1000000000000000;
+constexpr uint64_t kChunkWeightMask  = 0xff00000000000000;
+constexpr uint64_t kChunkIDMask      = 0x00ffffffffffffff;
 
 }
 }

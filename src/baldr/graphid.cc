@@ -3,9 +3,14 @@
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
 
+using namespace valhalla::baldr;
+
 namespace {
-// Invalid graphid.
-constexpr uint32_t kInvalidId = std::numeric_limits<uint32_t>::max();
+
+// 46 bits are used for the non-spare part of a graph Id. Fill all of them.
+// If we ever change the size of GraphId fields this will also need to change.
+constexpr uint64_t kInvalidId = 0x3ffffffffff;
+
 }
 
 namespace valhalla {
