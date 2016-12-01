@@ -250,6 +250,7 @@ namespace valhalla {
       bidir_astar.Clear();
       multi_modal_astar.Clear();
       locations.clear();
+      shape.clear();
       correlated.clear();
       correlated_s.clear();
       correlated_t.clear();
