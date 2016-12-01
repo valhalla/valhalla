@@ -8,7 +8,6 @@ using namespace prime_server;
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/meili/map_matcher.h>
-#include <valhalla/proto/trippath.pb.h>
 
 #include "thor/service.h"
 #include "thor/route_matcher.h"
@@ -18,6 +17,7 @@ using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
+using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace valhalla {
@@ -40,7 +40,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  auto trip_path = route_match();
+  odin::TripPath trip_path = route_match();
   if (trip_path.node().size() == 0) {
     //If no Valhalla route match, then use meili map matching
     //to match to local route network. No shortcuts are used and detailed

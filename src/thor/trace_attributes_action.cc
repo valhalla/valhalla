@@ -8,7 +8,7 @@ using namespace prime_server;
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/odin/enhancedtrippath.h>
 
 
 #include "thor/service.h"
@@ -27,27 +27,25 @@ namespace {
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
-    //lets get some edge attributes
+  json::MapPtr serialize(odin::EnhancedTripPath* trip_path, const boost::optional<std::string>& id, double scale) {
     json::ArrayPtr edges = json::array({});
-    if (trip_path.node().size() > 0) {
-      for(const auto& node : trip_path.node()){
-        if (node.has_edge()) {
-          auto names = json::array({});
-          for (const auto& name : node.edge().name())
-            names->push_back(name);
+    for (int i = 1; i < trip_path->node().size(); i++) {
+      auto edge = trip_path->GetPrevEdge(i,0);
+      if (edge) {
+        auto names = json::array({});
+        for (const auto& name : edge->name())
+          names->push_back(name);
 
-          edges->emplace_back(json::map({
-            {"max_downward_grade", static_cast<int64_t>(node.edge().max_downward_grade())},
-            {"max_upward_grade", static_cast<int64_t>(node.edge().max_upward_grade())},
-            {"weighted_grade", json::fp_t{node.edge().weighted_grade(), 3}},
-            {"length", json::fp_t{node.edge().length() * scale, 3}},
-            {"speed", json::fp_t{node.edge().speed() * scale, 3}},
-            {"way_id", static_cast<uint64_t>(node.edge().way_id())},
-            {"id", static_cast<uint64_t>(node.edge().id())},
-            {"names", names}
-          }));
-        }
+        edges->emplace_back(json::map({
+          {"max_downward_grade", static_cast<int64_t>(edge->max_downward_grade())},
+          {"max_upward_grade", static_cast<int64_t>(edge->max_upward_grade())},
+          {"weighted_grade", json::fp_t{edge->weighted_grade(), 3}},
+          {"length", json::fp_t{edge->length() * scale, 3}},
+          {"speed", json::fp_t{edge->speed() * scale, 3}},
+          {"way_id", static_cast<uint64_t>(edge->way_id())},
+          {"id", static_cast<uint64_t>(edge->id())},
+          {"names", names}
+        }));
       }
     }
     auto json = json::map({
@@ -77,18 +75,16 @@ worker_t::result_t thor_worker_t::trace_attributes(
 
   //get time for start of request
   auto s = std::chrono::system_clock::now();
- // worker_t::result_t result { false  };
-  // Forward the original request
- // result.messages.emplace_back(request_str);
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  auto trip_path = route_match();
-  if (trip_path.node().size() == 0) {
+  odin::TripPath tp = route_match();
+  odin::EnhancedTripPath* trip_path = static_cast<odin::EnhancedTripPath*>(&tp);
+  if (trip_path->node().size() == 0) {
     //If no Valhalla route match, then use meili map matching
     //to match to local route network. No shortcuts are used and detailed
     //information at every intersection becomes available.
-    trip_path = map_match();
+    odin::TripPath trip_path = map_match();
   }
   json::MapPtr json;
   auto id = request.get_optional<std::string>("id");
