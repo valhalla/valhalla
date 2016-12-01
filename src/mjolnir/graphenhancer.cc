@@ -1030,18 +1030,19 @@ void enhance(const boost::property_tree::ptree& pt,
           // Currently, overrides only exist for Trunk RC and Uses below.
           OSMAccess target{e_offset.wayid()};
 
-          if (admin_index != 0 && country_access.find(country_code) != country_access.end() &&
+          if (directededge.leaves_tile() && admin_index != 0 && country_access.find(country_code) != country_access.end() &&
               (directededge.classification() == RoadClass::kTrunk ||
                   directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
                   directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
                   directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
-            if (directededge.leaves_tile())
-              access_tags.find(target,less_than);
-            else target = OSMAccess{e_offset.wayid()};
+            sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
+            if (access_it != access_tags.end()) {
 
-            std::vector<int> access = country_access.at(country_code);
-            SetCountryAccess(directededge, access, target);
+              std::vector<int> access = country_access.at(country_code);
+              SetCountryAccess(directededge, access, access_it);
+            }
+            else LOG_WARN("access tags not found for " + e_offset.wayid());
           }
         }
 
