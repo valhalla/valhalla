@@ -109,11 +109,9 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
-  // Create controller for default route attributes
-  TripPathController controller;
-
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
+  TripPathController controller;
   TripPath trip_path = TripPathBuilder::Build(controller, reader, mode_costing,
                                               pathedges, origin, dest,
                                               through_loc);
