@@ -31,7 +31,7 @@ namespace {
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
       if (trip_path.node(i-1).has_edge()) {
-        auto edge = trip_path.node(i - 1).edge();
+        const auto& edge = trip_path.node(i - 1).edge();
         auto names = json::array({});
         for (const auto& name : edge.name())
           names->push_back(name);
