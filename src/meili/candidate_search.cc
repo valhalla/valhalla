@@ -140,7 +140,8 @@ void IndexTile(const baldr::GraphTile& tile, baldr::GraphReader& reader, Candida
       const auto* edge = bin_tile->directededge(edge_id);
       if(edge->trans_up() || edge->trans_down() || edge->use() == baldr::Use::kTransitConnection) continue;
       //get some shape
-      const auto& shape = bin_tile->edgeinfo(edge->edgeinfo_offset()).shape();
+      const auto edgeinfo = bin_tile->edgeinfo(edge->edgeinfo_offset());
+      const auto& shape = edgeinfo.shape();
       for(decltype(shape.size()) j = 1; j < shape.size(); ++j)
         grid.AddLineSegment(edge_id, {shape[j - 1], shape[j]});
     }
