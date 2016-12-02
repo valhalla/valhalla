@@ -20,6 +20,7 @@ using namespace valhalla::sif;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
+
 namespace valhalla {
 namespace thor {
 
@@ -31,6 +32,13 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
+  /*
+   * A flag indicating whether the input shape is a GPS trace or exact points from a
+   * prior route run against the Valhalla road network.  Knowing that the input is from
+   * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
+   * map-matching method. If true, this enforces to only use exact route match algorithm.
+   */
+  bool exact_match = request.get<bool>("exact_match_only", false);
 
   //get time for start of request
   auto s = std::chrono::system_clock::now();
@@ -42,16 +50,22 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
   odin::TripPath trip_path = route_match();
   if (trip_path.node().size() == 0) {
-    //If no Valhalla route match, then use meili map matching
-    //to match to local route network. No shortcuts are used and detailed
-    //information at every intersection becomes available.
-    trip_path = map_match();
+    if (!exact_match) {
+      //If no Valhalla route match, then use meili map matching to match to local route network.
+      //No shortcuts are used and detailed information at every intersection becomes available.
+      LOG_INFO("Could not find exact route match; Sending trace to map_match...");
+      try {
+        trip_path = map_match();
+      } catch (...) {
+        valhalla_exception_t{400,444};
+      }
+    } else throw valhalla_exception_t{400, 443};
   }
   result.messages.emplace_back(trip_path.SerializeAsString());
+
   // Get processing time for thor
   auto e = std::chrono::system_clock::now();
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  // TODO determine what to log
   //log request if greater than X (ms)
   if (!header_dnt
       && (elapsed_time.count() / correlated.size()) > long_request) {

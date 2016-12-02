@@ -26,10 +26,9 @@ namespace {
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
-
   json::MapPtr serialize(odin::EnhancedTripPath* trip_path, const boost::optional<std::string>& id, double scale) {
     json::ArrayPtr edges = json::array({});
-    for (int i = 1; i < trip_path->node().size(); i++) {
+    for (int i = 1; i <= trip_path->node().size(); i++) {
       auto edge = trip_path->GetPrevEdge(i,0);
       if (edge) {
         auto names = json::array({});
@@ -72,21 +71,33 @@ worker_t::result_t thor_worker_t::trace_attributes(
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
+  /*
+   * A flag indicating whether the input shape is a GPS trace or exact points from a
+   * prior route run against the Valhalla road network.  Knowing that the input is from
+   * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
+   * map-matching method. If true, this enforces to only use exact route match algorithm.
+   */
+  bool exact_match = request.get<bool>("exact_match_only", false);
 
   //get time for start of request
   auto s = std::chrono::system_clock::now();
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  odin::TripPath tp = route_match();
-  odin::EnhancedTripPath* trip_path = static_cast<odin::EnhancedTripPath*>(&tp);
-  if (trip_path->node().size() == 0) {
-    //If no Valhalla route match, then use meili map matching
-    //to match to local route network. No shortcuts are used and detailed
-    //information at every intersection becomes available.
-    odin::TripPath trip_path = map_match();
+  odin::TripPath trip_path = route_match();
+  if (trip_path.node().size() == 0) {
+    if (!exact_match) {
+      //If no Valhalla route match, then use meili map matching to match to local route network.
+      //No shortcuts are used and detailed information at every intersection becomes available.
+      LOG_INFO("Could not find exact route match; Sending trace to map_match...");
+      try {
+        trip_path = map_match();
+      } catch (...) {
+        valhalla_exception_t{400, 444};
+      }
+    } else throw valhalla_exception_t{400, 443};
   }
-  json::MapPtr json;
+  odin::EnhancedTripPath* etrip_path = static_cast<odin::EnhancedTripPath*>(&trip_path);
   auto id = request.get_optional<std::string>("id");
   //length and speed default to km
   double scale = 1;
@@ -95,7 +106,8 @@ worker_t::result_t thor_worker_t::trace_attributes(
     scale = kMilePerKm;
 
   //serialize output to Thor
-  json = serialize(trip_path, id, scale);
+  json::MapPtr json;
+  json = serialize(etrip_path, id, scale);
 
   //jsonp callback if need be
   std::ostringstream stream;
