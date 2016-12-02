@@ -854,8 +854,9 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // Get cost and sort cost (based on distance from endnode of this edge
       // to the origin. Make sure we use the reverse A* heuristic. Note that
       // the end node of the opposing edge is in the same tile as the directed
-      // edge.
-      Cost cost = costing->EdgeCost(opp_dir_edge) * edge.dist;
+      // edge.  Use the directed edge for costing, as this is the forward
+      // direction along the destination edge.
+      Cost cost = costing->EdgeCost(directededge) * edge.dist;
 
       // Add EdgeLabel to the adjacency list. Set the predecessor edge index
       // to invalid to indicate the origin of the path. Make sure the opposing

@@ -741,7 +741,9 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
       // Get cost. Get distance along the remainder of this edge.
-      Cost edgecost = costing_->EdgeCost(opp_dir_edge);
+      // Use the directed edge for costing, as this is the forward direction
+      // along the destination edge.
+      Cost edgecost = costing_->EdgeCost(directededge);
       Cost cost = edgecost * edge.dist;
       uint32_t d = std::round(directededge->length() * edge.dist);
 
