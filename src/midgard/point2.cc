@@ -14,9 +14,6 @@ constexpr float EPSILON = .00002f;
 namespace valhalla {
 namespace midgard {
 
-Point2::~Point2() {
-}
-
 float Point2::x() const {
   return first;
 }

@@ -17,13 +17,6 @@ void DistanceApproximator::SetTestPoint(const PointLL& ll) {
   m_per_lng_degree_  = MetersPerLngDegree(centerlat_);
 }
 
-// Distance squared (meters) from the test point
-float DistanceApproximator::DistanceSquared(const PointLL& ll) const {
-  float latm = (ll.lat() - centerlat_) * kMetersPerDegreeLat;
-  float lngm = (ll.lng() - centerlng_) * m_per_lng_degree_;
-  return (latm * latm + lngm * lngm);
-}
-
 // Distance squared (meters) between 2 lat,lngs
 float DistanceApproximator::DistanceSquared(const PointLL& ll1,
                                             const PointLL& ll2) {

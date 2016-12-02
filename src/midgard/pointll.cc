@@ -8,8 +8,6 @@
 #include <list>
 
 namespace {
-const float INVALID = 0xBADBADBAD;
-
 constexpr double RAD_PER_DEG = M_PI / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / M_PI;
 }
@@ -17,20 +15,7 @@ constexpr double DEG_PER_RAD = 180.0 / M_PI;
 namespace valhalla {
 namespace midgard {
 
-// Default constructor.  Sets latitude and longitude to INVALID.
-PointLL::PointLL()
-    : Point2(INVALID, INVALID) {
-}
-
-// Get the latitude in degrees.
-float PointLL::lat() const {
-  return second;
-}
-
-// Get the longitude in degrees.
-float PointLL::lng() const {
-  return first;
-}
+constexpr float PointLL::INVALID;
 
 // Checks for validity of the coordinates.
 bool PointLL::IsValid() const {

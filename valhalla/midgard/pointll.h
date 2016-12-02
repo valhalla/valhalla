@@ -22,19 +22,26 @@ class PointLL : public Point2 {
   /**
    * Default constructor.  Sets latitude and longitude to INVALID.
    */
-  PointLL();
+  PointLL()
+    : Point2(INVALID, INVALID) {
+  }
+
 
   /**
    * Get the latitude in degrees.
    * @return  Returns latitude (degrees).
    */
-  float lat() const;
+  float lat() const {
+    return second;
+  }
 
   /**
    * Get the longitude in degrees.
    * @return  Returns longitude in degrees.
    */
-  float lng() const;
+  float lng() const {
+    return first;
+  }
 
   /**
    * Checks for validity of the coordinates.
@@ -144,6 +151,9 @@ class PointLL : public Point2 {
    * @return true if the system is spherical false if not
    */
   static bool IsSpherical();
+
+ private:
+  static constexpr float INVALID = 0xBADBADBAD;
 };
 
 }

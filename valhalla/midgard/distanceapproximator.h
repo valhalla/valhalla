@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/constants.h>
 
 namespace valhalla{
 namespace midgard{
@@ -52,7 +53,11 @@ class DistanceApproximator
    *          theorem.  Squared distance is returned for more efficient
    *          searching (avoids sqrt).
    */
-  float DistanceSquared(const PointLL& ll) const;
+  float DistanceSquared(const PointLL& ll) const {
+    float latm = (ll.lat() - centerlat_) * kMetersPerDegreeLat;
+    float lngm = (ll.lng() - centerlng_) * m_per_lng_degree_;
+    return (latm * latm + lngm * lngm);
+  }
 
   /**
    * Approximates arc distance between 2 lat,lng positions using meters per

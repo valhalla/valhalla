@@ -29,7 +29,7 @@ class Point2 : public std::pair<float, float>{
   /**
    * Destructor
    */
-  virtual ~Point2();
+  virtual ~Point2() {}
 
   /**
    * Get the x component.
