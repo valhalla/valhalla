@@ -273,8 +273,6 @@ struct graph_callback : public OSMPBF::Callback {
 
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
-
-    const auto& emergency = results.find("use");
     if (!has_surface_tag)
       has_surface = false;
 
@@ -335,6 +333,10 @@ struct graph_callback : public OSMPBF::Callback {
         access.set_bike_tag(true);
         has_user_tags = true;
       }
+      else if (tag.first == "hov_tag") {
+        access.set_hov_tag(true);
+        has_user_tags = true;
+      }
 
       else if (tag.first == "wheelchair") {
         w.set_wheelchair_tag(true);
@@ -362,6 +364,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bike_forward(tag.second == "true" ? true : false);
       else if (tag.first == "emergency_forward")
         w.set_emergency_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "hov_forward")
+        w.set_hov_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_backward")
@@ -372,6 +376,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bike_backward(tag.second == "true" ? true : false);
       else if (tag.first == "emergency_backward")
         w.set_emergency_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "hov_backward")
+        w.set_hov_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
       else if (tag.first == "private" && tag.second == "true") {
@@ -633,8 +639,6 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bridge(tag.second == "true" ? true : false);
       else if (tag.first == "seasonal")
         w.set_seasonal(tag.second == "true" ? true : false);
-      else if (tag.first == "hov")
-        w.set_hov(tag.second == "true" ? true : false);
 
       else if (tag.first == "bike_network_mask")
         w.set_bike_network(std::stoi(tag.second));
@@ -1131,6 +1135,17 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   callback.output_loops();
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
 
+  //we need to sort the access tags so that we can easily find them.
+  LOG_INFO("Sorting osm access tags by way id...");
+  {
+    sequence<OSMAccess> access(access_file, false);
+    access.sort(
+        [](const OSMAccess& a, const OSMAccess& b){
+      return a.way_id() < b.way_id();
+    }
+    );
+  }
+
   // Parse relations.
   LOG_INFO("Parsing relations...")
   for (auto& file_handle : file_handles) {
@@ -1191,17 +1206,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
         }
         return a.way_index < b.way_index;
       }
-    );
-  }
-
-  //we need to sort the access tags so that we can easily find them.
-  LOG_INFO("Sorting osm access tags by way id...");
-  {
-    sequence<OSMAccess> access(access_file, false);
-    access.sort(
-        [](const OSMAccess& a, const OSMAccess& b){
-      return a.way_id() < b.way_id();
-    }
     );
   }
 

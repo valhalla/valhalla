@@ -77,5 +77,14 @@ bool OSMAccess::truck_tag() const {
   return attributes_.fields.truck_tag;
 }
 
+// Set hov tag flag.
+void OSMAccess::set_hov_tag(const bool hov_tag) {
+  attributes_.fields.hov_tag = hov_tag;
+}
+// Get hov tag flag.
+bool OSMAccess::hov_tag() const {
+  return attributes_.fields.hov_tag;
+}
+
 }
 }

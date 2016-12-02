@@ -1036,12 +1036,13 @@ void enhance(const boost::property_tree::ptree& pt,
                   directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
                   directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
-            if (directededge.leaves_tile())
-              access_tags.find(target,less_than);
-            else target = OSMAccess{e_offset.wayid()};
-
             std::vector<int> access = country_access.at(country_code);
-            SetCountryAccess(directededge, access, target);
+            if (directededge.leaves_tile()) {
+              sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
+              if (access_it != access_tags.end())
+                SetCountryAccess(directededge, access, access_it);
+              else LOG_WARN("access tags not found for " + e_offset.wayid());
+            } else SetCountryAccess(directededge, access, target);
           }
         }
 
