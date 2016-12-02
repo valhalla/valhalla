@@ -317,7 +317,11 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
-    header_builder_.set_end_offset(static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader));
+    // At this point there is no traffic segment data, so set end offset and
+    // traffic segment Id offset to same value
+    size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
+    header_builder_.set_traffic_segmentid_offset(end_offset);
+    header_builder_.set_end_offset(end_offset);
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
@@ -401,8 +405,10 @@ void GraphTileBuilder::Update(
     // Save existing text
     in_mem.write(textlist_, textlist_size_);
 
-    // Write the updated header.
-    header_->set_end_offset(static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader));
+    // Write the updated header. At this point there are no traffic segments
+    size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
+    header_->set_traffic_segmentid_offset(end_offset);
+    header_->set_end_offset(end_offset);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Write the rest of the tile
@@ -783,6 +789,7 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
+  header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
