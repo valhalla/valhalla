@@ -18,10 +18,13 @@ void TestCtor() {
   TryCtor();
 }
 
-void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes) {
+void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes,
+                size_t expected_size) {
   TripPathController controller(new_attributes);
   if (controller.attributes != new_attributes)
     throw runtime_error("Incorrect Constructor using argument attributes");
+  if (controller.attributes.size() != expected_size)
+    throw runtime_error("Incorrect Constructor using argument attributes size");
 }
 
 void TestArgCtor() {
@@ -29,15 +32,10 @@ void TestArgCtor() {
     { kEdgeNames, true },
     { kEdgeLength, false },
     { kEdgeSpeed, true },
-    { kEdgeRoadClass, false },
-    { kEdgeBeginHeading, true },
-    { kEdgeEndHeading, false },
-    { kEdgeBeginShapeIndex, true },
-    { kEdgeEndShapeIndex, false },
-    { kEdgeTraversability, true }
+    { kEdgeRoadClass, false }
   };
 
-  TryArgCtor(attributes);
+  TryArgCtor(attributes, attributes.size());
 }
 
 void TryEnableAll() {

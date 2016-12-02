@@ -59,7 +59,7 @@ constexpr auto kBoundingBox = "bounding_box";
 struct TripPathController {
 
   /*
-   * Attributes that are required by the route action to make driving directions
+   * Attributes that are required by the route action to make guidance instructions.
    */
   static const std::unordered_map<std::string, bool> kRouteAttributes;
 
