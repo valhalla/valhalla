@@ -10,6 +10,7 @@
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/thor/pathinfo.h>
+#include <valhalla/thor/trip_path_controller.h>
 
 namespace valhalla {
 namespace thor {
@@ -33,12 +34,12 @@ class TripPathBuilder {
    * Format the trip path output given the edges on the path.
    * For now just return length. TODO - modify to return trip path.
    */
-  static odin::TripPath Build(baldr::GraphReader& graphreader,
-             const std::shared_ptr<sif::DynamicCost>* mode_costing,
-             const std::vector<PathInfo>& path,
-             baldr::PathLocation& origin,
-             baldr::PathLocation& dest,
-             const std::vector<baldr::PathLocation>& through_loc);
+  static odin::TripPath Build(
+      const TripPathController& controller, baldr::GraphReader& graphreader,
+      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+      const std::vector<PathInfo>& path, baldr::PathLocation& origin,
+      baldr::PathLocation& dest,
+      const std::vector<baldr::PathLocation>& through_loc);
 
   /**
    * Add trip edge. (TODO more comments)

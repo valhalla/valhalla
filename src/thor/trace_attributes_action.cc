@@ -12,6 +12,7 @@ using namespace prime_server;
 
 
 #include "thor/service.h"
+#include "thor/trip_path_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -68,6 +69,10 @@ namespace thor {
 worker_t::result_t thor_worker_t::trace_attributes(
     const boost::property_tree::ptree &request,
     const std::string &request_str, http_request_t::info_t& request_info) {
+  //get time for start of request
+  auto s = std::chrono::system_clock::now();
+
+  // Parse request
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
@@ -79,19 +84,19 @@ worker_t::result_t thor_worker_t::trace_attributes(
    */
   bool exact_match = request.get<bool>("exact_match_only", false);
 
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+  TripPathController controller;
+  // TODO parse include/exclude and set controller as needed - for now just default
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  odin::TripPath trip_path = route_match();
+  odin::TripPath trip_path = route_match(controller);
   if (trip_path.node().size() == 0) {
     if (!exact_match) {
       //If no Valhalla route match, then use meili map matching to match to local route network.
       //No shortcuts are used and detailed information at every intersection becomes available.
       LOG_INFO("Could not find exact route match; Sending trace to map_match...");
       try {
-        trip_path = map_match();
+        trip_path = map_match(controller);
       } catch (...) {
         valhalla_exception_t{400, 444};
       }

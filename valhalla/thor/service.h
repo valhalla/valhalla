@@ -19,6 +19,7 @@
 #include <valhalla/thor/astar.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/trippathbuilder.h>
+#include <valhalla/thor/trip_path_controller.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
 
@@ -64,8 +65,8 @@ class thor_worker_t {
   thor::PathAlgorithm* get_path_algorithm(
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
-  valhalla::odin::TripPath route_match();
-  valhalla::odin::TripPath map_match();
+  valhalla::odin::TripPath route_match(const TripPathController& controller);
+  valhalla::odin::TripPath map_match(const TripPathController& controller);
 
   std::list<valhalla::odin::TripPath> path_arrive_by(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
