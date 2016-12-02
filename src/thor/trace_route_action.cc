@@ -14,6 +14,7 @@ using namespace prime_server;
 #include "thor/route_matcher.h"
 #include "thor/map_matcher.h"
 #include "thor/trippathbuilder.h"
+#include "thor/trip_path_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -28,24 +29,29 @@ namespace thor {
  */
 worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree &request,
     const std::string &request_str, const bool header_dnt) {
+  //get time for start of request
+  auto s = std::chrono::system_clock::now();
+
+  // Parse request
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
 
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+  TripPathController controller;
+  // TODO parse include/exclude and set controller as needed - for now just default
+
   worker_t::result_t result { true };
   // Forward the original request
   result.messages.emplace_back(request_str);
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  auto trip_path = route_match();
+  auto trip_path = route_match(controller);
   if (trip_path.node().size() == 0) {
     //If no Valhalla route match, then use meili map matching
     //to match to local route network. No shortcuts are used and detailed
     //information at every intersection becomes available.
-    trip_path = map_match();
+    trip_path = map_match(controller);
   }
   result.messages.emplace_back(trip_path.SerializeAsString());
   // Get processing time for thor
@@ -73,7 +79,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-odin::TripPath thor_worker_t::route_match() {
+odin::TripPath thor_worker_t::route_match(const TripPathController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
   if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, correlated, path_infos)) {
@@ -81,8 +87,8 @@ odin::TripPath thor_worker_t::route_match() {
     std::vector<baldr::PathLocation> through_loc;
 
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripPathBuilder::Build(reader, mode_costing, path_infos,
-                                             correlated.front(),
+    trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
+                                             path_infos, correlated.front(),
                                              correlated.back(), through_loc);
 
   }
@@ -93,7 +99,7 @@ odin::TripPath thor_worker_t::route_match() {
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-odin::TripPath thor_worker_t::map_match() {
+odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
   odin::TripPath trip_path;
   // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
@@ -139,10 +145,9 @@ odin::TripPath thor_worker_t::map_match() {
     std::vector<baldr::PathLocation> through_loc;
 
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripPathBuilder::Build(matcher->graphreader(),
-                                                  mode_costing, path_edges,
-                                                  origin, destination,
-                                                  through_loc);
+    trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
+                                             mode_costing, path_edges, origin,
+                                             destination, through_loc);
   } else {
     throw baldr::valhalla_exception_t { 400, 442 };
   }

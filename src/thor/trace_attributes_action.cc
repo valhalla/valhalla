@@ -12,6 +12,7 @@ using namespace prime_server;
 
 
 #include "thor/service.h"
+#include "thor/trip_path_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -71,24 +72,29 @@ namespace thor {
 worker_t::result_t thor_worker_t::trace_attributes(
     const boost::property_tree::ptree &request,
     const std::string &request_str, http_request_t::info_t& request_info) {
+  //get time for start of request
+  auto s = std::chrono::system_clock::now();
+
+  // Parse request
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
 
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+  TripPathController controller;
+  // TODO parse include/exclude and set controller as needed - for now just default
+
  // worker_t::result_t result { false  };
   // Forward the original request
  // result.messages.emplace_back(request_str);
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  auto trip_path = route_match();
+  auto trip_path = route_match(controller);
   if (trip_path.node().size() == 0) {
     //If no Valhalla route match, then use meili map matching
     //to match to local route network. No shortcuts are used and detailed
     //information at every intersection becomes available.
-    trip_path = map_match();
+    trip_path = map_match(controller);
   }
   json::MapPtr json;
   auto id = request.get_optional<std::string>("id");
