@@ -184,6 +184,8 @@ namespace baldr {
     {440,"Cannot reach destination - too far from a transit stop"},
     {441,"Location is unreachable"},
     {442,"No path could be found for input"},
+    {443,"Exact route match algorithm failed to find path"},
+    {444,"Map Match algorithm failed to find path"},
 
     {499,"Unknown"},
 
