@@ -52,7 +52,7 @@ float OSMWay::speed() const {
 
 // Sets the speed limit in KPH.
 void OSMWay::set_speed_limit(const float speed_limit) {
-  speed_ = static_cast<unsigned char>(speed_limit + 0.5f);
+  speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
 }
 
 // Gets the speed limit in KPH.
