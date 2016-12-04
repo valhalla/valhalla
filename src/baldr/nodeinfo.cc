@@ -84,19 +84,9 @@ NodeInfo::NodeInfo(const std::pair<float, float>& ll,
   set_traffic_signal(traffic_signal);
 }
 
-// Get the latitude, longitude
-const PointLL& NodeInfo::latlng() const {
-  return static_cast<const PointLL&>(latlng_);
-}
-
 // Sets the latitude and longitude.
 void NodeInfo::set_latlng(const std::pair<float, float>& ll) {
   latlng_ = ll;
-}
-
-// Get the index in this tile of the first outbound directed edge
-uint32_t NodeInfo::edge_index() const {
-  return edge_index_;
 }
 
 // Set the index in the node's tile of its first outbound edge.
@@ -106,11 +96,6 @@ void NodeInfo::set_edge_index(const uint32_t edge_index) {
     throw std::runtime_error("NodeInfo: edge index exceeds max");
   }
   edge_index_ = edge_index;
-}
-
-// Get the number of outbound edges from this node.
-uint32_t NodeInfo::edge_count() const {
-  return edge_count_;
 }
 
 // Set the number of outbound directed edges.
@@ -125,12 +110,6 @@ void NodeInfo::set_edge_count(const uint32_t edge_count) {
   }
 }
 
-// Get the access modes (bit mask) allowed to pass through the node.
-// See graphconstants.h
-uint16_t NodeInfo::access() const {
-  return access_;
-}
-
 // Set the access modes (bit mask) allowed to pass through the node.
 void NodeInfo::set_access(const uint32_t access) {
   if (access > kAllAccess) {
@@ -142,19 +121,9 @@ void NodeInfo::set_access(const uint32_t access) {
   }
 }
 
-// Get the intersection type.
-IntersectionType NodeInfo::intersection() const {
-  return static_cast<IntersectionType>(intersection_);
-}
-
 // Set the intersection type.
 void NodeInfo::set_intersection(const IntersectionType type) {
   intersection_ = static_cast<uint32_t>(type);
-}
-
-// Get the index of the administrative information within this tile.
-uint32_t NodeInfo::admin_index() const {
-  return admin_index_;
 }
 
 // Set the index of the administrative information within this tile.
@@ -169,11 +138,6 @@ void NodeInfo::set_admin_index(const uint16_t admin_index) {
   }
 }
 
-// Returns the timezone index.
-uint32_t NodeInfo::timezone() const {
-  return timezone_;
-}
-
 // Set the timezone index.
 void NodeInfo::set_timezone(const uint32_t timezone) {
   if (timezone > kMaxTimeZonesPerTile) {
@@ -184,13 +148,6 @@ void NodeInfo::set_timezone(const uint32_t timezone) {
   } else {
     timezone_ = timezone;
   }
-}
-
-// Get the driveability of the local directed edge given a local
-// edge index.
-Traversability NodeInfo::local_driveability(const uint32_t localidx) const {
-  uint32_t s = localidx * 2;     // 2 bits per index
-  return static_cast<Traversability>((local_driveability_ & (3 << s)) >> s);
 }
 
 // Set the driveability of the local directed edge given a local
@@ -205,11 +162,6 @@ void NodeInfo::set_local_driveability(const uint32_t localidx,
   }
 }
 
-// Get the relative density at the node.
-uint32_t NodeInfo::density() const {
-  return density_;
-}
-
 // Set the relative density
 void NodeInfo::set_density(const uint32_t density) {
   if (density > kMaxDensity) {
@@ -220,25 +172,9 @@ void NodeInfo::set_density(const uint32_t density) {
   }
 }
 
-// Gets the node type. See graphconstants.h for the list of types.
-NodeType NodeInfo::type() const {
-  return static_cast<NodeType>(type_);
-}
-
 // Set the node type.
 void NodeInfo::set_type(const NodeType type) {
   type_ = static_cast<uint32_t>(type);
-}
-
-// Checks if this node is a transit node.
-bool NodeInfo::is_transit() const {
-  return type() == NodeType::kMultiUseTransitStop;
-}
-
-// Get the number of edges on the local level. We add 1 to allow up to
-// up to kMaxLocalEdgeIndex + 1.
-uint32_t NodeInfo::local_edge_count() const {
-  return local_edge_count_ + 1;
 }
 
 // Set the number of driveable edges on the local level. Subtract 1 so
@@ -254,13 +190,6 @@ void NodeInfo::set_local_edge_count(const uint32_t n) {
   }
 }
 
-// Is a mode change allowed at this node? The access data tells which
-// modes are allowed at the node. Examples include transit stops, bike
-// share locations, and parking locations.
-bool NodeInfo::mode_change() const {
-  return mode_change_;
-}
-
 // Sets the flag indicating a mode change is allowed at this node.
 // The access data tells which modes are allowed at the node. Examples
 // include transit stops, bike share locations, and parking locations.
@@ -268,20 +197,9 @@ void NodeInfo::set_mode_change(const bool mc) {
   mode_change_ = mc;
 }
 
-// Is there a traffic signal at this node?
-bool NodeInfo::traffic_signal() const {
-  return traffic_signal_;
-}
-
 // Set the traffic signal flag.
 void NodeInfo::set_traffic_signal(const bool traffic_signal) {
   traffic_signal_ = traffic_signal;
-}
-
-// Gets the transit stop index. This is used for schedule lookups
-// and possibly queries to a transit service.
-uint32_t NodeInfo::stop_index() const {
-  return stop_.stop_index;
 }
 
 // Set the transit stop index.

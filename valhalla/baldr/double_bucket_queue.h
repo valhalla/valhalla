@@ -56,7 +56,9 @@ class DoubleBucketQueue {
    * @param   label  Label index to add to the adjacency list.
    * @param   cost   Cost for this label.
    */
-  void add(const uint32_t label, const float cost);
+  void add(const uint32_t label, const float cost) {
+    get_bucket(cost).push_back(label);
+  }
 
   /**
    * The specified label index now has a smaller cost.  Reorders it in the
@@ -101,7 +103,12 @@ class DoubleBucketQueue {
    * @param  cost  Cost.
    * @return Returns the bucket that the cost lies within.
    */
-  std::deque<uint32_t>& get_bucket(const float cost);
+  std::deque<uint32_t>& get_bucket(const float cost) {
+    return (cost < currentcost_) ? *currentbucket_ :
+             (cost < maxcost_) ?
+               buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
+               overflowbucket_;
+  }
 
   /**
    * Empties the overflow bucket by placing the label indexes into the

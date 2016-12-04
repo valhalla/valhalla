@@ -54,7 +54,9 @@ class NodeInfo {
    * Get the latitude, longitude of the node.
    * @return  Returns the latitude and longitude of the node.
    */
-  const PointLL& latlng() const;
+  const PointLL& latlng() const {
+    return static_cast<const PointLL&>(latlng_);
+  }
 
   /**
    * Sets the latitude and longitude.
@@ -68,7 +70,9 @@ class NodeInfo {
    * only need an index within the tile.
    * @return  Returns the GraphId of the first outbound edge.
    */
-  uint32_t edge_index() const;
+  uint32_t edge_index() const {
+    return edge_index_;
+  }
 
   /**
    * Set the index within the node's tile of its first outbound edge.
@@ -81,7 +85,9 @@ class NodeInfo {
    * present on the current hierarchy level.
    * @return  Returns the number of outbound directed edges.
    */
-  uint32_t edge_count() const;
+  uint32_t edge_count() const {
+    return edge_count_;
+  }
 
   /**
    * Set the number of outbound directed edges.
@@ -94,7 +100,9 @@ class NodeInfo {
    * See graphconstants.h for access constants.
    * @return  Returns the access bit mask indicating allowable modes.
    */
-  uint16_t access() const;
+  uint16_t access() const {
+    return access_;
+  }
 
   /**
    * Set the access modes (bit mask) allowed to pass through the node.
@@ -107,7 +115,9 @@ class NodeInfo {
    * Get the intersection type.
    * @return  Returns the intersection type.
    */
-  IntersectionType intersection() const;
+  IntersectionType intersection() const {
+    return static_cast<IntersectionType>(intersection_);
+  }
 
   /**
    * Set the intersection type.
@@ -119,7 +129,9 @@ class NodeInfo {
    * Get the index of the administrative information within this tile.
    * @return  Returns an index within the tile's administrative information.
    */
-  uint32_t admin_index() const;
+  uint32_t admin_index() const {
+    return admin_index_;
+  }
 
   /**
    * Set the index of the administrative information within this tile.
@@ -131,7 +143,9 @@ class NodeInfo {
    * Returns the timezone index. TODO - describe the timezone information.
    * @return  Returns the timezone index.
    */
-  uint32_t timezone() const;
+  uint32_t timezone() const {
+    return timezone_;
+  }
 
   /**
    * Set the timezone index.
@@ -145,7 +159,10 @@ class NodeInfo {
    * @param  localidx  Local edge index.
    * @return Returns traversability (see graphconstants.h)
    */
-  Traversability local_driveability(const uint32_t localidx) const;
+  Traversability local_driveability(const uint32_t localidx) const {
+    uint32_t s = localidx * 2;     // 2 bits per index
+    return static_cast<Traversability>((local_driveability_ & (3 << s)) >> s);
+  }
 
   /**
    * Set the auto driveability of the local directed edge given a local
@@ -160,7 +177,9 @@ class NodeInfo {
    * Get the relative road density at the node.
    * @return  Returns relative density (0-15).
    */
-  uint32_t density() const;
+  uint32_t density() const {
+    return density_;
+  }
 
   /**
    * Set the relative road density
@@ -172,7 +191,9 @@ class NodeInfo {
    * Gets the node type. See graphconstants.h for the list of types.
    * @return  Returns the node type.
    */
-  NodeType type() const;
+  NodeType type() const {
+    return static_cast<NodeType>(type_);
+  }
 
   /**
    * Set the node type.
@@ -184,7 +205,9 @@ class NodeInfo {
    * Checks if this node is a transit node.
    * @return  Returns true if this node is a transit node.
    */
-  bool is_transit() const;
+  bool is_transit() const {
+    return type() == NodeType::kMultiUseTransitStop;
+  }
 
   /**
    * Get the number of regular edges across all levels (up to
@@ -192,7 +215,9 @@ class NodeInfo {
    * transit edges and transit connections, and transition edges.
    * @return  Returns the number of edges on the local level.
    */
-  uint32_t local_edge_count() const;
+  uint32_t local_edge_count() const {
+    return local_edge_count_ + 1;
+  }
 
   /**
    * Set the number of edges on the local level (up to kMaxLocalEdgeInfo+1).
@@ -206,7 +231,9 @@ class NodeInfo {
    * share locations, and parking locations.
    * @return  Returns true if mode changes are allowed.
    */
-  bool mode_change() const;
+  bool mode_change() const {
+    return mode_change_;
+  }
 
   /**
    * Sets the flag indicating a mode change is allowed at this node.
@@ -220,7 +247,9 @@ class NodeInfo {
    * Is there a traffic signal at this node?
    * @return  Returns true if there is a traffic signal at the node.
    */
-  bool traffic_signal() const;
+  bool traffic_signal() const {
+    return traffic_signal_;
+  }
 
   /**
    * Set the traffic signal flag.
@@ -233,7 +262,9 @@ class NodeInfo {
    * and possibly queries to a transit service.
    * @return  Returns the transit stop index.
    */
-  uint32_t stop_index() const;
+  uint32_t stop_index() const {
+    return stop_.stop_index;
+  }
 
   /**
    * Set the transit stop index.
