@@ -312,18 +312,18 @@ class EdgeLabel {
   }
 
   /**
+   * Sets this edge as an origin.
+   */
+  void set_origin() {
+    origin_ = true;
+  }
+
+  /**
    * Does this edge have a toll?
    * @return  Returns true if this edge has a toll.
    */
   bool toll() const {
     return toll_;
-  }
-
-  /**
-   * Sets this edge as an origin.
-   */
-  void set_origin() {
-    origin_ = true;
   }
 
   /**
