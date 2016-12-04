@@ -12,8 +12,8 @@ namespace baldr {
 // Number of expansion slots remaining in this tile. If you want to add
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
-// offset in bytes  and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 16;
+// offset in bytes and NOT a bitfield or union or anything of that sort
+constexpr size_t kEmptySlots = 17;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -390,10 +390,6 @@ class GraphTileHeader {
   // kEmptySlots by 1. Note that you can ONLY add an offset here and NOT a
   // bitfield or union or anything like that
   uint32_t empty_slots_[kEmptySlots];
-
-  // End offset - fixed location in the header
-  uint32_t end_offset_;
-
 };
 
 }

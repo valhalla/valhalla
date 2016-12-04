@@ -23,7 +23,9 @@ class DirectedEdge {
    * Gets the end node of this directed edge.
    * @return  Returns the end node.
    */
-  GraphId endnode() const;
+  GraphId endnode() const {
+    return endnode_;
+  };
 
   /**
    * Set the end node of this directed edge.
@@ -36,7 +38,9 @@ class DirectedEdge {
    * of the common edge information  within a tile.
    * @return  Returns offset from the start of the edge info within a tile.
    */
-  uint64_t edgeinfo_offset() const;
+  uint64_t edgeinfo_offset() const {
+    return edgeinfo_offset_;
+  }
 
   /**
    * Set the offset to the common edge info. The offset is from the start
@@ -49,7 +53,9 @@ class DirectedEdge {
    * General restriction or access condition (per mode) for this directed edge.
    * @return  Returns the restriction for the directed edge.
    */
-  uint64_t access_restriction() const;
+  uint64_t access_restriction() const {
+    return access_restriction_;
+  }
 
   /**
    * Set the modes which have access restrictions on this edge.
@@ -62,7 +68,9 @@ class DirectedEdge {
    * @return  Returns true if the directed edge has exit signs,
    *          false if not.
    */
-  bool exitsign() const;
+  bool exitsign() const {
+    return exitsign_;
+  }
 
   /**
    * Sets the exit sign flag.
@@ -74,7 +82,9 @@ class DirectedEdge {
    * Gets the length of the edge in meters.
    * @return  Returns the length in meters.
    */
-  uint32_t length() const;
+  uint32_t length() const {
+    return length_;
+  }
 
   /**
    * Sets the length of the edge in meters.
@@ -87,7 +97,9 @@ class DirectedEdge {
    * @return  Returns the weighted grade factor (0-15).
    *          where 0 is a 10% grade and 15 is 15%
    */
-  uint32_t weighted_grade() const;
+  uint32_t weighted_grade() const {
+    return weighted_grade_;
+  }
 
   /**
    * Sets the weighted grade factor (0-15) for the edge.
@@ -99,7 +111,9 @@ class DirectedEdge {
    * Get the road curvature factor. TODO
    * @return  Returns the curvature factor (0-15).
    */
-  uint32_t curvature() const;
+  uint32_t curvature() const {
+    return curvature_;
+  }
 
   /**
    * Sets the curvature factor (0-16) for the edge. TODO.
@@ -112,7 +126,9 @@ class DirectedEdge {
    * @return  Returns true if this edge uses right-side driving, false if
    *          left-side driving.
    */
-  bool drive_on_right() const;
+  bool drive_on_right() const {
+    return drive_on_right_;
+  }
 
   /**
    * Set the flag indicating driving is on the right hand side of the road
@@ -127,7 +143,9 @@ class DirectedEdge {
    * roads at the end node of this edge).
    * @return  Returns true if this edge is a dead end.
    */
-  bool deadend() const;
+  bool deadend() const {
+    return deadend_;
+  }
 
   /**
    * Set the flag indicating the edge is a dead end (no other driveable
@@ -140,7 +158,9 @@ class DirectedEdge {
    * Does this edge have a toll or is it part of a toll road?
    * @return  Returns true if this edge is part of a toll road, false if not.
    */
-  bool toll() const;
+  bool toll() const {
+    return toll_;
+  }
 
   /**
    * Sets the flag indicating this edge has a toll or is it part of
@@ -153,7 +173,9 @@ class DirectedEdge {
    * Does this edge have a seasonal access (e.g., closed in the winter)?
    * @return  Returns true if this edge has seasonal access, false if not.
    */
-  bool seasonal() const;
+  bool seasonal() const {
+    return seasonal_;
+  }
 
   /**
    * Sets the flag indicating this edge has seasonal access.
@@ -166,7 +188,9 @@ class DirectedEdge {
    * only if required to get to a destination?
    * @return  Returns true if the edge is destination only / private access.
    */
-  bool destonly() const;
+  bool destonly() const {
+    return dest_only_;
+  }
 
   /**
    * Sets the destination only (private) flag. This indicates the edge should
@@ -181,7 +205,9 @@ class DirectedEdge {
    * Is this edge part of a tunnel?
    * @return  Returns true if this edge is part of a tunnel, false if not.
    */
-  bool tunnel() const;
+  bool tunnel() const  {
+    return tunnel_;
+  }
 
   /**
    * Sets the flag indicating this edge has is a tunnel of part of a tunnel.
@@ -193,7 +219,9 @@ class DirectedEdge {
    * Is this edge part of a bridge?
    * @return  Returns true if this edge is part of a bridge, false if not.
    */
-  bool bridge() const;
+  bool bridge() const {
+    return bridge_;
+  }
 
   /**
    * Sets the flag indicating this edge has is a bridge of part of a bridge.
@@ -205,7 +233,9 @@ class DirectedEdge {
    * Is this edge part of a roundabout?
    * @return  Returns true if this edge is part of a roundabout, false if not.
    */
-  bool roundabout() const;
+  bool roundabout() const {
+    return roundabout_;
+  }
 
   /**
    * Sets the flag indicating the edge is part of a roundabout.
@@ -219,7 +249,9 @@ class DirectedEdge {
    * is not properly connected to other edges.
    * @return  Returns true if this edge is unreachable by auto.
    */
-  bool unreachable() const;
+  bool unreachable() const {
+    return unreachable_;
+  }
 
   /**
    * Sets the flag indicating the edge is unreachable by driving. This can
@@ -235,7 +267,9 @@ class DirectedEdge {
    * @return  Returns true if a traffic signal is present at the end of the
    *          directed edge.
    */
-  bool traffic_signal() const;
+  bool traffic_signal() const  {
+    return traffic_signal_;
+  }
 
   /**
    * Sets the flag indicating a traffic signal is present at the end of
@@ -250,7 +284,9 @@ class DirectedEdge {
    * reverse (false).
    * @return  Returns true if stored forward, false if reverse.
    */
-  bool forward() const;
+  bool forward() const {
+    return forward_;
+  }
 
   /**
    * Set the forward flag. Tells if this directed edge is stored forward
@@ -265,7 +301,9 @@ class DirectedEdge {
    * identify such edges. This is used to speed pedestrian routing.
    * @return  Returns true if the edge leads into a no thru region.
    */
-  bool not_thru() const;
+  bool not_thru() const {
+    return not_thru_;
+  }
 
   /**
    * Set the not_thru flag. If an edge leads to a "no thru" region where
@@ -281,7 +319,9 @@ class DirectedEdge {
    * @return  Returns the index of the opposing directed edge at the end node
    *          of this directed edge.
    */
-  uint32_t opp_index() const;
+  uint32_t opp_index() const {
+    return opp_index_;
+  }
 
   /**
    * Set the index of the opposing directed edge at the end node of this
@@ -294,7 +334,9 @@ class DirectedEdge {
    * Get the cycle lane type along this edge.
    * @returns   Returns the type (if any) of bicycle lane along this edge.
    */
-  CycleLane cyclelane() const;
+  CycleLane cyclelane() const  {
+    return static_cast<CycleLane>(cycle_lane_);
+  }
 
   /**
    * Sets the type of cycle lane (if any) present on this edge.
@@ -306,7 +348,9 @@ class DirectedEdge {
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
-  uint32_t bike_network() const;
+  uint32_t bike_network() const {
+    return bike_network_;
+  }
 
   /**
    * Sets the bike network mask indicating which (if any) bicycle networks are
@@ -319,7 +363,9 @@ class DirectedEdge {
    * Get the truck route flag for this directed edge.
    * @return  Returns true if part of a truck network/route, false otherwise.
    */
-  bool truck_route() const;
+  bool truck_route() const {
+    return truck_route_;
+  }
 
   /**
    * Set the truck route flag for this directed edge.
@@ -331,7 +377,9 @@ class DirectedEdge {
    * Get the number of lanes for this directed edge.
    * @return  Returns the number of lanes for this directed edge.
    */
-  uint32_t lanecount() const;
+  uint32_t lanecount() const {
+    return lanecount_;
+  }
 
   /**
    * Sets the number of lanes
@@ -346,7 +394,9 @@ class DirectedEdge {
    * @return  Returns a bit mask that indicates the local edge indexes
    *          of outbound directed edges that are restricted.
    */
-  uint32_t restrictions() const;
+  uint32_t restrictions() const {
+    return restrictions_;
+  }
 
   /**
    * Set simple turn restrictions from the end of this directed edge.
@@ -361,7 +411,9 @@ class DirectedEdge {
    * Get the specialized use of this edge.
    * @return  Returns the use type of this edge.
    */
-  Use use() const;
+  Use use() const {
+    return static_cast<Use>(use_);
+  }
 
   /**
    * Sets the specialized use type of this edge.
@@ -373,13 +425,17 @@ class DirectedEdge {
    * Is this edge a transit line (bus or rail)?
    * @return  Returns true if this edge is a transit line.
    */
-  bool IsTransitLine() const;
+  bool IsTransitLine() const {
+    return (use() == Use::kRail || use() == Use::kBus);
+  }
 
   /**
    * Get the speed type (see graphconstants.h)
    * @return  Returns the speed type.
    */
-  SpeedType speed_type() const;
+  SpeedType speed_type() const {
+    return static_cast<SpeedType>(speed_type_);
+  }
 
   /**
    * Set the speed type (see graphconstants.h)
@@ -391,7 +447,9 @@ class DirectedEdge {
    * Get the country crossing flag.
    * @return  Returns true if the edge crosses into a new country.
    */
-  bool ctry_crossing() const;
+  bool ctry_crossing() const {
+    return ctry_crossing_;
+  }
 
   /**
    * Set the country crossing flag.
@@ -403,7 +461,9 @@ class DirectedEdge {
    * Get the access modes in the forward direction (bit field).
    * @return  Returns the access modes in the forward direction.
    */
-  uint32_t forwardaccess() const;
+  uint32_t forwardaccess() const  {
+    return forwardaccess_;
+  }
 
   /**
    * Set the access modes in the forward direction (bit field).
@@ -420,7 +480,9 @@ class DirectedEdge {
    * Get the access modes in the reverse direction (bit field).
    * @return  Returns the access modes in the reverse direction.
    */
-  uint32_t reverseaccess() const;
+  uint32_t reverseaccess() const {
+    return reverseaccess_;
+  }
 
   /**
    * Set the access modes in the reverse direction (bit field).
@@ -432,7 +494,9 @@ class DirectedEdge {
    * Gets the speed in KPH.
    * @return  Returns the speed in KPH.
    */
-  uint32_t speed() const;
+  uint32_t speed() const {
+    return speed_;
+  }
 
   /**
    * Sets the speed in KPH.
@@ -444,7 +508,9 @@ class DirectedEdge {
    * Gets the speed limit in KPH.
    * @return  Returns the speed limit in KPH.
    */
-  uint32_t speed_limit() const;
+  uint32_t speed_limit() const {
+    return speed_limit_;
+  }
 
   /**
    * Sets the speed limit in KPH.
@@ -456,7 +522,9 @@ class DirectedEdge {
    * Gets the truck speed in KPH.
    * @return  Returns the truck speed in KPH.
    */
-  uint32_t truck_speed() const;
+  uint32_t truck_speed() const {
+    return truck_speed_;
+  }
 
   /**
    * Sets the truck speed in KPH.
@@ -468,7 +536,9 @@ class DirectedEdge {
    * Get the classification (importance) of the road/path.
    * @return  Returns road classification / importance.
    */
-  RoadClass classification() const;
+  RoadClass classification() const {
+    return static_cast<RoadClass>(classification_);
+  }
 
   /**
    * Sets the classification (importance) of this edge.
@@ -479,13 +549,17 @@ class DirectedEdge {
   /**
    * Is this edge unpaved or bad surface?
    */
-  bool unpaved() const;
+  bool unpaved() const {
+    return (surface() >= Surface::kCompacted);
+  }
 
   /**
    * Get the surface type (see graphconstants.h). This is a general indication
    * of smoothness.
    */
-  Surface surface() const;
+  Surface surface() const {
+    return static_cast<Surface>(surface_);
+  }
 
   /**
    * Sets the surface type (see baldr/graphconstants.h). This is a general
@@ -497,7 +571,9 @@ class DirectedEdge {
   /**
    * Is this edge a link/ramp?
    */
-  bool link() const;
+  bool link() const {
+    return link_;
+  }
 
   /**
    * Sets the link flag indicating the edge is part of a link or connection
@@ -513,7 +589,9 @@ class DirectedEdge {
    * intersections.
    * @return  Returns true if the edge is internal to an intersection.
    */
-  bool internal() const;
+  bool internal() const {
+    return internal_;
+  }
 
   /**
    * Sets the intersection internal flag indicating the edge is "internal"
@@ -529,7 +607,9 @@ class DirectedEdge {
    * @return  Returns the starting mode for this complex restriction for the
    *          directed edge.
    */
-  uint32_t start_restriction() const;
+  uint32_t start_restriction() const {
+    return start_restriction_;
+  }
 
   /**
    * Set the modes which have a complex restriction starting on this edge.
@@ -542,7 +622,9 @@ class DirectedEdge {
    * @return  Returns the ending mode for this complex restriction for the
    *          directed edge.
    */
-  uint32_t end_restriction() const;
+  uint32_t end_restriction() const {
+    return end_restriction_;
+  }
 
   /**
    * Set the modes which have a complex restriction ending on this edge.
@@ -553,7 +635,9 @@ class DirectedEdge {
   /**
    * Is this edge part of a complex restriction?
    */
-  bool part_of_complex_restriction() const;
+  bool part_of_complex_restriction() const {
+    return part_of_complex_restriction_;
+  }
 
   /**
    * Sets the part of complex restriction flag indicating the edge is part
@@ -592,7 +676,9 @@ class DirectedEdge {
    * Get the density along the edges.
    * @return  Returns relative density along the edge.
    */
-  uint32_t density() const;
+  uint32_t density() const {
+    return density_;
+  }
 
   /**
    * Set the density along the edges.
@@ -604,7 +690,9 @@ class DirectedEdge {
    * Is there a sidewalk to the left of this directed edge?
    * @return  Returns true if there is a sidewalk to the left of this edge.
    */
-  bool sidewalk_left() const;
+  bool sidewalk_left() const {
+    return sidewalk_left_;
+  }
 
   /**
    * Set the flag for a sidewalk to the left of this directed edge.
@@ -616,7 +704,9 @@ class DirectedEdge {
    * Is there a sidewalk to the right of this directed edge?
    * @return  Returns true if there is a sidewalk to the right of this edge.
    */
-  bool sidewalk_right() const;
+  bool sidewalk_right() const {
+    return sidewalk_right_;
+  }
 
   /**
    * Set the flag for a sidewalk to the right of this directed edge.
@@ -630,7 +720,12 @@ class DirectedEdge {
    * @param  localidx  Local index at the node of the inbound edge.
    * @return  Returns the turn type (see turn.h)
    */
-  Turn::Type turntype(const uint32_t localidx) const;
+  Turn::Type turntype(const uint32_t localidx) const  {
+    // Turn type is 3 bits per index
+    uint32_t shift = localidx * 3;
+    return static_cast<Turn::Type>(
+        ((turntype_ & (7 << shift))) >> shift);
+  }
 
   /**
    * Sets the turn type given the prior edge's local index
@@ -645,7 +740,9 @@ class DirectedEdge {
    * @param localidx  Local index at the node of the inbound edge.
    * @return  Returns true if there is an edge to the left, false if not.
    */
-  bool edge_to_left(const uint32_t localidx) const;
+  bool edge_to_left(const uint32_t localidx) const {
+    return (edge_to_left_ & (1 << localidx));
+  }
 
   /**
    * Set the flag indicating there is an edge to the left, in between
@@ -661,7 +758,11 @@ class DirectedEdge {
    * @param  localidx  Local index at the node of the inbound edge.
    * @return  Returns the relative stop impact from low (0) to high (7).
    */
-  uint32_t stopimpact(const uint32_t localidx) const;
+  uint32_t stopimpact(const uint32_t localidx) const {
+    // Stop impact is 3 bits per index
+    uint32_t shift = localidx * 3;
+    return (stopimpact_.s.stopimpact & (7 << shift)) >> shift;
+  }
 
   /**
    * Set the stop impact when transitioning from the prior edge (given
@@ -675,7 +776,9 @@ class DirectedEdge {
    * Get the transit line Id (for departure lookups along an edge)
    * @return  Returns the transit line Id.
    */
-  uint32_t lineid() const;
+  uint32_t lineid() const {
+    return stopimpact_.lineid;
+  }
 
   /**
    * Set the unique transit line Id.
@@ -688,7 +791,9 @@ class DirectedEdge {
    * @param localidx  Local index at the node of the inbound edge.
    * @return  Returns true if there is an edge to the right, false if not.
    */
-  bool edge_to_right(const uint32_t localidx) const;
+  bool edge_to_right(const uint32_t localidx) const {
+    return (stopimpact_.s.edge_to_right & (1 << localidx));
+  }
 
   /**
    * Set the flag indicating there is an edge to the right, in between
@@ -704,7 +809,9 @@ class DirectedEdge {
    * identified on the different levels.
    * @return  Returns the index of the edge on the local level.
    */
-  uint32_t localedgeidx() const;
+  uint32_t localedgeidx() const {
+    return localedgeidx_;
+  }
 
   /** Set the index of the directed edge on the local level of the graph
    * hierarchy. This is used for turn restrictions so the edges can be
@@ -720,7 +827,9 @@ class DirectedEdge {
    * @return  Returns the index of the opposing directed edge on the local
    *          hierarchy level at end node of this directed edge.
    */
-  uint32_t opp_local_idx() const;
+  uint32_t opp_local_idx() const {
+    return opp_local_idx_;
+  }
 
   /**
    * Set the index of the opposing directed edge on the local hierarchy level
@@ -738,7 +847,9 @@ class DirectedEdge {
    * @return  Returns the shortcut mask of the matching superseded edge
    *          outbound from the node. 0 indicates the edge is not a shortcut.
    */
-  uint32_t shortcut() const;
+  uint32_t shortcut() const {
+    return shortcut_;
+   }
 
   /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
@@ -756,7 +867,9 @@ class DirectedEdge {
    *          directed edge outbound from the node. 0 indicates the edge is not
    *          superseded by a shortcut edge.
    */
-  uint32_t superseded() const;
+  uint32_t superseded() const {
+    return superseded_;
+  }
 
   /**
    * Set the mask for whether this edge is superseded by a shortcut edge.
@@ -775,7 +888,9 @@ class DirectedEdge {
    * @return  Returns true if the edge is a transition from a lower level
    *          to a higher (false if not).
    */
-  bool trans_up() const;
+  bool trans_up() const {
+    return (use() == Use::kTransitionUp);
+  }
 
   /**
    * Set the use indicating this edge represents a transition up one level
@@ -795,7 +910,9 @@ class DirectedEdge {
    * @return  Returns true if the edge is a transition from an upper level
    *          to a lower (false if not).
    */
-  bool trans_down() const;
+  bool trans_down() const {
+    return (use() == Use::kTransitionDown);
+  }
 
   /**
    * Set the use indicating this edge represents a transition down one level
@@ -811,14 +928,18 @@ class DirectedEdge {
    * shortcuts no mask is set but this flag is set to true.
    * @return  Returns true if this edge is a shortcut.
    */
-  bool is_shortcut() const;
+  bool is_shortcut() const {
+    return is_shortcut_;
+  }
 
   /**
    * Does this directed edge end in a different tile.
    * @return  Returns true if the end node of this directed edge
    *          is in a different tile.
    */
-  bool leaves_tile() const;
+  bool leaves_tile() const {
+    return leaves_tile_;
+  }
 
   /**
    * Set the flag indicating whether the end node of this directed edge is in

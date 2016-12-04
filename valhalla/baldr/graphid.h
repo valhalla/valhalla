@@ -13,6 +13,10 @@ namespace baldr {
 // Maximum of 8 (0-7) graph hierarchies are supported.
 constexpr uint32_t kMaxGraphHierarchy = 7;
 
+// 46 bits are used for the non-spare part of a graph Id. Fill all of them.
+// If we ever change the size of GraphId fields this will also need to change.
+constexpr uint64_t kInvalidGraphId = 0x3ffffffffff;
+
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.
  * Includes the tile Id, hierarchy level, and a unique identifier within
@@ -20,14 +24,15 @@ constexpr uint32_t kMaxGraphHierarchy = 7;
  * TODO - currently the Ids are indexes into the node and directed edge
  * "lists" for the tile/level. May need to create persistent Ids at some
  * point.
- * @author  David W. Nesbitt
  */
 union GraphId {
  public:
   /**
    * Default constructor
    */
-  GraphId();
+  GraphId()
+      : value(kInvalidGraphId) {
+  }
 
   /**
    * Constructor.
@@ -41,26 +46,33 @@ union GraphId {
    * Constructor
    * @param value all the various bits rolled into one
    */
-  explicit GraphId(const uint64_t value);
+  explicit GraphId(const uint64_t value)
+      : value(value) {
+  }
 
   /**
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */
-  uint32_t tileid() const;
+  uint32_t tileid() const {
+    return fields.tileid;
+  }
 
   /**
    * Gets the hierarchy level.
    * @return   Returns the level.
    */
-  uint32_t level() const;
+  uint32_t level() const {
+    return fields.level;
+  }
 
   /**
    * Gets the identifier within the hierarchy level.
    * @return   Returns the unique identifier within the level.
    */
-  uint32_t id() const;
-
+  uint32_t id() const {
+    return fields.id;
+  }
 
   /**
    * Convenience method to set individual graph Id elements.
@@ -73,32 +85,34 @@ union GraphId {
 
   /**
    * Conversion to bool for use in conditional statements.
-   *
    * Note that this is explicit to avoid unexpected implicit conversions. Some
    * statements, including "if", "&&", "||", "!" are "implicit explicit" and
    * will result in conversion.
-   *
    * @return boolean true if the id is valid.
    */
-  explicit inline operator bool() const { return Is_Valid(); }
+  explicit inline operator bool() const {
+    return Is_Valid();
+  }
 
   /**
    * Returns true if the id is valid
    *
    * @return boolean true if the id is valid
    */
-  bool Is_Valid() const;
+  bool Is_Valid() const {
+    return value != kInvalidGraphId;
+  }
 
   /**
    * Returns a GraphId omitting the id of the of the object within the level
-   *
    * @return graphid with only tileid and level included
    */
-  GraphId Tile_Base() const;
+  GraphId Tile_Base() const {
+    return GraphId( fields.tileid,  fields.level, 0);
+  }
 
   /**
    * The json representation of the id
-   *
    * @return  json
    */
   json::Value json() const;
@@ -106,40 +120,50 @@ union GraphId {
   /**
    * Post increments the id.
    */
-  void operator ++(int);
+  void operator ++(int) {
+    fields.id++;
+  }
 
   /**
    * Advances the id
    */
-  GraphId operator+(uint64_t offset) const;
+  GraphId operator+(uint64_t offset) const {
+    return GraphId(fields.tileid, fields.level, fields.id + offset);
+  }
 
   /**
    * Less than operator for sorting.
    * @param  rhs  Right hand side graph Id for comparison.
    * @return  Returns true if this GraphId is less than the right hand side.
    */
-  bool operator <(const GraphId& rhs) const;
+  bool operator <(const GraphId& rhs) const{
+    return value < rhs.value;
+  }
 
   // Operator EqualTo.
-  bool operator ==(const GraphId& rhs) const;
+  bool operator ==(const GraphId& rhs) const {
+    return value == rhs.value;
+  }
 
-  bool operator !=(const GraphId& rhs) const;
+  // Operator not equal
+  bool operator !=(const GraphId& rhs) const {
+    return value != rhs.value;
+  }
 
   // cast operator
-  operator uint64_t() const;
+  operator uint64_t() const {
+    return value;
+  }
 
   struct Fields {
-    //the hierarchy level
-    uint64_t level :3;
-    //the tile id
-    uint64_t tileid :22;
-    //the id of the element within the tile
-    uint64_t id :21;
-    uint64_t spare :18;
+    uint64_t level  : 3;   // Hierarchy level
+    uint64_t tileid : 22;  // Tile Id within the hierarchy level
+    uint64_t id     : 21;  // Id of the element within the tile
+    uint64_t spare  : 18;
   } fields;
-  //a single 64 bit value representing the graph id.
-  uint64_t value;
+  uint64_t value; // Single 64 bit value representing the graph id.
 
+  // Stream output
   friend std::ostream& operator<<(std::ostream& os, const GraphId& id);
 };
 
@@ -149,10 +173,8 @@ union GraphId {
 // Extend the standard namespace to know how to hash graphids
 namespace std {
   template <>
-  struct hash<valhalla::baldr::GraphId>
-  {
-    inline std::size_t operator()(const valhalla::baldr::GraphId& k) const
-    {
+  struct hash<valhalla::baldr::GraphId> {
+    inline std::size_t operator()(const valhalla::baldr::GraphId& k) const {
       return static_cast<size_t>(k.value);
     }
   };

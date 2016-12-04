@@ -41,7 +41,7 @@ uint8_t TileHierarchy::get_level(const RoadClass roadclass) const {
     return 1;
   } else {
     return 2;
-  };
+  }
 }
 
 }
