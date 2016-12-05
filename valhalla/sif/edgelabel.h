@@ -162,25 +162,33 @@ class EdgeLabel {
    * Get the predecessor edge label.
    * @return Predecessor edge label.
    */
-  uint32_t predecessor() const;
+  uint32_t predecessor() const {
+    return predecessor_;
+  }
 
   /**
    * Get the GraphId of this directed edge.
    * @return  Returns the GraphId of this directed edge.
    */
-  const baldr::GraphId& edgeid() const;
+  const baldr::GraphId& edgeid() const {
+    return edgeid_;
+  }
 
   /**
    * Get the GraphId of the opposing directed edge.
    * @return  Returns the GraphId of the opposing directed edge.
    */
-  const baldr::GraphId& opp_edgeid() const;
+  const baldr::GraphId& opp_edgeid() const {
+    return opp_edgeid_;
+  }
 
   /**
    * Get the prior transit stop Id.
    * @return  Returns the prior transit stop Id.
    */
-  const baldr::GraphId& prior_stopid() const;
+  const baldr::GraphId& prior_stopid() const {
+    return opp_edgeid_;
+  }
 
   /**
    * Get the end node of this directed edge. Allows the A* algorithm
@@ -188,46 +196,60 @@ class EdgeLabel {
    * the directed edge again.
    * @return  Returns the GraphId of the end node of this directed edge.
    */
-  const baldr::GraphId& endnode() const;
+  const baldr::GraphId& endnode() const {
+    return endnode_;
+  }
 
   /**
    * Get the cost from the origin to this directed edge.
    * @return  Returns the cost (units are based on the costing method)
    *          and elapsed time (seconds) to the end of the directed edge.
    */
-  const Cost& cost() const;
+  const Cost& cost() const {
+    return cost_;
+  }
 
   /**
    * Get the sort cost from the origin to this directed edge. The sort
    * cost includes the A* heuristic.
    * @return  Returns the sort cost (units are based on the costing method).
    */
-  float sortcost() const;
+  float sortcost() const {
+    return sortcost_;
+  }
 
   /**
    * Set the sort cost from the origin to this directed edge. The sort
    * cost includes the A* heuristic.
    * @param sortcost Sort cost (units are based on the costing method).
    */
-  void SetSortCost(float sortcost);
+  void SetSortCost(float sortcost) {
+    sortcost_ = sortcost;
+  }
 
   /**
    * Get the distance to the destination.
    * @return  Returns the distance in meters.
    */
-  float distance() const;
+  float distance() const {
+    return distance_;
+  }
 
   /**
    * Get the use of the directed edge.
    * @return  Returns edge use.
    */
-  baldr::Use use() const;
+  baldr::Use use() const {
+    return static_cast<baldr::Use>(use_);
+  }
 
   /**
    * Get the opposing index - for bidirectional A*.
    * @return  Returns the opposing directed edge index to the incoming edge.
    */
-  uint32_t opp_index() const;
+  uint32_t opp_index() const {
+    return opp_index_;
+  }
 
   /**
    * Get the opposing local index. This is the index of the incoming edge
@@ -235,92 +257,122 @@ class EdgeLabel {
    * edge. This is used for edge transition costs and Uturn detection.
    * @return  Returns the local index of the incoming edge.
    */
-  uint32_t opp_local_idx() const;
+  uint32_t opp_local_idx() const {
+    return opp_local_idx_;
+  }
 
   /**
    * Get the restriction mask at the end node. Each bit set to 1 indicates a
    * turn restriction onto the directed edge with matching local edge index.
    * @return  Returns the restriction mask.
    */
-  uint32_t restrictions() const;
+  uint32_t restrictions() const {
+    return restrictions_;
+  }
 
   /**
    * Get the shortcut flag.
    * @return  Returns true if the prior edge was a shortcut, false if not.
    */
-  bool shortcut() const;
+  bool shortcut() const {
+    return shortcut_;
+  }
 
   /**
    * Get the travel mode along this edge.
    * @return  Returns the travel mode.
    */
-  TravelMode mode() const;
+  TravelMode mode() const {
+    return static_cast<TravelMode>(mode_);
+  }
 
   /**
    * Get the dest only flag.
    * @return  Returns true if the edge is part of a private or no through road that allows access
    *          only if required to get to a destination?
    */
-  bool destonly() const;
+  bool destonly() const {
+    return dest_only_;
+  }
 
   /**
    * Has any transit been taken up to this point on the path.
    * @return  Returns true if any transit has been taken, false if not.
    */
-  bool has_transit() const;
+  bool has_transit() const {
+    return has_transit_;
+  }
 
   /**
    * Is this edge an origin edge?
    * @return  Returns true if this edge is an origin edge.
    */
-  bool origin() const;
+  bool origin() const {
+    return origin_;
+  }
+
+  /**
+   * Sets this edge as an origin.
+   */
+  void set_origin() {
+    origin_ = true;
+  }
 
   /**
    * Does this edge have a toll?
    * @return  Returns true if this edge has a toll.
    */
-  bool toll() const;
-
-  /**
-   * Sets this edge as an origin.
-   */
-  void set_origin();
+  bool toll() const {
+    return toll_;
+  }
 
   /**
    * Get the current path distance in meters.
    * @return  Returns the current path distance.
    */
-  uint32_t path_distance() const;
+  uint32_t path_distance() const {
+    return path_distance_;
+  }
 
   /**
    * Get the predecessor road classification.
    * @return Predecessor road classification.
    */
-  baldr::RoadClass classification() const;
+  baldr::RoadClass classification() const {
+    return static_cast<baldr::RoadClass>(classification_);
+  }
 
   /**
    * Should not thru pruning be enabled on this path?
    * @return Returns true if not thru pruning should be enabled.
    */
-  bool not_thru_pruning() const;
+  bool not_thru_pruning() const {
+    return not_thru_pruning_;
+  }
 
   /**
    * Get the transit trip Id.
    * @return   Returns the transit trip Id of the prior edge.
    */
-  uint32_t tripid() const;
+  uint32_t tripid() const {
+    return tripid_;
+  }
 
   /**
    * Return the transit block Id of the prior trip.
    * @return  Returns the block Id.
    */
-  uint32_t blockid() const;
+  uint32_t blockid() const {
+    return blockid_;
+  }
 
   /**
    * Get the index of the transit operator.
    * @return  Returns the transit operator index (0 if none).
    */
-  uint32_t transit_operator() const;
+  uint32_t transit_operator() const {
+    return transit_operator_;
+  }
 
   /**
    * Operator < used for sorting.
@@ -332,7 +384,9 @@ class EdgeLabel {
    * to determine the cost at the connection.
    * @return  Returns the transition cost (including penalties) in seconds.
    */
-  uint32_t transition_cost() const;
+  uint32_t transition_cost() const {
+    return transition_cost_;
+  }
 
   /**
    * Get the transition cost in seconds. This is used in the bidirectional A*
@@ -341,37 +395,50 @@ class EdgeLabel {
    * different node than the forward search.
    * @return  Returns the transition cost (without penalties) in seconds.
    */
-  uint32_t transition_secs() const;
+  uint32_t transition_secs() const {
+    return transition_secs_;
+  }
 
   /**
    * Set the transition cost.
    * @param  tc  Transition cost.
    */
-  void set_transition_cost(const Cost& tc);
+  void set_transition_cost(const Cost& tc) {
+    transition_cost_ = tc.cost;
+    transition_secs_ = tc.secs;
+  }
 
   /**
    * Is this edge part of a complex restriction.
    * @return  Returns true if the edge is part of a complex restriction.
    */
-  bool on_complex_rest() const;
+  bool on_complex_rest() const {
+    return on_complex_rest_;
+  }
 
   /**
    * Is this edge not-through
    * @return  Returns true if the edge is not thru.
    */
-  bool not_thru() const;
+  bool not_thru() const {
+    return not_thru_;
+  }
 
   /**
    * Set the not-through flag for this edge.
    * @param  not_thru  True if the edge is not thru.
    */
-  void set_not_thru(const bool not_thru);
+  void set_not_thru(const bool not_thru) {
+    not_thru_ = not_thru;
+  }
 
   /**
    * Is this edge a dead end.
    * @return  Returns true if the edge is a dead end.
    */
-  bool deadend() const;
+  bool deadend() const {
+    return deadend_;
+  }
 
  private:
   // Graph Id of the edge.
