@@ -239,16 +239,6 @@ int main(int argc, char *argv[]) {
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
 
-  // lambda for getting path location (Loki search)
-  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  auto getPathLoc = [&reader, &cost] (Location& loc) {
-    try {
-      return Search(loc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-    } catch (...) {
-      exit(EXIT_FAILURE);
-    }
-  };
-
   // If only one location is provided we create a set of random locations
   // around this location
   if (locations.size() == 1) {
@@ -270,9 +260,15 @@ int main(int argc, char *argv[]) {
 
   // Get path locations (Loki) for all locations.
   auto t0 = std::chrono::high_resolution_clock::now();
+  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_locations;
   for (auto& loc : locations) {
-    path_locations.push_back(getPathLoc(loc));
+    try {
+      path_locations.push_back(projections.at(loc));
+    } catch (...) {
+      exit(EXIT_FAILURE);
+    }
   }
   auto t1 = std::chrono::high_resolution_clock::now();
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();

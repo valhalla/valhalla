@@ -582,11 +582,11 @@ int main(int argc, char *argv[]) {
   // Find locations
   auto t1 = std::chrono::high_resolution_clock::now();
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
   for (auto loc : locations) {
     try {
-      path_location.push_back(Search(loc, reader, cost->GetEdgeFilter(),
-                                     cost->GetNodeFilter()));
+      path_location.push_back(projections.at(loc));
       //TODO: get transit level for transit costing
       //TODO: if transit send a non zero radius
     } catch (...) {
