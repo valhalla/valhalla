@@ -42,7 +42,7 @@ namespace baldr{
       boost::property_tree::ptree e;
       e.put("id", edge.id.value);
       e.put("dist", edge.dist);
-      e.put("sos", edge.sos);
+      e.put("sos", static_cast<int>(edge.sos));
       e.put("score", edge.score);
 
       // Serialize projected lat,lng as double (otherwise leads to shape
