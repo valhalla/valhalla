@@ -559,6 +559,15 @@ TripPath TripPathBuilder::Build(
       tp_orig->set_date_time(origin_date);
     }
 
+    // Set the bounding box of the shape
+    AABB2<PointLL> bbox(shape);
+    TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+    min_ll->set_lat(bbox.miny());
+    min_ll->set_lng(bbox.minx());
+    TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+    max_ll->set_lat(bbox.maxy());
+    max_ll->set_lng(bbox.maxx());
+
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
     // Assign the trip path admins
     AssignAdmins(trip_path, admin_info_list);
