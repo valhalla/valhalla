@@ -525,7 +525,7 @@ void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
 
-  // Disallow connections that are part of a cmplex restriction.
+  // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
   if (pred.on_complex_rest()) {

@@ -156,7 +156,10 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       }
 
       // Skip if no access is allowed to this edge (based on costing method)
-      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+      // or if a complex restriction prevents this path.
+      if (!costing->Allowed(directededge, pred, tile, edgeid) ||
+           costing->Restricted(directededge, pred, edgelabels_, tile,
+                                   edgeid, true)) {
         continue;
       }
 
