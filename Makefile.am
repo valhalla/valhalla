@@ -64,10 +64,8 @@ nobase_include_HEADERS = \
 	valhalla/thor/timedistancematrix.h
 libvalhalla_thor_la_SOURCES = \
 	src/thor/astar.cc \
-	src/thor/astarheuristic.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
-	src/thor/edgestatus.cc \
 	src/thor/isochrone.cc \
 	src/thor/isochrone_action.cc \
 	src/thor/map_matcher.cc \

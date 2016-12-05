@@ -56,12 +56,16 @@ class EdgeStatus {
    * Constructor given an initial size.
    * @param  sz  Size to reserve for edgestatus unordered map.
    */
-  EdgeStatus(const uint32_t sz = kDefaultEdgeStatusSize);
+  EdgeStatus(const uint32_t sz = kDefaultEdgeStatusSize) {
+    edgestatus_.reserve(sz);
+  }
 
   /**
    * Initialize the status to unreached for all edges.
    */
-  void Init();
+  void Init() {
+    edgestatus_.clear();
+  }
 
   /**
    * Set the status of a directed edge given its GraphId.
@@ -70,21 +74,28 @@ class EdgeStatus {
    * @param  index    Index of the edge label.
    */
   void Set(const baldr::GraphId& edgeid, const EdgeSet set,
-           const uint32_t index);
+           const uint32_t index) {
+    edgestatus_[edgeid.value] = { set, index };
+  }
 
   /**
    * Update the status of a directed edge given its GraphId.
    * @param  edgeid   GraphId of the directed edge to set.
    * @param  set      Label set for this directed edge.
    */
-  void Update(const baldr::GraphId& edgeid, const EdgeSet set);
+  void Update(const baldr::GraphId& edgeid, const EdgeSet set) {
+    edgestatus_[edgeid.value].status.set = static_cast<uint32_t>(set);
+  }
 
   /**
    * Get the status info of a directed edge given its GraphId.
    * @param   edgeid  GraphId of the directed edge.
    * @return  Returns edge status info.
    */
-  EdgeStatusInfo Get(const baldr::GraphId& edgeid) const;
+  EdgeStatusInfo Get(const baldr::GraphId& edgeid) const {
+    auto p = edgestatus_.find(edgeid.value);
+    return (p == edgestatus_.end()) ? EdgeStatusInfo() : p->second;
+  }
 
  private:
   // Map to store the status and index of GraphIds that have been encountered.
