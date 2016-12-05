@@ -25,13 +25,16 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeInternalIntersection, true },
   { kEdgeDriveOnRight, true },
   { kEdgeEndNodeIndex, true },
-  { kEdgeSign, true },
+  { kEdgeSignExitNumber, true },
+  { kEdgeSignExitBranch, true },
+  { kEdgeSignExitToward, true },
+  { kEdgeSignExitName, true },
   { kEdgeTravelMode, true },
   { kEdgeVehicleType, true },
   { kEdgePedestrianType, true },
   { kEdgeBicycleType, true },
   { kEdgeTransitType, true },
-  { kEdgeTransitRouteInfo, true },
+  //{ kEdgeTransitRouteInfo, true },       // TODO
   { kEdgeId, true },
   { kEdgeWayId, true },
   { kEdgeWeightedGrade, true },
@@ -39,17 +42,17 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeMaxDownwardGrade, true },
 
   // Node keys
-  { kNodeIntersectingEdge, true },
+  //{ kNodeIntersectingEdge, true },       // TODO
   { kNodeElapsedTime, true },
   { kNodeaAdminIndex, true },
   { kNodeType, true },
   { kNodeFork, true },
-  { kNodetransitStopInfo, true },
+  //{ kNodetransitStopInfo, true },        // TODO
 
   // Top level: admin list, full shape, and shape bounding box keys
-  { kAdmin, true },
+  //{ kAdmin, true },                      // TODO
   { kShape, true },
-  { kBoundingBox, true }
+  //{ kBoundingBox, true }                 // TODO
 };
 
 TripPathController::TripPathController(
