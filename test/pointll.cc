@@ -151,7 +151,9 @@ void TryClosestPoint(const std::vector<PointLL>& pts, const PointLL&p,
       throw runtime_error("ClosestPoint test failed -index of closest segment is wrong");
   if (fabs(c.x() - std::get<0>(result).lng()) > kEpsilon ||
       fabs(c.y() - std::get<0>(result).lat()) > kEpsilon)
-    throw runtime_error("ClosestPoint test failed - closest point is wrong");
+    throw runtime_error("ClosestPoint test failed - closest point is wrong " +
+                        std::to_string(std::get<0>(result).lat()) + "," +
+                        std::to_string(std::get<0>(result).lng()) );
 }
 void TestClosestPoint() {
   // Construct a simple polyline
@@ -171,6 +173,13 @@ void TestClosestPoint() {
 
   // Closest to the last point
   TryClosestPoint(pts, PointLL(15.0f, 4.0f), PointLL(12.0f, 0.0f), 3);
+
+  // Try at high latitude where we need to properly project the closest point
+  std::vector<PointLL> shape = {
+        {-97.2987f, 50.4072f },
+        {-97.3208f, 50.4265f }
+  };
+  TryClosestPoint(shape, PointLL(-97.3014f, 50.4212f), PointLL(-97.310097f, 50.417156f), 0);
 }
 
 void TryWithinConvexPolygon(const std::vector<PointLL>& pts, const PointLL&p,
