@@ -367,6 +367,9 @@ void edge_association::add_tile(const std::string &file_name) {
         score += (fow1 == fow2) ? 0 : 5;
 
         std::cout << "  " << edge_id << ":\t" << score << "\n";
+
+        // use dest as next origin
+        std::swap(origin, dest);
       }
     }
 
