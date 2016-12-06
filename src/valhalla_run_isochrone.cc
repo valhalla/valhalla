@@ -204,16 +204,14 @@ int main(int argc, char *argv[]) {
 
   // Find locations
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  auto getPathLoc = [&reader, &cost] (Location& loc, std::string status) {
+  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  std::vector<PathLocation> path_location;
+  for (auto loc : locations) {
     try {
-      return Search(loc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+      path_location.push_back(projections.at(loc));
     } catch (...) {
       exit(EXIT_FAILURE);
     }
-  };
-  std::vector<PathLocation> path_location;
-  for (auto loc : locations) {
-    path_location.push_back(getPathLoc(loc, "fail_invalid_origin"));
   }
 
   // For multimodal - hack the date time for now!
