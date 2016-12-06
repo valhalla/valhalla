@@ -123,90 +123,63 @@ float PointLL::Heading(const PointLL& ll2) const {
 // squared to that point and the index of the segment where the closest point
 // lies.
 std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts) const {
-  PointLL closest;
-  int idx;
-  float mindist = std::numeric_limits<float>::max();
+  PointLL closest {};
+  size_t closest_segment;
+  float mindistsqr = std::numeric_limits<float>::max();
 
   // If there are no points we are done
-  if(pts.size() == 0)
-    return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
+  if (pts.size() == 0)
+    return std::make_tuple(std::move(closest), std::move(mindistsqr),
+                           std::move(closest_segment));
+
   // If there is one point we are done
-  if(pts.size() == 1)
+  if (pts.size() == 1)
     return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
 
-  DistanceApproximator approx(*this);
+  // Longitude (x) is scaled by the cos of the latitude so that distances are
+  // correct in lat,lon space
+  float lon_scale = cosf(lat() * kRadPerDeg);
 
-  // Iterate through the pts
-  bool beyond_end = true;   // Need to test past the end point?
-  Vector2 v1;       // Segment vector (v1)
-  Vector2 v2;       // Vector from origin to target (v2)
-  PointLL projpt;   // Projected point along v1
-  float dot;        // Dot product of v1 and v2
-  float comp;       // Component of v2 along v1
-  float dist;       // Squared distance from target to closest point on line
+  DistanceApproximator approx(*this);
+  PointLL point;
   for (size_t index = 0; index < pts.size() - 1; ++index) {
     // Get the current segment
-    const PointLL& p0 = pts[index];
-    const PointLL& p1 = pts[index + 1];
+    const PointLL& u = pts[index];
+    const PointLL& v = pts[index + 1];
 
-    // Construct vector v1 - represents the segment.  Skip 0 length segments
-    v1.Set(p0, p1);
-    if (v1.x() == 0.0f && v1.y() == 0.0f)
-      continue;
+    // Project a onto b where b is the origin vector representing this segment
+    // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
+    auto bx = v.lng() - u.lng();
+    auto by = v.lat() - u.lat();
 
-    // Vector v2 from the segment origin to the target point
-    v2.Set(p0, *this);
+    // Scale longitude when finding the projection. Avoid divided-by-zero
+    // which gives a NaN scale, otherwise comparisons below will fail
+    auto bx2 = bx * lon_scale;
+    auto sq  = bx2 * bx2 + by * by;
+    auto scale = sq > 0 ?  (((lng() - u.lng()) * lon_scale * bx2 +
+                             (lat() - u.lat()) *by) / sq) : 0.f;
 
-    // Find the dot product of v1 and v2.  If less than 0 the segment
-    // origin is the closest point.  Find the distance and continue
-    // to the next segment.
-    dot = v1.Dot(v2);
-    if (dot <= 0.0f) {
-      beyond_end = false;
-      dist = approx.DistanceSquared(p0);
-      if (dist < mindist) {
-        mindist = dist;
-        closest = p0;
-        idx = index;
-      }
-      continue;
-    }
-
-    // Closest point is either beyond the end of the segment or at a point
-    // along the segment. Find the component of v2 along v1
-    comp = dot / v1.Dot(v1);
-
-    // If component >= 1.0 the segment end is the closest point. A future
-    // polyline segment will be closer.  If last segment we need to check
-    // distance to the endpoint.  Set flag so this happens.
-    if (comp >= 1.0f)
-      beyond_end = true;
+    // Projects along the ray before u
+    if (scale <= 0.f) {
+      point = { u.lng(), u.lat() };
+    } // Projects along the ray after v
+    else if (scale >= 1.f) {
+      point = { v.lng(), v.lat() };
+    } // Projects along the ray between u and v
     else {
-      // Closest point is along the segment.  The closest point is found
-      // by adding the projection of v2 onto v1 to the origin point.
-      // The squared distance from this point to the target is then found.
-      // TODO - why not:  *p0 + v1 * comp;
-      beyond_end = false;
-      projpt = p0 + v1 * comp;
-      dist = approx.DistanceSquared(projpt);
-      if (dist < mindist) {
-        mindist = dist;
-        closest = projpt;
-        idx = index;
-      }
+      point = { u.lng() + bx * scale, u.lat() + by * scale };
     }
-  }
 
-  // Test the end point if flag is set - it may be the closest point
-  if (beyond_end) {
-    dist = approx.DistanceSquared(pts[pts.size() - 1]);
-    if (dist < mindist) {
-      mindist = dist;
-      closest = pts.back();
-      idx = (int) (pts.size() - 2);
+    // Check if this point is better
+    const auto sq_distance = approx.DistanceSquared(point);
+    if (sq_distance < mindistsqr) {
+      closest_segment = index;
+      mindistsqr = sq_distance;
+      closest = std::move(point);
     }
   }
-  return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
+  return std::make_tuple(std::move(closest), sqrt(mindistsqr),
+                         closest_segment);
 }
 
 // Calculate the heading from the start of a polyline of lat,lng points to a
