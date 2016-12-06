@@ -37,7 +37,6 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
-  parse_trace_config(request);
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
@@ -120,7 +119,7 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
   // Create a matcher
   std::shared_ptr<meili::MapMatcher> matcher;
   try {
-    matcher.reset(matcher_factory.Create(trace_config));
+    matcher.reset(matcher_factory.Create(config));
   } catch (const std::invalid_argument& ex) {
     //return jsonify_error({400, 499}, request_info, std::string(ex.what()));
     throw std::runtime_error(std::string(ex.what()));
@@ -128,9 +127,7 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
 
   std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
-    sequence.emplace_back(coord, 
-                          matcher->config().get<float>("gps_accuracy"), 
-                          matcher->config().get<float>("search_radius"));
+    sequence.emplace_back(coord, gps_accuracy, search_radius);
   }
 
   // Create the vector of matched path results

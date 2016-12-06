@@ -60,7 +60,9 @@ namespace valhalla {
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), matcher_factory(config), reader(config.get_child("mjolnir")),
-      long_request(config.get<float>("thor.logging.long_request")){
+      long_request(config.get<float>("thor.logging.long_request")),
+      gps_accuracy(config.get<float>("meili.default.gps_accuracy")),
+      search_radius(config.get<float>("meili.default.search_radius")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -240,36 +242,6 @@ namespace valhalla {
         }
       }
 
-    }
-
-    void thor_worker_t::parse_trace_config(const boost::property_tree::ptree& request) {
-      auto costing = request.get<std::string>("costing");
-      trace_config.put<std::string>("mode", costing);
-
-      std::unordered_set<std::string> customizable;
-      for (const auto& item : config.get_child("meili.customizable")) {
-        customizable.insert(item.second.get_value<std::string>());
-      }
-
-      if (customizable.empty()) {
-        return;
-      }
-
-      for (const auto& pair : request.get_child("trace_options")) {
-        const auto& name = pair.first;
-        const auto& values = pair.second.data();
-        if (customizable.find(name) != customizable.end()
-            && !values.empty() ){
-          try {
-            // Possibly throw std::invalid_argument or std::out_of_range
-            trace_config.put<float>(name, std::stof(values));
-          } catch (const std::invalid_argument& ex) {
-            throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float");
-          } catch (const std::out_of_range& ex) {
-            throw std::out_of_range("Invalid argument: " + name + " is out of float range");
-          }
-        }
-      }
     }
 
     void thor_worker_t::cleanup() {

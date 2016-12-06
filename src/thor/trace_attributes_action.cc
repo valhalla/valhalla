@@ -76,7 +76,6 @@ worker_t::result_t thor_worker_t::trace_attributes(
   parse_locations(request);
   parse_shape(request);
   parse_costing(request);
-  parse_trace_config(request);
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
