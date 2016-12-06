@@ -78,6 +78,7 @@ class thor_worker_t {
 
   void parse_locations(const boost::property_tree::ptree& request);
   void parse_shape(const boost::property_tree::ptree& request);
+  void parse_trace_config(const boost::property_tree::ptree& request);
   std::string parse_costing(const boost::property_tree::ptree& request);
 
   prime_server::worker_t::result_t route(
@@ -119,8 +120,7 @@ class thor_worker_t {
   float long_request;
   boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
-  float gps_accuracy;
-  float search_radius;
+  boost::property_tree::ptree trace_config;
 };
 
 }
