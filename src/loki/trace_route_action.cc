@@ -37,25 +37,20 @@ namespace valhalla {
     }
 
     void loki_worker_t::locations_from_shape(boost::property_tree::ptree& request) {
-
-
-      // Grab first point and set heading
-      auto first = Location(shape.front());
-      first.heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
-
-      // Grab last point and set heading
-      auto last = Location(shape.back());
-      last.heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
+      std::vector<Location> locations{shape.front(), shape.back()};
+      locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
+      locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
       // Add first and last locations to request
       boost::property_tree::ptree locations_child;
-      locations_child.push_back(std::make_pair("", first.ToPtree()));
-      locations_child.push_back(std::make_pair("", last.ToPtree()));
+      locations_child.push_back(std::make_pair("", locations.front().ToPtree()));
+      locations_child.push_back(std::make_pair("", locations.back().ToPtree()));
       request.put_child("locations", locations_child);
 
       // Add first and last correlated locations to request
-      request.put_child("correlated_0", loki::Search(first, reader, edge_filter, node_filter).ToPtree(0));
-      request.put_child("correlated_1", loki::Search(last, reader, edge_filter, node_filter).ToPtree(1));
+      auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+      request.put_child("correlated_0", projections.at(locations.front()).ToPtree(0));
+      request.put_child("correlated_1", projections.at(locations.back()).ToPtree(1));
 
     }
 

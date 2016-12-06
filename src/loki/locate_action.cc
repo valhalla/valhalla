@@ -141,14 +141,14 @@ namespace valhalla {
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       auto verbose = request.get<bool>("verbose", false);
+      const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
 
       for(const auto& location : locations) {
         try {
-          auto correlated = loki::Search(location, reader, edge_filter, node_filter);
-          json->emplace_back(serialize(request.get_optional<std::string>("id"), correlated, reader, verbose));
+          json->emplace_back(serialize(request.get_optional<std::string>("id"), projections.at(location), reader, verbose));
         }
         catch(const std::exception& e) {
-          json->emplace_back(serialize(request.get_optional<std::string>("id"), location.latlng_, e.what(), verbose));
+          json->emplace_back(serialize(request.get_optional<std::string>("id"), location.latlng_, "No data found for location", verbose));
         }
       }
 

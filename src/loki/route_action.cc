@@ -111,8 +111,9 @@ namespace valhalla {
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
       try{
+        const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
-          auto correlated = loki::Search(locations[i], reader, edge_filter, node_filter);
+          const auto& correlated = projections.at(locations[i]);
           request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
@@ -126,7 +127,7 @@ namespace valhalla {
           }
         }
       }
-      catch(const std::runtime_error&) {
+      catch(const std::exception&) {
         throw valhalla_exception_t{400, 171};
       }
 

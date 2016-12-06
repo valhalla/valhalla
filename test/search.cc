@@ -144,15 +144,14 @@ void make_tile() {
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
   const std::vector<PathLocation::PathEdge>& expected_edges){
-
+  using namespace valhalla::loki;
   //make the config file
   std::stringstream json; json << "{ \"tile_dir\": \"test/fake_tiles\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
   valhalla::baldr::GraphReader reader(conf);
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader,
-    valhalla::loki::PassThroughEdgeFilter, valhalla::loki::PassThroughNodeFilter);
+  const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
 
   if((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)
     throw std::runtime_error(expected_node ? "Should've snapped to node" : "Shouldn't've snapped to node");
