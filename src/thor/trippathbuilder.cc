@@ -502,24 +502,34 @@ TripPath TripPathBuilder::Build(
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
     // Add trip edge
-    auto trip_edge = AddTripEdge(path.front().edgeid, path.front().trip_id,
-                       0, path.front().mode,
-                       travel_types[static_cast<int>(path.front().mode)],
-                       edge, trip_path.add_node(), tile,
-                       std::abs(end_pct - start_pct));
-    trip_edge->set_begin_shape_index(0);
-    trip_edge->set_end_shape_index(shape.size()-1);
+    auto trip_edge = AddTripEdge(
+        controller, path.front().edgeid, path.front().trip_id, 0,
+        path.front().mode, travel_types[static_cast<int>(path.front().mode)],
+        edge, trip_path.add_node(), tile, std::abs(end_pct - start_pct));
+
+    // Set begin shape index if requested
+    if (controller.attributes.at(kEdgeBeginShapeIndex))
+      trip_edge->set_begin_shape_index(0);
+    // Set end shape index if requested
+    if (controller.attributes.at(kEdgeEndShapeIndex))
+      trip_edge->set_end_shape_index(shape.size()-1);
+
     auto* node = trip_path.add_node();
-    node->set_elapsed_time(path.front().elapsed_time);
+    if (controller.attributes.at(kNodeElapsedTime))
+      node->set_elapsed_time(path.front().elapsed_time);
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
-    if (end_tile == nullptr)
-      node->set_admin_index(0);
+    if (end_tile == nullptr) {
+      if (controller.attributes.at(kNodeaAdminIndex))
+          node->set_admin_index(0);
+    }
     else {
-      node->set_admin_index(
-          GetAdminIndex(
-              end_tile->admininfo(end_tile->node(edge->endnode())->admin_index()),
+      if (controller.attributes.at(kNodeaAdminIndex)) {
+        node->set_admin_index(
+            GetAdminIndex(
+                end_tile->admininfo(end_tile->node(edge->endnode())->admin_index()),
                 admin_info_map, admin_info_list));
+      }
     }
 
     uint32_t elapsedtime = node->elapsed_time();
@@ -568,7 +578,10 @@ TripPath TripPathBuilder::Build(
     max_ll->set_lat(bbox.maxy());
     max_ll->set_lng(bbox.maxx());
 
-    trip_path.set_shape(encode<std::vector<PointLL> >(shape));
+    // Set shape if requested
+    if (controller.attributes.at(kShape))
+      trip_path.set_shape(encode<std::vector<PointLL> >(shape));
+
     // Assign the trip path admins
     AssignAdmins(trip_path, admin_info_list);
     return trip_path;
@@ -604,18 +617,24 @@ TripPath TripPathBuilder::Build(
     // Set node attributes - only set if they are true since they are optional
     const GraphTile* start_tile = graphreader.GetGraphTile(startnode);
     const NodeInfo* node = start_tile->node(startnode);
-    trip_node->set_type(GetTripPathNodeType(node->type()));
+    if (controller.attributes.at(kNodeType))
+      trip_node->set_type(GetTripPathNodeType(node->type()));
 
-    if (node->intersection() == IntersectionType::kFork)
-      trip_node->set_fork(true);
+    if (node->intersection() == IntersectionType::kFork) {
+      if (controller.attributes.at(kNodeFork))
+        trip_node->set_fork(true);
+    }
 
     // Assign the elapsed time from the start of the leg
-    trip_node->set_elapsed_time(elapsedtime);
+    if (controller.attributes.at(kNodeElapsedTime))
+      trip_node->set_elapsed_time(elapsedtime);
 
     // Assign the admin index
-    trip_node->set_admin_index(GetAdminIndex(
-            start_tile->admininfo(node->admin_index()),
-            admin_info_map, admin_info_list));
+    if (controller.attributes.at(kNodeaAdminIndex)) {
+      trip_node->set_admin_index(GetAdminIndex(
+          start_tile->admininfo(node->admin_index()),
+          admin_info_map, admin_info_list));
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Add transit information if this is a transit stop. TODO - can we move
@@ -735,17 +754,21 @@ TripPath TripPathBuilder::Build(
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge, trip_id, block_id, mode,
-                                           travel_type, directededge, trip_node,
-                                           graphtile, length_pct);
+    TripPath_Edge* trip_edge = AddTripEdge(controller, edge, trip_id, block_id,
+                                           mode, travel_type, directededge,
+                                           trip_node, graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
     auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
     if (is_first_edge) {
-      trip_edge->set_begin_shape_index(0);
+      // Set begin shape index if requested
+      if (controller.attributes.at(kEdgeBeginShapeIndex))
+        trip_edge->set_begin_shape_index(0);
     } else {
-      trip_edge->set_begin_shape_index(trip_shape.size() - 1);
+      // Set begin shape index if requested
+      if (controller.attributes.at(kEdgeBeginShapeIndex))
+        trip_edge->set_begin_shape_index(trip_shape.size() - 1);
     }
 
     // We need to clip the shape if its at the beginning or end and isnt a full length
@@ -769,7 +792,9 @@ TripPath TripPathBuilder::Build(
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1,
                           edgeinfo.shape().rend());
     }
-    trip_edge->set_end_shape_index(trip_shape.size() - 1);
+    // Set end shape index if requested
+    if (controller.attributes.at(kEdgeEndShapeIndex))
+      trip_edge->set_end_shape_index(trip_shape.size() - 1);
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
@@ -823,15 +848,17 @@ TripPath TripPathBuilder::Build(
                   de2->trans_up() || de2->trans_down()) {
                 continue;
               }
-              AddTripIntersectingEdge(de->localedgeidx(), prior_opp_local_index,
-                      directededge->localedgeidx(), nodeinfo2,
-                      trip_node, de2);
+              AddTripIntersectingEdge(controller, de->localedgeidx(),
+                                      prior_opp_local_index,
+                                      directededge->localedgeidx(), nodeinfo2,
+                                      trip_node, de2);
             }
           } else {
             // On the same hierarchy level and not on the path
-            AddTripIntersectingEdge(de->localedgeidx(), prior_opp_local_index,
-                                directededge->localedgeidx(), nodeinfo,
-                                trip_node, de);
+            AddTripIntersectingEdge(controller, de->localedgeidx(),
+                                    prior_opp_local_index,
+                                    directededge->localedgeidx(), nodeinfo,
+                                    trip_node, de);
           }
         }
       } else {
@@ -842,9 +869,9 @@ TripPath TripPathBuilder::Build(
           // Add intersecting edge if this edge is not on the path
           if ((edge_idx != prior_opp_local_index) &&
               (edge_idx != directededge->localedgeidx())) {
-            AddTripIntersectingEdge(edge_idx, prior_opp_local_index,
-                                  directededge->localedgeidx(), nodeinfo,
-                                  trip_node, nullptr);
+            AddTripIntersectingEdge(controller, edge_idx, prior_opp_local_index,
+                                    directededge->localedgeidx(), nodeinfo,
+                                    trip_node, nullptr);
           }
         }
       }
@@ -897,10 +924,13 @@ TripPath TripPathBuilder::Build(
 
   // Add the last node
   auto* node = trip_path.add_node();
-  node->set_admin_index(GetAdminIndex(
-          last_tile->admininfo(last_tile->node(startnode)->admin_index()),
-          admin_info_map, admin_info_list));
-  node->set_elapsed_time(elapsedtime);
+  if (controller.attributes.at(kNodeaAdminIndex)) {
+    node->set_admin_index(GetAdminIndex(
+        last_tile->admininfo(last_tile->node(startnode)->admin_index()),
+        admin_info_map, admin_info_list));
+  }
+  if (controller.attributes.at(kNodeElapsedTime))
+    node->set_elapsed_time(elapsedtime);
 
   // Assign the admins
   AssignAdmins(trip_path, admin_info_list);
@@ -914,16 +944,17 @@ TripPath TripPathBuilder::Build(
   max_ll->set_lat(bbox.maxy());
   max_ll->set_lng(bbox.maxx());
 
-  // Encode shape and add to trip path.
-  std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
-  trip_path.set_shape(encoded_shape_);
+  // Set shape if requested
+  if (controller.attributes.at(kShape))
+    trip_path.set_shape(encode<std::vector<PointLL> >(trip_shape));
 
   //hand it back
   return trip_path;
 }
 
 // Add a trip edge to the trip node and set its attributes
-TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
+TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller,
+                                            const GraphId& edge,
                                             const uint32_t trip_id,
                                             const uint32_t block_id,
                                             const sif::TravelMode mode,
@@ -938,18 +969,22 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
 
   TripPath_Edge* trip_edge = trip_node->mutable_edge();
 
-  // Get the edgeinfo and list of names - add to the trip edge.
+  // Get the edgeinfo
   auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
-  std::vector<std::string> names = edgeinfo.GetNames();
-  for (const auto& name : names) {
-    trip_edge->add_name(name);
+
+  // Add names to edge if requested
+  if (controller.attributes.at(kEdgeNames)) {
+    std::vector<std::string> names = edgeinfo.GetNames();
+    for (const auto& name : names) {
+      trip_edge->add_name(name);
+    }
   }
 
 #ifdef LOGGING_LEVEL_TRACE
   LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
 
-  // Set the exits (if the directed edge has exit sign information)
+  // Set the exits (if the directed edge has exit sign information) and if requested
   if (directededge->exitsign()) {
     std::vector<SignInfo> signs = graphtile->GetSigns(idx);
     if (!signs.empty()) {
@@ -957,19 +992,23 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
       for (const auto& sign : signs) {
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
-            trip_exit->add_exit_number(sign.text());
+            if (controller.attributes.at(kEdgeSignExitNumber))
+              trip_exit->add_exit_number(sign.text());
             break;
           }
           case Sign::Type::kExitBranch: {
-            trip_exit->add_exit_branch(sign.text());
+            if (controller.attributes.at(kEdgeSignExitBranch))
+              trip_exit->add_exit_branch(sign.text());
             break;
           }
           case Sign::Type::kExitToward: {
-            trip_exit->add_exit_toward(sign.text());
+            if (controller.attributes.at(kEdgeSignExitToward))
+              trip_exit->add_exit_toward(sign.text());
             break;
           }
           case Sign::Type::kExitName: {
-            trip_exit->add_exit_name(sign.text());
+            if (controller.attributes.at(kEdgeSignExitName))
+              trip_exit->add_exit_name(sign.text());
             break;
           }
         }
@@ -977,13 +1016,19 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
     }
   }
 
-  // Set road class
-  trip_edge->set_road_class(
-      GetTripPathRoadClass(directededge->classification()));
+  // Set road class if requested
+  if (controller.attributes.at(kEdgeRoadClass)) {
+    trip_edge->set_road_class(
+        GetTripPathRoadClass(directededge->classification()));
+  }
 
-  // Set speed and length
-  trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
-  trip_edge->set_speed(directededge->speed());
+  // Set length if requested
+  if (controller.attributes.at(kEdgeLength))
+    trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
+
+  // Set speed if requested
+  if (controller.attributes.at(kEdgeSpeed))
+    trip_edge->set_speed(directededge->speed());
 
   uint8_t kAccess = 0;
   if (mode == sif::TravelMode::kBicycle)
@@ -993,125 +1038,165 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
   else if (mode == sif::TravelMode::kPedestrian || mode == sif::TravelMode::kPublicTransit)
     kAccess = kPedestrianAccess;
 
-  // Test whether edge is traversed forward or reverse and set driveability and heading
+  // Test whether edge is traversed forward or reverse
   if (directededge->forward()) {
-    if ((directededge->forwardaccess() & kAccess)
-        && (directededge->reverseaccess() & kAccess))
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kBoth);
-    else if ((directededge->forwardaccess() & kAccess)
-        && !(directededge->reverseaccess() & kAccess))
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kForward);
-    else if (!(directededge->forwardaccess() & kAccess)
-        && (directededge->reverseaccess() & kAccess))
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kBackward);
-    else
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kNone);
+    // Set traversability for forward directededge if requested
+    if (controller.attributes.at(kEdgeTraversability)) {
+      if ((directededge->forwardaccess() & kAccess)
+          && (directededge->reverseaccess() & kAccess))
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kBoth);
+      else if ((directededge->forwardaccess() & kAccess)
+          && !(directededge->reverseaccess() & kAccess))
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kForward);
+      else if (!(directededge->forwardaccess() & kAccess)
+          && (directededge->reverseaccess() & kAccess))
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kBackward);
+      else
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kNone);
+    }
 
-    trip_edge->set_begin_heading(
-        std::round(
-            PointLL::HeadingAlongPolyline(
-                edgeinfo.shape(),
-                GetOffsetForHeading(directededge->classification(),
-                                    directededge->use()))));
-    trip_edge->set_end_heading(
-        std::round(
-            PointLL::HeadingAtEndOfPolyline(
-                edgeinfo.shape(),
-                GetOffsetForHeading(directededge->classification(),
-                                    directededge->use()))));
+    // Set begin heading if requested
+    if (controller.attributes.at(kEdgeBeginHeading)) {
+      trip_edge->set_begin_heading(
+          std::round(
+              PointLL::HeadingAlongPolyline(
+                  edgeinfo.shape(),
+                  GetOffsetForHeading(directededge->classification(),
+                                      directededge->use()))));
+    }
+
+    // Set end heading if requested
+    if (controller.attributes.at(kEdgeEndHeading)) {
+      trip_edge->set_end_heading(
+          std::round(
+              PointLL::HeadingAtEndOfPolyline(
+                  edgeinfo.shape(),
+                  GetOffsetForHeading(directededge->classification(),
+                                      directededge->use()))));
+    }
   } else {
-    // Reverse driveability and heading
-    if ((directededge->forwardaccess() & kAccess)
-        && (directededge->reverseaccess() & kAccess))
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kBoth);
-    else if (!(directededge->forwardaccess() & kAccess)
-        && (directededge->reverseaccess() & kAccess))
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kForward);
-    else if ((directededge->forwardaccess() & kAccess)
-        && !(directededge->reverseaccess() & kAccess))
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kBackward);
-    else
-      trip_edge->set_traversability(
-          TripPath_Traversability::TripPath_Traversability_kNone);
+    // Set traversability for reverse directededge if requested
+    if (controller.attributes.at(kEdgeTraversability)) {
+      if ((directededge->forwardaccess() & kAccess)
+          && (directededge->reverseaccess() & kAccess))
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kBoth);
+      else if (!(directededge->forwardaccess() & kAccess)
+          && (directededge->reverseaccess() & kAccess))
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kForward);
+      else if ((directededge->forwardaccess() & kAccess)
+          && !(directededge->reverseaccess() & kAccess))
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kBackward);
+      else
+        trip_edge->set_traversability(
+            TripPath_Traversability::TripPath_Traversability_kNone);
+    }
 
-    trip_edge->set_begin_heading(
-        std::round(
-            fmod(
-                (PointLL::HeadingAtEndOfPolyline(
-                    edgeinfo.shape(),
-                    GetOffsetForHeading(directededge->classification(),
-                                        directededge->use())) + 180.0f),
-                360)));
+    // Set begin heading if requested
+    if (controller.attributes.at(kEdgeBeginHeading)) {
+      trip_edge->set_begin_heading(
+          std::round(
+              fmod(
+                  (PointLL::HeadingAtEndOfPolyline(
+                      edgeinfo.shape(),
+                      GetOffsetForHeading(directededge->classification(),
+                                          directededge->use())) + 180.0f),
+                  360)));
+    }
 
-    trip_edge->set_end_heading(
-        std::round(
-            fmod(
-                (PointLL::HeadingAlongPolyline(
-                    edgeinfo.shape(),
-                    GetOffsetForHeading(directededge->classification(),
-                                        directededge->use())) + 180.0f),
-                360)));
+    // Set end heading if requested
+    if (controller.attributes.at(kEdgeEndHeading)) {
+      trip_edge->set_end_heading(
+          std::round(
+              fmod(
+                  (PointLL::HeadingAlongPolyline(
+                      edgeinfo.shape(),
+                      GetOffsetForHeading(directededge->classification(),
+                                          directededge->use())) + 180.0f),
+                  360)));
+    }
   }
 
-  // Set the trip path use based on directed edge use
-  trip_edge->set_use(GetTripPathUse(directededge->use()));
+  // Set the trip path use based on directed edge use if requested
+  if (controller.attributes.at(kEdgeUse))
+    trip_edge->set_use(GetTripPathUse(directededge->use()));
 
-  if (directededge->toll())
+  // Set toll flag if requested
+  if (directededge->toll() && controller.attributes.at(kEdgeToll))
     trip_edge->set_toll(true);
 
-  if (directededge->unpaved())
+  // Set unpaved flag if requested
+  if (directededge->unpaved() && controller.attributes.at(kEdgeUnpaved))
     trip_edge->set_unpaved(true);
 
-  if (directededge->tunnel())
+  // Set tunnel flag if requested
+  if (directededge->tunnel() && controller.attributes.at(kEdgeTunnel))
     trip_edge->set_tunnel(true);
 
-  if (directededge->bridge())
+  // Set bridge flag if requested
+  if (directededge->bridge() && controller.attributes.at(kEdgeBridge))
     trip_edge->set_bridge(true);
 
-  if (directededge->roundabout())
+  // Set roundabout flag if requested
+  if (directededge->roundabout() && controller.attributes.at(kEdgeRoundabout))
     trip_edge->set_roundabout(true);
 
-  if (directededge->internal())
+  // Set internal intersection flag if requested
+  if (directededge->internal() && controller.attributes.at(kEdgeInternalIntersection))
     trip_edge->set_internal_intersection(true);
 
-  // Set drive_on_right the right way
-  trip_edge->set_drive_on_right(directededge->drive_on_right());
+  // Set drive_on_right if requested
+  if (controller.attributes.at(kEdgeDriveOnRight))
+    trip_edge->set_drive_on_right(directededge->drive_on_right());
+
+  // TODO what about end_node_index
 
   // Set the mode and travel type
   if (mode == sif::TravelMode::kBicycle) {
-    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
-    trip_edge->set_bicycle_type(GetTripPathBicycleType(travel_type));
+    if (controller.attributes.at(kEdgeTravelMode))
+      trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
+    if (controller.attributes.at(kEdgeBicycleType))
+      trip_edge->set_bicycle_type(GetTripPathBicycleType(travel_type));
   } else if (mode == sif::TravelMode::kDrive) {
-    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kDrive);
-    trip_edge->set_vehicle_type(GetTripPathVehicleType(travel_type));
+    if (controller.attributes.at(kEdgeTravelMode))
+      trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kDrive);
+    if (controller.attributes.at(kEdgeVehicleType))
+      trip_edge->set_vehicle_type(GetTripPathVehicleType(travel_type));
   } else if (mode == sif::TravelMode::kPedestrian) {
-    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
-    trip_edge->set_pedestrian_type(GetTripPathPedestrianType(travel_type));
+    if (controller.attributes.at(kEdgeTravelMode))
+      trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
+    if (controller.attributes.at(kEdgePedestrianType))
+      trip_edge->set_pedestrian_type(GetTripPathPedestrianType(travel_type));
   } else if (mode == sif::TravelMode::kPublicTransit) {
-    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kTransit);
+    if (controller.attributes.at(kEdgeTravelMode))
+      trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kTransit);
   }
 
-  // Set edge id (graphid value)
-  trip_edge->set_id(edge.value);
+  // Set edge id (graphid value) if requested
+  if (controller.attributes.at(kEdgeId))
+    trip_edge->set_id(edge.value);
 
-  // Set way id (base data id)
-  trip_edge->set_way_id(edgeinfo.wayid());
+  // Set way id (base data id) if requested
+  if (controller.attributes.at(kEdgeWayId))
+    trip_edge->set_way_id(edgeinfo.wayid());
 
-  // Set weighted grade
-  trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
+  // Set weighted grade if requested
+  if (controller.attributes.at(kEdgeWeightedGrade))
+    trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
 
-  // Set maximum upward grade
-  trip_edge->set_max_upward_grade(directededge->max_up_slope());
+  // Set maximum upward grade if requested
+  if (controller.attributes.at(kEdgeMaxUpwardGrade))
+    trip_edge->set_max_upward_grade(directededge->max_up_slope());
 
-  // Set maximum downward grade
-  trip_edge->set_max_downward_grade(directededge->max_down_slope());
+  // Set maximum downward grade if requested
+  if (controller.attributes.at(kEdgeMaxDownwardGrade))
+    trip_edge->set_max_downward_grade(directededge->max_down_slope());
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information
@@ -1139,8 +1224,11 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
           transit_departure->routeid());
 
       if (transit_route) {
-        trip_edge->set_transit_type(GetTripPathTransitType(
-              transit_route->route_type()));
+        // Set transit type if requested
+        if (controller.attributes.at(kEdgeTransitType)) {
+          trip_edge->set_transit_type(
+              GetTripPathTransitType(transit_route->route_type()));
+        }
 
         // Set onestop_id
         if (transit_route->one_stop_offset())
@@ -1187,7 +1275,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const GraphId& edge,
   return trip_edge;
 }
 
-void TripPathBuilder::AddTripIntersectingEdge(uint32_t local_edge_index,
+void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controller,
+                                              uint32_t local_edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,
                                               const baldr::NodeInfo* nodeinfo,

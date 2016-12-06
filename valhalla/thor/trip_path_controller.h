@@ -26,13 +26,16 @@ constexpr auto kEdgeRoundabout = "edge.roundabout";
 constexpr auto kEdgeInternalIntersection = "edge.internal_intersection";
 constexpr auto kEdgeDriveOnRight = "edge.drive_on_right";
 constexpr auto kEdgeEndNodeIndex = "edge.end_node_index";
-constexpr auto kEdgeSign = "edge.sign";
+constexpr auto kEdgeSignExitNumber = "edge.sign.exit_number";
+constexpr auto kEdgeSignExitBranch = "edge.sign.exit_branch";
+constexpr auto kEdgeSignExitToward = "edge.sign.exit_toward";
+constexpr auto kEdgeSignExitName = "edge.sign.exit_name";
 constexpr auto kEdgeTravelMode = "edge.travel_mode";
 constexpr auto kEdgeVehicleType = "edge.vehicle_type";
 constexpr auto kEdgePedestrianType = "edge.pedestrian_type";
 constexpr auto kEdgeBicycleType = "edge.bicycle_type";
 constexpr auto kEdgeTransitType = "edge.transit_type";
-constexpr auto kEdgeTransitRouteInfo = "edge.transit_route_info";
+//constexpr auto kEdgeTransitRouteInfo = "edge.transit_route_info"; // TODO expand
 constexpr auto kEdgeId = "edge.id";
 constexpr auto kEdgeWayId = "edge.way_id";
 constexpr auto kEdgeWeightedGrade = "edge.weighted_grade";
@@ -40,17 +43,17 @@ constexpr auto kEdgeMaxUpwardGrade = "edge.max_upward_grade";
 constexpr auto kEdgeMaxDownwardGrade = "edge.max_downward_grade";
 
 // Node keys
-constexpr auto kNodeIntersectingEdge = "node.intersecting_edge"; //TODO expand
+//constexpr auto kNodeIntersectingEdge = "node.intersecting_edge";  // TODO expand
 constexpr auto kNodeElapsedTime = "node.elapsed_time";
 constexpr auto kNodeaAdminIndex = "node.admin_index";
 constexpr auto kNodeType = "node.type";
 constexpr auto kNodeFork = "node.fork";
-constexpr auto kNodetransitStopInfo = "node.transit_stop_info"; // TODO expand
+//constexpr auto kNodetransitStopInfo = "node.transit_stop_info";   // TODO expand
 
 // Top level: admin list, full shape, and shape bounding box keys
-constexpr auto kAdmin = "admin";
+//constexpr auto kAdmin = "admin";                                  // TODO expand
 constexpr auto kShape = "shape";
-constexpr auto kBoundingBox = "bounding_box";
+//constexpr auto kBoundingBox = "bounding_box";                     // TODO expand
 
 
 /**
