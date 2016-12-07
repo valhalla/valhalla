@@ -8,53 +8,87 @@ namespace valhalla {
 namespace thor {
 
 // Edge keys
-constexpr auto kEdgeNames = "edge.names";
-constexpr auto kEdgeLength = "edge.length";
-constexpr auto kEdgeSpeed = "edge.speed";
-constexpr auto kEdgeRoadClass = "edge.road_class";
-constexpr auto kEdgeBeginHeading = "edge.begin_heading";
-constexpr auto kEdgeEndHeading = "edge.end_heading";
-constexpr auto kEdgeBeginShapeIndex = "edge.begin_shape_index";
-constexpr auto kEdgeEndShapeIndex = "edge.end_shape_index";
-constexpr auto kEdgeTraversability = "edge.traversability";
-constexpr auto kEdgeUse = "edge.use";
-constexpr auto kEdgeToll = "edge.toll";
-constexpr auto kEdgeUnpaved = "edge.unpaved";
-constexpr auto kEdgeTunnel = "edge.tunnel";
-constexpr auto kEdgeBridge = "edge.bridge";
-constexpr auto kEdgeRoundabout = "edge.roundabout";
-constexpr auto kEdgeInternalIntersection = "edge.internal_intersection";
-constexpr auto kEdgeDriveOnRight = "edge.drive_on_right";
-constexpr auto kEdgeEndNodeIndex = "edge.end_node_index";
-constexpr auto kEdgeSignExitNumber = "edge.sign.exit_number";
-constexpr auto kEdgeSignExitBranch = "edge.sign.exit_branch";
-constexpr auto kEdgeSignExitToward = "edge.sign.exit_toward";
-constexpr auto kEdgeSignExitName = "edge.sign.exit_name";
-constexpr auto kEdgeTravelMode = "edge.travel_mode";
-constexpr auto kEdgeVehicleType = "edge.vehicle_type";
-constexpr auto kEdgePedestrianType = "edge.pedestrian_type";
-constexpr auto kEdgeBicycleType = "edge.bicycle_type";
-constexpr auto kEdgeTransitType = "edge.transit_type";
-//constexpr auto kEdgeTransitRouteInfo = "edge.transit_route_info"; // TODO expand
-constexpr auto kEdgeId = "edge.id";
-constexpr auto kEdgeWayId = "edge.way_id";
-constexpr auto kEdgeWeightedGrade = "edge.weighted_grade";
-constexpr auto kEdgeMaxUpwardGrade = "edge.max_upward_grade";
-constexpr auto kEdgeMaxDownwardGrade = "edge.max_downward_grade";
+const std::string kEdgeNames = "edge.names";
+const std::string kEdgeLength = "edge.length";
+const std::string kEdgeSpeed = "edge.speed";
+const std::string kEdgeRoadClass = "edge.road_class";
+const std::string kEdgeBeginHeading = "edge.begin_heading";
+const std::string kEdgeEndHeading = "edge.end_heading";
+const std::string kEdgeBeginShapeIndex = "edge.begin_shape_index";
+const std::string kEdgeEndShapeIndex = "edge.end_shape_index";
+const std::string kEdgeTraversability = "edge.traversability";
+const std::string kEdgeUse = "edge.use";
+const std::string kEdgeToll = "edge.toll";
+const std::string kEdgeUnpaved = "edge.unpaved";
+const std::string kEdgeTunnel = "edge.tunnel";
+const std::string kEdgeBridge = "edge.bridge";
+const std::string kEdgeRoundabout = "edge.roundabout";
+const std::string kEdgeInternalIntersection = "edge.internal_intersection";
+const std::string kEdgeDriveOnRight = "edge.drive_on_right";
+const std::string kEdgeEndNodeIndex = "edge.end_node_index";
+const std::string kEdgeSignExitNumber = "edge.sign.exit_number";
+const std::string kEdgeSignExitBranch = "edge.sign.exit_branch";
+const std::string kEdgeSignExitToward = "edge.sign.exit_toward";
+const std::string kEdgeSignExitName = "edge.sign.exit_name";
+const std::string kEdgeTravelMode = "edge.travel_mode";
+const std::string kEdgeVehicleType = "edge.vehicle_type";
+const std::string kEdgePedestrianType = "edge.pedestrian_type";
+const std::string kEdgeBicycleType = "edge.bicycle_type";
+const std::string kEdgeTransitType = "edge.transit_type";
+const std::string kEdgeTransitRouteInfoOnestopId = "edge.transit_route_info.onestop_id";
+const std::string kEdgeTransitRouteInfoBlockId = "edge.transit_route_info.block_id";
+const std::string kEdgeTransitRouteInfoTripId = "edge.transit_route_info.trip_id";
+const std::string kEdgeTransitRouteInfoShortName = "edge.transit_route_info.short_name";
+const std::string kEdgeTransitRouteInfoLongName = "edge.transit_route_info.long_name";
+const std::string kEdgeTransitRouteInfoHeadsign = "edge.transit_route_info.headsign";
+const std::string kEdgeTransitRouteInfoColor = "edge.transit_route_info.color";
+const std::string kEdgeTransitRouteInfoTextColor = "edge.transit_route_info.text_color";
+const std::string kEdgeTransitRouteInfoDescription = "edge.transit_route_info.description";
+const std::string kEdgeTransitRouteInfoOperatorOnestopId = "edge.transit_route_info.operator_onestop_id";
+const std::string kEdgeTransitRouteInfoOperatorName = "edge.transit_route_info.operator_name";
+const std::string kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
+const std::string kEdgeId = "edge.id";
+const std::string kEdgeWayId = "edge.way_id";
+const std::string kEdgeWeightedGrade = "edge.weighted_grade";
+const std::string kEdgeMaxUpwardGrade = "edge.max_upward_grade";
+const std::string kEdgeMaxDownwardGrade = "edge.max_downward_grade";
+
+// Node key prefix
+const std::string kNodeKeyPrefix = "node.";
 
 // Node keys
-//constexpr auto kNodeIntersectingEdge = "node.intersecting_edge";  // TODO expand
-constexpr auto kNodeElapsedTime = "node.elapsed_time";
-constexpr auto kNodeaAdminIndex = "node.admin_index";
-constexpr auto kNodeType = "node.type";
-constexpr auto kNodeFork = "node.fork";
-//constexpr auto kNodetransitStopInfo = "node.transit_stop_info";   // TODO expand
+const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
+const std::string kNodeIntersectingEdgePrevNameConsistency = "node.intersecting_edge.prev_name_consistency";
+const std::string kNodeIntersectingEdgeCurrNameConsistency = "node.intersecting_edge.curr_name_consistency";
+const std::string kNodeIntersectingEdgeDriveability = "node.intersecting_edge.driveability";
+const std::string kNodeIntersectingEdgeCyclability = "node.intersecting_edge.cyclability";
+const std::string kNodeIntersectingEdgeWalkability = "node.intersecting_edge.walkability";
+const std::string kNodeElapsedTime = "node.elapsed_time";
+const std::string kNodeaAdminIndex = "node.admin_index";
+const std::string kNodeType = "node.type";
+const std::string kNodeFork = "node.fork";
+const std::string kNodeTransitStopInfoType = "node.transit_stop_info.type";
+const std::string kNodeTransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
+const std::string kNodetransitStopInfoName = "node.transit_stop_info.name";
+const std::string kNodeTransitStopInfoArrivalDateTime = "node.transit_stop_info.arrival_date_time";
+const std::string kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
+const std::string kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
+const std::string kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
+const std::string kNodeTransitStopInfoLat = "node.transit_stop_info.lat";
+const std::string kNodeTransitStopInfoLon = "node.transit_stop_info.lon";
 
 // Top level: admin list, full shape, and shape bounding box keys
-//constexpr auto kAdmin = "admin";                                  // TODO expand
-constexpr auto kShape = "shape";
-//constexpr auto kBoundingBox = "bounding_box";                     // TODO expand
+const std::string kAdminCountryCode = "admin.country_code";
+const std::string kAdminCountryText = "admin.country_text";
+const std::string kAdminStateCode = "admin.state_code";
+const std::string kAdminStateText = "admin.state_text";
+const std::string kShape = "shape";
+const std::string kBoundingBoxMinLat = "bounding_box.min_lat";
+const std::string kBoundingBoxMinLon = "bounding_box.min_lon";
+const std::string kBoundingBoxMaxLat = "bounding_box.max_lat";
+const std::string kBoundingBoxMaxLon = "bounding_box.max_lon";
 
+// TODO do we need location and other top level?
 
 /**
  * Trip path controller for attributes
@@ -82,6 +116,11 @@ struct TripPathController {
    * Disable all of the attributes.
    */
   void disable_all();
+
+  /**
+   * Returns true if any node attribute is enabled, false otherwise.
+   */
+  bool node_attribute_enabled() const;
 
   std::unordered_map<std::string, bool> attributes;
 };

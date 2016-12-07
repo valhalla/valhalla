@@ -66,6 +66,44 @@ void TestDisableAll() {
   TryDisableAll();
 }
 
+void TryNodeAttributeEnabled(const TripPathController& controller,
+                             bool expected_response) {
+  // If node_attribute_enabled does not equal expected response then throw error
+  if (controller.node_attribute_enabled() != expected_response) {
+    throw runtime_error(
+        "Incorrect node_attribute_enabled response - expected: "
+            + std::string(expected_response ? "true" : "false"));
+  }
+}
+
+void TestNodeAttributeEnabled() {
+  TripPathController controller;
+
+  // Test default
+  TryNodeAttributeEnabled(controller, true);
+
+  // Test all node enabled
+  controller.enable_all();
+  TryNodeAttributeEnabled(controller, true);
+
+  // Test all node disabled
+  controller.disable_all();
+  TryNodeAttributeEnabled(controller, false);
+
+  // Test one node enabled
+  controller.attributes.at(kNodeType) = true;
+  TryNodeAttributeEnabled(controller, true);
+
+  // Test some node enabled
+  controller.attributes.at(kNodeType) = false;
+  controller.attributes.at(kNodeIntersectingEdgeBeginHeading) = true;
+  controller.attributes.at(kNodeTransitStopInfoType) = true;
+  controller.attributes.at(kNodeElapsedTime) = true;
+  controller.attributes.at(kNodeFork) = true;
+  TryNodeAttributeEnabled(controller, true);
+
+}
+
 }
 
 int main() {
@@ -82,6 +120,9 @@ int main() {
 
   // Test disable_all
   suite.test(TEST_CASE(TestDisableAll));
+
+  // Test node_attribute_enabled
+  suite.test(TEST_CASE(TestNodeAttributeEnabled));
 
   return suite.tear_down();
 }
