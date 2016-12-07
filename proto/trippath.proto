@@ -158,6 +158,18 @@ message TripPath {
     optional string operator_url = 12;
   }
 
+  enum CycleLane {
+    kShared = 1;    // Shared use lane (could be shared with pedestrians)
+    kDedicated = 2; // Dedicated cycle lane
+    kSeparated = 3; // A separate cycle lane (physical separation from the main carriageway
+  }
+
+  enum Sidewalk {
+    kLeft = 1;
+    kRight = 2;
+    kBothSides = 3;
+  }
+
   message Edge {
     repeated string name = 1;               // street names
     optional float length = 2;              // km
@@ -176,7 +188,7 @@ message TripPath {
     optional bool roundabout = 15;
     optional bool internal_intersection = 16;
     optional bool drive_on_right = 17 [default = true];
-    optional uint32 end_node_index = 18;
+    optional uint32 surface = 18;
     optional Sign sign = 19;
     optional TravelMode travel_mode = 20;
     optional VehicleType vehicle_type = 21;
@@ -189,6 +201,14 @@ message TripPath {
     optional float weighted_grade = 28;
     optional int32 max_upward_grade = 29;
     optional int32 max_downward_grade = 30;
+    optional uint32 lane_count = 31;
+    optional CycleLane cycle_lane = 32;
+    optional uint32 bicycle_network = 33;
+    optional Sidewalk sidewalk = 34;
+    optional uint32 density = 35;
+    optional uint32 speed_limit = 36;
+    optional float truck_speed = 37;         // km/h
+    optional bool truck_route = 38;
   }
 
   message IntersectingEdge {
@@ -246,13 +266,14 @@ message TripPath {
     optional string state_text = 4;
   }
   
-  optional uint64 trip_id = 1;
-  optional uint32 leg_id = 2;
-  optional uint32 leg_count = 3;
-  repeated Location location = 4;
-  repeated Node node = 5;
-  repeated Admin admin = 6;
-  optional string shape = 7;
-  optional BoundingBox bbox = 8;
+  optional uint64 osm_changeset = 1;
+  optional uint64 trip_id = 2;
+  optional uint32 leg_id = 3;
+  optional uint32 leg_count = 4;
+  repeated Location location = 5;
+  repeated Node node = 6;
+  repeated Admin admin = 7;
+  optional string shape = 8;
+  optional BoundingBox bbox = 9;
 }
 

@@ -454,7 +454,6 @@ void PopulateEdge(TripPath_Edge* edge, std::vector<std::string> names,
   edge->set_bridge(bridge);
   edge->set_roundabout(roundabout);
   edge->set_internal_intersection(internal_intersection);
-  edge->set_end_node_index(end_node_index);
   TripPath_Sign* sign = edge->mutable_sign();
   for (auto& exit_number : exit_numbers) {
     sign->add_exit_number(exit_number);
