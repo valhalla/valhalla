@@ -12,6 +12,7 @@
 
 #include "config.h"
 
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/connectivity_map.h>
@@ -29,6 +30,7 @@
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/thor/trip_path_controller.h>
+#include <valhalla/thor/route_matcher.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -82,7 +84,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
                   const std::shared_ptr<DynamicCost>* mode_costing,
                   const TravelMode mode, PathStatistics& data,
                   bool multi_run, uint32_t iterations,
-                  bool using_astar) {
+                  bool using_astar, bool match_test) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
   std::vector<PathLocation> through_loc;
@@ -125,6 +127,24 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
+
+  // Test RouteMatcher
+  if (match_test) {
+    LOG_INFO("Testing RouteMatcher");
+
+    // Get shape
+    std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
+
+    std::vector<PathLocation> locations = {origin, dest};
+    std::vector<PathInfo> path;
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, shape,
+                     locations, path);
+    if (ret) {
+      LOG_INFO("RouteMatcher succeeded");
+    } else {
+      LOG_ERROR("RouteMatcher failed");
+    }
+  }
 
   // Run again to see benefits of caching
   if (multi_run) {
@@ -366,8 +386,8 @@ int main(int argc, char *argv[]) {
   "\n");
 
   std::string origin, destination, routetype, json, config;
-  bool connectivity, multi_run;
-  connectivity = multi_run = false;
+  bool connectivity, multi_run, match_test;
+  connectivity = multi_run = match_test = false;
   uint32_t iterations;
 
   options.add_options()("help,h", "Print this help message.")(
@@ -384,6 +404,7 @@ int main(int argc, char *argv[]) {
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
       ("connectivity", "Generate a connectivity map before testing the route.")
+      ("match-test", "Test RouteMatcher with resulting shape.")
       ("multi-run", bpo::value<uint32_t>(&iterations), "Generate the route N additional times before exiting.")
       // positional arguments
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
@@ -420,6 +441,10 @@ int main(int argc, char *argv[]) {
 
   if (vm.count("connectivity")) {
     connectivity = true;
+  }
+
+  if (vm.count("match-test")) {
+    match_test = true;
   }
 
   if (vm.count("multi-run")) {
@@ -657,7 +682,7 @@ int main(int argc, char *argv[]) {
     try {
       trip_path = PathTest(reader, path_location[i], path_location[i + 1],
                            pathalgorithm, mode_costing, mode, data, multi_run,
-                           iterations, using_astar);
+                           iterations, using_astar, match_test);
     } catch (std::runtime_error& rte) {
       LOG_ERROR("trip_path not found");
     }
