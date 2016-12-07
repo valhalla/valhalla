@@ -346,9 +346,6 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | internal_intersection=";
   str += std::to_string(internal_intersection());
 
-  str += " | end_node_index=";
-  str += std::to_string(end_node_index());
-
   // Process exits, if needed
   if (this->has_sign()) {
     str += " | exit.number=";
@@ -498,9 +495,6 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += std::to_string(internal_intersection());
-
-  str += delim;
-  str += std::to_string(end_node_index());
 
   str += delim;
   str += ListToParameterString(this->sign().exit_number());
