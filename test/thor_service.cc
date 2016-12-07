@@ -51,6 +51,15 @@ namespace {
     config.add("meili.grid.size", "500");
     config.add("meili.grid.cache_size", "64");
 
+    boost::property_tree::ptree customizable;
+    boost::property_tree::ptree mode;
+    boost::property_tree::ptree search_radius;
+    mode.put("", "mode");
+    search_radius.put("", "search_radius");
+    customizable.push_back(std::make_pair("",mode));
+    customizable.push_back(std::make_pair("",search_radius));
+    config.add_child("meili.customizable", customizable);
+
     thor_worker_t worker(config);
     for (auto& req_resp : failure_request_responses) {
       std::list<zmq::message_t> messages;

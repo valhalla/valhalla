@@ -27,9 +27,9 @@ namespace {
 float length_comparison(const float length, const bool exact_match) {
   // If exact match we use a very small tolerance
   if (exact_match) {
-    return length * 1.02f;
+    return (length < 10.0f) ? length + 5.0f : length * 1.05f;
   } else {
-    return length * 1.1f;
+    return (length < 10.0f) ? length + 5.0f : length * 1.1f;
   }
 }
 
@@ -125,22 +125,19 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
       }
     }
 
-    // Initialize index and shape
-    size_t index = correlated_index;
-    float de_length = length_comparison(de->length(), true);
+    // Get the end node LL and set up the length comparison
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (end_node_tile == nullptr) {
       continue;
     }
     PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    float de_length = length_comparison(de->length(), true);
 
     // Process current edge until shape matches end node
     // or shape length is longer than the current edge. Increment to the
-    // next shape point after the correlated index. Use DistanceApproximator
-    // and squared length for efficiency.
-    index++;
+    // next shape point after the correlated index.
+    size_t index = correlated_index + 1;
     float length = 0.0f;
-    DistanceApproximator distapprox(de_end_ll);
     while (index < shape.size()) {
       // Exclude edge if length along shape is longer than the edge length
       length += distances.at(index);
@@ -148,6 +145,7 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         break;
       }
 
+      // Found a match if shape equals directed edge LL within tolerance
       if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(

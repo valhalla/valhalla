@@ -42,6 +42,8 @@ test-suite.log
 test-driver
 test/edgestatus
 test/optimizer
+test/astar
+test/trip_path_controller
 test/*.log
 test/*.trs
 
