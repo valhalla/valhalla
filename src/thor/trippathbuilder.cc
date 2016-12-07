@@ -698,8 +698,12 @@ TripPath TripPathBuilder::Build(
 
         // Set latitude and longitude
         TripPath_LatLng* stop_ll = transit_stop_info->mutable_ll();
-        stop_ll->set_lat(node->latlng().lat());
-        stop_ll->set_lng(node->latlng().lng());
+        // Set transit stop lat if requested
+        if (controller.attributes.at(kNodeTransitStopInfoLat))
+          stop_ll->set_lat(node->latlng().lat());
+        // Set transit stop lon if requested
+        if (controller.attributes.at(kNodeTransitStopInfoLon))
+          stop_ll->set_lng(node->latlng().lng());
       }
 
       // Set the arrival time at this node (based on schedule from last trip
@@ -720,14 +724,16 @@ TripPath TripPathBuilder::Build(
           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
 
           if (graphtile->header()->date_created() > date) {
-            // Set
+            // Set assumed schedule if requested
             if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule))
               transit_stop_info->set_assumed_schedule(true);
             assumed_schedule = true;
           } else {
             day = date - graphtile->header()->date_created();
             if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
-              transit_stop_info->set_assumed_schedule(true);
+              // Set assumed schedule if requested
+              if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule))
+                transit_stop_info->set_assumed_schedule(true);
               assumed_schedule = true;
             }
           }
@@ -771,7 +777,8 @@ TripPath TripPathBuilder::Build(
         arrival_time = "";
         block_id = 0;
 
-        if (assumed_schedule)
+        // Set assumed schedule if requested
+        if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule) && assumed_schedule)
           transit_stop_info->set_assumed_schedule(true);
         assumed_schedule = false;
       }
