@@ -135,10 +135,21 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
     // Get shape
     std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
 
-    std::vector<PathLocation> locations = {origin, dest};
+    // Use the shape to form a single edge correlation at the start and end of
+    // the shape (using heading).
+    std::vector<Location> locations{shape.front(), shape.back()};
+    locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
+    locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
+
+    std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+    const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+    std::vector<PathLocation> path_location;
+    for (auto loc : locations) {
+      path_location.push_back(projections.at(loc));
+    }
     std::vector<PathInfo> path;
     bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, shape,
-                     locations, path);
+                     path_location, path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
