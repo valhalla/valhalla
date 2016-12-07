@@ -34,7 +34,18 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgePedestrianType, true },
   { kEdgeBicycleType, true },
   { kEdgeTransitType, true },
-  //{ kEdgeTransitRouteInfo, true },       // TODO
+  { kEdgeTransitRouteInfoOnestopId, true },
+  { kEdgeTransitRouteInfoBlockId, true },
+  { kEdgeTransitRouteInfoTripId, true },
+  { kEdgeTransitRouteInfoShortName, true },
+  { kEdgeTransitRouteInfoLongName, true },
+  { kEdgeTransitRouteInfoHeadsign, true },
+  { kEdgeTransitRouteInfoColor, true },
+  { kEdgeTransitRouteInfoTextColor, true },
+  { kEdgeTransitRouteInfoDescription, true },
+  { kEdgeTransitRouteInfoOperatorOnestopId, true },
+  { kEdgeTransitRouteInfoOperatorName, true },
+  { kEdgeTransitRouteInfoOperatorUrl, true },
   { kEdgeId, true },
   { kEdgeWayId, true },
   { kEdgeWeightedGrade, true },
@@ -42,17 +53,36 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeMaxDownwardGrade, true },
 
   // Node keys
-  //{ kNodeIntersectingEdge, true },       // TODO
+  { kNodeIntersectingEdgeBeginHeading, true },
+  { kNodeIntersectingEdgePrevNameConsistency, true },
+  { kNodeIntersectingEdgeCurrNameConsistency, true },
+  { kNodeIntersectingEdgeDriveability, true },
+  { kNodeIntersectingEdgeCyclability, true },
+  { kNodeIntersectingEdgeWalkability, true },
   { kNodeElapsedTime, true },
   { kNodeaAdminIndex, true },
   { kNodeType, true },
   { kNodeFork, true },
-  //{ kNodetransitStopInfo, true },        // TODO
+  { kNodetransitStopInfoType, true },
+  { kNodetransitStopInfoOnestopId, true },
+  { kNodetransitStopInfoName, true },
+  { kNodetransitStopInfoArrivalDateTime, true },
+  { kNodetransitStopInfoDepartureDateTime, true },
+  { kNodetransitStopInfoIsParentStop, true },
+  { kNodetransitStopInfoAssumedSchedule, true },
+  { kNodetransitStopInfoLat, true },
+  { kNodetransitStopInfoLon, true },
 
   // Top level: admin list, full shape, and shape bounding box keys
-  //{ kAdmin, true },                      // TODO
+  { kAdminCountryCode, true },
+  { kAdminCountryText, true },
+  { kAdminStateCode, true },
+  { kAdminStateText, true },
   { kShape, true },
-  //{ kBoundingBox, true }                 // TODO
+  { kBoundingBoxMinLat, true },
+  { kBoundingBoxMinLon, true },
+  { kBoundingBoxMaxLat, true },
+  { kBoundingBoxMaxLon, true }
 };
 
 TripPathController::TripPathController(
