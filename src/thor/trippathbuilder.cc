@@ -450,7 +450,7 @@ TripPath TripPathBuilder::Build(
 
   // Partial edge at the start and side of street (sos)
   float start_pct;
-  PathLocation::SideOfStreet start_sos;
+  PathLocation::SideOfStreet start_sos = PathLocation::SideOfStreet::NONE;
   PointLL start_vrt;
   for(const auto& e : origin.edges) {
     if (e.id == path.front().edgeid) {
@@ -466,7 +466,7 @@ TripPath TripPathBuilder::Build(
 
   // Partial edge at the end
   float end_pct;
-  PathLocation::SideOfStreet end_sos;
+  PathLocation::SideOfStreet end_sos = PathLocation::SideOfStreet::NONE;
   PointLL end_vrt;
   for(const auto&e : dest.edges) {
     if (e.id == path.back().edgeid) {
