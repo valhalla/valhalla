@@ -67,15 +67,15 @@ const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeaAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
 const std::string kNodeFork = "node.fork";
-const std::string kNodetransitStopInfoType = "node.transit_stop_info.type";
-const std::string kNodetransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
+const std::string kNodeTransitStopInfoType = "node.transit_stop_info.type";
+const std::string kNodeTransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
 const std::string kNodetransitStopInfoName = "node.transit_stop_info.name";
-const std::string kNodetransitStopInfoArrivalDateTime = "node.transit_stop_info.arrival_date_time";
-const std::string kNodetransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
-const std::string kNodetransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
-const std::string kNodetransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
-const std::string kNodetransitStopInfoLat = "node.transit_stop_info.lat";
-const std::string kNodetransitStopInfoLon = "node.transit_stop_info.lon";
+const std::string kNodeTransitStopInfoArrivalDateTime = "node.transit_stop_info.arrival_date_time";
+const std::string kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
+const std::string kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
+const std::string kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
+const std::string kNodeTransitStopInfoLat = "node.transit_stop_info.lat";
+const std::string kNodeTransitStopInfoLon = "node.transit_stop_info.lon";
 
 // Top level: admin list, full shape, and shape bounding box keys
 const std::string kAdminCountryCode = "admin.country_code";
