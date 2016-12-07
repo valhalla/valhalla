@@ -19,6 +19,7 @@
 #include <valhalla/thor/astar.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/trippathbuilder.h>
+#include <valhalla/thor/trip_path_controller.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
 
@@ -64,8 +65,8 @@ class thor_worker_t {
   thor::PathAlgorithm* get_path_algorithm(
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
-  valhalla::odin::TripPath route_match();
-  valhalla::odin::TripPath map_match();
+  valhalla::odin::TripPath route_match(const TripPathController& controller);
+  valhalla::odin::TripPath map_match(const TripPathController& controller);
 
   std::list<valhalla::odin::TripPath> path_arrive_by(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
@@ -78,6 +79,7 @@ class thor_worker_t {
   void parse_locations(const boost::property_tree::ptree& request);
   void parse_shape(const boost::property_tree::ptree& request);
   std::string parse_costing(const boost::property_tree::ptree& request);
+  void filter_attributes(const boost::property_tree::ptree& request, TripPathController controller);
 
   prime_server::worker_t::result_t route(
       const boost::property_tree::ptree& request,
@@ -103,8 +105,6 @@ class thor_worker_t {
   boost::property_tree::ptree config;
   boost::optional<std::string> jsonp;
   std::vector<baldr::Location> locations;
-  std::vector<baldr::Location> sources;
-  std::vector<baldr::Location> targets;
   std::vector<midgard::PointLL> shape;
   std::vector<baldr::PathLocation> correlated;
   std::vector<baldr::PathLocation> correlated_s;
@@ -122,6 +122,8 @@ class thor_worker_t {
   valhalla::meili::MapMatcherFactory matcher_factory;
   float gps_accuracy;
   float search_radius;
+  std::unordered_set<std::string> attributes_include_;
+  std::unordered_set<std::string> attributes_exclude_;
 };
 
 }

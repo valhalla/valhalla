@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "thor/trippathbuilder.h"
+#include "thor/trip_path_controller.h"
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/edgeinfo.h>
@@ -45,7 +46,9 @@ void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end,
       //is this segment longer than what we have left, then we found the segment the point lies on
       const auto length = (start + 1)->Distance(*start);
       if (length > partial_length) {
-        push(last);
+        if (!last.ApproximatelyEqual(shape.back())) {
+          push(last);
+        }
         return;
       }
       //just take the point from this segment
@@ -332,12 +335,11 @@ TripPathBuilder::~TripPathBuilder() {
 // For now just find the length of the path!
 // TODO - probably need the location information passed in - to
 // add to the TripPath
-TripPath TripPathBuilder::Build(GraphReader& graphreader,
-                                const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                const std::vector<PathInfo>& path,
-                                PathLocation& origin,
-                                PathLocation& dest,
-                                const std::vector<PathLocation>& through_loc) {
+TripPath TripPathBuilder::Build(
+    const TripPathController& controller, GraphReader& graphreader,
+    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+    const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
+    const std::vector<PathLocation>& through_loc) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 

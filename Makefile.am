@@ -59,14 +59,13 @@ nobase_include_HEADERS = \
 	valhalla/thor/route_matcher.h \
 	valhalla/thor/service.h \
 	valhalla/thor/trippathbuilder.h \
+	valhalla/thor/trip_path_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h
 libvalhalla_thor_la_SOURCES = \
 	src/thor/astar.cc \
-	src/thor/astarheuristic.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
-	src/thor/edgestatus.cc \
 	src/thor/isochrone.cc \
 	src/thor/isochrone_action.cc \
 	src/thor/map_matcher.cc \
@@ -80,6 +79,7 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/thor/trippathbuilder.cc \
+	src/thor/trip_path_controller.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc
 
@@ -90,7 +90,8 @@ libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_
 check_PROGRAMS = \
 	test/edgestatus \
 	test/optimizer \
-	test/thor_service
+	test/thor_service \
+	test/trip_path_controller
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
 test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_edgestatus_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
@@ -100,6 +101,9 @@ test_optimizer_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libval
 test_thor_service_SOURCES = test/thor_service.cc test/test.cc
 test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_thor_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
+test_trip_path_controller_SOURCES = test/trip_path_controller.cc test/test.cc
+test_trip_path_controller_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_trip_path_controller_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

@@ -79,8 +79,17 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
   GraphId edge_id(node.tileid(), node.level(), node_info->edge_index());
   const DirectedEdge* de = tile->directededge(node_info->edge_index());
   for (uint32_t i = 0; i < node_info->edge_count(); i++, de++, edge_id++) {
-    // Skip shortcuts
-    if (de->is_shortcut()) {
+    // Skip shortcuts and transit connection edges
+    // TODO - later might allow transit connections for multi-modal
+    if (de->is_shortcut() || de->use() == Use::kTransitConnection) {
+      continue;
+    }
+
+    // Look back in path_infos by 1-2 edges to make sure we aren't in a loop.
+    // A loop can occur if we have edges shorter than the lat,lng tolerance.
+    uint32_t n = path_infos.size();
+    if (n > 1 &&  (edge_id == path_infos[n-2].edgeid ||
+        edge_id == path_infos[n-1].edgeid)) {
       continue;
     }
 
@@ -108,6 +117,7 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
     size_t index = correlated_index;
     uint32_t shape_length = 0;
     uint32_t de_length = de->length() + 50;  // TODO make constant
+    float de2 = de_length * de_length;
 
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (end_node_tile == nullptr) {
@@ -116,10 +126,13 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
     PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
 
     // Process current edge until shape matches end node
-    // or shape length is longer than the current edge
-    while (index < shape.size()
-        && (std::round(shape.at(correlated_index).Distance(shape.at(index)))
-            < de_length)) {
+    // or shape length is longer than the current edge. Increment to the
+    // next shape point after the correlated index. Use DistanceApproximator
+    // and squared length for efficiency.
+    index++;
+    DistanceApproximator distapprox(de_end_ll);
+    while (index < shape.size() &&
+           distapprox.DistanceSquared((shape.at(index))) < de2) {
       if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
@@ -139,7 +152,6 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
                                  end_node_tile, de->endnode(), stop_node,
                                  prev_edge_label, elapsed_time, path_infos,
                                  false));
-
       }
       index++;
     }
