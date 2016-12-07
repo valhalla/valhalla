@@ -68,8 +68,20 @@ void TripPathController::enable_all() {
 
 void TripPathController::disable_all() {
   for (auto& pair : attributes) {
-    pair.second = false;;
+    pair.second = false;
   }
+}
+
+bool TripPathController::node_attribute_enabled() const {
+  for (const auto& pair : attributes) {
+    // if the key starts with the node key prefix and it is enabled
+    // then return true
+    if ((pair.first.compare(0, kNodeKeyPrefix.size(), kNodeKeyPrefix) == 0)
+        && pair.second) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }
