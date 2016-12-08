@@ -908,6 +908,12 @@ void GraphTileBuilder::UpdateTrafficSegments() {
     file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
                traffic_chunk_builder_.size() * sizeof(uint64_t));
 
+    // Write rest of the stuff after traffic chunks
+    // TODO - enable this after anything is added after traffic
+//    const auto* begin = reinterpret_cast<const char*>(header_ + header_->NEXT_ITEM_OFFSET());
+//    const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
+//    file.write(begin, end - begin);
+
     // Close the file
     file.close();
   }
