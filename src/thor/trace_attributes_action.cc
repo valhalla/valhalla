@@ -26,64 +26,70 @@ namespace {
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
+
   json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
 
-      auto node = trip_path.node(i);
-      auto end_node = json::array({});
-      auto intersecting_edges = json::array({});
-      if (node.intersecting_edge().size() > 0) {
-        for (const auto& intersecting_edge : node.intersecting_edge())
-          intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
-      }
+    //  if (trip_path.has_node()) {
+        auto node = trip_path.node(i);
+        auto end_node = json::array({});
+        auto intersecting_edges = json::array({});
+        if (node.intersecting_edge().size() > 0) {
+          for (const auto& intersecting_edge : node.intersecting_edge())
+            intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
+        }
 
-      end_node->emplace_back(json::map({
-        {"intersecting_edges", intersecting_edges}
-      }));
+        end_node->emplace_back(json::map({
+          {"intersecting_edges", intersecting_edges}
+        }));
+    //  }
 
-      const auto& edge = trip_path.node(i - 1).edge();
-      auto names = json::array({});
-      if (edge.name().size() > 0) {
-        for (const auto& name : edge.name())
-          names->push_back(name);
-      }
+      if (trip_path.node(i-1).has_edge()) {
+        const auto& edge = trip_path.node(i - 1).edge();
+        auto names = json::array({});
+        if (edge.name().size() > 0) {
+          for (const auto& name : edge.name())
+            names->push_back(name);
+        }
 
-      auto edgemap = json::map({});
-      if (edge.has_max_downward_grade())
-        edgemap->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
-      if (edge.has_max_upward_grade())
-        edgemap->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
-      if (edge.has_weighted_grade())
-        edgemap->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
-      if (edge.has_length())
-        edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
-      if (edge.has_speed())
-        edgemap->emplace("speed", json::fp_t{edge.speed() * scale, 3});
-      if (edge.has_way_id())
-        edgemap->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
-      if (edge.has_id())
-        edgemap->emplace("id", static_cast<uint64_t>(edge.id()));
-      if (edge.has_end_shape_index())
-        edgemap->emplace("end_shape_index", static_cast<int64_t>(edge.end_shape_index()));
-      if (edge.has_begin_shape_index())
-        edgemap->emplace("begin_shape_index", static_cast<int64_t>(edge.begin_shape_index()));
-      //if (trip_path.has_node())
-      edgemap->emplace("end_node", end_node);
-      if (names)
-        edgemap->emplace("names", names);
+        auto edgemap = json::map({});
+        if (edge.has_max_downward_grade())
+          edgemap->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+        if (edge.has_max_upward_grade())
+          edgemap->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+        if (edge.has_weighted_grade())
+          edgemap->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
+        if (edge.has_length())
+          edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
+        if (edge.has_speed())
+          edgemap->emplace("speed", json::fp_t{edge.speed() * scale, 3});
+        if (edge.has_way_id())
+          edgemap->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
+        if (edge.has_id())
+          edgemap->emplace("id", static_cast<uint64_t>(edge.id()));
+        if (edge.has_end_shape_index())
+          edgemap->emplace("end_shape_index", static_cast<int64_t>(edge.end_shape_index()));
+        if (edge.has_begin_shape_index())
+          edgemap->emplace("begin_shape_index", static_cast<int64_t>(edge.begin_shape_index()));
+        //if (trip_path.has_node())
+        edgemap->emplace("end_node", end_node);
+        if (names)
+          edgemap->emplace("names", names);
 
-      edges->emplace_back(edgemap);
-      auto json = json::map({
-        {"edges", edges}
-      });
-      if (id)
-        json->emplace("id", *id);
-      if (edge.has_begin_shape_index() || edge.has_end_shape_index())
-        json->emplace("shape", trip_path.shape());
+        edges->emplace_back(edgemap);
+
+        auto json = json::map({
+          {"edges", edges}
+        });
+        if (id)
+          json->emplace("id", *id);
+        if (edge.has_begin_shape_index() || edge.has_end_shape_index())
+          json->emplace("shape", trip_path.shape());
 
     return json;
+      }
     }
   }
 }
@@ -91,35 +97,36 @@ namespace {
 namespace valhalla {
 namespace thor {
 
-void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController controller) {
+void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller) {
   std::string filter_action = request.get("filters.action", "");
 
-  if (filter_action.size()) {
-    for (const auto& kv : request.get_child("filters.attributes")) {
-      if (filter_action == "only") {
-        attributes_include_.emplace(kv.second.get_value<std::string>());
-        controller.disable_all();
-        for (const auto& include : attributes_include_)
-          controller.kRouteAttributes.at(include) == true;
+  if (filter_action.size() && filter_action == "only") {
+    controller.disable_all();
+    for (const auto& kv : request.get_child("filters.attributes"))
+      attributes_include_.emplace(kv.second.get_value<std::string>());
 
-      } else if (filter_action == "none") {
-        attributes_exclude_.emplace(kv.second.get_value<std::string>());
-        controller.enable_all();
-        for (const auto& exclude : attributes_exclude_)
-          controller.kRouteAttributes.at(exclude) == false;
+    for (const auto& include : attributes_include_)
+      controller.attributes.at(include) = true;
 
-      } else { //TODO:  This default will change
-        controller.disable_all();
-        controller.kRouteAttributes.at(kEdgeNames) == true;
-        controller.kRouteAttributes.at(kEdgeId) == true;
-        controller.kRouteAttributes.at(kEdgeWayId) == true;
-        controller.kRouteAttributes.at(kEdgeSpeed) == true;
-        controller.kRouteAttributes.at(kEdgeLength) == true;
-        controller.kRouteAttributes.at(kEdgeWeightedGrade) == true;
-        controller.kRouteAttributes.at(kEdgeMaxUpwardGrade) == true;
-        controller.kRouteAttributes.at(kEdgeMaxDownwardGrade) == true;
-      }
-    }
+  } else if (filter_action.size() && filter_action == "none") {
+    controller.enable_all();
+    for (const auto& kv : request.get_child("filters.attributes"))
+      attributes_exclude_.emplace(kv.second.get_value<std::string>());
+
+    for (const auto& exclude : attributes_exclude_)
+      controller.attributes.at(exclude) = false;
+
+  } else {
+    controller.disable_all();
+    //TODO:  This default will change
+    controller.attributes.at(kEdgeNames) = true;
+    controller.attributes.at(kEdgeId) = true;
+    controller.attributes.at(kEdgeWayId) = true;
+    controller.attributes.at(kEdgeSpeed) = true;
+    controller.attributes.at(kEdgeLength) = true;
+    controller.attributes.at(kEdgeWeightedGrade) = true;
+    controller.attributes.at(kEdgeMaxUpwardGrade) = true;
+    controller.attributes.at(kEdgeMaxDownwardGrade) = true;
   }
 }
 
@@ -146,7 +153,6 @@ worker_t::result_t thor_worker_t::trace_attributes(
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   bool exact_match = request.get<bool>("exact_match_only", false);
-
   TripPathController controller;
   filter_attributes(request, controller);
 

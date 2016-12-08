@@ -43,6 +43,7 @@ class TripPathBuilder {
 
   /**
    * Add trip edge. (TODO more comments)
+   * @param  controller    Controller to determine which attributes to set.
    * @param  edge          Identifier of an edge within the tiled, hierarchical graph.
    * @param  trip_id       Trip Id (0 if not a transit edge).
    * @param  block_id      Transit block Id (0 if not a transit edge)
@@ -53,7 +54,8 @@ class TripPathBuilder {
    * @param  length_pct    Scale for the edge length for the partial distance
    *                       at begin and end edges
    */
-  static odin::TripPath_Edge* AddTripEdge(const baldr::GraphId& edge,
+  static odin::TripPath_Edge* AddTripEdge(const TripPathController& controller,
+                                          const baldr::GraphId& edge,
                                           const uint32_t trip_id,
                                           const uint32_t block_id,
                                           const sif::TravelMode mode,
@@ -65,6 +67,7 @@ class TripPathBuilder {
 
   /**
     * Add trip intersecting edge.
+   * @param  controller   Controller to determine which attributes to set.
     * @param  edge_index  Index of the local intersecting path edge at intersection.
     * @param  prev_edge_index  Index of the local previous path edge at intersection.
     * @param  curr_edge_index  Index of the local current path edge at intersection.
@@ -73,7 +76,8 @@ class TripPathBuilder {
     * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
     *                         on the local hierarchy.
     */
-   static void AddTripIntersectingEdge(uint32_t local_edge_index,
+   static void AddTripIntersectingEdge(const TripPathController& controller,
+                                       uint32_t local_edge_index,
                                        uint32_t prev_edge_index,
                                        uint32_t curr_edge_index,
                                        const baldr::NodeInfo* nodeinfo,

@@ -47,7 +47,8 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 Isochrone::Isochrone()
-    : tile_creation_date_(0),
+    : access_mode_(kAutoAccess),
+      tile_creation_date_(0),
       shape_interval_(50.0f),
       mode_(TravelMode::kDrive),
       adjacencylist_(nullptr),
@@ -203,8 +204,11 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
         continue;
       }
 
-      // Skip if no access is allowed to this edge (based on the costing method.
-      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+      // Skip if no access is allowed to this edge (based on the costing
+      // method) or if a complex restriction exists for this path.
+      if (!costing->Allowed(directededge, pred, tile, edgeid) ||
+           costing->Restricted(directededge, pred, edgelabels_, tile,
+                               edgeid, true)) {
         continue;
       }
 
@@ -336,6 +340,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
       const DirectedEdge* opp_edge = t2->directededge(oppedge);
       if (!costing->AllowedReverse(directededge, pred, opp_edge,
                                    tile, edgeid)) {
+        continue;
+      }
+
+      // Check for complex restriction
+      if (costing->Restricted(directededge, pred, edgelabels_, tile,
+                               edgeid, false)) {
         continue;
       }
 

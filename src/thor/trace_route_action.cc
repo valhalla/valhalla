@@ -132,7 +132,7 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
 
   // Create the vector of matched path results
   std::vector<meili::MatchResult> results;
-  for (size_t i = 0; i < sequence.size(); i++) {
+  if (sequence.size() > 0) {
     results = (matcher->OfflineMatch(sequence));
   }
 

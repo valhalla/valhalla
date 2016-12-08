@@ -22,6 +22,17 @@ namespace thor {
  */
 
 namespace {
+
+// Get the length to compare to the edge length
+float length_comparison(const float length, const bool exact_match) {
+  // If exact match we use a very small tolerance
+  if (exact_match) {
+    return (length < 10.0f) ? length + 5.0f : length * 1.05f;
+  } else {
+    return (length < 10.0f) ? length + 5.0f : length * 1.1f;
+  }
+}
+
 const PathLocation::PathEdge* find_begin_edge(
     const std::vector<baldr::PathLocation>& correlated) {
   // Iterate through start edges
@@ -64,6 +75,7 @@ const GraphId find_start_node(GraphReader& reader, const GraphId& edge_id) {
 bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
                       const TravelMode& mode, GraphReader& reader,
                       const std::vector<midgard::PointLL>& shape,
+                      const std::vector<float>& distances,
                       size_t& correlated_index, const GraphTile* tile,
                       const GraphId& node, const GraphId& stop_node,
                       EdgeLabel& prev_edge_label, float& elapsed_time,
@@ -102,7 +114,7 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         if (end_node_tile == nullptr) {
           continue;
         }
-        if (expand_from_node(mode_costing, mode, reader, shape,
+        if (expand_from_node(mode_costing, mode, reader, shape, distances,
                              correlated_index, end_node_tile, de->endnode(),
                              stop_node, prev_edge_label, elapsed_time,
                              path_infos, true)) {
@@ -113,26 +125,27 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
       }
     }
 
-    // Initialize index and shape
-    size_t index = correlated_index;
-    uint32_t shape_length = 0;
-    uint32_t de_length = de->length() + 50;  // TODO make constant
-    float de2 = de_length * de_length;
-
+    // Get the end node LL and set up the length comparison
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (end_node_tile == nullptr) {
       continue;
     }
     PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
+    float de_length = length_comparison(de->length(), true);
 
     // Process current edge until shape matches end node
     // or shape length is longer than the current edge. Increment to the
-    // next shape point after the correlated index. Use DistanceApproximator
-    // and squared length for efficiency.
-    index++;
-    DistanceApproximator distapprox(de_end_ll);
-    while (index < shape.size() &&
-           distapprox.DistanceSquared((shape.at(index))) < de2) {
+    // next shape point after the correlated index.
+    size_t index = correlated_index + 1;
+    float length = 0.0f;
+    while (index < shape.size()) {
+      // Exclude edge if length along shape is longer than the edge length
+      length += distances.at(index);
+      if (length > de_length) {
+        break;
+      }
+
+      // Found a match if shape equals directed edge LL within tolerance
       if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
@@ -148,10 +161,10 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        return (expand_from_node(mode_costing, mode, reader, shape, index,
-                                 end_node_tile, de->endnode(), stop_node,
-                                 prev_edge_label, elapsed_time, path_infos,
-                                 false));
+        return (expand_from_node(mode_costing, mode, reader, shape, distances,
+                                 index, end_node_tile, de->endnode(),
+                                 stop_node, prev_edge_label, elapsed_time,
+                                 path_infos, false));
       }
       index++;
     }
@@ -201,28 +214,28 @@ bool RouteMatcher::FormPath(
   }
   PointLL de_end_ll = end_node_tile->node(de->endnode())->latlng();
 
-  // If start and end have the same edge then add and return
-  if (begin_path_edge->id == end_path_edge->id) {
-
-    // Update the elapsed time edge cost at single edge
-    elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs
-        * (end_path_edge->dist - begin_path_edge->dist);
-
-    // Add single edge
-    path_infos.emplace_back(mode, std::round(elapsed_time), begin_path_edge->id,
-                            0);
-    return true;
+  // Form distances between shape points
+  std::vector<float> distances;
+  distances.push_back(0.0f);
+  for (size_t i = 1; i < shape.size(); i++) {
+    distances.push_back(shape[i].Distance(shape[i-1]));
   }
 
   // Initialize indexes and shape
   size_t index = 0;
-  uint32_t shape_length = 0;
-  uint32_t de_length = std::round(de->length() * (1 - begin_path_edge->dist))
-      + 50;  // TODO make constant
+  float length = 0.0f;
+  float de_length = length_comparison(de->length() * (1 - begin_path_edge->dist), true);
   EdgeLabel prev_edge_label;
   // Loop over shape to form path from matching edges
-  while (index < shape.size()
-      && (std::round(shape.at(0).Distance(shape.at(index))) < de_length)) {
+  while (index < shape.size()) {
+    if (index > 0) {
+      length += distances.at(index);
+    }
+    if (length > de_length) {
+      break;
+    }
+
+    // Check if shape is within tolerance at the end node
     if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
 
       // Update the elapsed time edge cost at begin edge
@@ -237,7 +250,7 @@ bool RouteMatcher::FormPath(
       prev_edge_label = {kInvalidLabel, begin_path_edge->id, de, {}, 0, 0, mode, 0};
 
       // Continue walking shape to find the end edge...
-      if (expand_from_node(mode_costing, mode, reader, shape, index,
+      if (expand_from_node(mode_costing, mode, reader, shape, distances, index,
                            end_node_tile, de->endnode(), end_edge_start_node,
                            prev_edge_label, elapsed_time, path_infos, false)) {
         // Update the elapsed time based on transition cost
