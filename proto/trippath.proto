@@ -159,12 +159,14 @@ message TripPath {
   }
 
   enum CycleLane {
+    kNoCycleLane = 0;
     kShared = 1;    // Shared use lane (could be shared with pedestrians)
     kDedicated = 2; // Dedicated cycle lane
     kSeparated = 3; // A separate cycle lane (physical separation from the main carriageway
   }
 
   enum Sidewalk {
+    kNoSidewalk = 0;
     kLeft = 1;
     kRight = 2;
     kBothSides = 3;

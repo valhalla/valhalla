@@ -381,6 +381,9 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | drive_on_right=";
   str += std::to_string(drive_on_right());
 
+  str += " | surface=";
+  str += std::to_string(surface());
+
   // Process transit route info, if needed
   if (has_transit_route_info()) {
     str += " | transit_route_info.onestop_id=";
@@ -435,6 +438,29 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | max_downward_grade=";
   str += std::to_string(max_downward_grade());
 
+  str += " | lane_count=";
+  str += std::to_string(lane_count());
+
+  str += " | cycle_lane=";
+  str += std::to_string(cycle_lane());
+
+  str += " | bicycle_network=";
+  str += std::to_string(bicycle_network());
+
+  str += " | sidewalk=";
+  str += std::to_string(sidewalk());
+
+  str += " | density=";
+  str += std::to_string(density());
+
+  str += " | speed_limit=";
+  str += std::to_string(speed_limit());
+
+  str += " | truck_speed=";
+  str += std::to_string(truck_speed());
+
+  str += " | truck_route=";
+  str += std::to_string(truck_route());
 
   return str;
 }
@@ -549,6 +575,9 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(drive_on_right());
 
   str += delim;
+  str += std::to_string(surface());
+
+  str += delim;
   if (transit_route_info().has_onestop_id()) {
     str += "\"";
     str += transit_route_info().onestop_id();
@@ -609,6 +638,32 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += std::to_string(max_downward_grade());
+
+  str += delim;
+  str += std::to_string(lane_count());
+
+  str += delim;
+  str += "TripPath_CycleLane_";
+  str += TripPath_CycleLane_descriptor()->FindValueByNumber(cycle_lane())->name();
+
+  str += delim;
+  str += std::to_string(bicycle_network());
+
+  str += delim;
+  str += "TripPath_Sidewalk_";
+  str += TripPath_Sidewalk_descriptor()->FindValueByNumber(sidewalk())->name();
+
+  str += delim;
+  str += std::to_string(density());
+
+  str += delim;
+  str += std::to_string(speed_limit());
+
+  str += delim;
+  str += std::to_string(truck_speed());
+
+  str += delim;
+  str += std::to_string(truck_route());
 
   return str;
 }
@@ -975,6 +1030,9 @@ std::string EnhancedTripPath_Node::ToString() const {
     str += " | transit_stop_info.assumed_schedule()=";
     str += std::to_string(transit_stop_info().assumed_schedule());
   }
+
+  str += " | time_zone=";
+  str += time_zone();
 
   return str;
 }
