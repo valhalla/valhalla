@@ -586,19 +586,13 @@ TripPath TripPathBuilder::Build(
     // Set the bounding box of the shape
     AABB2<PointLL> bbox(shape);
     TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-    // Set bounding box min lat if requested
-    if (controller.attributes.at(kBoundingBoxMinLat))
-      min_ll->set_lat(bbox.miny());
-    // Set bounding box min lon if requested
-    if (controller.attributes.at(kBoundingBoxMinLon))
-      min_ll->set_lng(bbox.minx());
+    // Set bounding box min lat/lon
+    min_ll->set_lat(bbox.miny());
+    min_ll->set_lng(bbox.minx());
     TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-    // Set bounding box max lat if requested
-    if (controller.attributes.at(kBoundingBoxMaxLat))
-      max_ll->set_lat(bbox.maxy());
-    // Set bounding box max lat if requested
-    if (controller.attributes.at(kBoundingBoxMaxLon))
-      max_ll->set_lng(bbox.maxx());
+    // Set bounding box max lat/lon
+    max_ll->set_lat(bbox.maxy());
+    max_ll->set_lng(bbox.maxx());
 
     // Set shape if requested
     if (controller.attributes.at(kShape))
@@ -698,12 +692,11 @@ TripPath TripPathBuilder::Build(
 
         // Set latitude and longitude
         TripPath_LatLng* stop_ll = transit_stop_info->mutable_ll();
-        // Set transit stop lat if requested
-        if (controller.attributes.at(kNodeTransitStopInfoLat))
+        // Set transit stop lat/lon if requested
+        if (controller.attributes.at(kNodeTransitStopInfoLatLon)) {
           stop_ll->set_lat(node->latlng().lat());
-        // Set transit stop lon if requested
-        if (controller.attributes.at(kNodeTransitStopInfoLon))
           stop_ll->set_lng(node->latlng().lng());
+        }
       }
 
       // Set the arrival time at this node (based on schedule from last trip
@@ -977,20 +970,13 @@ TripPath TripPathBuilder::Build(
   // Set the bounding box of the shape
   AABB2<PointLL> bbox(trip_shape);
   TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-  // Set bounding box min lat if requested
-  if (controller.attributes.at(kBoundingBoxMinLat))
-    min_ll->set_lat(bbox.miny());
+  // Set bounding box min lat/lon
+  min_ll->set_lat(bbox.miny());
   min_ll->set_lng(bbox.minx());
-  // Set bounding box min lon if requested
-  if (controller.attributes.at(kBoundingBoxMinLon))
-    min_ll->set_lat(bbox.miny());
   TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-  // Set bounding box max lat if requested
-  if (controller.attributes.at(kBoundingBoxMaxLat))
-    max_ll->set_lat(bbox.maxy());
-  // Set bounding box max lon if requested
-  if (controller.attributes.at(kBoundingBoxMaxLon))
-    max_ll->set_lng(bbox.maxx());
+  // Set bounding box max lat/lon if requested
+  max_ll->set_lat(bbox.maxy());
+  max_ll->set_lng(bbox.maxx());
 
   // Set shape if requested
   if (controller.attributes.at(kShape))

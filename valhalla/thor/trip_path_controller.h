@@ -74,21 +74,15 @@ const std::string kNodeTransitStopInfoArrivalDateTime = "node.transit_stop_info.
 const std::string kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
 const std::string kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
 const std::string kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
-const std::string kNodeTransitStopInfoLat = "node.transit_stop_info.lat";
-const std::string kNodeTransitStopInfoLon = "node.transit_stop_info.lon";
+const std::string kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
 
-// Top level: admin list, full shape, and shape bounding box keys
+// Top level: admin list and full shape keys
 const std::string kAdminCountryCode = "admin.country_code";
 const std::string kAdminCountryText = "admin.country_text";
 const std::string kAdminStateCode = "admin.state_code";
 const std::string kAdminStateText = "admin.state_text";
 const std::string kShape = "shape";
-const std::string kBoundingBoxMinLat = "bounding_box.min_lat";
-const std::string kBoundingBoxMinLon = "bounding_box.min_lon";
-const std::string kBoundingBoxMaxLat = "bounding_box.max_lat";
-const std::string kBoundingBoxMaxLon = "bounding_box.max_lon";
 
-// TODO do we need location and other top level?
 
 /**
  * Trip path controller for attributes
