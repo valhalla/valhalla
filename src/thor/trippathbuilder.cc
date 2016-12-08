@@ -336,6 +336,17 @@ TripPath_Node_Type GetTripPathNodeType(NodeType node_type) {
   }
 }
 
+TripPath_CycleLane GetTripPathCycleLane(CycleLane cyclelane) {
+  switch (cyclelane) {
+    case CycleLane::kShared:
+      return TripPath_CycleLane_kShared;
+    case CycleLane::kDedicated:
+      return TripPath_CycleLane_kDedicated;
+    case CycleLane::kSeparated:
+      return TripPath_CycleLane_kSeparated;
+  }
+}
+
 }
 
 // Default constructor
@@ -598,6 +609,9 @@ TripPath TripPathBuilder::Build(
     if (controller.attributes.at(kShape))
       trip_path.set_shape(encode<std::vector<PointLL> >(shape));
 
+    if (controller.attributes.at(kOsmChangeset))
+      trip_path.set_osm_changeset(tile->header()->dataset_id());
+
     // Assign the trip path admins
     AssignAdmins(controller, trip_path, admin_info_list);
     return trip_path;
@@ -610,6 +624,7 @@ TripPath TripPathBuilder::Build(
   std::vector<PointLL> trip_shape;
   std::string arrival_time;
   bool assumed_schedule = false;
+  uint64_t osmchangeset = 0;
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
       TripPath_TransitStopInfo_Type_kStop;
@@ -633,6 +648,10 @@ TripPath TripPathBuilder::Build(
     // Set node attributes - only set if they are true since they are optional
     const GraphTile* start_tile = graphreader.GetGraphTile(startnode);
     const NodeInfo* node = start_tile->node(startnode);
+
+    if (osmchangeset == 0 && controller.attributes.at(kOsmChangeset))
+      osmchangeset = start_tile->header()->dataset_id();
+
     if (controller.attributes.at(kNodeType))
       trip_node->set_type(GetTripPathNodeType(node->type()));
 
@@ -650,6 +669,10 @@ TripPath TripPathBuilder::Build(
       trip_node->set_admin_index(GetAdminIndex(
           start_tile->admininfo(node->admin_index()),
           admin_info_map, admin_info_list));
+    }
+
+    if (controller.attributes.at(kNodeTimeZone)) {
+      trip_node->set_time_zone(DateTime::get_tz_db().from_index(node->timezone()).get()->to_posix_string());
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -982,6 +1005,9 @@ TripPath TripPathBuilder::Build(
   if (controller.attributes.at(kShape))
     trip_path.set_shape(encode<std::vector<PointLL> >(trip_shape));
 
+  if (osmchangeset != 0 && controller.attributes.at(kOsmChangeset))
+    trip_path.set_osm_changeset(osmchangeset);
+
   //hand it back
   return trip_path;
 }
@@ -1189,7 +1215,9 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   if (controller.attributes.at(kEdgeDriveOnRight))
     trip_edge->set_drive_on_right(directededge->drive_on_right());
 
-  // TODO what about end_node_index
+  // Set surface if requested
+  if (controller.attributes.at(kEdgeSurface))
+    trip_edge->set_surface(static_cast<uint32_t>(directededge->surface()));
 
   // Set the mode and travel type
   if (mode == sif::TravelMode::kBicycle) {
@@ -1231,6 +1259,36 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   // Set maximum downward grade if requested
   if (controller.attributes.at(kEdgeMaxDownwardGrade))
     trip_edge->set_max_downward_grade(directededge->max_down_slope());
+
+  if (controller.attributes.at(kEdgeLaneCount))
+    trip_edge->set_lane_count(directededge->lanecount());
+
+  if (directededge->cyclelane() != CycleLane::kNone && controller.attributes.at(kEdgeCycleLane))
+    trip_edge->set_cycle_lane(GetTripPathCycleLane(directededge->cyclelane()));
+
+  if (controller.attributes.at(kEdgeBicycleNetwork))
+    trip_edge->set_bicycle_network(directededge->bike_network());
+
+  if (controller.attributes.at(kEdgeSidewalk)) {
+    if (directededge->sidewalk_left() && directededge->sidewalk_right())
+      trip_edge->set_sidewalk(TripPath_Sidewalk::TripPath_Sidewalk_kBothSides);
+    else if (directededge->sidewalk_left())
+      trip_edge->set_sidewalk(TripPath_Sidewalk::TripPath_Sidewalk_kLeft);
+    else if (directededge->sidewalk_right())
+      trip_edge->set_sidewalk(TripPath_Sidewalk::TripPath_Sidewalk_kRight);
+  }
+
+  if (controller.attributes.at(kEdgeDensity))
+    trip_edge->set_density(directededge->density());
+
+  if (controller.attributes.at(kEdgeSpeedLimit))
+    trip_edge->set_speed_limit(directededge->speed_limit());
+
+  if (controller.attributes.at(kEdgeTruckSpeed))
+    trip_edge->set_truck_speed(directededge->truck_speed());
+
+  if (directededge->truck_route() && controller.attributes.at(kEdgeTruckRoute))
+    trip_edge->set_truck_route(true);
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information
