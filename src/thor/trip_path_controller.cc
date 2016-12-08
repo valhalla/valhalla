@@ -70,19 +70,14 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kNodeTransitStopInfoDepartureDateTime, true },
   { kNodeTransitStopInfoIsParentStop, true },
   { kNodeTransitStopInfoAssumedSchedule, true },
-  { kNodeTransitStopInfoLat, true },
-  { kNodeTransitStopInfoLon, true },
+  { kNodeTransitStopInfoLatLon, true },
 
   // Top level: admin list, full shape, and shape bounding box keys
   { kAdminCountryCode, true },
   { kAdminCountryText, true },
   { kAdminStateCode, true },
   { kAdminStateText, true },
-  { kShape, true },
-  { kBoundingBoxMinLat, true },
-  { kBoundingBoxMinLon, true },
-  { kBoundingBoxMaxLat, true },
-  { kBoundingBoxMaxLon, true }
+  { kShape, true }
 };
 
 TripPathController::TripPathController(
