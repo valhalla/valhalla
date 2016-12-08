@@ -27,32 +27,14 @@ namespace {
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
+  json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
 
-    //  if (trip_path.has_node()) {
-        auto node = trip_path.node(i);
-        auto end_node = json::array({});
-        auto intersecting_edges = json::array({});
-        if (node.intersecting_edge().size() > 0) {
-          for (const auto& intersecting_edge : node.intersecting_edge())
-            intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
-        }
-
-        end_node->emplace_back(json::map({
-          {"intersecting_edges", intersecting_edges}
-        }));
-    //  }
-
       if (trip_path.node(i-1).has_edge()) {
         const auto& edge = trip_path.node(i - 1).edge();
         auto names = json::array({});
-        if (edge.name().size() > 0) {
-          for (const auto& name : edge.name())
-            names->push_back(name);
-        }
 
         auto edgemap = json::map({});
         if (edge.has_max_downward_grade())
@@ -73,10 +55,24 @@ namespace {
           edgemap->emplace("end_shape_index", static_cast<int64_t>(edge.end_shape_index()));
         if (edge.has_begin_shape_index())
           edgemap->emplace("begin_shape_index", static_cast<int64_t>(edge.begin_shape_index()));
-        //if (trip_path.has_node())
-        edgemap->emplace("end_node", end_node);
-        if (names)
+        if (edge.name().size() > 0) {
+          for (const auto& name : edge.name())
+            names->push_back(name);
           edgemap->emplace("names", names);
+        }
+        if (controller.node_attribute_enabled()) {
+          auto node = trip_path.node(i);
+          auto end_node = json::array({});
+          auto intersecting_edges = json::array({});
+          if (node.intersecting_edge().size() > 0) {
+            for (const auto& intersecting_edge : node.intersecting_edge())
+              intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
+          }
+          end_node->emplace_back(json::map({
+            {"intersecting_edges", intersecting_edges}
+          }));
+          edgemap->emplace("end_node", end_node);
+        }
 
         edges->emplace_back(edgemap);
 
@@ -88,7 +84,7 @@ namespace {
         if (edge.has_begin_shape_index() || edge.has_end_shape_index())
           json->emplace("shape", trip_path.shape());
 
-    return json;
+        return json;
       }
     }
   }
@@ -201,7 +197,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
   //serialize output to Thor
   json::MapPtr json;
   if (trip_path.node().size() > 0)
-    json = serialize(trip_path, id, scale);
+    json = serialize(controller, trip_path, id, scale);
   else throw valhalla_exception_t{400, 442};
 
   //jsonp callback if need be
