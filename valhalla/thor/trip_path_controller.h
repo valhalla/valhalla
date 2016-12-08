@@ -25,7 +25,7 @@ const std::string kEdgeBridge = "edge.bridge";
 const std::string kEdgeRoundabout = "edge.roundabout";
 const std::string kEdgeInternalIntersection = "edge.internal_intersection";
 const std::string kEdgeDriveOnRight = "edge.drive_on_right";
-const std::string kEdgeEndNodeIndex = "edge.end_node_index";
+const std::string kEdgeSurface = "edge.surface";
 const std::string kEdgeSignExitNumber = "edge.sign.exit_number";
 const std::string kEdgeSignExitBranch = "edge.sign.exit_branch";
 const std::string kEdgeSignExitToward = "edge.sign.exit_toward";
@@ -52,6 +52,14 @@ const std::string kEdgeWayId = "edge.way_id";
 const std::string kEdgeWeightedGrade = "edge.weighted_grade";
 const std::string kEdgeMaxUpwardGrade = "edge.max_upward_grade";
 const std::string kEdgeMaxDownwardGrade = "edge.max_downward_grade";
+const std::string kEdgeLaneCount = "edge.lane_count";
+const std::string kEdgeCycleLane = "edge.cycle_lane";
+const std::string kEdgeBicycleNetwork = "edge.bicycle_network";
+const std::string kEdgeSidewalk = "edge.sidewalk";
+const std::string kEdgeDensity = "edge.density";
+const std::string kEdgeSpeedLimit = "edge.speed_limit";
+const std::string kEdgeTruckSpeed = "edge.truck_speed";
+const std::string kEdgeTruckRoute = "edge.truck_route";
 
 // Node key prefix
 const std::string kNodeKeyPrefix = "node.";
@@ -75,8 +83,10 @@ const std::string kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_inf
 const std::string kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
 const std::string kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
 const std::string kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
+const std::string kNodeTimeZone = "node.time_zone";
 
-// Top level: admin list and full shape keys
+// Top level: osm chnageset, admin list, and full shape keys
+const std::string kOsmChangeset = "osm_changeset";
 const std::string kAdminCountryCode = "admin.country_code";
 const std::string kAdminCountryText = "admin.country_text";
 const std::string kAdminStateCode = "admin.state_code";
