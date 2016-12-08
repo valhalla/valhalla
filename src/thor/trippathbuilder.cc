@@ -22,6 +22,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::sif;
 using namespace valhalla::odin;
+using namespace valhalla::thor;
 
 namespace {
 
@@ -117,15 +118,28 @@ uint32_t GetAdminIndex(
   return admin_index;
 }
 
-void AssignAdmins(TripPath& trip_path,
+void AssignAdmins(const TripPathController& controller,
+                  TripPath& trip_path,
                   const std::vector<AdminInfo>& admin_info_list) {
   // Assign the admins
   for (const auto& admin_info : admin_info_list) {
     TripPath_Admin* trip_admin = trip_path.add_admin();
-    trip_admin->set_country_code(admin_info.country_iso());
-    trip_admin->set_country_text(admin_info.country_text());
-    trip_admin->set_state_code(admin_info.state_iso());
-    trip_admin->set_state_text(admin_info.state_text());
+
+    // Set country code if requested
+    if (controller.attributes.at(kAdminCountryCode))
+        trip_admin->set_country_code(admin_info.country_iso());
+
+    // Set country text if requested
+    if (controller.attributes.at(kAdminCountryText))
+      trip_admin->set_country_text(admin_info.country_text());
+
+    // Set state code if requested
+    if (controller.attributes.at(kAdminStateCode))
+      trip_admin->set_state_code(admin_info.state_iso());
+
+    // Set state text if requested
+    if (controller.attributes.at(kAdminStateText))
+      trip_admin->set_state_text(admin_info.state_text());
 
     valhalla::midgard::logging::Log("admin_state_iso::" + admin_info.state_iso(), " [ANALYTICS] ");
     valhalla::midgard::logging::Log("admin_country_iso::" + admin_info.country_iso(), " [ANALYTICS] ");
@@ -436,7 +450,7 @@ TripPath TripPathBuilder::Build(
 
   // Partial edge at the start and side of street (sos)
   float start_pct;
-  PathLocation::SideOfStreet start_sos;
+  PathLocation::SideOfStreet start_sos = PathLocation::SideOfStreet::NONE;
   PointLL start_vrt;
   for(const auto& e : origin.edges) {
     if (e.id == path.front().edgeid) {
@@ -452,7 +466,7 @@ TripPath TripPathBuilder::Build(
 
   // Partial edge at the end
   float end_pct;
-  PathLocation::SideOfStreet end_sos;
+  PathLocation::SideOfStreet end_sos = PathLocation::SideOfStreet::NONE;
   PointLL end_vrt;
   for(const auto&e : dest.edges) {
     if (e.id == path.back().edgeid) {
@@ -572,9 +586,11 @@ TripPath TripPathBuilder::Build(
     // Set the bounding box of the shape
     AABB2<PointLL> bbox(shape);
     TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+    // Set bounding box min lat/lon
     min_ll->set_lat(bbox.miny());
     min_ll->set_lng(bbox.minx());
     TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+    // Set bounding box max lat/lon
     max_ll->set_lat(bbox.maxy());
     max_ll->set_lng(bbox.maxx());
 
@@ -583,7 +599,7 @@ TripPath TripPathBuilder::Build(
       trip_path.set_shape(encode<std::vector<PointLL> >(shape));
 
     // Assign the trip path admins
-    AssignAdmins(trip_path, admin_info_list);
+    AssignAdmins(controller, trip_path, admin_info_list);
     return trip_path;
   }
 
@@ -650,33 +666,42 @@ TripPath TripPathBuilder::Build(
       //       in future, we will set based on transitland value
       // Set type
       if (directededge->use() == Use::kRail) {
-        transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
+        // Set node transit info type if requested
+        if (controller.attributes.at(kNodeTransitStopInfoType))
+          transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStation;
       } else if (directededge->use() == Use::kTransitConnection) {
-        transit_stop_info->set_type(prev_transit_node_type);
+        // Set node transit info type if requested
+        if (controller.attributes.at(kNodeTransitStopInfoType))
+          transit_stop_info->set_type(prev_transit_node_type);
       } else {
-        transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStop);
+        // Set node transit info type if requested
+        if (controller.attributes.at(kNodeTransitStopInfoType))
+          transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStop);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStop;
       }
 
       if (transit_stop) {
-        // Set onstop_id
-        if (transit_stop->one_stop_offset())
+        // Set onstop_id if requested
+        if (controller.attributes.at(kNodeTransitStopInfoOnestopId) && transit_stop->one_stop_offset())
           transit_stop_info->set_onestop_id(graphtile->GetName(transit_stop->one_stop_offset()));
 
-        // Set name
-        if (transit_stop->name_offset())
+        // Set name if requested
+        if (controller.attributes.at(kNodetransitStopInfoName) && transit_stop->name_offset())
           transit_stop_info->set_name(graphtile->GetName(transit_stop->name_offset()));
 
         // Set latitude and longitude
         TripPath_LatLng* stop_ll = transit_stop_info->mutable_ll();
-        stop_ll->set_lat(node->latlng().lat());
-        stop_ll->set_lng(node->latlng().lng());
+        // Set transit stop lat/lon if requested
+        if (controller.attributes.at(kNodeTransitStopInfoLatLon)) {
+          stop_ll->set_lat(node->latlng().lat());
+          stop_ll->set_lng(node->latlng().lng());
+        }
       }
 
       // Set the arrival time at this node (based on schedule from last trip
-      // departure)
-      if (!arrival_time.empty()) {
+      // departure) if requested
+      if (controller.attributes.at(kNodeTransitStopInfoArrivalDateTime) && !arrival_time.empty()) {
         transit_stop_info->set_arrival_date_time(arrival_time);
       }
 
@@ -692,12 +717,16 @@ TripPath TripPathBuilder::Build(
           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
 
           if (graphtile->header()->date_created() > date) {
-            transit_stop_info->set_assumed_schedule(true);
+            // Set assumed schedule if requested
+            if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule))
+              transit_stop_info->set_assumed_schedule(true);
             assumed_schedule = true;
           } else {
             day = date - graphtile->header()->date_created();
             if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
-              transit_stop_info->set_assumed_schedule(true);
+              // Set assumed schedule if requested
+              if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule))
+                transit_stop_info->set_assumed_schedule(true);
               assumed_schedule = true;
             }
           }
@@ -713,8 +742,9 @@ TripPath TripPathBuilder::Build(
           if (found != std::string::npos)
             dt = dt.substr(0,found);
 
-          // Set departure time from this transit stop
-          transit_stop_info->set_departure_date_time(dt);
+          // Set departure time from this transit stop if requested
+          if (controller.attributes.at(kNodeTransitStopInfoDepartureDateTime))
+            transit_stop_info->set_departure_date_time(dt);
 
           //TODO:  set removed tz abbrev on transit_stop_info for departure.
 
@@ -740,13 +770,15 @@ TripPath TripPathBuilder::Build(
         arrival_time = "";
         block_id = 0;
 
-        if (assumed_schedule)
+        // Set assumed schedule if requested
+        if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule) && assumed_schedule)
           transit_stop_info->set_assumed_schedule(true);
         assumed_schedule = false;
       }
 
-      // Set is_parent_stop. TODO - update with station hierarchy
-      transit_stop_info->set_is_parent_stop(false);
+      // Set is_parent_stop if requested. TODO - update with station hierarchy
+      if (controller.attributes.at(kNodeTransitStopInfoIsParentStop))
+        transit_stop_info->set_is_parent_stop(false);
     }
 
     // Add edge to the trip node and set its attributes
@@ -933,14 +965,16 @@ TripPath TripPathBuilder::Build(
     node->set_elapsed_time(elapsedtime);
 
   // Assign the admins
-  AssignAdmins(trip_path, admin_info_list);
+  AssignAdmins(controller, trip_path, admin_info_list);
 
   // Set the bounding box of the shape
   AABB2<PointLL> bbox(trip_shape);
   TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  // Set bounding box min lat/lon
   min_ll->set_lat(bbox.miny());
   min_ll->set_lng(bbox.minx());
   TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  // Set bounding box max lat/lon if requested
   max_ll->set_lat(bbox.maxy());
   max_ll->set_lng(bbox.maxx());
 
@@ -1206,19 +1240,25 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
     TripPath_TransitRouteInfo* transit_route_info = trip_edge
         ->mutable_transit_route_info();
 
-    // Set block_id and trip_id
-    transit_route_info->set_block_id(block_id);
-    transit_route_info->set_trip_id(trip_id);
+    // Set block_id if requested
+    if (controller.attributes.at(kEdgeTransitRouteInfoBlockId))
+      transit_route_info->set_block_id(block_id);
+
+    // Set trip_id if requested
+    if (controller.attributes.at(kEdgeTransitRouteInfoTripId))
+      transit_route_info->set_trip_id(trip_id);
 
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
 
     if (transit_departure) {
 
-      // Set headsign
-      if (transit_departure->headsign_offset())
+      // Set headsign if requested
+      if (controller.attributes.at(kEdgeTransitRouteInfoHeadsign)
+          && transit_departure->headsign_offset()) {
         transit_route_info->set_headsign(
             graphtile->GetName(transit_departure->headsign_offset()));
+      }
 
       const TransitRoute* transit_route = graphtile->GetTransitRoute(
           transit_departure->routeid());
@@ -1230,44 +1270,62 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
               GetTripPathTransitType(transit_route->route_type()));
         }
 
-        // Set onestop_id
-        if (transit_route->one_stop_offset())
+        // Set onestop_id if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoOnestopId)
+            && transit_route->one_stop_offset()) {
           transit_route_info->set_onestop_id(
               graphtile->GetName(transit_route->one_stop_offset()));
+        }
 
-        // Set short_name
-        if (transit_route->short_name_offset())
+        // Set short_name if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoShortName)
+            && transit_route->short_name_offset()) {
           transit_route_info->set_short_name(
               graphtile->GetName(transit_route->short_name_offset()));
+        }
 
-        // Set long_name
-        if (transit_route->long_name_offset())
+        // Set long_name if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoLongName)
+            && transit_route->long_name_offset()) {
           transit_route_info->set_long_name(
               graphtile->GetName(transit_route->long_name_offset()));
+        }
 
-        // Set color and text_color
-        transit_route_info->set_color(transit_route->route_color());
-        transit_route_info->set_text_color(transit_route->route_text_color());
+        // Set color if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoColor))
+          transit_route_info->set_color(transit_route->route_color());
 
-        // Set description
-        if (transit_route->desc_offset())
+        // Set text_color if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoTextColor))
+          transit_route_info->set_text_color(transit_route->route_text_color());
+
+        // Set description if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoDescription)
+            && transit_route->desc_offset()) {
           transit_route_info->set_description(
               graphtile->GetName(transit_route->desc_offset()));
+        }
 
-        // Set operator_onestop_id
-        if (transit_route->op_by_onestop_id_offset())
+        // Set operator_onestop_id if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoOperatorOnestopId)
+            && transit_route->op_by_onestop_id_offset()) {
           transit_route_info->set_operator_onestop_id(
               graphtile->GetName(transit_route->op_by_onestop_id_offset()));
+        }
 
-        // Set operator_name
-        if (transit_route->op_by_name_offset())
+        // Set operator_name if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoOperatorName)
+            && transit_route->op_by_name_offset()) {
           transit_route_info->set_operator_name(
               graphtile->GetName(transit_route->op_by_name_offset()));
+        }
 
-        // Set operator_url
-        if (transit_route->op_by_website_offset())
+        // Set operator_url if requested
+        if (controller.attributes.at(kEdgeTransitRouteInfoOperatorUrl)
+            && transit_route->op_by_website_offset()) {
           transit_route_info->set_operator_url(
               graphtile->GetName(transit_route->op_by_website_offset()));
+        }
       }
     }
   }
@@ -1285,8 +1343,9 @@ void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controll
   TripPath_IntersectingEdge* itersecting_edge =
       trip_node->add_intersecting_edge();
 
-  // Set the heading for the intersecting edge
-  itersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
+  // Set the heading for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeBeginHeading))
+    itersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
 
   Traversability traversability = Traversability::kNone;
   if (intersecting_de != nullptr) {
@@ -1298,8 +1357,9 @@ void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controll
           Traversability::kBackward : Traversability::kNone;
     }
   }
-  // Set the walkability flag for the intersecting edge
-  itersecting_edge->set_walkability(GetTripPathTraversability(traversability));
+  // Set the walkability flag for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeWalkability))
+    itersecting_edge->set_walkability(GetTripPathTraversability(traversability));
 
   traversability = Traversability::kNone;
   if (intersecting_de != nullptr) {
@@ -1311,20 +1371,27 @@ void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controll
           Traversability::kBackward : Traversability::kNone;
     }
   }
-  // Set the cyclability flag for the intersecting edge
-  itersecting_edge->set_cyclability(GetTripPathTraversability(traversability));
+  // Set the cyclability flag for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeCyclability))
+    itersecting_edge->set_cyclability(GetTripPathTraversability(traversability));
 
-  // Set the driveability flag for the intersecting edge
-  itersecting_edge->set_driveability(
-      GetTripPathTraversability(nodeinfo->local_driveability(local_edge_index)));
+  // Set the driveability flag for the intersecting edge if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeDriveability)) {
+    itersecting_edge->set_driveability(
+        GetTripPathTraversability(nodeinfo->local_driveability(local_edge_index)));
+  }
 
-  // Set the previous/intersecting edge name consistency
-  itersecting_edge->set_prev_name_consistency(
-      nodeinfo->name_consistency(prev_edge_index, local_edge_index));
+  // Set the previous/intersecting edge name consistency if requested
+  if (controller.attributes.at(kNodeIntersectingEdgePrevNameConsistency)) {
+    itersecting_edge->set_prev_name_consistency(
+        nodeinfo->name_consistency(prev_edge_index, local_edge_index));
+  }
 
-  // Set the current/intersecting edge name consistency
-  itersecting_edge->set_curr_name_consistency(
-      nodeinfo->name_consistency(curr_edge_index, local_edge_index));
+  // Set the current/intersecting edge name consistency if requested
+  if (controller.attributes.at(kNodeIntersectingEdgeCurrNameConsistency)) {
+    itersecting_edge->set_curr_name_consistency(
+        nodeinfo->name_consistency(curr_edge_index, local_edge_index));
+  }
 }
 
 }

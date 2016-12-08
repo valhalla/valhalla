@@ -24,7 +24,7 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeRoundabout, true },
   { kEdgeInternalIntersection, true },
   { kEdgeDriveOnRight, true },
-  { kEdgeEndNodeIndex, true },
+  { kEdgeSurface, true },
   { kEdgeSignExitNumber, true },
   { kEdgeSignExitBranch, true },
   { kEdgeSignExitToward, true },
@@ -34,25 +34,60 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgePedestrianType, true },
   { kEdgeBicycleType, true },
   { kEdgeTransitType, true },
-  //{ kEdgeTransitRouteInfo, true },       // TODO
+  { kEdgeTransitRouteInfoOnestopId, true },
+  { kEdgeTransitRouteInfoBlockId, true },
+  { kEdgeTransitRouteInfoTripId, true },
+  { kEdgeTransitRouteInfoShortName, true },
+  { kEdgeTransitRouteInfoLongName, true },
+  { kEdgeTransitRouteInfoHeadsign, true },
+  { kEdgeTransitRouteInfoColor, true },
+  { kEdgeTransitRouteInfoTextColor, true },
+  { kEdgeTransitRouteInfoDescription, true },
+  { kEdgeTransitRouteInfoOperatorOnestopId, true },
+  { kEdgeTransitRouteInfoOperatorName, true },
+  { kEdgeTransitRouteInfoOperatorUrl, true },
   { kEdgeId, true },
   { kEdgeWayId, true },
   { kEdgeWeightedGrade, true },
   { kEdgeMaxUpwardGrade, true },
   { kEdgeMaxDownwardGrade, true },
+  { kEdgeLaneCount, true },
+  { kEdgeCycleLane, true },
+  { kEdgeBicycleNetwork, true },
+  { kEdgeSidewalk, true },
+  { kEdgeDensity, true },
+  { kEdgeSpeedLimit, true },
+  { kEdgeTruckSpeed, true },
+  { kEdgeTruckRoute, true },
 
   // Node keys
-  //{ kNodeIntersectingEdge, true },       // TODO
+  { kNodeIntersectingEdgeBeginHeading, true },
+  { kNodeIntersectingEdgePrevNameConsistency, true },
+  { kNodeIntersectingEdgeCurrNameConsistency, true },
+  { kNodeIntersectingEdgeDriveability, true },
+  { kNodeIntersectingEdgeCyclability, true },
+  { kNodeIntersectingEdgeWalkability, true },
   { kNodeElapsedTime, true },
   { kNodeaAdminIndex, true },
   { kNodeType, true },
   { kNodeFork, true },
-  //{ kNodetransitStopInfo, true },        // TODO
+  { kNodeTransitStopInfoType, true },
+  { kNodeTransitStopInfoOnestopId, true },
+  { kNodetransitStopInfoName, true },
+  { kNodeTransitStopInfoArrivalDateTime, true },
+  { kNodeTransitStopInfoDepartureDateTime, true },
+  { kNodeTransitStopInfoIsParentStop, true },
+  { kNodeTransitStopInfoAssumedSchedule, true },
+  { kNodeTransitStopInfoLatLon, true },
+  { kNodeTimeZone, true },
 
   // Top level: admin list, full shape, and shape bounding box keys
-  //{ kAdmin, true },                      // TODO
-  { kShape, true },
-  //{ kBoundingBox, true }                 // TODO
+  { kOsmChangeset, true },
+  { kAdminCountryCode, true },
+  { kAdminCountryText, true },
+  { kAdminStateCode, true },
+  { kAdminStateText, true },
+  { kShape, true }
 };
 
 TripPathController::TripPathController(
@@ -68,8 +103,20 @@ void TripPathController::enable_all() {
 
 void TripPathController::disable_all() {
   for (auto& pair : attributes) {
-    pair.second = false;;
+    pair.second = false;
   }
+}
+
+bool TripPathController::node_attribute_enabled() const {
+  for (const auto& pair : attributes) {
+    // if the key starts with the node key prefix and it is enabled
+    // then return true
+    if ((pair.first.compare(0, kNodeKeyPrefix.size(), kNodeKeyPrefix) == 0)
+        && pair.second) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }

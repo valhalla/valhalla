@@ -78,6 +78,7 @@ class thor_worker_t {
 
   void parse_locations(const boost::property_tree::ptree& request);
   void parse_shape(const boost::property_tree::ptree& request);
+  void parse_trace_config(const boost::property_tree::ptree& request);
   std::string parse_costing(const boost::property_tree::ptree& request);
   void filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller);
 
@@ -124,7 +125,8 @@ class thor_worker_t {
   float search_radius;
   std::unordered_set<std::string> attributes_include_;
   std::unordered_set<std::string> attributes_exclude_;
-
+  std::unordered_set<std::string> trace_customizable;
+  boost::property_tree::ptree trace_config;
 };
 
 }
