@@ -121,10 +121,6 @@ class thor_worker_t {
   float long_request;
   boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
-  float gps_accuracy;
-  float search_radius;
-  std::unordered_set<std::string> attributes_include_;
-  std::unordered_set<std::string> attributes_exclude_;
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
 };

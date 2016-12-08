@@ -55,7 +55,7 @@ namespace {
           edgemap->emplace("end_shape_index", static_cast<int64_t>(edge.end_shape_index()));
         if (edge.has_begin_shape_index())
           edgemap->emplace("begin_shape_index", static_cast<int64_t>(edge.begin_shape_index()));
-        if (edge.name().size() > 0) {
+        if (edge.name_size() > 0) {
           for (const auto& name : edge.name())
             names->push_back(name);
           edgemap->emplace("names", names);
@@ -64,7 +64,7 @@ namespace {
           auto node = trip_path.node(i);
           auto end_node = json::array({});
           auto intersecting_edges = json::array({});
-          if (node.intersecting_edge().size() > 0) {
+          if (node.intersecting_edge_size() > 0) {
             for (const auto& intersecting_edge : node.intersecting_edge())
               intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
           }
@@ -94,6 +94,8 @@ namespace valhalla {
 namespace thor {
 
 void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller) {
+  std::unordered_set<std::string> attributes_include_;
+  std::unordered_set<std::string> attributes_exclude_;
   std::string filter_action = request.get("filters.action", "");
 
   if (filter_action.size() && filter_action == "only") {
