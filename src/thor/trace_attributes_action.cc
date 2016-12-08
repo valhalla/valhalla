@@ -145,11 +145,11 @@ worker_t::result_t thor_worker_t::trace_attributes(
    */
   odin::TripPath trip_path;
   TripPathController controller;
-  auto shape_match = request.get<std::string>("shape_match", "edge_walk");
+  auto shape_match = request.get<std::string>("shape_match", "walk_or_snap");
   filter_attributes(request, controller);
 
-  // If the exact points from a prior route that was run agains the Valhalla road network,
-  //then we can traverse the exact shape to form a path by using edge-walking algorithm
+  // If the exact points from a prior route that was run against the Valhalla road network,
+  // then we can traverse the exact shape to form a path by using edge-walking algorithm
   if (shape_match == "edge_walk") {
     try {
       trip_path = route_match(controller);
