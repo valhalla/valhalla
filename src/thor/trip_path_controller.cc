@@ -24,7 +24,7 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeRoundabout, true },
   { kEdgeInternalIntersection, true },
   { kEdgeDriveOnRight, true },
-  { kEdgeEndNodeIndex, true },
+  { kEdgeSurface, true },
   { kEdgeSignExitNumber, true },
   { kEdgeSignExitBranch, true },
   { kEdgeSignExitToward, true },
@@ -51,6 +51,14 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeWeightedGrade, true },
   { kEdgeMaxUpwardGrade, true },
   { kEdgeMaxDownwardGrade, true },
+  { kEdgeLaneCount, true },
+  { kEdgeCycleLane, true },
+  { kEdgeBicycleNetwork, true },
+  { kEdgeSidewalk, true },
+  { kEdgeDensity, true },
+  { kEdgeSpeedLimit, true },
+  { kEdgeTruckSpeed, true },
+  { kEdgeTruckRoute, true },
 
   // Node keys
   { kNodeIntersectingEdgeBeginHeading, true },
@@ -71,8 +79,10 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kNodeTransitStopInfoIsParentStop, true },
   { kNodeTransitStopInfoAssumedSchedule, true },
   { kNodeTransitStopInfoLatLon, true },
+  { kNodeTimeZone, true },
 
   // Top level: admin list, full shape, and shape bounding box keys
+  { kOsmChangeset, true },
   { kAdminCountryCode, true },
   { kAdminCountryText, true },
   { kAdminStateCode, true },
