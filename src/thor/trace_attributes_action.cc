@@ -2,14 +2,13 @@
 
 using namespace prime_server;
 
+#include <valhalla/baldr/json.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/proto/trippath.pb.h>
-
 
 #include "thor/service.h"
 #include "thor/trip_path_controller.h"
@@ -27,38 +26,99 @@ namespace {
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
-  json::MapPtr serialize(odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
+
+  json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath& trip_path, const boost::optional<std::string>& id, double scale) {
+    //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
+
       if (trip_path.node(i-1).has_edge()) {
         const auto& edge = trip_path.node(i - 1).edge();
         auto names = json::array({});
-        for (const auto& name : edge.name())
-          names->push_back(name);
 
-        edges->emplace_back(json::map({
-          {"max_downward_grade", static_cast<int64_t>(edge.max_downward_grade())},
-          {"max_upward_grade", static_cast<int64_t>(edge.max_upward_grade())},
-          {"weighted_grade", json::fp_t{edge.weighted_grade(), 3}},
-          {"length", json::fp_t{edge.length() * scale, 3}},
-          {"speed", json::fp_t{edge.speed() * scale, 3}},
-          {"way_id", static_cast<uint64_t>(edge.way_id())},
-          {"id", static_cast<uint64_t>(edge.id())},
-          {"names", names}
-        }));
+        auto edgemap = json::map({});
+        if (edge.has_max_downward_grade())
+          edgemap->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+        if (edge.has_max_upward_grade())
+          edgemap->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+        if (edge.has_weighted_grade())
+          edgemap->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
+        if (edge.has_length())
+          edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
+        if (edge.has_speed())
+          edgemap->emplace("speed", json::fp_t{edge.speed() * scale, 3});
+        if (edge.has_way_id())
+          edgemap->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
+        if (edge.has_id())
+          edgemap->emplace("id", static_cast<uint64_t>(edge.id()));
+        if (edge.has_end_shape_index())
+          edgemap->emplace("end_shape_index", static_cast<int64_t>(edge.end_shape_index()));
+        if (edge.has_begin_shape_index())
+          edgemap->emplace("begin_shape_index", static_cast<int64_t>(edge.begin_shape_index()));
+        if (edge.name_size() > 0) {
+          for (const auto& name : edge.name())
+            names->push_back(name);
+          edgemap->emplace("names", names);
+        }
+        if (controller.node_attribute_enabled()) {
+          auto node = trip_path.node(i);
+          auto end_node = json::array({});
+          auto intersecting_edges = json::array({});
+          if (node.intersecting_edge_size() > 0) {
+            for (const auto& intersecting_edge : node.intersecting_edge())
+              intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
+          }
+          end_node->emplace_back(json::map({
+            {"intersecting_edges", intersecting_edges}
+          }));
+          edgemap->emplace("end_node", end_node);
+        }
+
+        edges->emplace_back(edgemap);
+
+        auto json = json::map({
+          {"edges", edges}
+        });
+        if (id)
+          json->emplace("id", *id);
+        if (edge.has_begin_shape_index() || edge.has_end_shape_index())
+          json->emplace("shape", trip_path.shape());
+
+        return json;
       }
     }
-    auto json = json::map({
-      {"edges", edges}
-    });
-    if (id)
-      json->emplace("id", *id);
-    return json;
   }
 }
 
 namespace valhalla {
 namespace thor {
+
+void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller) {
+  std::string filter_action = request.get("filters.action", "");
+
+  if (filter_action.size() && filter_action == "only") {
+    controller.disable_all();
+    for (const auto& kv : request.get_child("filters.attributes"))
+      controller.attributes.at(kv.second.get_value<std::string>()) = true;
+
+  } else if (filter_action.size() && filter_action == "none") {
+    controller.enable_all();
+    for (const auto& kv : request.get_child("filters.attributes"))
+      controller.attributes.at(kv.second.get_value<std::string>()) = false;
+
+  } else {
+    controller.disable_all();
+    //TODO:  This default will change
+    controller.attributes.at(kEdgeNames) = true;
+    controller.attributes.at(kEdgeId) = true;
+    controller.attributes.at(kEdgeWayId) = true;
+    controller.attributes.at(kEdgeSpeed) = true;
+    controller.attributes.at(kEdgeLength) = true;
+    controller.attributes.at(kEdgeWeightedGrade) = true;
+    controller.attributes.at(kEdgeMaxUpwardGrade) = true;
+    controller.attributes.at(kEdgeMaxDownwardGrade) = true;
+  }
+}
 
 /*
  * The trace_attributes action takes a GPS trace or latitude, longitude positions
@@ -83,25 +143,43 @@ worker_t::result_t thor_worker_t::trace_attributes(
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  bool exact_match = request.get<bool>("exact_match_only", false);
-
+  odin::TripPath trip_path;
   TripPathController controller;
-  // TODO parse include/exclude and set controller as needed - for now just default
+  auto shape_match = request.get<std::string>("shape_match", "edge_walk");
+  filter_attributes(request, controller);
 
   // If the exact points from a prior route that was run agains the Valhalla road network,
   //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  odin::TripPath trip_path = route_match(controller);
-  if (trip_path.node().size() == 0) {
-    if (!exact_match) {
-      //If no Valhalla route match, then use meili map matching to match to local route network.
-      //No shortcuts are used and detailed information at every intersection becomes available.
+  if (shape_match == "edge_walk") {
+    try {
+      trip_path = route_match(controller);
+    } catch (...) {
+      LOG_INFO("Could not find exact route match.  Use shape_match:'walk or snap' to fallback to map-matching algorithm");
+      valhalla_exception_t{400, 443};
+    }
+  // If non-exact shape points are used, then we need to correct this shape by sending them
+  // through the map-matching algorithm to snap the points to the correct shape
+  } else if (shape_match == "map_snap") {
+    try {
+      trip_path = map_match(controller);
+    } catch (...) {
+      LOG_INFO("Map-matching algorithm failed to snap the shape points to the correct shape.");
+      valhalla_exception_t{400, 444};
+    }
+  //If we think that we have the exact shape but there ends up being no Valhalla route match, then
+  // then we want to fallback to try and use meili map matching to match to local route network.
+  //No shortcuts are used and detailed information at every intersection becomes available.
+  } else if (shape_match == "walk_or_snap") {
+    trip_path = route_match(controller);
+    if (trip_path.node().size() == 0) {
       LOG_INFO("Could not find exact route match; Sending trace to map_match...");
       try {
         trip_path = map_match(controller);
       } catch (...) {
+        LOG_INFO("Map-matching algorithm failed to snap the shape points to the correct shape.");
         valhalla_exception_t{400, 444};
       }
-    } else throw valhalla_exception_t{400, 443};
+    }
   }
   auto id = request.get_optional<std::string>("id");
   //length and speed default to km
@@ -111,7 +189,10 @@ worker_t::result_t thor_worker_t::trace_attributes(
     scale = kMilePerKm;
 
   //serialize output to Thor
-  json::MapPtr json = serialize(trip_path, id, scale);
+  json::MapPtr json;
+  if (trip_path.node().size() > 0)
+    json = serialize(controller, trip_path, id, scale);
+  else throw valhalla_exception_t{400, 442};
 
   //jsonp callback if need be
   std::ostringstream stream;

@@ -107,6 +107,9 @@ odin::TripPath thor_worker_t::route_match(const TripPathController& controller) 
                                              correlated.back(), through_loc);
 
   }
+  if (trip_path.node().size() == 0)
+    throw valhalla_exception_t{400, 443};
+
   return trip_path;
 }
 

@@ -80,6 +80,7 @@ class thor_worker_t {
   void parse_shape(const boost::property_tree::ptree& request);
   void parse_trace_config(const boost::property_tree::ptree& request);
   std::string parse_costing(const boost::property_tree::ptree& request);
+  void filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller);
 
   prime_server::worker_t::result_t route(
       const boost::property_tree::ptree& request,
