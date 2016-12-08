@@ -27,7 +27,7 @@ namespace {
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath trip_path, const boost::optional<std::string>& id, double scale) {
+  json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath& trip_path, const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
@@ -94,25 +94,17 @@ namespace valhalla {
 namespace thor {
 
 void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller) {
-  std::unordered_set<std::string> attributes_include_;
-  std::unordered_set<std::string> attributes_exclude_;
   std::string filter_action = request.get("filters.action", "");
 
   if (filter_action.size() && filter_action == "only") {
     controller.disable_all();
     for (const auto& kv : request.get_child("filters.attributes"))
-      attributes_include_.emplace(kv.second.get_value<std::string>());
-
-    for (const auto& include : attributes_include_)
-      controller.attributes.at(include) = true;
+      controller.attributes.at(kv.second.get_value<std::string>()) = true;
 
   } else if (filter_action.size() && filter_action == "none") {
     controller.enable_all();
     for (const auto& kv : request.get_child("filters.attributes"))
-      attributes_exclude_.emplace(kv.second.get_value<std::string>());
-
-    for (const auto& exclude : attributes_exclude_)
-      controller.attributes.at(exclude) = false;
+      controller.attributes.at(kv.second.get_value<std::string>()) = false;
 
   } else {
     controller.disable_all();
