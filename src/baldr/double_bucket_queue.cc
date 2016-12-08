@@ -49,14 +49,6 @@ void DoubleBucketQueue::clear() {
   currentbucket_ = buckets_.begin();
 }
 
-// Adds a label index to the bucketed sort. Adds it to the appropriate bucket
-// given the cost. If the cost is greater than maxcost_ the label
-// is placed in the overflow bucket. If the cost is < the current bucket
-// cost then the label is placed in the current bucket to prevent underflow.
-void DoubleBucketQueue::add(const uint32_t label, const float cost) {
-  get_bucket(cost).push_back(label);
-}
-
 // The specified label now has a smaller cost.  Reorders it in the sorted list
 void DoubleBucketQueue::decrease(const uint32_t label, const float newcost,
                                  const float previouscost) {
@@ -112,17 +104,6 @@ uint32_t DoubleBucketQueue::pop() {
     }
   }
   return kInvalidLabel;
-}
-
-// Returns the bucket given the cost
-std::deque<uint32_t>& DoubleBucketQueue::get_bucket(const float cost) {
-  if (cost < currentcost_) {
-    return *currentbucket_;
-  } else {
-    return (cost < maxcost_) ?
-        buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
-        overflowbucket_;
-  }
 }
 
 // Empties the overflow bucket by placing the labels into the

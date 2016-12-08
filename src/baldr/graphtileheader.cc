@@ -316,12 +316,15 @@ void GraphTileHeader::set_traffic_chunk_offset(const uint32_t offset) {
 
 // Gets the offset to the end of the tile.
 uint32_t GraphTileHeader::end_offset() const {
-  return end_offset_;
+  return empty_slots_[0];
 }
 
-// Sets the offset to the end of the tile.
+// Sets the offset to the end of the tile. Fills all empty slots with the
+// offset value. This allows compatibility with different tile versions.
 void GraphTileHeader::set_end_offset(uint32_t offset) {
-  end_offset_ = offset;
+  for (size_t i = 0; i < kEmptySlots; i++) {
+    empty_slots_[i] = offset;
+  }
 }
 
 }
