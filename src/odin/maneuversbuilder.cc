@@ -176,6 +176,11 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   maneuvers.emplace_front();
   InitializeManeuver(maneuvers.front(), trip_path_->GetLastNodeIndex());
 
+#ifdef LOGGING_LEVEL_TRACE
+    LOG_TRACE("=============================================");
+    LOG_TRACE(std::string("osm_changeset=") + std::to_string(trip_path_->osm_changeset()));
+#endif
+
   // Step through nodes in reverse order to produce maneuvers
   // excluding the last and first nodes
   for (int i = (trip_path_->GetLastNodeIndex() - 1); i > 0; --i) {
