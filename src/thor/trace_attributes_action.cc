@@ -27,7 +27,9 @@ namespace {
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
 
-  json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath& trip_path, const boost::optional<std::string>& id, double scale) {
+  json::MapPtr serialize(const TripPathController& controller,
+                       const valhalla::odin::TripPath& trip_path,
+                       const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
@@ -75,19 +77,24 @@ namespace {
         }
 
         edges->emplace_back(edgemap);
-
-        auto json = json::map({
-          {"edges", edges}
-        });
-        if (id)
-          json->emplace("id", *id);
-        if (edge.has_begin_shape_index() || edge.has_end_shape_index())
-          json->emplace("shape", trip_path.shape());
-
-        return json;
       }
     }
+
+    auto json = json::map({
+      {"edges", edges}
+    });
+
+    // Add if it exists
+    if (id)
+      json->emplace("id", *id);
+
+    // Add shape if it exists
+    if (trip_path.has_shape())
+      json->emplace("shape", trip_path.shape());
+
+    return json;
   }
+
 }
 
 namespace valhalla {
