@@ -74,7 +74,9 @@ namespace {
     }
   }
 
-  json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath& trip_path, const boost::optional<std::string>& id, double scale) {
+  json::MapPtr serialize(const TripPathController& controller,
+                       const valhalla::odin::TripPath& trip_path,
+                       const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     auto returnShape = false;
@@ -221,6 +223,7 @@ namespace {
 
     return json;
   }
+
 }
 
 namespace valhalla {
