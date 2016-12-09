@@ -150,6 +150,7 @@ namespace {
             exit_number_elements->emplace(
                 "exit_number", edge.sign().exit_number(i));
           }
+          edgemap->emplace("sign", exit_number_elements);
           auto exit_branch_elements = json::map({});
           for (int i = 0; i < edge.sign().exit_branch_size(); ++i) {
              // Add the exit number
