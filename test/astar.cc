@@ -49,6 +49,18 @@ namespace {
 // c----->--<-----d
 //       5  6
 //
+// second test is a triangle set of roads, where the height of the triangle is
+// about at third of its width.
+//
+//      8  10
+//  e--->--<---f
+//  \         /
+// 9 v       v 11
+//    \     /
+//  12 ^   ^ 13
+//      \ /
+//       g
+//
 vb::TileHierarchy h("test/fake_tiles_astar");
 vb::GraphId tile_id = h.GetGraphId({.125, .125}, 2);
 
@@ -57,6 +69,10 @@ std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0
 std::pair<vb::GraphId, vm::PointLL> b({tile_id.tileid(), tile_id.level(), 1}, {0.10, 0.10});
 std::pair<vb::GraphId, vm::PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {0.01, 0.01});
 std::pair<vb::GraphId, vm::PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {0.10, 0.01});
+
+std::pair<vb::GraphId, vm::PointLL> e({tile_id.tileid(), tile_id.level(), 4}, {0.01, 0.14});
+std::pair<vb::GraphId, vm::PointLL> f({tile_id.tileid(), tile_id.level(), 5}, {0.10, 0.14});
+std::pair<vb::GraphId, vm::PointLL> g({tile_id.tileid(), tile_id.level(), 6}, {0.05, 0.11});
 } // namespace node
 
 #ifdef MAKE_TEST_TILES
@@ -70,6 +86,7 @@ void make_tile() {
     NodeInfo node_builder;
     node_builder.set_latlng(v.second);
     //node_builder.set_road_class(RoadClass::kSecondary);
+    node_builder.set_access(vb::kAllAccess);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
     edge_index += edge_count;
@@ -78,8 +95,9 @@ void make_tile() {
 
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u, const std::pair<vb::GraphId, vm::PointLL>& v,
                       const uint32_t name, const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1, {}, {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
+    edge_builder.set_forwardaccess(vb::kAllAccess);
     std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if(!forward)
       std::reverse(shape.begin(), shape.end());
@@ -106,6 +124,19 @@ void make_tile() {
   add_edge(node::d, node::c, 3, 5, false);
   add_edge(node::d, node::b, 2, 3, false);
   add_node(node::d, 2);
+
+  // second set of roads
+  add_edge(node::e, node::f, 4, 10, true);
+  add_edge(node::e, node::g, 5, 12, true);
+  add_node(node::e, 2);
+
+  add_edge(node::f, node::e, 4,  8, false);
+  add_edge(node::f, node::g, 6, 13, true);
+  add_node(node::f, 2);
+
+  add_edge(node::g, node::e, 5,  9, false);
+  add_edge(node::g, node::f, 6, 11, false);
+  add_node(node::g, 2);
 
   tile.StoreTileData();
 
@@ -179,6 +210,28 @@ void TestTrivialPath() {
   assert_is_trivial_path(origin, dest, 0);
 }
 
+// test that a path from E to F succeeds, even if the edges from E and F
+// to G appear first in the PathLocation.
+void TestTrivialPathTriangle() {
+  using node::e;
+  using node::f;
+
+  vb::PathLocation origin(e.second);
+  origin.edges.emplace_back(tile_id + uint64_t(9), 0.0f, e.second, 0.0f);
+  origin.edges.emplace_back(tile_id + uint64_t(12), 1.0f, e.second, 0.0f);
+  origin.edges.emplace_back(tile_id + uint64_t(8), 0.0f, e.second, 0.0f);
+  origin.edges.emplace_back(tile_id + uint64_t(10), 1.0f, e.second, 0.0f);
+
+  vb::PathLocation dest(f.second);
+  dest.edges.emplace_back(tile_id + uint64_t(11), 0.0f, f.second, 0.0f);
+  dest.edges.emplace_back(tile_id + uint64_t(13), 1.0f, f.second, 0.0f);
+  dest.edges.emplace_back(tile_id + uint64_t(10), 0.0f, f.second, 0.0f);
+  dest.edges.emplace_back(tile_id + uint64_t(8), 1.0f, f.second, 0.0f);
+
+  // this should go along the path from E to F
+  assert_is_trivial_path(origin, dest, 8);
+}
+
 } // anonymous namespace
 
 int main() {
@@ -190,6 +243,7 @@ int main() {
 #endif /* MAKE_TEST_TILES */
 
   suite.test(TEST_CASE(TestTrivialPath));
+  suite.test(TEST_CASE(TestTrivialPathTriangle));
 
   return suite.tear_down();
 }
