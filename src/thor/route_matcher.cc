@@ -23,14 +23,23 @@ namespace thor {
 
 namespace {
 
+// Minimum tolerance for edge length
+constexpr float kMinLengthTolerance = 10.0f;
+
 // Get the length to compare to the edge length
 float length_comparison(const float length, const bool exact_match) {
-  // If exact match we use a very small tolerance
+  // Alter tolerance based on exact_match flag
+  float t, max_t;
   if (exact_match) {
-    return (length < 10.0f) ? length + 5.0f : length * 1.05f;
+    t = length * 1.05f;
+    max_t = 25.0f;
   } else {
-    return (length < 10.0f) ? length + 5.0f : length * 1.1f;
+    t = length * 1.1f;
+    max_t = 100.0f;
   }
+  float tolerance = (t < kMinLengthTolerance) ? kMinLengthTolerance :
+                      (t > max_t) ? max_t : t;
+  return length + tolerance;
 }
 
 const PathLocation::PathEdge* find_begin_edge(
@@ -161,10 +170,17 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        return (expand_from_node(mode_costing, mode, reader, shape, distances,
+        if (expand_from_node(mode_costing, mode, reader, shape, distances,
                                  index, end_node_tile, de->endnode(),
                                  stop_node, prev_edge_label, elapsed_time,
-                                 path_infos, false));
+                                 path_infos, false)) {
+          return true;
+        } else {
+          // Match failed along this edge, pop the last entry off path_infos
+          // and try the next edge
+          path_infos.pop_back();
+          break;
+        }
       }
       index++;
     }
