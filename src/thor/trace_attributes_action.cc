@@ -26,10 +26,58 @@ namespace {
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
+  const std::unordered_map<int, std::string> vehicle_to_string {
+    { static_cast<int>(TripPath_VehicleType_kCar), "car" },
+    { static_cast<int>(TripPath_VehicleType_kMotorcycle), "motorcycle" },
+    { static_cast<int>(TripPath_VehicleType_kAutoBus), "bus" },
+    { static_cast<int>(TripPath_VehicleType_kTractorTrailer), "tractor_trailer" },
+  };
+
+  std::unordered_map<int, std::string> pedestrian_to_string {
+    { static_cast<int>(TripPath_PedestrianType_kFoot), "foot" },
+    { static_cast<int>(TripPath_PedestrianType_kWheelchair), "wheelchair" },
+    { static_cast<int>(TripPath_PedestrianType_kSegway), "segway" },
+  };
+
+  std::unordered_map<int, std::string> bicycle_to_string {
+    { static_cast<int>(TripPath_BicycleType_kRoad), "road" },
+    { static_cast<int>(TripPath_BicycleType_kCross), "cross" },
+    { static_cast<int>(TripPath_BicycleType_kHybrid), "hybrid" },
+    { static_cast<int>(TripPath_BicycleType_kMountain), "mountain" },
+  };
+
+  std::unordered_map<int, std::string> transit_to_string {
+    { static_cast<int>(TripPath_TransitType_kTram), "tram" },
+    { static_cast<int>(TripPath_TransitType_kMetro), "metro" },
+    { static_cast<int>(TripPath_TransitType_kRail), "rail" },
+    { static_cast<int>(TripPath_TransitType_kBus), "bus" },
+    { static_cast<int>(TripPath_TransitType_kFerry), "ferry" },
+    { static_cast<int>(TripPath_TransitType_kCableCar), "cable_car" },
+    { static_cast<int>(TripPath_TransitType_kGondola), "gondola" },
+    { static_cast<int>(TripPath_TransitType_kFunicular), "funicular" },
+  };
+
+  std::pair<std::string, std::string> travel_mode_type(const valhalla::odin::TripPath::Edge& edge) {
+    switch (edge.travel_mode()) {
+      case TripPath_TravelMode_kDrive: {
+        auto i = edge.has_vehicle_type() ? vehicle_to_string.find(edge.vehicle_type()) : vehicle_to_string.cend();
+        return i == vehicle_to_string.cend() ? std::make_pair("drive", "car") : std::make_pair("drive", i->second);
+      }
+      case TripPath_TravelMode_kPedestrian: {
+        auto i = edge.has_pedestrian_type() ? pedestrian_to_string.find(edge.pedestrian_type()) : pedestrian_to_string.cend();
+        return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot") : std::make_pair("pedestrian", i->second);
+      }
+      case TripPath_TravelMode_kBicycle: {
+        auto i = edge.has_bicycle_type() ? bicycle_to_string.find(edge.bicycle_type()) : bicycle_to_string.cend();
+        return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road") : std::make_pair("bicycle", i->second);
+      }
+    }
+  }
 
   json::MapPtr serialize(TripPathController& controller, valhalla::odin::TripPath& trip_path, const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
+    auto returnShape = false;
     for (int i = 1; i < trip_path.node().size(); i++) {
 
       if (trip_path.node(i-1).has_edge()) {
@@ -37,24 +85,103 @@ namespace {
         auto names = json::array({});
 
         auto edgemap = json::map({});
+        if (edge.has_truck_route())
+          edgemap->emplace("truck_route", static_cast<bool>(edge.truck_route()));
+        if (edge.has_truck_speed())
+          edgemap->emplace("truck_speed", json::fp_t{edge.truck_speed(), 3});
+        if (edge.has_speed_limit())
+          edgemap->emplace("speed_limit", static_cast<uint64_t>(edge.speed_limit()));
+        if (edge.has_density())
+          edgemap->emplace("density", static_cast<uint64_t>(edge.density()));
+      //  if (edge.has_sidewalk())
+      //    edgemap->emplace("sidewalk", edge.sidewalk());
+        if (edge.has_bicycle_network())
+          edgemap->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
+      //  if (edge.has_cycle_lane())
+      //    edgemap->emplace("cycle_lane", edge.cycle_lane());
+        if (edge.has_lane_count())
+          edgemap->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
         if (edge.has_max_downward_grade())
           edgemap->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
         if (edge.has_max_upward_grade())
           edgemap->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
         if (edge.has_weighted_grade())
           edgemap->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
-        if (edge.has_length())
-          edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
-        if (edge.has_speed())
-          edgemap->emplace("speed", json::fp_t{edge.speed() * scale, 3});
         if (edge.has_way_id())
           edgemap->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
         if (edge.has_id())
           edgemap->emplace("id", static_cast<uint64_t>(edge.id()));
-        if (edge.has_end_shape_index())
-          edgemap->emplace("end_shape_index", static_cast<int64_t>(edge.end_shape_index()));
-        if (edge.has_begin_shape_index())
-          edgemap->emplace("begin_shape_index", static_cast<int64_t>(edge.begin_shape_index()));
+        if (edge.has_travel_mode()) {
+          auto mode_type = travel_mode_type(edge);
+          edgemap->emplace("travel_mode", mode_type.first);
+        }
+        if (edge.has_sign()) {
+          auto exit_number_elements = json::map({});
+          for (int i = 0; i < edge.sign().exit_number_size(); ++i) {
+             // Add the exit number
+            exit_number_elements->emplace(
+                "exit_number", edge.sign().exit_number(i));
+          }
+          auto exit_branch_elements = json::map({});
+          for (int i = 0; i < edge.sign().exit_branch_size(); ++i) {
+             // Add the exit number
+            exit_branch_elements->emplace(
+                "exit_branch", edge.sign().exit_branch(i));
+          }
+          edgemap->emplace("sign", exit_branch_elements);
+          auto exit_toward_elements = json::map({});
+          for (int i = 0; i < edge.sign().exit_toward_size(); ++i) {
+             // Add the exit number
+            exit_toward_elements->emplace(
+                "exit_toward", edge.sign().exit_toward(i));
+          }
+          edgemap->emplace("sign", exit_toward_elements);
+          auto exit_name_elements = json::map({});
+          for (int i = 0; i < edge.sign().exit_name_size(); ++i) {
+             // Add the exit number
+            exit_name_elements->emplace(
+                "exit_name", edge.sign().exit_name(i));
+          }
+          edgemap->emplace("sign", exit_name_elements);
+        }
+        if (edge.has_surface())
+          edgemap->emplace("surface", static_cast<uint64_t>(edge.surface()));
+        if (edge.has_drive_on_right())
+          edgemap->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
+        if (edge.has_internal_intersection())
+          edgemap->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
+        if (edge.has_roundabout())
+          edgemap->emplace("roundabout", static_cast<bool>(edge.roundabout()));
+        if (edge.has_bridge())
+          edgemap->emplace("bridge", static_cast<bool>(edge.bridge()));
+        if (edge.has_tunnel())
+          edgemap->emplace("tunnel", static_cast<bool>(edge.tunnel()));
+        if (edge.has_unpaved())
+          edgemap->emplace("unpaved", static_cast<bool>(edge.unpaved()));
+        if (edge.has_toll())
+            edgemap->emplace("toll", static_cast<bool>(edge.toll()));
+     /*  if (edge.has_use())
+          edgemap->emplace("use", edge.use());
+        if (edge.has_traversability())
+          edgemap->emplace("traversability", edge.traversability());*/
+        if (edge.has_end_shape_index()) {
+          returnShape = true;
+          edgemap->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
+        }
+        if (edge.has_begin_shape_index()) {
+          returnShape = true;
+          edgemap->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
+        }
+        if (edge.has_end_heading())
+          edgemap->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
+        if (edge.has_begin_heading())
+          edgemap->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
+      //  if (edge.has_road_class())
+      //    edgemap->emplace("road_class", edge.road_class());
+        if (edge.has_speed())
+          edgemap->emplace("speed", json::fp_t{edge.speed() * scale, 3});
+        if (edge.has_length())
+          edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
         if (edge.name_size() > 0) {
           for (const auto& name : edge.name())
             names->push_back(name);
@@ -65,8 +192,14 @@ namespace {
           auto end_node = json::array({});
           auto intersecting_edges = json::array({});
           if (node.intersecting_edge_size() > 0) {
-            for (const auto& intersecting_edge : node.intersecting_edge())
+            for (const auto& intersecting_edge : node.intersecting_edge()) {
+             /* intersecting_edges->push_back(intersecting_edge.walkability()));
+              intersecting_edges->push_back(intersecting_edge.cyclability());
+              intersecting_edges->push_back(intersecting_edge.driveability());*/
+              intersecting_edges->push_back(static_cast<bool>(intersecting_edge.curr_name_consistency()));
+              intersecting_edges->push_back(static_cast<bool>(intersecting_edge.prev_name_consistency()));
               intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
+            }
           }
           end_node->emplace_back(json::map({
             {"intersecting_edges", intersecting_edges}
@@ -75,18 +208,18 @@ namespace {
         }
 
         edges->emplace_back(edgemap);
-
-        auto json = json::map({
-          {"edges", edges}
-        });
-        if (id)
-          json->emplace("id", *id);
-        if (edge.has_begin_shape_index() || edge.has_end_shape_index())
-          json->emplace("shape", trip_path.shape());
-
-        return json;
       }
     }
+
+    auto json = json::map({
+      {"edges", edges}
+    });
+    if (id)
+      json->emplace("id", *id);
+    if (returnShape)
+      json->emplace("shape", trip_path.shape());
+
+    return json;
   }
 }
 
@@ -107,8 +240,10 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
       controller.attributes.at(kv.second.get_value<std::string>()) = false;
 
   } else {
-    controller.disable_all();
+    //enable all for testing with no filter for now
+    controller.enable_all();
     //TODO:  This default will change
+   /* controller.disable_all();
     controller.attributes.at(kEdgeNames) = true;
     controller.attributes.at(kEdgeId) = true;
     controller.attributes.at(kEdgeWayId) = true;
@@ -116,7 +251,7 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
     controller.attributes.at(kEdgeLength) = true;
     controller.attributes.at(kEdgeWeightedGrade) = true;
     controller.attributes.at(kEdgeMaxUpwardGrade) = true;
-    controller.attributes.at(kEdgeMaxDownwardGrade) = true;
+    controller.attributes.at(kEdgeMaxDownwardGrade) = true;*/
   }
 }
 
