@@ -28,9 +28,7 @@ namespace bfs = boost::filesystem;
 namespace {
 
 vm::PointLL interp(vm::PointLL a, vm::PointLL b, double frac) {
-  return vm::PointLL(
-    a.lng() + ((b.lng() - a.lng()) * frac),
-    a.lat() + ((b.lat() - a.lat()) * frac));
+  return vm::PointLL(a.AffineCombination(1.0 - frac, frac, b));
 }
 
 void subsegment(std::vector<vm::PointLL> &seg, uint32_t dist) {
@@ -112,7 +110,7 @@ bool check_access(const vb::DirectedEdge *edge) {
   access &= edge->forwardaccess();
 
   // if any edge is a shortcut, then drop the whole path
-  if (edge->shortcut()) {
+  if (edge->is_shortcut()) {
     return false;
   }
 
@@ -130,9 +128,11 @@ bool check_access(const vb::DirectedEdge *edge) {
 }
 
 bool is_oneway(const vb::DirectedEdge *e) {
+  uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
+    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
   // TODO: don't need to find opposite edge, as this info alread in the
   // reverseaccess mask?
-  return e->reverseaccess() == 0;
+  return (e->reverseaccess() & vehicular) == 0;
 }
 
 enum class FormOfWay {
