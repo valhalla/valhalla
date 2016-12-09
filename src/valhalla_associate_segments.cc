@@ -273,6 +273,14 @@ vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference &lrp) {
   return coord;
 }
 
+vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &reader, const vs::EdgeFilter& edge_filter = vl::PassThroughEdgeFilter, const vs::NodeFilter& node_filter = vl::PassThroughNodeFilter) {
+  std::vector<vb::Location> locs;
+  locs.emplace_back(loc);
+  auto results = vl::Search(locs, reader, edge_filter, node_filter);
+  assert(results.size() == 1);
+  return results.begin()->second;
+}
+
 void edge_association::add_tile(const std::string &file_name) {
   pbf::Tile tile;
   {
@@ -300,7 +308,7 @@ void edge_association::add_tile(const std::string &file_name) {
       locs.resize(size - 1);
 
       std::cout << ">> " << entry_id << "\n";
-      auto origin = vl::Search(vb::Location(coord_for_lrp(segment.lrps(0))), m_reader);
+      auto origin = loki_search_single(vb::Location(coord_for_lrp(segment.lrps(0))), m_reader);
       for (size_t i = 0; i < size - 1; ++i) {
         auto &lrp = segment.lrps(i);
         auto coord = coord_for_lrp(lrp);
@@ -308,7 +316,7 @@ void edge_association::add_tile(const std::string &file_name) {
 
         vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
 
-        auto dest = vl::Search(vb::Location(next_coord), m_reader);
+        auto dest = loki_search_single(vb::Location(next_coord), m_reader);
 
         std::cout << " >> FROM " << coord.lat() << "/" << coord.lng() << "\n";
         std::cout << " >>   TO " << next_coord.lat() << "/" << next_coord.lng() << "\n";
