@@ -3,6 +3,7 @@
 using namespace prime_server;
 
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <valhalla/midgard/logging.h>
@@ -79,7 +80,6 @@ namespace {
                        const boost::optional<std::string>& id, double scale) {
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
-    auto returnShape = false;
     for (int i = 1; i < trip_path.node().size(); i++) {
 
       if (trip_path.node(i-1).has_edge()) {
@@ -90,7 +90,7 @@ namespace {
         if (edge.has_truck_route())
           edgemap->emplace("truck_route", static_cast<bool>(edge.truck_route()));
         if (edge.has_truck_speed())
-          edgemap->emplace("truck_speed", json::fp_t{edge.truck_speed(), 3});
+          edgemap->emplace("truck_speed", json::fp_t{std::round(edge.truck_speed() * scale), 3});
         if (edge.has_speed_limit())
           edgemap->emplace("speed_limit", static_cast<uint64_t>(edge.speed_limit()));
         if (edge.has_density())
@@ -99,8 +99,10 @@ namespace {
       //    edgemap->emplace("sidewalk", edge.sidewalk());
         if (edge.has_bicycle_network())
           edgemap->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
-      //  if (edge.has_cycle_lane())
-      //    edgemap->emplace("cycle_lane", edge.cycle_lane());
+      //  if (edge.has_cycle_lane()) {
+      //    auto cycle_lane = valhalla::baldr::graphconstants::CycleLane::to_string(edge.cycle_lane());
+      //    edgemap->emplace("cycle_lane", cycle_lane);
+      //  }
         if (edge.has_lane_count())
           edgemap->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
         if (edge.has_max_downward_grade())
@@ -166,14 +168,10 @@ namespace {
           edgemap->emplace("use", edge.use());
         if (edge.has_traversability())
           edgemap->emplace("traversability", edge.traversability());*/
-        if (edge.has_end_shape_index()) {
-          returnShape = true;
+        if (edge.has_end_shape_index())
           edgemap->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
-        }
-        if (edge.has_begin_shape_index()) {
-          returnShape = true;
+        if (edge.has_begin_shape_index())
           edgemap->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
-        }
         if (edge.has_end_heading())
           edgemap->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
         if (edge.has_begin_heading())
@@ -181,7 +179,7 @@ namespace {
       //  if (edge.has_road_class())
       //    edgemap->emplace("road_class", edge.road_class());
         if (edge.has_speed())
-          edgemap->emplace("speed", json::fp_t{edge.speed() * scale, 3});
+          edgemap->emplace("speed", json::fp_t{std::round(edge.speed() * scale), 3});
         if (edge.has_length())
           edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
         if (edge.name_size() > 0) {
@@ -208,7 +206,6 @@ namespace {
           }));
           edgemap->emplace("end_node", end_node);
         }
-
         edges->emplace_back(edgemap);
       }
     }
@@ -218,7 +215,7 @@ namespace {
     });
     if (id)
       json->emplace("id", *id);
-    if (returnShape)
+    if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
     return json;
