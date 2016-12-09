@@ -222,21 +222,46 @@ namespace {
             names->push_back(name);
           edgemap->emplace("names", names);
         }
+        // Process nodes only if any node items are enabled
         if (controller.node_attribute_enabled()) {
-          auto node = trip_path.node(i);
-          auto end_node = json::map({});
-          auto intersecting_edges = json::array({});
-          for (int i = 0; i< node.intersecting_edge_size(); ++i) {
-           // intersecting_edges->push_back(static_cast<TripPath_Traversability>(node.intersecting_edge(i).walkability()));
-           // intersecting_edges->push_back(static_cast<TripPath_Traversability>(node.intersecting_edge(i).cyclability()));
-           // intersecting_edges->push_back(static_cast<TripPath_Traversability>(node.intersecting_edge(i).driveability()));
-            intersecting_edges->push_back(static_cast<bool>(node.intersecting_edge(i).curr_name_consistency()));
-            intersecting_edges->push_back(static_cast<bool>(node.intersecting_edge(i).prev_name_consistency()));
-            intersecting_edges->push_back(static_cast<uint64_t>(node.intersecting_edge(i).begin_heading()));
+          const auto& node = trip_path.node(i);
+          auto end_node_map = json::map({});
+
+          if (node.intersecting_edge_size() > 0) {
+            auto intersecting_edge_array = json::array({});
+            for (const auto& xedge : node.intersecting_edge()) {
+              auto xedge_map = json::map({});
+              xedge_map->emplace("walkability", to_string(static_cast<TripPath_Traversability>(xedge.walkability())));
+              xedge_map->emplace("cyclability", to_string(static_cast<TripPath_Traversability>(xedge.cyclability())));
+              xedge_map->emplace("driveability", to_string(static_cast<TripPath_Traversability>(xedge.driveability())));
+              xedge_map->emplace("curr_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
+              xedge_map->emplace("prev_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
+              xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
+
+              intersecting_edge_array->emplace_back(xedge_map);
+            }
+            end_node_map->emplace("intersecting_edges", intersecting_edge_array);
           }
-          end_node->emplace("intersecting_edges", intersecting_edges);
-          edgemap->emplace("end_node", end_node);
+          // TODO - add in other node attributes
+          // kNodeElapsedTime = "node.elapsed_time";
+          // kNodeaAdminIndex = "node.admin_index";
+          // kNodeType = "node.type";
+          // kNodeFork = "node.fork";
+          // kNodeTimeZone = "node.time_zone";
+
+          // TODO
+          // kNodeTransitStopInfoType = "node.transit_stop_info.type";
+          // kNodeTransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
+          // kNodetransitStopInfoName = "node.transit_stop_info.name";
+          // kNodeTransitStopInfoArrivalDateTime = "node.transit_stop_info.arrival_date_time";
+          // kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
+          // kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
+          // kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
+          // kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
+
+          edgemap->emplace("end_node", end_node_map);
         }
+
         edges->emplace_back(edgemap);
       }
     }
