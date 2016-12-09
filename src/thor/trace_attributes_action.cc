@@ -10,6 +10,8 @@ using namespace prime_server;
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/errorcode_util.h>
+#include <valhalla/odin/util.h>
+#include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 
 #include "thor/service.h"
@@ -104,7 +106,15 @@ namespace {
 
   json::MapPtr serialize(const TripPathController& controller,
                        const valhalla::odin::TripPath& trip_path,
-                       const boost::optional<std::string>& id, double scale) {
+                       const boost::optional<std::string>& id,
+                       const DirectionsOptions& directions_options) {
+    // Length and speed default to kilometers
+    double scale = 1;
+    if (directions_options.has_units()
+        && directions_options.units() == DirectionsOptions::kMiles) {
+      scale = kMilePerKm;
+    }
+
     //lets get some edge attributes
     json::ArrayPtr edges = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
@@ -338,16 +348,17 @@ worker_t::result_t thor_worker_t::trace_attributes(
     }
   }
   auto id = request.get_optional<std::string>("id");
-  //length and speed default to km
-  double scale = 1;
-  auto units = request.get<std::string>("units", "km");
-  if ((units == "mi") || (units == "miles"))
-    scale = kMilePerKm;
+
+  // Get the directions_options if they are in the request
+  DirectionsOptions directions_options;
+  auto options = request.get_child_optional("directions_options");
+  if(options)
+    directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
   //serialize output to Thor
   json::MapPtr json;
   if (trip_path.node().size() > 0)
-    json = serialize(controller, trip_path, id, scale);
+    json = serialize(controller, trip_path, id, directions_options);
   else throw valhalla_exception_t{400, 442};
 
   //jsonp callback if need be
