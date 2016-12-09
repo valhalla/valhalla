@@ -104,7 +104,7 @@ namespace {
         if (edge.has_truck_route())
           edgemap->emplace("truck_route", static_cast<bool>(edge.truck_route()));
         if (edge.has_truck_speed())
-          edgemap->emplace("truck_speed", json::fp_t{std::round(edge.truck_speed() * scale), 3});
+          edgemap->emplace("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
         if (edge.has_speed_limit())
           edgemap->emplace("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit())));
         if (edge.has_density())
@@ -188,10 +188,10 @@ namespace {
           edgemap->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
         if (edge.has_begin_heading())
           edgemap->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
-      //  if (edge.has_road_class())
-      //    edgemap->emplace("road_class", edge.road_class());
+        if (edge.has_road_class())
+          edgemap->emplace("road_class", to_string(static_cast<RoadClass>(edge.road_class())));
         if (edge.has_speed())
-          edgemap->emplace("speed", json::fp_t{std::round(edge.speed() * scale), 3});
+          edgemap->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
         if (edge.has_length())
           edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
         if (edge.name_size() > 0) {
@@ -201,7 +201,7 @@ namespace {
         }
         if (controller.node_attribute_enabled()) {
           auto node = trip_path.node(i);
-          auto end_node = json::array({});
+          auto end_node = json::map({});
           auto intersecting_edges = json::array({});
           if (node.intersecting_edge_size() > 0) {
             for (const auto& intersecting_edge : node.intersecting_edge()) {
@@ -213,9 +213,7 @@ namespace {
               intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
             }
           }
-          end_node->emplace_back(json::map({
-            {"intersecting_edges", intersecting_edges}
-          }));
+          end_node->emplace("intersecting_edges", intersecting_edges);
           edgemap->emplace("end_node", end_node);
         }
         edges->emplace_back(edgemap);
