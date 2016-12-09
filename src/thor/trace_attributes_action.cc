@@ -84,11 +84,11 @@ namespace {
       {"edges", edges}
     });
 
-    // Add id is exists
+    // Add if it exists
     if (id)
       json->emplace("id", *id);
 
-    // Add shape if exists
+    // Add shape if it exists
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
