@@ -50,18 +50,7 @@ namespace {
     { static_cast<int>(TripPath_BicycleType_kMountain), "mountain" },
   };
 
-  std::unordered_map<int, std::string> transit_to_string {
-    { static_cast<int>(TripPath_TransitType_kTram), "tram" },
-    { static_cast<int>(TripPath_TransitType_kMetro), "metro" },
-    { static_cast<int>(TripPath_TransitType_kRail), "rail" },
-    { static_cast<int>(TripPath_TransitType_kBus), "bus" },
-    { static_cast<int>(TripPath_TransitType_kFerry), "ferry" },
-    { static_cast<int>(TripPath_TransitType_kCableCar), "cable_car" },
-    { static_cast<int>(TripPath_TransitType_kGondola), "gondola" },
-    { static_cast<int>(TripPath_TransitType_kFunicular), "funicular" },
-  };
-
-  std::pair<std::string, std::string> travel_mode_type(const valhalla::odin::TripPath::Edge& edge) {
+  std::pair<std::string, std::string> travel_mode_type(const TripPath::Edge& edge) {
     switch (edge.travel_mode()) {
       case TripPath_TravelMode_kDrive: {
         auto i = edge.has_vehicle_type() ? vehicle_to_string.find(edge.vehicle_type()) : vehicle_to_string.cend();
@@ -133,7 +122,7 @@ namespace {
         if (edge.has_density())
           edgemap->emplace("density", static_cast<uint64_t>(edge.density()));
         if (edge.has_sidewalk())
-          edgemap->emplace("sidewalk", to_string(static_cast<TripPath_Sidewalk>(edge.sidewalk())));
+          edgemap->emplace("sidewalk", to_string(edge.sidewalk()));
         if (edge.has_bicycle_network())
           edgemap->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
         if (edge.has_cycle_lane())
@@ -199,10 +188,10 @@ namespace {
           edgemap->emplace("unpaved", static_cast<bool>(edge.unpaved()));
         if (edge.has_toll())
             edgemap->emplace("toll", static_cast<bool>(edge.toll()));
-     //  if (edge.has_use())
-     //     edgemap->emplace("use", edge.use());
+       if (edge.has_use())
+          edgemap->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
         if (edge.has_traversability())
-          edgemap->emplace("traversability", to_string(static_cast<TripPath_Traversability>(edge.traversability())));
+          edgemap->emplace("traversability", to_string(edge.traversability()));
         if (edge.has_end_shape_index())
           edgemap->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
         if (edge.has_begin_shape_index())
@@ -212,7 +201,7 @@ namespace {
         if (edge.has_begin_heading())
           edgemap->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
         if (edge.has_road_class())
-          edgemap->emplace("road_class", to_string(static_cast<RoadClass>(edge.road_class())));
+          edgemap->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
         if (edge.has_speed())
           edgemap->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
         if (edge.has_length())
