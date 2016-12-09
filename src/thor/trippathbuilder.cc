@@ -672,7 +672,10 @@ TripPath TripPathBuilder::Build(
     }
 
     if (controller.attributes.at(kNodeTimeZone)) {
-      trip_node->set_time_zone(DateTime::get_tz_db().from_index(node->timezone()).get()->to_posix_string());
+      const auto& tz_db = DateTime::get_tz_db();
+      auto tz = DateTime::get_tz_db().from_index(node->timezone());
+      if(tz)
+        trip_node->set_time_zone(tz->to_posix_string());
     }
 
     ///////////////////////////////////////////////////////////////////////////
