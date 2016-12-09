@@ -362,10 +362,11 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
-        // Update cost and use A* heuristic from the origin location rather
-        // than the end node of this edge
+        // a trivial route passes along a single edge, meaning that the
+        // destination point must be on this edge, and so the distance
+        // remaining must be zero.
         cost -= p->second;
-        dist = astarheuristic_.GetDistance(origin.latlng_);
+        dist = 0.0;
       }
     }
 
