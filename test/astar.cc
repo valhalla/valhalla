@@ -37,6 +37,8 @@ namespace {
 
 // ph34r the ASCII art diagram:
 //
+// first test is just a square set of roads
+//
 //       0  2
 // a----->--<-----b
 // |              |
@@ -49,10 +51,13 @@ namespace {
 //
 vb::TileHierarchy h("test/fake_tiles_astar");
 vb::GraphId tile_id = h.GetGraphId({.125, .125}, 2);
+
+namespace node {
 std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0.01, 0.10});
 std::pair<vb::GraphId, vm::PointLL> b({tile_id.tileid(), tile_id.level(), 1}, {0.10, 0.10});
 std::pair<vb::GraphId, vm::PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {0.01, 0.01});
 std::pair<vb::GraphId, vm::PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {0.10, 0.01});
+} // namespace node
 
 #ifdef MAKE_TEST_TILES
 void make_tile() {
@@ -85,22 +90,22 @@ void make_tile() {
     tile.directededges().emplace_back(std::move(edge_builder));
   };
 
-  // node a
-  add_edge(a, b, 0, 2, true);
-  add_edge(a, c, 1, 4, true);
-  add_node(a, 2);
+  // first set of roads
+  add_edge(node::a, node::b, 0, 2, true);
+  add_edge(node::a, node::c, 1, 4, true);
+  add_node(node::a, 2);
 
-  add_edge(b, a, 0, 0, false);
-  add_edge(b, d, 2, 7, true);
-  add_node(b, 2);
+  add_edge(node::b, node::a, 0, 0, false);
+  add_edge(node::b, node::d, 2, 7, true);
+  add_node(node::b, 2);
 
-  add_edge(c, a, 1, 1, false);
-  add_edge(c, d, 3, 6, true);
-  add_node(c, 2);
+  add_edge(node::c, node::a, 1, 1, false);
+  add_edge(node::c, node::d, 3, 6, true);
+  add_node(node::c, 2);
 
-  add_edge(d, c, 3, 5, false);
-  add_edge(d, b, 2, 3, false);
-  add_node(d, 2);
+  add_edge(node::d, node::c, 3, 5, false);
+  add_edge(node::d, node::b, 2, 3, false);
+  add_node(node::d, 2);
 
   tile.StoreTileData();
 
@@ -111,9 +116,12 @@ void make_tile() {
 }
 #endif /* MAKE_TEST_TILES */
 
-// test that a path from A to B succeeds, even if the edges from A to C and B
-// to D appear first in the PathLocation.
-void TestTrivialPath() {
+// check that a path from origin to dest goes along the edge with expected_edge_index
+void assert_is_trivial_path(
+  vb::PathLocation &origin,
+  vb::PathLocation &dest,
+  uint32_t expected_edge_index) {
+
   //make the config file
   std::stringstream json;
   json << "{ \"tile_dir\": \"test/fake_tiles_astar\" }";
@@ -125,18 +133,6 @@ void TestTrivialPath() {
   if (tile == nullptr) {
     throw std::runtime_error("Unable to load test tile! Please read the comment at the top of this file about generating the test tiles.");
   }
-
-  vb::PathLocation origin(a.second);
-  origin.edges.emplace_back(tile_id + uint64_t(1), 0.0f, a.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(4), 1.0f, a.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(0), 0.0f, a.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(2), 1.0f, a.second, 0.0f);
-
-  vb::PathLocation dest(b.second);
-  dest.edges.emplace_back(tile_id + uint64_t(3), 0.0f, b.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(7), 1.0f, b.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(2), 0.0f, b.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(0), 1.0f, b.second, 0.0f);
 
   auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
@@ -152,13 +148,35 @@ void TestTrivialPath() {
     time += p.elapsed_time;
   }
 
-  auto cost = pedestrian->EdgeCost(tile->directededge(0));
+  auto cost = pedestrian->EdgeCost(tile->directededge(expected_edge_index));
   uint32_t expected_time = cost.cost;
   if (time != expected_time) {
     std::ostringstream ostr;
     ostr << "Expected " << expected_time << ", but got " << time;
     throw std::runtime_error(ostr.str());
   }
+}
+
+// test that a path from A to B succeeds, even if the edges from A to C and B
+// to D appear first in the PathLocation.
+void TestTrivialPath() {
+  using node::a;
+  using node::b;
+
+  vb::PathLocation origin(a.second);
+  origin.edges.emplace_back(tile_id + uint64_t(1), 0.0f, a.second, 0.0f);
+  origin.edges.emplace_back(tile_id + uint64_t(4), 1.0f, a.second, 0.0f);
+  origin.edges.emplace_back(tile_id + uint64_t(0), 0.0f, a.second, 0.0f);
+  origin.edges.emplace_back(tile_id + uint64_t(2), 1.0f, a.second, 0.0f);
+
+  vb::PathLocation dest(b.second);
+  dest.edges.emplace_back(tile_id + uint64_t(3), 0.0f, b.second, 0.0f);
+  dest.edges.emplace_back(tile_id + uint64_t(7), 1.0f, b.second, 0.0f);
+  dest.edges.emplace_back(tile_id + uint64_t(2), 0.0f, b.second, 0.0f);
+  dest.edges.emplace_back(tile_id + uint64_t(0), 1.0f, b.second, 0.0f);
+
+  // this should go along the path from A to B
+  assert_is_trivial_path(origin, dest, 0);
 }
 
 } // anonymous namespace
