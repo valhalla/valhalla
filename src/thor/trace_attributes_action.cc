@@ -113,10 +113,10 @@ json::MapPtr serialize(const TripPathController& controller,
         auto edgemap = json::map({});
         if (edge.has_truck_route())
           edgemap->emplace("truck_route", static_cast<bool>(edge.truck_route()));
-        if (edge.has_truck_speed())
+        if (edge.has_truck_speed() && (edge.truck_speed() > 0))
           edgemap->emplace("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
-        if (edge.has_speed_limit())
-          edgemap->emplace("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit())));
+        if (edge.has_speed_limit() && (edge.speed_limit() > 0))
+          edgemap->emplace("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
         if (edge.has_density())
           edgemap->emplace("density", static_cast<uint64_t>(edge.density()));
         if (edge.has_sidewalk())
