@@ -91,7 +91,20 @@ namespace {
     return i->second;
   }
 
-json::MapPtr serialize(const TripPathController& controller,
+  const std::unordered_map<uint8_t, std::string> TraversabilityStrings = {
+    {static_cast<uint8_t>(TripPath_Traversability_kNone), "none"},
+    {static_cast<uint8_t>(TripPath_Traversability_kForward), "forward"},
+    {static_cast<uint8_t>(TripPath_Traversability_kBackward), "backward"},
+    {static_cast<uint8_t>(TripPath_Traversability_kBoth), "both"},
+  };
+  inline std::string to_string(TripPath_Traversability t) {
+    auto i = TraversabilityStrings.find(static_cast<uint8_t>(t));
+    if(i == TraversabilityStrings.cend())
+      return "null";
+    return i->second;
+  }
+
+  json::MapPtr serialize(const TripPathController& controller,
                        const valhalla::odin::TripPath& trip_path,
                        const boost::optional<std::string>& id,
                        const DirectionsOptions& directions_options) {
@@ -186,10 +199,10 @@ json::MapPtr serialize(const TripPathController& controller,
           edgemap->emplace("unpaved", static_cast<bool>(edge.unpaved()));
         if (edge.has_toll())
             edgemap->emplace("toll", static_cast<bool>(edge.toll()));
-     /*  if (edge.has_use())
-          edgemap->emplace("use", edge.use());
+     //  if (edge.has_use())
+     //     edgemap->emplace("use", edge.use());
         if (edge.has_traversability())
-          edgemap->emplace("traversability", edge.traversability());*/
+          edgemap->emplace("traversability", to_string(static_cast<TripPath_Traversability>(edge.traversability())));
         if (edge.has_end_shape_index())
           edgemap->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
         if (edge.has_begin_shape_index())
@@ -213,15 +226,13 @@ json::MapPtr serialize(const TripPathController& controller,
           auto node = trip_path.node(i);
           auto end_node = json::map({});
           auto intersecting_edges = json::array({});
-          if (node.intersecting_edge_size() > 0) {
-            for (const auto& intersecting_edge : node.intersecting_edge()) {
-             /* intersecting_edges->push_back(intersecting_edge.walkability()));
-              intersecting_edges->push_back(intersecting_edge.cyclability());
-              intersecting_edges->push_back(intersecting_edge.driveability());*/
-              intersecting_edges->push_back(static_cast<bool>(intersecting_edge.curr_name_consistency()));
-              intersecting_edges->push_back(static_cast<bool>(intersecting_edge.prev_name_consistency()));
-              intersecting_edges->push_back(static_cast<uint64_t>(intersecting_edge.begin_heading()));
-            }
+          for (int i = 0; i< node.intersecting_edge_size(); ++i) {
+           // intersecting_edges->push_back(static_cast<TripPath_Traversability>(node.intersecting_edge(i).walkability()));
+           // intersecting_edges->push_back(static_cast<TripPath_Traversability>(node.intersecting_edge(i).cyclability()));
+           // intersecting_edges->push_back(static_cast<TripPath_Traversability>(node.intersecting_edge(i).driveability()));
+            intersecting_edges->push_back(static_cast<bool>(node.intersecting_edge(i).curr_name_consistency()));
+            intersecting_edges->push_back(static_cast<bool>(node.intersecting_edge(i).prev_name_consistency()));
+            intersecting_edges->push_back(static_cast<uint64_t>(node.intersecting_edge(i).begin_heading()));
           }
           end_node->emplace("intersecting_edges", intersecting_edges);
           edgemap->emplace("end_node", end_node);
