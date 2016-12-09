@@ -4,6 +4,7 @@ using namespace prime_server;
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/directededge.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <valhalla/midgard/logging.h>
@@ -75,6 +76,19 @@ namespace {
     }
   }
 
+  const std::unordered_map<uint8_t, std::string> SidewalkStrings = {
+    {static_cast<uint8_t>(TripPath_Sidewalk_kNoSidewalk), "none"},
+    {static_cast<uint8_t>(TripPath_Sidewalk_kLeft), "left"},
+    {static_cast<uint8_t>(TripPath_Sidewalk_kRight), "right"},
+    {static_cast<uint8_t>(TripPath_Sidewalk_kBothSides), "both"},
+  };
+  inline std::string to_string(TripPath_Sidewalk s) {
+    auto i = SidewalkStrings.find(static_cast<uint8_t>(s));
+    if(i == SidewalkStrings.cend())
+      return "null";
+    return i->second;
+  }
+
   json::MapPtr serialize(const TripPathController& controller,
                        const valhalla::odin::TripPath& trip_path,
                        const boost::optional<std::string>& id, double scale) {
@@ -92,17 +106,15 @@ namespace {
         if (edge.has_truck_speed())
           edgemap->emplace("truck_speed", json::fp_t{std::round(edge.truck_speed() * scale), 3});
         if (edge.has_speed_limit())
-          edgemap->emplace("speed_limit", static_cast<uint64_t>(edge.speed_limit()));
+          edgemap->emplace("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit())));
         if (edge.has_density())
           edgemap->emplace("density", static_cast<uint64_t>(edge.density()));
-      //  if (edge.has_sidewalk())
-      //    edgemap->emplace("sidewalk", edge.sidewalk());
+        if (edge.has_sidewalk())
+          edgemap->emplace("sidewalk", to_string(static_cast<TripPath_Sidewalk>(edge.sidewalk())));
         if (edge.has_bicycle_network())
           edgemap->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
-      //  if (edge.has_cycle_lane()) {
-      //    auto cycle_lane = valhalla::baldr::graphconstants::CycleLane::to_string(edge.cycle_lane());
-      //    edgemap->emplace("cycle_lane", cycle_lane);
-      //  }
+        if (edge.has_cycle_lane())
+          edgemap->emplace("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
         if (edge.has_lane_count())
           edgemap->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
         if (edge.has_max_downward_grade())
