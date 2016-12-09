@@ -44,29 +44,46 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  bool exact_match = request.get<bool>("exact_match_only", false);
-
+  odin::TripPath trip_path;
   TripPathController controller;
-  // TODO parse include/exclude and set controller as needed - for now just default
+  auto shape_match = request.get<std::string>("shape_match", "walk_or_snap");
 
   worker_t::result_t result { true };
   // Forward the original request
   result.messages.emplace_back(request_str);
 
-  // If the exact points from a prior route that was run agains the Valhalla road network,
-  //then we can traverse the exact shape to form a path by using edge-walking algorithm
-  odin::TripPath trip_path = route_match(controller);
-  if (trip_path.node().size() == 0) {
-    if (!exact_match) {
-      //If no Valhalla route match, then use meili map matching to match to local route network.
-      //No shortcuts are used and detailed information at every intersection becomes available.
+  // If the exact points from a prior route that was run against the Valhalla road network,
+  // then we can traverse the exact shape to form a path by using edge-walking algorithm
+  if (shape_match == "edge_walk") {
+    try {
+      trip_path = route_match(controller);
+    } catch (...) {
+      LOG_INFO("Could not find exact route match.  Use shape_match:'walk or snap' to fallback to map-matching algorithm");
+      valhalla_exception_t{400, 443};
+    }
+  // If non-exact shape points are used, then we need to correct this shape by sending them
+  // through the map-matching algorithm to snap the points to the correct shape
+  } else if (shape_match == "map_snap") {
+    try {
+      trip_path = map_match(controller);
+    } catch (...) {
+      LOG_INFO("Map-matching algorithm failed to snap the shape points to the correct shape.");
+      valhalla_exception_t{400, 444};
+    }
+  //If we think that we have the exact shape but there ends up being no Valhalla route match, then
+  // then we want to fallback to try and use meili map matching to match to local route network.
+  //No shortcuts are used and detailed information at every intersection becomes available.
+  } else if (shape_match == "walk_or_snap") {
+    trip_path = route_match(controller);
+    if (trip_path.node().size() == 0) {
       LOG_INFO("Could not find exact route match; Sending trace to map_match...");
       try {
         trip_path = map_match(controller);
       } catch (...) {
-        valhalla_exception_t{400,444};
+        LOG_INFO("Map-matching algorithm failed to snap the shape points to the correct shape.");
+        valhalla_exception_t{400, 444};
       }
-    } else throw valhalla_exception_t{400, 443};
+    }
   }
   result.messages.emplace_back(trip_path.SerializeAsString());
 
