@@ -57,7 +57,7 @@ sudo apt-get update
 sudo apt-get install valhalla-bin
 
 #or you could build it from source like by uncommenting the stuff below
-#sudo apt-get install git autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server-dev
+#sudo apt-get install git autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server0.4.0-dev
 #for repo in midgard baldr sif meili skadi mjolnir loki odin thor tyr tools; do
 #  git clone --recurse-submodules https://github.com/valhalla/$repo.git
 #  pushd $repo
