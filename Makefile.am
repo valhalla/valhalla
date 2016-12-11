@@ -106,8 +106,8 @@ test_trip_path_controller_SOURCES = test/trip_path_controller.cc test/test.cc
 test_trip_path_controller_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_trip_path_controller_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 test_astar_SOURCES = test/astar.cc test/test.cc
-test_astar_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@ # -I../mjolnir
-test_astar_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la # ../mjolnir/libvalhalla_mjolnir.la
+test_astar_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_astar_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
