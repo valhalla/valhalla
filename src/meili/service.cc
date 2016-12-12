@@ -183,7 +183,7 @@ std::string serialize_response(MapMatcher& matcher,
 
 
 worker_t::result_t jsonify_error(const std::string& message,
-                                 http_request_t::info_t& info,
+                                 http_request_info_t& info,
                                  unsigned status_code = 400)
 {
   worker_t::result_t result{false};
@@ -209,7 +209,7 @@ worker_t::result_t jsonify_error(const std::string& message,
 
 
 worker_t::result_t jsonify_success(const std::string& content,
-                                   http_request_t::info_t& info)
+                                   http_request_info_t& info)
 {
   worker_t::result_t result{false};
   http_response_t response(200, http_status_code(200), content, headers_t{CORS, JS_MIME});
@@ -286,8 +286,8 @@ class mm_worker_t {
     return preferences;
   }
 
-  worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
-    auto& info = *static_cast<http_request_t::info_t*>(request_info);
+  worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
+    auto& info = *static_cast<http_request_info_t*>(request_info);
     LOG_INFO("Got Map Matching Request " + std::to_string(info.id));
 
     http_request_t request;
@@ -377,13 +377,14 @@ void run_service(const boost::property_tree::ptree& config) {
   auto upstream_endpoint = config.get<std::string>("meili.service.proxy") + "_out";
   //or returns just location information back to the server
   auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+  auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
   //listen for requests
   zmq::context_t context;
   mm_worker_t meili_worker(config);
-  auto work = std::bind(&mm_worker_t::work, std::ref(meili_worker), std::placeholders::_1, std::placeholders::_2);
+  auto work = std::bind(&mm_worker_t::work, std::ref(meili_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
   auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(meili_worker));
-  prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, work, cleanup);
+  prime_server::worker_t worker(context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint, interrupt_endpoint, work, cleanup);
   worker.work();
 
   //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?

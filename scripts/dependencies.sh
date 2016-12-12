@@ -2,10 +2,15 @@
 set -e
 
 export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
+if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
+  sudo add-apt-repository -y ppa:kevinkreiser/libsodium
+  sudo add-apt-repository -y ppa:kevinkreiser/libpgm
+  sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
+  sudo add-apt-repository -y ppa:kevinkreiser/czmq
+fi
 sudo add-apt-repository -y ppa:kevinkreiser/prime-server
-sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/kevinkreiser-prime-server-$(lsb_release -c -s).list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
-sudo apt-get update -y
-sudo apt-get install -y autoconf automake libtool make pkg-config gcc g++ lcov libboost-all-dev libprime-server-dev
+sudo apt-get update
+sudo apt-get install -y autoconf automake libtool make pkg-config gcc g++ lcov libboost-all-dev libprime-server0.6.0-dev
 
 #clone async
 mkdir -p deps
