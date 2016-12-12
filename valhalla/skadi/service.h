@@ -20,14 +20,14 @@ namespace valhalla {
       enum ACTION_TYPE {HEIGHT = 0};
       skadi_worker_t(const boost::property_tree::ptree& config);
       virtual ~skadi_worker_t();
-      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
+      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
       void cleanup();
 
      protected:
 
       void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request);
 
-      prime_server::worker_t::result_t elevation(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t elevation(const boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
 
       boost::optional<std::string> jsonp;
       std::list<midgard::PointLL> shape;

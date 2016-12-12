@@ -56,7 +56,7 @@ namespace {
   void start_service(zmq::context_t& context) {
     //server
     std::thread server(std::bind(&http_server_t::serve,
-      http_server_t(context, "ipc:///tmp/test_skadi_server", "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results")));
+      http_server_t(context, "ipc:///tmp/test_skadi_server", "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results", "ipc:///tmp/test_skadi_interrupt")));
     server.detach();
 
     //load balancer
@@ -70,6 +70,7 @@ namespace {
     config.add("skadi.service.proxy", "ipc:///tmp/test_skadi_proxy");
     config.add("skadi.logging.long_request", "5.0");
     config.add("httpd.service.loopback", "ipc:///tmp/test_skadi_results");
+    config.add("httpd.service.interrupt", "ipc:///tmp/test_skadi_interrupt");
     config.add("additional_data.elevation", "test/data/service/");
     config.add("service_limits.skadi.max_shape", "100");
     config.add("service_limits.skadi.min_resample", "10");

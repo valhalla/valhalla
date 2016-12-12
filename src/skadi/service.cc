@@ -127,7 +127,7 @@ namespace {
     return array;
   }
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
@@ -164,10 +164,10 @@ namespace valhalla {
 
     skadi_worker_t::~skadi_worker_t(){}
 
-    worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+    worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
-      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
       //request should look like:
       //  http://host:port/height?json={shape:[{lat: ,lon: }],range=false} OR http://host:port/height?json={encoded_polyline:"SOMESTUFF",range:true}
@@ -199,7 +199,9 @@ namespace valhalla {
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        if (!info.do_not_track && (elapsed_time.count() / shape.size()) > long_request) {
+        auto do_not_track = request.headers.find("DNT");
+        bool allow_tracking = do_not_track == request.headers.cend() || do_not_track->second != "1";
+        if (allow_tracking && (elapsed_time.count() / shape.size()) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
@@ -283,7 +285,7 @@ namespace valhalla {
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    worker_t::result_t skadi_worker_t::elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t skadi_worker_t::elevation(const boost::property_tree::ptree& request, http_request_info_t& request_info) {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
@@ -334,12 +336,13 @@ namespace valhalla {
       auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
       //listen for requests
       zmq::context_t context;
       skadi_worker_t skadi_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint,
-        std::bind(&skadi_worker_t::work, std::ref(skadi_worker), std::placeholders::_1, std::placeholders::_2),
+      prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, interrupt_endpoint,
+        std::bind(&skadi_worker_t::work, std::ref(skadi_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
         std::bind(&skadi_worker_t::cleanup, std::ref(skadi_worker)));
       worker.work();
 
