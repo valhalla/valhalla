@@ -78,7 +78,7 @@ namespace valhalla {
 
     thor_worker_t::~thor_worker_t(){}
 
-    worker_t::result_t thor_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info) const {
+    worker_t::result_t thor_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info) const {
 
        //build up the json map
       auto json_error = json::map({});
@@ -103,10 +103,10 @@ namespace valhalla {
       return result;
     }
 
-    worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+    worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
-      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
       try{
         //get some info about what we need to do
@@ -136,14 +136,14 @@ namespace valhalla {
           case SOURCES_TO_TARGETS:
             return matrix(action, request, info);
           case OPTIMIZED_ROUTE:
-            return optimized_route(request, request_str, info.do_not_track);
+            return optimized_route(request, request_str, info.spare);
           case ISOCHRONE:
             return isochrone(request, info);
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, request.get_optional<int>("date_time.type"), info.do_not_track);
+            return route(request, request_str, request.get_optional<int>("date_time.type"), info.spare);
           case TRACE_ROUTE:
-            return trace_route(request, request_str, info.do_not_track);
+            return trace_route(request, request_str, info.spare);
           case TRACE_ATTRIBUTES:
             return trace_attributes(request, request_str, info);
           default:
@@ -300,12 +300,13 @@ namespace valhalla {
       auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
       //listen for requests
       zmq::context_t context;
       thor_worker_t thor_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2),
+      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
+        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
         std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
       worker.work();
 

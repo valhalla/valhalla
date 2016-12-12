@@ -43,7 +43,7 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.4.0])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.6.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE

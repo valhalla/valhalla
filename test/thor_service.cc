@@ -63,10 +63,11 @@ namespace {
     thor_worker_t worker(config);
     for (auto& req_resp : failure_request_responses) {
       std::list<zmq::message_t> messages;
-      http_request_t::info_t request_info;
+      http_request_info_t request_info;
+
       messages.emplace_back(zmq::message_t(static_cast<void*>(&req_resp.first[0]), req_resp.first.size(), [](void*, void*){}));
 
-      auto result = worker.work(messages, &request_info);
+      auto result = worker.work(messages, &request_info, [](){});
       http_response_t response(400, "Bad Request", req_resp.second, headers_t{{"Access-Control-Allow-Origin", "*"}});
       response.from_info(request_info);
       auto response_str = response.to_string();

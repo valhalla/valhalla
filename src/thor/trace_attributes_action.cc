@@ -307,7 +307,7 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
  */
 worker_t::result_t thor_worker_t::trace_attributes(
     const boost::property_tree::ptree &request,
-    const std::string &request_str, http_request_t::info_t& request_info) {
+    const std::string &request_str, http_request_info_t& request_info) {
   //get time for start of request
   auto s = std::chrono::system_clock::now();
 
@@ -388,7 +388,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
   // TODO determine what to log
   //log request if greater than X (ms)
-  if (!request_info.do_not_track && (elapsed_time.count() / correlated.size()) > long_request) {
+  if (!request_info.spare && (elapsed_time.count() / correlated.size()) > long_request) {
     LOG_WARN("thor::trace_attributes elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
     LOG_WARN("thor::trace_attributes exceeded threshold::"+ request_str);
     midgard::logging::Log("valhalla_thor_long_request_trace_attributes", " [ANALYTICS] ");

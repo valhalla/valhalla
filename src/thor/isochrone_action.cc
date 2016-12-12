@@ -15,7 +15,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::isochrone(const boost::property_tree::ptree &request, prime_server::http_request_t::info_t& request_info) {
+    worker_t::result_t  thor_worker_t::isochrone(const boost::property_tree::ptree &request, prime_server::http_request_info_t& request_info) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
