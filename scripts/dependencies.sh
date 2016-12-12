@@ -10,7 +10,7 @@ if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
 fi
 sudo add-apt-repository -y ppa:kevinkreiser/prime-server
 sudo apt-get update
-sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config cmake pkg-config gcc g++ lcov libboost1.54-all-dev protobuf-compiler libprotobuf-dev libprime-server0.6.0-dev
+sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config cmake pkg-config gcc g++ lcov libboost1.54-all-dev protobuf-compiler libprotobuf-dev libprime-server0.6.1-dev
 
 #clone async
 mkdir -p deps
