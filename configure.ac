@@ -29,6 +29,9 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
+# require pthread
+AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
+
 # optionally enable coverage information
 CHECK_COVERAGE
 

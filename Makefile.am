@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_LDFLAGS = @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -I@abs_srcdir@/valhalla -Igenfiles
+AM_LDFLAGS = @COVERAGE_LDFLAGS@ @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla @PTHREAD_CFLAGS@ -Igenfiles
 AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
@@ -135,7 +135,6 @@ test_util_midgard_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard
 test_logging_SOURCES = test/logging.cc test/test.cc
 test_logging_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
 test_logging_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
-test_logging_LDFLAGS = -pthread
 test_sequence_SOURCES = test/sequence.cc test/test.cc
 test_sequence_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS)
 test_sequence_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) libvalhalla_midgard.la
