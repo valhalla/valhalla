@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_LDFLAGS = @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @BOOST_CPPFLAGS@ -Igenfiles
+AM_LDFLAGS = @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@ @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @BOOST_CPPFLAGS@ @PTHREAD_CFLAGS@ -Igenfiles
 AM_CXXFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@ -Igenfiles
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
