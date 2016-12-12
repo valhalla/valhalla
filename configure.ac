@@ -44,7 +44,7 @@ AX_BOOST_FILESYSTEM
 AX_BOOST_REGEX
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.0])
+PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.1])
 
 # optionally enable coverage information
 CHECK_COVERAGE
