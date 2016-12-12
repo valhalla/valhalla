@@ -136,7 +136,7 @@ namespace valhalla {
       }
     }
 
-    worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_info_t& request_info) {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});

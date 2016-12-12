@@ -29,6 +29,9 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
+# require pthread
+AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
+
 # require other valhalla dependencies
 PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable])
 
@@ -39,7 +42,7 @@ AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [libprime_server = 0.4.0])
+PKG_CHECK_MODULES([DEPS], [libprime_server = 0.6.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE

@@ -95,7 +95,7 @@ namespace {
   void start_service(zmq::context_t& context) {
     //server
     std::thread server(std::bind(&http_server_t::serve,
-      http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in", "ipc:///tmp/test_loki_results")));
+      http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in", "ipc:///tmp/test_loki_results", "ipc:///tmp/test_loki_interrupt")));
     server.detach();
 
     //load balancer
@@ -111,7 +111,7 @@ namespace {
                   \"logging\": { \"long_request\": 100.0 }, \
                   \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
       \"thor\": { \"service\": { \"proxy\": \"ipc:///tmp/test_thor_proxy\" } }, \
-      \"httpd\": { \"service\": { \"loopback\": \"ipc:///tmp/test_loki_results\" } }, \
+      \"httpd\": { \"service\": { \"loopback\": \"ipc:///tmp/test_loki_results\", \"interrupt\": \"ipc:///tmp/test_loki_interrupt\" } }, \
       \"service_limits\": { \
         \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
         \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50, \

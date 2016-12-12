@@ -141,7 +141,7 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action,boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action,boost::property_tree::ptree& request, http_request_info_t& request_info) {
       init_matrix(action, request);
       auto costing = request.get<std::string>("costing");
       if (costing == "multimodal")

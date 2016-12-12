@@ -25,12 +25,12 @@ namespace valhalla {
       enum ACTION_TYPE {ROUTE = 0, VIAROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
                         SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7, ISOCHRONE = 8, TRACE_ROUTE = 9, TRACE_ATTRIBUTES = 10};
       loki_worker_t(const boost::property_tree::ptree& config);
-      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
+      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
       void cleanup();
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_t::info_t& request_info) const;
+      prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_info_t& request_info) const;
       void parse_locations(const boost::property_tree::ptree& request);
       void parse_trace(boost::property_tree::ptree& request);
       void parse_costing(const boost::property_tree::ptree& request);
@@ -42,11 +42,11 @@ namespace valhalla {
       void init_isochrones(const boost::property_tree::ptree& request);
       void init_trace(boost::property_tree::ptree& request);
 
-      prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t route(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t matrix(ACTION_TYPE action,boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t isochrones(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t trace_route(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t route(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t matrix(ACTION_TYPE action,boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t isochrones(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t trace_route(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
 
       boost::property_tree::ptree config;
       boost::optional<std::string> jsonp;

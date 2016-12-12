@@ -46,7 +46,7 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::route(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::route(boost::property_tree::ptree& request, http_request_info_t& request_info) {
       init_route(request);
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);

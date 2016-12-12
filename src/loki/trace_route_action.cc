@@ -25,7 +25,7 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    worker_t::result_t loki_worker_t::trace_route(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::trace_route(boost::property_tree::ptree& request, http_request_info_t& request_info) {
       init_trace(request);
 
       //pass it on to thor

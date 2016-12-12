@@ -108,7 +108,7 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-    worker_t::result_t loki_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info) const {
+    worker_t::result_t loki_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info) const {
 
       //build up the json map
       auto json_error = json::map({});
@@ -275,10 +275,10 @@ namespace valhalla {
 
     }
 
-    worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+    worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
-      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
 
       try{
@@ -299,6 +299,9 @@ namespace valhalla {
         jsonp = request_pt.get_optional<std::string>("jsonp");
         //let further processes more easily know what kind of request it was
         request_pt.put<int>("action", action->second);
+        //let further processes know about tracking
+        auto do_not_track = request.headers.find("DNT");
+        info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
 
         worker_t::result_t result{false};
         //do request specific processing
@@ -333,7 +336,7 @@ namespace valhalla {
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
         auto work_units = locations.size() ? locations.size() : 1;
-        if (!info.do_not_track && elapsed_time.count() / work_units > long_request) {
+        if (!info.spare && elapsed_time.count() / work_units > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
@@ -370,12 +373,13 @@ namespace valhalla {
       auto downstream_endpoint = config.get<std::string>("thor.service.proxy") + "_in";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
       //listen for requests
       zmq::context_t context;
       loki_worker_t loki_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-        std::bind(&loki_worker_t::work, std::ref(loki_worker), std::placeholders::_1, std::placeholders::_2),
+      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
+        std::bind(&loki_worker_t::work, std::ref(loki_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
         std::bind(&loki_worker_t::cleanup, std::ref(loki_worker)));
       worker.work();
 
