@@ -802,7 +802,7 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_t::info_t& request_info, const boost::optional<std::string>& jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
 
     //build up the json map
     auto json_error = json::map({});
@@ -838,10 +838,10 @@ namespace valhalla {
 
     tyr_worker_t::~tyr_worker_t(){}
 
-    worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info) {
+    worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
-      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Tyr Request " + std::to_string(info.id));
       try{
         //get some info about what we need to do
@@ -899,7 +899,7 @@ namespace valhalla {
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        if (!info.do_not_track && (elapsed_time.count() / trip_directions_length) > long_request) {
+        if (!info.spare && (elapsed_time.count() / trip_directions_length) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
@@ -931,11 +931,12 @@ namespace valhalla {
       //auto downstream_endpoint = config.get<std::string>("tyr.service.proxy_multi") + "_in";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
       //listen for requests
       zmq::context_t context;
-      prime_server::worker_t worker(context, upstream_endpoint, "ipc://NO_ENDPOINT", loopback_endpoint,
-        std::bind(&tyr_worker_t::work, tyr_worker_t(config), std::placeholders::_1, std::placeholders::_2));
+      prime_server::worker_t worker(context, upstream_endpoint, "ipc://NO_ENDPOINT", loopback_endpoint, interrupt_endpoint,
+        std::bind(&tyr_worker_t::work, tyr_worker_t(config), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
       worker.work();
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
