@@ -45,7 +45,7 @@ AX_BOOST_REGEX
 AX_BOOST_DATE_TIME
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.4.0])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.6.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE

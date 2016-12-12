@@ -14,7 +14,7 @@ namespace valhalla {
      public:
       odin_worker_t(const boost::property_tree::ptree& config);
       virtual ~odin_worker_t();
-      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
+      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
       void cleanup();
 
      protected:
