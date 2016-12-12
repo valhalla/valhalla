@@ -24,6 +24,7 @@ using namespace valhalla::sif;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
+
 namespace {
   const headers_t::value_type CORS { "Access-Control-Allow-Origin", "*" };
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
@@ -310,7 +311,6 @@ worker_t::result_t thor_worker_t::trace_attributes(
   //get time for start of request
   auto s = std::chrono::system_clock::now();
 
-
   // Parse request
   parse_locations(request);
   parse_shape(request);
@@ -371,6 +371,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
         break;
       }
     }
+
   auto id = request.get_optional<std::string>("id");
   // Get the directions_options if they are in the request
   DirectionsOptions directions_options;

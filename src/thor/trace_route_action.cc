@@ -96,6 +96,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         break;
       }
     }
+
   result.messages.emplace_back(trip_path.SerializeAsString());
 
   // Get processing time for thor
