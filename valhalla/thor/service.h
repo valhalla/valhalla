@@ -44,6 +44,12 @@ class thor_worker_t {
     TRACE_ROUTE = 9,
     TRACE_ATTRIBUTES = 10
   };
+  enum SHAPE_MATCH {EDGE_WALK = 0, MAP_SNAP = 1, WALK_OR_SNAP = 2};
+  const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH {
+     {"edge_walk", EDGE_WALK},
+     {"map_snap", MAP_SNAP},
+     {"walk_or_snap", WALK_OR_SNAP}
+   };
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
   prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
