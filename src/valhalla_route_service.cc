@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
   //grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
   std::string loopback = config.get<std::string>("httpd.service.loopback");
+  std::string interrupt = config.get<std::string>("httpd.service.interrupt");
   std::string loki_proxy = config.get<std::string>("loki.service.proxy");
   std::string thor_proxy = config.get<std::string>("thor.service.proxy");
   std::string odin_proxy = config.get<std::string>("odin.service.proxy");
@@ -73,7 +74,7 @@ int main(int argc, char** argv) {
   //setup the cluster within this process
   zmq::context_t context;
   std::thread server_thread = std::thread(std::bind(&http_server_t::serve,
-    http_server_t(context, listen, loki_proxy + "_in", loopback, true)));
+    http_server_t(context, listen, loki_proxy + "_in", loopback, interrupt, true)));
 
   //loki layer
   std::thread loki_proxy_thread(std::bind(&proxy_t::forward, proxy_t(context, loki_proxy + "_in", loki_proxy + "_out")));
