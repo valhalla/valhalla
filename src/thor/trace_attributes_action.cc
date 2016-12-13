@@ -280,12 +280,12 @@ namespace thor {
 void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller) {
   std::string filter_action = request.get("filters.action", "");
 
-  if (filter_action.size() && filter_action == "only") {
+  if (filter_action.size() && filter_action == "include") {
     controller.disable_all();
     for (const auto& kv : request.get_child("filters.attributes"))
       controller.attributes.at(kv.second.get_value<std::string>()) = true;
 
-  } else if (filter_action.size() && filter_action == "none") {
+  } else if (filter_action.size() && filter_action == "exclude") {
     controller.enable_all();
     for (const auto& kv : request.get_child("filters.attributes"))
       controller.attributes.at(kv.second.get_value<std::string>()) = false;
@@ -330,15 +330,14 @@ worker_t::result_t thor_worker_t::trace_attributes(
   odin::TripPath trip_path;
   TripPathController controller;
   filter_attributes(request, controller);
-
-  auto shape_match = request.get<std::string>("shape_match", "walk_or_snap");
-  if (thor_worker_t::STRING_TO_MATCH.find(shape_match) == thor_worker_t::STRING_TO_MATCH.cend())
+  auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
+  if (shape_match == STRING_TO_MATCH.cend())
     throw valhalla_exception_t{400, 445};
   else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
-    switch (thor_worker_t::STRING_TO_MATCH.find(shape_match)->second) {
-      case thor_worker_t::EDGE_WALK:
+    switch (shape_match->second) {
+      case EDGE_WALK:
         try {
           LOG_INFO("in edge_walk...");
           trip_path = route_match(controller);
@@ -349,7 +348,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
       // through the map-matching algorithm to snap the points to the correct shape
-      case thor_worker_t::MAP_SNAP:
+      case MAP_SNAP:
         try {
           LOG_INFO("in map_snap...");
           trip_path = map_match(controller);
@@ -361,7 +360,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
       // then we want to fallback to try and use meili map matching to match to local route network.
       //No shortcuts are used and detailed information at every intersection becomes available.
-      case thor_worker_t::WALK_OR_SNAP:
+      case WALK_OR_SNAP:
         LOG_INFO("in walk_or_snap...");
         trip_path = route_match(controller);
         if (trip_path.node().size() == 0) {
