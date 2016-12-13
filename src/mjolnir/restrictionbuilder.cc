@@ -1,5 +1,6 @@
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/dataquality.h"
 #include "mjolnir/osmrestriction.h"
 #include "mjolnir/complexrestrictionbuilder.h"
 
@@ -36,6 +37,8 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
   bool bBeginFound = false;
   uint64_t begin_wayid = 0;
   uint64_t end_wayid = 0;
+
+  std::set<GraphId> visited_set;
 
   GraphId prev_Node, avoidId;
   GraphId currentNode = n_graphId;
@@ -80,22 +83,25 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
           n_info = endnodetile->node(currentNode);
           break;
         } else if (begin_wayid == current_offset.wayid()) {
-          prev_Node = currentNode;
-          graphids.push_back(g_id);
+          if (visited_set.find(currentNode) == visited_set.end()) {
+            prev_Node = currentNode;
+            visited_set.emplace(currentNode);
+            graphids.push_back(g_id);
 
-          currentNode = de->endnode();
-          //get the new tile if needed.
-          if (endnodetile->id() != currentNode.Tile_Base()) {
-            lock.lock();
-            endnodetile = reader.GetGraphTile(currentNode);
-            lock.unlock();
+            currentNode = de->endnode();
+            //get the new tile if needed.
+            if (endnodetile->id() != currentNode.Tile_Base()) {
+              lock.lock();
+              endnodetile = reader.GetGraphTile(currentNode);
+              lock.unlock();
+            }
+
+            //get new end node and start over.
+            n_info = endnodetile->node(currentNode);
+            j = 0;
+            bBeginFound = true;
+            continue;
           }
-
-          //get new end node and start over.
-          n_info = endnodetile->node(currentNode);
-          j = 0;
-          bBeginFound = true;
-          continue;
         }
       }
 
@@ -175,6 +181,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
             avoidId = graphids.at(0);
             graphids.clear();
             bBeginFound = false;
+            visited_set.clear();
             i = 0; //start over avoiding the first graphid
                    //(i.e., we walked the graph in the wrong direction)
             lock.lock();
@@ -208,9 +215,10 @@ void build(const boost::property_tree::ptree& pt,
            const std::unordered_multimap<uint64_t, uint64_t>& end_map,
            const boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
-           std::promise<bool>& result) {
+           std::promise<DataQuality>& result) {
   sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
   GraphReader reader(hierarchy_properties);
+  DataQuality stats;
 
   // Get some things we need throughout
   const auto& tile_hierarchy = reader.GetTileHierarchy();
@@ -278,6 +286,7 @@ void build(const boost::property_tree::ptree& pt,
         // as needed at endnodes.
 
         if (directededge.start_restriction()) {
+
           OSMRestriction target_res{e_offset.wayid()}; // this is our from way id
           OSMRestriction restriction{};
           sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(target_res,
@@ -372,6 +381,7 @@ void build(const boost::property_tree::ptree& pt,
         }
 
         if (directededge.end_restriction()) {
+
           // is this edge the end of a restriction?
           auto to = end_map.equal_range(e_offset.wayid());
           if (to.first != end_map.end()) {
@@ -473,6 +483,9 @@ void build(const boost::property_tree::ptree& pt,
     tilebuilder.UpdateComplexRestrictions(updated_forward_cr_list,true);
     tilebuilder.UpdateComplexRestrictions(updated_reverse_cr_list,false);
 
+    stats.forward_restrictions_count += updated_forward_cr_list.size();
+    stats.reverse_restrictions_count += updated_reverse_cr_list.size();
+
     // Write the new file
     lock.lock();
     tilebuilder.StoreTileData();
@@ -485,7 +498,7 @@ void build(const boost::property_tree::ptree& pt,
   }
 
   // Send back the statistics
-  result.set_value(true);
+  result.set_value(stats);
 }
 
 namespace valhalla {
@@ -522,18 +535,17 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
     std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<unsigned int>(1),
       pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
-    // A place to hold the results of those threads, exceptions or otherwise
-    std::list<std::promise<bool> > results;
+    // Hold the results (DataQuality/stats) for the threads
+    std::vector<std::promise<DataQuality> > results(threads.size());
 
     // Start the threads
     LOG_INFO("Adding Restrictions at level " + std::to_string(tile_level.level));
-    for (auto& thread : threads) {
-      results.emplace_back();
-      thread.reset(new std::thread(build,
+    for (size_t i = 0; i < threads.size(); ++i) {
+      threads[i].reset(new std::thread(build,
                    std::cref(hierarchy_properties),
                    std::cref(complex_restrictions_file), std::cref(end_map),
                    std::ref(hierarchy_properties), std::ref(tilequeue),
-                   std::ref(lock), std::ref(results.back())));
+                   std::ref(lock), std::ref(std::ref(results[i]))));
     }
 
     // Wait for them to finish up their work
@@ -541,17 +553,23 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
       thread->join();
     }
 
-    // Check all of the outcomes, to see about maximum density (km/km2)
+    uint32_t forward_restrictions_count = 0;
+    uint32_t reverse_restrictions_count = 0;
+
     for (auto& result : results) {
       // If something bad went down this will rethrow it
       try {
-        auto thread_stats = result.get_future().get();
+        const auto& stat = result.get_future().get();
+        forward_restrictions_count += stat.forward_restrictions_count;
+        reverse_restrictions_count += stat.reverse_restrictions_count;
       }
       catch(const std::exception& e) {
         LOG_ERROR(e.what());
         throw e;
       }
     }
+    LOG_INFO("--Forward restrictions added: " + std::to_string(forward_restrictions_count));
+    LOG_INFO("--Reverse restrictions added: " + std::to_string(reverse_restrictions_count));
   }
   LOG_INFO("Finished");
 }
