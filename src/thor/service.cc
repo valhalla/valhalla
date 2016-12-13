@@ -57,7 +57,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    const std::unordered_map<std::string, thor_worker_t::SHAPE_MATCH> STRING_TO_MATCH {
+    const std::unordered_map<std::string, thor_worker_t::SHAPE_MATCH> thor_worker_t::STRING_TO_MATCH {
       {"edge_walk", thor_worker_t::EDGE_WALK},
       {"map_snap", thor_worker_t::MAP_SNAP},
       {"walk_or_snap", thor_worker_t::WALK_OR_SNAP}
