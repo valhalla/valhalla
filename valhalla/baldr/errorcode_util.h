@@ -186,6 +186,7 @@ namespace baldr {
     {442,"No path could be found for input"},
     {443,"Exact route match algorithm failed to find path"},
     {444,"Map Match algorithm failed to find path"},
+    {445,"Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input."},
 
     {499,"Unknown"},
 
