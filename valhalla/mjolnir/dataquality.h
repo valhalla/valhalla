@@ -75,7 +75,10 @@ class DataQuality {
   uint32_t simplerestrictions;
   uint32_t timedrestrictions;
   uint32_t culdesaccount;
+  uint32_t forward_restrictions_count;
+  uint32_t reverse_restrictions_count;
   uint32_t node_counts[128];
+
 
  protected:
   // Unconnected links
