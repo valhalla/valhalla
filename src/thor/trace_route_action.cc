@@ -163,8 +163,8 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
 
   std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
-    sequence.emplace_back(coord, 
-                          matcher->config().get<float>("gps_accuracy"), 
+    sequence.emplace_back(coord,
+                          matcher->config().get<float>("gps_accuracy"),
                           matcher->config().get<float>("search_radius"));
   }
 
@@ -182,16 +182,70 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
   // Set origin and destination from map matching results
   auto first_result_with_state = std::find_if(
       results.begin(), results.end(),
-      [](const meili::MatchResult& result) {return result.HasState();});
+      [](const meili::MatchResult& result) {
+        return result.HasState() && result.edgeid().Is_Valid();
+      });
+
   auto last_result_with_state = std::find_if(
       results.rbegin(), results.rend(),
-      [](const meili::MatchResult& result) {return result.HasState();});
+      [](const meili::MatchResult& result) {
+        return result.HasState() && result.edgeid().Is_Valid();
+      });
+
   if ((first_result_with_state != results.end())
       && (last_result_with_state != results.rend())) {
     baldr::PathLocation origin = matcher->mapmatching().state(
         first_result_with_state->stateid()).candidate();
     baldr::PathLocation destination = matcher->mapmatching().state(
         last_result_with_state->stateid()).candidate();
+
+    bool found_origin = false;
+    for (const auto& e : origin.edges) {
+      if (e.id == path_edges.front().edgeid) {
+        found_origin = true;
+        break;
+      }
+    }
+
+    if (!found_origin) {
+      LOG_INFO("Could not find origin edge");
+      // 1. origin must be at a node, so we can reuse any one of
+      // origin's edges
+
+      // 2. path_edges.front().edgeid must be the downstream edge that
+      // connects one of origin.edges (twins) at its start node
+      origin.edges.emplace_back(path_edges.front().edgeid,
+                                0.f,
+                                origin.edges.front().projected,
+                                origin.edges.front().score,
+                                origin.edges.front().sos);
+    }
+
+    bool found_destination = false;
+    for (const auto& e : destination.edges) {
+      if (e.id == path_edges.back().edgeid) {
+        found_destination = true;
+        break;
+      }
+    }
+
+    if (!found_destination) {
+      LOG_INFO("Could not find destination edge");
+      // 1. destination must be at a node, so we can reuse any one of
+      // destination's edges
+
+      // 2. path_edges.back().edgeid must be the upstream edge that
+      // connects one of destination.edges (twins) at its end node
+      destination.edges.emplace_back(path_edges.back().edgeid,
+                                     1.f,
+                                     destination.edges.front().projected,
+                                     destination.edges.front().score,
+                                     destination.edges.front().sos);
+    }
+
+
+    // assert origin.edges contains path_edges.front() &&
+    // destination.edges contains path_edges.back()
 
     // Empty through location list
     std::vector<baldr::PathLocation> through_loc;
