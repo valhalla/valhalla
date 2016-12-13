@@ -15,6 +15,8 @@ DataQuality::DataQuality()
       simplerestrictions(0),
       timedrestrictions(0),
       culdesaccount(0),
+      forward_restrictions_count(0),
+      reverse_restrictions_count(0),
       node_counts{} {
 }
 
