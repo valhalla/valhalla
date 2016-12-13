@@ -339,10 +339,11 @@ worker_t::result_t thor_worker_t::trace_attributes(
     switch (shape_match->second) {
       case EDGE_WALK:
         try {
-          LOG_INFO("in edge_walk...");
+          //TODO: remove after dev complete
+          LOG_INFO("in " + shape_match->first);
           trip_path = route_match(controller);
         } catch (...) {
-          LOG_INFO("Could not find exact route match.  Use shape_match:'walk or snap' to fallback to map-matching algorithm");
+          LOG_INFO(shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm");
           valhalla_exception_t{400, 443};
         }
         break;
@@ -350,10 +351,11 @@ worker_t::result_t thor_worker_t::trace_attributes(
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          LOG_INFO("in map_snap...");
+          //TODO: remove after dev complete
+          LOG_INFO("in " + shape_match->first);
           trip_path = map_match(controller);
         } catch (...) {
-          LOG_INFO("Map-matching algorithm failed to snap the shape points to the correct shape.");
+          LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
           valhalla_exception_t{400, 444};
         }
         break;
@@ -361,14 +363,15 @@ worker_t::result_t thor_worker_t::trace_attributes(
       // then we want to fallback to try and use meili map matching to match to local route network.
       //No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
-        LOG_INFO("in walk_or_snap...");
+        //TODO: remove after dev complete
+        LOG_INFO("in " + shape_match->first);
         trip_path = route_match(controller);
         if (trip_path.node().size() == 0) {
-          LOG_INFO("Could not find exact route match; Sending trace to map_match...");
+          LOG_INFO(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
             trip_path = map_match(controller);
           } catch (...) {
-            LOG_INFO("Map-matching algorithm failed to snap the shape points to the correct shape.");
+            LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
             valhalla_exception_t{400, 444};
           }
         }
