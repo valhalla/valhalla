@@ -232,12 +232,17 @@ namespace {
             }
             end_node_map->emplace("intersecting_edges", intersecting_edge_array);
           }
-          // TODO - add in other node attributes
-          // kNodeElapsedTime = "node.elapsed_time";
-          // kNodeaAdminIndex = "node.admin_index";
-          // kNodeType = "node.type";
-          // kNodeFork = "node.fork";
-          // kNodeTimeZone = "node.time_zone";
+
+          if (node.has_elapsed_time())
+            end_node_map->emplace("elapsed_time", static_cast<uint64_t>(node.elapsed_time()));
+          if (node.has_admin_index())
+            end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
+          if (node.has_type())
+            end_node_map->emplace("type", to_string(static_cast<baldr::NodeType>(node.type())));
+          if (node.has_fork())
+            end_node_map->emplace("fork", static_cast<bool>(node.fork()));
+          if (node.has_time_zone())
+            end_node_map->emplace("time_zone", node.time_zone());
 
           // TODO
           // kNodeTransitStopInfoType = "node.transit_stop_info.type";
