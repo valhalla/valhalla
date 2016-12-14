@@ -109,7 +109,7 @@ namespace valhalla {
       return result;
     }
 
-    worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
+    worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
@@ -134,6 +134,10 @@ namespace valhalla {
 
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
+        // Allow the request to be aborted
+        astar.set_interrupt(&interrupt);
+        bidir_astar.set_interrupt(&interrupt);
+        multi_modal_astar.set_interrupt(&interrupt);
         //what action is it
         switch (action) {
           case ONE_TO_MANY:

@@ -25,7 +25,7 @@ namespace thor {
 constexpr uint64_t kInitialEdgeLabelCountBD = 1000000;
 
 // Default constructor
-BidirectionalAStar::BidirectionalAStar() {
+BidirectionalAStar::BidirectionalAStar(): PathAlgorithm() {
   threshold_ = 0;
   mode_ = TravelMode::kDrive;
   access_mode_ = kAutoAccess;
@@ -341,7 +341,14 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   const GraphTile* tile2;
   bool expand_forward  = true;
   bool expand_reverse  = true;
+  size_t total_labels = 0;
   while (true) {
+    // Allow this process to be aborted
+    size_t current_labels = edgelabels_forward_.size() + edgelabels_reverse_.size();
+    if(interrupt && total_labels/kInterruptIterationsInterval < current_labels/kInterruptIterationsInterval)
+      (*interrupt)();
+    total_labels = current_labels;
+
     // Get the next predecessor (based on which direction was
     // expanded in prior step)
     if (expand_forward) {
