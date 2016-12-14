@@ -291,16 +291,7 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
       controller.attributes.at(kv.second.get_value<std::string>()) = false;
 
   } else {
-    //TODO:  This default will change
-    controller.disable_all();
-    controller.attributes.at(kEdgeNames) = true;
-    controller.attributes.at(kEdgeId) = true;
-    controller.attributes.at(kEdgeWayId) = true;
-    controller.attributes.at(kEdgeSpeed) = true;
-    controller.attributes.at(kEdgeLength) = true;
-    controller.attributes.at(kEdgeWeightedGrade) = true;
-    controller.attributes.at(kEdgeMaxUpwardGrade) = true;
-    controller.attributes.at(kEdgeMaxDownwardGrade) = true;
+    controller.enable_all();
   }
 }
 
