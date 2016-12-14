@@ -523,7 +523,8 @@ vb::GraphId parse_file_name(const std::string &file_name) {
   auto ritr = boost::make_reverse_iterator(p.end());
   const auto rend = boost::make_reverse_iterator(p.begin());
   for (; ritr != rend; ++ritr) {
-    const std::string str = ritr->stem().string();
+    const auto path = *ritr;
+    const std::string str = path.filename().stem().string();
 
     auto is_numeric = bal::all_of(str, bal::is_digit());
     auto length_3 = str.size() == 3;
