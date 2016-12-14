@@ -335,19 +335,19 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   // prevents one tree from expanding much more quickly (if in a sparser
   // portion of the graph) rather than strictly alternating.
   // TODO - CostMatrix alternates, maybe should try alternating here?
+  int n = 1;
   uint32_t forward_pred_idx, reverse_pred_idx;
   EdgeLabel pred, pred2;
   const GraphTile* tile;
   const GraphTile* tile2;
   bool expand_forward  = true;
   bool expand_reverse  = true;
-  size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted
-    size_t current_labels = edgelabels_forward_.size() + edgelabels_reverse_.size();
-    if(interrupt && total_labels/kInterruptIterationsInterval < current_labels/kInterruptIterationsInterval)
+    if (interrupt && (n % kInterruptIterationsInterval) == 0) {
       (*interrupt)();
-    total_labels = current_labels;
+    }
+    n++;
 
     // Get the next predecessor (based on which direction was
     // expanded in prior step)

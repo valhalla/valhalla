@@ -220,7 +220,7 @@ namespace valhalla {
           auto trip_path = thor::TripPathBuilder::Build(controller, reader,
                                                         mode_costing, path_edges,
                                                         origin, last_break_dest,
-                                                        through_loc);
+                                                        through_loc, interrupt_callback);
 
           if (origin.date_time_)
             origin_date_time = *origin.date_time_;
@@ -331,7 +331,8 @@ namespace valhalla {
           auto trip_path = thor::TripPathBuilder::Build(controller, reader,
                                                         mode_costing, path_edges,
                                                         last_break_origin,
-                                                        destination, through_loc);
+                                                        destination, through_loc,
+                                                        interrupt_callback);
 
           if (date_time_type) {
             origin_date_time = *last_break_origin.date_time_;

@@ -364,7 +364,13 @@ TripPath TripPathBuilder::Build(
     const TripPathController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
-    const std::vector<PathLocation>& through_loc) {
+    const std::vector<PathLocation>& through_loc,
+    const std::function<void ()>* interrupt_callback) {
+  // Test interrupt prior to building trip path
+  if (interrupt_callback) {
+    (*interrupt_callback)();
+  }
+
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 

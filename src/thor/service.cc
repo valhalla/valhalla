@@ -80,6 +80,7 @@ namespace valhalla {
       for (const auto& item : config.get_child("meili.customizable")) {
         trace_customizable.insert(item.second.get_value<std::string>());
       }
+      interrupt_callback = nullptr;
     }
 
     thor_worker_t::~thor_worker_t(){}
@@ -131,6 +132,9 @@ namespace valhalla {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
           return jsonify_error({500, 401}, info);
         }
+
+        // Set the interrupt function
+        interrupt_callback = &interrupt;
 
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));

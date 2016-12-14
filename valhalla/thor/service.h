@@ -128,6 +128,8 @@ class thor_worker_t {
   valhalla::meili::MapMatcherFactory matcher_factory;
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
+
+  const std::function<void ()>* interrupt_callback;
 };
 
 }

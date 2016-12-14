@@ -39,7 +39,8 @@ class TripPathBuilder {
       const std::shared_ptr<sif::DynamicCost>* mode_costing,
       const std::vector<PathInfo>& path, baldr::PathLocation& origin,
       baldr::PathLocation& dest,
-      const std::vector<baldr::PathLocation>& through_loc);
+      const std::vector<baldr::PathLocation>& through_loc,
+      const std::function<void ()>* interrupt_callback = nullptr);
 
   /**
    * Add trip edge. (TODO more comments)
