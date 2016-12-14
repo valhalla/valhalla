@@ -346,9 +346,9 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   std::string stop_action = pt.get("filters.stops.action", "");
   if (stop_action.size()) {
     for (const auto& kv : pt.get_child("filters.stops.ids")) {
-      if (stop_action == "none")
+      if (stop_action == "exclude")
         stop_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (stop_action == "only")
+      else if (stop_action == "include")
         stop_include_onestops_.emplace(kv.second.get_value<std::string>());
     }
   }
@@ -356,9 +356,9 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   std::string operator_action = pt.get("filters.operators.action", "");
   if (operator_action.size()) {
     for (const auto& kv : pt.get_child("filters.operators.ids")) {
-      if (operator_action == "none")
+      if (operator_action == "exclude")
         oper_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (operator_action == "only")
+      else if (operator_action == "include")
         oper_include_onestops_.emplace(kv.second.get_value<std::string>());
     }
   }
@@ -366,9 +366,9 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   std::string routes_action = pt.get("filters.routes.action", "");
   if (routes_action.size()) {
     for (const auto& kv : pt.get_child("filters.routes.ids")) {
-      if (routes_action == "none")
+      if (routes_action == "exclude")
         route_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (routes_action == "only")
+      else if (routes_action == "include")
         route_include_onestops_.emplace(kv.second.get_value<std::string>());
     }
   }
