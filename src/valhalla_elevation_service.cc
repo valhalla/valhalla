@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
   //grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
   std::string loopback = config.get<std::string>("httpd.service.loopback");
+  std::string interrupt = config.get<std::string>("httpd.service.interrupt");
   std::string skadi_proxy = config.get<std::string>("skadi.service.proxy");
 
   //check the server endpoint
@@ -56,7 +57,7 @@ int main(int argc, char** argv) {
   //setup the cluster within this process
   zmq::context_t context;
   std::thread server_thread = std::thread(std::bind(&http_server_t::serve,
-    http_server_t(context, listen, skadi_proxy + "_in", loopback, true)));
+    http_server_t(context, listen, skadi_proxy + "_in", loopback, interrupt, true)));
 
   //skadi layer
   std::thread skadi_proxy_thread(std::bind(&proxy_t::forward, proxy_t(context, skadi_proxy + "_in", skadi_proxy + "_out")));
