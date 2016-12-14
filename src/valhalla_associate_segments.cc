@@ -25,31 +25,60 @@ namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
 namespace bfs = boost::filesystem;
 
+namespace std {
+std::string to_string(const vm::PointLL &p) {
+  std::ostringstream out;
+  out.precision(16);
+  out << "PointLL(" << p.lng() << ", " << p.lat() << ")";
+  return out.str();
+}
+
+std::string to_string(const vb::GraphId &i) {
+  std::ostringstream out;
+  out << "GraphId(" << i.tileid() << ", " << i.level() << ", " << i.id() << ")";
+  return out.str();
+}
+} // namespace std
+
 namespace {
 
 vm::PointLL interp(vm::PointLL a, vm::PointLL b, double frac) {
   return vm::PointLL(a.AffineCombination(1.0 - frac, frac, b));
 }
 
-void subsegment(std::vector<vm::PointLL> &seg, uint32_t dist) {
+// chop the first "dist" length off seg, returning it as the result. this will
+// modify seg!
+std::vector<vm::PointLL> chop_subsegment(std::vector<vm::PointLL> &seg, uint32_t dist) {
   const size_t len = seg.size();
   assert(len > 1);
 
+  std::vector<vm::PointLL> result;
+  result.push_back(seg[0]);
   double d = 0.0;
-  size_t i = 0;
-  for (; i < len - 1; ++i) {
-    auto segdist = seg[i].Distance(seg[i+1]);
+  size_t i = 1;
+  for (; i < len; ++i) {
+    auto segdist = seg[i-1].Distance(seg[i]);
     if ((d + segdist) >= dist) {
       double frac = (dist - d) / segdist;
-      seg[i] = interp(seg[i], seg[i+1], frac);
+      auto midpoint = interp(seg[i-1], seg[i], frac);
+      result.push_back(midpoint);
+      // remove used part of seg.
+      seg.erase(seg.begin(), seg.begin() + (i - 1));
+      seg[0] = midpoint;
       break;
 
     } else {
       d += segdist;
+      result.push_back(seg[i]);
     }
   }
 
-  seg.erase(seg.begin(), seg.begin() + i);
+  // used all of seg, and exited the loop by iteration rather than breaking out.
+  if (i == len) {
+    seg.clear();
+  }
+
+  return result;
 }
 
 uint16_t bearing(const std::vector<vm::PointLL> &shape) {
@@ -73,7 +102,9 @@ uint16_t bearing(const vb::GraphTile *tile, vb::GraphId edge_id, float dist) {
     std::reverse(shape.begin(), shape.end());
   }
 
-  subsegment(shape, uint32_t(dist * edge_len));
+  if (dist > 0.0) {
+    chop_subsegment(shape, uint32_t(dist * edge_len));
+  }
 
   return bearing(shape);
 }
@@ -84,11 +115,23 @@ struct segment_part {
 };
 
 struct edge_association {
-  explicit edge_association(vb::GraphReader &reader) : m_reader(reader) {}
+  explicit edge_association(vb::GraphReader &reader);
   void add_tile(const std::string &file_name);
 
 private:
+  void match_segment(vb::GraphId segment_id, const pbf::Segment &segment);
+  std::vector<vb::GraphId> match_edges(const pbf::Segment &segment);
+  vm::PointLL lookup_end_coord(vb::GraphId);
+  vm::PointLL lookup_start_coord(vb::GraphId);
+
+  void assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id);
+  void assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id);
+  void save_chunk_for_later(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id);
+
   vb::GraphReader &m_reader;
+  vs::TravelMode m_travel_mode;
+  std::shared_ptr<vt::PathAlgorithm> m_path_algo;
+  std::shared_ptr<vs::DynamicCost> m_costing;
   // map of edge ID to the segment parts which match it.
   std::unordered_map<vb::GraphId, std::list<segment_part> > m_edges;
 };
@@ -281,6 +324,197 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
   return results.begin()->second;
 }
 
+edge_association::edge_association(vb::GraphReader &reader)
+  : m_reader(reader)
+  , m_travel_mode(vs::TravelMode::kDrive)
+  , m_path_algo(new vt::AStarPathAlgorithm())
+  , m_costing(new DistanceOnlyCost(m_travel_mode)) {
+}
+
+std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segment) {
+  const size_t size = segment.lrps_size();
+  assert(size >= 2);
+
+  std::vector<std::vector<edge_score> > locs;
+  locs.resize(size - 1);
+
+  std::vector<vb::GraphId> edges;
+
+  auto origin = loki_search_single(vb::Location(coord_for_lrp(segment.lrps(0))), m_reader);
+  for (size_t i = 0; i < size - 1; ++i) {
+    auto &lrp = segment.lrps(i);
+    auto coord = coord_for_lrp(lrp);
+    auto next_coord = coord_for_lrp(segment.lrps(i+1));
+
+    vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
+
+    auto dest = loki_search_single(vb::Location(next_coord), m_reader);
+
+    // make sure there's no state left over from previous paths
+    m_path_algo->Clear();
+    auto path = m_path_algo->GetBestPath(
+      origin, dest, m_reader, &m_costing, m_travel_mode);
+
+    if (path.empty()) {
+      // what to do if there's no path?
+      LOG_WARN("No route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + ". Segment cannot be matched, discarding.");
+      return std::vector<vb::GraphId>();
+    }
+
+    {
+      auto last_edge_id = path.back().edgeid;
+      auto *tile = m_reader.GetGraphTile(last_edge_id);
+      auto *edge = tile->directededge(last_edge_id);
+      auto node_id = edge->endnode();
+      auto *ntile = (last_edge_id.Tile_Base() == node_id.Tile_Base()) ? tile : m_reader.GetGraphTile(node_id);
+      auto *node = ntile->node(node_id);
+      auto dist = node->latlng().Distance(next_coord);
+      if (dist > 10.0f) {
+        LOG_WARN("Route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + " ends more than 10m away: " + std::to_string(node->latlng()) + ". Segment cannot be matched, discarding.");
+        return std::vector<vb::GraphId>();
+      }
+    }
+
+    int score = 0;
+    uint32_t sum = 0;
+    for (auto &p : path) {
+      auto edge_id = p.edgeid;
+      auto *tile = m_reader.GetGraphTile(edge_id);
+      auto *edge = tile->directededge(edge_id);
+      sum += p.elapsed_time;
+    }
+    score += std::abs(int(sum) - int(lrp.length())) / 10;
+
+    auto edge_id = path.front().edgeid;
+    auto *tile = m_reader.GetGraphTile(edge_id);
+    auto *edge = tile->directededge(edge_id);
+
+    if (!check_access(edge)) {
+      LOG_WARN("Edge " + std::to_string(edge_id) + " not accessible. Segment cannot be matched, discarding.");
+      return std::vector<vb::GraphId>();
+    }
+
+    score += std::abs(int(road_class) - int(edge->classification()));
+
+    bool found = false;
+    for (auto &e : origin.edges) {
+      if (e.id == edge_id) {
+        found = true;
+        score += int(e.projected.Distance(coord));
+
+        int bear1 = bearing(tile, edge_id, e.dist);
+        int bear2 = lrp.bear();
+        int bear_diff = std::abs(bear1 - bear2);
+        if (bear_diff > 180) {
+          bear_diff = 360 - bear_diff;
+        }
+        if (bear_diff < 0) {
+          bear_diff += 360;
+        }
+        score += bear_diff / 10;
+
+        break;
+      }
+    }
+    if (!found) {
+      LOG_WARN("Unable to find edge " + std::to_string(edge_id) + " at origin point " + std::to_string(origin.latlng_) + ". Segment cannot be matched, discarding.");
+      return std::vector<vb::GraphId>();
+    }
+
+    // form of way isn't really a metric space...
+    FormOfWay fow1 = form_of_way(edge);
+    FormOfWay fow2 = FormOfWay(lrp.start_fow());
+    score += (fow1 == fow2) ? 0 : 5;
+
+    for (const auto &info : path) {
+      edges.emplace_back(info.edgeid);
+    }
+
+    // use dest as next origin
+    std::swap(origin, dest);
+  }
+
+  // remove duplicate instances of the edge ID in the path info
+  auto new_end = std::unique(edges.begin(), edges.end());
+  edges.erase(new_end, edges.end());
+
+  return edges;
+}
+
+bool approx_equal(const vm::PointLL &a, const vm::PointLL &b) {
+  // TODO: implement me!
+  return false;
+}
+
+vm::PointLL edge_association::lookup_end_coord(vb::GraphId edge_id) {
+  auto *tile = m_reader.GetGraphTile(edge_id);
+  auto *edge = tile->directededge(edge_id);
+  auto node_id = edge->endnode();
+  auto *node_tile = tile;
+  if (edge_id.Tile_Base() != node_id.Tile_Base()) {
+    node_tile = m_reader.GetGraphTile(node_id);
+  }
+  auto *node = node_tile->node(node_id);
+  return node->latlng();
+}
+
+vm::PointLL edge_association::lookup_start_coord(vb::GraphId edge_id) {
+  auto *tile = m_reader.GetGraphTile(edge_id);
+  auto *edge = tile->directededge(edge_id);
+  auto opp_index = edge->opp_index();
+  return lookup_end_coord(edge_id.Tile_Base() + uint64_t(opp_index));
+}
+
+void edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment &segment) {
+  auto edges = match_edges(segment);
+  if (edges.empty()) {
+    LOG_WARN("Unable to match segment " + std::to_string(segment_id) + ".");
+    return;
+  }
+
+  auto seg_start = coord_for_lrp(segment.lrps(0));
+  auto seg_end = coord_for_lrp(segment.lrps(segment.lrps_size() - 1));
+
+  auto edges_start = lookup_start_coord(edges.front());
+  auto edges_end = lookup_end_coord(edges.back());
+
+  if (approx_equal(seg_start, edges_start) &&
+      approx_equal(seg_end, edges_end)) {
+    if (edges.size() == 1) {
+      // if the segment matches to one edge exactly, then we can use it
+      // directly. if not then it requires a level of indirection via
+      // "chunks".
+      assign_one_to_one(edges.front(), segment_id);
+
+    } else {
+      // more than one edge, but matches the segment exactly. this is a
+      // "one to many" case, and can also be looked up directly.
+      assign_one_to_many(edges, segment_id);
+    }
+  } else {
+    // save this for later, when we'll gather up all partial segments
+    // and try to build chunks out of them.
+    save_chunk_for_later(edges, segment_id);
+  }
+}
+
+void edge_association::assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id) {
+  // TODO: implement me!
+}
+
+void edge_association::assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id) {
+  // TODO: implement me!
+}
+
+void edge_association::save_chunk_for_later(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id) {
+  // TODO: implement me!
+}
+
+vb::GraphId parse_file_name(const std::string &file_name) {
+  // TODO: implement me!
+  return vb::GraphId{};
+}
+
 void edge_association::add_tile(const std::string &file_name) {
   pbf::Tile tile;
   {
@@ -290,9 +524,7 @@ void edge_association::add_tile(const std::string &file_name) {
     }
   }
 
-  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
-  std::shared_ptr<vt::PathAlgorithm> path_algo(new vt::AStarPathAlgorithm());
-  std::shared_ptr<vs::DynamicCost> costing(new DistanceOnlyCost(travel_mode));
+  auto base_id = parse_file_name(file_name);
 
   std::cout.precision(16);
   size_t entry_id = 0;
@@ -301,84 +533,7 @@ void edge_association::add_tile(const std::string &file_name) {
       assert(entry.has_segment());
       auto &segment = entry.segment();
 
-      const size_t size = segment.lrps_size();
-      assert(size >= 2);
-
-      std::vector<std::vector<edge_score> > locs;
-      locs.resize(size - 1);
-
-      std::cout << ">> " << entry_id << "\n";
-      auto origin = loki_search_single(vb::Location(coord_for_lrp(segment.lrps(0))), m_reader);
-      for (size_t i = 0; i < size - 1; ++i) {
-        auto &lrp = segment.lrps(i);
-        auto coord = coord_for_lrp(lrp);
-        auto next_coord = coord_for_lrp(segment.lrps(i+1));
-
-        vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
-
-        auto dest = loki_search_single(vb::Location(next_coord), m_reader);
-
-        std::cout << " >> FROM " << coord.lat() << "/" << coord.lng() << "\n";
-        std::cout << " >>   TO " << next_coord.lat() << "/" << next_coord.lng() << "\n";
-
-        auto path = path_algo->GetBestPath(
-          origin, dest, m_reader, &costing, travel_mode);
-
-        if (path.empty()) {
-          // what to do if there's no path?
-          throw std::runtime_error("Ooops");
-        }
-
-        int score = 0;
-        uint32_t sum = 0;
-        for (auto &p : path) {
-          sum += p.elapsed_time;
-        }
-        score += std::abs(int(sum) - int(lrp.length())) / 10;
-
-        auto edge_id = path.front().edgeid;
-        auto *tile = m_reader.GetGraphTile(edge_id);
-        auto *edge = tile->directededge(edge_id);
-
-        if (!check_access(edge)) {
-          continue;
-        }
-
-        score += std::abs(int(road_class) - int(edge->classification()));
-
-        bool found = false;
-        for (auto &e : origin.edges) {
-          if (e.id == edge_id) {
-            found = true;
-            score += int(e.projected.Distance(coord));
-
-            int bear1 = bearing(tile, edge_id, e.dist);
-            int bear2 = lrp.bear();
-            int bear_diff = std::abs(bear1 - bear2);
-            if (bear_diff > 180) {
-              bear_diff = 360 - bear_diff;
-            }
-            if (bear_diff < 0) {
-              bear_diff += 360;
-            }
-            score += bear_diff / 10;
-
-            break;
-          }
-        }
-        assert(found);
-
-
-        // form of way isn't really a metric space...
-        FormOfWay fow1 = form_of_way(edge);
-        FormOfWay fow2 = FormOfWay(lrp.start_fow());
-        score += (fow1 == fow2) ? 0 : 5;
-
-        std::cout << "  " << edge_id << ":\t" << score << "\n";
-
-        // use dest as next origin
-        std::swap(origin, dest);
-      }
+      match_segment(base_id + entry_id, segment);
     }
 
     entry_id += 1;
