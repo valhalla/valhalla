@@ -4,6 +4,7 @@
 #include <valhalla/loki/search.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/astar.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
 
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -22,6 +23,7 @@ namespace vb = valhalla::baldr;
 namespace vl = valhalla::loki;
 namespace vs = valhalla::sif;
 namespace vt = valhalla::thor;
+namespace vj = valhalla::mjolnir;
 namespace pbf = opentraffic::osmlr;
 
 namespace bal = boost::algorithm;
@@ -113,20 +115,22 @@ uint16_t bearing(const vb::GraphTile *tile, vb::GraphId edge_id, float dist) {
   return bearing(shape);
 }
 
-struct segment_part {
-  vb::GraphId segment_id;
-  uint8_t fraction;
+struct partial_chunk {
+  std::vector<vb::GraphId> edges, segments;
 };
 
 struct edge_association {
   explicit edge_association(vb::GraphReader &reader);
+
   void add_tile(const std::string &file_name);
+  void finish();
 
 private:
   void match_segment(vb::GraphId segment_id, const pbf::Segment &segment);
   std::vector<vb::GraphId> match_edges(const pbf::Segment &segment);
   vm::PointLL lookup_end_coord(vb::GraphId);
   vm::PointLL lookup_start_coord(vb::GraphId);
+  vj::GraphTileBuilder &builder_for_edge(vb::GraphId edge_id);
 
   void assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id);
   void assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id);
@@ -136,8 +140,10 @@ private:
   vs::TravelMode m_travel_mode;
   std::shared_ptr<vt::PathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
-  // map of edge ID to the segment parts which match it.
-  std::unordered_map<vb::GraphId, std::list<segment_part> > m_edges;
+  // map of tile ID to the builder for that tile.
+  std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder> > m_edges;
+  // chunks saved for later
+  std::list<partial_chunk> m_partial_chunks;
 };
 
 struct edge_score {
@@ -467,7 +473,13 @@ vm::PointLL edge_association::lookup_start_coord(vb::GraphId edge_id) {
   auto *tile = m_reader.GetGraphTile(edge_id);
   auto *edge = tile->directededge(edge_id);
   auto opp_index = edge->opp_index();
-  return lookup_end_coord(edge_id.Tile_Base() + uint64_t(opp_index));
+  auto node_id = edge->endnode();
+  auto *node_tile = tile;
+  if (edge_id.Tile_Base() != node_id.Tile_Base()) {
+    node_tile = m_reader.GetGraphTile(node_id);
+  }
+  auto *node = node_tile->node(node_id);
+  return lookup_end_coord(node_id.Tile_Base() + uint64_t(node->edge_index() + opp_index));
 }
 
 void edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment &segment) {
@@ -503,16 +515,39 @@ void edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   }
 }
 
+vj::GraphTileBuilder &edge_association::builder_for_edge(vb::GraphId edge_id) {
+  auto tile_id = edge_id.Tile_Base();
+  auto itr = m_edges.find(tile_id);
+  if (itr == m_edges.end()) {
+    auto ptr = std::make_shared<vj::GraphTileBuilder>(
+      m_reader.GetTileHierarchy(), tile_id, false);
+    ptr->InitializeTrafficSegmentIds();
+    auto status = m_edges.emplace(tile_id, ptr);
+    itr = status.first;
+  }
+  return *(itr->second);
+}
+
 void edge_association::assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id) {
-  // TODO: implement me!
+  std::vector<std::pair<vb::GraphId, float> > assoc;
+  assoc.emplace_back(segment_id, 1.0f);
+  builder_for_edge(edge_id).AddTrafficSegmentAssociation(edge_id, assoc);
 }
 
 void edge_association::assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id) {
-  // TODO: implement me!
+  std::vector<std::pair<vb::GraphId, float> > assoc;
+  for (auto edge_id : edges) {
+    assoc.emplace_back(segment_id, 1.0f);
+    builder_for_edge(edge_id).AddTrafficSegmentAssociation(edge_id, assoc);
+    assoc.clear();
+  }
 }
 
 void edge_association::save_chunk_for_later(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id) {
-  // TODO: implement me!
+  partial_chunk tmp;
+  tmp.edges = edges;
+  tmp.segments.push_back(segment_id);
+  m_partial_chunks.emplace_back(std::move(tmp));
 }
 
 vb::GraphId parse_file_name(const std::string &file_name) {
@@ -579,6 +614,17 @@ void edge_association::add_tile(const std::string &file_name) {
 
     entry_id += 1;
   }
+}
+
+void edge_association::finish() {
+  // TODO: do something with m_partial_chunks
+
+  // once everything has been written to the builder, we must save those
+  // results back to the tile on disk.
+  for (auto &entry : m_edges) {
+    entry.second->UpdateTrafficSegments();
+  }
+  m_edges.clear();
 }
 
 } // anonymous namespace
@@ -653,6 +699,8 @@ int main(int argc, char** argv) {
       }
     }
   }
+
+  e.finish();
 
   return EXIT_SUCCESS;
 }
