@@ -732,7 +732,7 @@ std::vector<std::pair<GraphId, float>> GraphTile::GetTrafficSegments(const size_
       }
       return segments;
     }
-  } else if (header_->traffic_id_count()) {
+  } else if (header_->traffic_id_count() == 0) {
     return { };
   } else {
     throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
