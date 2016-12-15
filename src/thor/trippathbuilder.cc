@@ -230,6 +230,27 @@ TripPath_Use GetTripPathUse(Use use) {
   }
 }
 
+TripPath_Surface GetTripPathSurface(Surface surface) {
+  switch (surface) {
+    case Surface::kPavedSmooth:
+      return TripPath_Surface_kPavedSmooth;
+    case Surface::kPaved:
+      return TripPath_Surface_kPaved;
+    case Surface::kPavedRough:
+      return TripPath_Surface_kPavedRough;
+    case Surface::kCompacted:
+      return TripPath_Surface_kCompacted;
+    case Surface::kDirt:
+      return TripPath_Surface_kDirt;
+    case Surface::kGravel:
+      return TripPath_Surface_kGravel;
+    case Surface::kPath:
+      return TripPath_Surface_kPath;
+    case Surface::kImpassable:
+      return TripPath_Surface_kImpassable;
+  }
+}
+
 TripPath_VehicleType GetTripPathVehicleType(uint8_t type) {
   switch (type) {
     case static_cast<uint8_t>(VehicleType::kCar):
@@ -1226,7 +1247,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
 
   // Set surface if requested
   if (controller.attributes.at(kEdgeSurface))
-    trip_edge->set_surface(static_cast<uint32_t>(directededge->surface()));
+    trip_edge->set_surface(GetTripPathSurface(directededge->surface()));
 
   // Set the mode and travel type
   if (mode == sif::TravelMode::kBicycle) {
