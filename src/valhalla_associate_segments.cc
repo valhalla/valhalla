@@ -551,44 +551,7 @@ void edge_association::save_chunk_for_later(const std::vector<vb::GraphId> &edge
 }
 
 vb::GraphId parse_file_name(const std::string &file_name) {
-  uint32_t tile_id = 0, multiplier = 1, level = 0;
-
-  bfs::path p(file_name);
-
-  auto ritr = boost::make_reverse_iterator(p.end());
-  const auto rend = boost::make_reverse_iterator(p.begin());
-  for (; ritr != rend; ++ritr) {
-    const auto path = *ritr;
-    const std::string str = path.filename().stem().string();
-
-    auto is_numeric = bal::all_of(str, bal::is_digit());
-    auto length_3 = str.size() == 3;
-
-    // loop should be broken when we reach the level, and there should be no
-    // intervening non-numeric stems. so if the path is non-numeric that may
-    // mean we have matched a level as a part of the tile_id, or that we don't
-    // understand the directory hierarchy.
-    if (!is_numeric) {
-      throw std::runtime_error("Unable to parse \"" + p.string() + "\" as a tile ID. Unexpected non-numeric path part \"" + str + "\".");
-    }
-
-    auto value = std::stoul(str);
-
-    // length=3 implies it's part of the tileid
-    if (length_3) {
-      tile_id += uint32_t(value) * multiplier;
-      multiplier *= 1000;
-
-    }
-    // length != 3 implies it's a level, at least until we get to having >=
-    // 100 levels. once we have the level, we can stop.
-    else {
-      level = value;
-      break;
-    }
-  }
-
-  return vb::GraphId(tile_id, level, 0);
+  return vb::GraphTile::GetTileId(file_name);
 }
 
 void edge_association::add_tile(const std::string &file_name) {
