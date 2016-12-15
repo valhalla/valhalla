@@ -326,12 +326,17 @@ vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference &lrp) {
   return coord;
 }
 
-vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &reader, const vs::EdgeFilter& edge_filter = vl::PassThroughEdgeFilter, const vs::NodeFilter& node_filter = vl::PassThroughNodeFilter) {
+std::vector<vb::PathLocation> loki_search_single(const vb::Location &loc, vb::GraphReader &reader, const vs::EdgeFilter& edge_filter = vl::PassThroughEdgeFilter, const vs::NodeFilter& node_filter = vl::PassThroughNodeFilter) {
   std::vector<vb::Location> locs;
   locs.emplace_back(loc);
   auto results = vl::Search(locs, reader, edge_filter, node_filter);
-  assert(results.size() == 1);
-  return results.begin()->second;
+
+  std::vector<vb::PathLocation> returns;
+  returns.reserve(results.size());
+  for (auto &entry : results) {
+    returns.emplace_back(std::move(entry.second));
+  }
+  return returns;
 }
 
 edge_association::edge_association(vb::GraphReader &reader)
@@ -350,7 +355,14 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
 
   std::vector<vb::GraphId> edges;
 
-  auto origin = loki_search_single(vb::Location(coord_for_lrp(segment.lrps(0))), m_reader);
+  auto origin_coord = coord_for_lrp(segment.lrps(0));
+  auto origins = loki_search_single(vb::Location(origin_coord), m_reader);
+  if (origins.size() == 0) {
+    LOG_WARN("Unable to find edge near origin " + std::to_string(origin_coord) + ". Segment cannot be matched, discarding.");
+    return std::vector<vb::GraphId>();
+  }
+  auto origin = origins[0];
+
   for (size_t i = 0; i < size - 1; ++i) {
     auto &lrp = segment.lrps(i);
     auto coord = coord_for_lrp(lrp);
@@ -358,7 +370,12 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
 
-    auto dest = loki_search_single(vb::Location(next_coord), m_reader);
+    auto dests = loki_search_single(vb::Location(next_coord), m_reader);
+    if (dests.size() == 0) {
+      LOG_WARN("Unable to find edge near point " + std::to_string(next_coord) + ". Segment cannot be matched, discarding.");
+      return std::vector<vb::GraphId>();
+    }
+    auto dest = dests[0];
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
