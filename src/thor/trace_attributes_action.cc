@@ -145,11 +145,11 @@ namespace {
 
         // Process sign
         if (edge.has_sign()) {
-          auto sign_map = json::map( { });
+          auto sign_map = json::map({});
 
           // Populate exit number array
           if (edge.sign().exit_number_size() > 0) {
-            auto exit_number_array = json::array( { });
+            auto exit_number_array = json::array({});
             for (const auto& exit_number : edge.sign().exit_number()) {
               exit_number_array->push_back(exit_number);
             }
@@ -158,7 +158,7 @@ namespace {
 
           // Populate exit branch array
           if (edge.sign().exit_branch_size() > 0) {
-            auto exit_branch_array = json::array( { });
+            auto exit_branch_array = json::array({});
             for (const auto& exit_branch : edge.sign().exit_branch()) {
               exit_branch_array->push_back(exit_branch);
             }
@@ -167,7 +167,7 @@ namespace {
 
           // Populate exit toward array
           if (edge.sign().exit_toward_size() > 0) {
-            auto exit_toward_array = json::array( { });
+            auto exit_toward_array = json::array({});
             for (const auto& exit_toward : edge.sign().exit_toward()) {
               exit_toward_array->push_back(exit_toward);
             }
@@ -176,7 +176,7 @@ namespace {
 
           // Populate exit name array
           if (edge.sign().exit_name_size() > 0) {
-            auto exit_name_array = json::array( { });
+            auto exit_name_array = json::array({});
             for (const auto& exit_name : edge.sign().exit_name()) {
               exit_name_array->push_back(exit_name);
             }
