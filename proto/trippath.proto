@@ -103,6 +103,17 @@ message TripPath {
     kTransitConnectionUse = 54; // Connection to multi-use transit stop
   }
 
+  enum Surface {
+    kPavedSmooth = 0;
+    kPaved = 1;
+    kPavedRough = 2;
+    kCompacted = 3;
+    kDirt = 4;
+    kGravel = 5;
+    kPath = 6;
+    kImpassable = 7;
+  }
+
   enum TravelMode {
     kDrive = 0;
     kPedestrian = 1;
@@ -190,7 +201,7 @@ message TripPath {
     optional bool roundabout = 15;
     optional bool internal_intersection = 16;
     optional bool drive_on_right = 17 [default = true];
-    optional uint32 surface = 18;
+    optional Surface surface = 18;
     optional Sign sign = 19;
     optional TravelMode travel_mode = 20;
     optional VehicleType vehicle_type = 21;
