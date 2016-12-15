@@ -141,7 +141,7 @@ private:
   std::shared_ptr<vt::PathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
   // map of tile ID to the builder for that tile.
-  std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder> > m_edges;
+  std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder> > m_tiles;
   // chunks saved for later
   std::list<partial_chunk> m_partial_chunks;
 };
@@ -517,12 +517,12 @@ void edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
 
 vj::GraphTileBuilder &edge_association::builder_for_edge(vb::GraphId edge_id) {
   auto tile_id = edge_id.Tile_Base();
-  auto itr = m_edges.find(tile_id);
-  if (itr == m_edges.end()) {
+  auto itr = m_tiles.find(tile_id);
+  if (itr == m_tiles.end()) {
     auto ptr = std::make_shared<vj::GraphTileBuilder>(
       m_reader.GetTileHierarchy(), tile_id, false);
     ptr->InitializeTrafficSegmentIds();
-    auto status = m_edges.emplace(tile_id, ptr);
+    auto status = m_tiles.emplace(tile_id, ptr);
     itr = status.first;
   }
   return *(itr->second);
@@ -621,10 +621,10 @@ void edge_association::finish() {
 
   // once everything has been written to the builder, we must save those
   // results back to the tile on disk.
-  for (auto &entry : m_edges) {
+  for (auto &entry : m_tiles) {
     entry.second->UpdateTrafficSegments();
   }
-  m_edges.clear();
+  m_tiles.clear();
 }
 
 } // anonymous namespace
