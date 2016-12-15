@@ -142,14 +142,6 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
       continue;
     }
 
-    // if we encounter any edges which have already been marked, then this
-    // node cannot be collapsible. either that edge would be one of the two
-    // needed at this node to make it collapsible, or the node has more than
-    // two edges.
-    if (m_tracker.get(edge.second)) {
-      return none;
-    }
-
     if (first) {
       if (second) {
         // can't add a third, that means this node is a true junction.
@@ -211,6 +203,12 @@ GraphId edge_collapser::edge_between(GraphId cur, GraphId next) {
 void edge_collapser::explore(GraphId node_id) {
   auto nodes = nodes_reachable_from(node_id);
   if (!nodes.first || !nodes.second) {
+    return;
+  }
+
+  // if either edge has been marked, then don't explore down either of them.
+  if (m_tracker.get(edge_between(node_id, nodes.first)) ||
+      m_tracker.get(edge_between(node_id, nodes.second))) {
     return;
   }
 

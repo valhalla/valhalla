@@ -196,6 +196,65 @@ void TestCollapseEdgeJunction() {
   }
 }
 
+void TestCollapseEdgeChain() {
+  vb::TileHierarchy hier("");
+  vb::GraphId base_id = hier.GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
+
+  // graph with 3 collapsible edges, all chained together. (e.g: think of the
+  // middle segment as a bridge).
+  //
+  //      /---(e0)-->\    /---(e1)-->\    /---(e3)-->\
+  //  (n0)            (n1)            (n2)            (n3)
+  //      \<--(e2)---/    \<--(e4)---/    \<--(e5)---/
+  //
+  graph_tile_builder builder;
+  builder.append_node(0.00f, 0.0f, 1, 0);
+  builder.append_node(0.01f, 0.0f, 2, 1);
+  builder.append_node(0.02f, 0.0f, 2, 3);
+  builder.append_node(0.03f, 0.0f, 1, 5);
+
+  builder.append_edge(base_id + uint64_t(1), 1113);
+  builder.append_edge(base_id + uint64_t(2), 1113);
+  builder.append_edge(base_id + uint64_t(0), 1113);
+  builder.append_edge(base_id + uint64_t(3), 1113);
+  builder.append_edge(base_id + uint64_t(1), 1113);
+  builder.append_edge(base_id + uint64_t(2), 1113);
+
+  builder.commit_tile(base_id);
+  assert(builder.tiles.size() == 1);
+
+  test_graph_reader reader(std::move(builder.tiles));
+
+  size_t count = 0;
+  std::set<vb::GraphId> edges;
+  for (uint64_t i = 0; i < 6; ++i) {
+    edges.insert(base_id + i);
+  }
+
+  std::vector<vb::GraphId> tiles;
+  tiles.push_back(base_id);
+
+  vb::merge::merge(
+    tiles, reader,
+    [](const vb::DirectedEdge *) -> bool { return true; },
+    [&](const vb::merge::path &p) {
+      count += 1;
+      for (auto id : p.m_edges) {
+        if (edges.count(id) != 1) {
+          throw std::runtime_error("Edge not found - either invalid or duplicate!");
+        }
+        edges.erase(id);
+      }
+    });
+
+  if (count != 2) {
+    throw std::runtime_error("Should have collapsed to 2 paths.");
+  }
+  if (!edges.empty()) {
+    throw std::runtime_error("Some edges left over!");
+  }
+}
+
 } // anonymous namespace
 
 int main() {
@@ -203,6 +262,7 @@ int main() {
 
   suite.test(TEST_CASE(TestCollapseEdgeSimple));
   suite.test(TEST_CASE(TestCollapseEdgeJunction));
+  suite.test(TEST_CASE(TestCollapseEdgeChain));
 
   return suite.tear_down();
 }
