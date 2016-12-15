@@ -110,107 +110,121 @@ namespace {
 
       if (trip_path.node(i-1).has_edge()) {
         const auto& edge = trip_path.node(i - 1).edge();
-        auto names = json::array({});
 
-        auto edgemap = json::map({});
+        auto edge_map = json::map({});
         if (edge.has_truck_route())
-          edgemap->emplace("truck_route", static_cast<bool>(edge.truck_route()));
+          edge_map->emplace("truck_route", static_cast<bool>(edge.truck_route()));
         if (edge.has_truck_speed() && (edge.truck_speed() > 0))
-          edgemap->emplace("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
+          edge_map->emplace("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
         if (edge.has_speed_limit() && (edge.speed_limit() > 0))
-          edgemap->emplace("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+          edge_map->emplace("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
         if (edge.has_density())
-          edgemap->emplace("density", static_cast<uint64_t>(edge.density()));
+          edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
         if (edge.has_sidewalk())
-          edgemap->emplace("sidewalk", to_string(edge.sidewalk()));
+          edge_map->emplace("sidewalk", to_string(edge.sidewalk()));
         if (edge.has_bicycle_network())
-          edgemap->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
+          edge_map->emplace("bicycle_network", static_cast<uint64_t>(edge.bicycle_network()));
         if (edge.has_cycle_lane())
-          edgemap->emplace("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
+          edge_map->emplace("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
         if (edge.has_lane_count())
-          edgemap->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
+          edge_map->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
         if (edge.has_max_downward_grade())
-          edgemap->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+          edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
         if (edge.has_max_upward_grade())
-          edgemap->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+          edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
         if (edge.has_weighted_grade())
-          edgemap->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
+          edge_map->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
         if (edge.has_way_id())
-          edgemap->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
+          edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
         if (edge.has_id())
-          edgemap->emplace("id", static_cast<uint64_t>(edge.id()));
+          edge_map->emplace("id", static_cast<uint64_t>(edge.id()));
         if (edge.has_travel_mode()) {
           auto mode_type = travel_mode_type(edge);
-          edgemap->emplace("travel_mode", mode_type.first);
+          edge_map->emplace("travel_mode", mode_type.first);
         }
+
+        // Process sign
         if (edge.has_sign()) {
-          auto exit_number_elements = json::map({});
-          for (int i = 0; i < edge.sign().exit_number_size(); ++i) {
-             // Add the exit number
-            exit_number_elements->emplace(
-                "exit_number", edge.sign().exit_number(i));
+          auto sign_map = json::map( { });
+
+          // Populate exit number array
+          if (edge.sign().exit_number_size() > 0) {
+            auto exit_number_array = json::array( { });
+            for (const auto& exit_number : edge.sign().exit_number()) {
+              exit_number_array->push_back(exit_number);
+            }
+            sign_map->emplace("exit_number", exit_number_array);
           }
-          edgemap->emplace("sign", exit_number_elements);
-          auto exit_branch_elements = json::map({});
-          for (int i = 0; i < edge.sign().exit_branch_size(); ++i) {
-             // Add the exit number
-            exit_branch_elements->emplace(
-                "exit_branch", edge.sign().exit_branch(i));
+
+          // Populate exit branch array
+          if (edge.sign().exit_branch_size() > 0) {
+            auto exit_branch_array = json::array( { });
+            for (const auto& exit_branch : edge.sign().exit_branch()) {
+              exit_branch_array->push_back(exit_branch);
+            }
+            sign_map->emplace("exit_branch", exit_branch_array);
           }
-          edgemap->emplace("sign", exit_branch_elements);
-          auto exit_toward_elements = json::map({});
-          for (int i = 0; i < edge.sign().exit_toward_size(); ++i) {
-             // Add the exit number
-            exit_toward_elements->emplace(
-                "exit_toward", edge.sign().exit_toward(i));
+
+          // Populate exit toward array
+          if (edge.sign().exit_toward_size() > 0) {
+            auto exit_toward_array = json::array( { });
+            for (const auto& exit_toward : edge.sign().exit_toward()) {
+              exit_toward_array->push_back(exit_toward);
+            }
+            sign_map->emplace("exit_toward", exit_toward_array);
           }
-          edgemap->emplace("sign", exit_toward_elements);
-          auto exit_name_elements = json::map({});
-          for (int i = 0; i < edge.sign().exit_name_size(); ++i) {
-             // Add the exit number
-            exit_name_elements->emplace(
-                "exit_name", edge.sign().exit_name(i));
+
+          // Populate exit name array
+          if (edge.sign().exit_name_size() > 0) {
+            auto exit_name_array = json::array( { });
+            for (const auto& exit_name : edge.sign().exit_name()) {
+              exit_name_array->push_back(exit_name);
+            }
+            sign_map->emplace("exit_name", exit_name_array);
           }
-          edgemap->emplace("sign", exit_name_elements);
+
+          edge_map->emplace("sign", sign_map);
         }
+
         if (edge.has_surface())
-          edgemap->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
+          edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
         if (edge.has_drive_on_right())
-          edgemap->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
+          edge_map->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
         if (edge.has_internal_intersection())
-          edgemap->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
+          edge_map->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
         if (edge.has_roundabout())
-          edgemap->emplace("roundabout", static_cast<bool>(edge.roundabout()));
+          edge_map->emplace("roundabout", static_cast<bool>(edge.roundabout()));
         if (edge.has_bridge())
-          edgemap->emplace("bridge", static_cast<bool>(edge.bridge()));
+          edge_map->emplace("bridge", static_cast<bool>(edge.bridge()));
         if (edge.has_tunnel())
-          edgemap->emplace("tunnel", static_cast<bool>(edge.tunnel()));
+          edge_map->emplace("tunnel", static_cast<bool>(edge.tunnel()));
         if (edge.has_unpaved())
-          edgemap->emplace("unpaved", static_cast<bool>(edge.unpaved()));
+          edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
         if (edge.has_toll())
-            edgemap->emplace("toll", static_cast<bool>(edge.toll()));
+            edge_map->emplace("toll", static_cast<bool>(edge.toll()));
        if (edge.has_use())
-          edgemap->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
+          edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
         if (edge.has_traversability())
-          edgemap->emplace("traversability", to_string(edge.traversability()));
+          edge_map->emplace("traversability", to_string(edge.traversability()));
         if (edge.has_end_shape_index())
-          edgemap->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
+          edge_map->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
         if (edge.has_begin_shape_index())
-          edgemap->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
+          edge_map->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
         if (edge.has_end_heading())
-          edgemap->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
+          edge_map->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
         if (edge.has_begin_heading())
-          edgemap->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
+          edge_map->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
         if (edge.has_road_class())
-          edgemap->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
+          edge_map->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
         if (edge.has_speed())
-          edgemap->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
+          edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
         if (edge.has_length())
-          edgemap->emplace("length", json::fp_t{edge.length() * scale, 3});
+          edge_map->emplace("length", json::fp_t{edge.length() * scale, 3});
         if (edge.name_size() > 0) {
+          auto names_array = json::array({});
           for (const auto& name : edge.name())
-            names->push_back(name);
-          edgemap->emplace("names", names);
+            names_array->push_back(name);
+          edge_map->emplace("names", names_array);
         }
         // Process nodes only if any node items are enabled
         if (controller.node_attribute_enabled()) {
@@ -254,10 +268,10 @@ namespace {
           // kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
           // kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
 
-          edgemap->emplace("end_node", end_node_map);
+          edge_map->emplace("end_node", end_node_map);
         }
 
-        edges->emplace_back(edgemap);
+        edges->emplace_back(edge_map);
       }
     }
 
