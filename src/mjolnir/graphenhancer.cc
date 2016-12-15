@@ -1059,13 +1059,16 @@ void enhance(const boost::property_tree::ptree& pt,
         // Update speed.
         UpdateSpeed(directededge, density);
 
+        // Update the named flag
+        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames();
+        directededge.set_named(names.size() > 0);
+
         // Name continuity - set in NodeInfo.
         for (uint32_t k = (j + 1); k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(
                     nodeinfo.edge_index() + k);
           if (directededge.link() ||
-              ConsistentNames(country_code,
-                  tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames(),
+              ConsistentNames(country_code, names,
                   tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
             // Set name consistency to true when entering a link (ramp or
             // turn channel) to avoid double penalizing.
