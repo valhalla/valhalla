@@ -691,7 +691,10 @@ int main(int argc, char** argv) {
   // of a tile.
   edge_association e(reader);
 
-  for (auto dir_entry : bfs::recursive_directory_iterator(tile_dir)) {
+  auto itr = bfs::recursive_directory_iterator(tile_dir);
+  auto end = bfs::recursive_directory_iterator();
+  for (; itr != end; ++itr) {
+    auto dir_entry = *itr;
     if (bfs::is_regular_file(dir_entry)) {
       auto ext = dir_entry.path().extension();
       if (ext == ".osmlr") {
