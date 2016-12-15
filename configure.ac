@@ -33,7 +33,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 
 # require other valhalla dependencies
-PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable libvalhalla_meili = unstable libvalhalla_skadi = unstable libvalhalla_loki = unstable libvalhalla_thor = unstable libvalhalla_odin = unstable libvalhalla_tyr = unstable])
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable libvalhalla_meili = unstable libvalhalla_skadi = unstable libvalhalla_loki = unstable libvalhalla_thor = unstable libvalhalla_odin = unstable libvalhalla_tyr = unstable libvalhalla_mjolnir = unstable])
 
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
