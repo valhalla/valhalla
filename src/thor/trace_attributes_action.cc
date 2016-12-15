@@ -174,7 +174,7 @@ namespace {
           edgemap->emplace("sign", exit_name_elements);
         }
         if (edge.has_surface())
-          edgemap->emplace("surface", static_cast<uint64_t>(edge.surface()));
+          edgemap->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
         if (edge.has_drive_on_right())
           edgemap->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
         if (edge.has_internal_intersection())
@@ -221,9 +221,9 @@ namespace {
             auto intersecting_edge_array = json::array({});
             for (const auto& xedge : node.intersecting_edge()) {
               auto xedge_map = json::map({});
-              xedge_map->emplace("walkability", to_string(static_cast<TripPath_Traversability>(xedge.walkability())));
-              xedge_map->emplace("cyclability", to_string(static_cast<TripPath_Traversability>(xedge.cyclability())));
-              xedge_map->emplace("driveability", to_string(static_cast<TripPath_Traversability>(xedge.driveability())));
+              xedge_map->emplace("walkability", to_string(xedge.walkability()));
+              xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
+              xedge_map->emplace("driveability", to_string(xedge.driveability()));
               xedge_map->emplace("curr_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
               xedge_map->emplace("prev_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
               xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
