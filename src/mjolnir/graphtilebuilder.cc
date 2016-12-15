@@ -320,7 +320,9 @@ void GraphTileBuilder::StoreTileData() {
     // At this point there is no traffic segment data, so set end offset and
     // traffic segment Id offset to same value
     size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
+    header_builder_.set_traffic_id_count(0);
     header_builder_.set_traffic_segmentid_offset(end_offset);
+    header_builder_.set_traffic_chunk_offset(end_offset);
     header_builder_.set_end_offset(end_offset);
 
     // Write the header.
@@ -408,6 +410,7 @@ void GraphTileBuilder::Update(
     // Write the updated header. At this point there are no traffic segments
     size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
     header_->set_traffic_segmentid_offset(end_offset);
+    header_->set_traffic_chunk_offset(end_offset);
     header_->set_end_offset(end_offset);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
@@ -790,6 +793,7 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
+  header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
@@ -894,11 +898,14 @@ void GraphTileBuilder::UpdateTrafficSegments() {
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write a new header
-    file.write(reinterpret_cast<const char*>(&header_), sizeof(GraphTileHeader));
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Copy the rest of the tile contents
-    const auto* begin = reinterpret_cast<const char*>(&header_) + sizeof(GraphTileHeader);
-    file.write(begin, current_size);
+if (current_size % 8 != 0) {
+  LOG_INFO("current size not a factor of 8: " + std::to_string(current_size));
+}
+    const auto* begin = reinterpret_cast<const char*>(nodes_);
+    file.write(begin, current_size - sizeof(GraphTileHeader));
 
     // Append the traffic segment list
     file.write(reinterpret_cast<const char*>(&traffic_segmentid_builder_[0]),
