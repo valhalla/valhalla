@@ -121,31 +121,35 @@ uint32_t GetAdminIndex(
 void AssignAdmins(const TripPathController& controller,
                   TripPath& trip_path,
                   const std::vector<AdminInfo>& admin_info_list) {
-  // Assign the admins
-  for (const auto& admin_info : admin_info_list) {
-    TripPath_Admin* trip_admin = trip_path.add_admin();
+  if (controller.category_attribute_enabled(kAdminCategory)) {
+    // Assign the admins
+    for (const auto& admin_info : admin_info_list) {
+      TripPath_Admin* trip_admin = trip_path.add_admin();
 
-    // Set country code if requested
-    if (controller.attributes.at(kAdminCountryCode))
+      // Set country code if requested
+      if (controller.attributes.at(kAdminCountryCode))
         trip_admin->set_country_code(admin_info.country_iso());
 
-    // Set country text if requested
-    if (controller.attributes.at(kAdminCountryText))
-      trip_admin->set_country_text(admin_info.country_text());
+      // Set country text if requested
+      if (controller.attributes.at(kAdminCountryText))
+        trip_admin->set_country_text(admin_info.country_text());
 
-    // Set state code if requested
-    if (controller.attributes.at(kAdminStateCode))
-      trip_admin->set_state_code(admin_info.state_iso());
+      // Set state code if requested
+      if (controller.attributes.at(kAdminStateCode))
+        trip_admin->set_state_code(admin_info.state_iso());
 
-    // Set state text if requested
-    if (controller.attributes.at(kAdminStateText))
-      trip_admin->set_state_text(admin_info.state_text());
+      // Set state text if requested
+      if (controller.attributes.at(kAdminStateText))
+        trip_admin->set_state_text(admin_info.state_text());
 
-    valhalla::midgard::logging::Log("admin_state_iso::" + admin_info.state_iso(), " [ANALYTICS] ");
-    valhalla::midgard::logging::Log("admin_country_iso::" + admin_info.country_iso(), " [ANALYTICS] ");
+      valhalla::midgard::logging::Log("admin_state_iso::" + admin_info.state_iso(), " [ANALYTICS] ");
+      valhalla::midgard::logging::Log("admin_country_iso::" + admin_info.country_iso(), " [ANALYTICS] ");
+    }
   }
- }
 }
+
+}
+
 
 namespace valhalla {
 namespace thor {
