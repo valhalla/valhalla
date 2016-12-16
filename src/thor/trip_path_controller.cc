@@ -62,8 +62,8 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
 
   // Node keys
   { kNodeIntersectingEdgeBeginHeading, true },
-  { kNodeIntersectingEdgePrevNameConsistency, true },
-  { kNodeIntersectingEdgeCurrNameConsistency, true },
+  { kNodeIntersectingEdgeFromEdgeNameConsistency, true },
+  { kNodeIntersectingEdgeToEdgeNameConsistency, true },
   { kNodeIntersectingEdgeDriveability, true },
   { kNodeIntersectingEdgeCyclability, true },
   { kNodeIntersectingEdgeWalkability, true },
