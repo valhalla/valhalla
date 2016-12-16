@@ -1470,13 +1470,13 @@ void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controll
   }
 
   // Set the previous/intersecting edge name consistency if requested
-  if (controller.attributes.at(kNodeIntersectingEdgePrevNameConsistency)) {
+  if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
     itersecting_edge->set_prev_name_consistency(
         nodeinfo->name_consistency(prev_edge_index, local_edge_index));
   }
 
   // Set the current/intersecting edge name consistency if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeCurrNameConsistency)) {
+  if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
     itersecting_edge->set_curr_name_consistency(
         nodeinfo->name_consistency(curr_edge_index, local_edge_index));
   }

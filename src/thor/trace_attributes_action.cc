@@ -238,8 +238,8 @@ namespace {
               xedge_map->emplace("walkability", to_string(xedge.walkability()));
               xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
               xedge_map->emplace("driveability", to_string(xedge.driveability()));
-              xedge_map->emplace("curr_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
-              xedge_map->emplace("prev_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
+              xedge_map->emplace("from_edge_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
+              xedge_map->emplace("to_edge_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
               xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
 
               intersecting_edge_array->emplace_back(xedge_map);

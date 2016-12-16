@@ -66,8 +66,8 @@ const std::string kNodeKeyPrefix = "node.";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
-const std::string kNodeIntersectingEdgePrevNameConsistency = "node.intersecting_edge.prev_name_consistency";
-const std::string kNodeIntersectingEdgeCurrNameConsistency = "node.intersecting_edge.curr_name_consistency";
+const std::string kNodeIntersectingEdgeFromEdgeNameConsistency = "node.intersecting_edge.from_edge_name_consistency";
+const std::string kNodeIntersectingEdgeToEdgeNameConsistency = "node.intersecting_edge.to_edge_name_consistency";
 const std::string kNodeIntersectingEdgeDriveability = "node.intersecting_edge.driveability";
 const std::string kNodeIntersectingEdgeCyclability = "node.intersecting_edge.cyclability";
 const std::string kNodeIntersectingEdgeWalkability = "node.intersecting_edge.walkability";
