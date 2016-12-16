@@ -107,11 +107,12 @@ void TripPathController::disable_all() {
   }
 }
 
-bool TripPathController::node_attribute_enabled() const {
+bool TripPathController::category_attribute_enabled(
+    const std::string& category) const {
   for (const auto& pair : attributes) {
-    // if the key starts with the node key prefix and it is enabled
+    // if the key starts with the specified category and it is enabled
     // then return true
-    if ((pair.first.compare(0, kNodeKeyPrefix.size(), kNodeKeyPrefix) == 0)
+    if ((pair.first.compare(0, category.size(), category) == 0)
         && pair.second) {
       return true;
     }

@@ -61,9 +61,6 @@ const std::string kEdgeSpeedLimit = "edge.speed_limit";
 const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
 
-// Node key prefix
-const std::string kNodeKeyPrefix = "node.";
-
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
 const std::string kNodeIntersectingEdgeFromEdgeNameConsistency = "node.intersecting_edge.from_edge_name_consistency";
@@ -92,6 +89,10 @@ const std::string kAdminCountryText = "admin.country_text";
 const std::string kAdminStateCode = "admin.state_code";
 const std::string kAdminStateText = "admin.state_text";
 const std::string kShape = "shape";
+
+// Categories
+const std::string kNodeCategory = "node.";
+const std::string kAdminCategory = "admin.";
 
 
 /**
@@ -122,9 +123,9 @@ struct TripPathController {
   void disable_all();
 
   /**
-   * Returns true if any node attribute is enabled, false otherwise.
+   * Returns true if any category attribute is enabled, false otherwise.
    */
-  bool node_attribute_enabled() const;
+  bool category_attribute_enabled(const std::string& category) const;
 
   std::unordered_map<std::string, bool> attributes;
 };

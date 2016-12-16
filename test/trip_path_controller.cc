@@ -66,12 +66,13 @@ void TestDisableAll() {
   TryDisableAll();
 }
 
-void TryNodeAttributeEnabled(const TripPathController& controller,
-                             bool expected_response) {
-  // If node_attribute_enabled does not equal expected response then throw error
-  if (controller.node_attribute_enabled() != expected_response) {
+void TryCategoryAttributeEnabled(const TripPathController& controller,
+                                 const std::string& category,
+                                 bool expected_response) {
+  // If category_attribute_enabled does not equal expected response then throw error
+  if (controller.category_attribute_enabled(category) != expected_response) {
     throw runtime_error(
-        "Incorrect node_attribute_enabled response - expected: "
+        "Incorrect cateogry_attribute_enabled response - expected: "
             + std::string(expected_response ? "true" : "false"));
   }
 }
@@ -80,19 +81,19 @@ void TestNodeAttributeEnabled() {
   TripPathController controller;
 
   // Test default
-  TryNodeAttributeEnabled(controller, true);
+  TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 
   // Test all node enabled
   controller.enable_all();
-  TryNodeAttributeEnabled(controller, true);
+  TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 
   // Test all node disabled
   controller.disable_all();
-  TryNodeAttributeEnabled(controller, false);
+  TryCategoryAttributeEnabled(controller, kNodeCategory, false);
 
   // Test one node enabled
   controller.attributes.at(kNodeType) = true;
-  TryNodeAttributeEnabled(controller, true);
+  TryCategoryAttributeEnabled(controller, kNodeCategory, true);
 
   // Test some node enabled
   controller.attributes.at(kNodeType) = false;
@@ -100,8 +101,33 @@ void TestNodeAttributeEnabled() {
   controller.attributes.at(kNodeTransitStopInfoType) = true;
   controller.attributes.at(kNodeElapsedTime) = true;
   controller.attributes.at(kNodeFork) = true;
-  TryNodeAttributeEnabled(controller, true);
+  TryCategoryAttributeEnabled(controller, kNodeCategory, true);
+}
 
+void TestAdminAttributeEnabled() {
+  TripPathController controller;
+
+  // Test default
+  TryCategoryAttributeEnabled(controller, kAdminCategory, true);
+
+  // Test all admin enabled
+  controller.enable_all();
+  TryCategoryAttributeEnabled(controller, kAdminCategory, true);
+
+  // Test all admin disabled
+  controller.disable_all();
+  TryCategoryAttributeEnabled(controller, kAdminCategory, false);
+
+  // Test one admin enabled
+  controller.attributes.at(kAdminCountryCode) = true;
+  TryCategoryAttributeEnabled(controller, kAdminCategory, true);
+
+  // Test some admin enabled
+  controller.attributes.at(kAdminCountryCode) = false;
+  controller.attributes.at(kAdminCountryText) = true;
+  controller.attributes.at(kAdminStateCode) = false;
+  controller.attributes.at(kAdminStateText) = true;
+  TryCategoryAttributeEnabled(controller, kAdminCategory, true);
 }
 
 }
@@ -121,8 +147,11 @@ int main() {
   // Test disable_all
   suite.test(TEST_CASE(TestDisableAll));
 
-  // Test node_attribute_enabled
+  // Test node category_attribute_enabled
   suite.test(TEST_CASE(TestNodeAttributeEnabled));
+
+  // Test admin category_attribute_enabled
+  suite.test(TEST_CASE(TestAdminAttributeEnabled));
 
   return suite.tear_down();
 }

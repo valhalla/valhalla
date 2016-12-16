@@ -228,7 +228,7 @@ namespace {
         }
 
         // Process edge end node only if any node items are enabled
-        if (controller.node_attribute_enabled()) {
+        if (controller.category_attribute_enabled(kNodeCategory)) {
           const auto& node = trip_path.node(i);
           auto end_node_map = json::map({});
 
@@ -291,13 +291,41 @@ namespace {
       }
     }
 
+    // Add edge array
     auto json = json::map({
       {"edges", edge_array}
     });
+
+    // Add result id, if supplied
     if (id)
       json->emplace("id", *id);
+
+    // Add shape
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
+
+    // Add osm_changeset
+    if (trip_path.has_osm_changeset())
+      json->emplace("osm_changeset", trip_path.osm_changeset());
+
+    // Add admins list
+    if (trip_path.admin_size() > 0) {
+      auto admin_array = json::array({});
+      for (const auto& admin : trip_path.admin()) {
+        auto admin_map = json::map({});
+        if (admin.has_country_code())
+          admin_map->emplace("country_code", admin.country_code());
+        if (admin.has_country_text())
+          admin_map->emplace("country_text", admin.country_text());
+        if (admin.has_state_code())
+          admin_map->emplace("state_code", admin.state_code());
+        if (admin.has_state_text())
+          admin_map->emplace("state_text", admin.state_text());
+
+        admin_array->push_back(admin_map);
+      }
+      json->emplace("admins", admin_array);
+    }
 
     return json;
   }
