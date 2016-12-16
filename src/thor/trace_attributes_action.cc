@@ -104,13 +104,14 @@ namespace {
       scale = kMilePerKm;
     }
 
-    //lets get some edge attributes
-    json::ArrayPtr edges = json::array({});
+    // Loop over edges to add attributes
+    json::ArrayPtr edge_array = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
 
       if (trip_path.node(i-1).has_edge()) {
         const auto& edge = trip_path.node(i - 1).edge();
 
+        // Process each edge
         auto edge_map = json::map({});
         if (edge.has_truck_route())
           edge_map->emplace("truck_route", static_cast<bool>(edge.truck_route()));
@@ -142,8 +143,48 @@ namespace {
           auto mode_type = travel_mode_type(edge);
           edge_map->emplace("travel_mode", mode_type.first);
         }
+        if (edge.has_surface())
+          edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
+        if (edge.has_drive_on_right())
+          edge_map->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
+        if (edge.has_internal_intersection())
+          edge_map->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
+        if (edge.has_roundabout())
+          edge_map->emplace("roundabout", static_cast<bool>(edge.roundabout()));
+        if (edge.has_bridge())
+          edge_map->emplace("bridge", static_cast<bool>(edge.bridge()));
+        if (edge.has_tunnel())
+          edge_map->emplace("tunnel", static_cast<bool>(edge.tunnel()));
+        if (edge.has_unpaved())
+          edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
+        if (edge.has_toll())
+            edge_map->emplace("toll", static_cast<bool>(edge.toll()));
+       if (edge.has_use())
+          edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
+        if (edge.has_traversability())
+          edge_map->emplace("traversability", to_string(edge.traversability()));
+        if (edge.has_end_shape_index())
+          edge_map->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
+        if (edge.has_begin_shape_index())
+          edge_map->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
+        if (edge.has_end_heading())
+          edge_map->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
+        if (edge.has_begin_heading())
+          edge_map->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
+        if (edge.has_road_class())
+          edge_map->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
+        if (edge.has_speed())
+          edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
+        if (edge.has_length())
+          edge_map->emplace("length", json::fp_t{edge.length() * scale, 3});
+        if (edge.name_size() > 0) {
+          auto names_array = json::array({});
+          for (const auto& name : edge.name())
+            names_array->push_back(name);
+          edge_map->emplace("names", names_array);
+        }
 
-        // Process sign
+        // Process edge sign
         if (edge.has_sign()) {
           auto sign_map = json::map({});
 
@@ -186,47 +227,7 @@ namespace {
           edge_map->emplace("sign", sign_map);
         }
 
-        if (edge.has_surface())
-          edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
-        if (edge.has_drive_on_right())
-          edge_map->emplace("drive_on_right", static_cast<bool>(edge.drive_on_right()));
-        if (edge.has_internal_intersection())
-          edge_map->emplace("internal_intersection", static_cast<bool>(edge.internal_intersection()));
-        if (edge.has_roundabout())
-          edge_map->emplace("roundabout", static_cast<bool>(edge.roundabout()));
-        if (edge.has_bridge())
-          edge_map->emplace("bridge", static_cast<bool>(edge.bridge()));
-        if (edge.has_tunnel())
-          edge_map->emplace("tunnel", static_cast<bool>(edge.tunnel()));
-        if (edge.has_unpaved())
-          edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
-        if (edge.has_toll())
-            edge_map->emplace("toll", static_cast<bool>(edge.toll()));
-       if (edge.has_use())
-          edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
-        if (edge.has_traversability())
-          edge_map->emplace("traversability", to_string(edge.traversability()));
-        if (edge.has_end_shape_index())
-          edge_map->emplace("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
-        if (edge.has_begin_shape_index())
-          edge_map->emplace("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
-        if (edge.has_end_heading())
-          edge_map->emplace("end_heading", static_cast<uint64_t>(edge.end_heading()));
-        if (edge.has_begin_heading())
-          edge_map->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
-        if (edge.has_road_class())
-          edge_map->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
-        if (edge.has_speed())
-          edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
-        if (edge.has_length())
-          edge_map->emplace("length", json::fp_t{edge.length() * scale, 3});
-        if (edge.name_size() > 0) {
-          auto names_array = json::array({});
-          for (const auto& name : edge.name())
-            names_array->push_back(name);
-          edge_map->emplace("names", names_array);
-        }
-        // Process nodes only if any node items are enabled
+        // Process edge end node only if any node items are enabled
         if (controller.node_attribute_enabled()) {
           const auto& node = trip_path.node(i);
           auto end_node_map = json::map({});
@@ -258,7 +259,7 @@ namespace {
           if (node.has_time_zone())
             end_node_map->emplace("time_zone", node.time_zone());
 
-          // TODO
+          // TODO transit info at node
           // kNodeTransitStopInfoType = "node.transit_stop_info.type";
           // kNodeTransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
           // kNodetransitStopInfoName = "node.transit_stop_info.name";
@@ -271,12 +272,27 @@ namespace {
           edge_map->emplace("end_node", end_node_map);
         }
 
-        edges->emplace_back(edge_map);
+        // TODO - transit info on edge
+        // kEdgeTransitType = "edge.transit_type";
+        // kEdgeTransitRouteInfoOnestopId = "edge.transit_route_info.onestop_id";
+        // kEdgeTransitRouteInfoBlockId = "edge.transit_route_info.block_id";
+        // kEdgeTransitRouteInfoTripId = "edge.transit_route_info.trip_id";
+        // kEdgeTransitRouteInfoShortName = "edge.transit_route_info.short_name";
+        // kEdgeTransitRouteInfoLongName = "edge.transit_route_info.long_name";
+        // kEdgeTransitRouteInfoHeadsign = "edge.transit_route_info.headsign";
+        // kEdgeTransitRouteInfoColor = "edge.transit_route_info.color";
+        // kEdgeTransitRouteInfoTextColor = "edge.transit_route_info.text_color";
+        // kEdgeTransitRouteInfoDescription = "edge.transit_route_info.description";
+        // kEdgeTransitRouteInfoOperatorOnestopId = "edge.transit_route_info.operator_onestop_id";
+        // kEdgeTransitRouteInfoOperatorName = "edge.transit_route_info.operator_name";
+        // kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
+
+        edge_array->emplace_back(edge_map);
       }
     }
 
     auto json = json::map({
-      {"edges", edges}
+      {"edges", edge_array}
     });
     if (id)
       json->emplace("id", *id);
