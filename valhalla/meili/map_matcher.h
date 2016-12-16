@@ -47,6 +47,14 @@ public:
   std::vector<MatchResult>
   OfflineMatch(const std::vector<Measurement>& measurements);
 
+  /**
+   * Set a callback that will throw when the map-matching should be aborted
+   * @param interrupt_callback  the function to periodically call to see if we should abort
+   */
+  void set_interrupt(const std::function<void ()>* interrupt_callback) {
+    interrupt_ = interrupt_callback;
+  }
+
 private:
   Time AppendMeasurement(const Measurement& measurement);
 
@@ -61,6 +69,9 @@ private:
   sif::TravelMode travelmode_;
 
   MapMatching mapmatching_;
+
+  // Interrupt callback. Can be set to interrupt if connection is closed.
+  const std::function<void ()>* interrupt_;
 };
 
 }

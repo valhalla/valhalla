@@ -335,7 +335,8 @@ MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
       candidatequery_(candidatequery),
       mode_costing_(mode_costing),
       travelmode_(travelmode),
-      mapmatching_(graphreader_, mode_costing_, travelmode_, config_) {}
+      mapmatching_(graphreader_, mode_costing_, travelmode_, config_),
+      interrupt_(nullptr) {}
 
 
 MapMatcher::~MapMatcher() {}
@@ -345,6 +346,7 @@ std::vector<MatchResult>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
   mapmatching_.Clear();
+  candidatequery_.set_interrupt(interrupt_);
 
   const auto begin = measurements.begin(),
                end = measurements.end();
@@ -399,6 +401,10 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 Time
 MapMatcher::AppendMeasurement(const Measurement& measurement)
 {
+  // Test interrupt
+  if (interrupt_) {
+    (*interrupt_)();
+  }
   const auto& candidates = candidatequery_.Query(
       measurement.lnglat(),
       measurement.sq_search_radius(),
