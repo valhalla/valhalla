@@ -7,7 +7,8 @@ namespace valhalla {
 namespace meili {
 
 CandidateQuery::CandidateQuery(baldr::GraphReader& graphreader):
-    reader_(graphreader) {}
+    reader_(graphreader),
+    interrupt_(nullptr) {}
 
 
 std::vector<std::vector<baldr::PathLocation>>
@@ -122,11 +123,16 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
-void IndexTile(const baldr::GraphTile& tile, baldr::GraphReader& reader, CandidateGridQuery::grid_t& grid)
+void IndexTile(const baldr::GraphTile& tile, baldr::GraphReader& reader, CandidateGridQuery::grid_t& grid,
+               const std::function<void ()>* interrupt)
 {
   //for each bin
   std::unordered_set<uint64_t> visited;
   for(size_t i = 0; i < baldr::kBinCount; ++i) {
+    // Allow interrupt if set
+    if (interrupt) {
+      (*interrupt)();
+    }
     //for each edge
     auto edge_ids = tile.GetBin(i);
     for(const auto& edge_id : edge_ids) {
@@ -155,7 +161,9 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_wi
       hierarchy_(reader.GetTileHierarchy()),
       cell_width_(cell_width),
       cell_height_(cell_height),
-      grid_cache_() {}
+      grid_cache_() {
+  interrupt_ = nullptr;
+}
 
 
 CandidateGridQuery::~CandidateGridQuery() {}
@@ -180,7 +188,7 @@ CandidateGridQuery::GetGrid(const baldr::GraphTile* tile) const
   }
 
   const auto inserted = grid_cache_.emplace(tile_id, grid_t(tile->BoundingBox(hierarchy_), cell_width_, cell_height_));
-  IndexTile(*tile, reader_, inserted.first->second);
+  IndexTile(*tile, reader_, inserted.first->second, interrupt_);
   return &(inserted.first->second);
 }
 
