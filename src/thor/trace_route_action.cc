@@ -136,8 +136,8 @@ odin::TripPath thor_worker_t::route_match(const TripPathController& controller) 
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
-                                             correlated.back(), through_loc);
-
+                                             correlated.back(), through_loc,
+                                             interrupt_callback);
   }
 //  if (trip_path.node().size() == 0)
 //    throw valhalla_exception_t{400, 443};
@@ -161,6 +161,7 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
     throw std::runtime_error(std::string(ex.what()));
   }
 
+  matcher->set_interrupt(interrupt_callback);
   std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
     sequence.emplace_back(coord,
@@ -253,7 +254,8 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
                                              mode_costing, path_edges, origin,
-                                             destination, through_loc);
+                                             destination, through_loc,
+                                             interrupt_callback);
   } else {
     throw baldr::valhalla_exception_t { 400, 442 };
   }
