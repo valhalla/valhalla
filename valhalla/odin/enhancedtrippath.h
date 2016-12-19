@@ -1,6 +1,9 @@
 #ifndef VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
+#include <unordered_map>
+#include <string>
+
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 
@@ -216,6 +219,83 @@ class EnhancedTripPath_Admin : public TripPath_Admin {
   std::string ToString() const;
 
 };
+
+const std::unordered_map<uint8_t, std::string> TripPath_TravelMode_Strings {
+  { static_cast<uint8_t>(TripPath_TravelMode_kDrive), "drive" },
+  { static_cast<uint8_t>(TripPath_TravelMode_kPedestrian), "pedestrian" },
+  { static_cast<uint8_t>(TripPath_TravelMode_kBicycle), "bicycle" },
+  { static_cast<uint8_t>(TripPath_TravelMode_kTransit), "transit" },
+};
+inline std::string to_string(TripPath_TravelMode travel_mode) {
+  auto i = TripPath_TravelMode_Strings.find(static_cast<uint8_t>(travel_mode));
+  if (i == TripPath_TravelMode_Strings.cend())
+    return "null";
+  return i->second;
+}
+
+const std::unordered_map<uint8_t, std::string> TripPath_VehicleType_Strings {
+  { static_cast<uint8_t>(TripPath_VehicleType_kCar), "car" },
+  { static_cast<uint8_t>(TripPath_VehicleType_kMotorcycle), "motorcycle" },
+  { static_cast<uint8_t>(TripPath_VehicleType_kAutoBus), "bus" },
+  { static_cast<uint8_t>(TripPath_VehicleType_kTractorTrailer), "tractor_trailer" },
+};
+inline std::string to_string(TripPath_VehicleType vehicle_type) {
+  auto i = TripPath_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));
+  if (i == TripPath_VehicleType_Strings.cend())
+    return "null";
+  return i->second;
+}
+
+const std::unordered_map<uint8_t, std::string> TripPath_PedestrianType_Strings {
+  { static_cast<uint8_t>(TripPath_PedestrianType_kFoot), "foot" },
+  { static_cast<uint8_t>(TripPath_PedestrianType_kWheelchair), "wheelchair" },
+  { static_cast<uint8_t>(TripPath_PedestrianType_kSegway), "segway" },
+};
+inline std::string to_string(TripPath_PedestrianType pedestrian_type) {
+  auto i = TripPath_PedestrianType_Strings.find(static_cast<uint8_t>(pedestrian_type));
+  if (i == TripPath_PedestrianType_Strings.cend())
+    return "null";
+  return i->second;
+}
+
+const std::unordered_map<uint8_t, std::string> TripPath_BicycleType_Strings {
+  { static_cast<uint8_t>(TripPath_BicycleType_kRoad), "road" },
+  { static_cast<uint8_t>(TripPath_BicycleType_kCross), "cross" },
+  { static_cast<uint8_t>(TripPath_BicycleType_kHybrid), "hybrid" },
+  { static_cast<uint8_t>(TripPath_BicycleType_kMountain), "mountain" },
+};
+inline std::string to_string(TripPath_BicycleType bicycle_type) {
+  auto i = TripPath_BicycleType_Strings.find(static_cast<uint8_t>(bicycle_type));
+  if (i == TripPath_BicycleType_Strings.cend())
+    return "null";
+  return i->second;
+}
+
+const std::unordered_map<uint8_t, std::string> TripPath_Sidewalk_Strings = {
+  {static_cast<uint8_t>(TripPath_Sidewalk_kNoSidewalk), "none"},
+  {static_cast<uint8_t>(TripPath_Sidewalk_kLeft), "left"},
+  {static_cast<uint8_t>(TripPath_Sidewalk_kRight), "right"},
+  {static_cast<uint8_t>(TripPath_Sidewalk_kBothSides), "both"},
+};
+inline std::string to_string(TripPath_Sidewalk s) {
+  auto i = TripPath_Sidewalk_Strings.find(static_cast<uint8_t>(s));
+  if(i == TripPath_Sidewalk_Strings.cend())
+    return "null";
+  return i->second;
+}
+
+const std::unordered_map<uint8_t, std::string> TripPath_Traversability_Strings = {
+  {static_cast<uint8_t>(TripPath_Traversability_kNone), "none"},
+  {static_cast<uint8_t>(TripPath_Traversability_kForward), "forward"},
+  {static_cast<uint8_t>(TripPath_Traversability_kBackward), "backward"},
+  {static_cast<uint8_t>(TripPath_Traversability_kBoth), "both"},
+};
+inline std::string to_string(TripPath_Traversability t) {
+  auto i = TripPath_Traversability_Strings.find(static_cast<uint8_t>(t));
+  if(i == TripPath_Traversability_Strings.cend())
+    return "null";
+  return i->second;
+}
 
 }
 }
