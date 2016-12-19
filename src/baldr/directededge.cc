@@ -58,7 +58,7 @@ DirectedEdge::DirectedEdge() {
 
 // Sets the end node of this directed edge.
 void DirectedEdge::set_endnode(const GraphId& endnode) {
-  endnode_ = endnode;
+  endnode_ = endnode.value;
 }
 
 // ------------------  Data offsets and flags for extended data -------------//
@@ -404,6 +404,11 @@ void DirectedEdge::set_density(const uint32_t density) {
   }
 }
 
+// Sets the named flag.
+void DirectedEdge::set_named(const bool named) {
+  named_ = named;
+}
+
 // Set the flag for a sidewalk to the left of this directed edge.
 void DirectedEdge::set_sidewalk_left(const bool sidewalk) {
   sidewalk_left_ = sidewalk;
@@ -539,7 +544,7 @@ void DirectedEdge::set_leaves_tile(const bool leaves_tile) {
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
-    {"end_node", endnode_.json()},
+    {"end_node", endnode().json()},
     {"speed", static_cast<uint64_t>(speed_)},
     //{"opp_index", static_cast<bool>(opp_index_)},
     //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},

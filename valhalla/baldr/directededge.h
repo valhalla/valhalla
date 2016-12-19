@@ -24,7 +24,7 @@ class DirectedEdge {
    * @return  Returns the end node.
    */
   GraphId endnode() const {
-    return endnode_;
+    return GraphId(endnode_);
   };
 
   /**
@@ -687,6 +687,20 @@ class DirectedEdge {
   void set_density(const uint32_t density);
 
   /**
+   * Is this edge named?
+   * @return  Returns true if the edge is named, false if unnamed.
+   */
+  bool named() const {
+    return named_;
+  }
+
+  /**
+   * Sets the named flag.
+   * @param  named  true if the edge has names, false if unnamed.
+   */
+  void set_named(const bool named);
+
+  /**
    * Is there a sidewalk to the left of this directed edge?
    * @return  Returns true if there is a sidewalk to the left of this edge.
    */
@@ -957,8 +971,9 @@ class DirectedEdge {
   json::MapPtr json() const;
 
  protected:
-  // End node
-  GraphId endnode_;
+
+  uint64_t endnode_             : 46; // End node of the directed edge
+  uint64_t spare1_              : 18;
 
   // Data offsets and flags for extended data. Where a flag exists the actual
   // data can be indexed by the directed edge Id within the tile.
@@ -1012,7 +1027,8 @@ class DirectedEdge {
   uint64_t max_down_slope_ : 5;  // Maximum downward slope
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
-  uint64_t spare_          : 12;
+  uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
+  uint64_t spare_          : 11;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.
