@@ -11,6 +11,7 @@ using namespace prime_server;
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/odin/util.h>
+#include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 
@@ -29,69 +30,6 @@ namespace {
   const headers_t::value_type CORS { "Access-Control-Allow-Origin", "*" };
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
-
-  const std::unordered_map<int, std::string> vehicle_to_string {
-    { static_cast<int>(TripPath_VehicleType_kCar), "car" },
-    { static_cast<int>(TripPath_VehicleType_kMotorcycle), "motorcycle" },
-    { static_cast<int>(TripPath_VehicleType_kAutoBus), "bus" },
-    { static_cast<int>(TripPath_VehicleType_kTractorTrailer), "tractor_trailer" },
-  };
-
-  std::unordered_map<int, std::string> pedestrian_to_string {
-    { static_cast<int>(TripPath_PedestrianType_kFoot), "foot" },
-    { static_cast<int>(TripPath_PedestrianType_kWheelchair), "wheelchair" },
-    { static_cast<int>(TripPath_PedestrianType_kSegway), "segway" },
-  };
-
-  std::unordered_map<int, std::string> bicycle_to_string {
-    { static_cast<int>(TripPath_BicycleType_kRoad), "road" },
-    { static_cast<int>(TripPath_BicycleType_kCross), "cross" },
-    { static_cast<int>(TripPath_BicycleType_kHybrid), "hybrid" },
-    { static_cast<int>(TripPath_BicycleType_kMountain), "mountain" },
-  };
-
-  std::pair<std::string, std::string> travel_mode_type(const TripPath::Edge& edge) {
-    switch (edge.travel_mode()) {
-      case TripPath_TravelMode_kDrive: {
-        auto i = edge.has_vehicle_type() ? vehicle_to_string.find(edge.vehicle_type()) : vehicle_to_string.cend();
-        return i == vehicle_to_string.cend() ? std::make_pair("drive", "car") : std::make_pair("drive", i->second);
-      }
-      case TripPath_TravelMode_kPedestrian: {
-        auto i = edge.has_pedestrian_type() ? pedestrian_to_string.find(edge.pedestrian_type()) : pedestrian_to_string.cend();
-        return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot") : std::make_pair("pedestrian", i->second);
-      }
-      case TripPath_TravelMode_kBicycle: {
-        auto i = edge.has_bicycle_type() ? bicycle_to_string.find(edge.bicycle_type()) : bicycle_to_string.cend();
-        return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road") : std::make_pair("bicycle", i->second);
-      }
-    }
-  }
-
-  const std::unordered_map<uint8_t, std::string> SidewalkStrings = {
-    {static_cast<uint8_t>(TripPath_Sidewalk_kNoSidewalk), "none"},
-    {static_cast<uint8_t>(TripPath_Sidewalk_kLeft), "left"},
-    {static_cast<uint8_t>(TripPath_Sidewalk_kRight), "right"},
-    {static_cast<uint8_t>(TripPath_Sidewalk_kBothSides), "both"},
-  };
-  inline std::string to_string(TripPath_Sidewalk s) {
-    auto i = SidewalkStrings.find(static_cast<uint8_t>(s));
-    if(i == SidewalkStrings.cend())
-      return "null";
-    return i->second;
-  }
-
-  const std::unordered_map<uint8_t, std::string> TraversabilityStrings = {
-    {static_cast<uint8_t>(TripPath_Traversability_kNone), "none"},
-    {static_cast<uint8_t>(TripPath_Traversability_kForward), "forward"},
-    {static_cast<uint8_t>(TripPath_Traversability_kBackward), "backward"},
-    {static_cast<uint8_t>(TripPath_Traversability_kBoth), "both"},
-  };
-  inline std::string to_string(TripPath_Traversability t) {
-    auto i = TraversabilityStrings.find(static_cast<uint8_t>(t));
-    if(i == TraversabilityStrings.cend())
-      return "null";
-    return i->second;
-  }
 
   json::MapPtr serialize(const TripPathController& controller,
                        const valhalla::odin::TripPath& trip_path,
@@ -139,10 +77,14 @@ namespace {
           edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
         if (edge.has_id())
           edge_map->emplace("id", static_cast<uint64_t>(edge.id()));
-        if (edge.has_travel_mode()) {
-          auto mode_type = travel_mode_type(edge);
-          edge_map->emplace("travel_mode", mode_type.first);
-        }
+        if (edge.has_travel_mode())
+          edge_map->emplace("travel_mode", to_string(edge.travel_mode()));
+        if (edge.has_vehicle_type())
+          edge_map->emplace("vehicle_type", to_string(edge.vehicle_type()));
+        if (edge.has_pedestrian_type())
+          edge_map->emplace("pedestrian_type", to_string(edge.pedestrian_type()));
+        if (edge.has_bicycle_type())
+          edge_map->emplace("bicycle_type", to_string(edge.bicycle_type()));
         if (edge.has_surface())
           edge_map->emplace("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
         if (edge.has_drive_on_right())
