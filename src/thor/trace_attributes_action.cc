@@ -272,6 +272,13 @@ namespace {
       json->emplace("admins", admin_array);
     }
 
+    // Add units, if specified
+    if (directions_options.has_units()) {
+      json->emplace("units", std::string(
+        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
+          ? "kilometers" : "miles"));
+    }
+
     return json;
   }
 
