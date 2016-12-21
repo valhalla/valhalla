@@ -824,13 +824,13 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
  * Initialize traffic segment association. Sizes the traffic segment Id list
  * and sets them all to Invalid.
  */
-void GraphTileBuilder::InitializeTrafficSegmentIds() {
-  // Resize the traffic segment Id list to be the same size as the directed
+void GraphTileBuilder::InitializeTrafficSegments() {
+  // Resize the traffic segment association list to be the same size as the directed
   // edge list. Initialize to all Invalid
   GraphId inv;
-  traffic_segmentid_builder_.resize(header_builder_.directededgecount());
-  for (auto s : traffic_segmentid_builder_) {
-    s = inv.value;
+  traffic_segment_builder_.resize(header_builder_.directededgecount());
+  for (auto s : traffic_segment_builder_) {
+    s.set_segment_id(inv);
   }
 }
 
@@ -841,7 +841,7 @@ void GraphTileBuilder::InitializeTrafficSegmentIds() {
  * @param  assoc  A vector of traffic segment associations to an edge.
  */
 void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
-                  const std::vector<std::pair<GraphId, float>>& assoc) {
+             const std::vector<std::pair<TrafficAssociation, float>>& assoc) {
   // Check if edge Id is within range. TODO - do we also need to check tile ID
   if (edgeid.id() >= header_builder_.directededgecount()) {
     // TODO -
@@ -850,23 +850,24 @@ void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
   }
 
   if (assoc.size() == 1) {
-    traffic_segmentid_builder_[edgeid.id()] = assoc[0].first.value;
+    traffic_segment_builder_[edgeid.id()] = assoc[0].first;
   } else {
-    // Store a chunk. tore count and offset in the traffic segment Id along
+    // TODO - store chunks
+/*    // Store a chunk. tore count and offset in the traffic segment Id along
     // with a bit that indicates this is a chunk Id
     uint64_t count = assoc.size();
     uint64_t offset = traffic_chunk_builder_.size() * sizeof(uint64_t);
     uint64_t chunkid = kTrafficChunkFlag | (count << kChunkCountOffset) | offset;
-    traffic_segmentid_builder_[edgeid.id()] = chunkid;
+    traffic_segment_builder_[edgeid.id()] = chunkid; */
 
     // Store the chunk as a set of 64 bit bit word (one for each
     // association pair)
-    for (const auto& seg : assoc) {
+/*    for (const auto& seg : assoc) {
       // Combine traffic segment Id and weight into single 64 bit word
       uint64_t w = static_cast<uint32_t>(seg.second * 255.0f);
       uint64_t chunk = (w << kChunkBitOffset) || seg.first.value;
       traffic_chunk_builder_.push_back(chunk);
-    }
+    }*/
   }
 }
 
@@ -874,15 +875,20 @@ void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
  * Updates a tile with traffic segment and chunk data.
  */
 void GraphTileBuilder::UpdateTrafficSegments() {
-  // Update header to include the offsets to traffic segments and chunks
+  // Make sure we start traffic info on an 8-byte boundary
+  char padding[8];
   size_t current_size = header_->end_offset();
-  header_builder_.set_traffic_id_count(traffic_segmentid_builder_.size());
-  header_builder_.set_traffic_segmentid_offset(current_size);
-  header_builder_.set_traffic_chunk_offset(current_size +
-              traffic_segmentid_builder_.size() * sizeof(uint64_t));
-  uint32_t shift = traffic_segmentid_builder_.size() * sizeof(uint64_t) +
+  size_t padding_size = 8 - (current_size % 8);
+
+  // Update header to include the offsets to traffic segments and chunks
+  size_t new_size = current_size + padding_size;
+  header_builder_.set_traffic_id_count(traffic_segment_builder_.size());
+  header_builder_.set_traffic_segmentid_offset(new_size);
+  header_builder_.set_traffic_chunk_offset(new_size +
+              traffic_segment_builder_.size() * sizeof(uint64_t));
+  uint32_t shift = traffic_segment_builder_.size() * sizeof(uint64_t) +
                    traffic_chunk_builder_.size() * sizeof(uint64_t);
-  header_builder_.set_end_offset(current_size + shift);
+  header_builder_.set_end_offset(new_size + shift);
 
   // Get the name of the file
   boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
@@ -901,15 +907,17 @@ void GraphTileBuilder::UpdateTrafficSegments() {
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Copy the rest of the tile contents
-if (current_size % 8 != 0) {
-  LOG_INFO("current size not a factor of 8: " + std::to_string(current_size));
-}
     const auto* begin = reinterpret_cast<const char*>(nodes_);
     file.write(begin, current_size - sizeof(GraphTileHeader));
 
+    // Add padding (if needed) to align to 8-byte word.
+    if (padding_size > 0) {
+      file.write(padding, padding_size);
+    }
+
     // Append the traffic segment list
-    file.write(reinterpret_cast<const char*>(&traffic_segmentid_builder_[0]),
-               traffic_segmentid_builder_.size() * sizeof(uint64_t));
+    file.write(reinterpret_cast<const char*>(&traffic_segment_builder_[0]),
+               traffic_segment_builder_.size() * sizeof(uint64_t));
 
     // Append the traffic chunks
     file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
