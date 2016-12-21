@@ -213,6 +213,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       directededge.set_localedgeidx(tilebuilder_local.directededges().size() - edge_index);
       directededge.set_forwardaccess(tc_access);
       directededge.set_reverseaccess(tc_access);
+      directededge.set_named(conn.names.size() > 0);
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
@@ -308,6 +309,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - edge_index);
         directededge.set_forwardaccess(tc_access);
         directededge.set_reverseaccess(tc_access);
+        directededge.set_named(conn.names.size() > 0);
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
