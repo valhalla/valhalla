@@ -538,25 +538,47 @@ vj::GraphTileBuilder &edge_association::builder_for_edge(vb::GraphId edge_id) {
   if (itr == m_tiles.end()) {
     auto ptr = std::make_shared<vj::GraphTileBuilder>(
       m_reader.GetTileHierarchy(), tile_id, false);
-    ptr->InitializeTrafficSegmentIds();
+    ptr->InitializeTrafficSegments();
     auto status = m_tiles.emplace(tile_id, ptr);
     itr = status.first;
   }
   return *(itr->second);
 }
 
+// A single Valhalla edge maps to a single traffic segment
 void edge_association::assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id) {
-  std::vector<std::pair<vb::GraphId, float> > assoc;
-  assoc.emplace_back(segment_id, 1.0f);
+  // Edge starts at the beginning of the traffic segment, ends on the end of
+  // the traffic segment
+  TrafficAssociation ta(segment_id, 0.0f, 1.0f);
+  std::vector<std::pair<vb::TrafficAssociation, float> > assoc;
+  assoc.emplace_back(ta, 1.0f);
   builder_for_edge(edge_id).AddTrafficSegmentAssociation(edge_id, assoc);
 }
 
+// Many valhalla edges map to a single traffic segment.
 void edge_association::assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id) {
-  std::vector<std::pair<vb::GraphId, float> > assoc;
+  // Iterate through all directed edges to find total length so that
+  // percentages along the traffic segment can be computed
+  float total_length = 0.0f;
+  std::vector<float> lengths;
   for (auto edge_id : edges) {
-    assoc.emplace_back(segment_id, 1.0f);
+    auto *tile = m_reader.GetGraphTile(edge_id);
+    auto *edge = tile->directededge(edge_id);
+    total_length += static_cast<float>(edge->length());
+    lengths.push_back(total_length);
+  }
+
+  float begin_pct = 0.0f;
+  std::vector<std::pair<vb::TrafficAssociation, float> > assoc;
+  for (size_t i = 0; i < edges.size(); i++) {
+    const auto& edge_id = edges[i];
+    float end_pct = (i == edges.size() - 1) ? 1.0f : (lengths[i] / total_length);
+    TrafficAssociation ta(segment_id, begin_pct, end_pct);
+    assoc.emplace_back(ta, 1.0f);
     builder_for_edge(edge_id).AddTrafficSegmentAssociation(edge_id, assoc);
     assoc.clear();
+    begin_pct = end_pct;
+    i++;
   }
 }
 
