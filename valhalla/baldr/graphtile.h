@@ -7,6 +7,7 @@
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
@@ -307,7 +308,7 @@ class GraphTile {
    * @return  Returns a list of traffic segment Ids and weights that associate
    *          to this edge.
    */
-  std::vector<std::pair<GraphId, float>> GetTrafficSegments(const GraphId& edge) const;
+  std::vector<std::pair<TrafficAssociation, float>> GetTrafficSegments(const GraphId& edge) const;
 
   /**
    * Get traffic segment(s) associated to this edge.
@@ -315,7 +316,7 @@ class GraphTile {
    * @return  Returns a list of traffic segment Ids and weights that associate
    *          to this edge.
    */
-  std::vector<std::pair<GraphId, float>> GetTrafficSegments(const size_t idx) const;
+  std::vector<std::pair<TrafficAssociation, float>> GetTrafficSegments(const size_t idx) const;
 
 
  protected:
@@ -391,8 +392,8 @@ class GraphTile {
   // indices in the tile header.
   GraphId* edge_bins_;
 
-  // Traffic segment Ids. Count is the same as the directed edge count.
-  uint64_t* traffic_segment_ids_;
+  // Traffic segment association. Count is the same as the directed edge count.
+  TrafficAssociation* traffic_segments_;
 
   // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
   // segment Id (GraphId) and weight (combined int a single uint64_t).
