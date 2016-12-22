@@ -417,7 +417,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  if (!node->name_consistency(idx, edge->localedgeidx())) {
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
 
@@ -477,7 +478,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  if (!node->name_consistency(idx, edge->localedgeidx())) {
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
 

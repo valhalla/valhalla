@@ -501,7 +501,8 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
   }
-  if (!node->name_consistency(idx, edge->localedgeidx())) {
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
 
@@ -561,7 +562,8 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
   }
-  if (!node->name_consistency(idx, edge->localedgeidx())) {
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
 
