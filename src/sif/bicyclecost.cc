@@ -253,16 +253,14 @@ class BicycleCost : public DynamicCost {
    * when using a reverse search (from destination towards the origin).
    * @param  idx   Directed edge local index
    * @param  node  Node (intersection) where transition occurs.
-   * @param  opp_edge  Pointer to the opposing directed edge - this is the
-   *                   "from" or predecessor edge in the transition.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor. This is the "to" edge.
+   * @param  pred  the opposing current edge in the reverse tree.
+   * @param  edge  the opposing predecessor in the reverse tree
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
-                              const baldr::NodeInfo* node,
-                              const baldr::DirectedEdge* opp_edge,
-                              const baldr::DirectedEdge* opp_pred_edge) const;
+                                     const baldr::NodeInfo* node,
+                                     const baldr::DirectedEdge* pred,
+                                     const baldr::DirectedEdge* edge) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -639,8 +637,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
-                               const baldr::NodeInfo* node,
-                               const EdgeLabel& pred) const {
+                                 const baldr::NodeInfo* node,
+                                 const EdgeLabel& pred) const {
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
@@ -667,7 +665,10 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  if (!node->name_consistency(idx, edge->localedgeidx())) {
+
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -701,9 +702,9 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 // pred is the opposing current edge in the reverse tree
 // edge is the opposing predecessor in the reverse tree
 Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
-                            const baldr::NodeInfo* node,
-                            const baldr::DirectedEdge* pred,
-                            const baldr::DirectedEdge* edge) const {
+                                        const baldr::NodeInfo* node,
+                                        const baldr::DirectedEdge* pred,
+                                        const baldr::DirectedEdge* edge) const {
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
@@ -729,7 +730,10 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  if (!node->name_consistency(idx, edge->localedgeidx())) {
+
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 

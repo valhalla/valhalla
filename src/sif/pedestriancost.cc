@@ -180,16 +180,14 @@ class PedestrianCost : public DynamicCost {
    * costs (i.e., intersection/turn costs) must override this method.
    * @param  idx   Directed edge local index
    * @param  node  Node (intersection) where transition occurs.
-   * @param  opp_edge  Pointer to the opposing directed edge - this is the
-   *                   "from" or predecessor edge in the transition.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor. This is the "to" edge.
+   * @param  pred  the opposing current edge in the reverse tree.
+   * @param  edge  the opposing predecessor in the reverse tree
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
-                              const baldr::NodeInfo* node,
-                              const baldr::DirectedEdge* opp_edge,
-                              const baldr::DirectedEdge* opp_pred_edge) const;
+                                     const baldr::NodeInfo* node,
+                                     const baldr::DirectedEdge* pred,
+                                     const baldr::DirectedEdge* edge) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -495,8 +493,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
-                               const baldr::NodeInfo* node,
-                               const EdgeLabel& pred) const {
+                                    const baldr::NodeInfo* node,
+                                    const EdgeLabel& pred) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return { step_penalty_, 0.0f };
@@ -517,13 +515,14 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     penalty += ferry_penalty_;
   }
 
-  // Slight maneuver penalty
-  if (!node->name_consistency(pred.opp_local_idx(), edge->localedgeidx())) {
+  uint32_t idx = pred.opp_local_idx();
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
   // Costs for crossing an intersection.
-  uint32_t idx = pred.opp_local_idx();
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     seconds += kCrossingCosts[edge->stopimpact(idx)];
   }
@@ -534,12 +533,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 // when using a reverse search (from destination towards the origin).
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
-                     const baldr::NodeInfo* node,
-                     const baldr::DirectedEdge* opp_edge,
-                     const baldr::DirectedEdge* opp_pred_edge) const {
+Cost PedestrianCost::TransitionCostReverse(
+    const uint32_t idx, const baldr::NodeInfo* node,
+    const baldr::DirectedEdge* pred, const baldr::DirectedEdge* edge) const {
   // Special cases: fixed penalty for steps/stairs
-  if (opp_pred_edge->use() == Use::kSteps) {
+  if (edge->use() == Use::kSteps) {
     return { step_penalty_, 0.0f };
   }
 
@@ -553,19 +551,20 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     penalty += gate_penalty_;
   }
 
-  if (opp_edge->use() != Use::kFerry && opp_pred_edge->use() == Use::kFerry) {
+  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
 
-  // Slight maneuver penalty
-  if (!node->name_consistency(idx, opp_pred_edge->localedgeidx())) {
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
   // Costs for crossing an intersection.
-  if (opp_pred_edge->edge_to_right(idx) && opp_pred_edge->edge_to_left(idx)) {
-    seconds += kCrossingCosts[opp_pred_edge->stopimpact(idx)];
+  if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+    seconds += kCrossingCosts[edge->stopimpact(idx)];
   }
   return { seconds + penalty, seconds };
 }
