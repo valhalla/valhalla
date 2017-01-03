@@ -279,9 +279,14 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     stop_id.fields.id = stops.size();
     stop->set_graphid(stop_id);
     stop->set_timezone(0);
-    uint32_t timezone = DateTime::get_tz_db().to_index(stop_pt.second.get<std::string>("timezone", ""));
+
+    auto tz = stop_pt.second.get<std::string>("timezone", "");
+    if (tz == "CET")
+      tz = "Europe/Paris";
+    uint32_t timezone = DateTime::get_tz_db().to_index(tz);
     if (timezone == 0)
       LOG_WARN("Timezone not found for stop " + stop->name());
+
     stop->set_timezone(timezone);
     stops.emplace(stop->onestop_id(), stop_id);
     if(stops.size() == kMaxGraphId) {
