@@ -133,7 +133,8 @@ class EdgeInfo {
   struct PackedItem {
     uint32_t name_count          :4;
     uint32_t encoded_shape_size  :16;
-    uint32_t spare               :12;
+    uint32_t reserved            :5;   // Reserved for use by forks of Valhalla
+    uint32_t spare               :7;
   };
 
  protected:
