@@ -47,3 +47,8 @@
 -j '{"locations":[{"lat":40.304585,"lon":-76.845901,"street":"I 81 North"},{"lat":40.319202,"lon":-76.822853,"street":"I 81 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.319588,"lon":-76.822990,"street":"I 81 South"},{"lat":40.301170,"lon":-76.828346,"street":"I 83 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.317978,"lon":-76.824997,"street":"I 81 South"},{"lat":40.305485,"lon":-76.844398,"street":"I 81 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.404518,"lon":-77.010223,"street":"US 22"},{"lat":40.402912,"lon":-77.014717,"street":"North Market Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.402817,"lon":-77.014793,"street":"North Market Street"},{"lat":40.404472,"lon":-77.010086,"street":"US 22"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.399952,"lon":-77.009178,"street":"US 22 West"},{"lat":40.402912,"lon":-77.014565,"street":"North Market Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.399761,"lon":-77.009087,"street":"US 22 West"},{"lat":40.405266,"lon":-77.010002,"street":"US 22"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.404949,"lon":-77.010185,"street":"US 22"},{"lat":40.400463,"lon":-77.009674,"street":"US 22 East"}],"costing":"auto","directions_options":{"units":"miles"}}'
