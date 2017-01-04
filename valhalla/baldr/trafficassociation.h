@@ -114,13 +114,13 @@ class TrafficAssociation {
 
  protected:
 
-  // NOTE: If this association is part of a chunk (chuk_ flag is set), then
+  // NOTE: If this association is part of a chunk (chunk_ flag is set), then
   // the segment_id points to an index and count of chunks.
-  uint64_t segment_id_              : 46;  // Internal route type
-  uint64_t begin_percent_           : 7;   // Begin percent.
+  uint64_t segment_id_              : 46;  // Traffic segment Id
+  uint64_t begin_percent_           : 7;   // Begin percent
   uint64_t end_percent_             : 7;   // End percent
   uint64_t starts_segment_          : 1;   // Start of the traffic segment
-  uint64_t ends_segment_            : 1;   // Start of the traffic segment
+  uint64_t ends_segment_            : 1;   // End of the traffic segment
   uint64_t chunk_                   : 1;   // This is part of a chunk
   uint64_t spare_                   : 1;
 };
