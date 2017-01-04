@@ -578,7 +578,6 @@ void edge_association::assign_one_to_many(const std::vector<vb::GraphId> &edges,
     builder_for_edge(edge_id).AddTrafficSegmentAssociation(edge_id, assoc);
     assoc.clear();
     begin_pct = end_pct;
-    i++;
   }
 }
 
