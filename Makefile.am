@@ -79,6 +79,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/streetnames_factory.h \
 	valhalla/baldr/streetname_us.h \
 	valhalla/baldr/streetnames_us.h \
+	valhalla/baldr/trafficassociation.h \
 	valhalla/baldr/transitdeparture.h \
 	valhalla/baldr/transitroute.h \
 	valhalla/baldr/transitschedule.h \
@@ -119,6 +120,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/streetnames_factory.cc \
 	src/baldr/streetname_us.cc \
 	src/baldr/streetnames_us.cc \
+	src/baldr/trafficassociation.cc \
 	src/baldr/transitdeparture.cc \
 	src/baldr/transitroute.cc \
 	src/baldr/transitschedule.cc \

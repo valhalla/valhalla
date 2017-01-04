@@ -63,7 +63,10 @@ GraphTile::GraphTile()
       complex_restriction_forward_size_(0),
       complex_restriction_reverse_size_(0),
       edgeinfo_size_(0),
-      textlist_size_(0){
+      textlist_size_(0),
+      traffic_segments_(nullptr),
+      traffic_chunks_(0),
+      traffic_chunk_size_(0) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -171,7 +174,18 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of text list and its size
   textlist_ = tile_ptr + header_->textlist_offset();
-  textlist_size_ = header_->end_offset() - header_->textlist_offset();
+  textlist_size_ = header_->traffic_segmentid_offset() - header_->textlist_offset();
+
+  // Start of the traffic segment association records
+  traffic_segments_ = reinterpret_cast<TrafficAssociation*>(tile_ptr +
+                          header_->traffic_segmentid_offset());
+
+  // Start of traffic chunks and their size
+  // TODO - update chunk definition...
+  traffic_chunks_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->traffic_chunk_offset());
+  traffic_chunk_size_ = header_->end_offset() - header_->traffic_chunk_offset();
+
+  // ANY NEW EXPANSION DATA GOES HERE
 
   // Associate one stop Ids for transit tiles
   if (graphid.level() == 3) {
@@ -695,6 +709,43 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
+
+// Get traffic segment(s) associated to this edge.
+std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(const GraphId& edge) const {
+  return GetTrafficSegments(edge.id());
+}
+
+// Get traffic segment(s) associated to this edge.
+std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(const size_t idx) const {
+  if (idx < header_->traffic_id_count()) {
+    const TrafficAssociation& t = traffic_segments_[idx];
+    if (!t.chunk()) {
+      // This edge associates to a single traffic segment
+      return { std::make_pair(t, 1.0f) };
+    } else {
+      // This represents a traffic chunk - the offset into the chunk array and
+      // the count are stored.
+      // TODO!
+      auto c = t.GetChunkCountAndIndex();
+//    std::vector<std::pair<GraphId, float>> segments;
+//     for (uint32_t i = 0; i < count; i++, chunk++) {
+//     segments.emplace_back(std::make_pair(GraphId(t & kChunkIDMask),
+//                           (t & kChunkWeightMask) / 255.0f));
+//     }
+//     return segments;
+      return { };
+    }
+  } else if (header_->traffic_id_count() == 0) {
+    return { };
+  } else {
+    throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(idx)  + " traffic Id count= " +
+                           std::to_string(header_->traffic_id_count()));
+  }
+}
+
 
 }
 }
