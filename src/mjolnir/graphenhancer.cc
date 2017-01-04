@@ -1067,11 +1067,8 @@ void enhance(const boost::property_tree::ptree& pt,
         for (uint32_t k = (j + 1); k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(
                     nodeinfo.edge_index() + k);
-          if (directededge.link() ||
-              ConsistentNames(country_code, names,
-                  tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
-            // Set name consistency to true when entering a link (ramp or
-            // turn channel) to avoid double penalizing.
+          if (ConsistentNames(country_code, names,
+              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
             nodeinfo.set_name_consistency(j, k, true);
           }
         }
