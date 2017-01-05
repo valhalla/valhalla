@@ -40,9 +40,8 @@ clean-genfiles:
 
 # protobuf generated code
 PROTO_FILES = proto/segment.proto proto/tile.proto
-PROTO_CXX_FILES = src/proto/segment.pb.cc src/proto/tile.pb.cc
-$(PROTO_CXX_FILES): src/proto/%.pb.cc: proto/%.proto
-	@echo "PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=include/proto $< && mv include/proto/$(@F) src/proto
+src/proto/%.pb.cc: proto/%.proto
+	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
 #distributed executables
 bin_PROGRAMS = valhalla_skadi_worker \
@@ -87,10 +86,10 @@ valhalla_elevation_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PR
 valhalla_route_service_SOURCES = src/valhalla_route_service.cc
 valhalla_route_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_route_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
-valhalla_run_isochrone_SOURCES =  src/valhalla_run_isochrone.cc
+valhalla_run_isochrone_SOURCES = src/valhalla_run_isochrone.cc
 valhalla_run_isochrone_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_run_isochrone_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
-valhalla_run_route_SOURCES =  src/valhalla_run_route.cc
+valhalla_run_route_SOURCES = src/valhalla_run_route.cc
 valhalla_run_route_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_run_route_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
 valhalla_benchmark_adjacency_list_SOURCES = src/valhalla_benchmark_adjacency_list.cc
@@ -102,7 +101,7 @@ valhalla_run_matrix_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $
 valhalla_export_edges_SOURCES = src/valhalla_export_edges.cc
 valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_export_edges_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
-valhalla_associate_segments_SOURCES = src/valhalla_associate_segments.cc $(PROTO_CXX_FILES)
+valhalla_associate_segments_SOURCES = src/valhalla_associate_segments.cc src/proto/segment.pb.cc src/proto/tile.pb.cc
 valhalla_associate_segments_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_associate_segments_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB)
 
