@@ -4,6 +4,10 @@ checkout:
     - git submodule update --init
     - bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
 
+machine:
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 dependencies:
   override:
     - sudo apt-get update
