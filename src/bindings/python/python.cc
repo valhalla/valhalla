@@ -247,16 +247,15 @@ namespace {
         auto segments = tile->GetTrafficSegments(edge_id);
         if (segments.size() > 0) {
           for (const auto& seg : segments) {
-            bool starts = seg.first.starts_segment();
-            bool ends   = seg.first.ends_segment();
+            // TODO - support chunks (more than 1 segment per edge)
             float p1 = seg.first.begin_percent();
             float p2 = seg.first.end_percent();
             valhalla::baldr::GraphId segment_id = seg.first.segment_id();
             float weight = seg.second;
 
 /*            LOG_INFO("segment_id " + std::to_string(segment_id.value) +
-                     " starts = " + std::to_string(starts) +
-                     " ends = " + std::to_string(ends) +
+                     " starts = " + std::to_string(seg.first.starts_segment()) +
+                     " ends = " + std::to_string(seg.first.ends_segment()) +
                      " p1 = " + std::to_string(p1) +
                      " p2 = " + std::to_string(p2)); */
 
@@ -268,13 +267,13 @@ namespace {
                  traffic_segment.back().partial_end = false;
                }
              } else if (segment_id.value == 0) {
+               // No segment associated to this edge...
                ; // LOG_INFO("Traffic segment ID == 0");
              } else {
                bool starts = (seg.first.starts_segment() && edge.start_pct == 0.0f);
                bool ends =   (seg.first.ends_segment() && edge.end_pct == 1.0f);
-               traffic_segment.emplace_back(!starts,
-                           !seg.first.ends_segment(), segment_id, edge.secs1,
-                            edge.secs2, length);
+               traffic_segment.emplace_back(!starts, !ends, segment_id,
+                                edge.secs1, edge.secs2, length);
                prior_segment = segment_id;
              }
            }
