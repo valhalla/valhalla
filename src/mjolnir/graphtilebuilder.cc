@@ -317,7 +317,13 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
-    header_builder_.set_end_offset(static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader));
+    // At this point there is no traffic segment data, so set end offset and
+    // traffic segment Id offset to same value
+    size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
+    header_builder_.set_traffic_id_count(0);
+    header_builder_.set_traffic_segmentid_offset(end_offset);
+    header_builder_.set_traffic_chunk_offset(end_offset);
+    header_builder_.set_end_offset(end_offset);
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
@@ -401,8 +407,11 @@ void GraphTileBuilder::Update(
     // Save existing text
     in_mem.write(textlist_, textlist_size_);
 
-    // Write the updated header.
-    header_->set_end_offset(static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader));
+    // Write the updated header. At this point there are no traffic segments
+    size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
+    header_->set_traffic_segmentid_offset(end_offset);
+    header_->set_traffic_chunk_offset(end_offset);
+    header_->set_end_offset(end_offset);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Write the rest of the tile
@@ -783,6 +792,8 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
+  header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
+  header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
@@ -807,6 +818,120 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
   }//failed
   else
     throw std::runtime_error("Failed to open file " + filename.string());
+}
+
+/**
+ * Initialize traffic segment association. Sizes the traffic segment Id list
+ * and sets them all to Invalid.
+ */
+void GraphTileBuilder::InitializeTrafficSegments() {
+  // Resize the traffic segment association list to be the same size as the directed
+  // edge list. Initialize to all Invalid
+  GraphId inv;
+  traffic_segment_builder_.resize(header_builder_.directededgecount());
+  for (auto s : traffic_segment_builder_) {
+    s.set_segment_id(inv);
+  }
+}
+
+/**
+ * Add a traffic segment association.
+ * @param  edgeid GraphId of the directed edge to which traffic segments are
+ *                associated.
+ * @param  assoc  A vector of traffic segment associations to an edge.
+ */
+void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
+             const std::vector<std::pair<TrafficAssociation, float>>& assoc) {
+  // Check if edge Id is within range. TODO - do we also need to check tile ID
+  if (edgeid.id() >= header_builder_.directededgecount()) {
+    // TODO -
+    LOG_ERROR("AddTrafficSegmentAssociation - edge is not valid for this tile");
+    return;
+  }
+
+  if (assoc.size() == 1) {
+    traffic_segment_builder_[edgeid.id()] = assoc[0].first;
+  } else {
+    // TODO - store chunks
+/*    // Store a chunk. tore count and offset in the traffic segment Id along
+    // with a bit that indicates this is a chunk Id
+    uint64_t count = assoc.size();
+    uint64_t offset = traffic_chunk_builder_.size() * sizeof(uint64_t);
+    uint64_t chunkid = kTrafficChunkFlag | (count << kChunkCountOffset) | offset;
+    traffic_segment_builder_[edgeid.id()] = chunkid; */
+
+    // Store the chunk as a set of 64 bit bit word (one for each
+    // association pair)
+/*    for (const auto& seg : assoc) {
+      // Combine traffic segment Id and weight into single 64 bit word
+      uint64_t w = static_cast<uint32_t>(seg.second * 255.0f);
+      uint64_t chunk = (w << kChunkBitOffset) || seg.first.value;
+      traffic_chunk_builder_.push_back(chunk);
+    }*/
+  }
+}
+
+/**
+ * Updates a tile with traffic segment and chunk data.
+ */
+void GraphTileBuilder::UpdateTrafficSegments() {
+  // Make sure we start traffic info on an 8-byte boundary
+  char padding[8];
+  size_t current_size = header_->end_offset();
+  size_t padding_size = 8 - (current_size % 8);
+
+  // Update header to include the offsets to traffic segments and chunks
+  size_t new_size = current_size + padding_size;
+  header_builder_.set_traffic_id_count(traffic_segment_builder_.size());
+  header_builder_.set_traffic_segmentid_offset(new_size);
+  header_builder_.set_traffic_chunk_offset(new_size +
+              traffic_segment_builder_.size() * sizeof(uint64_t));
+  uint32_t shift = traffic_segment_builder_.size() * sizeof(uint64_t) +
+                   traffic_chunk_builder_.size() * sizeof(uint64_t);
+  header_builder_.set_end_offset(new_size + shift);
+
+  // Get the name of the file
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
+      + GraphTile::FileSuffix(header_builder_.graphid(), hierarchy_);
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file and truncate
+  std::stringstream in_mem;
+  std::ofstream file(filename.c_str(),
+                     std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write a new header
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
+
+    // Copy the rest of the tile contents
+    const auto* begin = reinterpret_cast<const char*>(nodes_);
+    file.write(begin, current_size - sizeof(GraphTileHeader));
+
+    // Add padding (if needed) to align to 8-byte word.
+    if (padding_size > 0) {
+      file.write(padding, padding_size);
+    }
+
+    // Append the traffic segment list
+    file.write(reinterpret_cast<const char*>(&traffic_segment_builder_[0]),
+               traffic_segment_builder_.size() * sizeof(uint64_t));
+
+    // Append the traffic chunks
+    file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
+               traffic_chunk_builder_.size() * sizeof(uint64_t));
+
+    // Write rest of the stuff after traffic chunks
+    // TODO - enable this after anything is added after traffic
+//    const auto* begin = reinterpret_cast<const char*>(header_ + header_->NEXT_ITEM_OFFSET());
+//    const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
+//    file.write(begin, end - begin);
+
+    // Close the file
+    file.close();
+  }
 }
 
 }

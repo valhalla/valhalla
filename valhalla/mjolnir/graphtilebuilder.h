@@ -307,6 +307,26 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   static void AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
+  /**
+   * Initialize traffic segment association. Sizes the traffic segment
+   * association list and sets them all to Invalid.
+   */
+  void InitializeTrafficSegments();
+
+  /**
+   * Add a traffic segment association.
+   * @param  edgeid GraphId of the directed edge to which traffic segments are
+   *                associated.
+   * @param  assoc  A vector of traffic segment associations to an edge.
+   */
+  void AddTrafficSegmentAssociation(const baldr::GraphId& edgeid,
+            const std::vector<std::pair<baldr::TrafficAssociation, float>>& assoc);
+
+  /**
+   * Updates a tile with traffic segment and chunk data.
+   */
+  void UpdateTrafficSegments();
+
  protected:
 
   struct EdgeTupleHasher {
@@ -406,6 +426,12 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
+
+  // Traffic segment association
+  std::vector<baldr::TrafficAssociation> traffic_segment_builder_;
+
+  // Traffic chunks
+  std::vector<uint64_t> traffic_chunk_builder_;
 };
 
 }
