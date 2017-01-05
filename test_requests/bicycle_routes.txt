@@ -18,3 +18,6 @@
 -j '{"locations":[{"lat":37.7120,"lon":-122.4333},{"lat":37.7913,"lon":-122.3923}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.7913,"lon":-122.3918},{"lat":37.7107,"lon":-122.4344}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.7065,"lon":-122.4146},{"lat":37.7913,"lon":-122.3923}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.251919,"lon":-76.707581},{"lat":40.262821,"lon":-76.685020,"street":"Life Lion Drive"}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","use_roads":"0.5","cycling_speed":"25.0","use_hills":"0.0"}},"directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.251919,"lon":-76.707581},{"lat":40.262821,"lon":-76.685020,"street":"Life Lion Drive"}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","use_roads":"0.5","cycling_speed":"5.0","use_hills":"0.0"}},"directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.251919,"lon":-76.707581},{"lat":40.262821,"lon":-76.685020,"street":"Life Lion Drive"}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","use_roads":"0.5","cycling_speed":"55.0","use_hills":"0.0"}},"directions_options":{"units":"miles"}}'
