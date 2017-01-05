@@ -217,9 +217,8 @@ namespace {
           // what if these edges are not connected?
 
           // Update time and distance at the end of the prior edge
-          // For now just average the times. TODO - more accurate computation
           edges.back().end_pct = 1.0f;
-          edges.back().secs2   = (edge.secs + edges.back().secs2) * 0.5f;
+          edges.back().secs2   = edge.secs ;
 
           // New edge
           edges.emplace_back(edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs);
