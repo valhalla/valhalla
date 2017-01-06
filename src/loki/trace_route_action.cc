@@ -15,14 +15,36 @@ using namespace valhalla::midgard;
 
 namespace {
 
-void check_distance(const std::vector<PointLL>& shape, float max_distance) {
-  auto path_distance = shape.front().Distance(shape.back());
-  max_distance -= path_distance;
-  if (max_distance < 0)
+void check_shape(const std::vector<PointLL>& shape, unsigned int max_shape,
+                 float max_factor) {
+  // Adjust max - this enables max edge_walk shape count to be larger
+  max_shape *= max_factor;
+
+  // Must have at least two points
+  if (shape.size() < 2)
+    throw valhalla_exception_t{400, 123};
+  // Validate shape is not larger than the configured max
+  else if (shape.size() > max_shape)
+    throw valhalla_exception_t{400, 153, "(" + std::to_string(shape.size()) +"). The limit is " + std::to_string(max_shape)};
+
+  valhalla::midgard::logging::Log(
+      "trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
+
+}
+
+void check_distance(const std::vector<PointLL>& shape, float max_distance,
+                    float max_factor) {
+  // Adjust max - this enables max edge_walk distance to be larger
+  max_distance *= max_factor;
+
+  // Calculate "crow distance" of shape
+  auto crow_distance = shape.front().Distance(shape.back());
+
+  if (crow_distance > max_distance)
     throw valhalla_exception_t { 400, 154 };
 
   valhalla::midgard::logging::Log(
-      "location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
+      "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 }
 
 }
@@ -33,9 +55,20 @@ namespace valhalla {
     void loki_worker_t::init_trace(boost::property_tree::ptree& request) {
       parse_costing(request);
       parse_trace(request);
+
+      // Determine max factor, defaults to 1. This factor is used to increase
+      // the max value when an edge_walk shape match is requested
+      float max_factor = 1.0f;
+      auto shape_match = request.get<std::string>("shape_match", "walk_or_snap");
+      if (shape_match == "edge_walk")
+        max_factor = 8.0f;
+
+      // Validate shape count and distance
+      check_shape(shape, max_shape, max_factor);
+      check_distance(shape, max_distance.find("trace")->second, max_factor);
+
       // Set locations after parsing the shape
       locations_from_shape(request);
-      check_distance(shape, max_distance.find("trace")->second);
     }
 
     worker_t::result_t loki_worker_t::trace_route(boost::property_tree::ptree& request, http_request_info_t& request_info) {
@@ -85,15 +118,6 @@ namespace valhalla {
         //TODO: pass on e.what() to generic exception
         throw valhalla_exception_t{400, 114};
       }
-
-      //not enough
-      if(shape.size() < 2)
-        throw valhalla_exception_t{400, 123};
-      //too much
-      else if(shape.size() > max_shape)
-        throw valhalla_exception_t{400, 153, "(" + std::to_string(shape.size()) +"). The limit is " + std::to_string(max_shape)};
-
-      valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 
     }
 
