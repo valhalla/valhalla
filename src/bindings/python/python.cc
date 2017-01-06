@@ -28,6 +28,7 @@ namespace {
     //if we haven't already loaded one
     if(config && !pt) {
       try {
+        LOG_INFO("configure Valhalla");
         //parse the config
         boost::property_tree::ptree temp_pt;
         boost::property_tree::read_json(config.get(), temp_pt);
@@ -155,8 +156,6 @@ namespace {
         LOG_ERROR("Could not form trace from input JSON= " + json);
         return "{\"foo\":\"bar\"}";
       }
-
-      LOG_INFO("trace size = " + std::to_string(trace.size()));
 
       // Call Meili for map matching to get a collection of pathLocation Edges
       // Create a matcher
