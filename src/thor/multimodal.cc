@@ -91,14 +91,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   pc->SetAllowTransitConnections(true);
   pc->UseMaxMultiModalDistance();
 
-  // Check if there no possible path to destination based on mode to the
-  // destination - for now assume pedestrian
-  // TODO - some means of setting destination mode
-  if (!CanReachDestination(destination, graphreader, TravelMode::kPedestrian, pc)) {
-    LOG_INFO("Cannot reach destination - too far from a transit stop");
-    return { };
-  }
-
   // Set the mode from the origin
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
@@ -119,6 +111,22 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   //alternate paths using the other correlated points to may be harder to find
   Init(origin.edges.front().projected, destination.edges.front().projected, costing);
   float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
+
+  // Check if there no possible path to destination based on mode to the
+  // destination - for now assume pedestrian
+  // TODO - some means of setting destination mode
+  bool disable_transit = false;
+  if (!CanReachDestination(destination, graphreader, TravelMode::kPedestrian, pc)) {
+    // Return if distance exceeds maximum distance set for the starting distance
+    // of a multimodal route (TODO - add methods to costing to support this).
+    if (mindist > 2000) {
+      // Throw an exception so the message is returned in the service
+      throw valhalla_exception_t{400, 440};
+    } else {
+      // Allow routing but disable use of transit
+      disable_transit = true;
+    }
+  }
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
@@ -432,9 +440,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         newcost -= p->second;
       }
 
-      // Prohibit entering the same station as the prior.
+      // Do not allow transit connection edges if transit is disabled. Also,
+      // prohibit entering the same station as the prior.
       if (directededge->use() == Use::kTransitConnection &&
-          directededge->endnode() == pred.prior_stopid()) {
+         (disable_transit || directededge->endnode() == pred.prior_stopid())) {
         continue;
       }
 
@@ -539,8 +548,6 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjlist.pop();
     if (predindex == kInvalidLabel) {
-      // Throw an exception so the message is returned in the service
-      throw valhalla_exception_t{400, 440};
       return false;
     }
 
