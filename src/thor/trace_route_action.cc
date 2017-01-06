@@ -63,9 +63,11 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
           //TODO: remove after dev complete
           LOG_INFO("in " + shape_match->first);
           trip_path = route_match(controller);
+          if (trip_path.node().size() == 0)
+            throw valhalla_exception_t{400, 443};
         } catch (const valhalla_exception_t& e) {
           LOG_INFO(shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm");
-          valhalla_exception_t{400, 443};
+          throw valhalla_exception_t{400, 443};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
@@ -77,7 +79,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
           trip_path = map_match(controller);
         } catch (const valhalla_exception_t& e) {
           LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
-          valhalla_exception_t{400, 444};
+          throw valhalla_exception_t{400, 444};
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -93,7 +95,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
             trip_path = map_match(controller);
           } catch (const valhalla_exception_t& e) {
             LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
-            valhalla_exception_t{400, 444};
+            throw valhalla_exception_t{400, 444};
           }
         }
         break;
@@ -139,8 +141,6 @@ odin::TripPath thor_worker_t::route_match(const TripPathController& controller) 
                                              correlated.back(), through_loc,
                                              interrupt_callback);
   }
-//  if (trip_path.node().size() == 0)
-//    throw valhalla_exception_t{400, 443};
 
   return trip_path;
 }
