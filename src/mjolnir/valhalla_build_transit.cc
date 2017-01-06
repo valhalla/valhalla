@@ -28,6 +28,7 @@
 #include <valhalla/midgard/encoded.h>
 
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/admin.h"
 #include "proto/transit.pb.h"
 
 using namespace boost::property_tree;
@@ -261,7 +262,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
 }
 
 void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
-    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter) {
+    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter,
+    bool tile_within_one_tz, const std::unordered_map<uint32_t,multi_polygon_type>& tz_polys) {
   for(const auto& stop_pt : response.get_child("stops")) {
     const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
@@ -281,11 +283,16 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     stop->set_timezone(0);
 
     auto tz = stop_pt.second.get<std::string>("timezone", "");
-    if (tz == "CET")
-      tz = "Europe/Paris";
     uint32_t timezone = DateTime::get_tz_db().to_index(tz);
-    if (timezone == 0)
-      LOG_WARN("Timezone not found for stop " + stop->name());
+    if (timezone == 0) {
+
+      //fallback to tz database.
+      timezone = (tile_within_one_tz) ?
+                  tz_polys.begin()->first :
+                  GetMultiPolyId(tz_polys, PointLL(lon, lat));
+      if (timezone == 0)
+        LOG_WARN("Timezone not found for stop " + stop->name());
+    }
 
     stop->set_timezone(timezone);
     stops.emplace(stop->onestop_id(), stop_id);
@@ -308,7 +315,7 @@ void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
       type = Transit_VehicleType::Transit_VehicleType_kTram;
     else if (vehicle_type == "metro")
       type = Transit_VehicleType::Transit_VehicleType_kMetro;
-    else if (vehicle_type == "rail")
+    else if (vehicle_type == "rail" || vehicle_type == "suburban_railway")
       type = Transit_VehicleType::Transit_VehicleType_kRail;
     else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
              vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
@@ -560,6 +567,12 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon; //TODO: use timezone code?
 
+  auto database = pt.get_optional<std::string>("mjolnir.timezone");
+  // Initialize the tz DB (if it exists)
+  sqlite3 *tz_db_handle = GetDBHandle(*database);
+  if (!tz_db_handle)
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
+
   //for each tile
   while(true) {
     GraphId current;
@@ -591,6 +604,15 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::string prefix = transit_tile.string();
     LOG_INFO("Fetching " + transit_tile.string());
 
+    bool tile_within_one_tz = false;
+    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
+    if (tz_db_handle) {
+      tz_polys = GetTimeZones(tz_db_handle, filter);
+      if (tz_polys.size() == 1) {
+        tile_within_one_tz = true;
+      }
+    }
+
     //pull out all the STOPS (you see what we did there?)
     std::unordered_map<std::string, uint64_t> stops;
     boost::optional<std::string> request = url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
@@ -601,7 +623,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       //grab some stuff
       response = curler(*request, "stops");
       //copy stops in, keeping map of stopid to graphid
-      get_stops(tile, stops, current, response, filter);
+      get_stops(tile, stops, current, response, filter, tile_within_one_tz, tz_polys);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
 
