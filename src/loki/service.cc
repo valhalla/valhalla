@@ -229,7 +229,7 @@ namespace valhalla {
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
         max_time(config.get<unsigned int>("service_limits.isochrone.max_time")),
-        max_shape(config.get<size_t>("service_limits.trace_route.max_shape")) {
+        max_shape(config.get<size_t>("service_limits.trace.max_shape")) {
 
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {
@@ -245,9 +245,9 @@ namespace valhalla {
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
-        if (kv.first != "skadi" && kv.first != "trace_route")
+        if (kv.first != "skadi" && kv.first != "trace")
           max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
-        if (kv.first != "skadi" && kv.first != "isochrone" && kv.first != "trace_route")
+        if (kv.first != "skadi" && kv.first != "isochrone")
           max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
       //this should never happen
