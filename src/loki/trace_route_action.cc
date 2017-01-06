@@ -2,6 +2,7 @@
 #include "loki/search.h"
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/logging.h>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <math.h>
@@ -12,6 +13,15 @@ using namespace valhalla::midgard;
 
 namespace {
 
+void check_distance(const std::vector<PointLL>& shape, float max_distance) {
+  auto path_distance = shape.front().Distance(shape.back());
+  max_distance -= path_distance;
+  if (max_distance < 0)
+    throw valhalla_exception_t { 400, 154 };
+
+  valhalla::midgard::logging::Log(
+      "location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
+}
 
 }
 
@@ -23,6 +33,7 @@ namespace valhalla {
       parse_trace(request);
       // Set locations after parsing the shape
       locations_from_shape(request);
+      check_distance(shape, max_distance.find("trace")->second);
     }
 
     worker_t::result_t loki_worker_t::trace_route(boost::property_tree::ptree& request, http_request_info_t& request_info) {
