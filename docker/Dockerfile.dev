@@ -1,4 +1,4 @@
-FROM gyllen/mapillary_base_ubuntu:0.0.3
+FROM ubuntu:14.04
 
 RUN mkdir -p /source
 
