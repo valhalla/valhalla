@@ -2,7 +2,7 @@ FROM ubuntu:14.04
 
 RUN mkdir -p /source
 
-RUN apt-get update -y
+RUN apt-get update -y && apt-get install -y git
 
 RUN cd /source && git clone --depth=1 --branch=master --recurse-submodules http://github.com/valhalla/meili.git && \
     cd meili && \
