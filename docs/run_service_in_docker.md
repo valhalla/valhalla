@@ -1,13 +1,13 @@
 # Running Meili service in Docker
 
-Make sure you have `docker`, `git` and `wget` installed.
+Make sure you have `docker` and `wget` installed.
 
 ## Build Meili Docker Image
 
 Clone meili and build it
 ```sh
-git clone --depth=1 https://github.com/valhalla/meili.git
-sudo docker build -t valhalla/meili meili/docker
+# read Dockerfile.dev in a directory called docker in the branch master
+sudo docker build -t valhalla/meili -f Dockerfile.dev https://github.com/valhalla/meili.git#master:docker
 ```
 
 ## Build Graph Tiles
