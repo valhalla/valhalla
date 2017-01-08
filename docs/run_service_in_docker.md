@@ -7,7 +7,7 @@ Make sure you have `docker` and `wget` installed.
 
 Get meili from DockerHub:
 ```sh
-docker pull ptpt/meili
+sudo docker pull ptpt/meili
 
 # you can also build it manually, which takes much longer time
 # read Dockerfile.dev in a directory called docker in the branch master
