@@ -2,12 +2,16 @@
 
 Make sure you have `docker` and `wget` installed.
 
-## Build Meili Docker Image
+## Get Meili Docker Image
 
-Clone meili and build it
+
+Get meili from DockerHub:
 ```sh
+docker pull ptpt/meili
+
+# you can also build it manually, which takes much longer time
 # read Dockerfile.dev in a directory called docker in the branch master
-sudo docker build -t valhalla/meili -f Dockerfile.dev https://github.com/valhalla/meili.git#master:docker
+# sudo docker build -t ptpt/meili -f Dockerfile.dev https://github.com/valhalla/meili.git#master:docker
 ```
 
 ## Build Graph Tiles
@@ -37,7 +41,7 @@ Build tiles:
 sudo docker run -it \
      --volume  "$DATA_DIR":/data \
      --workdir /data \
-     valhalla/meili \
+     ptpt/meili \
      valhalla_build_tiles --conf /source/conf/valhalla.json berlin_germany.osm.pbf
 ```
 
@@ -53,7 +57,7 @@ Run the service:
 sudo docker run -it \
      --volume "$DATA_DIR":/data \
      --publish 8002:8002 \
-     valhalla/meili \
+     ptpt/meili \
      valhalla_map_match_service /source/conf/valhalla.json
 ```
 
@@ -66,6 +70,6 @@ for more information.
 ## Set up Demo
 
 Open
-http://valhalla.github.io/demos/map_matching/index-internal.html. Simulate
+http://valhalla.github.io/demos/map_matching/index-internal.html. Zoom to Berlin area. Simulate
 a trace by clicking on the map. You will see the trace is map matched
 immediately.
