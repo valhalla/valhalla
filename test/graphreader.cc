@@ -31,6 +31,20 @@ test_reader make_cache(std::string cache_size) {
   return {pt};
 }
 
+void TestOutOfRangeLL() {
+  boost::property_tree::ptree pt;
+  pt.put("tile_dir", "test/gphrdr_test");
+  GraphReader reader(pt);
+
+  // Latitude out of range
+  if (reader.GetGraphTile({60.0f, 100.0f}) != nullptr)
+    throw std::runtime_error("Out of range LL should return nullptr");
+
+  // Out of range longitude
+  if (reader.GetGraphTile({460.0f, 60.0f}) != nullptr)
+    throw std::runtime_error("Out of range LL should return nullptr");
+}
+
 void TestCacheLimits() {
   if(make_cache("\"max_cache_size\": 0,").OverCommitted())
     throw std::runtime_error("Cache should be over committed");
@@ -127,6 +141,8 @@ void TestConnectivityMap() {
 
 int main() {
   test::suite suite("graphtile");
+
+  suite.test(TEST_CASE(TestOutOfRangeLL));
 
   suite.test(TEST_CASE(TestCacheLimits));
 

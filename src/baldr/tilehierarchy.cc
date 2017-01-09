@@ -28,7 +28,10 @@ GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const unsigne
   GraphId id;
   const auto& tl = levels_.find(level);
   if(tl != levels_.end()) {
-    id.Set(static_cast<int32_t>(tl->second.tiles.TileId(pointll)), level, 0);
+    auto tile_id = tl->second.tiles.TileId(pointll);
+    if (tile_id >= 0) {
+      id.Set(tile_id, level, 0);
+    }
   }
   return id;
 }

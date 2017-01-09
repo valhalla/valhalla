@@ -135,7 +135,8 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 }
 
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
-  return GetGraphTile(tile_hierarchy_.GetGraphId(pointll, level));
+  GraphId id = tile_hierarchy_.GetGraphId(pointll, level);
+  return (id.Is_Valid()) ? GetGraphTile(tile_hierarchy_.GetGraphId(pointll, level)) : nullptr;
 }
 
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
