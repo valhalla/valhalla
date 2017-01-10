@@ -50,6 +50,17 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 AX_BOOST_PYTHON
 
+AS_IF([test "x$BOOST_PROGRAM_OPTIONS_LIB" == "x"],
+      [AC_MSG_ERROR([Boost::ProgramOptions library not detected, please install libboost-program-options-dev.])],)
+AS_IF([test "x$BOOST_SYSTEM_LIB" == "x"],
+      [AC_MSG_ERROR([Boost::System library not detected, please install libboost-system-dev.])],)
+AS_IF([test "x$BOOST_THREAD_LIB" == "x"],
+      [AC_MSG_ERROR([Boost::Thread library not detected, please install libboost-thread-dev.])],)
+AS_IF([test "x$BOOST_FILESYSTEM_LIB" == "x"],
+      [AC_MSG_ERROR([Boost::Filesystem library not detected, please install libboost-filesystem-dev.])],)
+AS_IF([test "x$BOOST_PYTHON_LIB" == "x"],
+      [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
+
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.1])
 
