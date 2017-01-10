@@ -1148,7 +1148,9 @@ Use GetTransitUse(const uint32_t rt) {
 
 std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, uint32_t shapeid,
                             const float orig_dist_traveled, const float dest_dist_traveled,
-                            const std::vector<PointLL>& trip_shape, const std::vector<float>& distances) {
+                            const std::vector<PointLL>& trip_shape, const std::vector<float>& distances,
+                            const std::string origin_id, const std::string dest_id) {
+
   std::list<PointLL> shape;
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
       orig_dist_traveled < dest_dist_traveled) {
@@ -1238,6 +1240,12 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, u
     shape.push_back(endstop_ll);
   }
 
+  if (shape.size() == 0) {
+    LOG_ERROR("Invalid shape from " + origin_id + " to " + dest_id);
+    shape.push_back(stop_ll);
+    shape.push_back(endstop_ll);
+  }
+
   return shape;
 }
 
@@ -1282,6 +1290,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     GraphId stopid = stop_edges.second.origin_pbf_graphid;
     uint32_t stop_index = stopid.id();
     const Transit_Stop& stop = transit.stops(stop_index);
+    std::string origin_id = stop.onestop_id();
     if (GraphId(stop.graphid()) != stopid) {
       LOG_ERROR("Stop key not equal!");
     }
@@ -1370,12 +1379,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       PointLL endll;
       std::string endstopname;
       GraphId end_stop_graphid = transitedge.dest_pbf_graphid;
+      std::string dest_id;
 
       if (end_stop_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Stop& endstop = transit.stops(end_stop_graphid.id());
         endstopname = endstop.name();
         endll = {endstop.lon(), endstop.lat()};
+        dest_id = endstop.onestop_id();
+
       } else {
         // Get Transit PBF data for this tile
         // Get transit pbf tile
@@ -1387,6 +1399,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         const Transit_Stop& endstop = endtransit.stops(end_stop_graphid.id());
         endstopname = endstop.name();
         endll = {endstop.lon(), endstop.lat()};
+        dest_id = endstop.onestop_id();
       }
 
       // Add the directed edge
@@ -1430,7 +1443,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // we will need to do something to differentiate edges (maybe use
       // lineid) so the shape doesn't get messed up.
       auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
-                            transitedge.dest_dist_traveled, points, distance);
+                            transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
+
       uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
