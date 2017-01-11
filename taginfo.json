@@ -205,6 +205,13 @@
       },
       {
          "key": "highway",
+         "value": "proposed",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
          "value": "cycleway",
          "object_types": [
             "way"
@@ -1010,6 +1017,118 @@
          "description": "Sets the truck_route flag to true."
       },
       {
+         "key": "sidewalk",
+         "value": "both",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "none",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "right",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "left",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "separate",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "shared",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "this",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "detached",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "raised",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "separate_double",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "sidepath",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "explicit",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
          "key": "hazmat",
          "value": "designated",
          "object_types": [
@@ -1323,6 +1442,141 @@
             "way"
          ],
          "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "limited",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "public",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "only",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "impassable",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "partial",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "bad",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "half",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "assisted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
       },
       {
          "key": "psv",
@@ -3123,6 +3377,34 @@
          ]
       },
       {
+         "key": "maxspeed:advisory",
+         "description": "Speed Limit - normally used on a curve or on/off ramps (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:practical",
+         "description": "Considered the average speed on a road (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:backward",
+         "description": "maximum speed which only applies in backward direction (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:forward",
+         "description": "maximum speed which only applies in forward direction (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
          "key": "surface",
          "description": "Road surface",
          "object_types": [
@@ -3130,8 +3412,54 @@
          ]
       },
       {
+         "key": "tracktype",
+         "value": "grade1",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade2",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade3",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade4",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
          "key": "lanes",
          "description": "Lane count",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lanes:forward",
+         "description": "Lane count in the forward direction",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lanes:backward",
+         "description": "Lane count in the backward direction",
          "object_types": [
             "way"
          ]
@@ -3287,20 +3615,26 @@
       {
          "key": "hov",
          "object_types": [
-            "way"
-         ]
+            "way",
+            "node"
+         ],
+         "description": "Allows access for hov modes unless the value is no."
       },
       {
          "key": "hov:lanes",
          "object_types": [
-            "way"
-         ]
+            "way",
+            "node"
+         ],
+         "description": "Allows access for hov."
       },
       {
          "key": "hov:minimum",
          "object_types": [
-            "way"
-         ]
+            "way",
+            "node"
+         ],
+         "description": "Allows access for hov."
       },
       {
          "key": "destination",
@@ -3409,6 +3743,33 @@
       {
          "key": "restriction",
          "value": "only_straight_on",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_entry",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_exit",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_turn",
          "object_types": [
             "node",
             "way",
