@@ -91,9 +91,11 @@ class CandidateGridQuery final: public CandidateQuery
 
  private:
 
-  const grid_t* GetGrid(const baldr::GraphId& tile_id) const;
-
-  const grid_t* GetGrid(const baldr::GraphTile* tile_ptr) const;
+  // Get a grid for a specified bin within a tile. Tile support for
+  // graph tiles and bins is provided to go between bin Ids and tile Ids.
+  const grid_t* GetGrid(const int32_t bin_id,
+                        const midgard::Tiles<midgard::PointLL>& tiles,
+                        const midgard::Tiles<midgard::PointLL>& bins) const;
 
   std::unordered_set<baldr::GraphId>
   RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
@@ -104,7 +106,8 @@ class CandidateGridQuery final: public CandidateQuery
 
   float cell_height_;
 
-  mutable std::unordered_map<baldr::GraphId, grid_t> grid_cache_;
+  // Grid cache - cached per "bin" within a graph tile
+  mutable std::unordered_map<int32_t, grid_t> grid_cache_;
 };
 
 }
