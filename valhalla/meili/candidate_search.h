@@ -39,14 +39,6 @@ class CandidateQuery
   virtual std::vector<std::vector<baldr::PathLocation>>
   QueryBulk(const std::vector<midgard::PointLL>& points, float radius, sif::EdgeFilter filter = nullptr);
 
-  /**
-   * Set a callback that will throw when the map-matching should be aborted
-   * @param interrupt_callback  the function to periodically call to see if we should abort
-   */
-  void set_interrupt(const std::function<void ()>* interrupt_callback) {
-    interrupt_ = interrupt_callback;
-  }
-
  protected:
   template <typename edgeid_iterator_t> std::vector<baldr::PathLocation>
   WithinSquaredDistance(const midgard::PointLL& location,
@@ -56,9 +48,6 @@ class CandidateQuery
                         sif::EdgeFilter filter) const;
 
   baldr::GraphReader& reader_;
-
-  // Interrupt callback. Can be set to interrupt if connection is closed.
-  const std::function<void ()>* interrupt_;
 };
 
 
@@ -73,14 +62,6 @@ class CandidateGridQuery final: public CandidateQuery
 
   std::vector<baldr::PathLocation>
   Query(const midgard::PointLL& location, float sq_search_radius, sif::EdgeFilter filter) const override;
-
-  /**
-   * Set a callback that will throw when the map-matching should be aborted
-   * @param interrupt_callback  the function to periodically call to see if we should abort
-   */
-  void set_interrupt(const std::function<void ()>* interrupt_callback) {
-    interrupt_ = interrupt_callback;
-  }
 
   std::unordered_map<baldr::GraphId, grid_t>::size_type
   size() const

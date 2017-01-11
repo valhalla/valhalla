@@ -7,8 +7,8 @@ namespace valhalla {
 namespace meili {
 
 CandidateQuery::CandidateQuery(baldr::GraphReader& graphreader):
-    reader_(graphreader),
-    interrupt_(nullptr) {}
+    reader_(graphreader) {
+}
 
 
 std::vector<std::vector<baldr::PathLocation>>
@@ -156,7 +156,6 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_wi
       cell_width_(cell_width),
       cell_height_(cell_height),
       grid_cache_() {
-  interrupt_ = nullptr;
 }
 
 
@@ -191,7 +190,7 @@ CandidateGridQuery::GetGrid(const int32_t bin_id, const Tiles<PointLL>& tiles,
 
   // Insert the bin into the cache and index the bin
   const auto inserted = grid_cache_.emplace(bin_id,
-          grid_t(bins.TileBounds(bin_id), cell_width_, cell_height_));
+          grid_t(tile->BoundingBox(hierarchy_), cell_width_, cell_height_));
   IndexBin(*tile, bin_index, reader_, inserted.first->second);
   return &(inserted.first->second);
 }
