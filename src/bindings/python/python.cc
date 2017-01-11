@@ -24,11 +24,9 @@ namespace {
   //configuring multiple times is wasteful/ineffectual but not harmful
   boost::property_tree::ptree configure(const boost::optional<std::string>& config = boost::none) {
     static boost::optional<boost::property_tree::ptree> pt;
-    LOG_INFO("INSIDE OF CONFIGURE");
     //if we haven't already loaded one
     if(config && !pt) {
       try {
-        LOG_INFO("configure Valhalla");
         //parse the config
         boost::property_tree::ptree temp_pt;
         boost::property_tree::read_json(config.get(), temp_pt);
