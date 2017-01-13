@@ -47,5 +47,24 @@ uint8_t TileHierarchy::get_level(const RoadClass roadclass) const {
   }
 }
 
+std::vector<GraphId> TileHierarchy::GetGraphIds(
+  const midgard::AABB2<midgard::PointLL> &bbox,
+  uint8_t level) const {
+
+  std::vector<GraphId> ids;
+
+  auto itr = levels_.find(level);
+  if (itr != levels_.end()) {
+    auto tile_ids = itr->second.tiles.TileList(bbox);
+    ids.reserve(tile_ids.size());
+
+    for (auto tile_id : tile_ids) {
+      ids.emplace_back(tile_id, level, 0);
+    }
+  }
+
+  return ids;
+}
+
 }
 }
