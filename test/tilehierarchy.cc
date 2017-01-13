@@ -43,6 +43,27 @@ namespace {
     if(h.levels().rbegin()->second.importance != RoadClass::kServiceOther)
       throw runtime_error("Importance should be set to service/other");
   }
+
+  void test_tiles() {
+    TileHierarchy h("/data/valhalla");
+
+    //there are 1440 cols and 720 rows, this spot lands on col 414 and row 522
+    AABB2<PointLL> bbox{{-76.49, 40.51}, {-76.48, 40.52}};
+    auto ids = h.GetGraphIds(bbox, 2);
+    if (ids.size() != 1) {
+      throw runtime_error("Should have only found one result.");
+    }
+    auto id = ids[0];
+    if (id.level() != 2 || id.tileid() != (522 * 1440) + 414 || id.id() != 0) {
+      throw runtime_error("Didn't find correct tile ID.");
+    }
+
+    bbox = AABB2<PointLL>{{-76.51, 40.49}, {-76.49, 40.51}};
+    ids = h.GetGraphIds(bbox, 2);
+    if (ids.size() != 4) {
+      throw runtime_error("Should have found 4 results.");
+    }
+  }
 }
 
 int main(void)
@@ -50,6 +71,7 @@ int main(void)
   test::suite suite("tilehierarchy");
 
   suite.test(TEST_CASE(test_parse));
+  suite.test(TEST_CASE(test_tiles));
 
   return suite.tear_down();
 }

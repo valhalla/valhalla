@@ -66,6 +66,23 @@ class TileHierarchy {
   GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level) const;
 
   /**
+   * Returns all the graphids of the tiles which intersect the given bounding
+   * box at that level.
+   *
+   * @param bbox  the bounding box of tiles to find.
+   * @param level the level of the tiles to return.
+   */
+  std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL> &bbox, uint8_t level) const;
+
+  /**
+   * Returns all the graphids of the tiles which intersect the given bounding
+   * box at any level.
+   *
+   * @param bbox  the bounding box of tiles to find.
+   */
+  std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL> &bbox) const;
+
+  /**
    * Gets the hierarchy level given the road class.
    * @param  road_class  Road classification.
    * @return Returns the level.
