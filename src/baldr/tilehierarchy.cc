@@ -66,5 +66,19 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(
   return ids;
 }
 
+std::vector<GraphId> TileHierarchy::GetGraphIds(
+  const midgard::AABB2<midgard::PointLL> &bbox) const {
+
+  std::vector<GraphId> ids;
+
+  for (const auto &entry : levels_) {
+    auto level_ids = GetGraphIds(bbox, entry.first);
+    ids.reserve(ids.size() + level_ids.size());
+    ids.insert(ids.end(), level_ids.begin(), level_ids.end());
+  }
+
+  return ids;
+}
+
 }
 }
