@@ -135,7 +135,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 
     // Break out when remaining sources and targets to expand are both 0
     if (remaining_sources_ == 0 && remaining_targets_ == 0) {
-      LOG_INFO("SourceToTarget iterations: n = " + std::to_string(n));
+      LOG_DEBUG("SourceToTarget iterations: n = " + std::to_string(n));
       break;
     }
 

@@ -449,8 +449,8 @@ bool AStarPathAlgorithm::IsTrivial(const GraphId& edgeid,
 // Form the path from the adjacency list.
 std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
   // Metrics to track
-  LOG_INFO("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
-  LOG_INFO("path_iterations::" + std::to_string(edgelabels_.size()));
+  LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
+  LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
 
   // Work backwards from the destination
   std::vector<PathInfo> path;

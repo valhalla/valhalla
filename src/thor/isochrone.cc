@@ -169,7 +169,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
 
     // Return after the time interval has been met
     if (pred.cost().secs > max_seconds) {
-      LOG_INFO("Exceed time interval: n = " + std::to_string(n));
+      LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
       return isotile_;
     }
 
@@ -284,7 +284,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
     // Return after the time interval has been met
     if (pred.cost().secs > max_seconds) {
-      LOG_INFO("Exceed time interval: n = " + std::to_string(n));
+      LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
       return isotile_;
     }
 
@@ -454,7 +454,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
     // Return after the time interval has been met
     if (pred.cost().secs > max_seconds) {
-      LOG_INFO("Exceed time interval: n = " + std::to_string(n));
+      LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
       return isotile_;
     }
 
