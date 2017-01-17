@@ -294,7 +294,46 @@ void test_single_node() {
   boost::property_tree::json_parser::read_json(json, conf);
 
   vb::GraphReader reader(conf);
-  vm::AABB2<vm::PointLL> box{{-0.0025, 0.0025}, {0.0025, 0.0025}};
+  // this should only find the node a 0,0
+  vm::AABB2<vm::PointLL> box{{-0.0025, -0.0025}, {0.0025, 0.0025}};
+
+  auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
+
+  if (nodes.size() != 1) {
+    throw std::runtime_error("Expecting to find one node, but got " +
+                             std::to_string(nodes.size()));
+  }
+}
+
+void test_small_node_block() {
+  //make the config file
+  std::stringstream json; json << "{ \"tile_dir\": \"test/node_search_tiles\" }";
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(json, conf);
+
+  vb::GraphReader reader(conf);
+  // this should find the four nodes which form a square at the lower left of
+  // the grid. note that the definition of AABB2::Contains would exclude nodes
+  // which lie on the right or top boundaries.
+  vm::AABB2<vm::PointLL> box{{0.0, 0.0}, {0.0051, 0.0051}};
+
+  auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
+
+  if (nodes.size() != 4) {
+    throw std::runtime_error("Expecting to find four nodes, but got " +
+                             std::to_string(nodes.size()));
+  }
+}
+
+void test_node_at_tile_boundary() {
+  //make the config file
+  std::stringstream json; json << "{ \"tile_dir\": \"test/node_search_tiles\" }";
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(json, conf);
+
+  vb::GraphReader reader(conf);
+  // this should find node which is at the tile boundary
+  vm::AABB2<vm::PointLL> box{{0.1, 0.249}, {0.101, 0.251}};
 
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
@@ -313,8 +352,9 @@ int main() {
   suite.test(TEST_CASE(make_tile));
 #endif /* MAKE_TEST_TILES */
 
-  // TODO: uncomment when implemented
-  //suite.test(TEST_CASE(test_single_node));
+  suite.test(TEST_CASE(test_single_node));
+  suite.test(TEST_CASE(test_small_node_block));
+  //suite.test(TEST_CASE(test_node_at_tile_boundary));
 
   return suite.tear_down();
 }
