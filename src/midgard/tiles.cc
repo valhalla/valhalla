@@ -534,6 +534,37 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 }
 
 template <class coord_t>
+std::unordered_map<int32_t, std::unordered_set<uint16_t> > Tiles<coord_t>::Intersect(const AABB2<coord_t> &box) const {
+  std::unordered_map<int32_t, std::unordered_set<uint16_t> > intersection;
+
+  // to calculate the bounds within each tile, we first calculate all the
+  // subdivisions (bins) which the bounding box covers in global space, and
+  // then iterate over them to fill in each "pixel" or bin.
+  const int32_t x_pixels = ncolumns_ * nsubdivisions_;
+  const int32_t y_pixels = nrows_ * nsubdivisions_;
+  int32_t x0 = std::floor((box.minx() - tilebounds_.minx()) / tilebounds_.Width() * x_pixels);
+  int32_t y0 = std::floor((box.miny() - tilebounds_.miny()) / tilebounds_.Height() * y_pixels);
+  int32_t x1 = std::floor((box.maxx() - tilebounds_.minx()) / tilebounds_.Width() * x_pixels);
+  int32_t y1 = std::floor((box.maxy() - tilebounds_.miny()) / tilebounds_.Height() * y_pixels);
+
+  // clamp ranges to within the bounds of the tile.
+  if (x0 < 0) { x0 = 0; }
+  if (y0 < 0) { y0 = 0; }
+  if (x1 >= x_pixels) { x1 = x_pixels - 1; }
+  if (y1 >= y_pixels) { y1 = y_pixels - 1; }
+
+  for (auto y = y0; y <= y1; ++y) {
+    for (auto x = x0; x <= x1; ++x) {
+      auto tile_id = (y / nsubdivisions_) * ncolumns_ + (x / nsubdivisions_);
+      auto bin = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
+      intersection[tile_id].insert(bin);
+    }
+  }
+
+  return intersection;
+}
+
+template <class coord_t>
 std::function<std::tuple<int32_t, unsigned short, float>() > Tiles<coord_t>::ClosestFirst(const coord_t& seed) const {
   return std::bind(&closest_first_generator_t<coord_t>::next, closest_first_generator_t<coord_t>(*this, seed));
 }

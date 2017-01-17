@@ -359,6 +359,15 @@ void test_closest_first() {
   }
 }
 
+void test_intersect_bbox() {
+  AABB2<PointLL> world_box{-180,-90,180,90};
+  Tiles<PointLL> t(world_box, 90, 2);
+  auto intersection = t.Intersect(world_box);
+  if (intersection.size() != t.TileCount()) {
+    throw std::runtime_error("Expected " + std::to_string(t.TileCount()) + " tiles returned from world-spanning intersection, but got " + std::to_string(intersection.size()) + " instead.");
+  }
+}
+
 }
 
 int main() {
@@ -381,6 +390,8 @@ int main() {
   suite.test(TEST_CASE(test_closest_first));
 
   suite.test(TEST_CASE(test_random_linestring));
+
+  suite.test(TEST_CASE(test_intersect_bbox));
 
   return suite.tear_down();
 }
