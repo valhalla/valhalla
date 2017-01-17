@@ -359,12 +359,47 @@ void test_closest_first() {
   }
 }
 
-void test_intersect_bbox() {
+void test_intersect_bbox_world() {
   AABB2<PointLL> world_box{-180,-90,180,90};
   Tiles<PointLL> t(world_box, 90, 2);
   auto intersection = t.Intersect(world_box);
   if (intersection.size() != t.TileCount()) {
     throw std::runtime_error("Expected " + std::to_string(t.TileCount()) + " tiles returned from world-spanning intersection, but got " + std::to_string(intersection.size()) + " instead.");
+  }
+  auto nbins = t.nsubdivisions() * t.nsubdivisions();
+  for (const auto &i : intersection) {
+    const auto &bins = i.second;
+    if (bins.size() != nbins) {
+      throw std::runtime_error("Expected " + std::to_string(nbins) + " bins for tile " + std::to_string(i.first) + " but got " + std::to_string(bins.size()) + " instead.");
+    }
+  }
+}
+
+void test_intersect_bbox_single() {
+  AABB2<PointLL> world_box{-180,-90,180,90};
+  Tiles<PointLL> t(world_box, 90, 2);
+
+  AABB2<PointLL> single_box{1, 1, 2, 2};
+  auto intersection = t.Intersect(single_box);
+  if (intersection.size() != 1) {
+    throw std::runtime_error("Expected one tile returned from world-spanning intersection, but got " + std::to_string(intersection.size()) + " instead.");
+  }
+  auto tile_id = intersection.begin()->first;
+  auto bins = intersection.begin()->second;
+  // expect tile id to be 6 because the point just up and right from the origin
+  // should be in the 3rd column, 2nd row, so thats (ncols(=4) * row(=1)) +
+  // col(=2).
+  if (tile_id != 6) {
+    throw std::runtime_error("Expected tile 6, but got tile " + std::to_string(tile_id));
+  }
+  // there should be a single result bin, which should be in the lower left
+  // and therefore be bin 0.
+  if (bins.size() != 1) {
+    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) + " bins.");
+  }
+  auto bin_id = *bins.begin();
+  if (bin_id != 0) {
+    throw std::runtime_error("Expected bin ID 0, but got " + std::to_string(bin_id) + " instead.");
   }
 }
 
@@ -391,7 +426,8 @@ int main() {
 
   suite.test(TEST_CASE(test_random_linestring));
 
-  suite.test(TEST_CASE(test_intersect_bbox));
+  suite.test(TEST_CASE(test_intersect_bbox_world));
+  suite.test(TEST_CASE(test_intersect_bbox_single));
 
   return suite.tear_down();
 }
