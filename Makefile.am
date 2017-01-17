@@ -53,18 +53,22 @@ libvalhalla_loki_la_SOURCES = \
 	src/loki/route_action.cc \
 	src/loki/matrix_action.cc \
 	src/loki/isochrone_action.cc \
-	src/loki/trace_route_action.cc
+	src/loki/trace_route_action.cc \
+	src/loki/node_search.cc
 libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 # tests
-check_PROGRAMS = test/loki_service test/search
+check_PROGRAMS = test/loki_service test/search test/node_search
 test_search_SOURCES = test/search.cc test/test.cc
 test_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_search_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
 test_loki_service_SOURCES = test/loki_service.cc test/test.cc
 test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_loki_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
+test_node_search_SOURCES = test/node_search.cc test/test.cc
+test_node_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_node_search_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
