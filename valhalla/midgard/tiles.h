@@ -256,6 +256,16 @@ class Tiles {
   std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& linestring) const;
 
   /**
+   * Intersect the bounding box with the tiles to see which tiles and sub-cells
+   * (a.k.a bins) it intersects with. This can be used to reduce the number of
+   * tiles and bins to search for matching items.
+   *
+   * @param box the bounding box to be tested.
+   * @return    a map of tile IDs to a set of bin IDs with that tile.
+   */
+  std::unordered_map<int32_t, std::unordered_set<uint16_t> > Intersect(const AABB2<coord_t> &box) const;
+
+  /**
    * Returns a functor which returns subdivisions close to the original point on each invocation in a best first fashion
    * If the functor can't expand any further (no more subdivisions) it will throw
    * @param seed   the point at for which we measure 'closeness'
