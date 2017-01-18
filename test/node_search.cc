@@ -362,7 +362,7 @@ void test_single_node() {
 
 void test_small_node_block() {
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/" << test_tile_dir << "\" }";
+  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
@@ -382,7 +382,7 @@ void test_small_node_block() {
 
 void test_node_at_tile_boundary() {
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/" << test_tile_dir << "\" }";
+  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
