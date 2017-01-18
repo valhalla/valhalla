@@ -29,11 +29,14 @@ namespace vb = valhalla::baldr;
 #ifdef MAKE_TEST_TILES
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
+#include <valhalla/mjolnir/graphvalidator.h>
 
 namespace vj = valhalla::mjolnir;
 #endif /* MAKE_TEST_TILES */
 
 namespace {
+
+const std::string test_tile_dir = "test/node_search_tiles";
 
 #ifdef MAKE_TEST_TILES
 struct graph_writer {
@@ -131,6 +134,31 @@ private:
   std::unordered_map<vb::GraphId, uint32_t> m_counts;
 };
 
+// functor to sort GraphId objects by level, tile then id within the tile.
+struct sort_by_tile {
+  inline bool operator()(vb::GraphId a, vb::GraphId b) const {
+    return ((a.fields.level < b.fields.level) ||
+            ((a.fields.level == b.fields.level) &&
+             ((a.fields.tileid < b.fields.tileid) ||
+              ((a.fields.tileid == b.fields.tileid) &&
+               (a.fields.id < b.fields.id)))));
+  }
+};
+
+// functor to sort pairs of GraphId objects by the functor above
+struct sort_pair_by_tile {
+  typedef std::pair<vb::GraphId, vb::GraphId> value_type;
+  static const sort_by_tile sort_tile;
+
+  inline bool operator()(const value_type &a, const value_type &b) {
+    return (sort_tile(a.first, b.first) ||
+            ((a.first == b.first) &&
+             sort_tile(a.second, b.second)));
+  }
+};
+
+const sort_by_tile sort_pair_by_tile::sort_tile;
+
 // temporary structure for holding a bunch of nodes and edges until they can be
 // renumbered to the format needed for storing in tiles.
 struct graph_builder {
@@ -187,7 +215,8 @@ void graph_builder::write_tiles(const TileHierarchy &hierarchy, uint8_t level) c
   // sort edges so that they come in tile, node order. this allows us to figure
   // out which edges start at which nodes in the tile, to assign them. it also
   // allows us to easily look up the opposing edges by binary search.
-  std::sort(renumbered_edges.begin(), renumbered_edges.end());
+  std::sort(renumbered_edges.begin(), renumbered_edges.end(),
+            sort_pair_by_tile());
 
   // find the first renumbered edge for each tile. this allows us to easily
   // calculate the index of the edge in the tile from the offset of the two
@@ -218,25 +247,34 @@ void graph_builder::write_tiles(const TileHierarchy &hierarchy, uint8_t level) c
     auto opp = std::make_pair(e.second, e.first);
     auto itr = std::lower_bound(renumbered_edges.begin(),
                                 renumbered_edges.end(),
-                                opp);
+                                opp,
+                                sort_pair_by_tile());
 
     // check that we found the opposite edge, which should always exist.
     assert(itr != renumbered_edges.end() && *itr == opp);
 
-    uint32_t opp_index = itr - tile_bases[e.second.Tile_Base()];
+    uint32_t opp_index = std::distance(tile_bases[e.second.Tile_Base()], itr);
     edge_builder.set_opp_index(opp_index);
 
-    std::vector<PointLL> shape = {start_point, end_point};
-    if(!forward)
-      std::reverse(shape.begin(), shape.end());
-
-    bool add;
-    // make more complex edge geom so that there are 3 segments, affine
-    // combination doesnt properly handle arcs but who cares
     uint32_t edge_index = tile.directededges().size();
-    uint32_t edge_info_offset = tile.AddEdgeInfo(
-      edge_index, e.first, e.second, 123, shape, {std::to_string(edge_index)},
-      add);
+    uint32_t edge_info_offset = 0;
+    if ((opp_index < edge_index) && (e.second.Tile_Base() == tile_id)) {
+      // opp edge already exists in this tile, so use its edgeinfo
+      edge_info_offset = tile.directededges()[opp_index].edgeinfo_offset();
+
+    } else {
+      // make an edgeinfo
+      std::vector<PointLL> shape = {start_point, end_point};
+      if(!forward)
+        std::reverse(shape.begin(), shape.end());
+
+      bool add;
+      // make more complex edge geom so that there are 3 segments, affine
+      // combination doesnt properly handle arcs but who cares
+      edge_info_offset = tile.AddEdgeInfo(
+        edge_index, e.first, e.second, 123, shape, {std::to_string(edge_index)},
+        add);
+    }
     edge_builder.set_edgeinfo_offset(edge_info_offset);
 
     tile.directededges().emplace_back(std::move(edge_builder));
@@ -281,15 +319,25 @@ void make_tile() {
     }
   }
 
-  vb::TileHierarchy h("test/node_search_tiles");
+  vb::TileHierarchy h(test_tile_dir);
   uint8_t level = 2;
   builder.write_tiles(h, level);
+
+  // run the validator to create opposing edges and check connectivity
+  std::stringstream json;
+  json << "{ \"mjolnir\": { \"tile_dir\": \"" << test_tile_dir << "\" }";
+  json << ", \"concurrency\": 1";
+  json << " }";
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(json, conf);
+
+  vj::GraphValidator::Validate(conf);
 }
 #endif /* MAKE_TEST_TILES */
 
 void test_single_node() {
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/node_search_tiles\" }";
+  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
@@ -307,7 +355,7 @@ void test_single_node() {
 
 void test_small_node_block() {
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/node_search_tiles\" }";
+  std::stringstream json; json << "{ \"tile_dir\": \"test/" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
@@ -327,7 +375,7 @@ void test_small_node_block() {
 
 void test_node_at_tile_boundary() {
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/node_search_tiles\" }";
+  std::stringstream json; json << "{ \"tile_dir\": \"test/" << test_tile_dir << "\" }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
