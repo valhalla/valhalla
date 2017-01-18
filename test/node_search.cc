@@ -30,8 +30,10 @@ namespace vb = valhalla::baldr;
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/graphvalidator.h>
+#include <boost/filesystem.hpp>
 
 namespace vj = valhalla::mjolnir;
+namespace bfs = boost::filesystem;
 #endif /* MAKE_TEST_TILES */
 
 namespace {
@@ -284,6 +286,11 @@ void graph_builder::write_tiles(const TileHierarchy &hierarchy, uint8_t level) c
 }
 
 void make_tile() {
+  // make sure that all the old tiles are gone before trying to make new ones.
+  if (bfs::is_directory(test_tile_dir)) {
+    bfs::remove_all(test_tile_dir);
+  }
+
   graph_builder builder;
 
   vm::AABB2<vm::PointLL> box{{0.0, 0.0}, {0.5, 0.5}};
