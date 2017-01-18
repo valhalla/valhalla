@@ -77,6 +77,15 @@ nodes_in_bbox(const midgard::AABB2<midgard::PointLL> &bbox, baldr::GraphReader& 
   // tile lookups.
   std::vector<vb::GraphId> tweeners;
 
+  // keep a set of (again, hopefully rare) combinations of node and index for
+  // when we encounter an edge whose opposite is in a different tile. the
+  // opposite is used to get the start node of the current edge.
+  //
+  // TODO: could be really naughty here and stuff the opposite index into the
+  // extra unused field of the GraphId... but that might cause real headaches
+  // down the road.
+  std::vector<std::pair<vb::GraphId, uint32_t> > opposite_edges;
+
   for (const auto &entry : intersections) {
     // TODO: level fixed at 2 for intersections?
     vb::GraphId tile_id(entry.first, 2, 0);
@@ -87,16 +96,36 @@ nodes_in_bbox(const midgard::AABB2<midgard::PointLL> &bbox, baldr::GraphReader& 
       continue;
     }
 
-    // fetch the beginning of the edges array as a raw pointer to avoid the
-    // slowness of bounds checks in the inner loop. we assume that the tile is
-    // valid and only references edges which exist.
-    auto *edges = tile->directededge(0);
+    // fetch the beginning of the edges and nodes arrays as raw pointers to
+    // avoid the slowness of bounds checks in the inner loop. we assume that the
+    // tile is valid and only references edges and nodes which exist.
+    auto *tile_edges = tile->directededge(0);
+    auto *tile_nodes = tile->node(0);
 
     for (auto bin_id : entry.second) {
       for (auto edge_id : tile->GetBin(bin_id)) {
         //assert(edge_id.fields.spare == 0);
         if (edge_id.Tile_Base() == tile_id) {
-          nodes.push_back(edges[edge_id.id()].endnode());
+          // we want _both_ nodes attached to this edge. the end node is easy
+          // because the ID is available from the edge itself.
+          const auto &edge = tile_edges[edge_id.id()];
+          const auto endnode = edge.endnode();
+          nodes.push_back(endnode);
+
+          // however, the start node - even though we know it must be in the
+          // same tile as the edge, is only available as the end node of the
+          // opposite edge, which might be in a different tile!
+          const auto opp_index = edge.opp_index();
+          if (endnode.Tile_Base() == tile_id) {
+            const auto &node = tile_nodes[endnode.id()];
+            assert(opp_index < node.edge_count());
+            const auto startnode = tile_edges[node.edge_index() + opp_index].endnode();
+            nodes.push_back(startnode);
+          }
+          // save the (node, index) pair for later.
+          else {
+            opposite_edges.emplace_back(endnode, opp_index);
+          }
         }
         // ignore edges which lead to different levels
         // TODO: is this right?
@@ -111,11 +140,27 @@ nodes_in_bbox(const midgard::AABB2<midgard::PointLL> &bbox, baldr::GraphReader& 
   std::sort(tweeners.begin(), tweeners.end());
   for (auto edge_id : tweeners) {
     const auto &edge = cache(edge_id).edge(edge_id);
-    nodes.push_back(edge.endnode());
+    const auto endnode = edge.endnode();
+    nodes.push_back(endnode);
+
+    const auto opp_index = edge.opp_index();
+    if (endnode.Tile_Base() == edge_id.Tile_Base()) {
+      const auto &node = cache(endnode).node(endnode);
+      assert(opp_index < node.edge_count());
+      vb::GraphId opp_edge_id(edge_id.tileid(), edge_id.level(), node.edge_index() + opp_index);
+      const auto startnode = cache(opp_edge_id).edge(opp_edge_id).endnode();
+      nodes.push_back(startnode);
+    }
+    // save the (node, index) pair for later.
+    else {
+      opposite_edges.emplace_back(endnode, opp_index);
+    }
   }
 
   // don't need tweeners any more
   tweeners.clear();
+
+  // TODO: sort and loop over opposite_edges
 
   // erase the duplicates
   std::sort(nodes.begin(), nodes.end());
