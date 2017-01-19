@@ -65,7 +65,7 @@ GraphTile::GraphTile()
       edgeinfo_size_(0),
       textlist_size_(0),
       traffic_segments_(nullptr),
-      traffic_chunks_(0),
+      traffic_chunks_(nullptr),
       traffic_chunk_size_(0) {
 }
 
@@ -182,7 +182,7 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of traffic chunks and their size
   // TODO - update chunk definition...
-  traffic_chunks_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->traffic_chunk_offset());
+  traffic_chunks_ = reinterpret_cast<TrafficChunk*>(tile_ptr + header_->traffic_chunk_offset());
   traffic_chunk_size_ = header_->end_offset() - header_->traffic_chunk_offset();
 
   // ANY NEW EXPANSION DATA GOES HERE
@@ -725,17 +725,17 @@ std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(
     } else {
       // This represents a traffic chunk - the offset into the chunk array and
       // the count are stored.
-      // TODO!
       auto c = t.GetChunkCountAndIndex();
-//    std::vector<std::pair<GraphId, float>> segments;
-//     for (uint32_t i = 0; i < count; i++, chunk++) {
-//     segments.emplace_back(std::make_pair(GraphId(t & kChunkIDMask),
-//                           (t & kChunkWeightMask) / 255.0f));
-//     }
-//     return segments;
-      return { };
+      TrafficChunk* chunk = &traffic_chunks_[c.second];
+      std::vector<std::pair<TrafficAssociation, float>> segments;
+      for (uint32_t i = 0; i < c.first; i++, chunk++) {
+        float weight = chunk->weight_ * kInvPercentFactor;
+        segments.emplace_back(std::make_pair(TrafficAssociation(*chunk), weight));
+     }
+     return segments;
     }
   } else if (header_->traffic_id_count() == 0) {
+    // Tile does not contain traffic
     return { };
   } else {
     throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +

@@ -397,7 +397,7 @@ class GraphTile {
 
   // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
   // segment Id (GraphId) and weight (combined int a single uint64_t).
-  uint64_t* traffic_chunks_;
+  TrafficChunk* traffic_chunks_;
 
   // Number of bytes in the traffic chunk list
   std::size_t traffic_chunk_size_;

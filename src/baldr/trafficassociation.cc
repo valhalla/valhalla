@@ -5,6 +5,17 @@
 namespace valhalla {
 namespace baldr {
 
+// Constructor with arguments
+TrafficChunk::TrafficChunk(const GraphId& segment_id,
+                           const float begin_percent,
+                           const float end_percent,
+                           const float weight)
+    : segment_id_(segment_id.value),
+      begin_percent_(begin_percent  * kPercentFactor),
+      end_percent_(end_percent * kPercentFactor),
+      weight_(weight  * kPercentFactor) {
+}
+
 /**
  * Default constructor.
  */
@@ -51,35 +62,27 @@ TrafficAssociation::TrafficAssociation(const GraphId& segment_id,
 // Constructor with arguments. Validate input is within bounds of the
 // name offset fields.
 // Constructor with arguments
-TrafficAssociation::TrafficAssociation(
-                     const float begin_percent, const float end_percent,
-                     const uint32_t chunk_count, const uint32_t chunk_index)
+TrafficAssociation::TrafficAssociation(const uint32_t chunk_count,
+                                       const uint32_t chunk_index)
       : chunk_(true),
+        begin_percent_ (0),
+        starts_segment_ (false),
+        end_percent_(0),
+        ends_segment_(false),
         spare_(0) {
-  // TODO - set chunk count and chunk index
-  starts_segment_ = false;
-  if (begin_percent <= 0.0f) {
-    begin_percent_ = 0;
-    starts_segment_ = true;
-  } else if (begin_percent >= 1.0f) {
-    LOG_WARN("TrafficAssociation: begin percent must be <= 1.0");
-    begin_percent_ = static_cast<uint32_t>(kPercentFactor);
-  } else {
-    begin_percent_ = static_cast<uint32_t>(begin_percent * kPercentFactor);
-  }
+  segment_id_ = ((chunk_count & kChunkCountMask) << kChunkCountShift) |
+                 (chunk_index & kChunkIndexMask);
+}
 
-  ends_segment_ = false;
-  if (begin_percent <= 0.0f) {
-    LOG_WARN("TrafficAssociation: end percent must be >= 0.0");
-    end_percent_ = 0;
-  } else if (begin_percent >= 1.0f) {
-    end_percent_ = static_cast<uint32_t>(kPercentFactor);
-    ends_segment_ = true;
-  } else {
-    end_percent_ = static_cast<uint32_t>(end_percent * kPercentFactor);
-  }
-
-  segment_id_ = 0; // TODO
+// Create a TrafficAssociation record from a chunk.
+TrafficAssociation::TrafficAssociation(const TrafficChunk& chunk)
+    : segment_id_(chunk.segment_id_),
+      begin_percent_(chunk.begin_percent_),
+      end_percent_(chunk.end_percent_),
+      chunk_(false),
+      spare_(0) {
+  starts_segment_ = (chunk.begin_percent_ == 0);
+  ends_segment_   = (chunk.end_percent_ == kEndsSegment);
 }
 
 // Get the traffic segment Id.

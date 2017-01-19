@@ -6,21 +6,36 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr float kPercentFactor    = 127.0f;
-constexpr float kInvPercentFactor = 1.0f / 127.0f;
+// 6 bits are used for percentages and weights in traffic associations
+constexpr uint64_t kEndsSegment   = 63;
+constexpr float kPercentFactor    = 63.0f;
+constexpr float kInvPercentFactor = 1.0f / 63.0f;
 
-// TODO - need to redesign the traffic chunks...
-
-// These are used to indicate
+// These are used to indicate a chunk is stored for this edge's
+// association to traffic segments. A chunk count and chunk index
+// are stored in the association word.
 constexpr uint64_t kChunkCountMask  = 0x00000fff00000000;
 constexpr uint64_t kChunkCountShift = 32;
 constexpr uint64_t kChunkIndexMask  = 0x00000000ffffffff;
 
-
+/**
+ * TrafficChunk describes many to one and many to many associations of
+ * traffic segments to edges. This is similar to the traffic association
+ * structure except that a "weight" is added to indicate the weight or
+ * percent of the segment applied to this edge.
+ */
 struct TrafficChunk {
-  uint64_t segment_id_              : 46;  // Internal route type
-  uint64_t begin_percent_           : 7;   // Weight.
-  uint64_t spare_                   : 13;
+  uint64_t segment_id_    : 46;  // Traffic segment Id
+  uint64_t begin_percent_ : 6;   // Begin percent along the segment
+  uint64_t end_percent_   : 6;   // End percent along the segment
+  uint64_t weight_        : 6;   // Weight (percentage this traffic segment
+                                 // applies to the edge)
+
+  /**
+   * Constructor with arguments
+   */
+  TrafficChunk(const GraphId& segment_id, const float begin_percent,
+               const float end_percent, const float weight);
 };
 
 /**
@@ -49,15 +64,16 @@ class TrafficAssociation {
   /**
    * Constructor with arguments. Used when the edge associates to a traffic
    * chunk.
-   * @param  begin_percent  Percentage along the segment at the beginning
-   *                        of the edge.
-   * @param  end_percent    Percentage along the segment at the end
-   *                        of the edge.
    * @param  chunk_count    Count of chunks associated to this edge.
    * @param  chunk_index    Index into the list of chunks.
    */
-  TrafficAssociation(const float begin_percent, const float end_percent,
-                     const uint32_t chunk_count, const uint32_t chunk_index);
+  TrafficAssociation(const uint32_t chunk_count, const uint32_t chunk_index);
+
+  /**
+   * Create a TrafficAssociation record from a chunk.
+   * @param  chunk  Traffic association chunk.
+   */
+  TrafficAssociation(const TrafficChunk& chunk);
 
   /**
    * Get the traffic segment Id.
@@ -117,12 +133,12 @@ class TrafficAssociation {
   // NOTE: If this association is part of a chunk (chunk_ flag is set), then
   // the segment_id points to an index and count of chunks.
   uint64_t segment_id_              : 46;  // Traffic segment Id
-  uint64_t begin_percent_           : 7;   // Begin percent
-  uint64_t end_percent_             : 7;   // End percent
+  uint64_t begin_percent_           : 6;   // Begin percent
+  uint64_t end_percent_             : 6;   // End percent
   uint64_t starts_segment_          : 1;   // Start of the traffic segment
   uint64_t ends_segment_            : 1;   // End of the traffic segment
   uint64_t chunk_                   : 1;   // This is part of a chunk
-  uint64_t spare_                   : 1;
+  uint64_t spare_                   : 3;
 };
 
 }
