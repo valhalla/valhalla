@@ -509,9 +509,14 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
   // Assume pedestrian mode for now
   mode_ = dest_mode;
 
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) {
-    return edgelabels_[label].sortcost();
+  // Local edge labels and edge status info
+  EdgeStatus edgestatus;
+  std::vector<EdgeLabel> edgelabels;
+
+  // Set up lambda to get sort costs (use the local edgelabels, not the class
+  // member!)
+  const auto edgecost = [edgelabels](const uint32_t label) {
+    return edgelabels[label].sortcost();
   };
 
   // Use a simple Dijkstra method - no need to recover the path just need to
@@ -520,8 +525,6 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
   uint32_t label_idx = 0;
   uint32_t bucketsize = costing->UnitSize();
   DoubleBucketQueue adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgecost);
-  std::vector<EdgeLabel> edgelabels;
-  EdgeStatus edgestatus;
 
   // Add the opposing destination edges to the priority queue
   for (const auto& edge : destination.edges) {
