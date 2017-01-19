@@ -15,7 +15,7 @@ dependencies:
 
 test:
   override:
-    - scripts/install.sh --enable-coverage
+    - scripts/install.sh --enable-coverage --enable-python-bindings
 
 general:
   artifacts:

@@ -38,25 +38,31 @@ PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_b
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
 
-# we require python dev headers
-AX_PYTHON_DEVEL([>= '2.7'])
-AM_PATH_PYTHON([2.7],,)
-
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tools. Please install libboost-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
-AX_BOOST_PYTHON
 
-# most of the boost AX_BOOST_XXX checks will error if the library is not
-# installed, but the python one continues on regardless. this seems like
-# sensible behaviour if the python bindings are optional, but in our case
-# they are not (yet?), so we must error if boost::python could not be
-# found.
-AS_IF([test "x$BOOST_PYTHON_LIB" == "x"],
-      [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
+# if we wanted python bindings
+AC_ARG_ENABLE([python_bindings],
+    [  --enable-python-bindings    Create python bindings],
+    [case "${enableval}" in
+        yes) python_bindings=true ;;
+        no)  python_bindings=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-python-bindings]) ;;
+    esac],[python_bindings=false])
+AM_CONDITIONAL([PYTHON_BINDINGS], [test x$python_bindings = xtrue])
+
+# then we require python dev headers and boost python
+AM_COND_IF([PYTHON_BINDINGS], [
+    AX_PYTHON_DEVEL([>= '2.7'])
+    AM_PATH_PYTHON([2.7],,)
+    AX_BOOST_PYTHON
+    AS_IF([test "x$BOOST_PYTHON_LIB" == "x"],
+          [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
+])
 
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.1])

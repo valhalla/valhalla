@@ -119,11 +119,13 @@ unconnected_ways_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BO
 
 
 # python bindings
+if PYTHON_BINDINGS
 pyexec_LTLIBRARIES = valhalla.la
 valhalla_la_SOURCES = src/bindings/python/python.cc
 valhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
 valhalla_la_LIBADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PYTHON_LIBS@ -l$(BOOST_PYTHON_LIB) $(VALHALLA_DEPS_LIBS)
 valhalla_la_LDFLAGS = @COVERAGE_LDFLAGS@ -avoid-version -module -shared
+endif
 
 # tests
 #check_PROGRAMS = test/something
