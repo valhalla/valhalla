@@ -403,6 +403,26 @@ void test_intersect_bbox_single() {
   }
 }
 
+void test_intersect_bbox_rounding() {
+  AABB2<PointLL> world_box{-180,-90,180,90};
+  Tiles<PointLL> t(world_box, 0.25, 5);
+
+  AABB2<PointLL> single_box{0.5, 0.5, 0.501, 0.501};
+  auto intersection = t.Intersect(single_box);
+  if (intersection.size() != 1) {
+    throw std::runtime_error("Expected one tile returned from intersection, but got " + std::to_string(intersection.size()) + " instead.");
+  }
+  auto bins = intersection.begin()->second;
+  // expect only the lower left bin, 0
+  if (bins.size() != 1) {
+    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) + " bins.");
+  }
+  auto bin_id = *bins.begin();
+  if (bin_id != 0) {
+    throw std::runtime_error("Expected bin ID 0, but got " + std::to_string(bin_id) + " instead.");
+  }
+}
+
 }
 
 int main() {
@@ -428,6 +448,7 @@ int main() {
 
   suite.test(TEST_CASE(test_intersect_bbox_world));
   suite.test(TEST_CASE(test_intersect_bbox_single));
+  suite.test(TEST_CASE(test_intersect_bbox_rounding));
 
   return suite.tear_down();
 }
