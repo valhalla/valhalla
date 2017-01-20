@@ -88,7 +88,6 @@ libvalhalla_meili_la_SOURCES = \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
 	src/meili/traffic_segment_matcher.cc
-     
 libvalhalla_meili_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_meili_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
