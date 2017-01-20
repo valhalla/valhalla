@@ -542,10 +542,12 @@ std::unordered_map<int32_t, std::unordered_set<uint16_t> > Tiles<coord_t>::Inter
   // then iterate over them to fill in each "pixel" or bin.
   const int32_t x_pixels = ncolumns_ * nsubdivisions_;
   const int32_t y_pixels = nrows_ * nsubdivisions_;
-  int32_t x0 = std::floor((box.minx() - tilebounds_.minx()) / tilebounds_.Width() * x_pixels);
-  int32_t y0 = std::floor((box.miny() - tilebounds_.miny()) / tilebounds_.Height() * y_pixels);
-  int32_t x1 = std::floor((box.maxx() - tilebounds_.minx()) / tilebounds_.Width() * x_pixels);
-  int32_t y1 = std::floor((box.maxy() - tilebounds_.miny()) / tilebounds_.Height() * y_pixels);
+  // NOTE: multiply by pixels before dividing to keep as much precision as
+  // possible.
+  int32_t x0 = std::floor(((box.minx() - tilebounds_.minx()) * x_pixels) / tilebounds_.Width());
+  int32_t y0 = std::floor(((box.miny() - tilebounds_.miny()) * y_pixels) / tilebounds_.Height());
+  int32_t x1 = std::floor(((box.maxx() - tilebounds_.minx()) * x_pixels) / tilebounds_.Width());
+  int32_t y1 = std::floor(((box.maxy() - tilebounds_.miny()) * y_pixels) / tilebounds_.Height());
 
   // clamp ranges to within the bounds of the tile.
   if (x0 < 0) { x0 = 0; }
