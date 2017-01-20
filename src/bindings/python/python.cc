@@ -56,18 +56,10 @@ BOOST_PYTHON_MODULE(valhalla) {
   //python interface for configuring the system, always call this first in your python program
   boost::python::def("Configure", py_configure);
 
-  //class for doing matching, a dummy for now but can be fleshed out
+  //class for doing matching to traffic segments. Pass in the config to the constructor
   boost::python::class_<valhalla::meili::TrafficSegmentMatcher, boost::noncopyable,
                        boost::shared_ptr<valhalla::meili::TrafficSegmentMatcher> >
         ("SegmentMatcher", boost::python::no_init)
       .def("__init__", boost::python::make_constructor(+[](){ return boost::make_shared<valhalla::meili::TrafficSegmentMatcher>(configure()); }))
-      .def("Match", &valhalla::meili::TrafficSegmentMatcher::match)
-      ;
-
-/*  boost::python::class_<valhalla::meili::TrafficSegmentMatcher,
-      boost::shared_ptr<valhalla::meili::TrafficSegmentMatcher>,
-      boost::noncopyable>("SegmentMatcher", boost::python::no_init)
-    .def("__init__", boost::python::make_constructor(&boost::make_shared<valhalla::meili::TrafficSegmentMatcher>))
-    .def("Match", &valhalla::meili::TrafficSegmentMatcher::match) */
-
+      .def("Match", &valhalla::meili::TrafficSegmentMatcher::match);
 }
