@@ -130,6 +130,12 @@ class GraphTileBuilder : public baldr::GraphTile {
                 const std::vector<baldr::SignInfo>& signs);
 
   /**
+   * Add lane connectivity information.
+   * @param  idx  Directed edge index.
+   * @param  lc  Lane connectivity information.
+   */
+  void AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc);
+  /**
    * Update all of the complex restrictions.
    * @param  complex_restriction_builder  list of complex restrictions.
    * @param  forward                      do we update the reverse or forward list
@@ -441,6 +447,12 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Traffic chunks
   std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
+
+  // List of signs. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<LaneConnectivity> lane_connectivity_builder_;
+  // lane connectivity list offset
+  uint32_t lane_connectivity_offset_ = 0;
 };
 
 }

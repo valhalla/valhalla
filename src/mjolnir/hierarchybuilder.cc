@@ -226,6 +226,18 @@ void FormTilesInNewLevel(GraphReader& reader,
         }
       }
 
+      // Copy lane connectivity
+      if (directededge->laneconnectivity()) {
+        auto laneconnectivity = tile->GetLaneConnectivity(base_edge_id.id());
+        if (laneconnectivity.size() == 0) {
+          LOG_ERROR("Base edge should have lane connectivity, but none found");
+        }
+        for (auto& lc : laneconnectivity) {
+          lc.set_to(tilebuilder->directededges().size());
+        }
+        tilebuilder->AddLaneConnectivity(laneconnectivity);
+      }
+
       // Get edge info, shape, and names from the old tile and add to the
       // new. Use the current edge info offset as the "index" to properly
       // create edge pairs in the same tile.

@@ -113,6 +113,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/transitschedule.h \
 	valhalla/baldr/transitstop.h \
 	valhalla/baldr/transittransfer.h \
+	valhalla/baldr/laneconnectivity.h \
 	valhalla/baldr/verbal_text_formatter.h \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
@@ -236,6 +237,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/transitschedule.cc \
 	src/baldr/transitstop.cc \
 	src/baldr/transittransfer.cc \
+	src/baldr/laneconnectivity.cc \
 	src/baldr/verbal_text_formatter.cc \
 	src/baldr/verbal_text_formatter_us.cc \
 	src/baldr/verbal_text_formatter_us_co.cc \
@@ -541,6 +543,7 @@ check_PROGRAMS = \
 	test/directededge \
 	test/double_bucket_queue \
 	test/edgecollapser \
+	test/laneconnectivity \
 	test/graphid \
 	test/tilehierarchy \
 	test/graphtile \
@@ -649,6 +652,9 @@ test_double_bucket_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
 test_edgecollapser_SOURCES = test/edgecollapser.cc test/test.cc
 test_edgecollapser_CPPFLAGS = $(DEPS_CFLAGS)
 test_edgecollapser_LDADD = $(DEPS_LIBS)  libvalhalla.la
+test_laneconnectivity_SOURCES = test/laneconnectivity.cc test/test.cc
+test_laneconnectivity_CPPFLAGS = $(DEPS_CFLAGS)
+test_laneconnectivity_LDADD = $(DEPS_LIBS)  libvalhalla.la
 test_graphid_SOURCES = test/graphid.cc test/test.cc
 test_graphid_CPPFLAGS = $(DEPS_CFLAGS)
 test_graphid_LDADD = $(DEPS_LIBS)  libvalhalla.la

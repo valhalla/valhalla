@@ -100,6 +100,7 @@ test/datetime
 test/directededge
 test/double_bucket_queue
 test/edgecollapser
+test/laneconnectivity
 test/graphid
 test/tilehierarchy
 test/graphtile

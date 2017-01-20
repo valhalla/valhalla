@@ -52,6 +52,7 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kEdgeMaxUpwardGrade, true },
   { kEdgeMaxDownwardGrade, true },
   { kEdgeLaneCount, true },
+  { kEdgeLaneConnectivity, true },
   { kEdgeCycleLane, true },
   { kEdgeBicycleNetwork, true },
   { kEdgeSidewalk, true },
