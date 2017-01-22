@@ -129,6 +129,8 @@ class MapMatching: public ViterbiSearch<State>
     return time;
   }
 
+  // given the *squared* great circle distance between a measurement and its candidate,
+  // return the emission cost of the candidate
   float
   CalculateEmissionCost(float sq_distance) const
   { return sq_distance * inv_double_sq_sigma_z_; }

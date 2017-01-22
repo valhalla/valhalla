@@ -204,7 +204,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
 
 inline float
 MapMatching::EmissionCost(const State& state) const
-{ return CalculateEmissionCost(std::sqrt(state.candidate().edges.front().score)); }
+{ return CalculateEmissionCost(state.candidate().edges.front().score); }
 
 
 inline double
