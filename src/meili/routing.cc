@@ -435,7 +435,9 @@ find_shortest_path(baldr::GraphReader& reader,
     {
       auto pred_idx = label_idx;
       auto pred_edgeid = label.edgeid;
-      while (pred_idx != kInvalidLabelIndex && isTransition(reader, pred_edgeid, tile)) {
+      while (pred_idx != kInvalidLabelIndex
+             && pred_edgeid.Is_Valid()
+             && isTransition(reader, pred_edgeid, tile)) {
         const auto& pred_label = labelset.label(pred_idx);
         pred_idx = pred_label.predecessor;
         pred_edgeid = pred_label.edgeid;
