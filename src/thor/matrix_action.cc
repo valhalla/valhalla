@@ -11,6 +11,7 @@ using namespace prime_server;
 
 #include "thor/service.h"
 #include "thor/costmatrix.h"
+#include "thor/timedistancematrix.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -125,9 +126,40 @@ namespace valhalla {
 
       json::MapPtr json;
       //do the real work
-      thor::CostMatrix costmatrix;
+      std::vector<TimeDistance> time_distances;
+      auto costmatrix = [&]() {
+        thor::CostMatrix matrix;
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+      };
+      auto timedistancematrix = [&]() {
+        thor::TimeDistanceMatrix matrix;
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+      };
+      switch (source_to_target_algorithm) {
+      case SELECT_OPTIMAL:
+        if (correlated_s.size() + correlated_t.size() > 100) {
+          time_distances = timedistancematrix();
+        } else {
+          switch (mode) {
+          case TravelMode::kPedestrian:
+          case TravelMode::kBicycle:
+            time_distances = timedistancematrix();
+            break;
+          default:
+            time_distances = costmatrix();
+          }
+        }
+        break;
+      case COST_MATRIX:
+        time_distances = costmatrix();
+        break;
+      case TIME_DISTANCE_MATRIX: {
+        time_distances = timedistancematrix();
+        break;
+      }
+      }
       json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
-        costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode), units, distance_scale);
+        time_distances, units, distance_scale);
 
       //jsonp callback if need be
       std::ostringstream stream;

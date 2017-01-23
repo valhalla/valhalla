@@ -59,14 +59,14 @@ class TimeDistanceMatrix {
   /**
    * One to many time and distance cost matrix. Computes time and distance
    * matrix from one origin location to many other locations.
-   * @param  origin_index  Index in the locations list of the origin.
+   * @param  origin        Location of the origin.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance> OneToMany(const uint32_t origin_index,
+  std::vector<TimeDistance> OneToMany(const baldr::PathLocation& origin,
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -75,14 +75,14 @@ class TimeDistanceMatrix {
   /**
    * Many to one time and distance cost matrix. Computes time and distance
    * matrix from many locations to one destination location.
-   * @param  dest_index    Index in the locations list of the destination.
+   * @param  dest          Location of the destination.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
    * @return time/distance to the destination index from all other locations
    */
-  std::vector<TimeDistance> ManyToOne(const uint32_t dest_index,
+  std::vector<TimeDistance> ManyToOne(const baldr::PathLocation& dest,
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -99,6 +99,23 @@ class TimeDistanceMatrix {
    */
   std::vector<TimeDistance> ManyToMany(
           const std::vector<baldr::PathLocation>& locations,
+          baldr::GraphReader& graphreader,
+          const std::shared_ptr<sif::DynamicCost>* mode_costing,
+          const sif::TravelMode mode);
+
+  /**
+   * Forms a time distance matrix from the set of source locations
+   * to the set of target locations.
+   * @param  source_location_list  List of source/origin locations.
+   * @param  target_location_list  List of target/destination locations.
+   * @param  graphreader           Graph reader for accessing routing graph.
+   * @param  costing               Costing methods.
+   * @param  mode                  Travel mode to use.
+   * @return time/distance from origin index to all other locations
+   */
+  std::vector<TimeDistance> SourceToTarget(
+          const std::vector<baldr::PathLocation>& source_location_list,
+          const std::vector<baldr::PathLocation>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
@@ -162,31 +179,27 @@ class TimeDistanceMatrix {
   /**
    * Add destinations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  dest_index    Index of the "destination" in the locations vector.
    * @param  locations     List of locations.
    * @param  costing       Costing method.
    */
   void SetDestinations(baldr::GraphReader& graphreader,
-                       const uint32_t dest_index,
                        const std::vector<baldr::PathLocation>& locations,
                        const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Set destinations for the many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  origin_index  Index of the origin in the locations vector.
    * @param  locations     List of locations.
    * @param  costing       Costing method.
    */
   void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-            const uint32_t origin_index,
             const std::vector<baldr::PathLocation>& locations,
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
    * found to the end of edge).
-   * @param   origin_index  Index of the origin location.
+   * @param   origin        Location of the origin.
    * @param   locations     List of locations.
    * @param   destinations  Vector of destination indexes along this edge.
    * @param   edge          Directed edge
@@ -195,7 +208,7 @@ class TimeDistanceMatrix {
    * @param   costing       Costing method.
    * @return  Returns true if all destinations have been settled.
    */
-  bool UpdateDestinations(const uint32_t origin_index,
+  bool UpdateDestinations(const baldr::PathLocation& origin,
                           const std::vector<baldr::PathLocation>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,

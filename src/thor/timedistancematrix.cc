@@ -51,7 +51,7 @@ void TimeDistanceMatrix::Clear() {
 // Calculate time and distance from one origin location to many destination
 // locations.
 std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
-            const uint32_t origin_index,
+            const baldr::PathLocation& origin,
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
@@ -65,7 +65,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
   // factor (needed for setting the origin).
-  astarheuristic_.Init(locations[origin_index].latlng_, 0.0f);
+  astarheuristic_.Init(origin.latlng_, 0.0f);
   uint32_t bucketsize = costing->UnitSize();
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) {
@@ -77,8 +77,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
-  SetOriginOneToMany(graphreader, locations[origin_index], costing);
-  SetDestinations(graphreader, origin_index, locations, costing);
+  SetOriginOneToMany(graphreader, origin, costing);
+  SetDestinations(graphreader, locations, costing);
 
   // Find shortest path
   const GraphTile* tile;
@@ -108,7 +108,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin_index, locations, destedge->second, edge,
+      if (UpdateDestinations(origin, locations, destedge->second, edge,
                              pred, predindex, costing)) {
         return FormTimeDistanceMatrix();
       }
@@ -204,7 +204,7 @@ void TimeDistanceMatrix::AddToAdjacencyList(const baldr::GraphId& edgeid,
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to one location.
 std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
-            const uint32_t dest_index,
+            const baldr::PathLocation& dest,
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
@@ -218,7 +218,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
   // factor (needed for setting the origin).
-  astarheuristic_.Init(locations[dest_index].latlng_, 0.0f);
+  astarheuristic_.Init(dest.latlng_, 0.0f);
   uint32_t bucketsize = costing->UnitSize();
   const auto edgecost = [this](const uint32_t label) {
     return edgelabels_[label].sortcost();
@@ -229,8 +229,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
-  SetOriginManyToOne(graphreader, locations[dest_index], costing);
-  SetDestinationsManyToOne(graphreader, dest_index, locations, costing);
+  SetOriginManyToOne(graphreader, dest, costing);
+  SetDestinationsManyToOne(graphreader, locations, costing);
 
   // Find shortest path
   const GraphTile* tile;
@@ -260,7 +260,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest_index, locations, destedge->second, edge,
+      if (UpdateDestinations(dest, locations, destedge->second, edge,
                              pred, predindex, costing)) {
         return FormTimeDistanceMatrix();
       }
@@ -361,13 +361,31 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
            GraphReader& graphreader,
            const std::shared_ptr<DynamicCost>* mode_costing,
            const sif::TravelMode mode) {
+  return SourceToTarget(locations, locations, graphreader, mode_costing, mode);
+}
+
+std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
+        const std::vector<baldr::PathLocation>& source_location_list,
+        const std::vector<baldr::PathLocation>& target_location_list,
+        baldr::GraphReader& graphreader,
+        const std::shared_ptr<sif::DynamicCost>* mode_costing,
+        const sif::TravelMode mode) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
-  for (uint32_t origin_idx = 0; origin_idx < locations.size(); origin_idx++) {
-    std::vector<TimeDistance> td = OneToMany(origin_idx, locations,
-                          graphreader, mode_costing, mode);
-    many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-    Clear();
+  if (source_location_list.size() <= target_location_list.size()) {
+    for (const auto& origin: source_location_list) {
+      std::vector<TimeDistance> td = OneToMany(origin, target_location_list,
+                                               graphreader, mode_costing, mode);
+      many_to_many.insert(many_to_many.end(), td.begin(), td.end());
+      Clear();
+    }
+  } else {
+    for (const auto& destination: target_location_list) {
+      std::vector<TimeDistance> td = ManyToOne(destination, source_location_list,
+                                               graphreader, mode_costing, mode);
+      many_to_many.insert(many_to_many.end(), td.begin(), td.end());
+      Clear();
+    }
   }
   return many_to_many;
 }
@@ -456,7 +474,6 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
 // Set destinations
 void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
-          const uint32_t origin_index,
           const std::vector<PathLocation>& locations,
           const std::shared_ptr<DynamicCost>& costing) {
   // For each destination
@@ -466,31 +483,22 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
     destinations_.emplace_back();
     Destination& d = destinations_.back();
 
-    // If this is the origin, mark the destination as complete with
-    // 0 cost and 0 distance
-    if (idx == origin_index) {
-      d.best_cost = { 0.0f, 0.0f };
-      d.distance  = 0;
-      d.settled = true;
-      settled_count_++;
-    } else {
-      // Set up the destination - consider each possible location edge.
-      for (const auto& edge : loc.edges) {
-        // Keep the id and the partial distance for the
-        // remainder of the edge.
-        d.dest_edges[edge.id] = (1.0f - edge.dist);
+    // Set up the destination - consider each possible location edge.
+    for (const auto& edge : loc.edges) {
+      // Keep the id and the partial distance for the
+      // remainder of the edge.
+      d.dest_edges[edge.id] = (1.0f - edge.dist);
 
-        // Form a threshold cost (the total cost to traverse the edge)
-        const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
-        if (c > d.threshold) {
-          d.threshold = c;
-        }
-
-        // Mark the edge as having a destination on it and add the
-        // destination index
-        dest_edges_[edge.id].push_back(idx);
+      // Form a threshold cost (the total cost to traverse the edge)
+      const GraphTile* tile = graphreader.GetGraphTile(edge.id);
+      float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
+      if (c > d.threshold) {
+        d.threshold = c;
       }
+
+      // Mark the edge as having a destination on it and add the
+      // destination index
+      dest_edges_[edge.id].push_back(idx);
     }
     idx++;
   }
@@ -498,7 +506,6 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
 
 // Set destinations for the many to one case.
 void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
-          const uint32_t dest_index,
           const std::vector<PathLocation>& locations,
           const std::shared_ptr<DynamicCost>& costing) {
   // For each destination
@@ -508,36 +515,27 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
     destinations_.emplace_back();
     Destination& d = destinations_.back();
 
-    // If this is the origin, mark the destination as complete with
-    // 0 cost and 0 distance
-    if (idx == dest_index) {
-      d.best_cost = { 0.0f, 0.0f };
-      d.distance  = 0;
-      d.settled = true;
-      settled_count_++;
-    } else {
-      // Set up the destination - consider each possible location edge.
-      for (const auto& edge : loc.edges) {
-        // Get the opposing directed edge Id - this is the edge marked as the
-        // "destination" - but the cost is based on the forward path along the
-        // initial edge.
-        GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edge.id);
+    // Set up the destination - consider each possible location edge.
+    for (const auto& edge : loc.edges) {
+      // Get the opposing directed edge Id - this is the edge marked as the
+      // "destination" - but the cost is based on the forward path along the
+      // initial edge.
+      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edge.id);
 
-        // Keep the id and the partial distance for the
-        // remainder of the edge.
-        d.dest_edges[opp_edge_id] = edge.dist;
+      // Keep the id and the partial distance for the
+      // remainder of the edge.
+      d.dest_edges[opp_edge_id] = edge.dist;
 
-        // Form a threshold cost (the total cost to traverse the edge)
-        const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
-        if (c > d.threshold) {
-          d.threshold = c;
-        }
-
-        // Mark the edge as having a destination on it and add the
-        // destination index
-        dest_edges_[opp_edge_id].push_back(idx);
+      // Form a threshold cost (the total cost to traverse the edge)
+      const GraphTile* tile = graphreader.GetGraphTile(edge.id);
+      float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
+      if (c > d.threshold) {
+        d.threshold = c;
       }
+
+      // Mark the edge as having a destination on it and add the
+      // destination index
+      dest_edges_[opp_edge_id].push_back(idx);
     }
     idx++;
   }
@@ -545,7 +543,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
 
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled.
-bool TimeDistanceMatrix::UpdateDestinations(const uint32_t origin_index,
+bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
                                 const std::vector<PathLocation>& locations,
                                 std::vector<uint32_t>& destinations,
                                 const DirectedEdge* edge,
@@ -574,7 +572,7 @@ bool TimeDistanceMatrix::UpdateDestinations(const uint32_t origin_index,
     // Skip case where destination is along the origin edge, there is no
     // predecessor, and the destination cannot be reached via trival path.
     if (pred.predecessor() == kInvalidLabel &&
-        !IsTrivial(pred.edgeid(), locations[origin_index],
+        !IsTrivial(pred.edgeid(), origin,
                    locations[dest_idx])) {
       continue;
     }
