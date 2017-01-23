@@ -140,6 +140,11 @@ namespace valhalla {
         if (correlated_s.size() + correlated_t.size() > 100) {
           time_distances = timedistancematrix();
         } else {
+          time_distances = costmatrix();
+        }
+        /** TODO - test performance of TimeDistanceMatrix vs. CostMatrix for various
+            modes and conditions (e.g. number of locations, distances between
+            locations)
           switch (mode) {
           case TravelMode::kPedestrian:
           case TravelMode::kBicycle:
@@ -148,7 +153,7 @@ namespace valhalla {
           default:
             time_distances = costmatrix();
           }
-        }
+        } */
         break;
       case COST_MATRIX:
         time_distances = costmatrix();
