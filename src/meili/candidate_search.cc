@@ -161,6 +161,7 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_wi
       cell_width_(cell_width),
       cell_height_(cell_height),
       grid_cache_() {
+  bin_level_ = hierarchy_.levels().rbegin()->second.level;
 }
 
 
@@ -181,10 +182,9 @@ CandidateGridQuery::GetGrid(const int32_t bin_id, const Tiles<PointLL>& tiles,
   int32_t ndiv = tiles.nsubdivisions();
   auto rc = bins.GetRowColumn(bin_id);
   int32_t tile_id = tiles.TileId(rc.second / ndiv, rc.first / ndiv);
-  baldr::GraphId tileid(tile_id, 2, 0);
+  baldr::GraphId tileid(tile_id, bin_level_, 0);
   auto tile = reader_.GetGraphTile(tileid);
   if (!tile) {
-    std::cout << "Tile not found" << std::endl;
     return nullptr;
   }
 

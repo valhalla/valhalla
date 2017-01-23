@@ -81,10 +81,10 @@ class CandidateGridQuery final: public CandidateQuery
   std::unordered_set<baldr::GraphId>
   RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
 
+  uint32_t bin_level_;
   const baldr::TileHierarchy& hierarchy_;
 
   float cell_width_;
-
   float cell_height_;
 
   // Grid cache - cached per "bin" within a graph tile
