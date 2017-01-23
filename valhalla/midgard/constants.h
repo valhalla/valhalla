@@ -26,6 +26,9 @@ constexpr float kDegPerRad = (180.0f / kPi);  // Radians to degrees conversion
 constexpr float kRadPerDeg = (kPi / 180.0f);  // Degrees to radians conversion
 constexpr float kEpsilon   = 0.000001f;
 
+// To avoid using M_PI
+constexpr double kPiDouble = 3.14159265358979323846;
+
 // Weight measures
 constexpr float kTonsShortToMetric = 0.907f;  // Short tons to metric
 
