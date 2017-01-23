@@ -304,9 +304,9 @@ int main(int argc, char *argv[]) {
     res.clear();
     TimeDistanceMatrix tdm(28800);
     if (matrixtype == "one_to_many") {
-      res = tdm.OneToMany(0, path_locations, reader, mode_costing, mode);
+      res = tdm.OneToMany(path_locations[0], path_locations, reader, mode_costing, mode);
     } else if (matrixtype == "many_to_many") {
-      res = tdm.ManyToOne(path_locations.size()-1, path_locations, reader,
+      res = tdm.ManyToOne(path_locations.back(), path_locations, reader,
                                   mode_costing, mode);
     } else {
       res = tdm.ManyToMany(path_locations, reader, mode_costing, mode);
