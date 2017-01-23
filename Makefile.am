@@ -89,7 +89,8 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/restrictionbuilder.h \
 	valhalla/mjolnir/shortcutbuilder.h \
 	valhalla/mjolnir/transitbuilder.h \
-	valhalla/mjolnir/util.h
+	valhalla/mjolnir/util.h \
+	valhalla/mjolnir/validatetransit.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/transit.pb.cc \
 	src/mjolnir/admin.cc \
@@ -124,6 +125,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/shortcutbuilder.cc \
 	src/mjolnir/transitbuilder.cc \
 	src/mjolnir/util.cc \
+	src/mjolnir/validatetransit.cc \
 	src/mjolnir/graph_lua_proc.h \
 	src/mjolnir/admin_lua_proc.h
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
