@@ -54,6 +54,17 @@ const tz_db_t& get_tz_db() {
   return tz_db;
 }
 
+//default testing date and time is the next Tues @ 08:00
+std::string get_testing_date_time() {
+  auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
+  boost::gregorian::date d = get_formatted_date(iso_date_time(tz));
+
+  while (d.day_of_week() != boost::date_time::Tuesday)
+    d += boost::gregorian::days(1);
+
+  return to_iso_extended_string(d) + "T08:00";
+}
+
 //get a formatted date.
 boost::gregorian::date get_formatted_date(const std::string& date) {
   boost::gregorian::date d;

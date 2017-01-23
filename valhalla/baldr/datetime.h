@@ -29,6 +29,12 @@ namespace DateTime {
   const tz_db_t& get_tz_db();
 
   /**
+   * Get a formatted testing date.  Currently, next Tuesday @ 08:00.
+   * @return  Returns the formatted date string.
+   */
+  std::string get_testing_date_time();
+
+  /**
    * Get a formatted date from a string.
    * @param date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the formatted date.
