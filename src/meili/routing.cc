@@ -352,6 +352,16 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
 }
 
 
+inline bool
+isTransition(baldr::GraphReader& graphreader, const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
+  const auto edge = helpers::edge_directededge(graphreader, edgeid, tile);
+  if (!edge) {
+    return false;
+  }
+  return edge->trans_up() || edge->trans_down();
+}
+
+
 // This heuristic function estimates cost from current node
 // (incorporated in the approximator) to a cluster of destinations
 // within a circle formed by the search radius around the lnglat (the
@@ -418,8 +428,22 @@ find_shortest_path(baldr::GraphReader& reader,
     // So we cache the costs that will be used during expanding
     const auto label_cost = label.cost;
     const auto label_turn_cost = label.turn_cost;
-    // and edgelabel pointer for checking edge accessibility later
-    const auto pred_edgelabel = label.edgelabel;
+
+    // Find the first non-transition edgelabel
+    // Note only use edgelabel to determine if edge is allowed or not
+    auto pred_edgelabel = label.edgelabel;
+    {
+      auto pred_idx = label_idx;
+      auto pred_edgeid = label.edgeid;
+      while (pred_idx != kInvalidLabelIndex
+             && pred_edgeid.Is_Valid()
+             && isTransition(reader, pred_edgeid, tile)) {
+        const auto& pred_label = labelset.label(pred_idx);
+        pred_idx = pred_label.predecessor;
+        pred_edgeid = pred_label.edgeid;
+        pred_edgelabel = pred_label.edgelabel;
+      }
+    }
 
     if (label.nodeid.Is_Valid()) {
       const auto nodeid = label.nodeid;
