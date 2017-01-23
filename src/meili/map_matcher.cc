@@ -346,7 +346,6 @@ std::vector<MatchResult>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
 {
   mapmatching_.Clear();
-  candidatequery_.set_interrupt(interrupt_);
 
   const auto begin = measurements.begin(),
                end = measurements.end();

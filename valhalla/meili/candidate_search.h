@@ -39,14 +39,6 @@ class CandidateQuery
   virtual std::vector<std::vector<baldr::PathLocation>>
   QueryBulk(const std::vector<midgard::PointLL>& points, float radius, sif::EdgeFilter filter = nullptr);
 
-  /**
-   * Set a callback that will throw when the map-matching should be aborted
-   * @param interrupt_callback  the function to periodically call to see if we should abort
-   */
-  void set_interrupt(const std::function<void ()>* interrupt_callback) {
-    interrupt_ = interrupt_callback;
-  }
-
  protected:
   template <typename edgeid_iterator_t> std::vector<baldr::PathLocation>
   WithinSquaredDistance(const midgard::PointLL& location,
@@ -56,9 +48,6 @@ class CandidateQuery
                         sif::EdgeFilter filter) const;
 
   baldr::GraphReader& reader_;
-
-  // Interrupt callback. Can be set to interrupt if connection is closed.
-  const std::function<void ()>* interrupt_;
 };
 
 
@@ -74,14 +63,6 @@ class CandidateGridQuery final: public CandidateQuery
   std::vector<baldr::PathLocation>
   Query(const midgard::PointLL& location, float sq_search_radius, sif::EdgeFilter filter) const override;
 
-  /**
-   * Set a callback that will throw when the map-matching should be aborted
-   * @param interrupt_callback  the function to periodically call to see if we should abort
-   */
-  void set_interrupt(const std::function<void ()>* interrupt_callback) {
-    interrupt_ = interrupt_callback;
-  }
-
   std::unordered_map<baldr::GraphId, grid_t>::size_type
   size() const
   { return grid_cache_.size(); }
@@ -91,20 +72,23 @@ class CandidateGridQuery final: public CandidateQuery
 
  private:
 
-  const grid_t* GetGrid(const baldr::GraphId& tile_id) const;
-
-  const grid_t* GetGrid(const baldr::GraphTile* tile_ptr) const;
+  // Get a grid for a specified bin within a tile. Tile support for
+  // graph tiles and bins is provided to go between bin Ids and tile Ids.
+  const grid_t* GetGrid(const int32_t bin_id,
+                        const midgard::Tiles<midgard::PointLL>& tiles,
+                        const midgard::Tiles<midgard::PointLL>& bins) const;
 
   std::unordered_set<baldr::GraphId>
   RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
 
+  uint32_t bin_level_;
   const baldr::TileHierarchy& hierarchy_;
 
   float cell_width_;
-
   float cell_height_;
 
-  mutable std::unordered_map<baldr::GraphId, grid_t> grid_cache_;
+  // Grid cache - cached per "bin" within a graph tile
+  mutable std::unordered_map<int32_t, grid_t> grid_cache_;
 };
 
 }

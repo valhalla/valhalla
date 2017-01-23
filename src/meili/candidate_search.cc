@@ -7,8 +7,8 @@ namespace valhalla {
 namespace meili {
 
 CandidateQuery::CandidateQuery(baldr::GraphReader& graphreader):
-    reader_(graphreader),
-    interrupt_(nullptr) {}
+    reader_(graphreader) {
+}
 
 
 std::vector<std::vector<baldr::PathLocation>>
@@ -123,37 +123,36 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
-void IndexTile(const baldr::GraphTile& tile, baldr::GraphReader& reader, CandidateGridQuery::grid_t& grid,
-               const std::function<void ()>* interrupt)
+void IndexBin(const baldr::GraphTile& tile, const int32_t bin_index,
+               baldr::GraphReader& reader, CandidateGridQuery::grid_t& grid)
 {
-  //for each bin
-  std::unordered_set<uint64_t> visited;
-  for(size_t i = 0; i < baldr::kBinCount; ++i) {
-    // Allow interrupt if set
-    if (interrupt) {
-      (*interrupt)();
-    }
-    //for each edge
-    auto edge_ids = tile.GetBin(i);
-    for(const auto& edge_id : edge_ids) {
-      //skip ones we did already
-      if(!visited.insert(edge_id).second)
-        continue;
-      //need the right tile
-      const auto* bin_tile = edge_id.tileid() == tile.header()->graphid().tileid() ? &tile : reader.GetGraphTile(edge_id);
-      if(bin_tile == nullptr) continue;
-      //skip these
-      const auto* edge = bin_tile->directededge(edge_id);
-      if(edge->trans_up() || edge->trans_down() || edge->use() == baldr::Use::kTransitConnection) continue;
-      //get some shape
-      const auto edgeinfo = bin_tile->edgeinfo(edge->edgeinfo_offset());
-      const auto& shape = edgeinfo.shape();
-      for(decltype(shape.size()) j = 1; j < shape.size(); ++j)
-        grid.AddLineSegment(edge_id, {shape[j - 1], shape[j]});
+  // Get the edges within the specified bin.
+  auto edge_ids = tile.GetBin(bin_index);
+  for(const auto& edge_id : edge_ids) {
+    // Get the right tile (edges in a bin can be in a different tile if they
+    // pass through the tile but do not start or end in the tile). Skip if
+    // tile is null.
+    const auto* bin_tile = edge_id.tileid() == tile.header()->graphid().tileid() ?
+                  &tile : reader.GetGraphTile(edge_id);
+    if(bin_tile == nullptr) continue;
+
+    // Get the edge. Skip transition edges and transit connection edges.
+    const auto* edge = bin_tile->directededge(edge_id);
+    if(edge->trans_up() || edge->trans_down() ||
+       edge->use() == baldr::Use::kTransitConnection) continue;
+
+    // Get shape and add to grid. Use lazy_shape to avoid allocations.
+    auto shape = bin_tile->edgeinfo(edge->edgeinfo_offset()).lazy_shape();
+    if (!shape.empty()) {
+      PointLL v = shape.pop();
+      while (!shape.empty()) {
+        const PointLL u = v;
+        v = shape.pop();
+        grid.AddLineSegment(edge_id, {u, v});
+      }
     }
   }
 }
-
 
 
 CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_width, float cell_height)
@@ -162,7 +161,7 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_wi
       cell_width_(cell_width),
       cell_height_(cell_height),
       grid_cache_() {
-  interrupt_ = nullptr;
+  bin_level_ = hierarchy_.levels().rbegin()->second.level;
 }
 
 
@@ -170,108 +169,59 @@ CandidateGridQuery::~CandidateGridQuery() {}
 
 
 inline const CandidateGridQuery::grid_t*
-CandidateGridQuery::GetGrid(const baldr::GraphId& tile_id) const
-{ return GetGrid(reader_.GetGraphTile(tile_id)); }
-
-
-const CandidateGridQuery::grid_t*
-CandidateGridQuery::GetGrid(const baldr::GraphTile* tile) const
+CandidateGridQuery::GetGrid(const int32_t bin_id, const Tiles<PointLL>& tiles,
+                            const Tiles<PointLL>& bins) const
 {
-  if (!tile) {
-    return nullptr;
-  }
-
-  const auto tile_id = tile->id();
-  const auto it = grid_cache_.find(tile_id);
+  // Check if the bin is in the cache
+  const auto it = grid_cache_.find(bin_id);
   if (it != grid_cache_.end()) {
     return &(it->second);
   }
 
-  const auto inserted = grid_cache_.emplace(tile_id, grid_t(tile->BoundingBox(hierarchy_), cell_width_, cell_height_));
-  IndexTile(*tile, reader_, inserted.first->second, interrupt_);
+  // Not in the cache. Get the tile and Index the bin within the tile.
+  int32_t ndiv = tiles.nsubdivisions();
+  auto rc = bins.GetRowColumn(bin_id);
+  int32_t tile_id = tiles.TileId(rc.second / ndiv, rc.first / ndiv);
+  baldr::GraphId tileid(tile_id, bin_level_, 0);
+  auto tile = reader_.GetGraphTile(tileid);
+  if (!tile) {
+    return nullptr;
+  }
+
+  // Compute bin index within the tile (row-ordered)
+  int32_t bin_row = rc.first % ndiv;
+  int32_t bin_col = rc.second % ndiv;
+  int32_t bin_index = (bin_row * ndiv) + bin_col;
+
+  // Insert the bin into the cache and index the bin
+  const auto inserted = grid_cache_.emplace(bin_id,
+          grid_t(tile->BoundingBox(hierarchy_), cell_width_, cell_height_));
+  IndexBin(*tile, bin_index, reader_, inserted.first->second);
   return &(inserted.first->second);
 }
-
 
 std::unordered_set<baldr::GraphId>
 CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
 {
-  auto tile_of_minpt = reader_.GetGraphTile(range.minpt()),
-       tile_of_maxpt = reader_.GetGraphTile(range.maxpt());
+  // Get the tiles object from the tile hierarchy and create the bin tiles
+  // (subidivisions within the tile)
+  const auto& tl = hierarchy_.levels().rbegin();
+  Tiles<PointLL> tiles = tl->second.tiles;
+  Tiles<PointLL> bins(tiles.TileBounds(), tiles.SubdivisionSize());
 
-  // If the range is inside a single tile
-  //
-  // +--------+---------+
-  // |        | +----+  |
-  // |        | +----+  |
-  // +--------+---------+
-  // |        |         |
-  // |        |         |
-  // +--------+---------+
-  if (tile_of_minpt == tile_of_maxpt) {
-    if (tile_of_minpt) {
-      auto grid = GetGrid(tile_of_minpt);
-      if (grid)
-        return grid->Query(range);
-    }
-    return std::unordered_set<baldr::GraphId>();
-  }
+  // Get a list of bins within the range. These are "tile Ids" that must
+  // be resolved to a Graph Id (tile) / bin combination
+  auto bin_list = bins.TileList(range);
 
-  // Otherwise this range intersects with multiple tiles:
-  //
-  // NOTE for simplicity we only consider the case that the range is
-  // smaller than tile's bounding box
-  //
-  //   intersects 4 tiles               intersects 2 tiles
-  // +---------+-----------+  +-------+---------+  +-------+-------+
-  // |      +--+-----+     |  |   +---+----+    |  | +---+ |       |
-  // |      |  |     |     |  |   +---+----+    |  | |   | |       |
-  // +------+--+-----+-----+  +-------+---------+  +-+---+-+-------+
-  // |      |  |     |     |  |       |         |  | +---+ +       |
-  // |      +--+-----+     |  |       |         |  |       |       |
-  // +---------+-----------+  +-------+---------+  +-------+-------+
+  // Iterate through the bins and query grids to get results
   std::unordered_set<baldr::GraphId> result;
-
-  if (tile_of_minpt) {
-    auto grid = GetGrid(tile_of_minpt);
+  for (auto bin_id : bin_list) {
+    auto grid = GetGrid(bin_id, tiles, bins);
     if (grid) {
       const auto& set = grid->Query(range);
       result.insert(set.begin(), set.end());
     }
   }
-
-  if (tile_of_maxpt) {
-    auto grid = GetGrid(tile_of_maxpt);
-    if (grid) {
-      const auto& set = grid->Query(range);
-      result.insert(set.begin(), set.end());
-    }
-  }
-
-  auto tile_of_lefttop = reader_.GetGraphTile(midgard::PointLL(range.minx(), range.maxy()));
-  if (tile_of_lefttop
-      && tile_of_lefttop != tile_of_minpt
-      && tile_of_lefttop != tile_of_maxpt) {
-    auto grid = GetGrid(tile_of_lefttop);
-    if (grid) {
-      const auto& set = grid->Query(range);
-      result.insert(set.begin(), set.end());
-    }
-  }
-
-  auto tile_of_rightbottom = reader_.GetGraphTile(midgard::PointLL(range.maxx(), range.miny()));
-  if (tile_of_rightbottom
-      && tile_of_rightbottom != tile_of_minpt
-      && tile_of_rightbottom != tile_of_maxpt) {
-    if(tile_of_rightbottom == tile_of_lefttop)
-      throw std::logic_error("The candidate grid range should not be in a single tile");
-    auto grid = GetGrid(tile_of_rightbottom);
-    if (grid) {
-      const auto& set = grid->Query(range);
-      result.insert(set.begin(), set.end());
-    }
-  }
-
   return result;
 }
 
