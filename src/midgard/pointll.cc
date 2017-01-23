@@ -1,4 +1,5 @@
 #include "valhalla/midgard/pointll.h"
+#include "valhalla/midgard/constants.h"
 #include <valhalla/midgard/util.h>
 #include "valhalla/midgard/distanceapproximator.h"
 #include "valhalla/midgard/vector2.h"
@@ -8,8 +9,8 @@
 #include <list>
 
 namespace {
-constexpr double RAD_PER_DEG = M_PI / 180.0;
-constexpr double DEG_PER_RAD = 180.0 / M_PI;
+constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
+constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 }
 
 namespace valhalla {
