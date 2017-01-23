@@ -97,6 +97,11 @@ bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const Gra
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   //TODO: clear the cache automatically once we become overcommitted by a certain amount
 
+  // Return nullptr if not a valid tile
+  if (!graphid.Is_Valid()) {
+    return nullptr;
+  }
+
   // Check if the level/tileid combination is in the cache
   auto base = graphid.Tile_Base();
   auto cached = cache_.find(base);
