@@ -14,6 +14,7 @@
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 #include <curl/curl.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -27,8 +28,10 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/encoded.h>
 
-#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/validatetransit.h"
+
 #include "proto/transit.pb.h"
 
 using namespace boost::property_tree;
@@ -75,6 +78,60 @@ struct StopEdges {
   std::vector<GraphId> intrastation; // List of intra-station connections
   std::vector<TransitLine> lines;    // Set of unique route/stop pairs
 };
+
+std::string remove_parens(const std::string& s) {
+  std::string ret;
+  for (auto c : s) {
+    if (c != '"') {
+      ret += c;
+    }
+  }
+  return ret;
+}
+
+std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
+  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+  boost::char_separator<char> sep{","};
+  std::vector<OneStopTest> onestoptests;
+  std::string default_date_time = DateTime::get_testing_date_time();
+
+  // Open file
+  std::string line;
+  std::ifstream file(filename);
+  if (file.is_open()) {
+    while (getline(file, line)) {
+      tokenizer tok{line, sep};
+      uint32_t field_num = 0;
+      OneStopTest onestoptest{};
+      for (const auto &t : tok) {
+        switch (field_num) {
+        case 0:
+          onestoptest.origin = remove_parens(t);
+          break;
+        case 1:
+          onestoptest.destination = remove_parens(t);
+          break;
+        case 2:
+          onestoptest.route_id = remove_parens(t);
+          break;
+        case 3:
+          onestoptest.date_time = remove_parens(t);
+          break;
+        }
+        field_num++;
+      }
+      if (onestoptest.date_time.empty())
+        onestoptest.date_time = default_date_time;
+
+      onestoptests.emplace_back(std::move(onestoptest));
+    }
+    file.close();
+  } else {
+    std::cout << "One stop test file: " << filename << " not found" << std::endl;
+  }
+
+  return onestoptests;
+}
 
 // Struct to hold stats information during each threads work
 struct builder_stats {
@@ -172,7 +229,7 @@ std::string url(const std::string& path, const ptree& pt) {
 
 //TODO: update this call to get only the tiles that have changed since last time
 struct weighted_tile_t { GraphId t; size_t w; bool operator<(const weighted_tile_t& o) const { return w == o.w ? t < o.t : w < o.w; } };
-std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
+std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::string& feed) {
   //now real need to catch exceptions since we can't really proceed without this stuff
   LOG_INFO("Fetching transit feeds");
 
@@ -185,37 +242,39 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   curler_t curler;
   auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
-    //use the following logic if you only want certain feeds
-  //auto feed = feature.second.get_optional<std::string>("properties.onestop_id");
-  //if (feed && *feed == "f-drt-mbta") {
 
-    //should be a polygon
-    auto type = feature.second.get_optional<std::string>("geometry.type");
-    if(!type || *type != "Polygon") {
-      LOG_WARN("Skipping non-polygonal feature: " + feature.second.get_value<std::string>());
-      continue;
+    auto onestop_feed = feature.second.get_optional<std::string>("properties.onestop_id");
+    if (feed.empty() || (onestop_feed && *onestop_feed == feed)) {
+
+      //should be a polygon
+      auto type = feature.second.get_optional<std::string>("geometry.type");
+      if(!type || *type != "Polygon") {
+        LOG_WARN("Skipping non-polygonal feature: " + feature.second.get_value<std::string>());
+        continue;
+      }
+      //grab the tile row and column ranges for the max box around the polygon
+      float min_x = 180, max_x = -180, min_y = 90, max_y = -90;
+      for(const auto& coord :feature.second.get_child("geometry.coordinates").front().second) {
+        auto x = coord.second.front().second.get_value<float>();
+        auto y = coord.second.back().second.get_value<float>();
+        if(x < min_x) min_x = x;
+        if(x > max_x) max_x = x;
+        if(y < min_y) min_y = y;
+        if(y > max_y) max_y = y;
+      }
+
+      //expand the top and bottom edges of the box to account for geodesics
+      min_y -= std::abs(min_y - PointLL(min_x, min_y).MidPoint({max_x, min_y}).second);
+      max_y += std::abs(max_y - PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
+      auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
+      auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
+      if(min_c > max_c) std::swap(min_c, max_c);
+      if(min_r > max_r) std::swap(min_r, max_r);
+      //for each tile in the polygon figure out how heavy it is and keep track of it
+      for(auto i = min_c; i <= max_c; ++i)
+        for(auto j = min_r; j <= max_r; ++j)
+          tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
     }
-    //grab the tile row and column ranges for the max box around the polygon
-    float min_x = 180, max_x = -180, min_y = 90, max_y = -90;
-    for(const auto& coord :feature.second.get_child("geometry.coordinates").front().second) {
-      auto x = coord.second.front().second.get_value<float>();
-      auto y = coord.second.back().second.get_value<float>();
-      if(x < min_x) min_x = x;
-      if(x > max_x) max_x = x;
-      if(y < min_y) min_y = y;
-      if(y > max_y) max_y = y;
-    }
-    //expand the top and bottom edges of the box to account for geodesics
-    min_y -= std::abs(min_y - PointLL(min_x, min_y).MidPoint({max_x, min_y}).second);
-    max_y += std::abs(max_y - PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
-    auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
-    auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
-    if(min_c > max_c) std::swap(min_c, max_c);
-    if(min_r > max_r) std::swap(min_r, max_r);
-    //for each tile in the polygon figure out how heavy it is and keep track of it
-    for(auto i = min_c; i <= max_c; ++i)
-      for(auto j = min_r; j <= max_r; ++j)
-        tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
   }
   //we want slowest to build tiles first, routes query is slowest so we weight by that
   //stop pairs is most numerous so that might want to be factored in as well
@@ -263,7 +322,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
 
 void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter,
-    bool tile_within_one_tz, const std::unordered_map<uint32_t,multi_polygon_type>& tz_polys) {
+    bool tile_within_one_tz, const std::unordered_map<uint32_t, multi_polygon_type>& tz_polys) {
   for(const auto& stop_pt : response.get_child("stops")) {
     const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
@@ -559,7 +618,8 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
   }
 }
 
-void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, unique_transit_t& uniques, std::promise<std::list<GraphId> >& promise) {
+void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, unique_transit_t& uniques,
+                 std::promise<std::list<GraphId> >& promise) {
   TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   const auto& tiles = hierarchy.levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
@@ -1274,6 +1334,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::unordered_map<uint32_t, Shape> shape_data,
                 const std::vector<float> distances,
                 const std::vector<uint32_t>& route_types,
+                std::vector<OneStopTest>& onestoptests,
                 uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -1484,6 +1545,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
                  const std::unordered_set<GraphId>& all_tiles,
                  std::unordered_set<GraphId>::const_iterator tile_start,
                  std::unordered_set<GraphId>::const_iterator tile_end,
+                 std::vector<OneStopTest>& onestoptests,
                  std::promise<builder_stats>& results) {
 
   uint32_t no_dir_edge_count = 0;
@@ -1499,8 +1561,6 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 
     // Get transit pbf tile
     const std::string transit_dir = pt.get<std::string>("transit_dir");
-    //std::cout << transit_dir << std::endl;
-
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), hierarchy_transit_level);
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
@@ -1653,7 +1713,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, hierarchy_transit_level, tile_id, file, transit_dir,
                lock, all_tiles, stop_edge_map, stop_access, shapes, distances,
-               route_types, no_dir_edge_count);
+               route_types, onestoptests, no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.stops_size()) + " stops, " +
@@ -1672,6 +1732,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 }
 
 void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
+           std::vector<OneStopTest>& onestoptests,
            unsigned int thread_count = std::max(static_cast<unsigned int>(1), std::thread::hardware_concurrency())) {
 
   LOG_INFO("Building transit network.");
@@ -1689,12 +1750,7 @@ void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   // and populate tiles
 
   // A place to hold worker threads and their results
-  // (Change threads to 1 if running DEBUG to get more info)
-  //std::vector<std::shared_ptr<std::thread> > threads(1);
-  std::vector<std::shared_ptr<std::thread> > threads(
-      std::max(static_cast<uint32_t>(1),
-               pt.get<uint32_t>("mjolnir.concurrency",
-                                std::thread::hardware_concurrency())));
+  std::vector<std::shared_ptr<std::thread> > threads(thread_count);
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
@@ -1721,7 +1777,7 @@ void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
     threads[i].reset(
         new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")),
                         std::ref(lock), std::cref(all_tiles), tile_start, tile_end,
-                        std::ref(results.back())));
+                        std::ref(onestoptests), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
@@ -1773,8 +1829,19 @@ int main(int argc, char** argv) {
   //yes we want to curl
   curl_global_init(CURL_GLOBAL_DEFAULT);
 
+  std::string feed;
+  if(argc > 7) { feed = std::string(argv[7]); }
+
+  std::string testfile;
+  std::vector<OneStopTest> onestoptests;
+  if(argc > 8) {
+    testfile = std::string(argv[8]);
+    onestoptests = ParseTestFile(testfile);
+    std::sort(onestoptests.begin(), onestoptests.end());
+  }
+
   //go get information about what transit tiles we should be fetching
-  auto transit_tiles = which_tiles(pt);
+  auto transit_tiles = which_tiles(pt, feed);
   //spawn threads to download all the tiles returning a list of
   //tiles that ended up having dangling stop pairs
   auto dangling_tiles = fetch(pt, transit_tiles);
@@ -1795,7 +1862,9 @@ int main(int argc, char** argv) {
 
   // update tile dir loc.  Don't want to overwrite the real transit tiles
   if(argc > 4) { pt.get_child("mjolnir").erase("tile_dir"); pt.add("mjolnir.tile_dir", std::string(argv[4])); }
-  build(pt, all_tiles);
+
+  build(pt, all_tiles, onestoptests);
+  ValidateTransit::Validate(pt, all_tiles, onestoptests);
 
   return 0;
 }
