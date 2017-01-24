@@ -220,29 +220,7 @@ namespace valhalla {
                                                         mode_costing, path_edges,
                                                         origin, last_break_dest,
                                                         through_loc, interrupt_callback);
-
-
-          if (!healthcheck){
-            std::unordered_set<std::string> state_iso;
-            std::unordered_set<std::string> country_iso;
-            std::stringstream s_ss, c_ss;
-            if (trip_path.admin_size() > 0) {
-              for (const auto& admin : trip_path.admin()) {
-                if (admin.has_state_code())
-                  state_iso.insert(admin.state_code());
-                if (admin.has_country_code())
-                  country_iso.insert(admin.country_code());
-              }
-              for (const std::string& x: state_iso)
-                s_ss << " " << x;
-              std::cout <<  std::endl;
-              for (const std::string& x: country_iso)
-                c_ss << " " << x;
-              std::cout <<  std::endl;
-              if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
-              if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
-            }
-          }
+          log_admin(trip_path);
 
           if (origin.date_time_)
             origin_date_time = *origin.date_time_;
@@ -355,28 +333,7 @@ namespace valhalla {
                                                         last_break_origin,
                                                         destination, through_loc,
                                                         interrupt_callback);
-
-          if (!healthcheck){
-            std::unordered_set<std::string> state_iso;
-            std::unordered_set<std::string> country_iso;
-            std::stringstream s_ss, c_ss;
-            if (trip_path.admin_size() > 0) {
-              for (const auto& admin : trip_path.admin()) {
-                if (admin.has_state_code())
-                  state_iso.insert(admin.state_code());
-                if (admin.has_country_code())
-                  country_iso.insert(admin.country_code());
-              }
-              for (const std::string& x: state_iso)
-                s_ss << " " << x;
-              std::cout <<  std::endl;
-              for (const std::string& x: country_iso)
-                c_ss << " " << x;
-              std::cout <<  std::endl;
-              if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
-              if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
-            }
-          }
+          log_admin(trip_path);
 
           if (date_time_type) {
             origin_date_time = *last_break_origin.date_time_;
