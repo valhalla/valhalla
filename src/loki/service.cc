@@ -154,8 +154,8 @@ namespace valhalla {
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
       if (costing && !healthcheck)
-        valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
-      else
+          valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
+      if (!costing)
         throw valhalla_exception_t{400, 124};
 
       // TODO - have a way of specifying mode at the location
@@ -290,14 +290,12 @@ namespace valhalla {
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
         auto work_units = locations.size() ? locations.size() : 1;
-        if (!healthcheck) {
-          if (!info.spare && elapsed_time.count() / work_units > long_request) {
-            std::stringstream ss;
-            boost::property_tree::json_parser::write_json(ss, request_pt, false);
-            LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-            LOG_WARN("loki::request exceeded threshold::"+ ss.str());
-            midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
-          }
+        if (!healthcheck && !info.spare && elapsed_time.count() / work_units > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request_pt, false);
+          LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("loki::request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
 
         return result;
