@@ -37,6 +37,7 @@ namespace valhalla {
       size_t max_shape;
       float min_resample;
       float long_request;
+      bool healthcheck;
   };
  }
 }

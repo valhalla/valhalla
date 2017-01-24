@@ -201,7 +201,7 @@ namespace valhalla {
         //log request if greater than X (ms)
         auto do_not_track = request.headers.find("DNT");
         bool allow_tracking = do_not_track == request.headers.cend() || do_not_track->second != "1";
-        if (allow_tracking && (elapsed_time.count() / shape.size()) > long_request) {
+        if (!healthcheck && allow_tracking && (elapsed_time.count() / shape.size()) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
@@ -228,6 +228,8 @@ namespace valhalla {
     }
 
     void skadi_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+      //flag healthcheck requests; do not send to logstash
+      healthcheck = request.get<bool>("healthcheck", false);
       //get some parameters
       range = request.get<bool>("range", false);
       auto input_shape = request.get_child_optional("shape");
@@ -288,7 +290,8 @@ namespace valhalla {
     worker_t::result_t skadi_worker_t::elevation(const boost::property_tree::ptree& request, http_request_info_t& request_info) {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
-      valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
       boost::optional<std::string> id = request.get_optional<std::string>("id");
       auto json = json::map({});
 
