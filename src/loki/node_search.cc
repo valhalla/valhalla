@@ -52,19 +52,80 @@ private:
   const vb::DirectedEdge *m_edges;
 };
 
+// find the bin which contains pt and return its bounding box
+vm::AABB2<vm::PointLL> bin_bbox(
+  const vm::Tiles<vm::PointLL> &tiles,
+  const vm::PointLL &pt) {
+
+  const auto tile_id = tiles.TileId(pt);
+  const auto tile_box = tiles.TileBounds(tile_id);
+  const int32_t nsubdivisions = tiles.nsubdivisions();
+  const float row_delta = nsubdivisions / tile_box.Width();
+  const float col_delta = nsubdivisions / tile_box.Height();
+
+  int32_t sub_row = (pt.x() - tile_box.minx()) * row_delta;
+  int32_t sub_col = (pt.y() - tile_box.miny()) * col_delta;
+
+  return vm::AABB2<vm::PointLL>(
+    tile_box.minx() + sub_row * row_delta,
+    tile_box.miny() + sub_col * col_delta,
+    tile_box.minx() + (sub_row + 1) * row_delta,
+    tile_box.miny() + (sub_col + 1) * col_delta);
+}
+
+// return a bounding box which has been expanded as necessary to make sure that
+// none of its boundaries are coincident with the divisions between tiles or the
+// subdivisions between bins within the tiles.
+vm::AABB2<vm::PointLL> expand_bbox_across_boundaries(
+  const vm::AABB2<vm::PointLL> &bbox,
+  const vm::Tiles<vm::PointLL> &tiles) {
+
+  // use a tolerance to ensure that, for all tiles, the lat/lng used for the
+  // bounding box is is distinct from the one used for the tile / bin
+  // boundary.
+  static constexpr float tolerance = std::numeric_limits<float>::epsilon() * 180.0f;
+
+  auto minx = bbox.minx();
+  auto miny = bbox.miny();
+  auto maxx = bbox.maxx();
+  auto maxy = bbox.maxy();
+
+  auto ll_bin_pt = bin_bbox(tiles, bbox.minpt()).minpt();
+  if (std::abs(ll_bin_pt.lng() - minx) < tolerance) {
+    minx = ll_bin_pt.lng() - tolerance;
+  }
+  if (std::abs(ll_bin_pt.lat() - miny) < tolerance) {
+    miny = ll_bin_pt.lat() - tolerance;
+  }
+
+  auto ur_bin_pt = bin_bbox(tiles, bbox.maxpt()).maxpt();
+  if (std::abs(ur_bin_pt.lng() - maxx) < tolerance) {
+    maxx = ur_bin_pt.lng() + tolerance;
+  }
+  if (std::abs(ur_bin_pt.lat() - maxy) < tolerance) {
+    maxy = ur_bin_pt.lat() + tolerance;
+  }
+
+  return vm::AABB2<vm::PointLL>(minx, miny, maxx, maxy);
+}
+
 } // anonymous namespace
 
 namespace valhalla {
 namespace loki {
 
 std::vector<baldr::GraphId>
-nodes_in_bbox(const midgard::AABB2<midgard::PointLL> &bbox, baldr::GraphReader& reader) {
+nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   std::vector<baldr::GraphId> nodes;
 
   auto hierarchy = reader.GetTileHierarchy();
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
 
-  auto intersections = tiles.Intersect(bbox);
+  // if the bbox only touches the edge of the tile or bin, then we need to
+  // include neighbouring bins as well, in case both the edge and its opposite
+  // were tie-broken into a bin which doesn't intersect the original bbox.
+  auto expanded_bbox = expand_bbox_across_boundaries(bbox, tiles);
+  auto intersections = tiles.Intersect(expanded_bbox);
 
   // we cache the last tile lookup, since the nodes and tweeners arrays are in
   // order then this guarantees the smallest number of times we have to look up
