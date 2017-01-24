@@ -49,6 +49,11 @@ class thor_worker_t {
     MAP_SNAP = 1,
     WALK_OR_SNAP = 2
   };
+  enum SOURCE_TO_TARGET_ALGORITHM {
+    SELECT_OPTIMAL = 0,
+    COST_MATRIX = 1,
+    TIME_DISTANCE_MATRIX = 2
+  };
   static const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH;
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
@@ -124,6 +129,7 @@ class thor_worker_t {
   MultiModalPathAlgorithm multi_modal_astar;
   Isochrone isochrone_gen;
   float long_request;
+  SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
   std::unordered_set<std::string> trace_customizable;

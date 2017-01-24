@@ -80,6 +80,19 @@ namespace valhalla {
       for (const auto& item : config.get_child("meili.customizable")) {
         trace_customizable.insert(item.second.get_value<std::string>());
       }
+
+      // Select the matrix algorithm based on the conf file (defaults to
+      // select_optimal if not present)
+      auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm",
+                                                          "select_optimal");
+      if (conf_algorithm == "timedistancematrix") {
+        source_to_target_algorithm = TIME_DISTANCE_MATRIX;
+      } else if (conf_algorithm == "costmatrix") {
+        source_to_target_algorithm = COST_MATRIX;
+      } else {
+        source_to_target_algorithm = SELECT_OPTIMAL;
+      }
+
       interrupt_callback = nullptr;
     }
 
