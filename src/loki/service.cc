@@ -146,13 +146,14 @@ namespace valhalla {
           throw valhalla_exception_t{400, 130};
         }
       }
-      valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
     }
 
     void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
-      if (costing)
+      if (costing && !healthcheck)
         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
       else
         throw valhalla_exception_t{400, 124};
@@ -250,6 +251,8 @@ namespace valhalla {
         jsonp = request_pt.get_optional<std::string>("jsonp");
         //let further processes more easily know what kind of request it was
         request_pt.put<int>("action", action->second);
+        //flag healthcheck requests; do not send to logstash
+        healthcheck = request_pt.get<bool>("healthcheck", false);
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
@@ -287,12 +290,14 @@ namespace valhalla {
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
         auto work_units = locations.size() ? locations.size() : 1;
-        if (!info.spare && elapsed_time.count() / work_units > long_request) {
-          std::stringstream ss;
-          boost::property_tree::json_parser::write_json(ss, request_pt, false);
-          LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("loki::request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
+        if (!healthcheck) {
+          if (!info.spare && elapsed_time.count() / work_units > long_request) {
+            std::stringstream ss;
+            boost::property_tree::json_parser::write_json(ss, request_pt, false);
+            LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+            LOG_WARN("loki::request exceeded threshold::"+ ss.str());
+            midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
+          }
         }
 
         return result;
@@ -315,6 +320,7 @@ namespace valhalla {
       shape.clear();
       if(reader.OverCommitted())
         reader.Clear();
+      healthcheck = false;
     }
 
     void run_service(const boost::property_tree::ptree& config) {
