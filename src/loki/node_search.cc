@@ -160,7 +160,23 @@ nodes_in_bbox(const midgard::AABB2<midgard::PointLL> &bbox, baldr::GraphReader& 
   // don't need tweeners any more
   tweeners.clear();
 
-  // TODO: sort and loop over opposite_edges
+  // sort and loop over opposite_edges, adding them to nodes. this is to pick up
+  // on any nodes which only have edges in the bin which leave the tile. whether
+  // this edge is in the tile or in the neighbouring one.
+  std::sort(opposite_edges.begin(), opposite_edges.end());
+  for (const auto &entry : opposite_edges) {
+    vb::GraphId node_id = entry.first;
+    uint32_t opp_index = entry.second;
+
+    const auto &node = cache(node_id).node(node_id);
+    assert(opp_index < node.edge_count());
+    vb::GraphId opp_edge_id = node_id + uint64_t(opp_index);
+    const auto startnode = cache(opp_edge_id).edge(opp_edge_id).endnode();
+    nodes.push_back(startnode);
+  }
+
+  // don't need opposite_edges any more
+  opposite_edges.clear();
 
   // erase the duplicates
   std::sort(nodes.begin(), nodes.end());
