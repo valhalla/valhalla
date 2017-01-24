@@ -201,14 +201,12 @@ namespace valhalla {
         //log request if greater than X (ms)
         auto do_not_track = request.headers.find("DNT");
         bool allow_tracking = do_not_track == request.headers.cend() || do_not_track->second != "1";
-        if (!healthcheck) {
-          if (allow_tracking && (elapsed_time.count() / shape.size()) > long_request) {
-            std::stringstream ss;
-            boost::property_tree::json_parser::write_json(ss, request_pt, false);
-            LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-            LOG_WARN("skadi::request exceeded threshold::"+ ss.str());
-            midgard::logging::Log("valhalla_skadi_long_request", " [ANALYTICS] ");
-          }
+        if (!healthcheck && allow_tracking && (elapsed_time.count() / shape.size()) > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request_pt, false);
+          LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+          LOG_WARN("skadi::request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("valhalla_skadi_long_request", " [ANALYTICS] ");
         }
 
         return result;
@@ -227,7 +225,6 @@ namespace valhalla {
       jsonp = boost::none;
       shape.clear();
       encoded_polyline.reset();
-      healthcheck = false;
     }
 
     void skadi_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
