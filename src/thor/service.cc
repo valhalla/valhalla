@@ -320,7 +320,6 @@ namespace valhalla {
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
-      healthcheck = false;
     }
 
     void run_service(const boost::property_tree::ptree& config) {
