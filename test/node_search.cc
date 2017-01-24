@@ -393,7 +393,7 @@ void test_node_at_tile_boundary() {
 
   vb::GraphReader reader(conf);
   // this should find node which is at the tile boundary
-  vm::AABB2<vm::PointLL> box{{0.1, 0.249}, {0.101, 0.251}};
+  vm::AABB2<vm::PointLL> box{{0.0, 0.250}, {0.001, 0.253}};
 
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
@@ -414,7 +414,7 @@ int main() {
 
   suite.test(TEST_CASE(test_single_node));
   suite.test(TEST_CASE(test_small_node_block));
-  //suite.test(TEST_CASE(test_node_at_tile_boundary));
+  suite.test(TEST_CASE(test_node_at_tile_boundary));
 
   return suite.tear_down();
 }
