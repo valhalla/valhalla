@@ -835,7 +835,6 @@ namespace valhalla {
       config(config),
       long_request(config.get<float>("tyr.logging.long_request")){}
 
-
     tyr_worker_t::~tyr_worker_t(){}
 
     worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
