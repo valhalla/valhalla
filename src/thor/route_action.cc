@@ -8,6 +8,7 @@ using namespace prime_server;
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
+#include <valhalla/proto/trippath.pb.h>
 
 #include "thor/service.h"
 #include "thor/trip_path_controller.h"
@@ -50,10 +51,12 @@ namespace valhalla {
     auto e = std::chrono::system_clock::now();
     std::chrono::duration<float, std::milli> elapsed_time = e - s;
     //log request if greater than X (ms)
-    if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request) {
-     LOG_WARN("thor::route trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-     LOG_WARN("thor::route trip_path exceeded threshold::"+ request_str);
-     midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
+    if (!healthcheck) {
+      if (!header_dnt && (elapsed_time.count() / correlated.size()) > long_request) {
+       LOG_WARN("thor::route trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+       LOG_WARN("thor::route trip_path exceeded threshold::"+ request_str);
+       midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
+      }
     }
     return result;
   }
@@ -129,7 +132,6 @@ namespace valhalla {
   void thor_worker_t::get_path(PathAlgorithm* path_algorithm,
                baldr::PathLocation& origin, baldr::PathLocation& destination,
                std::vector<thor::PathInfo>& path_edges) {
-    midgard::logging::Log("#_passes::1", " [ANALYTICS] ");
     // Find the path.
     path_edges = path_algorithm->GetBestPath(origin, destination, reader,
                                              mode_costing, mode);
@@ -143,7 +145,6 @@ namespace valhalla {
         float relax_factor = using_astar ? 16.0f : 8.0f;
         float expansion_within_factor = using_astar ? 4.0f : 2.0f;
         cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
-        midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
         path_edges = path_algorithm->GetBestPath(origin, destination,
                                   reader, mode_costing, mode);
       }
@@ -221,6 +222,29 @@ namespace valhalla {
                                                         mode_costing, path_edges,
                                                         origin, last_break_dest,
                                                         through_loc, interrupt_callback);
+
+
+          if (!healthcheck){
+            std::unordered_set<std::string> state_iso;
+            std::unordered_set<std::string> country_iso;
+            std::stringstream s_ss, c_ss;
+            if (trip_path.admin_size() > 0) {
+              for (const auto& admin : trip_path.admin()) {
+                if (admin.has_state_code())
+                  state_iso.insert(admin.state_code());
+                if (admin.has_country_code())
+                  country_iso.insert(admin.country_code());
+              }
+              for (const std::string& x: state_iso)
+                s_ss << " " << x;
+              std::cout <<  std::endl;
+              for (const std::string& x: country_iso)
+                c_ss << " " << x;
+              std::cout <<  std::endl;
+              if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
+              if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
+            }
+          }
 
           if (origin.date_time_)
             origin_date_time = *origin.date_time_;
@@ -333,6 +357,28 @@ namespace valhalla {
                                                         last_break_origin,
                                                         destination, through_loc,
                                                         interrupt_callback);
+
+          if (!healthcheck){
+            std::unordered_set<std::string> state_iso;
+            std::unordered_set<std::string> country_iso;
+            std::stringstream s_ss, c_ss;
+            if (trip_path.admin_size() > 0) {
+              for (const auto& admin : trip_path.admin()) {
+                if (admin.has_state_code())
+                  state_iso.insert(admin.state_code());
+                if (admin.has_country_code())
+                  country_iso.insert(admin.country_code());
+              }
+              for (const std::string& x: state_iso)
+                s_ss << " " << x;
+              std::cout <<  std::endl;
+              for (const std::string& x: country_iso)
+                c_ss << " " << x;
+              std::cout <<  std::endl;
+              if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
+              if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
+            }
+          }
 
           if (date_time_type) {
             origin_date_time = *last_break_origin.date_time_;

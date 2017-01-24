@@ -136,6 +136,8 @@ namespace valhalla {
         // Set the interrupt function
         interrupt_callback = &interrupt;
 
+        //flag healthcheck requests; do not send to logstash
+        healthcheck = request.get<bool>("healthcheck", false);
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
         // Allow the request to be aborted
@@ -305,6 +307,7 @@ namespace valhalla {
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
+      healthcheck = false;
     }
 
     void run_service(const boost::property_tree::ptree& config) {

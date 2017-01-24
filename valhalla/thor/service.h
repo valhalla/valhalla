@@ -130,6 +130,7 @@ class thor_worker_t {
   boost::property_tree::ptree trace_config;
 
   const std::function<void ()>* interrupt_callback;
+  bool healthcheck;
 };
 
 }

@@ -34,7 +34,8 @@ namespace valhalla {
     parse_locations(request);
     auto costing = parse_costing(request);
 
-    valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
+    if (!healthcheck)
+      valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
     worker_t::result_t result{true};
     //get time for start of request
     auto s = std::chrono::system_clock::now();
@@ -82,7 +83,7 @@ namespace valhalla {
     if (!header_dnt && ((elapsed_time.count() / correlated_s.size()) || elapsed_time.count() / correlated_t.size()) > long_request) {
       LOG_WARN("thor::optimized_route elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
       LOG_WARN("thor::optimized_route exceeded threshold::"+ request_str);
-      midgard::logging::Log("valhalla_thor_long_request_manytomany", " [ANALYTICS] ");
+      midgard::logging::Log("valhalla_thor_long_request_optimized", " [ANALYTICS] ");
     }
     return result;
   }

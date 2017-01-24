@@ -100,6 +100,27 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         }
         break;
       }
+      if (!healthcheck){
+        std::unordered_set<std::string> state_iso;
+        std::unordered_set<std::string> country_iso;
+        std::stringstream s_ss, c_ss;
+        if (trip_path.admin_size() > 0) {
+          for (const auto& admin : trip_path.admin()) {
+            if (admin.has_state_code())
+              state_iso.insert(admin.state_code());
+            if (admin.has_country_code())
+              country_iso.insert(admin.country_code());
+          }
+          for (const std::string& x: state_iso)
+            s_ss << " " << x;
+          std::cout <<  std::endl;
+          for (const std::string& x: country_iso)
+            c_ss << " " << x;
+          std::cout <<  std::endl;
+          if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
+          if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
+        }
+      }
     }
 
   result.messages.emplace_back(trip_path.SerializeAsString());
@@ -108,14 +129,16 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   auto e = std::chrono::system_clock::now();
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
   //log request if greater than X (ms)
-  if (!header_dnt
-      && (elapsed_time.count() / correlated.size()) > long_request) {
-    LOG_WARN(
-        "thor::trace_route elapsed time (ms)::"
-            + std::to_string(elapsed_time.count()));
-    LOG_WARN("thor::trace_route exceeded threshold::" + request_str);
-    midgard::logging::Log("valhalla_thor_long_request_trace_route",
-                          " [ANALYTICS] ");
+  if (!healthcheck) {
+    if (!header_dnt
+        && (elapsed_time.count() / correlated.size()) > long_request) {
+      LOG_WARN(
+          "thor::trace_route elapsed time (ms)::"
+              + std::to_string(elapsed_time.count()));
+      LOG_WARN("thor::trace_route exceeded threshold::" + request_str);
+      midgard::logging::Log("valhalla_thor_long_request_trace_route",
+                            " [ANALYTICS] ");
+    }
   }
   return result;
 }

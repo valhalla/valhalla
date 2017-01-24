@@ -3,8 +3,11 @@
 using namespace prime_server;
 
 #include <valhalla/baldr/geojson.h>
+#include <valhalla/midgard/logging.h>
 
 #include "thor/service.h"
+
+using namespace valhalla::midgard;
 
 namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -16,6 +19,9 @@ namespace valhalla {
   namespace thor {
 
     worker_t::result_t  thor_worker_t::isochrone(const boost::property_tree::ptree &request, prime_server::http_request_info_t& request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
+
       parse_locations(request);
       auto costing = parse_costing(request);
 
@@ -46,6 +52,19 @@ namespace valhalla {
         geojson->emplace("id", *id);
       std::stringstream stream; stream << *geojson;
 
+      //get processing time for thor
+       auto e = std::chrono::system_clock::now();
+       std::chrono::duration<float, std::milli> elapsed_time = e - s;
+       //log request if greater than X (ms)
+       if (!healthcheck) {
+         if (!request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
+           std::stringstream ss;
+           boost::property_tree::json_parser::write_json(ss, request, false);
+           LOG_WARN("thor::isochrone elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+           LOG_WARN("thor::isochrone exceeded threshold::"+ ss.str());
+           midgard::logging::Log("valhalla_thor_long_request_isochrone", " [ANALYTICS] ");
+         }
+       }
       //return the geojson
       worker_t::result_t result{false};
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});

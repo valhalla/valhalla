@@ -141,9 +141,6 @@ void AssignAdmins(const TripPathController& controller,
       // Set state text if requested
       if (controller.attributes.at(kAdminStateText))
         trip_admin->set_state_text(admin_info.state_text());
-
-      valhalla::midgard::logging::Log("admin_state_iso::" + admin_info.state_iso(), " [ANALYTICS] ");
-      valhalla::midgard::logging::Log("admin_country_iso::" + admin_info.country_iso(), " [ANALYTICS] ");
     }
   }
 }
