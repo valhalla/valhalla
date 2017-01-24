@@ -350,7 +350,6 @@ namespace {
       route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
       route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
       LOG_DEBUG("trip_time::" + std::to_string(time) +"s");
-      midgard::logging::Log("trip_length::" + std::to_string(length) + "km", " [ANALYTICS] ");
       return route_summary;
     }
 
@@ -836,6 +835,7 @@ namespace valhalla {
       config(config),
       long_request(config.get<float>("tyr.logging.long_request")){}
 
+
     tyr_worker_t::~tyr_worker_t(){}
 
     worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
@@ -857,13 +857,16 @@ namespace valhalla {
           return jsonify_error({500, 500}, info, jsonp);
         }
 
+        //flag healthcheck requests; do not send to logstash
+        healthcheck = request.get<bool>("healthcheck", false);
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
         auto options = request.get_child_optional("directions_options");
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-        midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
+        if (!healthcheck)
+          midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
 
         //get the legs
         std::list<odin::TripDirections> legs;
@@ -895,11 +898,12 @@ namespace valhalla {
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
+        if (!healthcheck) midgard::logging::Log("trip_length::" + std::to_string(trip_directions_length) + "km", " [ANALYTICS] ");
         //get processing time for tyr
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        if (!info.spare && (elapsed_time.count() / trip_directions_length) > long_request) {
+        if (!healthcheck && !info.spare && (elapsed_time.count() / trip_directions_length) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
