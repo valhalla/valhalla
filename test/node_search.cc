@@ -403,6 +403,48 @@ void test_node_at_tile_boundary() {
   }
 }
 
+void test_opposite_in_another_tile() {
+  /* this tests that the code is able to find the start node of an edge which is
+   * a "tweener" and for which the end node is in another tile. this requires
+   * that the search look in the end node's tile to look up the opposite edge in
+   * order to find its end node, which is the start node of the original edge.
+   *
+   * this ASCII art diagram will not make it any clearer:
+   *
+   *   tile 1            tile 2
+   *  +-----------------+-----------------+
+   *  | node 1/0        |        node 2/0 |
+   *  |        edge 1/0 |                 |
+   *  |  /-------------->--------------\  |
+   *  | o               |               o |
+   *  |  \--------------<--------------/  |
+   *  |                 | edge 2/0        |
+   *  +-----------------+-----------------+
+   *
+   * this happens at the top right corner of the grid of tiles, where the final
+   * node is the only node in the tile and has two edges, both of which go into
+   * neighbouring tiles.
+   */
+
+  //make the config file
+  std::stringstream json; json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(json, conf);
+
+  vb::GraphReader reader(conf);
+  // this should find the four nodes which form a square at the lower left of
+  // the grid. note that the definition of AABB2::Contains would exclude nodes
+  // which lie on the right or top boundaries.
+  vm::AABB2<vm::PointLL> box{{0.5, 0.5}, {0.51, 0.51}};
+
+  auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
+
+  if (nodes.size() != 1) {
+    throw std::runtime_error("Expecting to find one node, but got " +
+                             std::to_string(nodes.size()));
+  }
+}
+
 } // anonymous namespace
 
 int main() {
@@ -415,6 +457,7 @@ int main() {
   suite.test(TEST_CASE(test_single_node));
   suite.test(TEST_CASE(test_small_node_block));
   suite.test(TEST_CASE(test_node_at_tile_boundary));
+  suite.test(TEST_CASE(test_opposite_in_another_tile));
 
   return suite.tear_down();
 }
