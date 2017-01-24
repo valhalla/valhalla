@@ -349,7 +349,7 @@ namespace {
       route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
       route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
       route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
-      midgard::logging::Log("trip_time::" + std::to_string(time) +"s", " [ANALYTICS] ");
+      LOG_DEBUG("trip_time::" + std::to_string(time) +"s");
       midgard::logging::Log("trip_length::" + std::to_string(length) + "km", " [ANALYTICS] ");
       return route_summary;
     }
@@ -915,7 +915,7 @@ namespace valhalla {
         return result;
       }
       catch(const std::exception& e) {
-        LOG_INFO(std::string("Bad Request: ") + e.what());
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return jsonify_error({400, 599, std::string(e.what())}, info, jsonp);
       }
     }
