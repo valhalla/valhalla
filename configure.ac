@@ -41,7 +41,7 @@ AX_BOOST_FILESYSTEM
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 
 # check pkg-config dependencies
-PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.1])
+PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.3])
 
 # optionally enable coverage information
 CHECK_COVERAGE
