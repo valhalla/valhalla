@@ -10,7 +10,7 @@ if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
 fi
 sudo add-apt-repository -y ppa:kevinkreiser/prime-server
 sudo apt-get update
-sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov libboost1.54-all-dev libprotobuf-dev libprime-server0.6.1-dev prime-server0.6.1-bin vim-common protobuf-compiler lua5.2 liblua5.2-dev libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev
+sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov libboost1.54-all-dev libprotobuf-dev libprime-server0.6.3-dev prime-server0.6.3-bin vim-common protobuf-compiler lua5.2 liblua5.2-dev libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev
 
 #clone async
 mkdir -p deps
