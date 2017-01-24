@@ -56,14 +56,12 @@ namespace valhalla {
        auto e = std::chrono::system_clock::now();
        std::chrono::duration<float, std::milli> elapsed_time = e - s;
        //log request if greater than X (ms)
-       if (!healthcheck) {
-         if (!request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
-           std::stringstream ss;
-           boost::property_tree::json_parser::write_json(ss, request, false);
-           LOG_WARN("thor::isochrone elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-           LOG_WARN("thor::isochrone exceeded threshold::"+ ss.str());
-           midgard::logging::Log("valhalla_thor_long_request_isochrone", " [ANALYTICS] ");
-         }
+       if (!healthcheck && !request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
+         std::stringstream ss;
+         boost::property_tree::json_parser::write_json(ss, request, false);
+         LOG_WARN("thor::isochrone elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+         LOG_WARN("thor::isochrone exceeded threshold::"+ ss.str());
+         midgard::logging::Log("valhalla_thor_long_request_isochrone", " [ANALYTICS] ");
        }
       //return the geojson
       worker_t::result_t result{false};

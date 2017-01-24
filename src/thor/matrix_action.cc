@@ -181,14 +181,12 @@ namespace valhalla {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if (!healthcheck) {
-        if (!request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
-          std::stringstream ss;
-          boost::property_tree::json_parser::write_json(ss, request, false);
-          LOG_WARN("thor::" + matrix_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
-          midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
-        }
+      if (!healthcheck && !request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
+        std::stringstream ss;
+        boost::property_tree::json_parser::write_json(ss, request, false);
+        LOG_WARN("thor::" + matrix_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
+        LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
       }
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
