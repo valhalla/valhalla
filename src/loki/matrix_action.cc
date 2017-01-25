@@ -129,11 +129,13 @@ namespace valhalla {
       }
       if(sources.size() < 1)
         throw valhalla_exception_t{400, 121};
-      valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
 
       if(targets.size() < 1)
         throw valhalla_exception_t{400, 122};
-      valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
 
       //no locations!
       request.erase("locations");
@@ -197,7 +199,8 @@ namespace valhalla {
       }
       if(!connected)
         throw valhalla_exception_t{400, 170};
-      valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
       std::stringstream stream;
       boost::property_tree::write_json(stream, request, false);
