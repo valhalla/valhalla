@@ -16,7 +16,7 @@ using namespace valhalla::midgard;
 namespace {
 
 void check_shape(const std::vector<PointLL>& shape, unsigned int max_shape,
-                 float max_factor) {
+                 float max_factor = 1.0f) {
   // Adjust max - this enables max edge_walk shape count to be larger
   max_shape *= max_factor;
 
@@ -33,7 +33,7 @@ void check_shape(const std::vector<PointLL>& shape, unsigned int max_shape,
 }
 
 void check_distance(const std::vector<PointLL>& shape, float max_distance,
-                    float max_factor) {
+                    float max_factor = 1.0f) {
   // Adjust max - this enables max edge_walk distance to be larger
   max_distance *= max_factor;
 
@@ -61,10 +61,10 @@ namespace valhalla {
       float max_factor = 1.0f;
       auto shape_match = request.get<std::string>("shape_match", "walk_or_snap");
       if (shape_match == "edge_walk")
-        max_factor = 8.0f;
+        max_factor = 5.0f;
 
       // Validate shape count and distance
-      check_shape(shape, max_shape, max_factor);
+      check_shape(shape, max_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
 
       // Set locations after parsing the shape
