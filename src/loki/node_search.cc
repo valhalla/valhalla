@@ -243,9 +243,11 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
             opposite_edges.emplace_back(endnode, opp_index);
           }
         }
-        // ignore edges which lead to different levels
-        // TODO: is this right?
-        else if (edge_id.level() == tile_id.level()) {
+        // edges which lead to different levels or tiles are tweeners which we
+        // gather and process in a second sweep. note that up/down transfer
+        // edges and transit edges are not present in the bins, so we don't
+        // need to screen them out.
+        else {
           tweeners.emplace_back(edge_id);
         }
       }
