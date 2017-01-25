@@ -215,12 +215,16 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
     // fetch the beginning of the edges and nodes arrays as raw pointers to
     // avoid the slowness of bounds checks in the inner loop. we assume that the
     // tile is valid and only references edges and nodes which exist.
-    auto *tile_edges = tile->directededge(0);
-    auto *tile_nodes = tile->node(0);
+    //
+    // note that the tile might not have any edges or nodes, and might have bins
+    // that refer only to edges in other tiles.
+    const auto tile_edge_count = tile->header()->directededgecount();
+    const auto tile_node_count = tile->header()->nodecount();
+    auto *tile_edges = tile_edge_count > 0 ? tile->directededge(0) : nullptr;
+    auto *tile_nodes = tile_node_count > 0 ? tile->node(0) : nullptr;
 
     for (auto bin_id : entry.second) {
       for (auto edge_id : tile->GetBin(bin_id)) {
-        //assert(edge_id.fields.spare == 0);
         if (edge_id.Tile_Base() == tile_id) {
           // we want _both_ nodes attached to this edge. the end node is easy
           // because the ID is available from the edge itself.
