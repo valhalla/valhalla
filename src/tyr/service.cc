@@ -349,8 +349,7 @@ namespace {
       route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
       route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
       route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
-      midgard::logging::Log("trip_time::" + std::to_string(time) +"s", " [ANALYTICS] ");
-      midgard::logging::Log("trip_length::" + std::to_string(length) + "km", " [ANALYTICS] ");
+      LOG_DEBUG("trip_time::" + std::to_string(time) +"s");
       return route_summary;
     }
 
@@ -857,13 +856,16 @@ namespace valhalla {
           return jsonify_error({500, 500}, info, jsonp);
         }
 
+        //flag healthcheck requests; do not send to logstash
+        healthcheck = request.get<bool>("healthcheck", false);
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
         auto options = request.get_child_optional("directions_options");
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-        midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
+        if (!healthcheck)
+          midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
 
         //get the legs
         std::list<odin::TripDirections> legs;
@@ -895,11 +897,12 @@ namespace valhalla {
         for(const auto& leg : legs) {
           trip_directions_length += leg.summary().length();
         }
+        if (!healthcheck) midgard::logging::Log("trip_length::" + std::to_string(trip_directions_length) + "km", " [ANALYTICS] ");
         //get processing time for tyr
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        if (!info.spare && (elapsed_time.count() / trip_directions_length) > long_request) {
+        if (!healthcheck && !info.spare && (elapsed_time.count() / trip_directions_length) > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("tyr::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
@@ -915,7 +918,7 @@ namespace valhalla {
         return result;
       }
       catch(const std::exception& e) {
-        LOG_INFO(std::string("Bad Request: ") + e.what());
+        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
         return jsonify_error({400, 599, std::string(e.what())}, info, jsonp);
       }
     }
