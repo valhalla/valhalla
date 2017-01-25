@@ -73,10 +73,13 @@ vm::AABB2<vm::PointLL> bin_bbox(
     tile_box.miny() + (sub_col + 1) * col_delta);
 }
 
-// return a bounding box which has been expanded as necessary to make sure that
-// none of its boundaries are coincident with the divisions between tiles or the
-// subdivisions between bins within the tiles.
-vm::AABB2<vm::PointLL> expand_bbox_across_boundaries(
+// return a set of bounding boxes which have been expanded as necessary to make
+// sure that none of its boundaries are coincident with the divisions between
+// tiles or the subdivisions between bins within the tiles.
+//
+// multiple bounding boxes can be returned if the input box is close to the
+// anti-meridian.
+std::vector<vm::AABB2<vm::PointLL> > expand_bbox_across_boundaries(
   const vm::AABB2<vm::PointLL> &bbox,
   const vm::Tiles<vm::PointLL> &tiles) {
 
@@ -106,7 +109,59 @@ vm::AABB2<vm::PointLL> expand_bbox_across_boundaries(
     maxy = ur_bin_pt.lat() + tolerance;
   }
 
-  return vm::AABB2<vm::PointLL>(minx, miny, maxx, maxy);
+  // cap latitude extents to +/-90, as there is nothing on the "other side" of
+  // these limits to include.
+  if (miny < -90.0f) {
+    miny = -90.0f;
+  }
+  if (maxy > 90.0f) {
+    maxy = 90.0f;
+  }
+
+  std::vector<vm::AABB2<vm::PointLL> > boxes;
+
+  // if the longitude extents wrap across +/-180, then either merge them if
+  // they overlap, or create a second bounding box if they do not.
+  if (minx + 360.0f < maxx) {
+    minx = -180.0f;
+    maxx = 180.0f;
+
+  } else if (minx < -180.0f) {
+    // given that minx + 360 >= maxx && minx < -180, this implies that maxx
+    // < 180.0f, and that the boxes do not overlap.
+    boxes.push_back(vm::AABB2<vm::PointLL>(minx + 360.0f, miny, 180.0f, maxy));
+    minx = -180.0f;
+
+  } else if (maxx > 180.0f) {
+    // given the above two cases, this means that minx > maxx - 360, so the
+    // boxes do not overlap.
+    boxes.push_back(vm::AABB2<vm::PointLL>(-180.0f, miny, maxx - 360.0f, maxy));
+    maxx = 180.0f;
+  }
+
+  boxes.push_back(vm::AABB2<vm::PointLL>(minx, miny, maxx, maxy));
+
+  return boxes;
+}
+
+// for each bounding box in boxes, calculate the intersection and merge all the
+// results together, then return it.
+std::unordered_map<int32_t, std::unordered_set<uint16_t> >
+merge_intersections(
+  const std::vector<vm::AABB2<vm::PointLL> > &boxes,
+  const vm::Tiles<vm::PointLL> &tiles) {
+
+  std::unordered_map<int32_t, std::unordered_set<uint16_t> > result;
+
+  for (const auto &box : boxes) {
+    auto intersection = tiles.Intersect(box);
+
+    for (const auto &entry : intersection) {
+      result[entry.first].insert(entry.second.begin(), entry.second.end());
+    }
+  }
+
+  return result;
 }
 
 } // anonymous namespace
@@ -124,8 +179,8 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   // if the bbox only touches the edge of the tile or bin, then we need to
   // include neighbouring bins as well, in case both the edge and its opposite
   // were tie-broken into a bin which doesn't intersect the original bbox.
-  auto expanded_bbox = expand_bbox_across_boundaries(bbox, tiles);
-  auto intersections = tiles.Intersect(expanded_bbox);
+  auto expanded_bboxes = expand_bbox_across_boundaries(bbox, tiles);
+  auto intersections = merge_intersections(expanded_bboxes, tiles);
 
   // we cache the last tile lookup, since the nodes and tweeners arrays are in
   // order then this guarantees the smallest number of times we have to look up
