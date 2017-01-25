@@ -23,7 +23,12 @@ namespace {
   constexpr size_t HGT_DIM = 3601;
   constexpr size_t HGT_PIXELS = HGT_DIM * HGT_DIM;
   constexpr int16_t NO_DATA_VALUE = -32768;
+  constexpr int16_t NO_DATA_HIGH = 16384;
+  constexpr int16_t NO_DATA_LOW = -16384;
   constexpr size_t TILE_COUNT = 180 * 360;
+
+  //macro is faster than inline funciton for this..
+  #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
 
   std::list<std::string> get_files(const std::string& root_dir) {
     std::list<std::string> files;
@@ -126,8 +131,8 @@ namespace skadi {
     double adjust = 0;
     auto a = flip(t[y * HGT_DIM + x]);
     auto b = flip(t[y * HGT_DIM + x + 1]);
-    if(a == NO_DATA_VALUE) a_coef = 0;
-    if(b == NO_DATA_VALUE) b_coef = 0;
+    if(out_of_range(a)) a_coef = 0;
+    if(out_of_range(b)) b_coef = 0;
 
     //first part of the bilinear interpolation
     auto value = a * a_coef + b * b_coef;
@@ -139,8 +144,8 @@ namespace skadi {
     if(y < HGT_DIM - 1) {
       auto c = flip(t[(y + 1) * HGT_DIM + x]);
       auto d = flip(t[(y + 1) * HGT_DIM + x + 1]);
-      if(c == NO_DATA_VALUE) c_coef = 0;
-      if(d == NO_DATA_VALUE) d_coef = 0;
+      if(out_of_range(c)) c_coef = 0;
+      if(out_of_range(d)) d_coef = 0;
       //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x) + ',' + std::to_string(c) + '}');
       //LOG_INFO('{' + std::to_string((y + 1) * HGT_DIM + x + 1) + ',' + std::to_string(d) + '}');
       value += c * c_coef + d * d_coef;
