@@ -70,6 +70,7 @@ class thor_worker_t {
   void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
                 baldr::PathLocation& destination,
                 std::vector<thor::PathInfo>& path_edges);
+  void log_admin(odin::TripPath&);
   valhalla::sif::cost_ptr_t get_costing(
       const boost::property_tree::ptree& request, const std::string& costing);
   thor::PathAlgorithm* get_path_algorithm(
@@ -136,6 +137,7 @@ class thor_worker_t {
   boost::property_tree::ptree trace_config;
 
   const std::function<void ()>* interrupt_callback;
+  bool healthcheck;
 };
 
 }

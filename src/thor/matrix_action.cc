@@ -110,14 +110,16 @@ namespace valhalla {
   namespace thor {
 
     worker_t::result_t  thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request, http_request_info_t& request_info) {
+      //get time for start of request
+      auto s = std::chrono::system_clock::now();
+
       parse_locations(request);
       parse_costing(request);
 
       const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
-      valhalla::midgard::logging::Log("matrix_type::" + matrix_type, " [ANALYTICS] ");
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("matrix_type::" + matrix_type, " [ANALYTICS] ");
 
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
       auto units = request.get<std::string>("units", "km");
@@ -179,14 +181,13 @@ namespace valhalla {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
-      if (!request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
+      if (!healthcheck && !request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
         LOG_WARN("thor::" + matrix_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
         LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
         midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
       }
-
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       worker_t::result_t result{false};

@@ -407,9 +407,8 @@ worker_t::result_t thor_worker_t::trace_attributes(
   // Get processing time for thor
   auto e = std::chrono::system_clock::now();
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  // TODO determine what to log
   //log request if greater than X (ms)
-  if (!request_info.spare && (elapsed_time.count() / correlated.size()) > long_request) {
+  if (!healthcheck && !request_info.spare && (elapsed_time.count() / correlated.size()) > long_request) {
     LOG_WARN("thor::trace_attributes elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
     LOG_WARN("thor::trace_attributes exceeded threshold::"+ request_str);
     midgard::logging::Log("valhalla_thor_long_request_trace_attributes", " [ANALYTICS] ");

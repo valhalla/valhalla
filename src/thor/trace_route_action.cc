@@ -100,6 +100,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         }
         break;
       }
+      log_admin(trip_path);
     }
 
   result.messages.emplace_back(trip_path.SerializeAsString());
@@ -108,7 +109,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   auto e = std::chrono::system_clock::now();
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
   //log request if greater than X (ms)
-  if (!header_dnt
+  if (!healthcheck && !header_dnt
       && (elapsed_time.count() / correlated.size()) > long_request) {
     LOG_WARN(
         "thor::trace_route elapsed time (ms)::"
