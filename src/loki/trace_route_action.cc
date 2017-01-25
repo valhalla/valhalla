@@ -63,7 +63,7 @@ namespace valhalla {
       if (shape_match == "edge_walk")
         max_factor = 5.0f;
 
-      // Validate shape count and distance
+      // Validate shape count and distance (for now, just send max_factor for distance)
       check_shape(shape, max_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
 
