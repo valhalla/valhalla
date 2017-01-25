@@ -153,10 +153,10 @@ namespace valhalla {
     void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
-      if (costing && !healthcheck)
-          valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
       if (!costing)
         throw valhalla_exception_t{400, 124};
+      else if (!healthcheck)
+        valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
 
       // TODO - have a way of specifying mode at the location
       if(*costing == "multimodal")
