@@ -175,6 +175,7 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
 
   auto hierarchy = reader.GetTileHierarchy();
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
+  const uint8_t bin_level = hierarchy.levels().rbegin()->second.level;
 
   // if the bbox only touches the edge of the tile or bin, then we need to
   // include neighbouring bins as well, in case both the edge and its opposite
@@ -203,8 +204,7 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   std::vector<std::pair<vb::GraphId, uint32_t> > opposite_edges;
 
   for (const auto &entry : intersections) {
-    // TODO: level fixed at 2 for intersections?
-    vb::GraphId tile_id(entry.first, 2, 0);
+    vb::GraphId tile_id(entry.first, bin_level, 0);
     auto *tile = reader.GetGraphTile(tile_id);
     // tile might not exist - the Tiles::Intersect routine returns all tiles
     // which might intersect, regardless of whether any of them exist.
