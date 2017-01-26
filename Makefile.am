@@ -45,6 +45,7 @@ clean-genfiles:
 lib_LTLIBRARIES = libvalhalla_loki.la
 nobase_include_HEADERS = \
 	valhalla/loki/search.h \
+	valhalla/loki/node_search.h \
 	valhalla/loki/service.h
 libvalhalla_loki_la_SOURCES = \
 	src/loki/search.cc \
