@@ -29,7 +29,6 @@ namespace {
       max_distance-=path_distance;
       if (max_distance < 0)
         throw valhalla_exception_t{400, 154};
-
       valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
   }

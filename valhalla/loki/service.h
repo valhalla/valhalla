@@ -70,6 +70,7 @@ namespace valhalla {
       unsigned int max_contours;
       unsigned int max_time;
       unsigned int max_shape;
+      bool healthcheck;
     };
   }
 }
