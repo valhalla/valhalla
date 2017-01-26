@@ -31,14 +31,31 @@ struct tile_cache {
     return m_edges[id.id()];
   }
 
+  inline bool exists() const {
+    return m_tile != nullptr;
+  }
+
+  inline vb::GraphId tile_id() const {
+    return m_last_tile_id;
+  }
+
 private:
   void lookup(vb::GraphId id_base) {
     m_last_tile_id = id_base;
     m_tile = m_reader.GetGraphTile(id_base);
 
     if (m_tile != nullptr) {
-      m_nodes = m_tile->node(0);
-      m_edges = m_tile->directededge(0);
+      // fetch the beginning of the edges and nodes arrays as raw pointers to
+      // avoid the slowness of bounds checks in the inner loop. we assume that the
+      // tile is valid and only references edges and nodes which exist.
+      //
+      // note that the tile might not have any edges or nodes, and might have bins
+      // that refer only to edges in other tiles.
+      const auto tile_edge_count = m_tile->header()->directededgecount();
+      const auto tile_node_count = m_tile->header()->nodecount();
+      m_edges = tile_edge_count > 0 ? m_tile->directededge(0) : nullptr;
+      m_nodes = tile_node_count > 0 ? m_tile->node(0) : nullptr;
+
     } else {
       m_nodes = nullptr;
       m_edges = nullptr;
@@ -164,6 +181,177 @@ merge_intersections(
   return result;
 }
 
+struct filtered_nodes {
+  explicit filtered_nodes(const vm::AABB2<vm::PointLL> &b,
+                          std::vector<vb::GraphId> &nodes)
+    : m_box(b), m_nodes(nodes) {}
+
+  inline void push_back(vb::GraphId id, const vb::NodeInfo &info) {
+    if (m_box.Contains(info.latlng())) {
+      m_nodes.push_back(id);
+    }
+  }
+
+private:
+  vm::AABB2<vm::PointLL> m_box;
+  std::vector<vb::GraphId> &m_nodes;
+};
+
+// functor to sort GraphId objects by level, tile then id within the tile.
+struct sort_by_tile {
+  inline bool operator()(vb::GraphId a, vb::GraphId b) const {
+    return ((a.fields.level < b.fields.level) ||
+            ((a.fields.level == b.fields.level) &&
+             ((a.fields.tileid < b.fields.tileid) ||
+              ((a.fields.tileid == b.fields.tileid) &&
+               (a.fields.id < b.fields.id)))));
+  }
+};
+
+// functor to sort pairs of (GraphId, uint32_t) objects by the functor above
+struct sort_pair_by_tile {
+  typedef std::pair<vb::GraphId, uint32_t> value_type;
+  static const sort_by_tile sort_tile;
+
+  inline bool operator()(const value_type &a, const value_type &b) {
+    return (sort_tile(a.first, b.first) ||
+            ((a.first == b.first) && (a.second < b.second)));
+  }
+};
+
+const sort_by_tile sort_pair_by_tile::sort_tile;
+
+struct node_collector {
+  node_collector(tile_cache &cache, filtered_nodes &nodes)
+    : m_cache(cache), m_nodes(nodes) {}
+
+  void add_edge(vb::GraphId edge_id) {
+    const auto tile_id = m_cache.tile_id();
+
+    if (edge_id.Tile_Base() == tile_id) {
+      // we want _both_ nodes attached to this edge. the end node is easy
+      // because the ID is available from the edge itself.
+      const auto &edge = m_cache.edge(edge_id);
+      const auto endnode_id = edge.endnode();
+
+      // however, the start node - even though we know it must be in the
+      // same tile as the edge, is only available as the end node of the
+      // opposite edge, which might be in a different tile!
+      const auto opp_index = edge.opp_index();
+      add_node_with_opposite(endnode_id, opp_index);
+    }
+    // edges which lead to different levels or tiles are tweeners which we
+    // gather and process in a second sweep. note that up/down transfer
+    // edges and transit edges are not present in the bins, so we don't
+    // need to screen them out.
+    else {
+      m_tweeners.emplace_back(edge_id);
+    }
+  }
+
+  void add_node_with_opposite(vb::GraphId node_id, uint32_t opp_index) {
+    const auto tile_id = m_cache.tile_id();
+
+    if (node_id.Tile_Base() == tile_id) {
+      const auto &node = m_cache.node(node_id);
+
+      // node is in this tile, so add it to the collection
+      m_nodes.push_back(node_id, node);
+
+      assert(opp_index < node.edge_count());
+      // add the node at the other end of the opposite - which would be the
+      // start node of the original edge.
+      auto opp_id = tile_id + uint64_t(node.edge_index() + opp_index);
+      add_node(m_cache.edge(opp_id).endnode());
+    }
+    // the node is not in this tile, so we cannot look up its position or edge
+    // offset yet. save the (node, index) pair for later.
+    else {
+      m_opposite_edges.emplace_back(node_id, opp_index);
+    }
+  }
+
+  void add_node(vb::GraphId node_id) {
+    const auto tile_id = m_cache.tile_id();
+
+    if (node_id.Tile_Base() == tile_id) {
+      const auto &node = m_cache.node(node_id);
+
+      // node is in this tile, so add it to the collection
+      m_nodes.push_back(node_id, node);
+    }
+    // node is not in this tile, so save it for later
+    else {
+      m_backfill_nodes.push_back(node_id);
+    }
+  }
+
+  void finish_tweeners() {
+    std::sort(m_tweeners.begin(), m_tweeners.end(), sort_by_tile());
+    for (auto tweener : m_tweeners) {
+      if (m_cache(tweener).exists()) {
+        add_edge(tweener);
+      }
+    }
+    m_tweeners.clear();
+  }
+
+  void finish_opposite_edges() {
+    std::sort(m_opposite_edges.begin(), m_opposite_edges.end(), sort_pair_by_tile());
+    for (const auto &entry : m_opposite_edges) {
+      if (m_cache(entry.first).exists()) {
+        add_node_with_opposite(entry.first, entry.second);
+      }
+    }
+    m_opposite_edges.clear();
+  }
+
+  void finish_backfill_nodes() {
+    std::sort(m_backfill_nodes.begin(), m_backfill_nodes.end(), sort_by_tile());
+    for (auto node_id : m_backfill_nodes) {
+      if (m_cache(node_id).exists()) {
+        add_node(node_id);
+      }
+    }
+    m_backfill_nodes.clear();
+  }
+
+  void finish() {
+    finish_tweeners();
+    finish_opposite_edges();
+    finish_backfill_nodes();
+  }
+
+private:
+
+  // object which caches access to tiles. therefore it's much more efficient to
+  // access objects grouped by (level, tile).
+  tile_cache &m_cache;
+
+  // a bounding-box filtered list of nodes. we append nodes to this, and when
+  // the algorithm finishes, this list can be made unique.
+  filtered_nodes &m_nodes;
+
+  // keep a set of (hopefully rare) "tweeners", which are edges which cross
+  // from one tile into another. to find their end-node, we need to load up
+  // a different tile, which is best done in a second loop to avoid too many
+  // tile lookups.
+  std::vector<vb::GraphId> m_tweeners;
+
+  // keep a set of (again, hopefully rare) combinations of node and index for
+  // when we encounter an edge whose opposite is in a different tile. the
+  // opposite is used to get the start node of the current edge.
+  //
+  // TODO: could be really naughty here and stuff the opposite index into the
+  // extra unused field of the GraphId... but that might cause real headaches
+  // down the road.
+  std::vector<std::pair<vb::GraphId, uint32_t> > m_opposite_edges;
+
+  // keep a set of (rarest of them all) nodes which are in a different tile from
+  // their opposite edge, which is in a different tile from the original node.
+  std::vector<vb::GraphId> m_backfill_nodes;
+};
+
 } // anonymous namespace
 
 namespace valhalla {
@@ -171,7 +359,7 @@ namespace loki {
 
 std::vector<baldr::GraphId>
 nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
-  std::vector<baldr::GraphId> nodes;
+  std::vector<vb::GraphId> nodes;
 
   auto hierarchy = reader.GetTileHierarchy();
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
@@ -188,133 +376,42 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   // a new tile from the reader.
   tile_cache cache(reader);
 
-  // keep a set of (hopefully rare) "tweeners", which are edges which cross
-  // from one tile into another. to find their end-node, we need to load up
-  // a different tile, which is best done in a second loop to avoid too many
-  // tile lookups.
-  std::vector<vb::GraphId> tweeners;
+  // wrap the nodes in a filter so that only nodes contained within the bounding
+  // box are appended to the vector. there might be duplicates, so we have to
+  // sort and uniq the vector later.
+  filtered_nodes filtered(bbox, nodes);
 
-  // keep a set of (again, hopefully rare) combinations of node and index for
-  // when we encounter an edge whose opposite is in a different tile. the
-  // opposite is used to get the start node of the current edge.
-  //
-  // TODO: could be really naughty here and stuff the opposite index into the
-  // extra unused field of the GraphId... but that might cause real headaches
-  // down the road.
-  std::vector<std::pair<vb::GraphId, uint32_t> > opposite_edges;
+  // a wrapper process which aims to order the lookups against tiles into a
+  // number of sequential passes through the set of tiles.
+  node_collector collector(cache, filtered);
 
   for (const auto &entry : intersections) {
     vb::GraphId tile_id(entry.first, bin_level, 0);
-    auto *tile = reader.GetGraphTile(tile_id);
     // tile might not exist - the Tiles::Intersect routine returns all tiles
     // which might intersect, regardless of whether any of them exist.
-    if (tile == nullptr) {
+    auto &tile = cache(tile_id);
+    if (!tile.exists()) {
       continue;
     }
 
-    // fetch the beginning of the edges and nodes arrays as raw pointers to
-    // avoid the slowness of bounds checks in the inner loop. we assume that the
-    // tile is valid and only references edges and nodes which exist.
-    //
-    // note that the tile might not have any edges or nodes, and might have bins
-    // that refer only to edges in other tiles.
-    const auto tile_edge_count = tile->header()->directededgecount();
-    const auto tile_node_count = tile->header()->nodecount();
-    auto *tile_edges = tile_edge_count > 0 ? tile->directededge(0) : nullptr;
-    auto *tile_nodes = tile_node_count > 0 ? tile->node(0) : nullptr;
-
     for (auto bin_id : entry.second) {
-      for (auto edge_id : tile->GetBin(bin_id)) {
-        if (edge_id.Tile_Base() == tile_id) {
-          // we want _both_ nodes attached to this edge. the end node is easy
-          // because the ID is available from the edge itself.
-          const auto &edge = tile_edges[edge_id.id()];
-          const auto endnode = edge.endnode();
-          nodes.push_back(endnode);
-
-          // however, the start node - even though we know it must be in the
-          // same tile as the edge, is only available as the end node of the
-          // opposite edge, which might be in a different tile!
-          const auto opp_index = edge.opp_index();
-          if (endnode.Tile_Base() == tile_id) {
-            const auto &node = tile_nodes[endnode.id()];
-            assert(opp_index < node.edge_count());
-            const auto startnode = tile_edges[node.edge_index() + opp_index].endnode();
-            nodes.push_back(startnode);
-          }
-          // save the (node, index) pair for later.
-          else {
-            opposite_edges.emplace_back(endnode, opp_index);
-          }
-        }
-        // edges which lead to different levels or tiles are tweeners which we
-        // gather and process in a second sweep. note that up/down transfer
-        // edges and transit edges are not present in the bins, so we don't
-        // need to screen them out.
-        else {
-          tweeners.emplace_back(edge_id);
-        }
+      for (auto edge_id : tile.tile()->GetBin(bin_id)) {
+        collector.add_edge(edge_id);
       }
     }
   }
 
-  // sort the tweeners, so that they're in tile order
-  std::sort(tweeners.begin(), tweeners.end());
-  for (auto edge_id : tweeners) {
-    const auto &edge = cache(edge_id).edge(edge_id);
-    const auto endnode = edge.endnode();
-    nodes.push_back(endnode);
-
-    const auto opp_index = edge.opp_index();
-    if (endnode.Tile_Base() == edge_id.Tile_Base()) {
-      const auto &node = cache(endnode).node(endnode);
-      assert(opp_index < node.edge_count());
-      vb::GraphId opp_edge_id(edge_id.tileid(), edge_id.level(), node.edge_index() + opp_index);
-      const auto startnode = cache(opp_edge_id).edge(opp_edge_id).endnode();
-      nodes.push_back(startnode);
-    }
-    // save the (node, index) pair for later.
-    else {
-      opposite_edges.emplace_back(endnode, opp_index);
-    }
-  }
-
-  // don't need tweeners any more
-  tweeners.clear();
-
-  // sort and loop over opposite_edges, adding them to nodes. this is to pick up
-  // on any nodes which only have edges in the bin which leave the tile. whether
-  // this edge is in the tile or in the neighbouring one.
-  std::sort(opposite_edges.begin(), opposite_edges.end());
-  for (const auto &entry : opposite_edges) {
-    vb::GraphId node_id = entry.first;
-    uint32_t opp_index = entry.second;
-
-    const auto &node = cache(node_id).node(node_id);
-    assert(opp_index < node.edge_count());
-    vb::GraphId opp_edge_id = node_id + uint64_t(opp_index);
-    const auto startnode = cache(opp_edge_id).edge(opp_edge_id).endnode();
-    nodes.push_back(startnode);
-  }
-
-  // don't need opposite_edges any more
-  opposite_edges.clear();
+  // finish the collector by going over any stored edges or nodes which weren't
+  // accessible in the current tile at the time they were found.
+  collector.finish();
 
   // erase the duplicates
   std::sort(nodes.begin(), nodes.end());
   auto uniq_end = std::unique(nodes.begin(), nodes.end());
 
-  // the nodes at this point are just candidates, we need to filter through them
-  // to figure out which ones are actually within the bounding box.
-  auto rm_end = std::remove_if(
-    nodes.begin(), uniq_end, [&](vb::GraphId node_id) -> bool {
-      auto coord = cache(node_id).node(node_id).latlng();
-      return !bbox.Contains(coord);
-    });
-
-  // remove any of the space at the end of the nodes array which was removed by
-  // either the unique or bounding box checks.
-  nodes.erase(rm_end, nodes.end());
+  // remove any of the space at the end of the nodes array which is unused since
+  // duplicates were removed.
+  nodes.erase(uniq_end, nodes.end());
 
   return nodes;
 }
