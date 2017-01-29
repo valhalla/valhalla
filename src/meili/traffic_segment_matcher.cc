@@ -7,6 +7,8 @@
 
 #include "meili/traffic_segment_matcher.h"
 
+using namespace valhalla::baldr;
+
 namespace {
 
 float GetEdgeDist(const valhalla::meili::MatchResult& res,
@@ -14,7 +16,7 @@ float GetEdgeDist(const valhalla::meili::MatchResult& res,
   if (res.HasState()) {
     bool found = false;
     const auto& state = matcher->mapmatching().state(res.stateid());
-    valhalla::baldr::PathLocation loc = state.candidate();
+    PathLocation loc = state.candidate();
     for (const auto& e : loc.edges) {
      if (e.id == res.edgeid()) {
        return e.dist;
@@ -25,7 +27,6 @@ float GetEdgeDist(const valhalla::meili::MatchResult& res,
 }
 
 };
-
 
 namespace valhalla {
 namespace meili {
@@ -114,7 +115,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   }
 
   // Iterate through the edges and form a list of unique edges
-  valhalla::baldr::GraphId prior_edge;
+  GraphId prior_edge;
   std::vector<UniqueEdgeOnTrace> edges;
   for (auto edge : trace_edges) {
     if (!prior_edge.Is_Valid()) {
@@ -137,46 +138,80 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
     prior_edge = edge.edge_id;
   }
 
-  valhalla::baldr::GraphId prior_segment;
+  GraphId prior_segment;
   std::vector<MatchedTrafficSegments> traffic_segment;
   for (const auto& edge : edges) {
     // Get the directed edge Id and tile
-    valhalla::baldr::GraphId edge_id = edge.edge_id;
-    const valhalla::baldr::GraphTile* tile = matcher->graphreader().GetGraphTile(edge_id);
-    const valhalla::baldr::DirectedEdge* directededge = tile->directededge(edge_id);
+    GraphId edge_id = edge.edge_id;
+    const GraphTile* tile = matcher->graphreader().GetGraphTile(edge_id);
+    const DirectedEdge* directededge = tile->directededge(edge_id);
+
+    // Compute the length of the trace along this edge
     float length = directededge->length() * (edge.end_pct - edge.start_pct);
 
     // Get the traffic segment(s) associated to this edge
     float begin_time, end_time;
-    auto segments = tile->GetTrafficSegments(edge_id);
-    if (segments.size() > 0) {
-      // TODO - support chunks (more than 1 segment per edge)
+    auto segments = tile->GetTrafficSegments(edge_id.id());
+    if (segments.size() == 1) {
+      // Edge is associated to a single traffic segment
+      TrafficSegment seg = segments.front();
+      if (!seg.segment_id_.Is_Valid()) {
+        // No segment associated to this edge...
+        LOG_DEBUG("Traffic segment ID is invalid");
+      } else if (seg.segment_id_ == prior_segment) {
+        // Update end time, end_pct, and length of the current segment
+        traffic_segment.back().end_time = edge.secs2;
+        traffic_segment.back().length += length;
+        if (seg.ends_segment_ && edge.end_pct == 1.0f) {
+          traffic_segment.back().partial_end = false;
+        }
+      } else {
+        bool starts = (seg.starts_segment_ && edge.start_pct == 0.0f);
+        bool ends =   (seg.ends_segment_ && edge.end_pct == 1.0f);
+        traffic_segment.emplace_back(!starts, !ends, seg.segment_id_,
+                              edge.secs1, edge.secs2, length);
+        prior_segment = seg.segment_id_;
+      }
+    } else if (segments.size() > 1) {
+      // Edge is associated to more than 1 segment (chunks)
       for (const auto& seg : segments) {
-        float p1 = seg.first.begin_percent();
-        float p2 = seg.first.end_percent();
-        valhalla::baldr::GraphId segment_id = seg.first.segment_id();
-        float weight = seg.second;
-        if (segment_id == prior_segment) {
-          // Update end time, end_pct, and length of the current segment
+        // Skip this segment chunk if outside the range of the edge traversed
+        // by this part of the trace
+        if (!seg.segment_id_.Is_Valid() ||
+            seg.end_percent_   < edge.start_pct ||
+            seg.begin_percent_ > edge.end_pct) {
+          continue;
+        }
+
+        // Compute percentage of the edge that this segment touches
+        // TODO - Intersect this with the percentages of the edge?
+        float seg_length = length;
+       // float pct = seg.end_percent_ - seg.begin_percent_;
+
+        // TODO - need to adjust the times and lengths applied to each segment
+
+        if (seg.segment_id_ == prior_segment) {
+          // TODO: Update end time, end_pct, and length of the current segment
           traffic_segment.back().end_time = edge.secs2;
-          traffic_segment.back().length += length;
-          if (seg.first.ends_segment() && edge.end_pct == 1.0f) {
+          traffic_segment.back().length += seg_length;
+          if (seg.ends_segment_) {
+            // Mark this segment as ended
             traffic_segment.back().partial_end = false;
           }
-        } else if (segment_id.value == 0) {
-          // No segment associated to this edge...
-          ; // LOG_INFO("Traffic segment ID == 0");
         } else {
-          bool starts = (seg.first.starts_segment() && edge.start_pct == 0.0f);
-          bool ends =   (seg.first.ends_segment() && edge.end_pct == 1.0f);
-          traffic_segment.emplace_back(!starts, !ends, segment_id,
-                      edge.secs1, edge.secs2, length);
-          prior_segment = segment_id;
+          // Compute start time, end time, and length along this segment
+          bool starts = seg.starts_segment_;
+          bool ends =   seg.ends_segment_;
+          float start_secs = edge.secs1;  // TODO!l
+          float end_secs = edge.secs2;    // TODO!!
+          traffic_segment.emplace_back(!starts, !ends, seg.segment_id_,
+                                start_secs, end_secs, seg_length);
+          prior_segment = seg.segment_id_;
         }
       }
     } else {
       // No traffic segment associated to this edge
-      if (directededge->classification() <= valhalla::baldr::RoadClass::kTertiary) {
+      if (directededge->classification() <= RoadClass::kTertiary) {
         LOG_ERROR("No traffic associated to this edge");
       }
     }
