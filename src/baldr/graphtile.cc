@@ -711,26 +711,29 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
 }
 
 // Get traffic segment(s) associated to this edge.
-std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(const GraphId& edge) const {
-  return GetTrafficSegments(edge.id());
-}
-
-// Get traffic segment(s) associated to this edge.
-std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(const size_t idx) const {
+std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const size_t idx) const {
   if (idx < header_->traffic_id_count()) {
     const TrafficAssociation& t = traffic_segments_[idx];
     if (!t.chunk()) {
-      // This edge associates to a single traffic segment
-      return { std::make_pair(t, 1.0f) };
+      // Make sure there is an associated segment. If count == 0 make sure
+      // we return an invalid segment Id
+      GraphId segment_id;
+      if (t.count() == 1) {
+        // Segment associated to this edge
+        segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
+      }
+      TrafficSegment seg(segment_id, 0.0f, 1.0f, true, true);
+      return { seg };
     } else {
-      // This represents a traffic chunk - the offset into the chunk array and
-      // the count are stored.
+      // This edge associates to more than 1 segment (or the segment is in
+      // a different tile. Get traffic chunks.
       auto c = t.GetChunkCountAndIndex();
       TrafficChunk* chunk = &traffic_chunks_[c.second];
-      std::vector<std::pair<TrafficAssociation, float>> segments;
+      std::vector<TrafficSegment> segments;
       for (uint32_t i = 0; i < c.first; i++, chunk++) {
-        float weight = chunk->weight_ * kInvPercentFactor;
-        segments.emplace_back(std::make_pair(TrafficAssociation(*chunk), weight));
+        segments.emplace_back(chunk->segment_id(), chunk->begin_percent(),
+                              chunk->end_percent(), chunk->starts_segment(),
+                              chunk->ends_segment());
      }
      return segments;
     }
