@@ -7,16 +7,8 @@ namespace valhalla {
 namespace baldr {
 
 // 8 bits are used for percentages
-//constexpr uint64_t kEndsSegment   = 255;
 constexpr float kPercentFactor    = 255.0f;
 constexpr float kInvPercentFactor = 1.0f / 255.0f;
-
-// These are used to indicate a chunk is stored for this edge's
-// association to traffic segments. A chunk count and chunk index
-// are stored in the association word.
-constexpr uint64_t kChunkCountMask  = 0x00000fff00000000;
-constexpr uint64_t kChunkCountShift = 32;
-constexpr uint64_t kChunkIndexMask  = 0x00000000ffffffff;
 
 // Structure used to return information
 struct TrafficSegment {
