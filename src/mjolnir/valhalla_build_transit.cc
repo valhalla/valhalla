@@ -143,6 +143,15 @@ struct builder_stats {
   }
 };
 
+std::string url_encode(const std::string& unencoded) {
+  char* encoded = curl_escape(unencoded.c_str(), static_cast<int>(unencoded.size()));
+  if(encoded == nullptr)
+    throw std::runtime_error("url encoding failed");
+  std::string encoded_str(encoded);
+  curl_free(encoded);
+  return encoded_str;
+}
+
 struct logged_error_t: public std::runtime_error {
   logged_error_t(const std::string& msg):std::runtime_error(msg) {
     LOG_ERROR(msg);
@@ -720,7 +729,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     } while(request && (request = *request + api_key));
 
     //pull out all ROUTES
-    request = url((boost::format("/api/v1/routes?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    request = url((boost::format("/api/v1/routes?total=false&exclude_geometry=true&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
     request = *request + import_level;
@@ -740,7 +749,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::unordered_map<std::string, size_t> shapes;
     for(const auto& route : routes) {
       request = url((boost::format("/api/v1/route_stop_patterns?total=false&per_page=%1%&traversed_by=%2%")
-              % pt.get<std::string>("per_page") % route.first).str(), pt);
+              % pt.get<std::string>("per_page") % url_encode(route.first)).str(), pt);
       do {
         //grab some stuff
         response = curler(*request, "route_stop_patterns");
@@ -755,7 +764,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     bool dangles = false;
     for(const auto& stop : stops) {
       request = url((boost::format("/api/v1/schedule_stop_pairs?active=true&total=false&per_page=%1%&origin_onestop_id=%2%&service_from_date=%3%-%4%-%5%")
-        % pt.get<std::string>("per_page") % stop.first % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
+        % pt.get<std::string>("per_page") % url_encode(stop.first) % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
       request = *request + import_level;
       do {
         //grab some stuff
