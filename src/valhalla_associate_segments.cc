@@ -131,7 +131,7 @@ struct partial_chunk {
   std::vector<vb::GraphId> edges, segments;
 };
 
-using leftovers_t = std::vector<std::pair<GraphId, std::vector<std::pair<vb::TrafficAssociation, float> > > >;
+using leftovers_t = std::vector<std::pair<GraphId, vb::TrafficChunk > >;
 struct edge_association {
   explicit edge_association(const bpt::ptree &pt);
 
@@ -141,15 +141,14 @@ struct edge_association {
 private:
   void match_segment(vb::GraphId segment_id, const pbf::Segment &segment);
   std::vector<vb::GraphId> match_edges(const pbf::Segment &segment, uint8_t level);
-  vm::PointLL lookup_end_coord(vb::GraphId);
-  vm::PointLL lookup_start_coord(vb::GraphId);
-  vj::GraphTileBuilder &builder_for_edge(vb::GraphId edge_id);
+  vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
+  vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
   std::vector<vb::GraphId> find_nodes_within(float dist, const vm::PointLL &pt);
   vb::GraphId find_common_edge(const std::vector<vb::GraphId> &origins,
                                const std::vector<vb::GraphId> &dests);
 
-  void assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id);
-  void assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id);
+  void assign_one_to_one(const vb::GraphId& edge_id, const vb::GraphId& segment_id);
+  void assign_one_to_many(const std::vector<vb::GraphId> &edges, const vb::GraphId& segment_id);
   void save_chunk_for_later(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id);
 
   vb::GraphReader m_reader;
@@ -721,7 +720,7 @@ bool approx_equal(const vm::PointLL &a, const vm::PointLL &b) {
   return a.DistanceSquared(b) <= kApproxEqualDistanceSquared;
 }
 
-vm::PointLL edge_association::lookup_end_coord(vb::GraphId edge_id) {
+vm::PointLL edge_association::lookup_end_coord(const vb::GraphId& edge_id) {
   auto *tile = m_reader.GetGraphTile(edge_id);
   auto *edge = tile->directededge(edge_id);
   auto node_id = edge->endnode();
@@ -733,7 +732,7 @@ vm::PointLL edge_association::lookup_end_coord(vb::GraphId edge_id) {
   return node->latlng();
 }
 
-vm::PointLL edge_association::lookup_start_coord(vb::GraphId edge_id) {
+vm::PointLL edge_association::lookup_start_coord(const vb::GraphId& edge_id) {
   auto *tile = m_reader.GetGraphTile(edge_id);
   auto *edge = tile->directededge(edge_id);
   auto opp_index = edge->opp_index();
@@ -780,46 +779,34 @@ void edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
 }
 
 // A single traffic segment maps to a single valhalla edge.
-void edge_association::assign_one_to_one(vb::GraphId edge_id, vb::GraphId segment_id) {
+void edge_association::assign_one_to_one(const vb::GraphId& edge_id,
+                                         const vb::GraphId& segment_id) {
   // Edge starts at the beginning of the traffic segment, ends on the end of
   // the traffic segment
-  TrafficAssociation ta(segment_id, 0.0f, 1.0f);
-  std::vector<std::pair<vb::TrafficAssociation, float> > assoc;
-  assoc.emplace_back(ta, 1.0f);
+  vb::TrafficChunk assoc(segment_id, 0.0f, 1.0f, true, true);
+
   // Store the local ones and leave the non local for later
   if(m_tile_builder->id() == edge_id.Tile_Base())
-    m_tile_builder->AddTrafficSegmentAssociation(edge_id, assoc);
+    m_tile_builder->AddTrafficSegment(edge_id, assoc);
   else
     m_leftover_associations.emplace_back(std::make_pair(edge_id, assoc));
 }
 
-//A single traffic segment maps to multiple valhalla edges.
-void edge_association::assign_one_to_many(const std::vector<vb::GraphId> &edges, vb::GraphId segment_id) {
-  // Iterate through all directed edges to find total length so that
-  // percentages along the traffic segment can be computed
-  float total_length = 0.0f;
-  std::vector<float> lengths;
-  for (auto edge_id : edges) {
-    auto *tile = m_reader.GetGraphTile(edge_id);
-    auto *edge = tile->directededge(edge_id);
-    total_length += static_cast<float>(edge->length());
-    lengths.push_back(total_length);
-  }
-
-  float begin_pct = 0.0f;
-  std::vector<std::pair<vb::TrafficAssociation, float> > assoc;
+// A single traffic segment maps to multiple valhalla edges. Each edge is
+// entirely within the segment.
+void edge_association::assign_one_to_many(const std::vector<vb::GraphId> &edges,
+                                          const vb::GraphId& segment_id) {
   for (size_t i = 0; i < edges.size(); i++) {
+    // Form association for this edge. First edge "starts" the traffic
+    // segment and the last edge ends the segment.
     const auto& edge_id = edges[i];
-    float end_pct = (i == edges.size() - 1) ? 1.0f : (lengths[i] / total_length);
-    TrafficAssociation ta(segment_id, begin_pct, end_pct);
-    assoc.emplace_back(ta, 1.0f);
-    // Sore the local ones and leave the non local for later
+    vb::TrafficChunk assoc(segment_id, 0.0f, 1.0f, (i == 0), (i == edges.size() - 1));
+
+    // Store the local segment and leave the non local for later
     if(m_tile_builder->id() == edge_id.Tile_Base())
-      m_tile_builder->AddTrafficSegmentAssociation(edge_id, assoc);
+      m_tile_builder->AddTrafficSegment(edge_id, assoc);
     else
       m_leftover_associations.emplace_back(std::make_pair(edge_id, assoc));
-    assoc.clear();
-    begin_pct = end_pct;
   }
 }
 
@@ -916,7 +903,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
     vj::GraphTileBuilder tile_builder(hierarchy, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     for(const auto& association : associations)
-      tile_builder.AddTrafficSegmentAssociation(association.first, association.second);
+      tile_builder.AddTrafficSegment(association.first, association.second);
     tile_builder.UpdateTrafficSegments();
   }
 }
