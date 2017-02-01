@@ -2,7 +2,7 @@
 
 Midgard serves as a set of geographic/metric data structures and algorithms for use in essentially all other parts of valhalla. In keeping with the Norse mythological theme, the name Midgard was chosen as it is represents the world as humans know it. Since the software and classes within midgard deal mostly with the maths of our favorite spheroid, this seemed like a fitting name!
 
-Midgard constains a set of various geometric data structures and support classes. It also includes algorithms which deal with things like: closest point to line, vector and matrix operations, polyline encoding, logging, projection, tiling, and culling. Midgard also include a variety of constants for time and distance conversions as well as angular measures.
+Midgard contains a set of various geometric data structures and support classes. It also includes algorithms which deal with things like: closest point to line, vector and matrix operations, polyline encoding, logging, projection, tiling, and culling. Midgard also include a variety of constants for time and distance conversions as well as angular measures.
 
 ## Components ##
 
