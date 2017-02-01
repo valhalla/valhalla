@@ -55,6 +55,11 @@ std::string to_string(const vb::GraphId &i) {
 
 namespace {
 
+// be permissive here, as we do want to collect traffic on most vehicular
+// routes.
+constexpr uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
+    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
+
 vm::PointLL interp(vm::PointLL a, vm::PointLL b, double frac) {
   return vm::PointLL(a.AffineCombination(1.0 - frac, frac, b));
 }
@@ -186,16 +191,10 @@ bool check_access(const vb::DirectedEdge *edge) {
     return false;
   }
 
-  // be permissive here, as we do want to collect traffic on most vehicular
-  // routes.
-  uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
-    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
   return access & vehicular;
 }
 
 bool is_oneway(const vb::DirectedEdge *e) {
-  uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
-    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
   // TODO: don't need to find opposite edge, as this info alread in the
   // reverseaccess mask?
   return (e->reverseaccess() & vehicular) == 0;
@@ -287,8 +286,6 @@ DistanceOnlyCost::~DistanceOnlyCost() {
 }
 
 uint32_t DistanceOnlyCost::access_mode() const {
-  uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
-    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
   return vehicular;
 }
 
@@ -351,8 +348,8 @@ vb::Location location_for_lrp(const pbf::Segment::LocationReference &lrp) {
 vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &reader, uint8_t level) {
   //we dont want non real edges but also we want the edges to be on the right level
   //also right now only driveable edges please
-  auto edge_filter = [&level](const DirectedEdge* edge) -> float {
-    return edge->endnode().level() == level && ((edge->forwardaccess() & kAutoAccess) || (edge->forwardaccess() & kHOVAccess)) &&
+  auto edge_filter = [level](const DirectedEdge* edge) -> float {
+    return edge->endnode().level() == level && (edge->forwardaccess() & vehicular) &&
       !(edge->trans_up() || edge->trans_down() || edge->is_shortcut() || edge->IsTransitLine());
   };
 
