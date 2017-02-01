@@ -308,15 +308,7 @@ class GraphTile {
    * @return  Returns a list of traffic segment Ids and weights that associate
    *          to this edge.
    */
-  std::vector<std::pair<TrafficAssociation, float>> GetTrafficSegments(const GraphId& edge) const;
-
-  /**
-   * Get traffic segment(s) associated to this edge.
-   * @param  edge  GraphId of the directed edge.
-   * @return  Returns a list of traffic segment Ids and weights that associate
-   *          to this edge.
-   */
-  std::vector<std::pair<TrafficAssociation, float>> GetTrafficSegments(const size_t idx) const;
+  std::vector<TrafficSegment> GetTrafficSegments(const size_t idx) const;
 
 
  protected:
@@ -397,7 +389,7 @@ class GraphTile {
 
   // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
   // segment Id (GraphId) and weight (combined int a single uint64_t).
-  uint64_t* traffic_chunks_;
+  TrafficChunk* traffic_chunks_;
 
   // Number of bytes in the traffic chunk list
   std::size_t traffic_chunk_size_;

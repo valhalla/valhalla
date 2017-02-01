@@ -65,7 +65,7 @@ GraphTile::GraphTile()
       edgeinfo_size_(0),
       textlist_size_(0),
       traffic_segments_(nullptr),
-      traffic_chunks_(0),
+      traffic_chunks_(nullptr),
       traffic_chunk_size_(0) {
 }
 
@@ -182,7 +182,7 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of traffic chunks and their size
   // TODO - update chunk definition...
-  traffic_chunks_ = reinterpret_cast<uint64_t*>(tile_ptr + header_->traffic_chunk_offset());
+  traffic_chunks_ = reinterpret_cast<TrafficChunk*>(tile_ptr + header_->traffic_chunk_offset());
   traffic_chunk_size_ = header_->end_offset() - header_->traffic_chunk_offset();
 
   // ANY NEW EXPANSION DATA GOES HERE
@@ -711,31 +711,34 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
 }
 
 // Get traffic segment(s) associated to this edge.
-std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(const GraphId& edge) const {
-  return GetTrafficSegments(edge.id());
-}
-
-// Get traffic segment(s) associated to this edge.
-std::vector<std::pair<TrafficAssociation, float>> GraphTile::GetTrafficSegments(const size_t idx) const {
+std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const size_t idx) const {
   if (idx < header_->traffic_id_count()) {
     const TrafficAssociation& t = traffic_segments_[idx];
     if (!t.chunk()) {
-      // This edge associates to a single traffic segment
-      return { std::make_pair(t, 1.0f) };
+      // Make sure there is an associated segment. If count == 0 make sure
+      // we return an invalid segment Id
+      GraphId segment_id;
+      if (t.count() == 1) {
+        // Segment associated to this edge
+        segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
+      }
+      TrafficSegment seg(segment_id, 0.0f, 1.0f, true, true);
+      return { seg };
     } else {
-      // This represents a traffic chunk - the offset into the chunk array and
-      // the count are stored.
-      // TODO!
+      // This edge associates to more than 1 segment (or the segment is in
+      // a different tile. Get traffic chunks.
       auto c = t.GetChunkCountAndIndex();
-//    std::vector<std::pair<GraphId, float>> segments;
-//     for (uint32_t i = 0; i < count; i++, chunk++) {
-//     segments.emplace_back(std::make_pair(GraphId(t & kChunkIDMask),
-//                           (t & kChunkWeightMask) / 255.0f));
-//     }
-//     return segments;
-      return { };
+      TrafficChunk* chunk = &traffic_chunks_[c.second];
+      std::vector<TrafficSegment> segments;
+      for (uint32_t i = 0; i < c.first; i++, chunk++) {
+        segments.emplace_back(chunk->segment_id(), chunk->begin_percent(),
+                              chunk->end_percent(), chunk->starts_segment(),
+                              chunk->ends_segment());
+     }
+     return segments;
     }
   } else if (header_->traffic_id_count() == 0) {
+    // Tile does not contain traffic
     return { };
   } else {
     throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
