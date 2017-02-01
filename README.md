@@ -9,19 +9,20 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Mjolnir, serves as a set of applications suited to creating tiled routing data for use in the [routing](https://github.com/valhalla/thor) and [searching](https://github.com/valhalla/loki) projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Mjölnir](http://en.wikipedia.org/wiki/Mj%C3%B6lnir) was chosen as it represents a weapon of mass destruction. This seemed fitting since the main application deals mostly with pounding planet sized OSM data into tiny routable tile fragments.
+
+This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons) only. Further development of this library will continue here: [Valhalla](https://github.com/valhalla/valhalla).
 
 Build Status
 ------------
 
-[![Circle CI](https://circleci.com/gh/valhalla/mjolnir.svg?style=svg)](https://circleci.com/gh/valhalla/mjolnir)
+[![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
 
 Building
 --------
 
-Mjolnir uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    scripts/dependencies.sh
+    srcipts/dependencies.sh
 
 And then run to install it:
 
@@ -32,16 +33,16 @@ Please see `./configure --help` for more options on how to control the build pro
 Using
 -----
 
-For detailed information about what algorithms, data structures and executables are contained within mjolnir, please see the more [detailed documentation](docs/index.md).
+For detailed information about what algorithms, data structures and executables are contained within valhalla, please see the more [detailed documentation](docs/index.md).
 
-The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Mjolnir for your own projects as well. To simplify the inclusion of the Mjolnir library in another autotoolized project you may make use of [mjolnir m4](m4/valhalla_mjolnir.m4) in your own `configure.ac` file. For an example of this please have a look at `configure.ac` in another one of the valhalla projects. Mjolnir, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Valhalla for your own projects as well. To simplify the inclusion of the Valhalla library in another autotoolized project you may make use of [valhalla m4](m4/valhalla.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Valhalla, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
 Contributing
 ------------
 
-We welcome contributions to mjolnir. If you would like to report an issue, or even better fix an existing one, please use the [mjolnir issue tracker](https://github.com/valhalla/mjolnir/issues) on GitHub.
+We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/mjolnir) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
 Tests
 -----
