@@ -9,19 +9,20 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. This library, Thor, serves as a routing engine backed by tiled open source routing data. Thor is a companion to [Sif](https://github.com/valhalla/sif) which it relies heavily on to determine the appropriate graph traversal. The resulting path can be used as input for creating [guidance/narrative](https://github.com/valhalla/odin). The name [Thor](http://en.wikipedia.org/wiki/Thor) was chosen as an acronym standing for: Tiled Hierarchical Open Routing and was the foundational idea around which the organization Valhalla and its Norse mythology theme was formed.
+
+This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons) only. Further development of this library will continue here: [Valhalla](https://github.com/valhalla/valhalla).
 
 Build Status
 ------------
 
-[![Circle CI](https://circleci.com/gh/valhalla/thor.svg?style=svg)](https://circleci.com/gh/valhalla/thor)
+[![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
 
 Building
 --------
 
-Thor uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    scripts/dependencies.sh
+    srcipts/dependencies.sh
 
 And then run to install it:
 
@@ -32,16 +33,16 @@ Please see `./configure --help` for more options on how to control the build pro
 Using
 -----
 
-For detailed information about what algorithms, data structures and executables are contained within thor, please see the more [detailed documentation](docs/index.md).
+For detailed information about what algorithms, data structures and executables are contained within valhalla, please see the more [detailed documentation](docs/index.md).
 
-The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Thor for your own projects as well. To simplify the inclusion of the Thor library in another autotoolized project you may make use of [thor m4](m4/valhalla_thor.m4) in your own `configure.ac` file. For an example of this please have a look at `configure.ac` in another one of the valhalla projects. Thor, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Valhalla for your own projects as well. To simplify the inclusion of the Valhalla library in another autotoolized project you may make use of [valhalla m4](m4/valhalla.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Valhalla, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
 Contributing
 ------------
 
-We welcome contributions to thor. If you would like to report an issue, or even better fix an existing one, please use the [thor issue tracker](https://github.com/valhalla/thor/issues) on GitHub.
+We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/thor) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
 Tests
 -----
