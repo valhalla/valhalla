@@ -8,7 +8,7 @@ Run the valhalla_run_route application using the `requests/demo_routes.txt` rout
 ```
 The results will be stored in the `<TIMESTAMP>_<ROUTE_REQUEST_FILE_BASENAME>` directory, e.g. `20160112_181443_demo_routes`
 
-[Create and save diffs](https://github.com/valhalla/tools/blob/master/run_route_scripts/results/README.md) in the `results` directory.
+[Create and save diffs](results/README.md) in the `results` directory.
 
 Run the valhalla_run_route application using all of the country specific route request files in the `requests/city_to_city` directory:  
 ```

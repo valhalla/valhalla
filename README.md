@@ -9,113 +9,58 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This repository is comprised of command line tools meant to exercise various bits of the valhalla libraries.
+
+This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons) only. Further development of this library will continue here: [Valhalla](https://github.com/valhalla/valhalla).
 
 Build Status
 ------------
 
-[![Circle CI](https://circleci.com/gh/valhalla/tools.svg?style=svg)](https://circleci.com/gh/valhalla/tools)
+[![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
 
-Valhalla Overview
------------------
+Building
+--------
 
-The are several key features that we hope can differentiate the valhalla project from other route engines. They are:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-- Open source software, on open source data with a very liberal license. Should allow for transparency in development, encourage contribution and community input and foster use in other projects.
-- Tiled hierarchical data structure. Should allow users to have a small memory footprint on memory constrained devices, enable offline routing, provide a means for regional extracts and partial updates.
-- Runtime costing of edges and vertices within the graph via a plugin architecture. Should allow for customizable and alternate routes.
-- C++ based API. Should allow for cross compilation of the various pieces to enable routing on offline portable devices.
-- A plugin based narrative and maneuver generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
-- Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
+    srcipts/dependencies.sh
 
-The valhalla organization is comprised of several repositories each responsible for a different function. The layout of the various projects is as follows:
+And then run to install it:
 
-- [Midgard](https://github.com/valhalla/midgard) - Basic geographic and geometric algorithms for use in the various other projects
-- [Baldr](https://github.com/valhalla/baldr) - The base data structures for accessing and caching tiled route data. Depends on `midgard`
-- [Sif](https://github.com/valhalla/sif) - Library used in costing of graph nodes and edges. This can be used as input to `loki` and `thor`. Depends on `midgard` and `baldr`
-- [Skadi](https://github.com/valhalla/skadi) - Library and service for accessing elevation data. This can be used as input to `mjolnir` or as a standalone service. Depends on `midgard` and `baldr`
-- [Mjolnir](https://github.com/valhalla/mjolnir) - Tools for turning open data into graph tiles. Depends on `midgard`, `baldr` and `skadi`
-- [Loki](https://github.com/valhalla/loki) - Library used to search graph tiles and correlate input locations to an entity within a tile. This correlated entity (edge or vertex) can be used as input to `thor`. Depends on `midgard`, `baldr` and `sif`
-- [Odin](https://github.com/valhalla/odin) - Library used to generate maneuvers and narrative based on a path. This set of directions information can be used as input to `tyr`. Depends on `midgard` and `baldr`
-- [Meili](https://github.com/valhalla/meili) - Library providing a set of algorithms and datastructures for map matching. Used by `thor`. Depends on `midgard`, `baldr` and `sif`.
-- [Thor](https://github.com/valhalla/thor) - Library used to generate a path through the graph tile hierarchy. This path can be used as input to `odin`. Depends on `midgard`, `baldr`, `sif`, `odin` and `meili`
-- [Tyr](https://github.com/valhalla/tyr) - Service used to handle http requests for a route communicating with all of the other valhalla APIs. The service will format output from `odin` and support json (and eventually protocol buffer) output. Depends on `midgard`, `baldr` and `odin`
-- [Tools](https://github.com/valhalla/tools) - A set command line tools that exercise bits of functionality from the libraries above
-- [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs
-- [Chef](https://github.com/valhalla/chef-valhalla) - This cookbook for installing and running valhalla
+    scripts/install.sh
 
-Building and Running Valhalla
------------------------------
+Please see `./configure --help` for more options on how to control the build process.
 
-To build, install and run valhalla on Ubuntu (or other Debian based systems) try the following bash commands:
+Using
+-----
 
-```bash
-#grab all of the valhalla software from ppa
-sudo add-apt-repository ppa:kevinkreiser/prime-server
-sudo add-apt-repository ppa:valhalla-routing/valhalla
-sudo apt-get update
-sudo apt-get install valhalla-bin
+For detailed information about what algorithms, data structures and executables are contained within valhalla, please see the more [detailed documentation](docs/index.md).
 
-#or you could build it from source like by uncommenting the stuff below
-#sudo apt-get install git autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev git firefox libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server0.4.0-dev
-#for repo in midgard baldr sif meili skadi mjolnir loki odin thor tyr tools; do
-#  git clone --recurse-submodules https://github.com/valhalla/$repo.git
-#  pushd $repo
-#  ./autogen.sh
-#  ./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
-#  make -j$(nproc)
-#  sudo make install
-#  popd
-#done
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Valhalla for your own projects as well. To simplify the inclusion of the Valhalla library in another autotoolized project you may make use of [valhalla m4](m4/valhalla.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Valhalla, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
-#download some data and make tiles out of it
-#note: you can feed multiple extracts into pbfgraphbuilder
-wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
-#get the config and setup for it
-git clone --recurse-submodules https://github.com/valhalla/conf.git
-sudo mkdir -p /data/valhalla
-sudo chown `whoami` /data/valhalla
-rm -rf /data/valhalla/*
-#build routing tiles
-#TODO: run valhalla_build_addmins?
-LD_LIBRARY_PATH=/usr/lib:/usr/local/lib valhalla_build_tiles -c conf/valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
-#tar it up for running the server
-find /data/valhalla/* | sort -n | tar cf /data/valhalla/tiles.tar --no-recursion -T -
+Contributing
+------------
 
-#grab the demos repo and open up the point and click routing sample
-git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
-firefox demos/routing/index-internal.html &
-#NOTE: set the environment pulldown to 'localhost' to point it at your own server
+We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
-#start up the server
-LD_LIBRARY_PATH=/usr/lib:/usr/local/lib valhalla_route_service conf/valhalla.json
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
-#HAVE FUN!
-```
+Tests
+-----
 
-Command Line Tools
-------------------
-####valhalla_run_route
-A C++ application that will create a route path with guidance instructions for the specified route request.
-```
-#Usage:
-./valhalla_run_route -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
-#Example:
-./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
-```
+We highly encourage running and updating the tests to make sure no regressions have been made. We use the Automake test suite to run our tests by simply making the `check` target:
 
-####valhalla_route_service
-A C++ service that can be used to test Valhalla locally.
-```
-#Usage:
-./valhalla_route_service <CONFIG_FILE>
-#Example:
-./valhalla_route_service conf/valhalla.json
-#Localhost URL
-http://localhost:8002/route?json={"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}
-```
+    make check
 
-Batch Script Tool
------------------
-- [Batch Run_Route](https://github.com/valhalla/tools/blob/master/run_route_scripts/README.md)
+You can also build a test coverage report. This requires that the packages `lcov`, `gcov` and `genhtml` be installed. On Ubuntu you can get these with:
 
+    sudo apt-get install lcov
+
+To make the coverage report, configure the build for it:
+
+    ./configure --enable-coverage
+
+And generate an HTML coverage report in the `coverage/` directory:
+
+    make coverage-report
+
+Note also that, because calculating the coverage requires compiler support, you will need to clean any object files from a non-coverage build by running `make clean` before `make coverage-report`.
