@@ -59,27 +59,23 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  bool info_only = false;
+  // Print out help or version and return
   if (vm.count("help")) {
     std::cout << options << "\n";
-    info_only = true;
+    return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
     std::cout << "valhalla_build_tiles " << VERSION << "\n";
-    info_only = true;
+    return EXIT_SUCCESS;
   }
 
   // Exit if no config file or no input pbf files
   if (!vm.count("config") || !boost::filesystem::is_regular_file(config_file_path)) {
-    if (!info_only) {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
-    }
+    std::cerr << "Configuration file is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
   }
   if (input_files.size() == 0) {
-    if (!info_only) {
-      std::cerr << "Input file is required\n\n" << options << "\n\n";
-    }
+    std::cerr << "Input file is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
   }
 
