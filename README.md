@@ -10,7 +10,7 @@
          ░                                                                    
 
 
-This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons). Please see: [Valhalla](https://github.com/valhalla/valhalla)
+This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons) only. Further development of this library will continue here: [Valhalla](https://github.com/valhalla/valhalla).
 
 Build Status
 ------------
