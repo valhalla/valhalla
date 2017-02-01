@@ -1,10 +1,12 @@
 # Loki #
 
-The loki library is essentially a set of various data structures and alogrithms which deal with things like: correlating an input location to the underlying graph, partial distance along an edge and filtering edges which shouldn't be considered for correlation.
+Loki can be used to associate location information to an underlying graph tile object for use in creating input to the [routing engine](https://github.com/valhalla/thor). In keeping with the Norse mythological theme, the name [Loki](http://en.wikipedia.org/wiki/Loki) was chosen as a play on the word locate. Since loki deals mostly with correlating some input (minimally a lat,lon) to an object within a graph tile, this seemed like a fitting name!
+
+Loki is essentially a set of various data structures and alogrithms which deal with things like: correlating an input location to the underlying graph, partial distance along an edge and filtering edges which shouldn't be considered for correlation.
 
 ## Components ##
 
-What follows are some notable components of the loki library.
+What follows are some notable components of loki.
 
 ### Search ###
 
