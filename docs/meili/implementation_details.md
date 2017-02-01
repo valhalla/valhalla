@@ -88,7 +88,7 @@ your objectives) and implement `IViterbiSearch::TransitionCost` and
 `IViterbiSearch::EmissionCost`.
 
 The details about these algorithms are described
-[here](https://github.com/valhalla/meili/blob/master/docs/algorithms.md).
+[here](algorithms.md).
 
 ### Routing
 `valhalla/meili/routing.h`

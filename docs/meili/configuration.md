@@ -1,9 +1,9 @@
 # Configuration
 
 To launch a
-[Meili service](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
+[Meili service](service_api.md)
 or instantiate a
-[`MapMatcherFactor`](https://github.com/valhalla/meili/blob/master/docs/library_api.md#map-matcher-factory),
+[`MapMatcherFactor`](library_api.md#map-matcher-factory),
 you need to pass it the
 [Valhalla configuration file](https://github.com/valhalla/conf), which
 holds all configurations for Meili at the node `meili`.

@@ -9,21 +9,20 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library/service, Meili, provides a set of algorithms and datastructures for map matching. It matches a sequence of locations (usually noisy e.g. GPS trajectory) to the underlying road network. In keeping with the Norse mythological theme, the name [Meili](http://en.wikipedia.org/wiki/Meili), Thor's brother, was chosen. Since map matching is closely related to routing and since Thor is the Valhalla routing library, meili seemed most appropriate. Additionally the main author of this software, @ptpt from team [Mapillary](https://github.com/mapillary)  noted that, mĕilì (美丽) means beautiful in Chinese. This is indeed a beautiful collaboration between team Mapillary and team Valhalla! Open source FTW!
 
-![Map](docs/figures/cover.png)
+This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons) only. Further development of this library will continue here: [Valhalla](https://github.com/valhalla/valhalla).
 
 Build Status
 ------------
 
-[![CircleCI](https://circleci.com/gh/valhalla/meili.svg?style=svg)](https://circleci.com/gh/valhalla/meili)
+[![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
 
 Building
 --------
 
-Baldr uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    scripts/dependencies.sh
+    srcipts/dependencies.sh
 
 And then run to install it:
 
@@ -31,25 +30,19 @@ And then run to install it:
 
 Please see `./configure --help` for more options on how to control the build process.
 
-Getting Started
----------------
+Using
+-----
 
-Follow this [tutorial](https://github.com/valhalla/meili/blob/master/docs/run_service_in_docker.md) to get the service run in Docker.
+For detailed information about what algorithms, data structures and executables are contained within valhalla, please see the more [detailed documentation](docs/index.md).
 
-Documentation
--------------
-
-1. [Service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
-2. [Library API](https://github.com/valhalla/meili/blob/master/docs/library_api.md)
-3. [Configuration](https://github.com/valhalla/meili/blob/master/docs/configuration.md)
-4. [The Algorithms](https://github.com/valhalla/meili/blob/master/docs/algorithms.md)
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Valhalla for your own projects as well. To simplify the inclusion of the Valhalla library in another autotoolized project you may make use of [valhalla m4](m4/valhalla.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Valhalla, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
 Contributing
 ------------
 
-We welcome contributions to meili. If you would like to report an issue, or even better fix an existing one, please use the [meili issue tracker](https://github.com/valhalla/meili/issues) on GitHub.
+We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](https://google.github.io/styleguide/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/meili) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
 Tests
 -----
@@ -71,4 +64,3 @@ And generate an HTML coverage report in the `coverage/` directory:
     make coverage-report
 
 Note also that, because calculating the coverage requires compiler support, you will need to clean any object files from a non-coverage build by running `make clean` before `make coverage-report`.
-

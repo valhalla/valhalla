@@ -63,7 +63,7 @@ sudo docker run -it \
 
 Now the service is up and listening on `localhost:8002`. You may refer
 to the
-[service API](https://github.com/valhalla/meili/blob/master/docs/service_api.md)
+[service API](service_api.md)
 for more information.
 
 
