@@ -314,13 +314,22 @@ class GraphTileBuilder : public baldr::GraphTile {
   void InitializeTrafficSegments();
 
   /**
-   * Add a traffic segment association.
-   * @param  edgeid GraphId of the directed edge to which traffic segments are
-   *                associated.
-   * @param  assoc  A vector of traffic segment associations to an edge.
+   * Add a traffic segment association - used when an edge associates to
+   * a single traffic segment.
+   * @param  edgeid  Edge Id to which traffic segment is associated.
+   * @param  seg     Traffic segment associated to this edge.
    */
-  void AddTrafficSegmentAssociation(const baldr::GraphId& edgeid,
-            const std::vector<std::pair<baldr::TrafficAssociation, float>>& assoc);
+  void AddTrafficSegment(const baldr::GraphId& edgeid,
+                         const baldr::TrafficChunk& seg);
+
+  /**
+   * Add a traffic segment association - used when an edge associates to
+   * more than one traffic segment.
+   * @param  edgeid  Edge Id to which traffic segments are associated.
+   * @param  segs    A vector of traffic segment associations to an edge.
+   */
+  void AddTrafficSegments(const baldr::GraphId& edgeid,
+                          const std::vector<baldr::TrafficChunk>& segs);
 
   /**
    * Updates a tile with traffic segment and chunk data.
@@ -431,7 +440,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::vector<baldr::TrafficAssociation> traffic_segment_builder_;
 
   // Traffic chunks
-  std::vector<uint64_t> traffic_chunk_builder_;
+  std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
 };
 
 }

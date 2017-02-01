@@ -833,40 +833,54 @@ void GraphTileBuilder::InitializeTrafficSegments() {
   //TODO: assign the chunks to its builder counterpart
 }
 
-/**
- * Add a traffic segment association.
- * @param  edgeid GraphId of the directed edge to which traffic segments are
- *                associated.
- * @param  assoc  A vector of traffic segment associations to an edge.
- */
-void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
-             const std::vector<std::pair<TrafficAssociation, float>>& assoc) {
-  // Check if edge Id is within range. TODO - do we also need to check tile ID
+// Add a traffic segment association - used when an edge associates to
+// a single traffic segment.
+void GraphTileBuilder::AddTrafficSegment(const GraphId& edgeid,
+                        const TrafficChunk& seg) {
+  // Check if edge Id is within range and part of this tile
+  if (edgeid.Tile_Base() != header_builder_.graphid()) {
+    LOG_ERROR("AddTrafficSegments - edge does not belong to this tile");
+    return;
+  }
   if (edgeid.id() >= header_builder_.directededgecount()) {
-    // TODO -
-    LOG_ERROR("AddTrafficSegmentAssociation - edge is not valid for this tile");
+    LOG_ERROR("AddTrafficSegments - edge is not valid for this tile");
     return;
   }
 
-  if (assoc.size() == 1) {
-    traffic_segment_builder_[edgeid.id()] = assoc[0].first;
+  // If this segment is in the same tile we have a 1:1 association of an edge
+  // to a segment in this tile - create a single segment association
+  if (seg.segment_id().Tile_Base() == edgeid.Tile_Base()) {
+    traffic_segment_builder_[edgeid.id()] = { seg.segment_id().id(),
+          seg.starts_segment(), seg.ends_segment() };
   } else {
-    // TODO - store chunks
-/*    // Store a chunk. tore count and offset in the traffic segment Id along
-    // with a bit that indicates this is a chunk Id
-    uint64_t count = assoc.size();
-    uint64_t offset = traffic_chunk_builder_.size() * sizeof(uint64_t);
-    uint64_t chunkid = kTrafficChunkFlag | (count << kChunkCountOffset) | offset;
-    traffic_segment_builder_[edgeid.id()] = chunkid; */
+    // Associates to a single traffic segment but in a different tile. Set
+    // the TrafficAssociation to represent a chunk count (1) and index. Store
+    // a single TrafficChunk.
+    traffic_segment_builder_[edgeid.id()] = { 1, traffic_chunk_builder_.size() };
+    traffic_chunk_builder_.emplace_back(seg);
+  }
+}
 
-    // Store the chunk as a set of 64 bit bit word (one for each
-    // association pair)
-/*    for (const auto& seg : assoc) {
-      // Combine traffic segment Id and weight into single 64 bit word
-      uint64_t w = static_cast<uint32_t>(seg.second * 255.0f);
-      uint64_t chunk = (w << kChunkBitOffset) || seg.first.value;
-      traffic_chunk_builder_.push_back(chunk);
-    }*/
+// Add a traffic segment association - used when an edge associates to
+// more than one traffic segment.
+void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
+                         const std::vector<baldr::TrafficChunk>& segs) {
+  // Check if edge Id is within range and part of this tile
+  if (edgeid.Tile_Base() != header_builder_.graphid()) {
+    LOG_ERROR("AddTrafficSegments - edge does not belong to this tile");
+    return;
+  }
+  if (edgeid.id() >= header_builder_.directededgecount()) {
+    LOG_ERROR("AddTrafficSegments - edge is not valid for this tile");
+    return;
+  }
+
+  // This edge associates to many segments or portions of segments.
+  // Set the TrafficAssociation to represent a chunk count and index.
+  // Store each TrafficChunk.
+  traffic_segment_builder_[edgeid.id()] = { segs.size(), traffic_chunk_builder_.size() };
+  for (const auto& seg : segs) {
+    traffic_chunk_builder_.push_back(seg);
   }
 }
 
@@ -875,16 +889,17 @@ void GraphTileBuilder::AddTrafficSegmentAssociation(const GraphId& edgeid,
  */
 void GraphTileBuilder::UpdateTrafficSegments() {
   // Make sure we start traffic info on an 8-byte boundary
-  size_t offset = header_->traffic_id_count() ? header_->traffic_segmentid_offset() : header_->end_offset();
+  size_t offset = header_->traffic_id_count() ? header_->traffic_segmentid_offset() :
+                  header_->end_offset();
   size_t padding = 8 - (offset % 8);
 
   // Update header to include the offsets to traffic segments and chunks
   header_builder_.set_traffic_id_count(traffic_segment_builder_.size());
   header_builder_.set_traffic_segmentid_offset(offset + padding);
   header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset() +
-    traffic_segment_builder_.size() * sizeof(baldr::TrafficAssociation));
+          traffic_segment_builder_.size() * sizeof(TrafficAssociation));
   header_builder_.set_end_offset(header_builder_.traffic_chunk_offset() +
-    traffic_chunk_builder_.size() * sizeof(uint64_t));
+          traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
   // Get the name of the file
   boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
@@ -911,11 +926,11 @@ void GraphTileBuilder::UpdateTrafficSegments() {
 
     // Append the traffic segment list
     file.write(reinterpret_cast<const char*>(&traffic_segment_builder_[0]),
-               traffic_segment_builder_.size() * sizeof(baldr::TrafficAssociation));
+               traffic_segment_builder_.size() * sizeof(TrafficAssociation));
 
     // Append the traffic chunks
     file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
-               traffic_chunk_builder_.size() * sizeof(uint64_t));
+               traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
     // Write rest of the stuff after traffic chunks
     // TODO - enable this after anything is added after traffic
