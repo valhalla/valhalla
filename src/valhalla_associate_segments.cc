@@ -548,6 +548,13 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
     return std::vector<vb::GraphId>();
   }
 
+  // calculate total length of the segment for comparison to common edges or
+  // short "walked" paths.
+  uint32_t total_length = 0;
+  for (const auto &lrp : segment.lrps()) {
+    total_length += lrp.length();
+  }
+
   auto common_edge_id = find_common_edge(origin_nodes, dest_nodes);
   if (common_edge_id) {
     // TODO: check bearing, length, FRC, FOW, etc...
@@ -559,7 +566,7 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
     int bear = bear_diff(bearing(tile, common_edge_id, 0.0), lrp.bear());
-    int len = abs_u32_diff(edge->length(), lrp.length());
+    int len = abs_u32_diff(edge->length(), total_length);
     FormOfWay fow = FormOfWay(lrp.start_fow());
 
     if ((road_class == edge->classification()) &&
@@ -585,6 +592,13 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
   if (walked_edges.size()) {
     // TODO: check bearing, length, FRC, FOW, etc...
 
+    uint32_t walked_length = 0;
+    for (auto edge_id : walked_edges) {
+      auto *tile = m_reader.GetGraphTile(walked_edges.front());
+      auto *edge = tile->directededge(walked_edges.front());
+      walked_length += edge->length();
+    }
+
     auto *tile = m_reader.GetGraphTile(walked_edges.front());
     auto *edge = tile->directededge(walked_edges.front());
 
@@ -592,7 +606,7 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
     int bear = bear_diff(bearing(tile, walked_edges.front(), 0.0), lrp.bear());
-    int len = abs_u32_diff(edge->length(), lrp.length());
+    int len = abs_u32_diff(walked_length, total_length);
     FormOfWay fow = FormOfWay(lrp.start_fow());
 
     if ((road_class == edge->classification()) &&
