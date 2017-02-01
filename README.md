@@ -9,19 +9,20 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Sif, provides dynamic, extensible costing for edges and transitions between edges (turn costs). Its primary use is in the [routing engine](https://github.com/valhalla/thor) when forming the best path between locations. In keeping with the Norse mythological theme, the name [Sif](http://en.wikipedia.org/wiki/Sif) was chosen since Sif is a companion to Thor.
+
+This repo is provided for [hysterical raisins](http://www.dictionary.com/browse/hysterical-reasons) only. Further development of this library will continue here: [Valhalla](https://github.com/valhalla/valhalla).
 
 Build Status
 ------------
 
-[![Circle CI](https://circleci.com/gh/valhalla/sif.svg?style=svg)](https://circleci.com/gh/valhalla/sif)
+[![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
 
 Building
 --------
 
-Sif uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    scripts/dependencies.sh
+    srcipts/dependencies.sh
 
 And then run to install it:
 
@@ -32,16 +33,16 @@ Please see `./configure --help` for more options on how to control the build pro
 Using
 -----
 
-For detailed information about what algorithms, data structures and executables are contained within sif, please see the more [detailed documentation](docs/index.md).
+For detailed information about what algorithms, data structures and executables are contained within valhalla, please see the more [detailed documentation](docs/index.md).
 
-The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Sif for your own projects as well. To simplify the inclusion of the Sif library in another autotoolized project you may make use of [sif m4](m4/valhalla_loki.m4) in your own `configure.ac` file. For an example of this please have a look at `configure.ac` in another one of the valhalla projects. Sif, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Valhalla for your own projects as well. To simplify the inclusion of the Valhalla library in another autotoolized project you may make use of [valhalla m4](m4/valhalla.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Valhalla, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
 Contributing
 ------------
 
-We welcome contributions to Sif and encourage users to try out their own costing methods and contribute back! If you would like to report an issue, or even better fix an existing one, please use the [sif issue tracker](https://github.com/valhalla/sif/issues) on GitHub.
+We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/sif) and highly recommend that your pull request include a test to validate the addition/change of functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
 Tests
 -----
