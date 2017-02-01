@@ -548,6 +548,13 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
     return std::vector<vb::GraphId>();
   }
 
+  // calculate total length of the segment for comparison to common edges or
+  // short "walked" paths.
+  uint32_t total_length = 0;
+  for (const auto &lrp : segment.lrps()) {
+    total_length += lrp.length();
+  }
+
   auto common_edge_id = find_common_edge(origin_nodes, dest_nodes);
   if (common_edge_id) {
     // TODO: check bearing, length, FRC, FOW, etc...
@@ -556,10 +563,6 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
     auto *edge = tile->directededge(common_edge_id);
 
     auto &lrp = segment.lrps(0);
-    uint32_t total_length = 0;
-    for (const auto &lrp : segment.lrps()) {
-      total_length += lrp.length();
-    }
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
     int bear = bear_diff(bearing(tile, common_edge_id, 0.0), lrp.bear());
@@ -600,10 +603,6 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
     auto *edge = tile->directededge(walked_edges.front());
 
     auto &lrp = segment.lrps(0);
-    uint32_t total_length = 0;
-    for (const auto &lrp : segment.lrps()) {
-      total_length += lrp.length();
-    }
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
     int bear = bear_diff(bearing(tile, walked_edges.front(), 0.0), lrp.bear());
