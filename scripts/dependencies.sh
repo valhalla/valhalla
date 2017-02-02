@@ -10,6 +10,7 @@ export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov
 =======
 sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ vim-common libboost1.54-all-dev lcov
@@ -36,6 +37,8 @@ for dep in midgard baldr; do
 >>>>>>> loki/master
 =======
 >>>>>>> thor/master
+=======
+>>>>>>> tyr/master
 if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
   sudo add-apt-repository -y ppa:kevinkreiser/libsodium
   sudo add-apt-repository -y ppa:kevinkreiser/libpgm
@@ -44,6 +47,7 @@ if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
 fi
 sudo add-apt-repository -y ppa:kevinkreiser/prime-server
 sudo apt-get update
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -94,10 +98,19 @@ mkdir -p deps
 for dep in midgard baldr sif meili odin; do
 	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep &
 >>>>>>> thor/master
+=======
+sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov libboost1.54-all-dev protobuf-compiler libprotobuf-dev libprime-server0.6.3-dev
+
+#clone async
+mkdir -p deps
+for dep in midgard baldr odin; do
+	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep &
+>>>>>>> tyr/master
 done
 wait
 
 #build sync
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -127,6 +140,9 @@ for dep in midgard baldr sif; do
 =======
 for dep in midgard baldr sif meili odin; do
 >>>>>>> thor/master
+=======
+for dep in midgard baldr odin; do
+>>>>>>> tyr/master
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
@@ -134,6 +150,7 @@ for dep in midgard baldr sif meili odin; do
 	sudo make install
 	popd
 done
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -158,3 +175,5 @@ wait
 >>>>>>> loki/master
 =======
 >>>>>>> thor/master
+=======
+>>>>>>> tyr/master

@@ -33,6 +33,7 @@ libtool
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 libvalhalla.pc
 =======
 libvalhalla_sif.pc
@@ -101,12 +102,20 @@ libvalhalla_thor.pc
 # built objects
 thor_service
 >>>>>>> thor/master
+=======
+libvalhalla_tyr.pc
+py-compile
+
+# built objects
+tyr_service
+>>>>>>> tyr/master
 *.o
 .deps/
 .dirstamp
 *.lo
 conf/
 .libs/
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -141,6 +150,9 @@ libvalhalla_loki.la
 =======
 libvalhalla_thor.la
 >>>>>>> thor/master
+=======
+libvalhalla_tyr.la
+>>>>>>> tyr/master
 
 # tests
 test-suite.log
@@ -248,6 +260,7 @@ loop_ways.txt
 =======
 test/*.log
 test/*.trs
+<<<<<<< HEAD
 test/search
 test/service
 test/node_search
@@ -255,6 +268,10 @@ test/node_search
 
 # scripts
 scripts/duane_routes.txt
+=======
+test/test_config
+test/serializers
+>>>>>>> tyr/master
 
 # test coverage stuff
 *.gcno

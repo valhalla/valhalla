@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_INIT([midgard],
 	[unstable],
 	[https://github.com/valhalla/midgard/issues],
@@ -67,6 +68,13 @@ AC_INIT([thor],
 	[valhalla_thor-[unstable]],
 	[https://github.com/valhalla/thor])
 >>>>>>> thor/master
+=======
+AC_INIT([tyr],
+	[unstable],
+	[https://github.com/valhalla/tyr/issues],
+	[valhalla_tyr-[unstable]],
+	[https://github.com/valhalla/tyr])
+>>>>>>> tyr/master
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
@@ -225,6 +233,7 @@ PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.6.3])
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 
 # require other valhalla dependencies
+<<<<<<< HEAD
 PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable])
 
 # check for boost and make sure we have the program options library
@@ -240,10 +249,22 @@ PKG_CHECK_MODULES([DEPS], [libprime_server = 0.6.3])
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.6.3])
 >>>>>>> thor/master
+=======
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_odin = unstable])
+
+# check for boost and make sure we have the program options library
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tyr. Please install libboost-dev.])])
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
+
+# check zeromq version
+PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.3])
+>>>>>>> tyr/master
 
 # optionally enable coverage information
 CHECK_COVERAGE
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -277,6 +298,9 @@ AC_CONFIG_FILES([Makefile libvalhalla_loki.pc])
 =======
 AC_CONFIG_FILES([Makefile libvalhalla_thor.pc])
 >>>>>>> thor/master
+=======
+AC_CONFIG_FILES([Makefile libvalhalla_tyr.pc])
+>>>>>>> tyr/master
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

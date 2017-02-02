@@ -12,6 +12,7 @@ AM_CPPFLAGS = -I@abs_srcdir@/valhalla @PTHREAD_CFLAGS@ -Igenfiles
 =======
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -I@abs_srcdir@/valhalla @BOOST_CPPFLAGS@ -Igenfiles
+<<<<<<< HEAD
 >>>>>>> baldr/master
 =======
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
@@ -60,11 +61,15 @@ AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -I@abs_srcdir@/valhalla @BOOST_CPPFLAGS@ -Igenfiles
 AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
 >>>>>>> thor/master
+=======
+AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
+>>>>>>> tyr/master
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
 # things for versioning
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -98,6 +103,9 @@ pkgconfig_DATA = libvalhalla_loki.pc
 =======
 pkgconfig_DATA = libvalhalla_thor.pc
 >>>>>>> thor/master
+=======
+pkgconfig_DATA = libvalhalla_tyr.pc
+>>>>>>> tyr/master
 EXTRA_DIST = version.sh
 
 # conditional test coverage
@@ -145,6 +153,7 @@ endif
 
 clean-genfiles:
 	-rm -rf genfiles
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -977,6 +986,21 @@ test_astar_SOURCES = test/astar.cc test/test.cc
 test_astar_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_astar_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 >>>>>>> thor/master
+=======
+
+# lib valhalla compilation etc
+lib_LTLIBRARIES = libvalhalla_tyr.la
+nobase_include_HEADERS = valhalla/tyr/service.h
+libvalhalla_tyr_la_SOURCES = src/tyr/service.cc
+libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+
+# tests
+check_PROGRAMS = test/serializers
+test_serializers_SOURCES = test/serializers.cc test/test.cc
+test_serializers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_serializers_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
+>>>>>>> tyr/master
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

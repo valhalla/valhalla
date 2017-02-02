@@ -7,6 +7,7 @@ checkout:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     - (rc=0; for f in *.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
 >>>>>>> mjolnir/master
@@ -16,11 +17,14 @@ checkout:
 >>>>>>> loki/master
 =======
 >>>>>>> thor/master
+=======
+>>>>>>> tyr/master
 
 dependencies:
   override:
     - sudo apt-get update
     - scripts/dependencies.sh
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -35,6 +39,8 @@ dependencies:
 >>>>>>> loki/master
 =======
 >>>>>>> thor/master
+=======
+>>>>>>> tyr/master
 
 test:
   override:
