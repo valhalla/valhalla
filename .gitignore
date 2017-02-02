@@ -26,7 +26,11 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
+<<<<<<< HEAD
 libvalhalla.pc
+=======
+libvalhalla_sif.pc
+>>>>>>> sif/master
 
 # built objects
 *.o
@@ -34,13 +38,18 @@ libvalhalla.pc
 .dirstamp
 *.lo
 .libs/
+<<<<<<< HEAD
 libvalhalla.la
 date_time_zonespec.csv
 genfiles/
+=======
+libvalhalla_sif.la
+>>>>>>> sif/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 test/thread_file_log_test.log
 test/point2
 test/linesegment2
@@ -83,6 +92,9 @@ test/verbal_text_formatter
 test/verbal_text_formatter_us
 test/verbal_text_formatter_us_co
 test/verbal_text_formatter_us_tx
+=======
+test/factory
+>>>>>>> sif/master
 test/*.log
 test/*.trs
 

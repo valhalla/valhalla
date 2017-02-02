@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_INIT([midgard],
 	[unstable],
 	[https://github.com/valhalla/midgard/issues],
@@ -11,6 +12,13 @@ AC_INIT([baldr],
 	[valhalla_baldr-[unstable]],
 	[https://github.com/valhalla/baldr])
 >>>>>>> baldr/master
+=======
+AC_INIT([sif],
+	[unstable],
+	[https://github.com/valhalla/sif/issues],
+	[valhalla_sif-[unstable]],
+	[https://github.com/valhalla/sif])
+>>>>>>> sif/master
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
@@ -38,6 +46,7 @@ AC_LANG_CPLUSPLUS
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # require pthread
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 =======
@@ -57,15 +66,28 @@ AS_IF([test "x$enable_std_regex" = "xyes"],
       [AC_DEFINE(USE_STD_REGEX, [], [Use regex from the standard library instead of boost])],
       [AX_BOOST_REGEX])
 >>>>>>> baldr/master
+=======
+# require other valhalla dependencies
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable])
+
+# check for boost and make sure we have the program options library
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building sif. Please install libboost-dev.])])
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
+>>>>>>> sif/master
 
 # optionally enable coverage information
 CHECK_COVERAGE
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_CONFIG_FILES([Makefile libvalhalla_midgard.pc])
 =======
 AC_CONFIG_FILES([Makefile libvalhalla_baldr.pc])
 >>>>>>> baldr/master
+=======
+AC_CONFIG_FILES([Makefile libvalhalla_sif.pc])
+>>>>>>> sif/master
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a
