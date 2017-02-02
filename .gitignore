@@ -29,6 +29,7 @@ libtool
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 libvalhalla.pc
 =======
 libvalhalla_sif.pc
@@ -59,11 +60,28 @@ libvalhalla_skadi.pc
 # built objects
 skadi_service
 >>>>>>> skadi/master
+=======
+libvalhalla_mjolnir.pc
+
+# built objects
+valhalla/proto
+src/proto
+valhalla_benchmark_admins
+valhalla_build_admins
+valhalla_build_connectivity
+valhalla_build_tiles
+valhalla_build_transit
+valhalla_query_transit
+valhalla_ways_to_edges
+valhalla_build_speeds
+valhalla_build_statistics
+>>>>>>> mjolnir/master
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,10 +97,17 @@ libvalhalla_meili.la
 =======
 libvalhalla_skadi.la
 >>>>>>> skadi/master
+=======
+conf/
+libvalhalla_mjolnir.la
+genfiles/
+*.bin
+>>>>>>> mjolnir/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -143,6 +168,27 @@ test/sample
 test/service
 test/util_skadi
 >>>>>>> skadi/master
+=======
+test/test_config*
+test/edgeinfobuilder
+test/uniquenames
+test/idtable
+test/graphtilebuilder
+test/graphbuilder
+test/names
+test/refs
+test/graphparser
+test/signinfo
+test/utrecht
+test/countryaccess
+test/*.log
+test/*.trs
+test/data/bin_tiles/bin/*
+test/data/amsterdam_tiles
+EdgeInfoBuilder_TestWriteRead.gph
+AdminInfoBuilder_TestWriteRead.gph
+loop_ways.txt
+>>>>>>> mjolnir/master
 
 # test coverage stuff
 *.gcno
@@ -156,9 +202,14 @@ coverage/
 .settings
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 #gdal
 scripts/gdal-2.0.0/
 scripts/gdal-2.0.0.tar.gz
 >>>>>>> skadi/master
+=======
+duplicateways.txt
+connectivity*
+>>>>>>> mjolnir/master

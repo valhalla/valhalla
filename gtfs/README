@@ -1,0 +1,29 @@
+These scripts and files will be thrown away after we use gtfs from transitland.
+
+PG install:
+
+These scripts import feeds from NYC via ./makeNYC_pg.sh.  Prerequisites for the
+scripts are:  1.  Install postgresql and create a gtfs db.  2.  Spatial 
+enable the db via: CREATE EXTENSION postgis;  3.  Update dbuser var in
+import.sh to your db username.  4.  Install csvfilter via: sudo pip install csvfilter.
+
+Run ./makeNYC_pg.sh
+
+NOTE:  LIRR puts all of the calendar entries in the calendar_dates.txt
+file.  Therefore, you will see an error for their feed:
+ERROR:  could not open file "/data/valhalla/mjolnir/gtfs/schedule.txt" for reading: No such file or directory
+
+Please disregard the above error.
+
+
+sqlite install:
+
+These scripts import feeds from NYC via ./makeNYC_sqlite.sh.  Prerequisites for the
+scripts are:  1.  Install spatialite and sqlite.  2.  Install sqlparse which is used
+by termsql.  3.  Install termsql via git clone https://github.com/tobimensch/termsql.git 
+and run sudo python setup.py install
+
+Run ./makeNYC_sqlite.sh
+
+Again LIRR will produce errors that you should ignore.
+

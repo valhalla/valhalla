@@ -1,0 +1,3941 @@
+{
+   "data_format": 1,
+   "data_url": "",
+   "data_updated": "20160324T000000Z",
+   "project": {
+      "name": "Valhalla",
+      "description": "Open Source Tile-Based Routing Applications and APIs",
+      "project_url": "https://github.com/valhalla",
+      "doc_url": "",
+      "icon_url": "https://s3.amazonaws.com/assets-staging.mapzen.com/images/mapzen-icon/logo.png",
+      "contact_name": "Valhalla",
+      "contact_email": "valhalla@mapzen.com"
+   },
+   "tags": [
+      {
+         "key": "impassable",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "This is used by HOT.  Turns off access unless bus, motorcar, motor_vehicle, foot, etc. is set."
+      },    
+      {
+         "key": "highway",
+         "value": "motorway",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "motorway_link",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "motorway_junction",
+         "object_types": [
+            "node"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "traffic_signals",
+         "object_types": [
+            "node"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "trunk",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "trunk_link",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "primary",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "primary_link",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "secondary",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "secondary_link",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "residential",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "residential_link",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "service",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "tertiary",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "tertiary_link",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "road",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "track",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "unclassified",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "undefined",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "unknown",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "living_street",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "footway",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "pedestrian",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "steps",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "bridleway",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "construction",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "proposed",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "cycleway",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "path",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "bus_guideway",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "highway",
+         "value": "crossing",
+         "object_types": [
+            "node"
+         ],
+         "description": "Allows access for all modes unless the mode override is set except for bicycles."
+      },
+      {
+         "key": "access",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to false"
+      },
+      {
+         "key": "access",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to false"
+      },
+      {
+         "key": "access",
+         "value": "discouraged",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to false"
+      },
+      {
+         "key": "access",
+         "value": "forestry",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to false"
+      },
+      {
+         "key": "access",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to false"
+      },
+      {
+         "key": "access",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true; however, if access = private and (emergency = yes or service = emergency_access) then access flag is false." 
+      },
+      {
+         "key": "access",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "customers",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "public",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to true"
+      },
+      {
+         "key": "access",
+         "value": "emergency",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Sets access flag to false"
+      },
+      {
+         "key": "motorcar",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "discouraged",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "forestry",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "customers",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "public",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motorcar",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "discouraged",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "forestry",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing not allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "customers",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "public",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "motor_vehicle",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for auto.  Auto Routing allowed."
+      },
+      {
+         "key": "bus",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing not allowed."
+      },
+      {
+         "key": "bus",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing not allowed."
+      },
+      {
+         "key": "bus",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "bus",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "bus",
+         "value": "urban",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "bus",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "bus",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "bus",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "bus:backward",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the bus reverse flag to true."
+      },
+      {
+         "key": "bus:backward",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the bus reverse flag to true."
+      },
+      {
+         "key": "hgv",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "local",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "discouraged",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "unsuitable",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "agricultural;forestry",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "forestry",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "hgv",
+         "value": "destination;delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
+      },
+      {
+         "key": "maxheight",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxheight for hgv."
+      },
+      {
+         "key": "maxheight:physical",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxheight for hgv."
+      },
+      {
+         "key": "maxwidth",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxwidth for hgv."
+      },
+      {
+         "key": "maxwidth:physical",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxwidth for hgv."
+      },
+      {
+         "key": "maxlength",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxlength for hgv."
+      },
+      {
+         "key": "maxweight",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxweight for hgv."
+      },
+      {
+         "key": "maxaxleload",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxaxleload for hgv."
+      },
+      {
+         "key": "maxspeed:hgv",
+         "object_types": [
+            "way"
+         ],
+         "description": "Maxspeed for hgv."
+      },
+      {
+         "key": "hgv:national_network",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the truck_route flag to true."
+      },
+      {
+         "key": "hgv:state_network",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the truck_route flag to true."
+      },
+      {
+         "key": "hgv",
+         "value": "local",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the truck_route flag to true."
+      },
+      {
+         "key": "hgv",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the truck_route flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "both",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "none",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "right",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "left",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "separate",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "shared",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "this",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "detached",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "raised",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "sidewalk",
+         "value": "separate_double",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "sidepath",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to false."
+      },
+      {
+         "key": "sidewalk",
+         "value": "explicit",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the sidewalk flag to true."
+      },
+      {
+         "key": "hazmat",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:water",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:water",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:water",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat:water",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:water",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:A",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:A",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:A",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat:A",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:A",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:B",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:B",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:B",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat:B",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:B",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:C",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:C",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:C",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat:C",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:C",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:D",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:D",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:D",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat:D",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:D",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:E",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:E",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:E",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to false."
+      },
+      {
+         "key": "hazmat:E",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "hazmat:E",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the hazmat flag to true."
+      },
+      {
+         "key": "area",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Way will not be used in routing graph."
+      },
+      {
+         "key": "access",
+         "value": "emergency",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
+      },
+      {
+         "key": "emergency",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
+      },
+      {
+         "key": "service",
+         "value": "emergency_access",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "limited",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "public",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "only",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "impassable",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "partial",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "bad",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "half",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access not allowed."
+      },
+      {
+         "key": "wheelchair",
+         "value": "assisted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+      },
+      {
+         "key": "psv",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing not allowed."
+      },
+      {
+         "key": "psv",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing not allowed."
+      },
+      {
+         "key": "psv",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "urban",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "bus",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "1",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "psv",
+         "value": "2",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing not allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing not allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "urban",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "bus",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "1",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "lanes:psv:forward",
+         "value": "2",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "busway",
+         "valuedd": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed."
+      },
+      {
+         "key": "busway:left",
+         "value": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed.  busway:right must exist as well."
+      },
+      {
+         "key": "busway:right",
+         "value": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bus.  Bus Routing allowed.  busway:left must exist as well."
+      },
+      {
+         "key": "lanes:bus",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bus forward override.  Sets bus forward to true."
+      },
+      {
+         "key": "lanes:bus",
+         "value": "2",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bus forward and backward overrides.  Sets bus forward and backward to true."
+      },
+      {
+         "key": "foot",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "foot",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "foot",
+         "value": "discouraged",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "foot",
+         "value": "forestry",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "foot",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "restricted",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "customers",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "public",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "crossing",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed.  For nodes: Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "foot",
+         "value": "sidewalk",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "passable",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "foot",
+         "value": "footway",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "agricultural",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "discouraged",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing not allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "forestry",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "official",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "restricted",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "private",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "permissive",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "use_sidepath",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "delivery",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "customers",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "public",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "crossing",
+         "object_types": [
+            "way",
+            "node"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed.  For nodes: Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "pedestrian",
+         "value": "sidewalk",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "allowed",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "passable",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "pedestrian",
+         "value": "footway",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "lane",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "track",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "shared",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "shared_lane",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "share_busway",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "none",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "lane",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "track",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "shared",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "shared_lane",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "share_busway",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "none",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cyclestreet",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "use_sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "lane",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "track",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "shared",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "shared_lane",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "sidepath",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "share_busway",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "none",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing not allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "allowed",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle_road",
+         "value": "official",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "bicycle",
+         "value": "crossing",
+         "object_types": [
+            "node"
+         ],
+         "description": "Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "bicycle:backward",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the bike reverse flag to true.  Note from wiki: (when a road has a oneway cycleway next to it that must be used, and a cyclelane in the other direction)"
+      },
+      {
+         "key": "bicycle:backward",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the bike reverse flag to true.  Note from wiki: (when cyclists are allowed to travel in both directions on a oneway street (but no lane is present))"
+      },
+      {
+         "key": "cycleway",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "use_sidepath",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "permissive",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "destination",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "dismount",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
+         "value": "track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
+         "value": "shared",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
+         "value": "shared_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
+         "value": "sidepath",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "share_busway",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
+         "value": "allowed",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "private",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "cyclestreet",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed."
+      },
+      {
+         "key": "cycleway",
+         "value": "crossing",
+         "object_types": [
+            "node"
+         ],
+         "description": "Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "exit_to",
+         "object_types": [
+            "node"
+         ],
+         "description": "Branch route number/road name.  And/or...Toward route number/road name.  And/or...Toward location."
+      },
+      {
+         "key": "footway",
+         "value": "crossing",
+         "object_types": [
+            "node"
+         ],
+         "description": "Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "crossing",
+         "object_types": [
+            "node"
+         ],
+         "description": "Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "barrier",
+         "value": "gate",
+         "object_types": [
+            "node"
+         ],
+         "description": "Set gate flag to true."
+      },
+      {
+         "key": "barrier",
+         "value": "lift_gate",
+         "object_types": [
+            "node"
+         ],
+         "description": "Set gate flag to true."
+      },
+      {
+         "key": "barrier",
+         "value": "bollard",
+         "object_types": [
+            "node"
+         ],
+         "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      },
+      {
+         "key": "barrier",
+         "value": "block",
+         "object_types": [
+            "node"
+         ],
+         "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      },
+      {
+         "key": "barrier",
+         "value": "removable",
+         "object_types": [
+            "node"
+         ],
+         "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      },
+      {
+         "key": "barrier",
+         "value": "border_control",
+         "object_types": [
+            "node"
+         ],
+         "description": "Sets the border control flag to true"
+      },
+      {
+         "key": "barrier",
+         "value": "toll_booth",
+         "object_types": [
+            "node"
+         ],
+         "description": "Sets the toll booth flag to true"
+      },
+      {
+         "key": "bollard",
+         "value": "rising",
+         "object_types": [
+            "node"
+         ],
+         "description": "If bollard flag equals true, then set bollard flag to false and gate tor true."
+      },
+      {
+         "key": "traffic_signals:direction",
+         "value": "forward",
+         "object_types": [
+            "node"
+         ],
+         "description": "Traffic signal direction."
+      },
+      {
+         "key": "traffic_signals:direction",
+         "value": "backward",
+         "object_types": [
+            "node"
+         ],
+         "description": "Traffic signal direction."
+      },
+      {
+         "key": "traffic_signals",
+         "object_types": [
+            "node"
+         ],
+         "description": "Sets the traffic signal flag."
+      },
+      {
+         "key": "route",
+         "value": "ferry",
+         "object_types": [
+            "way"
+         ],
+         "description": "If access not already set then enable access for each type of routing."
+      },
+      {
+         "key": "service",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the use and if value = driveway and access not already set then enable access for each type of routing."
+      },
+      {
+         "key": "oneway",
+         "value": "-1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets reverse flag to true for all types of routing.  A value of -1 will flip the direction of the oneway."
+      },
+      {
+         "key": "oneway",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets reverse flag to true for all types of routing."
+      },
+      {
+         "key": "oneway",
+         "value": "true",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets reverse flag to true for all types of routing."
+      },
+      {
+         "key": "oneway",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets reverse flag to true for all types of routing."
+      },
+      {
+         "key": "junction",
+         "value": "roundabout",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets auto backward to false."
+      },
+      {
+         "key": "cycleway",
+         "value": "opposite",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true."
+      },
+      {
+         "key": "cycleway",
+         "value": "opposite_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
+         "value": "opposite_track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "opposite",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "opposite_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "opposite_track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "opposite",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "opposite_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "opposite_track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "oneway:bicycle",
+         "value": "-1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true.  A value of -1 will flip the direction of the oneway for bicycles."
+      },
+      {
+         "key": "oneway:bicycle",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true."
+      },
+      {
+         "key": "oneway:bicycle",
+         "value": "true",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true."
+      },
+      {
+         "key": "oneway:bicycle",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bike reverse flag to true."
+      },
+      {
+         "key": "oneway:bicycle",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "If oneway = yes and oneway:bicycle = no then set the bike reverse flag to true."
+      },
+      {
+         "key": "busway",
+         "value": "opposite",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "busway",
+         "value": "opposite_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "lanes:psv:backward",
+         "value": "bus",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "lanes:psv:backward",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "lanes:psv:backward",
+         "value": "designated",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "lanes:psv:backward",
+         "value": "permissive",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "lanes:psv:backward",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "lanes:psv:backward",
+         "value": "2",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "oneway:bus",
+         "value": "-1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true.  A value of -1 will flip the direction of the oneway for buses."
+      },
+      {
+         "key": "oneway:bus",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "oneway:bus",
+         "value": "true",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "oneway:bus",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets bus reverse flag to true."
+      },
+      {
+         "key": "oneway:bus",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "If oneway = yes and oneway:bus = no then set the bus reverse flag to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "shared_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "share_busway",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "shared",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "opposite_track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "opposite_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:both",
+         "value": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "shared_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "share_busway",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "shared",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left",
+         "value": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "shared_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "share_busway",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "shared",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "track",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right",
+         "value": "lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "ncn",
+         "value": "yes",
+         "description": "National Bike Network.  Set bitmask for network",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "rcn",
+         "value": "yes",
+         "description": "Regional Bike Network.  Set bitmask for network",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lcn",
+         "value": "yes",
+         "description": "Local Bike Network.  Set bitmask for network",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "ncn_ref",
+         "description": "National Bike Network ref.  Set bitmask for network",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "rcn_ref",
+         "description": "Regional Bike Network ref.  Set bitmask for network",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lcn_ref",
+         "description": "Local Bike Network ref.  Set bitmask for network",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "network",
+         "value": "ncn",
+         "object_types": [
+            "relation"
+         ],
+         "description": "National Bike Network.  Set bitmask for network.  Route key must equal bicycle too."
+      },
+      {
+         "key": "network",
+         "value": "rcn",
+         "object_types": [
+            "relation"
+         ],
+         "description": "Regional Bike Network.  Set bitmask for network.  Route key must equal bicycle too."
+      },
+      {
+         "key": "network",
+         "value": "lcn",
+         "object_types": [
+            "relation"
+         ],
+         "description": "Local Bike Network.  Set bitmask for network.  Route key must equal bicycle too."
+      },
+      {
+         "key": "network",
+         "value": "mtb",
+         "object_types": [
+            "relation"
+         ],
+         "description": "Mountain Bike Network.  Set bitmask for network.  Route key must equal bicycle too."
+      },
+      {
+         "key": "route",
+         "value": "mtb",
+         "object_types": [
+            "relation"
+         ],
+         "description": "Mountain Bike Network.  Set bitmask for network"
+      },
+      {
+         "key": "maxspeed",
+         "description": "Speed Limit (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:advisory",
+         "description": "Speed Limit - normally used on a curve or on/off ramps (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:practical",
+         "description": "Considered the average speed on a road (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:backward",
+         "description": "maximum speed which only applies in backward direction (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "maxspeed:forward",
+         "description": "maximum speed which only applies in forward direction (assume kph except where mph given)",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "surface",
+         "description": "Road surface",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade1",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade2",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade3",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tracktype",
+         "value": "grade4",
+         "description": "Track types",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lanes",
+         "description": "Lane count",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lanes:forward",
+         "description": "Lane count in the forward direction",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "lanes:backward",
+         "description": "Lane count in the backward direction",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "true",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "1",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "building_passage",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "no",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "false",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "tunnel",
+         "value": "0",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "true",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "1",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "interval",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "snowmobile",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "no",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "false",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "toll",
+         "value": "0",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "railway",
+         "value": "rail",
+         "description": "If auto access then this is a auto train.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "railway",
+         "value": "crossing",
+         "object_types": [
+            "node"
+         ],
+         "description": "Allows access for all modes unless the mode override is set."
+      },
+      {
+         "key": "bridge",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "bridge",
+         "value": "true",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "bridge",
+         "value": "1",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "seasonal",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "hov",
+         "object_types": [
+            "way",
+            "node"
+         ],
+         "description": "Allows access for hov modes unless the value is no."
+      },
+      {
+         "key": "hov:lanes",
+         "object_types": [
+            "way",
+            "node"
+         ],
+         "description": "Allows access for hov."
+      },
+      {
+         "key": "hov:minimum",
+         "object_types": [
+            "way",
+            "node"
+         ],
+         "description": "Allows access for hov."
+      },
+      {
+         "key": "destination",
+         "description": "Toward location.  Used for exit information.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "destination:ref",
+         "description": "Branch route number.  Used for exit information.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "destination:ref:to",
+         "description": "Toward route number.  Used for exit information.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "destination:street",
+         "description": "Branch road name.  Used for exit information.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "destination:street:to",
+         "description": "Toward road name.  Used for exit information.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "junction:ref",
+         "description": "Junction/exit number.  Used for exit information.",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "type",
+         "value": "restriction",
+         "description": "Turn Restriction",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_left_turn",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_right_turn",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_straight_on",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_u_turn",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "only_left_turn",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "only_right_turn",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "only_straight_on",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_entry",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_exit",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "restriction",
+         "value": "no_turn",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ]
+      },
+      {
+         "key": "day_off",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "day_on",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "hour_off",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "hour_on",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "type",
+         "value": "route",
+         "description": "Determine route number and name.",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "route",
+         "value": "road",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "network",
+         "object_types": [
+            "relation"
+         ]
+      },
+      {
+         "key": "ref",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ],
+         "description": "Route network and number.  Junction/exit number."
+      },
+      {
+         "key": "int_ref",
+         "object_types": [
+            "way"
+         ],
+         "description": "International Route network and number."
+      },
+      {
+         "key": "admin_level",
+         "value": "2",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "admin_level",
+         "value": "3",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "admin_level",
+         "value": "4",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "admin_level",
+         "value": "6",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "boundary",
+         "value": "administrative",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "ISO3166-1",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "ISO3166-1:alpha2",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "ISO3166-2",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "name",
+         "object_types": [
+            "node",
+            "way",
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "name:en",
+         "object_types": [
+            "way",
+            "relation"
+         ],
+         "description": ""
+      },
+      {
+         "key": "alt_name",
+         "object_types": [
+            "way"
+         ],
+         "description": ""
+      },
+      {
+         "key": "official_name",
+         "object_types": [
+            "way"
+         ],
+         "description": ""
+      },
+      {
+         "key": "type",
+         "value": "boundary",
+         "object_types": [
+            "relation"
+         ],
+         "description": ""
+      }
+   ]
+}

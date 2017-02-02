@@ -6,6 +6,7 @@ export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov
 =======
 sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ vim-common libboost1.54-all-dev lcov
@@ -24,6 +25,8 @@ for dep in midgard baldr; do
 =======
 =======
 >>>>>>> skadi/master
+=======
+>>>>>>> mjolnir/master
 if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
   sudo add-apt-repository -y ppa:kevinkreiser/libsodium
   sudo add-apt-repository -y ppa:kevinkreiser/libpgm
@@ -32,6 +35,7 @@ if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
 fi
 sudo add-apt-repository -y ppa:kevinkreiser/prime-server
 sudo apt-get update
+<<<<<<< HEAD
 <<<<<<< HEAD
 sudo apt-get install -y autoconf automake libtool make pkg-config gcc g++ lcov libboost-all-dev libprime-server0.6.3-dev
 
@@ -48,10 +52,19 @@ mkdir -p deps
 for dep in midgard baldr; do
 	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep & 
 >>>>>>> skadi/master
+=======
+sudo apt-get install -y autoconf automake pkg-config libtool make pkg-config gcc g++ lcov vim-common libboost1.54-all-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev libsqlite3-dev libspatialite-dev libgeos-dev libgeos++-dev libcurl4-openssl-dev libprime-server0.6.3-dev
+
+#clone async
+mkdir -p deps
+for dep in midgard baldr skadi; do
+	git clone --depth=1 --recurse --single-branch https://github.com/valhalla/$dep.git deps/$dep &
+>>>>>>> mjolnir/master
 done
 wait
 
 #build sync
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -65,6 +78,9 @@ for dep in midgard baldr sif; do
 =======
 for dep in midgard baldr; do
 >>>>>>> skadi/master
+=======
+for dep in midgard baldr skadi; do
+>>>>>>> mjolnir/master
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
@@ -72,6 +88,7 @@ for dep in midgard baldr; do
 	sudo make install
 	popd
 done
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -84,3 +101,5 @@ wait
 =======
 wait
 >>>>>>> skadi/master
+=======
+>>>>>>> mjolnir/master
