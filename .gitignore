@@ -158,6 +158,9 @@ test/search
 test/node_search
 test/test_config
 test/serializers
+test/loki_service
+test/skadi_service
+test/thor_service
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 loop_ways.txt
