@@ -53,7 +53,11 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
+<<<<<<< HEAD
 #serial 20
+=======
+#serial 21
+>>>>>>> tools/master
 
 AC_DEFUN([AX_BOOST_PYTHON],
 [AC_REQUIRE([AX_PYTHON_DEVEL])dnl
@@ -65,9 +69,25 @@ ax_boost_python_save_LIBS="$LIBS"
 if test "x$PYTHON_CPPFLAGS" != "x"; then
   CPPFLAGS="$PYTHON_CPPFLAGS $CPPFLAGS"
 fi
+<<<<<<< HEAD
 if test "x$PYTHON_LDFLAGS" != "x"; then
   LDFLAGS="$PYTHON_LDFLAGS $LDFLAGS"
 fi
+=======
+
+# Versions of AX_PYTHON_DEVEL() before serial 18 provided PYTHON_LDFLAGS
+# instead of PYTHON_LIBS, so this is just here for compatibility.
+if test "x$PYTHON_LDFLAGS" != "x"; then
+  LDFLAGS="$PYTHON_LDFLAGS $LDFLAGS"
+fi
+
+# Note: Only versions of AX_PYTHON_DEVEL() since serial 18 provide PYTHON_LIBS
+# instead of PYTHON_LDFLAGS.
+if test "x$PYTHON_LIBS" != "x"; then
+  LIBS="$PYTHON_LIBS $LIBS"
+fi
+
+>>>>>>> tools/master
 if test "x$BOOST_CPPFLAGS" != "x"; then
   CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
 fi
@@ -89,12 +109,19 @@ if test "$ac_cv_boost_python" = "yes"; then
      ax_python_lib=$with_boost_python
      ax_boost_python_lib=boost_python-$with_boost_python
    fi])
+<<<<<<< HEAD
   ax_lib=""
+=======
+>>>>>>> tools/master
   BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
   for ax_lib in $ax_python_lib $ax_boost_python_lib `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` boost_python boost_python3; do
     AS_VAR_PUSHDEF([ax_Lib], [ax_cv_lib_$ax_lib''_BOOST_PYTHON_MODULE])dnl
     AC_CACHE_CHECK([whether $ax_lib is the correct library], [ax_Lib],
+<<<<<<< HEAD
     [LIBS="-l$ax_lib $PYTHON_LDFLAGS $ax_boost_python_save_LIBS"
+=======
+    [LIBS="-l$ax_lib $ax_boost_python_save_LIBS $PYTHON_LIBS"
+>>>>>>> tools/master
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <boost/python/module.hpp>
 BOOST_PYTHON_MODULE(test) { throw "Boost::Python test."; }]], [])],

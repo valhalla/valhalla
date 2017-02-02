@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_INIT([midgard],
 	[unstable],
 	[https://github.com/valhalla/midgard/issues],
@@ -75,13 +76,24 @@ AC_INIT([tyr],
 	[valhalla_tyr-[unstable]],
 	[https://github.com/valhalla/tyr])
 >>>>>>> tyr/master
+=======
+AC_INIT([tools],
+	[unstable],
+	[https://github.com/valhalla/tools/issues],
+	[valhalla_tools-[unstable]],
+	[https://github.com/valhalla/tools])
+>>>>>>> tools/master
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 
 AM_SILENT_RULES([yes])
+<<<<<<< HEAD
 AC_CONFIG_HEADERS([valhalla/config.h])
+=======
+AC_CONFIG_HEADERS([include/config.h])
+>>>>>>> tools/master
 AC_CONFIG_MACRO_DIR([m4])
 
 # set pkgconfigdir, allow override
@@ -101,6 +113,7 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -152,10 +165,13 @@ AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are ar
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building skadi. Please install libboost-dev.])])
 >>>>>>> skadi/master
 =======
+=======
+>>>>>>> tools/master
 # require pthread
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 
 # require other valhalla dependencies
+<<<<<<< HEAD
 PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_skadi = unstable])
 
 # check for protocol buffers compiler and libraries
@@ -168,11 +184,15 @@ AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are ar
 =======
 # require other valhalla dependencies
 PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable])
+=======
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable libvalhalla_meili = unstable libvalhalla_skadi = unstable libvalhalla_loki = unstable libvalhalla_thor = unstable libvalhalla_odin = unstable libvalhalla_tyr = unstable libvalhalla_mjolnir = unstable])
+>>>>>>> tools/master
 
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
 
 # check for boost and make sure we have the program options library
+<<<<<<< HEAD
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building odin. Please install libboost-dev.])])
 >>>>>>> odin/master
 =======
@@ -182,10 +202,14 @@ PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_b
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building thor. Please install libboost-dev.])])
 >>>>>>> thor/master
+=======
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tools. Please install libboost-dev.])])
+>>>>>>> tools/master
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
@@ -260,10 +284,35 @@ AX_BOOST_THREAD
 # check zeromq version
 PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.3])
 >>>>>>> tyr/master
+=======
+
+# if we wanted python bindings
+AC_ARG_ENABLE([python_bindings],
+    [  --enable-python-bindings    Create python bindings],
+    [case "${enableval}" in
+        yes) python_bindings=true ;;
+        no)  python_bindings=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-python-bindings]) ;;
+    esac],[python_bindings=false])
+AM_CONDITIONAL([PYTHON_BINDINGS], [test x$python_bindings = xtrue])
+
+# then we require python dev headers and boost python
+AM_COND_IF([PYTHON_BINDINGS], [
+    AX_PYTHON_DEVEL([>= '2.7'])
+    AM_PATH_PYTHON([2.7],,)
+    AX_BOOST_PYTHON
+    AS_IF([test "x$BOOST_PYTHON_LIB" == "x"],
+          [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
+])
+
+# check pkg-config dependencies
+PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.3])
+>>>>>>> tools/master
 
 # optionally enable coverage information
 CHECK_COVERAGE
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -301,6 +350,9 @@ AC_CONFIG_FILES([Makefile libvalhalla_thor.pc])
 =======
 AC_CONFIG_FILES([Makefile libvalhalla_tyr.pc])
 >>>>>>> tyr/master
+=======
+AC_CONFIG_FILES([Makefile])
+>>>>>>> tools/master
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

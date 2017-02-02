@@ -16,9 +16,15 @@ install-sh
 missing
 depcomp
 Makefile
+<<<<<<< HEAD
 valhalla/config.h
 valhalla/config.h.in
 valhalla/stamp-h1
+=======
+include/config.h
+include/config.h.in
+include/stamp-h1
+>>>>>>> tools/master
 ltmain.sh
 m4/libtool.m4
 m4/ltoptions.m4
@@ -26,6 +32,7 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,10 +116,32 @@ py-compile
 # built objects
 tyr_service
 >>>>>>> tyr/master
+=======
+libvalhalla_tools.pc
+
+# built objects
+valhalla_benchmark_adjacency_list
+valhalla_benchmark_loki
+valhalla_benchmark_skadi
+valhalla_elevation_service
+valhalla_export_edges
+valhalla_loki_worker
+valhalla_odin_worker
+valhalla_route_service
+valhalla_run_matrix
+valhalla_run_isochrone
+valhalla_run_route
+valhalla_skadi_worker
+valhalla_thor_worker
+valhalla_tyr_worker
+valhalla_associate_segments
+*.la
+>>>>>>> tools/master
 *.o
 .deps/
 .dirstamp
 *.lo
+<<<<<<< HEAD
 conf/
 .libs/
 <<<<<<< HEAD
@@ -153,10 +182,17 @@ libvalhalla_thor.la
 =======
 libvalhalla_tyr.la
 >>>>>>> tyr/master
+=======
+.libs/
+conf/
+include/proto/
+src/proto/
+>>>>>>> tools/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -272,6 +308,10 @@ scripts/duane_routes.txt
 test/test_config
 test/serializers
 >>>>>>> tyr/master
+=======
+test/*.log
+test/*.trs
+>>>>>>> tools/master
 
 # test coverage stuff
 *.gcno
@@ -283,6 +323,7 @@ coverage/
 .cproject
 .project
 .settings
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -296,3 +337,5 @@ scripts/gdal-2.0.0.tar.gz
 duplicateways.txt
 connectivity*
 >>>>>>> mjolnir/master
+=======
+>>>>>>> tools/master

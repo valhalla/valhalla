@@ -1,16 +1,25 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "test.h"
 #include "config.h"
 
 =======
 >>>>>>> odin/master
+=======
+#include "test.h"
+#include "config.h"
+
+>>>>>>> tools/master
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
 
+<<<<<<< HEAD
 #include "test.h"
 #include "config.h"
 
+=======
+>>>>>>> tools/master
 using namespace std;
 
 namespace test {

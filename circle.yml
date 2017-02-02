@@ -8,6 +8,7 @@ checkout:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     - (rc=0; for f in *.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
 >>>>>>> mjolnir/master
@@ -19,11 +20,18 @@ checkout:
 >>>>>>> thor/master
 =======
 >>>>>>> tyr/master
+=======
+
+machine:
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+>>>>>>> tools/master
 
 dependencies:
   override:
     - sudo apt-get update
     - scripts/dependencies.sh
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -45,6 +53,12 @@ dependencies:
 test:
   override:
     - scripts/install.sh --enable-coverage
+=======
+
+test:
+  override:
+    - scripts/install.sh --enable-coverage --enable-python-bindings
+>>>>>>> tools/master
 
 general:
   artifacts:

@@ -12,8 +12,13 @@
 #   in your configure.ac.
 #
 #   This macro checks for Python and tries to get the include path to
+<<<<<<< HEAD
 #   'Python.h'. It provides the $(PYTHON_CPPFLAGS) and $(PYTHON_LDFLAGS)
 #   output variables. It also exports $(PYTHON_EXTRA_LIBS) and
+=======
+#   'Python.h'. It provides the $(PYTHON_CPPFLAGS) and $(PYTHON_LIBS) output
+#   variables. It also exports $(PYTHON_EXTRA_LIBS) and
+>>>>>>> tools/master
 #   $(PYTHON_EXTRA_LDFLAGS) for embedding Python in your code.
 #
 #   You can search for some particular version of Python by passing a
@@ -67,7 +72,11 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
+<<<<<<< HEAD
 #serial 17
+=======
+#serial 18
+>>>>>>> tools/master
 
 AU_ALIAS([AC_PYTHON_DEVEL], [AX_PYTHON_DEVEL])
 AC_DEFUN([AX_PYTHON_DEVEL],[
@@ -99,7 +108,11 @@ AC_DEFUN([AX_PYTHON_DEVEL],[
 This version of the AC@&t@_PYTHON_DEVEL macro
 doesn't work properly with versions of Python before
 2.1.0. You may need to re-run configure, setting the
+<<<<<<< HEAD
 variables PYTHON_CPPFLAGS, PYTHON_LDFLAGS, PYTHON_SITE_PKG,
+=======
+variables PYTHON_CPPFLAGS, PYTHON_LIBS, PYTHON_SITE_PKG,
+>>>>>>> tools/master
 PYTHON_EXTRA_LIBS and PYTHON_EXTRA_LDFLAGS by hand.
 Moreover, to disable this check, set PYTHON_NOVERSIONCHECK
 to something else than an empty string.
@@ -172,7 +185,11 @@ $ac_distutils_result])
 	# Check for Python library path
 	#
 	AC_MSG_CHECKING([for Python library path])
+<<<<<<< HEAD
 	if test -z "$PYTHON_LDFLAGS"; then
+=======
+	if test -z "$PYTHON_LIBS"; then
+>>>>>>> tools/master
 		# (makes two attempts to ensure we've got a version number
 		# from the interpreter)
 		ac_python_version=`cat<<EOD | $PYTHON -
@@ -227,13 +244,18 @@ EOD`
 		then
 			# use the official shared library
 			ac_python_library=`echo "$ac_python_library" | sed "s/^lib//"`
+<<<<<<< HEAD
 			PYTHON_LDFLAGS="-L$ac_python_libdir -l$ac_python_library"
+=======
+			PYTHON_LIBS="-L$ac_python_libdir -l$ac_python_library"
+>>>>>>> tools/master
 		else
 			# old way: use libpython from python_configdir
 			ac_python_libdir=`$PYTHON -c \
 			  "from distutils.sysconfig import get_python_lib as f; \
 			  import os; \
 			  print (os.path.join(f(plat_specific=1, standard_lib=1), 'config'));"`
+<<<<<<< HEAD
 			PYTHON_LDFLAGS="-L$ac_python_libdir -lpython$ac_python_version"
 		fi
 
@@ -246,6 +268,20 @@ EOD`
 	fi
 	AC_MSG_RESULT([$PYTHON_LDFLAGS])
 	AC_SUBST([PYTHON_LDFLAGS])
+=======
+			PYTHON_LIBS="-L$ac_python_libdir -lpython$ac_python_version"
+		fi
+
+		if test -z "PYTHON_LIBS"; then
+			AC_MSG_ERROR([
+  Cannot determine location of your Python DSO. Please check it was installed with
+  dynamic libraries enabled, or try setting PYTHON_LIBS by hand.
+			])
+		fi
+	fi
+	AC_MSG_RESULT([$PYTHON_LIBS])
+	AC_SUBST([PYTHON_LIBS])
+>>>>>>> tools/master
 
 	#
 	# Check for site packages
@@ -262,6 +298,7 @@ EOD`
 	# libraries which must be linked in when embedding
 	#
 	AC_MSG_CHECKING(python extra libraries)
+<<<<<<< HEAD
 	if test -z "$PYTHON_EXTRA_LIBS"; then
 	   PYTHON_EXTRA_LIBS=`$PYTHON -c "import distutils.sysconfig; \
                 conf = distutils.sysconfig.get_config_var; \
@@ -269,11 +306,21 @@ EOD`
 	fi
 	AC_MSG_RESULT([$PYTHON_EXTRA_LIBS])
 	AC_SUBST(PYTHON_EXTRA_LIBS)
+=======
+	if test -z "$PYTHON_EXTRA_LDFLAGS"; then
+	   PYTHON_EXTRA_LDFLAGS=`$PYTHON -c "import distutils.sysconfig; \
+                conf = distutils.sysconfig.get_config_var; \
+                print (conf('LIBS') + ' ' + conf('SYSLIBS'))"`
+	fi
+	AC_MSG_RESULT([$PYTHON_EXTRA_LDFLAGS])
+	AC_SUBST(PYTHON_EXTRA_LDFLAGS)
+>>>>>>> tools/master
 
 	#
 	# linking flags needed when embedding
 	#
 	AC_MSG_CHECKING(python extra linking flags)
+<<<<<<< HEAD
 	if test -z "$PYTHON_EXTRA_LDFLAGS"; then
 		PYTHON_EXTRA_LDFLAGS=`$PYTHON -c "import distutils.sysconfig; \
 			conf = distutils.sysconfig.get_config_var; \
@@ -281,6 +328,15 @@ EOD`
 	fi
 	AC_MSG_RESULT([$PYTHON_EXTRA_LDFLAGS])
 	AC_SUBST(PYTHON_EXTRA_LDFLAGS)
+=======
+	if test -z "$PYTHON_EXTRA_LIBS"; then
+		PYTHON_EXTRA_LIBS=`$PYTHON -c "import distutils.sysconfig; \
+			conf = distutils.sysconfig.get_config_var; \
+			print (conf('LINKFORSHARED'))"`
+	fi
+	AC_MSG_RESULT([$PYTHON_EXTRA_LIBS])
+	AC_SUBST(PYTHON_EXTRA_LIBS)
+>>>>>>> tools/master
 
 	#
 	# final check to see if everything compiles alright
@@ -288,8 +344,15 @@ EOD`
 	AC_MSG_CHECKING([consistency of all components of python development environment])
 	# save current global flags
 	ac_save_LIBS="$LIBS"
+<<<<<<< HEAD
 	ac_save_CPPFLAGS="$CPPFLAGS"
 	LIBS="$ac_save_LIBS $PYTHON_LDFLAGS $PYTHON_EXTRA_LDFLAGS $PYTHON_EXTRA_LIBS"
+=======
+	ac_save_LDFLAGS="$LDFLAGS"
+	ac_save_CPPFLAGS="$CPPFLAGS"
+	LIBS="$ac_save_LIBS $PYTHON_LIBS $PYTHON_EXTRA_LIBS $PYTHON_EXTRA_LIBS"
+	LDFLAGS="$ac_save_LDFLAGS $PYTHON_EXTRA_LDFLAGS"
+>>>>>>> tools/master
 	CPPFLAGS="$ac_save_CPPFLAGS $PYTHON_CPPFLAGS"
 	AC_LANG_PUSH([C])
 	AC_LINK_IFELSE([
@@ -300,6 +363,10 @@ EOD`
 	# turn back to default flags
 	CPPFLAGS="$ac_save_CPPFLAGS"
 	LIBS="$ac_save_LIBS"
+<<<<<<< HEAD
+=======
+	LDFLAGS="$ac_save_LDFLAGS"
+>>>>>>> tools/master
 
 	AC_MSG_RESULT([$pythonexists])
 
@@ -307,8 +374,13 @@ EOD`
 	   AC_MSG_FAILURE([
   Could not link test program to Python. Maybe the main Python library has been
   installed in some non-standard library path. If so, pass it to configure,
+<<<<<<< HEAD
   via the LDFLAGS environment variable.
   Example: ./configure LDFLAGS="-L/usr/non-standard-path/python/lib"
+=======
+  via the LIBS environment variable.
+  Example: ./configure LIBS="-L/usr/non-standard-path/python/lib"
+>>>>>>> tools/master
   ============================================================================
    ERROR!
    You probably have to install the development version of the Python package

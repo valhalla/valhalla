@@ -1,0 +1,3 @@
+-j '{"locations":[{"lat":-16.416666,"lon":179.383331,"city":"Lambasa"},{"lat":-17.799999,"lon":177.416672,"city":"Nandi"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":-16.416666,"lon":179.383331,"city":"Lambasa"},{"lat":-18.133333,"lon":178.416672,"city":"Suva"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":-17.799999,"lon":177.416672,"city":"Nandi"},{"lat":-18.133333,"lon":178.416672,"city":"Suva"}],"costing":"auto","directions_options":{"units":"miles"}}'

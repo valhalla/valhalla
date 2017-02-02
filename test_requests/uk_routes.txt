@@ -1,0 +1,4 @@
+-j '{"locations":[{"lat":50.257927,"lon":-5.077632,"street":"Penwethers Lane"},{"lat":50.259197,"lon":-5.076162,"street":"Penwethers Lane"}],"costing":"auto","directions_options":{"units":"kilometers"}}
+-j '{"locations":[{"lat":50.259075,"lon":-5.076307,"street":"Penwethers Lane"},{"lat":50.257912,"lon":-5.077696,"street":"Penwethers Lane"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":50.257908,"lon":-5.077642,"street":"Penwethers Lane"},{"lat":50.258347,"lon":-5.078243,"street":"Trethowan Heights"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":50.258976,"lon":-5.076360,"street":"Penwethers Lane"},{"lat":50.258354,"lon":-5.078340,"street":"Trethowan Heights"}],"costing":"auto","directions_options":{"units":"kilometers"}}'

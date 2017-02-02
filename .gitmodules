@@ -1,3 +1,6 @@
 [submodule "rapidjson"]
 	path = rapidjson
 	url = https://github.com/miloyip/rapidjson
+[submodule "proto"]
+	path = OSMLR
+	url = https://github.com/opentraffic/osmlr-tile-spec.git

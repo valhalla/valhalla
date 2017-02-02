@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":40.069206,"lon":-76.305824,"street":"York Road"},{"lat":40.070145,"lon":-76.312767,"street":"York Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.053726,"lon":-76.271538,"street":"PA 23 East"},{"lat":40.071934,"lon":-76.318558,"street":"Fruitville Pike"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.070145,"lon":-76.312744,"street":"York Road"},{"lat":40.072773,"lon":-76.329407,"street":"PA 283 West"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.066010,"lon":-76.306999,"street":"Lititz Pike"},{"lat":40.072773,"lon":-76.329407,"street":"PA 283 West"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.066010,"lon":-76.306999,"street":"Lititz Pike"},{"lat":40.071037,"lon":-76.322716,"street":"PA 283 West"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.430706,"lon":-79.873199,"street":"I 376 East"},{"lat":40.420532,"lon":-79.851357,"street":"US 30"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.428970,"lon":-79.863808,"street":"US 30"},{"lat":40.424809,"lon":-79.860130,"street":"US 30"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.068405,"lon":-76.306145,"street":"Chester Road"},{"lat":40.068020,"lon":-76.292595,"street":"US 30 East"}],"costing":"auto","directions_options":{"units":"miles"}}'

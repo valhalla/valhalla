@@ -1,0 +1,5 @@
+-j '{"locations":[{"lat":40.230461,"lon":-76.718224,"street":"Middletown Road"},{"lat":40.225479,"lon":-76.719254,"street":"Vine Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.225498,"lon":-76.719254,"street":"Vine Street"},{"lat":40.230560,"lon":-76.718147,"street":"Middletown Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.160999,"lon":-76.664337,"street":"Bossler Road"},{"lat":40.159470,"lon":-76.662163,"street":"Zeager Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.241039,"lon":-76.823250,"street":"4th Avenue"},{"lat":40.238838,"lon":-76.824097,"street":"Dunkle Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.238861,"lon":-76.824097,"street":"Dunkle Street"},{"lat":40.241039,"lon":-76.823250,"street":"4th Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'

@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":39.981422,"lon":-75.735725,"street":"Marshallton Thorndale Road"},{"lat":39.981579,"lon":-75.734215,"street":"Poorhouse Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.981358,"lon":-75.735718,"street":"Marshallton Thorndale Road"},{"lat":39.980537,"lon":-75.735382,"street":"Poorhouse Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.980564,"lon":-75.734192,"street":"Marshallton Thorndale Road"},{"lat":39.980511,"lon":-75.735359,"street":"Poorhouse Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.980785,"lon":-75.734375,"street":"Marshallton Thorndale Road"},{"lat":39.981541,"lon":-75.734222,"street":"Poorhouse Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.608471,"lon":-77.702644,"street":"Beaver Creek Road"},{"lat":39.609238,"lon":-77.705902,"street":"East Baltimore Street"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.608421,"lon":-77.702888,"street":"Beaver Creek Road"},{"lat":39.609310,"lon":-77.703636,"street":"Stouffer Avenue"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.609287,"lon":-77.703491,"street":"Stouffer Avenue"},{"lat":39.608578,"lon":-77.702835,"street":"Beaver Creek Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
+-j '{"locations":[{"lat":39.609196,"lon":-77.705811,"street":"East Baltimore Street"},{"lat":39.608524,"lon":-77.702843,"street":"Beaver Creek Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}'
