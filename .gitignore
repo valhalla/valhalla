@@ -27,17 +27,37 @@ m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
 <<<<<<< HEAD
+<<<<<<< HEAD
 libvalhalla.pc
 =======
 libvalhalla_sif.pc
 >>>>>>> sif/master
 
 # built objects
+=======
+libvalhalla_meili.pc
+
+# built objects
+valhalla_run_map_match
+valhalla_map_match_service
+valhalla_meili_worker
+test/geometry_helpers
+test/grid_range_query
+test/map_matching
+test/queue
+test/routing
+test/viterbi_search
+test/geojson_reader
+test/geojson_writer
+test/grid_traversal
+test/map_matcher_factory
+>>>>>>> meili/master
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
+<<<<<<< HEAD
 <<<<<<< HEAD
 libvalhalla.la
 date_time_zonespec.csv
@@ -45,10 +65,14 @@ genfiles/
 =======
 libvalhalla_sif.la
 >>>>>>> sif/master
+=======
+libvalhalla_meili.la
+>>>>>>> meili/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 <<<<<<< HEAD
 test/thread_file_log_test.log
 test/point2
@@ -95,6 +119,8 @@ test/verbal_text_formatter_us_tx
 =======
 test/factory
 >>>>>>> sif/master
+=======
+>>>>>>> meili/master
 test/*.log
 test/*.trs
 
