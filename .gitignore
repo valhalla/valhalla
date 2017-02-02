@@ -71,9 +71,10 @@ libvalhalla.la
 date_time_zonespec.csv
 
 # tests
+test/*.log
+test/*.trs
 test-suite.log
 test-driver
-test/thread_file_log_test.log
 test/point2
 test/linesegment2
 test/distanceapproximator
