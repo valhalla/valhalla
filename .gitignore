@@ -161,6 +161,7 @@ test/serializers
 test/loki_service
 test/skadi_service
 test/thor_service
+test_requests/duane_routes.txt
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 loop_ways.txt
@@ -170,7 +171,6 @@ connectivity*
 nodes.nd
 
 # scripts
-scripts/duane_routes.txt
 scripts/gdal-2.0.0/
 scripts/gdal-2.0.0.tar.gz
 
