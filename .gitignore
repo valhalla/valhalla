@@ -26,7 +26,7 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
-libvalhalla_midgard.pc
+libvalhalla.pc
 
 # built objects
 *.o
@@ -34,7 +34,9 @@ libvalhalla_midgard.pc
 .dirstamp
 *.lo
 .libs/
-libvalhalla_midgard.la
+libvalhalla.la
+date_time_zonespec.csv
+genfiles/
 
 # tests
 test-suite.log
@@ -59,6 +61,28 @@ test/sequence
 test/grid
 test/gridded_data
 nodes.nd
+test/location
+test/admin
+test/datetime
+test/directededge
+test/double_bucket_queue
+test/edgecollapser
+test/graphid
+test/tilehierarchy
+test/graphtile
+test/nodeinfo
+test/streetname
+test/streetnames
+test/streetname_us
+test/streetnames_us
+test/streetnames_factory
+test/graphreader
+test/turn
+test/json
+test/verbal_text_formatter
+test/verbal_text_formatter_us
+test/verbal_text_formatter_us_co
+test/verbal_text_formatter_us_tx
 test/*.log
 test/*.trs
 
