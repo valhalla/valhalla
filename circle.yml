@@ -4,18 +4,25 @@ checkout:
     - git submodule update --init
     - bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     - (rc=0; for f in *.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
 >>>>>>> mjolnir/master
+=======
+>>>>>>> odin/master
 
 dependencies:
   override:
     - sudo apt-get update
     - scripts/dependencies.sh
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     - (rc=0; for f in lua/*.lua; do lua $f || rc=$?; done; exit $rc;)
 >>>>>>> mjolnir/master
+=======
+    - (rc=0; for f in locales/*.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
+>>>>>>> odin/master
 
 test:
   override:

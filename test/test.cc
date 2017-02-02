@@ -1,9 +1,15 @@
+<<<<<<< HEAD
 #include "test.h"
 #include "config.h"
 
+=======
+>>>>>>> odin/master
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+
+#include "test.h"
+#include "config.h"
 
 using namespace std;
 

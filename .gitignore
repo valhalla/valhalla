@@ -30,6 +30,7 @@ libtool
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 libvalhalla.pc
 =======
 libvalhalla_sif.pc
@@ -76,11 +77,23 @@ valhalla_ways_to_edges
 valhalla_build_speeds
 valhalla_build_statistics
 >>>>>>> mjolnir/master
+=======
+libvalhalla_odin.pc
+
+# built objects
+valhalla/proto
+src/proto
+genfiles/
+locales/*.UTF-8
+odin_service
+>>>>>>> odin/master
 *.o
 .deps/
 .dirstamp
 *.lo
+conf/
 .libs/
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -103,10 +116,14 @@ libvalhalla_mjolnir.la
 genfiles/
 *.bin
 >>>>>>> mjolnir/master
+=======
+libvalhalla_odin.la
+>>>>>>> odin/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -181,6 +198,15 @@ test/graphparser
 test/signinfo
 test/utrecht
 test/countryaccess
+=======
+test/maneuversbuilder
+test/narrativebuilder
+test/enhancedtrippath
+test/sign
+test/signs
+test/util_odin
+test/narrative_dictionary
+>>>>>>> odin/master
 test/*.log
 test/*.trs
 test/data/bin_tiles/bin/*

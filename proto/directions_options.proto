@@ -1,0 +1,13 @@
+package valhalla.odin;
+
+message DirectionsOptions {
+  
+  enum Units {
+    kKilometers = 0;
+    kMiles = 1;
+  }
+
+  optional Units units = 1;                         // kKilometers or kMiles
+  optional string language = 2 [default = "en-US"]; // Based on IETF BCP 47 language tag string
+  optional bool narrative = 3 [default = true];     // Enable/disable narrative production
+}
