@@ -5,6 +5,7 @@ ACLOCAL_AMFLAGS = -I m4
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AM_LDFLAGS = @COVERAGE_LDFLAGS@ @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
 AM_CPPFLAGS = -I@abs_srcdir@/valhalla @PTHREAD_CFLAGS@ -Igenfiles
 =======
@@ -48,11 +49,17 @@ AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @BOOST_CPPFLAGS@ -Igenfiles
 AM_CXXFLAGS = -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto @COVERAGE_CXXFLAGS@ -Igenfiles
 >>>>>>> odin/master
+=======
+AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@ @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
+AM_CPPFLAGS = -I@abs_srcdir@/valhalla @BOOST_CPPFLAGS@ @PTHREAD_CFLAGS@ -Igenfiles
+AM_CXXFLAGS = -I@abs_srcdir@/valhalla @COVERAGE_CXXFLAGS@ -Igenfiles
+>>>>>>> loki/master
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
 # things for versioning
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -78,6 +85,9 @@ pkgconfig_DATA = libvalhalla_mjolnir.pc
 =======
 pkgconfig_DATA = libvalhalla_odin.pc
 >>>>>>> odin/master
+=======
+pkgconfig_DATA = libvalhalla_loki.pc
+>>>>>>> loki/master
 EXTRA_DIST = version.sh
 
 # conditional test coverage
@@ -102,6 +112,7 @@ coverage/index.html: coverage.info
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> sif/master
@@ -111,6 +122,8 @@ coverage/index.html: coverage.info
 =======
 
 >>>>>>> skadi/master
+=======
+>>>>>>> loki/master
 .PHONY: clean-gcno
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
@@ -122,6 +135,7 @@ endif
 
 clean-genfiles:
 	-rm -rf genfiles
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -851,6 +865,38 @@ test_narrative_dictionary_SOURCES = test/narrative_dictionary.cc test/test.cc
 test_narrative_dictionary_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_narrative_dictionary_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 >>>>>>> odin/master
+=======
+
+# lib valhalla compilation etc
+lib_LTLIBRARIES = libvalhalla_loki.la
+nobase_include_HEADERS = \
+	valhalla/loki/search.h \
+	valhalla/loki/node_search.h \
+	valhalla/loki/service.h
+libvalhalla_loki_la_SOURCES = \
+	src/loki/search.cc \
+	src/loki/service.cc \
+	src/loki/locate_action.cc \
+	src/loki/route_action.cc \
+	src/loki/matrix_action.cc \
+	src/loki/isochrone_action.cc \
+	src/loki/trace_route_action.cc \
+	src/loki/node_search.cc
+libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+
+# tests
+check_PROGRAMS = test/loki_service test/search test/node_search
+test_search_SOURCES = test/search.cc test/test.cc
+test_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_search_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
+test_loki_service_SOURCES = test/loki_service.cc test/test.cc
+test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_loki_service_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
+test_node_search_SOURCES = test/node_search.cc test/test.cc
+test_node_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_node_search_LDADD = $(DEPS_LIBS) $(VALHALLA_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
+>>>>>>> loki/master
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

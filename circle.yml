@@ -5,16 +5,20 @@ checkout:
     - bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     - (rc=0; for f in *.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
 >>>>>>> mjolnir/master
 =======
 >>>>>>> odin/master
+=======
+>>>>>>> loki/master
 
 dependencies:
   override:
     - sudo apt-get update
     - scripts/dependencies.sh
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -23,6 +27,8 @@ dependencies:
 =======
     - (rc=0; for f in locales/*.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
 >>>>>>> odin/master
+=======
+>>>>>>> loki/master
 
 test:
   override:

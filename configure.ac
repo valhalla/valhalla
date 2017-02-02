@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_INIT([midgard],
 	[unstable],
 	[https://github.com/valhalla/midgard/issues],
@@ -51,6 +52,13 @@ AC_INIT([odin],
 	[valhalla_odin-[unstable]],
 	[https://github.com/valhalla/odin])
 >>>>>>> odin/master
+=======
+AC_INIT([loki],
+	[unstable],
+	[https://github.com/valhalla/loki/issues],
+	[valhalla_loki-[unstable]],
+	[https://github.com/valhalla/loki])
+>>>>>>> loki/master
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
@@ -77,6 +85,7 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -194,10 +203,27 @@ AX_BOOST_DATE_TIME
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.6.3])
 >>>>>>> odin/master
+=======
+# require pthread
+AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
+
+# require other valhalla dependencies
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_sif = unstable])
+
+# check for boost and make sure we have the program options library
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building loki. Please install libboost-dev.])])
+AX_BOOST_PROGRAM_OPTIONS
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
+
+# check pkg-config dependencies
+PKG_CHECK_MODULES([DEPS], [libprime_server = 0.6.3])
+>>>>>>> loki/master
 
 # optionally enable coverage information
 CHECK_COVERAGE
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -223,6 +249,9 @@ AC_CONFIG_FILES([Makefile libvalhalla_mjolnir.pc])
 =======
 AC_CONFIG_FILES([Makefile libvalhalla_odin.pc])
 >>>>>>> odin/master
+=======
+AC_CONFIG_FILES([Makefile libvalhalla_loki.pc])
+>>>>>>> loki/master
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a
