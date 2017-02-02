@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_INIT([midgard],
 	[unstable],
 	[https://github.com/valhalla/midgard/issues],
@@ -59,6 +60,13 @@ AC_INIT([loki],
 	[valhalla_loki-[unstable]],
 	[https://github.com/valhalla/loki])
 >>>>>>> loki/master
+=======
+AC_INIT([thor],
+	[unstable],
+	[https://github.com/valhalla/thor/issues],
+	[valhalla_thor-[unstable]],
+	[https://github.com/valhalla/thor])
+>>>>>>> thor/master
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
@@ -145,6 +153,7 @@ PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_b
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
 
+<<<<<<< HEAD
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building mjolnir. Please install libboost-dev.])])
 >>>>>>> mjolnir/master
@@ -158,6 +167,13 @@ REQUIRE_PROTOC
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building odin. Please install libboost-dev.])])
 >>>>>>> odin/master
+=======
+# require other valhalla dependencies
+PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable libvalhalla_meili = unstable libvalhalla_sif = unstable libvalhalla_odin = unstable])
+
+# check for boost and make sure we have the program options library
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building thor. Please install libboost-dev.])])
+>>>>>>> thor/master
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
@@ -183,6 +199,7 @@ if test "x$SQLITE3_VERSION" = "x"; then
   AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.]) 
 fi 
 
+<<<<<<< HEAD
 # Check for Geos library
 AX_LIB_GEOS(3.0.0)
 if test "x$GEOS_VERSION" = "x"
@@ -219,10 +236,15 @@ AX_BOOST_THREAD
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libprime_server = 0.6.3])
 >>>>>>> loki/master
+=======
+# check pkg-config dependencies
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server >= 0.6.3])
+>>>>>>> thor/master
 
 # optionally enable coverage information
 CHECK_COVERAGE
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -252,6 +274,9 @@ AC_CONFIG_FILES([Makefile libvalhalla_odin.pc])
 =======
 AC_CONFIG_FILES([Makefile libvalhalla_loki.pc])
 >>>>>>> loki/master
+=======
+AC_CONFIG_FILES([Makefile libvalhalla_thor.pc])
+>>>>>>> thor/master
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

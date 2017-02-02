@@ -1,0 +1,124 @@
+#include <thor/trip_path_controller.h>
+#include <string>
+
+
+namespace valhalla {
+namespace thor {
+
+const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes = {
+  // Edge keys
+  { kEdgeNames, true },
+  { kEdgeLength, true },
+  { kEdgeSpeed, true },
+  { kEdgeRoadClass, true },
+  { kEdgeBeginHeading, true },
+  { kEdgeEndHeading, true },
+  { kEdgeBeginShapeIndex, true },
+  { kEdgeEndShapeIndex, true },
+  { kEdgeTraversability, true },
+  { kEdgeUse, true },
+  { kEdgeToll, true },
+  { kEdgeUnpaved, true },
+  { kEdgeTunnel, true },
+  { kEdgeBridge, true },
+  { kEdgeRoundabout, true },
+  { kEdgeInternalIntersection, true },
+  { kEdgeDriveOnRight, true },
+  { kEdgeSurface, true },
+  { kEdgeSignExitNumber, true },
+  { kEdgeSignExitBranch, true },
+  { kEdgeSignExitToward, true },
+  { kEdgeSignExitName, true },
+  { kEdgeTravelMode, true },
+  { kEdgeVehicleType, true },
+  { kEdgePedestrianType, true },
+  { kEdgeBicycleType, true },
+  { kEdgeTransitType, true },
+  { kEdgeTransitRouteInfoOnestopId, true },
+  { kEdgeTransitRouteInfoBlockId, true },
+  { kEdgeTransitRouteInfoTripId, true },
+  { kEdgeTransitRouteInfoShortName, true },
+  { kEdgeTransitRouteInfoLongName, true },
+  { kEdgeTransitRouteInfoHeadsign, true },
+  { kEdgeTransitRouteInfoColor, true },
+  { kEdgeTransitRouteInfoTextColor, true },
+  { kEdgeTransitRouteInfoDescription, true },
+  { kEdgeTransitRouteInfoOperatorOnestopId, true },
+  { kEdgeTransitRouteInfoOperatorName, true },
+  { kEdgeTransitRouteInfoOperatorUrl, true },
+  { kEdgeId, true },
+  { kEdgeWayId, true },
+  { kEdgeWeightedGrade, true },
+  { kEdgeMaxUpwardGrade, true },
+  { kEdgeMaxDownwardGrade, true },
+  { kEdgeLaneCount, true },
+  { kEdgeCycleLane, true },
+  { kEdgeBicycleNetwork, true },
+  { kEdgeSidewalk, true },
+  { kEdgeDensity, true },
+  { kEdgeSpeedLimit, true },
+  { kEdgeTruckSpeed, true },
+  { kEdgeTruckRoute, true },
+
+  // Node keys
+  { kNodeIntersectingEdgeBeginHeading, true },
+  { kNodeIntersectingEdgeFromEdgeNameConsistency, true },
+  { kNodeIntersectingEdgeToEdgeNameConsistency, true },
+  { kNodeIntersectingEdgeDriveability, true },
+  { kNodeIntersectingEdgeCyclability, true },
+  { kNodeIntersectingEdgeWalkability, true },
+  { kNodeElapsedTime, true },
+  { kNodeaAdminIndex, true },
+  { kNodeType, true },
+  { kNodeFork, true },
+  { kNodeTransitStopInfoType, true },
+  { kNodeTransitStopInfoOnestopId, true },
+  { kNodetransitStopInfoName, true },
+  { kNodeTransitStopInfoArrivalDateTime, true },
+  { kNodeTransitStopInfoDepartureDateTime, true },
+  { kNodeTransitStopInfoIsParentStop, true },
+  { kNodeTransitStopInfoAssumedSchedule, true },
+  { kNodeTransitStopInfoLatLon, true },
+  { kNodeTimeZone, true },
+
+  // Top level: admin list, full shape, and shape bounding box keys
+  { kOsmChangeset, true },
+  { kAdminCountryCode, true },
+  { kAdminCountryText, true },
+  { kAdminStateCode, true },
+  { kAdminStateText, true },
+  { kShape, true }
+};
+
+TripPathController::TripPathController(
+    const std::unordered_map<std::string, bool>& new_attributes) {
+  attributes = new_attributes;
+}
+
+void TripPathController::enable_all() {
+  for (auto& pair : attributes) {
+    pair.second = true;
+  }
+}
+
+void TripPathController::disable_all() {
+  for (auto& pair : attributes) {
+    pair.second = false;
+  }
+}
+
+bool TripPathController::category_attribute_enabled(
+    const std::string& category) const {
+  for (const auto& pair : attributes) {
+    // if the key starts with the specified category and it is enabled
+    // then return true
+    if ((pair.first.compare(0, category.size(), category) == 0)
+        && pair.second) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}
+}

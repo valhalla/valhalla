@@ -32,6 +32,7 @@ libtool
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 libvalhalla.pc
 =======
 libvalhalla_sif.pc
@@ -94,12 +95,19 @@ libvalhalla_loki.pc
 # built objects
 loki_service
 >>>>>>> loki/master
+=======
+libvalhalla_thor.pc
+
+# built objects
+thor_service
+>>>>>>> thor/master
 *.o
 .deps/
 .dirstamp
 *.lo
 conf/
 .libs/
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -130,10 +138,14 @@ libvalhalla_odin.la
 =======
 libvalhalla_loki.la
 >>>>>>> loki/master
+=======
+libvalhalla_thor.la
+>>>>>>> thor/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -219,6 +231,12 @@ test/signs
 test/util_odin
 test/narrative_dictionary
 >>>>>>> odin/master
+=======
+test/edgestatus
+test/optimizer
+test/astar
+test/trip_path_controller
+>>>>>>> thor/master
 test/*.log
 test/*.trs
 test/data/bin_tiles/bin/*
@@ -234,6 +252,9 @@ test/search
 test/service
 test/node_search
 >>>>>>> loki/master
+
+# scripts
+scripts/duane_routes.txt
 
 # test coverage stuff
 *.gcno
