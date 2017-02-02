@@ -16,15 +16,9 @@ install-sh
 missing
 depcomp
 Makefile
-<<<<<<< HEAD
 valhalla/config.h
 valhalla/config.h.in
 valhalla/stamp-h1
-=======
-include/config.h
-include/config.h.in
-include/stamp-h1
->>>>>>> tools/master
 ltmain.sh
 m4/libtool.m4
 m4/ltoptions.m4
@@ -32,51 +26,12 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 libtool
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 libvalhalla.pc
-=======
-libvalhalla_sif.pc
->>>>>>> sif/master
-
-# built objects
-=======
-libvalhalla_meili.pc
 
 # built objects
 valhalla_run_map_match
 valhalla_map_match_service
 valhalla_meili_worker
-test/geometry_helpers
-test/grid_range_query
-test/map_matching
-test/queue
-test/routing
-test/viterbi_search
-test/geojson_reader
-test/geojson_writer
-test/grid_traversal
-test/map_matcher_factory
->>>>>>> meili/master
-=======
-libvalhalla_skadi.pc
-
-# built objects
-skadi_service
->>>>>>> skadi/master
-=======
-libvalhalla_mjolnir.pc
-
-# built objects
-valhalla/proto
-src/proto
 valhalla_benchmark_admins
 valhalla_build_admins
 valhalla_build_connectivity
@@ -86,40 +41,6 @@ valhalla_query_transit
 valhalla_ways_to_edges
 valhalla_build_speeds
 valhalla_build_statistics
->>>>>>> mjolnir/master
-=======
-libvalhalla_odin.pc
-
-# built objects
-valhalla/proto
-src/proto
-genfiles/
-locales/*.UTF-8
-odin_service
->>>>>>> odin/master
-=======
-libvalhalla_loki.pc
-
-# built objects
-loki_service
->>>>>>> loki/master
-=======
-libvalhalla_thor.pc
-
-# built objects
-thor_service
->>>>>>> thor/master
-=======
-libvalhalla_tyr.pc
-py-compile
-
-# built objects
-tyr_service
->>>>>>> tyr/master
-=======
-libvalhalla_tools.pc
-
-# built objects
 valhalla_benchmark_adjacency_list
 valhalla_benchmark_loki
 valhalla_benchmark_skadi
@@ -135,71 +56,23 @@ valhalla_skadi_worker
 valhalla_thor_worker
 valhalla_tyr_worker
 valhalla_associate_segments
+valhalla/proto
+src/proto
+genfiles/
+locales/*.UTF-8
+py-compile
 *.la
->>>>>>> tools/master
 *.o
 .deps/
 .dirstamp
 *.lo
-<<<<<<< HEAD
-conf/
 .libs/
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 libvalhalla.la
 date_time_zonespec.csv
-genfiles/
-=======
-libvalhalla_sif.la
->>>>>>> sif/master
-=======
-libvalhalla_meili.la
->>>>>>> meili/master
-=======
-libvalhalla_skadi.la
->>>>>>> skadi/master
-=======
-conf/
-libvalhalla_mjolnir.la
-genfiles/
-*.bin
->>>>>>> mjolnir/master
-=======
-libvalhalla_odin.la
->>>>>>> odin/master
-=======
-libvalhalla_loki.la
->>>>>>> loki/master
-=======
-libvalhalla_thor.la
->>>>>>> thor/master
-=======
-libvalhalla_tyr.la
->>>>>>> tyr/master
-=======
-.libs/
-conf/
-include/proto/
-src/proto/
->>>>>>> tools/master
 
 # tests
 test-suite.log
 test-driver
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 test/thread_file_log_test.log
 test/point2
 test/linesegment2
@@ -219,7 +92,6 @@ test/logging
 test/sequence
 test/grid
 test/gridded_data
-nodes.nd
 test/location
 test/admin
 test/datetime
@@ -242,22 +114,20 @@ test/verbal_text_formatter
 test/verbal_text_formatter_us
 test/verbal_text_formatter_us_co
 test/verbal_text_formatter_us_tx
-=======
 test/factory
->>>>>>> sif/master
-=======
->>>>>>> meili/master
-test/*.log
-test/*.trs
-=======
-test/*.log
-test/*.trs
+test/geometry_helpers
+test/grid_range_query
+test/map_matching
+test/queue
+test/routing
+test/viterbi_search
+test/geojson_reader
+test/geojson_writer
+test/grid_traversal
+test/map_matcher_factory
 test/data/*.hgt
 test/sample
-test/service
 test/util_skadi
->>>>>>> skadi/master
-=======
 test/test_config*
 test/edgeinfobuilder
 test/uniquenames
@@ -270,7 +140,6 @@ test/graphparser
 test/signinfo
 test/utrecht
 test/countryaccess
-=======
 test/maneuversbuilder
 test/narrativebuilder
 test/enhancedtrippath
@@ -278,40 +147,28 @@ test/sign
 test/signs
 test/util_odin
 test/narrative_dictionary
->>>>>>> odin/master
-=======
 test/edgestatus
 test/optimizer
 test/astar
 test/trip_path_controller
->>>>>>> thor/master
-test/*.log
-test/*.trs
 test/data/bin_tiles/bin/*
 test/data/amsterdam_tiles
+test/search
+test/node_search
+test/test_config
+test/serializers
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 loop_ways.txt
->>>>>>> mjolnir/master
-=======
-test/*.log
-test/*.trs
-<<<<<<< HEAD
-test/search
-test/service
-test/node_search
->>>>>>> loki/master
+*.bin
+duplicateways.txt
+connectivity*
+nodes.nd
 
 # scripts
 scripts/duane_routes.txt
-=======
-test/test_config
-test/serializers
->>>>>>> tyr/master
-=======
-test/*.log
-test/*.trs
->>>>>>> tools/master
+scripts/gdal-2.0.0/
+scripts/gdal-2.0.0.tar.gz
 
 # test coverage stuff
 *.gcno
@@ -323,19 +180,3 @@ coverage/
 .cproject
 .project
 .settings
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-#gdal
-scripts/gdal-2.0.0/
-scripts/gdal-2.0.0.tar.gz
->>>>>>> skadi/master
-=======
-duplicateways.txt
-connectivity*
->>>>>>> mjolnir/master
-=======
->>>>>>> tools/master
