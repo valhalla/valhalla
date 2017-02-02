@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libvalhalla_tyr
-Description: valhalla_tyr c++ library
+Name: libvalhalla
+Description: valhalla c++ library
 Version: @VERSION@
-Libs: -L${libdir} -lvalhalla_tyr
+Libs: -L${libdir} -lvalhalla
 Cflags: -I${includedir}
