@@ -263,7 +263,6 @@ libvalhalla_la_SOURCES = \
 	src/baldr/streetnames_factory.cc \
 	src/baldr/streetname_us.cc \
 	src/baldr/streetnames_us.cc \
-	src/baldr/trafficassociation.cc \
 	src/baldr/transitdeparture.cc \
 	src/baldr/transitroute.cc \
 	src/baldr/transitschedule.cc \
