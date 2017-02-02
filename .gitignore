@@ -28,6 +28,7 @@ m4/lt~obsolete.m4
 libtool
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 libvalhalla.pc
 =======
 libvalhalla_sif.pc
@@ -52,11 +53,18 @@ test/geojson_writer
 test/grid_traversal
 test/map_matcher_factory
 >>>>>>> meili/master
+=======
+libvalhalla_skadi.pc
+
+# built objects
+skadi_service
+>>>>>>> skadi/master
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 libvalhalla.la
@@ -68,10 +76,14 @@ libvalhalla_sif.la
 =======
 libvalhalla_meili.la
 >>>>>>> meili/master
+=======
+libvalhalla_skadi.la
+>>>>>>> skadi/master
 
 # tests
 test-suite.log
 test-driver
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 test/thread_file_log_test.log
@@ -123,6 +135,14 @@ test/factory
 >>>>>>> meili/master
 test/*.log
 test/*.trs
+=======
+test/*.log
+test/*.trs
+test/data/*.hgt
+test/sample
+test/service
+test/util_skadi
+>>>>>>> skadi/master
 
 # test coverage stuff
 *.gcno
@@ -135,3 +155,10 @@ coverage/
 .project
 .settings
 
+<<<<<<< HEAD
+=======
+
+#gdal
+scripts/gdal-2.0.0/
+scripts/gdal-2.0.0.tar.gz
+>>>>>>> skadi/master

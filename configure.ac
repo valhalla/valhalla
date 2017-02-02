@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AC_INIT([midgard],
 	[unstable],
 	[https://github.com/valhalla/midgard/issues],
@@ -27,6 +28,13 @@ AC_INIT([meili],
 	[valhalla_meili-[unstable]],
 	[https://github.com/valhalla/meili])
 >>>>>>> meili/master
+=======
+AC_INIT([skadi],
+	[unstable],
+	[https://github.com/valhalla/skadi/issues],
+	[valhalla_skadi-[unstable]],
+	[https://github.com/valhalla/skadi])
+>>>>>>> skadi/master
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
@@ -56,6 +64,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # require pthread
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 =======
@@ -76,10 +85,16 @@ AS_IF([test "x$enable_std_regex" = "xyes"],
       [AX_BOOST_REGEX])
 >>>>>>> baldr/master
 =======
+=======
+# require pthread
+AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
+
+>>>>>>> skadi/master
 # require other valhalla dependencies
 PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_baldr = unstable])
 
 # check for boost and make sure we have the program options library
+<<<<<<< HEAD
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building sif. Please install libboost-dev.])])
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
@@ -90,19 +105,30 @@ PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla_midgard = unstable libvalhalla_b
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
+=======
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building skadi. Please install libboost-dev.])])
+>>>>>>> skadi/master
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
+<<<<<<< HEAD
 AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 
 # check pkg-config dependencies
 PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.3])
 >>>>>>> meili/master
+=======
+AX_BOOST_REGEX
+
+# check pkg-config dependencies
+PKG_CHECK_MODULES([DEPS], [libprime_server >= 0.6.3])
+>>>>>>> skadi/master
 
 # optionally enable coverage information
 CHECK_COVERAGE
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -116,6 +142,9 @@ AC_CONFIG_FILES([Makefile libvalhalla_sif.pc])
 =======
 AC_CONFIG_FILES([Makefile libvalhalla_meili.pc])
 >>>>>>> meili/master
+=======
+AC_CONFIG_FILES([Makefile libvalhalla_skadi.pc])
+>>>>>>> skadi/master
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a
