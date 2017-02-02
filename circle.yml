@@ -1,0 +1,20 @@
+checkout:
+  post:
+    - git submodule sync
+    - git submodule update --init
+    - bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
+
+dependencies:
+  override:
+    - sudo apt-get update
+    - scripts/dependencies.sh
+
+test:
+  override:
+    - scripts/install.sh --enable-coverage
+
+general:
+  artifacts:
+    - config.log
+    - test/*.log
+    - Makefile

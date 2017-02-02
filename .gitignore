@@ -1,0 +1,75 @@
+# editor temporary / backup files
+*~
+
+# artefacts from autotools
+INSTALL
+Makefile.in
+aclocal.m4
+autom4te.cache/
+compile
+config.guess
+config.sub
+config.log
+config.status
+configure
+install-sh
+missing
+depcomp
+Makefile
+valhalla/config.h
+valhalla/config.h.in
+valhalla/stamp-h1
+ltmain.sh
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
+libtool
+libvalhalla_midgard.pc
+
+# built objects
+*.o
+.deps/
+.dirstamp
+*.lo
+.libs/
+libvalhalla_midgard.la
+
+# tests
+test-suite.log
+test-driver
+test/thread_file_log_test.log
+test/point2
+test/linesegment2
+test/distanceapproximator
+test/aabb2
+test/obb2
+test/ellipse
+test/vector2
+test/polyline2
+test/pointll
+test/encode
+test/tiles
+test/aabbll
+test/tilehierarchy
+test/util_midgard
+test/logging
+test/sequence
+test/grid
+test/gridded_data
+nodes.nd
+test/*.log
+test/*.trs
+
+# test coverage stuff
+*.gcno
+*.gcda
+coverage.info
+coverage/
+
+# tools
+.cproject
+.project
+.settings
+
