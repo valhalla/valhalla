@@ -2,9 +2,9 @@
 #include <ostream>
 #include <iostream>
 
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/edgeinfo.h>
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "baldr/edgeinfo.h"
 #include "mjolnir/edgeinfobuilder.h"
 
 namespace valhalla {

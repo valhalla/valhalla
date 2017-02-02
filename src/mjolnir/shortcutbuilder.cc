@@ -1,5 +1,5 @@
 #include "mjolnir/shortcutbuilder.h"
-#include "valhalla/mjolnir/graphtilebuilder.h"
+#include "mjolnir/graphtilebuilder.h"
 
 #include <ostream>
 #include <sstream>
@@ -12,16 +12,16 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/format.hpp>
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/skadi/sample.h>
-#include <valhalla/skadi/util.h>
+#include "midgard/pointll.h"
+#include "midgard/logging.h"
+#include "midgard/encoded.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/graphid.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
+#include "skadi/sample.h"
+#include "skadi/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

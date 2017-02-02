@@ -1,7 +1,7 @@
 
 #include "thor/pathalgorithm.h"
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

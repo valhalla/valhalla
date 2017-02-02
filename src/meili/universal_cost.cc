@@ -1,5 +1,5 @@
-#include <valhalla/midgard/logging.h>
-#include <valhalla/sif/dynamiccost.h>
+#include "midgard/logging.h"
+#include "sif/dynamiccost.h"
 
 #include "meili/universal_cost.h"
 

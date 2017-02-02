@@ -3,7 +3,7 @@
 
 #include "baldr/streetnames_us.h"
 #include "baldr/streetnames_us.h"
-#include <valhalla/midgard/util.h>
+#include "midgard/util.h"
 
 namespace valhalla {
 namespace baldr {

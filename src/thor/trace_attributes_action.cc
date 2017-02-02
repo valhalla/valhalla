@@ -2,18 +2,18 @@
 
 using namespace prime_server;
 
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/directededge.h>
+#include "baldr/json.h"
+#include "baldr/graphconstants.h"
+#include "baldr/directededge.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/odin/enhancedtrippath.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include "midgard/logging.h"
+#include "midgard/constants.h"
+#include "baldr/errorcode_util.h"
+#include "odin/util.h"
+#include "odin/enhancedtrippath.h"
+#include "proto/tripdirections.pb.h"
+#include "proto/trippath.pb.h"
 
 #include "thor/service.h"
 #include "thor/trip_path_controller.h"

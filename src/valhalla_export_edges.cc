@@ -2,10 +2,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/encoded.h>
+#include "baldr/graphconstants.h"
+#include "baldr/graphreader.h"
+#include "midgard/logging.h"
+#include "midgard/encoded.h"
 
 #include <unordered_map>
 #include <algorithm>

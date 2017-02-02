@@ -4,7 +4,7 @@
 #include "baldr/streetnames.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include <valhalla/midgard/util.h>
+#include "midgard/util.h"
 
 namespace valhalla {
 namespace baldr {

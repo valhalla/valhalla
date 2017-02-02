@@ -2,7 +2,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include "odin/narrative_dictionary.h"
 

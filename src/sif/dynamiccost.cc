@@ -1,5 +1,5 @@
 #include "sif/dynamiccost.h"
-#include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
+#include "baldr/double_bucket_queue.h" // For kInvalidLabel
 
 using namespace valhalla::baldr;
 

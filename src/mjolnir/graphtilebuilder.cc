@@ -1,8 +1,8 @@
 #include "mjolnir/graphtilebuilder.h"
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/edgeinfo.h>
+#include "midgard/logging.h"
+#include "baldr/datetime.h"
+#include "baldr/edgeinfo.h"
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>

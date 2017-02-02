@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/connectivity_map.h>
+#include "baldr/connectivity_map.h"
 #include "config.h"
 
 using namespace valhalla::baldr;

@@ -4,12 +4,12 @@
 #include <queue>
 #include <boost/program_options.hpp>
 
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/sif/edgelabel.h>
+#include "midgard/util.h"
+#include "midgard/logging.h"
+#include "sif/edgelabel.h"
 #include "config.h"
 
-#include <valhalla/baldr/double_bucket_queue.h>
+#include "baldr/double_bucket_queue.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

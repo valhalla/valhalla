@@ -1,11 +1,11 @@
 #include <iostream>
 #include <list>
 
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/baldr/streetnames_us.h>
+#include "midgard/util.h"
+#include "midgard/logging.h"
+#include "midgard/constants.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_us.h"
 
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"

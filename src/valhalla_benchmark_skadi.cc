@@ -6,8 +6,8 @@
 #include <thread>
 #include <chrono>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/skadi/sample.h>
+#include "midgard/logging.h"
+#include "skadi/sample.h"
 
 void get_samples(const valhalla::skadi::sample& sample, const std::list<std::pair<double, double> >& postings, size_t id) {
   LOG_INFO("Thread" + std::to_string(id) + " sampling " + std::to_string(postings.size()) + " postings");

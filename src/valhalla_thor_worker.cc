@@ -3,7 +3,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/thor/service.h>
+#include "thor/service.h"
 
 int main(int argc, char** argv) {
 

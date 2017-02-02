@@ -2,9 +2,9 @@
 #include <map>
 #include <algorithm>
 #include "thor/isochrone.h"
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/datetime.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

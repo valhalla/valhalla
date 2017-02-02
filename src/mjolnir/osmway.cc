@@ -2,7 +2,7 @@
 #include "mjolnir/util.h"
 
 #include <iostream>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 

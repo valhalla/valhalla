@@ -2,8 +2,8 @@
 
 using namespace prime_server;
 
-#include <valhalla/baldr/geojson.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/geojson.h"
+#include "midgard/logging.h"
 
 #include "thor/service.h"
 

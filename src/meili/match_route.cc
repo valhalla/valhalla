@@ -1,9 +1,9 @@
 #include <vector>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/graphid.h>
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphid.h"
 
 #include "meili/geometry_helpers.h"
 #include "meili/graph_helpers.h"

@@ -1,9 +1,9 @@
 #include "loki/service.h"
 #include "loki/search.h"
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/encoded.h>
+#include "midgard/pointll.h"
+#include "midgard/logging.h"
+#include "midgard/encoded.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <math.h>

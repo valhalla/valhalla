@@ -9,14 +9,14 @@
 
 #include <boost/filesystem/operations.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/sequence.h>
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/graphreader.h>
+#include "midgard/logging.h"
+#include "midgard/sequence.h"
+#include "baldr/datetime.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/graphid.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

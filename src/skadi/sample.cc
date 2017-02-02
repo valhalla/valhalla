@@ -12,8 +12,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
 
 namespace {
   //srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile

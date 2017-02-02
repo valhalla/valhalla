@@ -8,15 +8,15 @@
 #include "thor/trippathbuilder.h"
 #include "thor/trip_path_controller.h"
 
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/signinfo.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/proto/trippath.pb.h>
+#include "baldr/datetime.h"
+#include "baldr/edgeinfo.h"
+#include "baldr/signinfo.h"
+#include "baldr/graphconstants.h"
+#include "midgard/pointll.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "sif/costconstants.h"
+#include "proto/trippath.pb.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

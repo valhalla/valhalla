@@ -2,7 +2,7 @@
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include <ostream>
 #include <boost/format.hpp>
@@ -19,14 +19,14 @@
 #include <numeric>
 #include <tuple>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/nodeinfo.h>
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/distanceapproximator.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/graphid.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphreader.h"
+#include "baldr/nodeinfo.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

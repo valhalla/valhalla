@@ -1,8 +1,8 @@
 #include <vector>
 #include <algorithm>
 #include "thor/costmatrix.h"
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/logging.h"
+#include "baldr/errorcode_util.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

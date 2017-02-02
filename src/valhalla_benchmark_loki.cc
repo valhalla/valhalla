@@ -1,7 +1,7 @@
 #include "config.h"
 
-#include <valhalla/loki/search.h>
-#include <valhalla/midgard/logging.h>
+#include "loki/search.h"
+#include "midgard/logging.h"
 
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>

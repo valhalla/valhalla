@@ -1,11 +1,11 @@
 #include "sif/bicyclecost.h"
 #include "sif/costconstants.h"
 
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/accessrestriction.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/directededge.h"
+#include "baldr/nodeinfo.h"
+#include "midgard/constants.h"
+#include "baldr/accessrestriction.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 

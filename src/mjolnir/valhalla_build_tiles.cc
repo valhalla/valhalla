@@ -9,7 +9,7 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/restrictionbuilder.h"
-#include <valhalla/baldr/tilehierarchy.h>
+#include "baldr/tilehierarchy.h"
 #include "config.h"
 
 using namespace valhalla::mjolnir;
@@ -21,10 +21,10 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/point2.h"
+#include "midgard/aabb2.h"
+#include "midgard/polyline2.h"
+#include "midgard/logging.h"
 
 namespace bpo = boost::program_options;
 

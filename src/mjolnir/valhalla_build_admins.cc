@@ -5,7 +5,7 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/adminconstants.h"
-#include <valhalla/baldr/graphconstants.h>
+#include "baldr/graphconstants.h"
 
 #include "config.h"
 
@@ -44,7 +44,7 @@ using namespace valhalla::baldr;
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;

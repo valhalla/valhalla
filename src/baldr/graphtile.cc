@@ -1,9 +1,9 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/tiles.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "midgard/logging.h"
 
 #include <ctime>
 #include <string>

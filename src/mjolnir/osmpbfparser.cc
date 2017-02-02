@@ -34,7 +34,7 @@
 #include <unordered_map>
 
 #include "mjolnir/osmpbfparser.h"
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace OSMPBF;
 

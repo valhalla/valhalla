@@ -10,9 +10,9 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <prime_server/http_protocol.hpp>
 
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/json.h"
+#include "baldr/errorcode_util.h"
+#include "midgard/logging.h"
 
 #include "proto/directions_options.pb.h"
 #include "proto/trippath.pb.h"

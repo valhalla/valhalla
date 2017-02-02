@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <cstring>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 

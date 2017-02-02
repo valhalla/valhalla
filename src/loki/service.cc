@@ -8,12 +8,12 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/pedestriancost.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/logging.h"
+#include "sif/autocost.h"
+#include "sif/bicyclecost.h"
+#include "sif/pedestriancost.h"
+#include "baldr/json.h"
+#include "baldr/errorcode_util.h"
 
 #include "loki/service.h"
 #include "loki/search.h"

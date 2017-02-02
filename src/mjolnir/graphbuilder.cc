@@ -12,19 +12,19 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/signinfo.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/skadi/sample.h>
-#include <valhalla/skadi/util.h>
+#include "midgard/logging.h"
+#include "midgard/util.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "midgard/polyline2.h"
+#include "midgard/tiles.h"
+#include "baldr/datetime.h"
+#include "baldr/graphid.h"
+#include "baldr/graphconstants.h"
+#include "baldr/signinfo.h"
+#include "baldr/graphreader.h"
+#include "skadi/sample.h"
+#include "skadi/util.h"
 
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"

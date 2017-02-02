@@ -1,8 +1,8 @@
 #include <map>
 #include <algorithm>
 #include "thor/bidirectional_astar.h"
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/datetime.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

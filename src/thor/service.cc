@@ -9,11 +9,11 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/geojson.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/logging.h"
+#include "midgard/constants.h"
+#include "baldr/json.h"
+#include "baldr/geojson.h"
+#include "baldr/errorcode_util.h"
 
 #include <prime_server/prime_server.hpp>
 

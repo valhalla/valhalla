@@ -1,13 +1,13 @@
 #include <string>
 
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/pedestriancost.h>
-#include <valhalla/baldr/graphreader.h>
+#include "sif/costconstants.h"
+#include "sif/autocost.h"
+#include "sif/bicyclecost.h"
+#include "sif/pedestriancost.h"
+#include "baldr/graphreader.h"
 
-#include <valhalla/meili/candidate_search.h>
-#include <valhalla/meili/map_matcher.h>
+#include "meili/candidate_search.h"
+#include "meili/map_matcher.h"
 
 #include "meili/universal_cost.h"
 #include "meili/map_matcher_factory.h"

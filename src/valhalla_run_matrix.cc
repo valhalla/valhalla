@@ -11,17 +11,17 @@
 
 #include "config.h"
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/loki/search.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/odin/directionsbuilder.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/graphreader.h"
+#include "baldr/pathlocation.h"
+#include "loki/search.h"
+#include "sif/costfactory.h"
+#include "odin/directionsbuilder.h"
+#include "odin/util.h"
+#include "midgard/logging.h"
 
-#include <valhalla/thor/costmatrix.h>
-#include <valhalla/thor/timedistancematrix.h>
-#include <valhalla/thor/optimizer.h>
+#include "thor/costmatrix.h"
+#include "thor/timedistancematrix.h"
+#include "thor/optimizer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

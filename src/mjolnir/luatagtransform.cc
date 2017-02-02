@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <boost/format.hpp>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 
 using namespace valhalla::mjolnir;

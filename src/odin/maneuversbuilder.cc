@@ -8,18 +8,18 @@
 
 #include <boost/format.hpp>
 
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/turn.h>
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/baldr/streetnames_us.h>
-#include <valhalla/baldr/streetnames_factory.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
-#include <valhalla/baldr/verbal_text_formatter_us.h>
-#include <valhalla/baldr/verbal_text_formatter_factory.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/util.h"
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
+#include "midgard/logging.h"
+#include "baldr/turn.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_us.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/verbal_text_formatter.h"
+#include "baldr/verbal_text_formatter_us.h"
+#include "baldr/verbal_text_formatter_factory.h"
+#include "baldr/errorcode_util.h"
 
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"

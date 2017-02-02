@@ -5,7 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include "proto/directions_options.pb.h"
 #include "odin/util.h"

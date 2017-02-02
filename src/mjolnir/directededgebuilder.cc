@@ -1,5 +1,5 @@
 #include "mjolnir/directededgebuilder.h"
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include <algorithm>
 

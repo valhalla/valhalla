@@ -1,4 +1,4 @@
-#include <valhalla/midgard/distanceapproximator.h>
+#include "midgard/distanceapproximator.h"
 
 #include "meili/graph_helpers.h"
 #include "meili/routing.h"

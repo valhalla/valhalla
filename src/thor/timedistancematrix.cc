@@ -1,7 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include "thor/timedistancematrix.h"
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

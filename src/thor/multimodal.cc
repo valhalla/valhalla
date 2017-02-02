@@ -1,8 +1,8 @@
 #include <map>
 #include <algorithm>
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/datetime.h"
+#include "baldr/errorcode_util.h"
+#include "midgard/logging.h"
 #include "thor/multimodal.h"
 
 using namespace valhalla::baldr;

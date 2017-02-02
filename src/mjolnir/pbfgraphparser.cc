@@ -13,15 +13,15 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/sequence.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/tiles.h>
+#include "baldr/tilehierarchy.h"
+#include "baldr/complexrestriction.h"
+#include "baldr/datetime.h"
+#include "midgard/sequence.h"
+#include "midgard/logging.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "midgard/polyline2.h"
+#include "midgard/tiles.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

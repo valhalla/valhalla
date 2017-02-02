@@ -4,8 +4,8 @@
 #include <set>
 #include <unordered_map>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/util.h>
+#include "baldr/graphid.h"
+#include "midgard/util.h"
 
 using namespace valhalla::baldr;
 

@@ -2,12 +2,12 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/costconstants.h>
+#include "midgard/distanceapproximator.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/pathlocation.h"
+#include "sif/dynamiccost.h"
+#include "sif/costconstants.h"
 
 #include "meili/graph_helpers.h"
 #include "meili/geometry_helpers.h"

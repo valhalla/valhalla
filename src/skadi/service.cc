@@ -14,12 +14,12 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/encoded.h>
+#include "baldr/json.h"
+#include "midgard/logging.h"
+#include "baldr/location.h"
+#include "baldr/errorcode_util.h"
+#include "midgard/util.h"
+#include "midgard/encoded.h"
 
 #include "skadi/service.h"
 #include "skadi/sample.h"

@@ -13,10 +13,10 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/edgeinfo.h>
+#include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
+#include "baldr/directededge.h"
+#include "baldr/edgeinfo.h"
 
 namespace bpo = boost::program_options;
 

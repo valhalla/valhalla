@@ -1,5 +1,5 @@
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/pathlocation.h>
+#include "midgard/logging.h"
+#include "baldr/pathlocation.h"
 
 #include "meili/candidate_search.h"
 #include "meili/routing.h"

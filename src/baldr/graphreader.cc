@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/sequence.h>
+#include "midgard/logging.h"
+#include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
 using namespace valhalla::baldr;

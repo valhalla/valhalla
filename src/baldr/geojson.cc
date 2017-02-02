@@ -1,6 +1,6 @@
 #include "baldr/geojson.h"
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
 
 #include <sstream>
 #include <iomanip>

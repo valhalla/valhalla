@@ -1,9 +1,9 @@
 #include "loki/service.h"
 #include "loki/search.h"
 
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/json.h"
+#include "baldr/pathlocation.h"
+#include "midgard/logging.h"
 
 using namespace prime_server;
 using namespace valhalla::baldr;

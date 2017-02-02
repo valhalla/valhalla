@@ -3,7 +3,7 @@
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
 
-#include <valhalla/midgard/pointll.h>
+#include "midgard/pointll.h"
 #include <boost/filesystem.hpp>
 #include <list>
 #include <iomanip>
@@ -11,7 +11,7 @@
 #include <sstream>
 #include <unordered_set>
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

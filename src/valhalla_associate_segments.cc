@@ -1,11 +1,11 @@
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/merge.h>
-#include <valhalla/loki/search.h>
-#include <valhalla/loki/node_search.h>
-#include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/thor/astar.h>
-#include <valhalla/mjolnir/graphtilebuilder.h>
+#include "midgard/logging.h"
+#include "baldr/graphreader.h"
+#include "baldr/merge.h"
+#include "loki/search.h"
+#include "loki/node_search.h"
+#include "thor/pathalgorithm.h"
+#include "thor/astar.h"
+#include "mjolnir/graphtilebuilder.h"
 
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>

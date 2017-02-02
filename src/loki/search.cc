@@ -1,6 +1,6 @@
 #include "loki/search.h"
-#include <valhalla/midgard/linesegment2.h>
-#include <valhalla/midgard/distanceapproximator.h>
+#include "midgard/linesegment2.h"
+#include "midgard/distanceapproximator.h"
 
 #include <unordered_set>
 #include <list>

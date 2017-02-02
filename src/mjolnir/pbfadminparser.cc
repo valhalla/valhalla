@@ -13,8 +13,8 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

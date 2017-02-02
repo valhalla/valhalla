@@ -7,8 +7,8 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/graphreader.h>
+#include "midgard/logging.h"
+#include "baldr/graphreader.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"

@@ -1,6 +1,6 @@
 #include "baldr/transittransfer.h"
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 namespace valhalla {
 namespace baldr {

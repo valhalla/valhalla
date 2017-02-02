@@ -2,8 +2,8 @@
 #include <string>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
 
 #include "meili/traffic_segment_matcher.h"
 

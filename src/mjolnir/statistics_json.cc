@@ -7,7 +7,7 @@
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
-#include <valhalla/baldr/json.h>
+#include "baldr/json.h"
 
 using dataPair = std::pair<std::vector<std::string>*, std::unordered_map<std::string, std::vector<float>>*>;
 

@@ -12,22 +12,22 @@
 
 #include "config.h"
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/geojson.h>
-#include <valhalla/loki/search.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/odin/directionsbuilder.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/thor/bidirectional_astar.h>
-#include <valhalla/thor/trippathbuilder.h>
-#include <valhalla/thor/isochrone.h>
+#include "baldr/graphreader.h"
+#include "baldr/pathlocation.h"
+#include "baldr/geojson.h"
+#include "loki/search.h"
+#include "sif/costfactory.h"
+#include "odin/directionsbuilder.h"
+#include "odin/util.h"
+#include "proto/trippath.pb.h"
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
+#include "midgard/logging.h"
+#include "midgard/distanceapproximator.h"
+#include "thor/pathalgorithm.h"
+#include "thor/bidirectional_astar.h"
+#include "thor/trippathbuilder.h"
+#include "thor/isochrone.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

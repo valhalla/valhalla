@@ -1,8 +1,8 @@
 #include <vector>
 #include <algorithm>
 #include <exception>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/logging.h"
+#include "baldr/errorcode_util.h"
 
 #include "thor/route_matcher.h"
 #include "thor/service.h"

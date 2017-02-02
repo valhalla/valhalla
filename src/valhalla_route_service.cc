@@ -16,12 +16,12 @@
 #include <prime_server/http_protocol.hpp>
 using namespace prime_server;
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
-#include "valhalla/loki/service.h"
-#include "valhalla/thor/service.h"
-#include "valhalla/odin/service.h"
-#include "valhalla/tyr/service.h"
+#include "loki/service.h"
+#include "thor/service.h"
+#include "odin/service.h"
+#include "tyr/service.h"
 
 int main(int argc, char** argv) {
 

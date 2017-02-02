@@ -1,6 +1,6 @@
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/midgard/util.h>
+#include "midgard/util.h"
 
 #include "proto/directions_options.pb.h"
 #include "odin/narrative_builder_factory.h"

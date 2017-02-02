@@ -18,10 +18,10 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/io/coded_stream.h>
 
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/datetime.h"
+#include "baldr/graphreader.h"
+#include "midgard/util.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

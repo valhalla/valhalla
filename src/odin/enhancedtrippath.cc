@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/util.h"
+#include "midgard/logging.h"
+#include "midgard/constants.h"
+#include "baldr/errorcode_util.h"
 
 #include "proto/trippath.pb.h"
 #include "odin/util.h"

@@ -1,9 +1,9 @@
 #include "sif/pedestriancost.h"
 #include "sif/costconstants.h"
 
-#include <valhalla/baldr/accessrestriction.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/accessrestriction.h"
+#include "midgard/constants.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 

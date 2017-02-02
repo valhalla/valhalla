@@ -12,25 +12,25 @@
 
 #include "config.h"
 
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/connectivity_map.h>
-#include <valhalla/loki/search.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/odin/directionsbuilder.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/thor/astar.h>
-#include <valhalla/thor/bidirectional_astar.h>
-#include <valhalla/thor/multimodal.h>
-#include <valhalla/thor/trippathbuilder.h>
-#include <valhalla/thor/trip_path_controller.h>
-#include <valhalla/thor/route_matcher.h>
+#include "midgard/encoded.h"
+#include "baldr/graphreader.h"
+#include "baldr/pathlocation.h"
+#include "baldr/connectivity_map.h"
+#include "loki/search.h"
+#include "sif/costfactory.h"
+#include "odin/directionsbuilder.h"
+#include "odin/util.h"
+#include "proto/trippath.pb.h"
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
+#include "midgard/logging.h"
+#include "midgard/distanceapproximator.h"
+#include "thor/astar.h"
+#include "thor/bidirectional_astar.h"
+#include "thor/multimodal.h"
+#include "thor/trippathbuilder.h"
+#include "thor/trip_path_controller.h"
+#include "thor/route_matcher.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

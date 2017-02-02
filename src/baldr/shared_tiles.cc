@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 

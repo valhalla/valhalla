@@ -24,23 +24,23 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/sequence.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/baldr/streetnames_factory.h>
-#include <valhalla/baldr/streetnames_us.h>
-#include <valhalla/baldr/admininfo.h>
-#include <valhalla/baldr/datetime.h>
+#include "midgard/aabb2.h"
+#include "midgard/constants.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/graphid.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/streetnames_us.h"
+#include "baldr/admininfo.h"
+#include "baldr/datetime.h"
 #include "mjolnir/osmaccess.h"
 
 using namespace valhalla::midgard;

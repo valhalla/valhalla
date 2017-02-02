@@ -3,7 +3,7 @@
 #include <queue>
 #include <unordered_map>
 
-#include <valhalla/midgard/util.h>
+#include "midgard/util.h"
 
 namespace valhalla {
 namespace mjolnir {

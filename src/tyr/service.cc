@@ -11,15 +11,15 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/odin/util.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include "midgard/pointll.h"
+#include "midgard/aabb2.h"
+#include "midgard/logging.h"
+#include "midgard/encoded.h"
+#include "baldr/json.h"
+#include "baldr/errorcode_util.h"
+#include "odin/util.h"
+#include "proto/tripdirections.pb.h"
+#include "proto/directions_options.pb.h"
 
 #include "tyr/service.h"
 

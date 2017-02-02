@@ -7,9 +7,9 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
-#include <valhalla/baldr/errorcode_util.h>
+#include "midgard/logging.h"
+#include "baldr/verbal_text_formatter.h"
+#include "baldr/errorcode_util.h"
 
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_dictionary.h"

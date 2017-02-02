@@ -3,7 +3,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/odin/service.h>
+#include "odin/service.h"
 
 int main(int argc, char** argv) {
 

@@ -1,6 +1,6 @@
 #include "loki/service.h"
 #include "loki/search.h"
-#include <valhalla/baldr/datetime.h>
+#include "baldr/datetime.h"
 #include <boost/property_tree/json_parser.hpp>
 
 using namespace prime_server;

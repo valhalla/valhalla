@@ -3,11 +3,11 @@ using namespace prime_server;
 
 #include <memory>
 
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/geojson.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/errorcode_util.h>
-#include <valhalla/meili/map_matcher.h>
+#include "midgard/logging.h"
+#include "baldr/geojson.h"
+#include "baldr/pathlocation.h"
+#include "baldr/errorcode_util.h"
+#include "meili/map_matcher.h"
 
 #include "thor/service.h"
 #include "thor/route_matcher.h"

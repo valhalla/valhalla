@@ -3,8 +3,8 @@
 
 #include <boost/property_tree/info_parser.hpp>
 
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/midgard/logging.h>
+#include "baldr/datetime.h"
+#include "midgard/logging.h"
 
 using namespace prime_server;
 using namespace valhalla::baldr;

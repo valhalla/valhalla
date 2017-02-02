@@ -1,7 +1,7 @@
 #include "baldr/nodeinfo.h"
 #include <boost/functional/hash.hpp>
 #include <cmath>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include <baldr/datetime.h>
 #include <baldr/graphtile.h>
