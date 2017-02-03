@@ -372,11 +372,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 }
 
 // Fallback to find connection edges from the transit stop to an OSM edge.
-void FindOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
-                      GraphReader& reader_local_level,
-                      const TileHierarchy& tilehierarchy,
-                      std::mutex& lock, const PointLL& stop_ll,
-                      std::vector<std::string>& names, uint32_t& wayid,
+void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
+                      const TileHierarchy& tilehierarchy, std::mutex& lock,
+                      std::vector<std::string>& names, uint64_t& wayid,
                       GraphId& startnode, GraphId& endnode,
                       std::vector<PointLL>& closest_shape,
                       std::tuple<PointLL,float,int>& closest)
@@ -499,7 +497,8 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
 
-
+    FindOSMConnection(stop_ll, reader_local_level, tilehierarchy,
+                      lock, names, wayid, startnode, endnode, closest_shape, closest);
 
     // Check for invalid tile Ids...are we still no good?
     if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
