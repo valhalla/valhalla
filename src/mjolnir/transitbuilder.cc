@@ -27,6 +27,7 @@
 #include "baldr/graphreader.h"
 #include "midgard/util.h"
 #include "midgard/logging.h"
+#include "midgard/distanceapproximator.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -370,11 +371,86 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
           + std::to_string(msecs) + " ms");
 }
 
+// Fallback to find connection edges from the transit stop to an OSM edge.
+void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
+                      const TileHierarchy& tilehierarchy, std::mutex& lock,
+                      std::vector<std::string>& names, uint64_t& wayid,
+                      GraphId& startnode, GraphId& endnode,
+                      std::vector<PointLL>& closest_shape,
+                      std::tuple<PointLL,float,int>& closest)
+{
+  // Let's try a fallback.  Use approximator to find the closest edge.
+  // We do this because the associated way could have been deleted from the
+  // OSM data, but we may have not updated the stops yet in TransitLand.
+  float mindist = 10000000.0f;
+  uint32_t edgelength = 0;
+  float rm = kMetersPerKm;//one km
+  float mr2 = rm * rm;
+
+  const auto& tiles = tilehierarchy.levels().rbegin()->second.tiles;
+  const float kTransitLatDeg  = kMetersPerKm / kMetersPerDegreeLat; //one km radius
+
+  // Get a list of tiles required for a node search within this radius
+  float lngdeg = (rm / DistanceApproximator::MetersPerLngDegree(stop_ll.lat()));
+  AABB2<PointLL> bbox(Point2(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
+                      Point2(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
+  std::vector<int32_t> tilelist = tiles.TileList(bbox);
+
+  for (auto t : tilelist) {
+    // Check all the nodes within the tile. Skip if tile has no nodes
+    lock.lock();
+    const auto& local_level = tilehierarchy.levels().rbegin()->second.level;
+    const GraphTile* newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
+    lock.unlock();
+    if (!newtile || newtile->header()->nodecount() == 0)
+      continue;
+
+    // Use distance approximator for all distance checks
+    DistanceApproximator approximator(stop_ll);
+    for (uint32_t i = 0; i < newtile->header()->nodecount(); i++) {
+      const NodeInfo* node = newtile->node(i);
+      // Check if within radius
+      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+        for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
+          const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
+          auto edgeinfo = newtile->edgeinfo(directededge->edgeinfo_offset());
+
+          // Get shape and find closest point
+          auto this_shape = edgeinfo.shape();
+          auto this_closest = stop_ll.ClosestPoint(this_shape);
+          // Get names
+          names = edgeinfo.GetNames();
+
+          if (std::get<1>(this_closest) < mindist) {
+            // use the new wayid
+            wayid = edgeinfo.wayid();
+            startnode.Set(newtile->header()->graphid().tileid(),
+                          newtile->header()->graphid().level(), i);
+            endnode = directededge->endnode();
+            mindist = std::get<1>(this_closest);
+            closest = this_closest;
+            closest_shape = this_shape;
+            edgelength = directededge->length();
+
+            // Reverse the shape if directed edge is not the forward direction
+            // along the shape
+            if (!directededge->forward()) {
+              std::reverse(closest_shape.begin(), closest_shape.end());
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 // Add connection edges from the transit stop to an OSM edge
 void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
+                      GraphReader& reader_local_level,
                       const TileHierarchy& tilehierarchy,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
+
   PointLL stop_ll = {stop.lon(), stop.lat() };
   uint64_t wayid = stop.osm_way_id();
 
@@ -420,13 +496,20 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
 
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
-    const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
-    LOG_ERROR("No closest edge found for this stop: " + stop.name() + " way Id = " +
-              std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
-              std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) +
-              ", " + std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) +
-              ", " +  std::to_string(aabb.maxy()));
-    return;
+
+    FindOSMConnection(stop_ll, reader_local_level, tilehierarchy,
+                      lock, names, wayid, startnode, endnode, closest_shape, closest);
+
+    // Check for invalid tile Ids...are we still no good?
+    if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
+      const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
+      LOG_ERROR("No closest edge found for this stop: " + stop.name() + " way Id = " +
+                std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
+                std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) +
+                ", " + std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) +
+                ", " +  std::to_string(aabb.maxy()));
+      return;
+    }
   }
 
   LOG_DEBUG("edge found for this stop: " + stop.name() + " way Id = " +
@@ -568,7 +651,8 @@ void build(const std::string& transit_dir,
 
       // Form connections to the stop
       // TODO - deal with hierarchy (only connect egress locations)
-      AddOSMConnection(stop, local_tile, hierarchy_local_level, lock, connection_edges);
+      AddOSMConnection(stop, local_tile, reader_local_level,
+                       hierarchy_local_level, lock, connection_edges);
 
       /** TODO - parent/child relationships
       if (stop.type == 0 && stop.parent.Is_Valid()) {
