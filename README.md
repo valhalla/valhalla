@@ -70,6 +70,7 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
     sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
     #if you plan to compile with data building support, see below for more info
     sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
+    if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
     #if you plan to compile with python bindings, see below for more info
     sudo apt-get install -y python-all-dev
 
