@@ -27,6 +27,7 @@
 #include "baldr/graphreader.h"
 #include "midgard/util.h"
 #include "midgard/logging.h"
+#include "midgard/distanceapproximator.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -375,6 +376,7 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
                       const TileHierarchy& tilehierarchy,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
+
   PointLL stop_ll = {stop.lon(), stop.lat() };
   uint64_t wayid = stop.osm_way_id();
 
@@ -420,13 +422,64 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
 
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
-    const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
-    LOG_ERROR("No closest edge found for this stop: " + stop.name() + " way Id = " +
-              std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
-              std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) +
-              ", " + std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) +
-              ", " +  std::to_string(aabb.maxy()));
-    return;
+
+    // Let's try a fallback.  Use approximator to find the closest edge.
+    // We do this because the associated way could have been deleted from the
+    // OSM data, but we may have not updated the stops yet in TransitLand.
+    mindist = 10000000.0f;
+    edgelength = 0;
+    float rm = kMetersPerKm;//one km
+    float mr2 = rm * rm;
+
+    // Use distance approximator for all distance checks
+    DistanceApproximator approximator(stop_ll);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
+      const NodeInfo* node = tile->node(i);
+      // Check if within radius
+      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+        for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
+          const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
+          auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+
+          // Get shape and find closest point
+          auto this_shape = edgeinfo.shape();
+          auto this_closest = stop_ll.ClosestPoint(this_shape);
+
+          // Get names
+          names = edgeinfo.GetNames();
+
+          if (std::get<1>(this_closest) < mindist) {
+
+            // use the new wayid
+            wayid = edgeinfo.wayid();
+            startnode.Set(tile->header()->graphid().tileid(),
+                          tile->header()->graphid().level(), i);
+            endnode = directededge->endnode();
+            mindist = std::get<1>(this_closest);
+            closest = this_closest;
+            closest_shape = this_shape;
+            edgelength = directededge->length();
+
+            // Reverse the shape if directed edge is not the forward direction
+            // along the shape
+            if (!directededge->forward()) {
+              std::reverse(closest_shape.begin(), closest_shape.end());
+            }
+          }
+        }
+      }
+    }
+
+    // Check for invalid tile Ids...are we still no good?
+    if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
+      const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
+      LOG_ERROR("No closest edge found for this stop: " + stop.name() + " way Id = " +
+                std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
+                std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) +
+                ", " + std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) +
+                ", " +  std::to_string(aabb.maxy()));
+      return;
+    }
   }
 
   LOG_DEBUG("edge found for this stop: " + stop.name() + " way Id = " +
