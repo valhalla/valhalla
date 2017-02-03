@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -Im4
 AM_LDFLAGS =  @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@ @LUA_LIB@ 
-AM_CPPFLAGS =  @BOOST_CPPFLAGS@ -I@abs_srcdir@/include -I@abs_srcdir@/include/proto -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto -Igenfiles 
-AM_CXXFLAGS = @COVERAGE_CXXFLAGS@ -I@abs_srcdir@/include -I@abs_srcdir@/include/proto -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto -Igenfiles @LUA_INCLUDE@ 
+AM_CPPFLAGS =  @BOOST_CPPFLAGS@ -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto -Igenfiles
+AM_CXXFLAGS = @COVERAGE_CXXFLAGS@ -I@abs_srcdir@/valhalla -I@abs_srcdir@/valhalla/proto -Igenfiles @LUA_INCLUDE@ 
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool

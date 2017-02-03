@@ -5,7 +5,8 @@ AC_INIT([valhalla],
 	[https://github.com/valhalla/valahlla])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
-LT_INIT
+# no static lib by default but you can ask for it
+LT_INIT([disable-static])
 AC_SUBST([LIBTOOL_DEPS])
 
 AM_SILENT_RULES([yes])
@@ -35,10 +36,6 @@ AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
 
-# we require python dev headers
-AX_PYTHON_DEVEL([>= '2.7'])
-AM_PATH_PYTHON([2.7],,)
-
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-all-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
@@ -47,6 +44,7 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 AX_BOOST_REGEX
 AX_BOOST_DATE_TIME
+AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 
 # if we wanted python bindings
 AC_ARG_ENABLE([python_bindings],
@@ -55,7 +53,7 @@ AC_ARG_ENABLE([python_bindings],
         yes) python_bindings=true ;;
         no)  python_bindings=false ;;
         *) AC_MSG_ERROR([bad value ${enableval} for --enable-python-bindings]) ;;
-    esac],[python_bindings=false])
+    esac],[python_bindings=true])
 AM_CONDITIONAL([PYTHON_BINDINGS], [test x$python_bindings = xtrue])
 
 # then we require python dev headers and boost python
@@ -73,7 +71,7 @@ AC_ARG_ENABLE([data_tools],
         yes) data_tools=true ;;
         no)  data_tools=false ;;
         *) AC_MSG_ERROR([bad value ${enableval} for --enable-data-tools]) ;;
-    esac],[data_tools=false])
+    esac],[data_tools=true])
 AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 
 # then we require lots more stuff
