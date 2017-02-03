@@ -153,38 +153,6 @@ nobase_include_HEADERS = \
 	valhalla/skadi/service.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
-	valhalla/mjolnir/admin.h \
-	valhalla/mjolnir/countryaccess.h \
-	valhalla/mjolnir/complexrestrictionbuilder.h \
-	valhalla/mjolnir/dataquality.h \
-	valhalla/mjolnir/directededgebuilder.h \
-	valhalla/mjolnir/graphtilebuilder.h \
-	valhalla/mjolnir/edgeinfobuilder.h \
-	valhalla/mjolnir/uniquenames.h \
-	valhalla/mjolnir/ferry_connections.h \
-	valhalla/mjolnir/graphbuilder.h \
-	valhalla/mjolnir/graphenhancer.h \
-	valhalla/mjolnir/graphvalidator.h \
-	valhalla/mjolnir/hierarchybuilder.h \
-	valhalla/mjolnir/idtable.h \
-	valhalla/mjolnir/linkclassification.h \
-	valhalla/mjolnir/luatagtransform.h \
-	valhalla/mjolnir/node_expander.h \
-	valhalla/mjolnir/osmaccess.h \
-	valhalla/mjolnir/osmadmin.h \
-	valhalla/mjolnir/osmdata.h \
-	valhalla/mjolnir/osmnode.h \
-	valhalla/mjolnir/osmpbfparser.h \
-	valhalla/mjolnir/osmaccessrestriction.h \
-	valhalla/mjolnir/osmrestriction.h \
-	valhalla/mjolnir/osmway.h \
-	valhalla/mjolnir/pbfadminparser.h \
-	valhalla/mjolnir/pbfgraphparser.h \
-	valhalla/mjolnir/restrictionbuilder.h \
-	valhalla/mjolnir/shortcutbuilder.h \
-	valhalla/mjolnir/transitbuilder.h \
-	valhalla/mjolnir/util.h \
-	valhalla/mjolnir/validatetransit.h \
 	valhalla/loki/search.h \
 	valhalla/loki/node_search.h \
 	valhalla/loki/service.h \
@@ -222,6 +190,41 @@ nobase_include_HEADERS = \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/service.h
+if DATA_TOOLS
+nobase_include_HEADERS += \
+	valhalla/mjolnir/admin.h \
+	valhalla/mjolnir/countryaccess.h \
+	valhalla/mjolnir/complexrestrictionbuilder.h \
+	valhalla/mjolnir/dataquality.h \
+	valhalla/mjolnir/directededgebuilder.h \
+	valhalla/mjolnir/graphtilebuilder.h \
+	valhalla/mjolnir/edgeinfobuilder.h \
+	valhalla/mjolnir/uniquenames.h \
+	valhalla/mjolnir/ferry_connections.h \
+	valhalla/mjolnir/graphbuilder.h \
+	valhalla/mjolnir/graphenhancer.h \
+	valhalla/mjolnir/graphvalidator.h \
+	valhalla/mjolnir/hierarchybuilder.h \
+	valhalla/mjolnir/idtable.h \
+	valhalla/mjolnir/linkclassification.h \
+	valhalla/mjolnir/luatagtransform.h \
+	valhalla/mjolnir/node_expander.h \
+	valhalla/mjolnir/osmaccess.h \
+	valhalla/mjolnir/osmadmin.h \
+	valhalla/mjolnir/osmdata.h \
+	valhalla/mjolnir/osmnode.h \
+	valhalla/mjolnir/osmpbfparser.h \
+	valhalla/mjolnir/osmaccessrestriction.h \
+	valhalla/mjolnir/osmrestriction.h \
+	valhalla/mjolnir/osmway.h \
+	valhalla/mjolnir/pbfadminparser.h \
+	valhalla/mjolnir/pbfgraphparser.h \
+	valhalla/mjolnir/restrictionbuilder.h \
+	valhalla/mjolnir/shortcutbuilder.h \
+	valhalla/mjolnir/transitbuilder.h \
+	valhalla/mjolnir/util.h \
+	valhalla/mjolnir/validatetransit.h
+endif
 libvalhalla_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
@@ -294,42 +297,6 @@ libvalhalla_la_SOURCES = \
 	src/skadi/service.cc \
 	src/skadi/sample.cc \
 	src/skadi/util.cc \
-	src/proto/transit.pb.cc \
-	src/mjolnir/admin.cc \
-	src/mjolnir/complexrestrictionbuilder.cc \
-	src/mjolnir/countryaccess.cc \
-	src/mjolnir/dataquality.cc \
-	src/mjolnir/directededgebuilder.cc \
-	src/mjolnir/graphtilebuilder.cc \
-	src/mjolnir/edgeinfobuilder.cc \
-	src/mjolnir/uniquenames.cc \
-	src/proto/fileformat.pb.cc \
-	src/proto/osmformat.pb.cc \
-	src/mjolnir/ferry_connections.cc \
-	src/mjolnir/graphbuilder.cc \
-	src/mjolnir/graphenhancer.cc \
-	src/mjolnir/graphvalidator.cc \
-	src/mjolnir/hierarchybuilder.cc \
-	src/mjolnir/idtable.cc \
-	src/mjolnir/linkclassification.cc \
-	src/mjolnir/luatagtransform.cc \
-	src/mjolnir/node_expander.cc \
-	src/mjolnir/osmaccess.cc \
-	src/mjolnir/osmadmin.cc \
-	src/mjolnir/osmnode.cc \
-	src/mjolnir/osmpbfparser.cc \
-	src/mjolnir/osmaccessrestriction.cc \
-	src/mjolnir/osmrestriction.cc \
-	src/mjolnir/osmway.cc \
-	src/mjolnir/pbfadminparser.cc \
-	src/mjolnir/pbfgraphparser.cc \
-	src/mjolnir/restrictionbuilder.cc \
-	src/mjolnir/shortcutbuilder.cc \
-	src/mjolnir/transitbuilder.cc \
-	src/mjolnir/util.cc \
-	src/mjolnir/validatetransit.cc \
-	src/mjolnir/graph_lua_proc.h \
-	src/mjolnir/admin_lua_proc.h \
 	src/loki/search.cc \
 	src/loki/service.cc \
 	src/loki/locate_action.cc \
@@ -375,8 +342,51 @@ libvalhalla_la_SOURCES = \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
 	src/tyr/service.cc
+if DATA_TOOLS
+libvalhalla_la_SOURCES +=
+	src/proto/transit.pb.cc \
+	src/mjolnir/admin.cc \
+	src/mjolnir/complexrestrictionbuilder.cc \
+	src/mjolnir/countryaccess.cc \
+	src/mjolnir/dataquality.cc \
+	src/mjolnir/directededgebuilder.cc \
+	src/mjolnir/graphtilebuilder.cc \
+	src/mjolnir/edgeinfobuilder.cc \
+	src/mjolnir/uniquenames.cc \
+	src/proto/fileformat.pb.cc \
+	src/proto/osmformat.pb.cc \
+	src/mjolnir/ferry_connections.cc \
+	src/mjolnir/graphbuilder.cc \
+	src/mjolnir/graphenhancer.cc \
+	src/mjolnir/graphvalidator.cc \
+	src/mjolnir/hierarchybuilder.cc \
+	src/mjolnir/idtable.cc \
+	src/mjolnir/linkclassification.cc \
+	src/mjolnir/luatagtransform.cc \
+	src/mjolnir/node_expander.cc \
+	src/mjolnir/osmaccess.cc \
+	src/mjolnir/osmadmin.cc \
+	src/mjolnir/osmnode.cc \
+	src/mjolnir/osmpbfparser.cc \
+	src/mjolnir/osmaccessrestriction.cc \
+	src/mjolnir/osmrestriction.cc \
+	src/mjolnir/osmway.cc \
+	src/mjolnir/pbfadminparser.cc \
+	src/mjolnir/pbfgraphparser.cc \
+	src/mjolnir/restrictionbuilder.cc \
+	src/mjolnir/shortcutbuilder.cc \
+	src/mjolnir/transitbuilder.cc \
+	src/mjolnir/util.cc \
+	src/mjolnir/validatetransit.cc \
+	src/mjolnir/graph_lua_proc.h \
+	src/mjolnir/admin_lua_proc.h
+endif
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ $(DEPS_CFLAGS) 
-libvalhalla_la_LIBADD = $(BOOST_DATE_TIME_LIB) $(BOOST_FILESYSTEM_LIB) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(DEPS_LIBS) -lspatialite -lsqlite3 @PROTOC_LIBS@ 
+libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_DATE_TIME_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(DEPS_LIBS)
+if DATA_TOOLS
+libvalhalla_la_LIBADD += -lspatialite -lsqlite3
+endif
+
 
 if PYTHON_BINDINGS
 pyexec_LTLIBRARIES = \
@@ -391,15 +401,6 @@ bin_PROGRAMS = \
 	valhalla_map_match_service \
 	valhalla_run_map_match \
 	valhalla_meili_worker \
-	valhalla_benchmark_admins \
-	valhalla_build_connectivity \
-	valhalla_build_tiles \
-	valhalla_build_admins \
-	valhalla_build_transit \
-	valhalla_query_transit \
-	valhalla_ways_to_edges \
-	valhalla_build_speeds \
-	valhalla_build_statistics \
 	valhalla_skadi_worker \
 	valhalla_loki_worker \
 	valhalla_odin_worker \
@@ -413,8 +414,8 @@ bin_PROGRAMS = \
 	valhalla_run_route \
 	valhalla_benchmark_adjacency_list \
 	valhalla_run_matrix \
-	valhalla_export_edges \
-	valhalla_associate_segments
+	valhalla_export_edges
+
 valhalla_map_match_service_SOURCES = src/meili/valhalla_map_match_service.cc
 valhalla_map_match_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_map_match_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
@@ -424,33 +425,6 @@ valhalla_run_map_match_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTI
 valhalla_meili_worker_SOURCES = src/meili/valhalla_meili_worker.cc
 valhalla_meili_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_meili_worker_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
-valhalla_benchmark_admins_SOURCES = src/mjolnir/valhalla_benchmark_admins.cc
-valhalla_benchmark_admins_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_benchmark_admins_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite  libvalhalla.la
-valhalla_build_connectivity_SOURCES = src/mjolnir/valhalla_build_connectivity.cc
-valhalla_build_connectivity_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_build_connectivity_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
-valhalla_build_tiles_SOURCES = src/mjolnir/valhalla_build_tiles.cc 
-valhalla_build_tiles_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_build_tiles_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite  libvalhalla.la
-valhalla_build_admins_SOURCES = src/mjolnir/valhalla_build_admins.cc
-valhalla_build_admins_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_build_admins_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite  libvalhalla.la
-valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc
-valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_build_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
-valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc
-valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_query_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
-valhalla_ways_to_edges_SOURCES = src/mjolnir/valhalla_ways_to_edges.cc
-valhalla_ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_ways_to_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
-valhalla_build_speeds_SOURCES = src/mjolnir/valhalla_build_speeds.cc
-valhalla_build_speeds_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_build_speeds_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lsqlite3  libvalhalla.la
-valhalla_build_statistics_SOURCES = src/mjolnir/valhalla_build_statistics.cc src/mjolnir/statistics.cc src/mjolnir/statistics_database.cc src/mjolnir/statistics.h
-valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-valhalla_build_statistics_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
 valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
 valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla.la
@@ -493,13 +467,56 @@ valhalla_run_matrix_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS
 valhalla_export_edges_SOURCES = src/valhalla_export_edges.cc
 valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_export_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) libvalhalla.la
+
+if DATA_TOOLS
+bin_PROGRAMS +=
+	valhalla_benchmark_admins \
+	valhalla_build_connectivity \
+	valhalla_build_tiles \
+	valhalla_build_admins \
+	valhalla_build_transit \
+	valhalla_query_transit \
+	valhalla_ways_to_edges \
+	valhalla_build_speeds \
+	valhalla_build_statistics \
+	valhalla_associate_segments
+valhalla_benchmark_admins_SOURCES = src/mjolnir/valhalla_benchmark_admins.cc
+valhalla_benchmark_admins_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_benchmark_admins_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite  libvalhalla.la
+valhalla_build_connectivity_SOURCES = src/mjolnir/valhalla_build_connectivity.cc
+valhalla_build_connectivity_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_connectivity_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
+valhalla_build_tiles_SOURCES = src/mjolnir/valhalla_build_tiles.cc
+valhalla_build_tiles_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_tiles_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite  libvalhalla.la
+valhalla_build_admins_SOURCES = src/mjolnir/valhalla_build_admins.cc
+valhalla_build_admins_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_admins_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite  libvalhalla.la
+valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc
+valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
+valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc
+valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_query_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
+valhalla_ways_to_edges_SOURCES = src/mjolnir/valhalla_ways_to_edges.cc
+valhalla_ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_ways_to_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
+valhalla_build_speeds_SOURCES = src/mjolnir/valhalla_build_speeds.cc
+valhalla_build_speeds_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_speeds_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lsqlite3  libvalhalla.la
+valhalla_build_statistics_SOURCES = src/mjolnir/valhalla_build_statistics.cc src/mjolnir/statistics.cc src/mjolnir/statistics_database.cc src/mjolnir/statistics.h
+valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_build_statistics_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
 valhalla_associate_segments_SOURCES = src/valhalla_associate_segments.cc src/proto/segment.pb.cc src/proto/tile.pb.cc
 valhalla_associate_segments_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_associate_segments_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) libvalhalla.la
+endif
 
 bin_SCRIPTS = \
-	scripts/valhalla_build_elevation \
-	scripts/valhalla_build_timezones
+	scripts/valhalla_build_elevation
+if DATA_TOOLS
+bin_SCRIPTS += scripts/valhalla_build_timezones
+endif
 
 TESTS_ENVIRONMENT = LOCPATH=locales
 check_PROGRAMS = \
@@ -553,17 +570,6 @@ check_PROGRAMS = \
 	test/util_skadi \
 	test/sample \
 	test/skadi_service \
-	test/utrecht \
-	test/edgeinfobuilder \
-	test/uniquenames \
-	test/idtable \
-	test/graphbuilder \
-	test/graphparser \
-	test/names \
-	test/refs \
-	test/signinfo \
-	test/countryaccess \
-	test/graphtilebuilder \
 	test/loki_service \
 	test/search \
 	test/node_search \
@@ -730,39 +736,6 @@ test_sample_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(
 test_skadi_service_SOURCES = test/skadi_service.cc test/test.cc
 test_skadi_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_skadi_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
-test_utrecht_SOURCES = test/utrecht.cc test/test.cc
-test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
-test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_edgeinfobuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
-test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_uniquenames_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_idtable_SOURCES = test/idtable.cc test/test.cc
-test_idtable_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_idtable_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
-test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_graphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_graphparser_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_graphparser_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_graphparser_SOURCES = test/graphparser.cc test/test.cc
-test_names_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_names_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_names_SOURCES = test/names.cc test/test.cc
-test_refs_SOURCES = test/refs.cc test/test.cc
-test_refs_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_refs_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_signinfo_SOURCES = test/signinfo.cc test/test.cc
-test_signinfo_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_signinfo_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
-test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_countryaccess_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
-test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
-test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_graphtilebuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
 test_loki_service_SOURCES = test/loki_service.cc test/test.cc
 test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_loki_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
@@ -810,7 +783,55 @@ test_astar_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_astar_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
 test_serializers_SOURCES = test/serializers.cc test/test.cc
 test_serializers_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_serializers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)  libvalhalla.la
+test_serializers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla.la
+
+if DATA_TOOLS
+check_PROGRAMS +=
+	test/utrecht \
+	test/edgeinfobuilder \
+	test/uniquenames \
+	test/idtable \
+	test/graphbuilder \
+	test/graphparser \
+	test/names \
+	test/refs \
+	test/signinfo \
+	test/countryaccess \
+	test/graphtilebuilder
+t_utrecht_SOURCES = test/utrecht.cc test/test.cc
+test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
+test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_edgeinfobuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
+test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_uniquenames_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_idtable_SOURCES = test/idtable.cc test/test.cc
+test_idtable_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_idtable_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
+test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_graphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_graphparser_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_graphparser_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_graphparser_SOURCES = test/graphparser.cc test/test.cc
+test_names_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_names_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_names_SOURCES = test/names.cc test/test.cc
+test_refs_SOURCES = test/refs.cc test/test.cc
+test_refs_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_refs_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_signinfo_SOURCES = test/signinfo.cc test/test.cc
+test_signinfo_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_signinfo_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
+test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_countryaccess_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
+test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_graphtilebuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
+endif
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

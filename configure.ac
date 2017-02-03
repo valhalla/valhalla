@@ -67,29 +67,36 @@ AM_COND_IF([PYTHON_BINDINGS], [
           [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
 ])
 
-# check for Lua libraries and headers
-AX_PROG_LUA([5.2],[],[
-    AX_LUA_HEADERS([
-        AX_LUA_LIBS([
-        ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
-    ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
-],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
+# if we wanted data tools
+AC_ARG_ENABLE([data_tools],
+    [  --enable-data-tools    Create data building tools],
+    [case "${enableval}" in
+        yes) data_tools=true ;;
+        no)  data_tools=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-data-tools]) ;;
+    esac],[data_tools=false])
+AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 
-AX_LIB_SQLITE3(3.0.0)
+# then we require lots more stuff
+AM_COND_IF([DATA_TOOLS], [
+    AX_PROG_LUA([5.2],[],[
+        AX_LUA_HEADERS([
+            AX_LUA_LIBS([
+            ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
+        ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
+    ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
-if test "x$SQLITE3_VERSION" = "x"; then
-  AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])
-fi
+    AX_LIB_SQLITE3(3.0.0)
+    AS_IF([test "x$SQLITE3_VERSION" = "x"],
+          [AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])],)
+    
+    AX_LIB_GEOS(3.0.0)
+    AS_IF([test "x$GEOS_VERSION" = "x"],
+          [AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.])],]
 
-# Check for Geos library
-AX_LIB_GEOS(3.0.0)
-if test "x$GEOS_VERSION" = "x"
-then
-  AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.]);
-fi
+    PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
 
-# spatialite needed for admin info
-PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
+])
 
 # check pkg-config packaged packages.
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server = 0.6.3 libcurl >= 7.35.0])
