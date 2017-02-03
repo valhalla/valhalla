@@ -5,7 +5,8 @@ AC_INIT([valhalla],
 	[https://github.com/valhalla/valahlla])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
-LT_INIT
+# no static lib by default but you can ask for it
+LT_INIT([disable-static])
 AC_SUBST([LIBTOOL_DEPS])
 
 AM_SILENT_RULES([yes])
@@ -35,10 +36,6 @@ AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
 
-# we require python dev headers
-AX_PYTHON_DEVEL([>= '2.7'])
-AM_PATH_PYTHON([2.7],,)
-
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-all-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
@@ -47,6 +44,7 @@ AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
 AX_BOOST_REGEX
 AX_BOOST_DATE_TIME
+AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 
 # if we wanted python bindings
 AC_ARG_ENABLE([python_bindings],
@@ -55,7 +53,7 @@ AC_ARG_ENABLE([python_bindings],
         yes) python_bindings=true ;;
         no)  python_bindings=false ;;
         *) AC_MSG_ERROR([bad value ${enableval} for --enable-python-bindings]) ;;
-    esac],[python_bindings=false])
+    esac],[python_bindings=true])
 AM_CONDITIONAL([PYTHON_BINDINGS], [test x$python_bindings = xtrue])
 
 # then we require python dev headers and boost python
@@ -63,33 +61,42 @@ AM_COND_IF([PYTHON_BINDINGS], [
     AX_PYTHON_DEVEL([>= '2.7'])
     AM_PATH_PYTHON([2.7],,)
     AX_BOOST_PYTHON
-    AS_IF([test "x$BOOST_PYTHON_LIB" == "x"],
-          [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
+    AS_IF([test "x$BOOST_PYTHON_LIB" == "x"], [AC_MSG_ERROR([Boost::Python is required, please install libboost-python-dev.])])
 ])
 
-# check for Lua libraries and headers
-AX_PROG_LUA([5.2],[],[
-    AX_LUA_HEADERS([
-        AX_LUA_LIBS([
-        ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
-    ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
-],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
+# if we wanted data tools
+AC_ARG_ENABLE([data_tools],
+    [  --enable-data-tools    Create data building tools],
+    [case "${enableval}" in
+        yes) data_tools=true ;;
+        no)  data_tools=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-data-tools]) ;;
+    esac],[data_tools=true])
+AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 
-AX_LIB_SQLITE3(3.0.0)
+# then we require lots more stuff
+AM_COND_IF([DATA_TOOLS], [
 
-if test "x$SQLITE3_VERSION" = "x"; then
-  AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])
-fi
+    # check for lua libraries and headers
+    AX_PROG_LUA([5.2],[],[
+        AX_LUA_HEADERS([
+            AX_LUA_LIBS([
+            ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
+        ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
+    ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
-# Check for Geos library
-AX_LIB_GEOS(3.0.0)
-if test "x$GEOS_VERSION" = "x"
-then
-  AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.]);
-fi
+    # check for sqlite
+    AX_LIB_SQLITE3(3.0.0)
+    AS_IF([test "x$SQLITE3_VERSION" = "x"], [AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])])
 
-# spatialite needed for admin info
-PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
+    # check for geos library    
+    AX_LIB_GEOS(3.0.0)
+    AS_IF([test "x$GEOS_VERSION" = "x"], [AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.])])
+
+    # spatialite needed for admin info
+    PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
+
+])
 
 # check pkg-config packaged packages.
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server = 0.6.3 libcurl >= 7.35.0])
