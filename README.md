@@ -59,13 +59,32 @@ Building and Using
 
 Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    srcipts/dependencies.sh
+    if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
+      sudo add-apt-repository -y ppa:kevinkreiser/libsodium
+      sudo add-apt-repository -y ppa:kevinkreiser/libpgm
+      sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
+      sudo add-apt-repository -y ppa:kevinkreiser/czmq
+    fi
+    sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+    sudo apt-get update
+    sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
+    #if you plan to compile with data building support, see below for more info
+    sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
+    #if you plan to compile with python bindings, see below for more info
+    python-all-dev
 
 And then run to install it:
 
-    scripts/install.sh
+    ./autogen.sh
+    ./configure
+    make test -j$(nproc)
+    sudo make install
 
-Please see `./configure --help` for more options on how to control the build process.
+Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
+
+* `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really dont need some of the dependencies above.
+* `--enable-static=yes` will enable building of static libvalhalla.la which could be useful for embedded applications
+* `--enable-python-bindings=no` will disable python bindings for valhalla. Embedded applications would probably rather turn this off.
 
 The build will produce libraries, headers and binaries which you are free to use for your own projects. To simplify the inclusion of the libvalhalla in another autotoolized project you may make use of `pkg-config` within your own `configure.ac` to check for the existance of a recent version of the library. Something like this should suffice:
 
