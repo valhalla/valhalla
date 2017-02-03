@@ -271,6 +271,13 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
     return false;
   }
 
+  // Do not allow a shortcut on a ramp crossing at a traffic signal or where
+  // more than 3 edges meet.
+  if (edge1->link() && edge2->link() && (nodeinfo->traffic_signal() ||
+      nodeinfo->edge_count() > 3)) {
+    return false;
+  }
+
   // Cannot have turn restriction from either inbound edge edge to
   // the other outbound edge
   if (((oppdiredge1->restrictions() & (1 << edge2->localedgeidx())) != 0) ||
