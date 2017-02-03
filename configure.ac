@@ -63,8 +63,7 @@ AM_COND_IF([PYTHON_BINDINGS], [
     AX_PYTHON_DEVEL([>= '2.7'])
     AM_PATH_PYTHON([2.7],,)
     AX_BOOST_PYTHON
-    AS_IF([test "x$BOOST_PYTHON_LIB" == "x"],
-          [AC_MSG_ERROR([Boost::Python library not detected, please install libboost-python-dev.])],)
+    AS_IF([test "x$BOOST_PYTHON_LIB" == "x"], [AC_MSG_ERROR([Boost::Python is required, please install libboost-python-dev.])])
 ])
 
 # if we wanted data tools
@@ -79,6 +78,8 @@ AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 
 # then we require lots more stuff
 AM_COND_IF([DATA_TOOLS], [
+
+    # check for lua libraries and headers
     AX_PROG_LUA([5.2],[],[
         AX_LUA_HEADERS([
             AX_LUA_LIBS([
@@ -86,14 +87,15 @@ AM_COND_IF([DATA_TOOLS], [
         ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
     ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
+    # check for sqlite
     AX_LIB_SQLITE3(3.0.0)
-    AS_IF([test "x$SQLITE3_VERSION" = "x"],
-          [AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])],)
-    
-    AX_LIB_GEOS(3.0.0)
-    AS_IF([test "x$GEOS_VERSION" = "x"],
-          [AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.])],]
+    AS_IF([test "x$SQLITE3_VERSION" = "x"], [AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.])])
 
+    # check for geos library    
+    AX_LIB_GEOS(3.0.0)
+    AS_IF([test "x$GEOS_VERSION" = "x"], [AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.])])
+
+    # spatialite needed for admin info
     PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
 
 ])

@@ -190,41 +190,6 @@ nobase_include_HEADERS = \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/service.h
-if DATA_TOOLS
-nobase_include_HEADERS += \
-	valhalla/mjolnir/admin.h \
-	valhalla/mjolnir/countryaccess.h \
-	valhalla/mjolnir/complexrestrictionbuilder.h \
-	valhalla/mjolnir/dataquality.h \
-	valhalla/mjolnir/directededgebuilder.h \
-	valhalla/mjolnir/graphtilebuilder.h \
-	valhalla/mjolnir/edgeinfobuilder.h \
-	valhalla/mjolnir/uniquenames.h \
-	valhalla/mjolnir/ferry_connections.h \
-	valhalla/mjolnir/graphbuilder.h \
-	valhalla/mjolnir/graphenhancer.h \
-	valhalla/mjolnir/graphvalidator.h \
-	valhalla/mjolnir/hierarchybuilder.h \
-	valhalla/mjolnir/idtable.h \
-	valhalla/mjolnir/linkclassification.h \
-	valhalla/mjolnir/luatagtransform.h \
-	valhalla/mjolnir/node_expander.h \
-	valhalla/mjolnir/osmaccess.h \
-	valhalla/mjolnir/osmadmin.h \
-	valhalla/mjolnir/osmdata.h \
-	valhalla/mjolnir/osmnode.h \
-	valhalla/mjolnir/osmpbfparser.h \
-	valhalla/mjolnir/osmaccessrestriction.h \
-	valhalla/mjolnir/osmrestriction.h \
-	valhalla/mjolnir/osmway.h \
-	valhalla/mjolnir/pbfadminparser.h \
-	valhalla/mjolnir/pbfgraphparser.h \
-	valhalla/mjolnir/restrictionbuilder.h \
-	valhalla/mjolnir/shortcutbuilder.h \
-	valhalla/mjolnir/transitbuilder.h \
-	valhalla/mjolnir/util.h \
-	valhalla/mjolnir/validatetransit.h
-endif
 libvalhalla_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
@@ -342,8 +307,43 @@ libvalhalla_la_SOURCES = \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
 	src/tyr/service.cc
+libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ $(DEPS_CFLAGS)
+libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_DATE_TIME_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(DEPS_LIBS)
 if DATA_TOOLS
-libvalhalla_la_SOURCES +=
+nobase_include_HEADERS += \
+	valhalla/mjolnir/admin.h \
+	valhalla/mjolnir/countryaccess.h \
+	valhalla/mjolnir/complexrestrictionbuilder.h \
+	valhalla/mjolnir/dataquality.h \
+	valhalla/mjolnir/directededgebuilder.h \
+	valhalla/mjolnir/graphtilebuilder.h \
+	valhalla/mjolnir/edgeinfobuilder.h \
+	valhalla/mjolnir/uniquenames.h \
+	valhalla/mjolnir/ferry_connections.h \
+	valhalla/mjolnir/graphbuilder.h \
+	valhalla/mjolnir/graphenhancer.h \
+	valhalla/mjolnir/graphvalidator.h \
+	valhalla/mjolnir/hierarchybuilder.h \
+	valhalla/mjolnir/idtable.h \
+	valhalla/mjolnir/linkclassification.h \
+	valhalla/mjolnir/luatagtransform.h \
+	valhalla/mjolnir/node_expander.h \
+	valhalla/mjolnir/osmaccess.h \
+	valhalla/mjolnir/osmadmin.h \
+	valhalla/mjolnir/osmdata.h \
+	valhalla/mjolnir/osmnode.h \
+	valhalla/mjolnir/osmpbfparser.h \
+	valhalla/mjolnir/osmaccessrestriction.h \
+	valhalla/mjolnir/osmrestriction.h \
+	valhalla/mjolnir/osmway.h \
+	valhalla/mjolnir/pbfadminparser.h \
+	valhalla/mjolnir/pbfgraphparser.h \
+	valhalla/mjolnir/restrictionbuilder.h \
+	valhalla/mjolnir/shortcutbuilder.h \
+	valhalla/mjolnir/transitbuilder.h \
+	valhalla/mjolnir/util.h \
+	valhalla/mjolnir/validatetransit.h
+libvalhalla_la_SOURCES += \
 	src/proto/transit.pb.cc \
 	src/mjolnir/admin.cc \
 	src/mjolnir/complexrestrictionbuilder.cc \
@@ -380,10 +380,6 @@ libvalhalla_la_SOURCES +=
 	src/mjolnir/validatetransit.cc \
 	src/mjolnir/graph_lua_proc.h \
 	src/mjolnir/admin_lua_proc.h
-endif
-libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ $(DEPS_CFLAGS) 
-libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_DATE_TIME_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(DEPS_LIBS)
-if DATA_TOOLS
 libvalhalla_la_LIBADD += -lspatialite -lsqlite3
 endif
 
@@ -469,7 +465,7 @@ valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_export_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) libvalhalla.la
 
 if DATA_TOOLS
-bin_PROGRAMS +=
+bin_PROGRAMS += \
 	valhalla_benchmark_admins \
 	valhalla_build_connectivity \
 	valhalla_build_tiles \
@@ -786,7 +782,7 @@ test_serializers_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_serializers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla.la
 
 if DATA_TOOLS
-check_PROGRAMS +=
+check_PROGRAMS += \
 	test/utrecht \
 	test/edgeinfobuilder \
 	test/uniquenames \
