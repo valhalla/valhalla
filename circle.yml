@@ -18,14 +18,15 @@ dependencies:
     - (rc=0; for f in *.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
     - (rc=0; for f in lua/*.lua; do lua $f || rc=$?; done; exit $rc;)
     - (rc=0; for f in locales/*.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
+    # great sadness: this has to go here if we want to have caching, as the cache is _only_ saved after the dependencies step.
+    - ./autogen.sh
+    - ./configure CC="ccache gcc" CXX="ccache g++" CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS" --enable-coverage --enable-python-bindings
+    - make test -j$(nproc)
   cache_directories:
     - "~/.ccache"
 
 test:
   override:
-    - ./autogen.sh
-    - ./configure CC="ccache gcc" CXX="ccache g++" CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS" --enable-coverage --enable-python-bindings
-    - make test -j$(nproc)
     - sudo make install
 
 general:
