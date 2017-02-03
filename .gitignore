@@ -162,6 +162,7 @@ test/loki_service
 test/skadi_service
 test/thor_service
 test_requests/duane_routes.txt
+run_route_scripts/results/20*
 EdgeInfoBuilder_TestWriteRead.gph
 AdminInfoBuilder_TestWriteRead.gph
 loop_ways.txt
