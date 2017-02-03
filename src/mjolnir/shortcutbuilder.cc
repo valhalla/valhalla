@@ -627,7 +627,7 @@ uint32_t FormShortcuts(GraphReader& reader,
     // Store the new tile
     tilebuilder.StoreTileData();
     LOG_DEBUG((boost::format("ShortcutBuilder created tile %1%: %2% bytes") %
-         tile % tilebuilder.size()).str());
+         tile % tilebuilder.header_builder().end_offset()).str());
 
     // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {

@@ -788,7 +788,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       graphtile.StoreTileData();
 
       // Made a tile
-      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.header_builder().end_offset()).str());
+//      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.header_builder().end_offset()).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread

@@ -537,18 +537,6 @@ int main(int argc, char *argv[]) {
 
   }
 
-  // TODO: remove after input files are transformed
-#ifdef LOGGING_LEVEL_DEBUG
-  std::string json_input = "-j '{\"locations\":[";
-  json_input += std::to_json(originloc);
-  json_input += ",";
-  json_input += std::to_json(destloc);
-  json_input += "],\"costing\":\"auto\",";
-  json_input += "\"directions_options\":{\"units\":\"miles\"}}'";
-  json_input += " --config ../conf/valhalla.json";
-  valhalla::midgard::logging::Log(json_input, " [JSON_INPUT] ");
-#endif
-
   //parse the config
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config.c_str(), pt);
