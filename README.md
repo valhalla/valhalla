@@ -71,7 +71,7 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
     #if you plan to compile with data building support, see below for more info
     sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
     #if you plan to compile with python bindings, see below for more info
-    python-all-dev
+    sudo apt-get install -y python-all-dev
 
 And then run to install it:
 
