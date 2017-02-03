@@ -798,7 +798,7 @@ check_PROGRAMS +=
 	test/signinfo \
 	test/countryaccess \
 	test/graphtilebuilder
-t_utrecht_SOURCES = test/utrecht.cc test/test.cc
+test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@  libvalhalla.la
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
