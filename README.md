@@ -84,7 +84,7 @@ Please see `./configure --help` for more options on how to control the build pro
 
 * `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really dont need some of the dependencies above.
 * `--enable-static=yes` will enable building of static libvalhalla.la which could be useful for embedded applications
-* `--enable-python-bindings=no` will build python bindings for valhalla. Embedded applications would probably rather turn this off.
+* `--enable-python-bindings=no` will disable python bindings for valhalla. Embedded applications would probably rather turn this off.
 
 The build will produce libraries, headers and binaries which you are free to use for your own projects. To simplify the inclusion of the libvalhalla in another autotoolized project you may make use of `pkg-config` within your own `configure.ac` to check for the existance of a recent version of the library. Something like this should suffice:
 
