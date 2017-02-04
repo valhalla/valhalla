@@ -74,11 +74,16 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
     #if you plan to compile with python bindings, see below for more info
     sudo apt-get install -y python-all-dev
 
+To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
+
+    brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config lua czmq
+
 And then run to install it:
 
+    git submodule update --init --recursive
     ./autogen.sh
     ./configure
-    make test -j$(nproc)
+    make test -j8
     sudo make install
 
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
