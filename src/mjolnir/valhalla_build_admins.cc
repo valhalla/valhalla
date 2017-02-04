@@ -135,7 +135,11 @@ int polygondata_comparearea(const void* vp1, const void* vp2)
 std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   std::vector<std::string> wkts;
 
-  GeometryFactory gf;
+#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
+  GeometryFactory::unique_ptr gf = GeometryFactory::create();
+#else
+  std::unique_ptr<GeometryFactory> gf;
+#endif
 
   LineMerger merger;
   merger.add(mline.get());
@@ -149,8 +153,8 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   for (unsigned i=0 ;i < merged->size(); ++i) {
     std::unique_ptr<LineString> pline ((*merged ) [i]);
     if (pline->getNumPoints() > 3 && pline->isClosed()) {
-      polys[totalpolys].polygon = gf.createPolygon(gf.createLinearRing(pline->getCoordinates()),0);
-      polys[totalpolys].ring = gf.createLinearRing(pline->getCoordinates());
+      polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()),0);
+      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
       polys[totalpolys].area = polys[totalpolys].polygon->getArea();
       polys[totalpolys].iscontained = 0;
       polys[totalpolys].containedbyid = 0;
@@ -212,13 +216,13 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
           interior->push_back(polys[j].ring);
       }
 
-      Polygon* poly(gf.createPolygon(polys[i].ring, interior.release()));
+      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
       poly->normalize();
       polygons->push_back(poly);
     }
 
     // Make a multipolygon
-    std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
+    std::unique_ptr<Geometry> multipoly(gf->createMultiPolygon(polygons.release()));
     if (!multipoly->isValid()) {
       multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
     }
@@ -399,7 +403,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   uint32_t count = 0;
   uint64_t nodeid;
   bool has_data;
-  GeometryFactory gf;
+#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
+  GeometryFactory::unique_ptr gf = GeometryFactory::create();
+#else
+  std::unique_ptr<GeometryFactory> gf;
+#endif
 
   try {
 
@@ -420,7 +428,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           break;
         }
 
-        std::unique_ptr<CoordinateSequence> coords(gf.getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
+        std::unique_ptr<CoordinateSequence> coords(gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
         size_t j = 0;
 
         for (const auto ref_id :itr->second) {
@@ -435,7 +443,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         }
 
         if (coords->getSize() > 1) {
-          geom = std::unique_ptr<Geometry>(gf.createLineString(coords.release()));
+          geom = std::unique_ptr<Geometry>(gf->createLineString(coords.release()));
           lines->push_back(geom.release());
         }
 
@@ -443,7 +451,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
       if (has_data) {
 
-        std::unique_ptr<Geometry> mline (gf.createMultiLineString(lines.release()));
+        std::unique_ptr<Geometry> mline (gf->createMultiLineString(lines.release()));
         std::vector<std::string> wkts = GetWkts(mline);
         std::string name;
 

@@ -844,7 +844,7 @@ void edge_association::add_tile(const std::string &file_name) {
     if (!entry.has_marker()) {
       assert(entry.has_segment());
       auto &segment = entry.segment();
-      match_segment(base_id + entry_id, segment);
+      match_segment(base_id + static_cast<uint64_t>(entry_id), segment);
     }
     entry_id += 1;
   }

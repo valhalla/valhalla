@@ -1,15 +1,15 @@
 #include <string>
 #include <sstream>
-#include <boost/python.hpp>
-#include <boost/python/str.hpp>
-#include <boost/python/dict.hpp>
-#include <boost/python/extract.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/python/str.hpp>
+#include <boost/python/dict.hpp>
+#include <boost/python/extract.hpp>
+#include <boost/python.hpp>
 
 #include "midgard/logging.h"
 #include "meili/traffic_segment_matcher.h"
