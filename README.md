@@ -82,6 +82,8 @@ And then run to install it:
 
     git submodule update --init --recursive
     ./autogen.sh
+    # on macOS you need to tell linkers how to reach home-brewed sqlite3
+    # export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3"
     ./configure
     make test -j8
     sudo make install
