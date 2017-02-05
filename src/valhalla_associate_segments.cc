@@ -839,12 +839,12 @@ void edge_association::add_tile(const std::string &file_name) {
 
   //do the matching of the segments in this osmlr tile
   std::cout.precision(16);
-  size_t entry_id = 0;
+  uint64_t entry_id = 0;
   for (auto &entry : tile.entries()) {
     if (!entry.has_marker()) {
       assert(entry.has_segment());
       auto &segment = entry.segment();
-      match_segment(base_id + static_cast<uint64_t>(entry_id), segment);
+      match_segment(base_id + entry_id, segment);
     }
     entry_id += 1;
   }
