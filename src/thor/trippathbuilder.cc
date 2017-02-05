@@ -228,6 +228,10 @@ TripPath_Use GetTripPathUse(Use use) {
       return TripPath_Use_kBusConnectionUse;
     case Use::kTransitConnection:
       return TripPath_Use_kTransitConnectionUse;
+    case Use::kTransitionUp:
+    case Use::kTransitionDown: {
+      // TODO should we throw a runtime error?
+    }
   }
 }
 
