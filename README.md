@@ -76,7 +76,10 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
 
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
+    # install dependencies (czmq is required by prime_server)
     brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config lua czmq
+
+    # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
 
 And then run to install it:
 
@@ -85,7 +88,7 @@ And then run to install it:
     # on macOS you need to tell linkers how to reach home-brewed sqlite3
     # export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3"
     ./configure
-    make test -j8
+    make test -j$(nproc)
     sudo make install
 
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
