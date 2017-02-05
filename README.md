@@ -32,7 +32,7 @@ The are several key features that we hope can differentiate the Valhalla project
 Organization
 --------
 
-The Valhalla organization is comprised of several repositories each responsible for a different function. The layout of the various repositories is as follows:
+The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
 
 - [Midgard](https://github.com/valhalla/valhalla/tree/master/valhalla/midgard) - Basic geographic and geometric algorithms for use in the various other projects.
 - [Baldr](https://github.com/valhalla/valhalla/tree/master/valhalla/baldr) - The base data structures for accessing and caching tiled route data.
@@ -120,3 +120,29 @@ And generate an HTML coverage report in the `coverage/` directory:
     make coverage-report
 
 Note also that, because calculating the coverage requires compiler support, you will need to clean any object files from a non-coverage build by running `make clean` before `make coverage-report`.
+
+Command Line Tools
+------------------
+####valhalla_run_route
+A C++ application that will create a route path with guidance instructions for the specified route request.
+```
+#Usage:
+./valhalla_run_route -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
+#Example:
+./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+```
+
+####valhalla_route_service
+A C++ service that can be used to test Valhalla locally.
+```
+#Usage:
+./valhalla_route_service <CONFIG_FILE>
+#Example:
+./valhalla_route_service conf/valhalla.json
+#Localhost URL
+http://localhost:8002/route?json={"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}
+```
+
+Batch Script Tool
+-----------------
+- [Batch Run_Route](../run_route_scripts/README.md)
