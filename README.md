@@ -54,7 +54,26 @@ Documentation
 
 Technical documentation for the various components of the library can be found here: [docs](docs). Service API documentation as well as links to a variety of technical descriptions are provided within the [valhalla-docs](https://github.com/valhalla/valhalla-docs) repository.
 
-Building and Using
+Get Valhalla from Personal Package Archive (PPA)
+------------------------------------------------
+
+If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
+
+     #get some dependencies in other ppas
+     if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
+       sudo add-apt-repository -y ppa:kevinkreiser/libsodium
+       sudo add-apt-repository -y ppa:kevinkreiser/libpgm
+       sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
+       sudo add-apt-repository -y ppa:kevinkreiser/czmq
+     fi
+     sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+     #grab all of the valhalla software from ppa
+     sudo add-apt-repository ppa:kevinkreiser/prime-server
+     sudo add-apt-repository ppa:valhalla-routing/valhalla
+     sudo apt-get update
+     sudo apt-get install valhalla-bin
+
+Building from Source
 ------------------
 
 Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
