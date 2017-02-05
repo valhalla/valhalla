@@ -199,6 +199,8 @@ private:
 
 // functor to sort GraphId objects by level, tile then id within the tile.
 struct sort_by_tile {
+  sort_by_tile() {}
+
   inline bool operator()(vb::GraphId a, vb::GraphId b) const {
     return ((a.fields.level < b.fields.level) ||
             ((a.fields.level == b.fields.level) &&

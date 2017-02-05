@@ -439,6 +439,9 @@ inline float GetOffsetForHeading(RoadClass road_class, Use use) {
     case Use::kBridleway: {
       offset *= 0.5f;
     }
+    default: {
+      break;
+    }
   }
 
   return offset;
