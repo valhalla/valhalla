@@ -726,6 +726,13 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // (ramps and turn channels) are involved.
   if (allramps) {
     stop_impact /= 2;
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp) {
+    // Ramp may be crossing a road
+    if (nodeinfo.traffic_signal()) {
+      stop_impact = 4;
+    } else if (count > 3) {
+      stop_impact += 2;
+    }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
     stop_impact += 2;
