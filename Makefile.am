@@ -472,7 +472,7 @@ bin_PROGRAMS += \
 	valhalla_build_admins \
 	valhalla_build_transit \
 	valhalla_query_transit \
-        valhalla_validate_transit \
+	valhalla_validate_transit \
 	valhalla_ways_to_edges \
 	valhalla_build_speeds \
 	valhalla_build_statistics \
