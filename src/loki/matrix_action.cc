@@ -3,8 +3,10 @@
 
 #include <boost/property_tree/info_parser.hpp>
 #include <unordered_map>
+#include <rapidjson/pointer.h>
 
 #include "baldr/datetime.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
 using namespace prime_server;
@@ -61,10 +63,12 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_matrix(ACTION_TYPE action, boost::property_tree::ptree& request) {
-      auto request_locations = request.get_child_optional("locations");
-      auto request_sources = request.get_child_optional("sources");
-      auto request_targets = request.get_child_optional("targets");
+    void loki_worker_t::init_matrix(ACTION_TYPE action, rapidjson::Document& request) {
+      //auto* request_locations = rapidjson::Pointer("/locations").Get(request);
+      auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/locations");
+      auto request_sources = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/sources");
+      auto request_targets = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/targets");
+      auto& allocator = request.GetAllocator();
 
       //we require locations
       if (!request_locations) {
@@ -76,51 +80,53 @@ namespace valhalla {
       //if MATRIX OR OPTIMIZED and not using sources & targets parameters
       //deprecated way of specifying
       if (!request_sources && !request_targets) {
-        if (request_locations->size() < 2)
+        if (request_locations->Size() < 2)
           throw valhalla_exception_t{400, 120};
 
         //create new sources and targets ptree from locations
-        boost::property_tree::ptree sources_child, targets_child;
+        rapidjson::Value sources_child{rapidjson::kArrayType}, targets_child{rapidjson::kArrayType};
         switch (action) {
           case ONE_TO_MANY:
-            sources_child.push_back(request_locations->front());
-            for(const auto& reqloc : *request_locations)
-              targets_child.push_back(reqloc);
-
+            // Copy
+            sources_child.PushBack(rapidjson::Value{*request_locations->Begin(), allocator}, allocator);
+            request.AddMember("sources", sources_child, allocator);
+            // Move
+            request.AddMember("targets", *request_locations, allocator);
             break;
           case MANY_TO_ONE:
-            for(const auto& reqloc : *request_locations)
-              sources_child.push_back(reqloc);
-
-            targets_child.push_back(request_locations->back());
+            // Copy
+            targets_child.PushBack(rapidjson::Value{*request_locations->End(), allocator},allocator);
+            request.AddMember("targets", targets_child, allocator);
+            // Move
+            request.AddMember("sources", *request_locations, allocator);
             break;
           case MANY_TO_MANY:
           case OPTIMIZED_ROUTE:
-            for(const auto& reqloc : *request_locations) {
-              sources_child.push_back(reqloc);
-              targets_child.push_back(reqloc);
-            }
+            // Copy
+            request.AddMember("targets", rapidjson::Value{request["locations"], allocator}, allocator);
+            // Move
+            request.AddMember("sources", *request_locations, allocator);
             break;
         }
         //add these back in the original request (in addition to locations while being deprecated
-        request.add_child("sources", sources_child);
-        request.add_child("targets", targets_child);
-        request_sources = request.get_child("sources");
-        request_targets = request.get_child("targets");
 
+        request_sources = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/sources");
+        request_targets = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/targets");
       }
+      sources.reserve(request_sources->Size());
       for(const auto& source : *request_sources) {
         try{
-          sources.push_back(baldr::Location::FromPtree(source.second));
+          sources.push_back(baldr::Location::FromRapidJson(source));
           sources.back().heading_.reset();
         }
         catch (...) {
           throw valhalla_exception_t{400, 131};
         }
       }
+      targets.reserve(request_targets->Size());
       for(const auto& target : *request_targets) {
         try{
-          targets.push_back(baldr::Location::FromPtree(target.second));
+          targets.push_back(baldr::Location::FromRapidJson(target));
           targets.back().heading_.reset();
         }
         catch (...) {
@@ -130,22 +136,22 @@ namespace valhalla {
       if(sources.size() < 1)
         throw valhalla_exception_t{400, 121};
       if (!healthcheck)
-        valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
+        valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->Size()), " [ANALYTICS] ");
 
       if(targets.size() < 1)
         throw valhalla_exception_t{400, 122};
       if (!healthcheck)
-        valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+        valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->Size()), " [ANALYTICS] ");
 
       //no locations!
-      request.erase("locations");
+      request.RemoveMember("locations");
 
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action,boost::property_tree::ptree& request, http_request_info_t& request_info) {
+    worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action, rapidjson::Document& request, http_request_info_t& request_info) {
       init_matrix(action, request);
-      auto costing = request.get<std::string>("costing");
+      auto costing = request["costing"].GetString();
       if (costing == "multimodal")
         return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
 
@@ -170,8 +176,9 @@ namespace valhalla {
         for(size_t i = 0; i < sources_targets.size(); ++i) {
           const auto& l = sources_targets[i];
           const auto& projection = searched.at(l);
-          request.put_child("correlated_" + std::to_string(i), projection.ToPtree(i));
-
+          std::string name_tmp = "/correlated_" + std::to_string(i);
+          //rapidjson::SetValueByPointer(request, name_tmp.c_str(), correlated.ToRapidJson(i, request.GetAllocator()));
+          rapidjson::Pointer(name_tmp.c_str()).Set(request, projection.ToRapidJson(i, request.GetAllocator()));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, projection, 0);
@@ -202,10 +209,12 @@ namespace valhalla {
       if (!healthcheck)
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
-      std::stringstream stream;
-      boost::property_tree::write_json(stream, request, false);
+      rapidjson::StringBuffer buffer;
+      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+      request.Accept(writer);
+
       worker_t::result_t result{true};
-      result.messages.emplace_back(stream.str());
+      result.messages.emplace_back(buffer.GetString());
 
       return result;
     }

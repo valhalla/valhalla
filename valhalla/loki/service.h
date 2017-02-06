@@ -14,7 +14,7 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/sif/costfactory.h>
-
+#include <rapidjson/document.h>
 
 namespace valhalla {
   namespace loki {
@@ -31,22 +31,22 @@ namespace valhalla {
      protected:
 
       prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_info_t& request_info) const;
-      void parse_locations(const boost::property_tree::ptree& request);
-      void parse_trace(boost::property_tree::ptree& request);
-      void parse_costing(const boost::property_tree::ptree& request);
-      void locations_from_shape(boost::property_tree::ptree& request);
+      void parse_locations(const rapidjson::Document& request);
+      void parse_trace(rapidjson::Document& request);
+      void parse_costing(const rapidjson::Document& request);
+      void locations_from_shape(rapidjson::Document& request);
 
-      void init_locate(const boost::property_tree::ptree& request);
-      void init_route(const boost::property_tree::ptree& request);
-      void init_matrix(ACTION_TYPE action, boost::property_tree::ptree& request);
-      void init_isochrones(const boost::property_tree::ptree& request);
-      void init_trace(boost::property_tree::ptree& request);
+      void init_locate(const rapidjson::Document& request);
+      void init_route(const rapidjson::Document& request);
+      void init_matrix(ACTION_TYPE action, rapidjson::Document& request);
+      void init_isochrones(const rapidjson::Document& request);
+      void init_trace(rapidjson::Document& request);
 
-      prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t route(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t matrix(ACTION_TYPE action,boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t isochrones(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t trace_route(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t locate(const rapidjson::Document& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t route(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t matrix(ACTION_TYPE action,rapidjson::Document& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t isochrones(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t trace_route(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
 
       boost::property_tree::ptree config;
       boost::optional<std::string> jsonp;
