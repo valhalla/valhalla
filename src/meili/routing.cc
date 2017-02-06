@@ -208,11 +208,13 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const baldr::GraphTile* tile)
 {
   if (costing && pred_edgelabel) {
+    // TODO let sif do this?
     // Still on the same edge and the predecessor's show-up here
     // means it was allowed so we give it a pass directly
-
-    // TODO let sif do this?
     return edgeid == pred_edgelabel->edgeid()
+        // Transition edges are exceptions here because
+        // costing::Allowed only conisders non-transition edges
+        || edge->trans_up() || edge->trans_down()
         || costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
   }
 
@@ -242,22 +244,22 @@ void set_origin(baldr::GraphReader& reader,
       const auto nodeid = helpers::edge_startnodeid(reader, edge.id, tile);
       if (!nodeid.Is_Valid()) continue;
 
-#if 1  // TODO perhaps we shouldn't check start node
+      // If both origin and destination are nodes, then always check
+      // the origin node but won't check the destination node
       const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
       if (!nodeinfo) continue;
       if (costing && !costing->Allowed(nodeinfo)) continue;
-#endif
 
       labelset.put(nodeid, travelmode, edgelabel);
     } else if (edge.end_node()) {
       const auto nodeid = helpers::edge_endnodeid(reader, edge.id, tile);
       if (!nodeid.Is_Valid()) continue;
 
-#if 1  // TODO perhaps we shouldn't check start node
+      // If both origin and destination are nodes, then always check
+      // the origin node but won't check the destination node
       const auto nodeinfo = helpers::edge_nodeinfo(reader, nodeid, tile);
       if (!nodeinfo) continue;
       if (costing && !costing->Allowed(nodeinfo)) continue;
-#endif
 
       labelset.put(nodeid, travelmode, edgelabel);
     } else {
@@ -353,12 +355,10 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
 
 
 inline bool
-isTransition(baldr::GraphReader& graphreader, const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
+isTransition(baldr::GraphReader& graphreader, const baldr::GraphId& edgeid, const baldr::GraphTile* tile)
+{
   const auto edge = helpers::edge_directededge(graphreader, edgeid, tile);
-  if (!edge) {
-    return false;
-  }
-  return edge->trans_up() || edge->trans_down();
+  return edge && (edge->trans_up() || edge->trans_down());
 }
 
 
