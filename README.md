@@ -102,7 +102,7 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
     # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
 
-After installing dependencies:
+After getting the dependencies install it with:
 
     git submodule update --init --recursive
     ./autogen.sh
