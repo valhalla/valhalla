@@ -10,7 +10,7 @@
          ░                                                                    
 
 
-Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Traveling Salesman).
+Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
 
 Build Status
 ------------
@@ -42,7 +42,7 @@ The Valhalla organization is comprised of several library modules each responsib
 - [Loki](https://github.com/valhalla/valhalla/tree/master/valhalla/loki) - Library used to search graph tiles and correlate input locations to an entity within a tile. This correlated entity (edge or vertex) can be used as input to `thor`.
 - [Meili](https://github.com/valhalla/valhalla/tree/master/valhalla/meili) - Library used to for map-matching.
 - [Thor](https://github.com/valhalla/valhalla/tree/master/valhalla/thor) - Library used to generate a path through the graph tile hierarchy.  This path and attribution along the path can be used as input to `odin`.
-- [Odin](https://github.com/valhalla/valhalla/tree/master/valhalla/odin) - Library used to generate maneuvers and narrative based on a path. This set of directions information can be used as input to `tyr`.
+- [Odin](https://github.com/valhalla/valhalla/tree/master/valhalla/odin) - Library used to generate manoeuvres and narrative based on a path. This set of directions information can be used as input to `tyr`.
 - [Tyr](https://github.com/valhalla/valhalla/tree/master/valhalla/tyr) - Service used to handle http requests for a route communicating with all of the other valhalla APIs. The service will format output from `odin` and support json (and eventually protocol buffer) output.
 - [Tools](https://github.com/valhalla/valhalla/tree/master/src) - A set command line tools that exercise bits of functionality from the library components above and provide the basis for quality testing and performance benchmarking.
 - [conf](https://github.com/valhalla/conf) - Runtime configuration files.
@@ -76,7 +76,9 @@ If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly a
 Building from Source
 ------------------
 
-Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself.
+
+To install on a Debian or Ubuntu system you need to install its dependencies with:
 
     if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
       sudo add-apt-repository -y ppa:kevinkreiser/libsodium
@@ -100,7 +102,7 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
     # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
 
-And then run to install it:
+After getting the dependencies install it with:
 
     git submodule update --init --recursive
     ./autogen.sh
@@ -112,15 +114,18 @@ And then run to install it:
 
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
 
-* `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really dont need some of the dependencies above.
+* `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really don't need some of the dependencies above.
 * `--enable-static=yes` will enable building of static libvalhalla.la which could be useful for embedded applications
 * `--enable-python-bindings=no` will disable python bindings for valhalla. Embedded applications would probably rather turn this off.
 
-The build will produce libraries, headers and binaries which you are free to use for your own projects. To simplify the inclusion of the libvalhalla in another autotoolized project you may make use of `pkg-config` within your own `configure.ac` to check for the existance of a recent version of the library. Something like this should suffice:
+The build will produce libraries, headers and binaries which you are free to use for your own projects. To simplify the inclusion of the libvalhalla in another autotoolized project you may make use of `pkg-config` within your own `configure.ac` to check for the existence of a recent version of the library. Something like this should suffice:
 
     PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla >= 2.0.6])
 
-Valhalla, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
+For more information on binaries, see [Command Line Tools](#Command-Line-Tools) section below and the [docs](docs).
+
+Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
+
 
 Contributing
 ------------
