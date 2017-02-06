@@ -79,60 +79,6 @@ struct StopEdges {
   std::vector<TransitLine> lines;    // Set of unique route/stop pairs
 };
 
-std::string remove_parens(const std::string& s) {
-  std::string ret;
-  for (auto c : s) {
-    if (c != '"') {
-      ret += c;
-    }
-  }
-  return ret;
-}
-
-std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
-  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-  boost::char_separator<char> sep{","};
-  std::vector<OneStopTest> onestoptests;
-  std::string default_date_time = DateTime::get_testing_date_time();
-
-  // Open file
-  std::string line;
-  std::ifstream file(filename);
-  if (file.is_open()) {
-    while (getline(file, line)) {
-      tokenizer tok{line, sep};
-      uint32_t field_num = 0;
-      OneStopTest onestoptest{};
-      for (const auto &t : tok) {
-        switch (field_num) {
-        case 0:
-          onestoptest.origin = remove_parens(t);
-          break;
-        case 1:
-          onestoptest.destination = remove_parens(t);
-          break;
-        case 2:
-          onestoptest.route_id = remove_parens(t);
-          break;
-        case 3:
-          onestoptest.date_time = remove_parens(t);
-          break;
-        }
-        field_num++;
-      }
-      if (onestoptest.date_time.empty())
-        onestoptest.date_time = default_date_time;
-
-      onestoptests.emplace_back(std::move(onestoptest));
-    }
-    file.close();
-  } else {
-    std::cout << "One stop test file: " << filename << " not found" << std::endl;
-  }
-
-  return onestoptests;
-}
-
 // Struct to hold stats information during each threads work
 struct builder_stats {
   uint32_t no_dir_edge_count;
