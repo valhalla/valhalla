@@ -9,7 +9,8 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/truckcost.h>
 #include <valhalla/sif/transitcost.h>
-
+#include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
 namespace valhalla {
 namespace sif {
 
@@ -55,6 +56,16 @@ class CostFactory {
     return itr->second(config);
   }
 
+  cost_ptr_t Create(const std::string& name,
+                    const rapidjson::Value& config) const {
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    config.Accept(writer);
+    boost::property_tree::ptree pt;
+    std::istringstream is(buffer.GetString());;
+    boost::property_tree::read_json(is, pt);
+    return Create(name, pt);
+  }
  private:
   std::map<std::string, factory_function_t> factory_funcs_;
 };

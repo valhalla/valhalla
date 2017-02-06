@@ -4,9 +4,13 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "baldr/location.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+
+#include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
 
 namespace valhalla {
 namespace baldr {
@@ -43,6 +47,40 @@ boost::property_tree::ptree Location::ToPtree() const {
   if(way_id_)
     location.put("way_id", *way_id_);
 
+  return location;
+}
+
+rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) const {
+  rapidjson::Value location;
+
+  location.AddMember("lat", latlng_.lat(), a);
+  location.AddMember("lon", latlng_.lng(), a);
+  if (stoptype_ == StopType::THROUGH)
+    location.AddMember("type", "through", a);
+  else location.AddMember("type", "break", a);
+  auto helper_setter = [&](const std::string& attr, const std::string& s) {
+    location.AddMember(rapidjson::Value{}.SetString(attr.c_str(), attr.length(), a),
+            rapidjson::Value{}.SetString(s.c_str(), s.length(), a),
+            a);
+  };
+  if(!name_.empty())
+    helper_setter("name", name_);
+  if(!street_.empty())
+    helper_setter("street", street_);
+  if(!city_.empty())
+    helper_setter("city", city_);
+  if(!state_.empty())
+    helper_setter("state", state_);
+  if(!zip_.empty())
+    helper_setter("postal_code", zip_);
+  if(!country_.empty())
+    helper_setter("country", country_);
+  if(date_time_ && !(*date_time_).empty())
+    helper_setter("date_time", *date_time_);
+  if(heading_)
+    location.AddMember("heading", *heading_, a);
+  if(way_id_)
+    location.AddMember("way_id", *way_id_, a);
   return location;
 }
 
@@ -89,12 +127,76 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   return location;
 }
 
-Location Location::FromJson(const std::string& json) {
+Location Location::FromRapidJson(const rapidjson::Value& d){
+  auto* lat_ptr = rapidjson::Pointer("/lat").Get(d);
+  if (! lat_ptr) throw std::runtime_error{"lat is missing"};
+  float lat = lat_ptr->GetFloat();
+
+  if (lat < -90.0f || lat > 90.0f)
+      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+
+  auto* lon_ptr = rapidjson::Pointer("/lon").Get(d);
+  if (! lon_ptr) throw std::runtime_error{"lon is missing"};
+
+  float lon = midgard::circular_range_clamp<float>(lon_ptr->GetFloat(), -180, 180);
+
+  StopType stop_type{StopType::BREAK};
+  auto* stop_type_ptr = rapidjson::Pointer("/type").Get(d);
+  if (stop_type_ptr && stop_type_ptr->GetString() == std::string("through")){
+    stop_type = StopType::THROUGH;
+  }
+
+  Location location{{lon,lat}, stop_type};
+
+  location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
+  location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
+  location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
+
+  auto name = GetOptionalFromRapidJson<std::string>(d, "/name");
+  if (name)
+    location.name_ = *name;
+
+  auto street = GetOptionalFromRapidJson<std::string>(d, "/street");
+  if (street)
+    location.street_ = *street;
+
+  auto city = GetOptionalFromRapidJson<std::string>(d, "/city");
+  if (city)
+    location.city_ = *city;
+
+  auto state = GetOptionalFromRapidJson<std::string>(d, "/state");
+  if (state)
+    location.state_ = *state;
+
+  auto zip = GetOptionalFromRapidJson<std::string>(d, "/postal_code");
+  if (zip)
+    location.zip_ = *zip;
+
+  auto country = GetOptionalFromRapidJson<std::string>(d, "/country");
+  if (country)
+    location.country_ = *country;
+
+  return location;
+}
+
+Location Location::FromJson(const std::string& json, const ParseMethod& method){
   std::stringstream stream;
   stream << json;
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(stream, pt);
-  return FromPtree(pt);
+  switch(method){
+  case ParseMethod::PTREE: {
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(stream, pt);
+    return FromPtree(pt);
+    }
+  case ParseMethod::RAPIDJSON: {
+    rapidjson::Document d;
+    d.Parse(stream.str().c_str());
+    if (d.HasParseError())
+      throw std::runtime_error("Parse Error");
+    return FromRapidJson(d);
+    }
+  default: throw std::runtime_error("Bad parse method");
+  }
 }
 
 Location Location::FromCsv(const std::string& csv) {
