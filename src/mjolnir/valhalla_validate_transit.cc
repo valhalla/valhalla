@@ -106,17 +106,17 @@ int main(int argc, char** argv) {
   }
 
   if(argc > 4) {
-// do we validate the transit or build the test.
+    // do we validate the transit or build the test.
     if (build_validate == "validate") {
       testfile = std::string(std::string(argv[4]));
       onestoptests = ParseTestFile(testfile);
       std::sort(onestoptests.begin(), onestoptests.end());
-// Validate transit
+      // Validate transit
       std::unordered_set<valhalla::baldr::GraphId> all_tiles;
       if (!ValidateTransit::Validate(pt,all_tiles,onestoptests))
         return EXIT_FAILURE;
     } else if (build_validate == "build") {
-// test file is usually the results of running transit_prod_routes.tmpl tests
+      // test file is usually the results of running transit_prod_routes.tmpl tests
       testfile = std::string(std::string(argv[4]));
       ParseLogFile(testfile);
     }
