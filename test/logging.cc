@@ -1,5 +1,5 @@
 #include "test.h"
-#include "valhalla/midgard/logging.h"
+#include "midgard/logging.h"
 
 #include <thread>
 #include <future>

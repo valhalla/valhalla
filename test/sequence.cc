@@ -1,5 +1,5 @@
 #include "test.h"
-#include "valhalla/midgard/sequence.h"
+#include "midgard/sequence.h"
 
 using namespace valhalla::midgard;
 

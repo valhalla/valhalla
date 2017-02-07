@@ -5,19 +5,19 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <unordered_set>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/vector2.h>
-#include <valhalla/baldr/tilehierarchy.h>
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/location.h"
+#include "midgard/pointll.h"
+#include "midgard/vector2.h"
+#include "baldr/tilehierarchy.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
-#include <valhalla/mjolnir/graphvalidator.h>
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/directededgebuilder.h"
+#include "mjolnir/graphvalidator.h"
 #include <boost/filesystem.hpp>
 
 namespace vj = valhalla::mjolnir;

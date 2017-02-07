@@ -2,8 +2,8 @@
 
 #include "baldr/location.h"
 #include <boost/property_tree/json_parser.hpp>
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/util.h"
+#include "midgard/logging.h"
 
 #include <unordered_map>
 

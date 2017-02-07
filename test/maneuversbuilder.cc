@@ -1,7 +1,7 @@
 #include <string>
 
-#include <valhalla/midgard/util.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/util.h"
+#include "midgard/logging.h"
 
 #include "proto/directions_options.pb.h"
 #include "odin/maneuver.h"

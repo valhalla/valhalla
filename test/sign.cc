@@ -1,8 +1,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <valhalla/baldr/sign.h>
-#include <valhalla/baldr/signinfo.h>
+#include "baldr/sign.h"
+#include "baldr/signinfo.h"
 
 #include "odin/sign.h"
 

@@ -6,12 +6,12 @@
 #include <boost/filesystem.hpp>
 #include <unordered_set>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/vector2.h>
-#include <valhalla/baldr/tilehierarchy.h>
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/location.h"
+#include "midgard/pointll.h"
+#include "midgard/vector2.h"
+#include "baldr/tilehierarchy.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

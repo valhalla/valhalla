@@ -1,4 +1,4 @@
-#include <valhalla/baldr/signinfo.h>
+#include "baldr/signinfo.h"
 
 #include "test.h"
 

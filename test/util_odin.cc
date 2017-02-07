@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <boost/regex.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 #include "odin/util.h"
 #include "test.h"
 
