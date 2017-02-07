@@ -1,7 +1,7 @@
 #include "loki/service.h"
 #include "loki/search.h"
 #include "baldr/datetime.h"
-#include "/baldr/rapidjson_utils.h"
+#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/json_parser.hpp>
 #include <rapidjson/pointer.h>
 

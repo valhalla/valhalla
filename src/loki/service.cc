@@ -260,7 +260,8 @@ namespace valhalla {
         //let further processes more easily know what kind of request it was
         rapidjson::SetValueByPointer(request_rj, "/action", action->second);
         //flag healthcheck requests; do not send to logstash
-        healthcheck = request_pt.get<bool>("healthcheck", false);
+        auto optional_healthcheck = GetOptionalFromRapidJson<bool>(request_rj, "/healthcheck");
+        healthcheck = optional_healthcheck ? *optional_healthcheck : false;
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
@@ -303,7 +304,7 @@ namespace valhalla {
           rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
           request_rj.Accept(writer);
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("loki::request exceeded threshold::"+ buffer.GetString());
+          LOG_WARN("loki::request exceeded threshold::"+ std::string(buffer.GetString()));
           midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
 
