@@ -142,8 +142,7 @@ namespace valhalla {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
-      auto verbose_optinal = GetOptionalFromRapidJson<bool>(request, "/verbose");
-      auto verbose = verbose_optinal ? *verbose_optinal : false;
+      bool verbose = GetOptionalFromRapidJson<bool>(request, "/verbose").get_value_or(false);
       const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
       auto id = GetOptionalFromRapidJson<std::string>(request, "/id");
       for(const auto& location : locations) {

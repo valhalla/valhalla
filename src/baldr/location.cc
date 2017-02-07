@@ -75,7 +75,7 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
     helper_setter("postal_code", zip_);
   if(!country_.empty())
     helper_setter("country", country_);
-  if(date_time_ && !(*date_time_).empty())
+  if(date_time_ && !date_time_->empty())
     helper_setter("date_time", *date_time_);
   if(heading_)
     location.AddMember("heading", *heading_, a);
@@ -128,69 +128,62 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 }
 
 Location Location::FromRapidJson(const rapidjson::Value& d){
-  auto* lat_ptr = rapidjson::Pointer("/lat").Get(d);
-  if (! lat_ptr) throw std::runtime_error{"lat is missing"};
-  float lat = lat_ptr->GetFloat();
+  auto lat = GetOptionalFromRapidJson<float>(d, "/lat");
+  if (! lat) throw std::runtime_error{"lat is missing"};
 
-  if (lat < -90.0f || lat > 90.0f)
+  if (*lat < -90.0f || *lat > 90.0f)
       throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
 
-  auto* lon_ptr = rapidjson::Pointer("/lon").Get(d);
-  if (! lon_ptr) throw std::runtime_error{"lon is missing"};
+  auto lon = GetOptionalFromRapidJson<float>(d, "/lon");
+  if (! lon) throw std::runtime_error{"lon is missing"};
 
-  float lon = midgard::circular_range_clamp<float>(lon_ptr->GetFloat(), -180, 180);
+  lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
 
   StopType stop_type{StopType::BREAK};
-  auto* stop_type_ptr = rapidjson::Pointer("/type").Get(d);
-  if (stop_type_ptr && stop_type_ptr->GetString() == std::string("through")){
+  auto stop_type_json = GetOptionalFromRapidJson<std::string>(d, "/type");
+  if (stop_type_json && *stop_type_json == std::string("through")){
     stop_type = StopType::THROUGH;
   }
 
-  Location location{{lon,lat}, stop_type};
+  Location location{{*lon,*lat}, stop_type};
 
   location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
-  auto name = GetOptionalFromRapidJson<std::string>(d, "/name");
-  if (name)
+  if (auto name = GetOptionalFromRapidJson<std::string>(d, "/name"))
     location.name_ = *name;
 
-  auto street = GetOptionalFromRapidJson<std::string>(d, "/street");
-  if (street)
+  if (auto street = GetOptionalFromRapidJson<std::string>(d, "/street"))
     location.street_ = *street;
 
-  auto city = GetOptionalFromRapidJson<std::string>(d, "/city");
-  if (city)
+  if (auto city = GetOptionalFromRapidJson<std::string>(d, "/city"))
     location.city_ = *city;
 
-  auto state = GetOptionalFromRapidJson<std::string>(d, "/state");
-  if (state)
+  if (auto state = GetOptionalFromRapidJson<std::string>(d, "/state"))
     location.state_ = *state;
 
-  auto zip = GetOptionalFromRapidJson<std::string>(d, "/postal_code");
-  if (zip)
+  if (auto zip = GetOptionalFromRapidJson<std::string>(d, "/postal_code"))
     location.zip_ = *zip;
 
-  auto country = GetOptionalFromRapidJson<std::string>(d, "/country");
-  if (country)
+  if (auto country = GetOptionalFromRapidJson<std::string>(d, "/country"))
     location.country_ = *country;
 
   return location;
 }
 
 Location Location::FromJson(const std::string& json, const ParseMethod& method){
-  std::stringstream stream;
-  stream << json;
   switch(method){
   case ParseMethod::PTREE: {
+    std::stringstream stream;
+    stream << json;
     boost::property_tree::ptree pt;
     boost::property_tree::read_json(stream, pt);
     return FromPtree(pt);
     }
   case ParseMethod::RAPIDJSON: {
     rapidjson::Document d;
-    d.Parse(stream.str().c_str());
+    d.Parse(json.c_str());
     if (d.HasParseError())
       throw std::runtime_error("Parse Error");
     return FromRapidJson(d);

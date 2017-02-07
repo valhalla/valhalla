@@ -98,7 +98,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/nodeinfo.h \
 	valhalla/baldr/location.h \
 	valhalla/baldr/pathlocation.h \
-        valhalla/baldr/rapidjson_utils.h \
+	valhalla/baldr/rapidjson_utils.h \
 	valhalla/baldr/sign.h \
 	valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \

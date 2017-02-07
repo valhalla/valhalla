@@ -64,7 +64,6 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_matrix(ACTION_TYPE action, rapidjson::Document& request) {
-      //auto* request_locations = rapidjson::Pointer("/locations").Get(request);
       auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/locations");
       auto request_sources = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/sources");
       auto request_targets = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/targets");
@@ -176,9 +175,7 @@ namespace valhalla {
         for(size_t i = 0; i < sources_targets.size(); ++i) {
           const auto& l = sources_targets[i];
           const auto& projection = searched.at(l);
-          std::string name_tmp = "/correlated_" + std::to_string(i);
-          //rapidjson::SetValueByPointer(request, name_tmp.c_str(), correlated.ToRapidJson(i, request.GetAllocator()));
-          rapidjson::Pointer(name_tmp.c_str()).Set(request, projection.ToRapidJson(i, request.GetAllocator()));
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, projection.ToRapidJson(i, request.GetAllocator()));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, projection, 0);

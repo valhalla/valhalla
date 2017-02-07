@@ -32,8 +32,7 @@ namespace valhalla {
         throw valhalla_exception_t{400, 152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
-        auto time = GetOptionalFromRapidJson<size_t>(request, "/time");
-        size_t c = time ? *time : -1;
+        const size_t c = GetOptionalFromRapidJson<size_t>(request, "/time").get_value_or(-1);
         if(c < prev || c == -1)
           throw valhalla_exception_t{400, 111};
         if(c > max_time)
@@ -49,14 +48,12 @@ namespace valhalla {
       if (locations.size() > max_locations.find("isochrone")->second)
         throw valhalla_exception_t{400, 150, std::to_string(max_locations.find("isochrone")->second)};
 
-      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
-      if (! costing)
-        costing = "";
+      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing").get_value_or("");
       auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type");
 
       auto& allocator = request.GetAllocator();
       //default to current date_time for mm or transit.
-      if (! date_type && (*costing == "multimodal" || *costing == "transit")) {
+      if (! date_type && (costing == "multimodal" || costing == "transit")) {
         rapidjson::SetValueByPointer(request, "/date_time/type", 0);
         date_type = 0;
       }
@@ -90,8 +87,7 @@ namespace valhalla {
         //correlate the various locations to the underlying graph
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
-          auto path_tmp = ("/correlated_" + std::to_string(i)).c_str();
-          rapidjson::Pointer(path_tmp).Set(request, projections.at(locations[i]).ToRapidJson(i, allocator));
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, projections.at(locations[i]).ToRapidJson(i, allocator));
         }
       }
       catch(const std::exception&) {

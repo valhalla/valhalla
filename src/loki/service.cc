@@ -56,12 +56,10 @@ namespace {
     const auto& json = request.query.find("json");
     if (json != request.query.end() && json->second.size()
       && json->second.front().size()) {
-      std::istringstream is(json->second.front());
-      d.Parse(is.str().c_str());
+      d.Parse(json->second.front().c_str());
     }//no json parameter, check the body
     else if(!request.body.empty()) {
-      std::istringstream is(request.body);
-      d.Parse(is.str().c_str());
+      d.Parse(request.body.c_str());
     }
     if (d.HasParseError())
       throw valhalla_exception_t{400, 100};
@@ -79,23 +77,25 @@ namespace {
 
       //turn single value entries into single key value
       if(kv.second.size() == 1) {
-        d.AddMember(rapidjson::StringRef(kv.second.front().c_str()), rapidjson::StringRef(kv.first.c_str()), allocator);
+        d.AddMember({kv.second.front(), allocator}, {kv.first, allocator}, allocator);
         continue;
       }
 
       //make an array of values for this key
       rapidjson::Value array{rapidjson::kArrayType};
       for(const auto& value : kv.second) {
-        array.PushBack(rapidjson::StringRef(value.c_str()), allocator);
+        array.PushBack({value, allocator}, allocator);
       }
-      d.AddMember(rapidjson::StringRef(kv.first.c_str()), array, allocator);
+      d.AddMember({kv.first, allocator}, array, allocator);
     }
 
     //if its osrm compatible lets make the location object conform to our standard input
     if(action == loki_worker_t::VIAROUTE) {
       auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
-
-      for(const auto& location : d["loc"].GetArray()) {
+      auto loc = GetOptionalFromRapidJson<rapidjson::kArrayType>(d, "/loc");
+      if (!loc)
+        throw valhalla_exception_t{400, 110};
+      for(const auto& location : *loc) {
         Location l = Location::FromCsv(location.GetString());
         rapidjson::Value ele{rapidjson::kObjectType};
         ele.AddMember("lon", l.latlng_.first, allocator)
@@ -151,7 +151,7 @@ namespace valhalla {
         }
       }
       if (!healthcheck)
-        valhalla::midgard::logging::Log("location_count::" + std::to_string(request["locations"].Size()), " [ANALYTICS] ");
+        valhalla::midgard::logging::Log("location_count::" + std::to_string(locations_array->Size()), " [ANALYTICS] ");
     }
 
     void loki_worker_t::parse_costing(const rapidjson::Document& request) {
@@ -260,8 +260,7 @@ namespace valhalla {
         //let further processes more easily know what kind of request it was
         rapidjson::SetValueByPointer(request_rj, "/action", action->second);
         //flag healthcheck requests; do not send to logstash
-        auto optional_healthcheck = GetOptionalFromRapidJson<bool>(request_rj, "/healthcheck");
-        healthcheck = optional_healthcheck ? *optional_healthcheck : false;
+        healthcheck = GetOptionalFromRapidJson<bool>(request_rj, "/healthcheck").get_value_or(false);
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
