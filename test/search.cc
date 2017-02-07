@@ -138,7 +138,7 @@ void make_tile() {
 }
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
-  const std::vector<PathLocation::PathEdge>& expected_edges){
+  const std::vector<PathLocation::PathEdge>& expected_edges, bool exact = false){
   using namespace valhalla::loki;
   //make the config file
   boost::property_tree::ptree conf;
@@ -159,8 +159,13 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
       expected_point, location.latlng_.Distance(expected_point), expected_edge.sos});
   }
+  //note that this just checks that p has the edges that answer has
+  //p can have more edges than answer has and that wont fail this check!
   if(!(answer == p))
     throw std::runtime_error("Did not find expected edges");
+  //if you want to enforce that the result didnt have more then expected
+  if(exact && answer.edges.size() != p.edges.size())
+    throw std::logic_error("Got more edges than expected");
 }
 
 void TestEdgeSearch() {
@@ -177,6 +182,12 @@ void TestEdgeSearch() {
     { PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE}, PE{{t, l, 9}, 0, d.second, 0, S::NONE}, //leaving edges
       PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE}, PE{{t, l, 6}, 1, d.second, 0, S::NONE}  //arriving edges
     });
+  //snap to node as through location should just be outgoing
+  Location x{a.second, Location::StopType::THROUGH};
+  search(x, true, a.second, { PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE}, PE{{t, l, 4}, 0, a.second, 0, S::NONE} }, true);
+  //with a heading should just be a single outgoing
+  x.heading_ = 180;
+  search(x, true, a.second, { PE{{t, l, 4}, 0, a.second, 0, S::NONE} }, true);
 
   //mid point search
   auto answer = a.second.MidPoint(d.second);
@@ -188,7 +199,7 @@ void TestEdgeSearch() {
   search({answer}, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
 
   //with heading
-  Location x{answer};
+  x = {answer};
   x.heading_ = 90;
   search(x, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE} });
   x.heading_ = 0;
