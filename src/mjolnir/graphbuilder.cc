@@ -997,8 +997,11 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
   // NUMBER
   // Exit sign number
   if (way.junction_ref_index() != 0) {
-    exit_list.emplace_back(Sign::Type::kExitNumber,
-            osmdata.ref_offset_map.name(way.junction_ref_index()));
+
+    std::vector<std::string> j_refs = GetTagTokens(
+        osmdata.ref_offset_map.name(way.junction_ref_index()));
+    for (auto& j_ref : j_refs)
+      exit_list.emplace_back(Sign::Type::kExitNumber, j_ref);
   }  else if (node.ref() && !fork) {
     exit_list.emplace_back(Sign::Type::kExitNumber,
             osmdata.node_ref.find(node.osmid)->second);
