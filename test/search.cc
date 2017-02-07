@@ -3,6 +3,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/filesystem.hpp>
 #include <unordered_set>
 
 #include <valhalla/baldr/graphid.h>
@@ -15,18 +16,9 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-/*
- * to regenerate the test tile you'll want to:
- *  add -I../mjolnir to the compile line
- *  add ../mjolnir/libvalhalla_mjolnir.la to the link line
- *  uncomment the commented sections in this file
- *  and delete the test tile: test/fake_tiles/2/000/519/120.gph
- */
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/directededgebuilder.h"
 
-/*
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
-*/
 
 namespace {
 
@@ -44,16 +36,21 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-TileHierarchy h("test/fake_tiles");
+TileHierarchy h("test/search_tiles");
 GraphId tile_id = h.GetGraphId({.125,.125}, 2);
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
 std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
-/*
+
 void make_tile() {
   using namespace valhalla::mjolnir;
   using namespace valhalla::baldr;
+
+  // make sure that all the old tiles are gone before trying to make new ones.
+  if (boost::filesystem::is_directory(h.tile_dir())) {
+    boost::filesystem::remove_all(h.tile_dir());
+  }
 
   //basic tile information
   GraphTileBuilder tile(h, tile_id, false);
@@ -62,7 +59,6 @@ void make_tile() {
   auto add_node = [&edge_index] (const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
     NodeInfo node_builder;
     node_builder.set_latlng(v.second);
-    node_builder.set_bestrc(RoadClass::kSecondary);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
     edge_index += edge_count;
@@ -71,7 +67,7 @@ void make_tile() {
   auto add_edge = [&tile] (const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
     const uint32_t name, const uint32_t opposing, const bool forward) {
 
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1, {}, {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
     std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if(!forward)
@@ -140,15 +136,13 @@ void make_tile() {
   auto bins = GraphTileBuilder::BinEdges(h, &reloaded, tweeners);
   GraphTileBuilder::AddBins(h, &reloaded, bins);
 }
-*/
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
   const std::vector<PathLocation::PathEdge>& expected_edges){
   using namespace valhalla::loki;
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/fake_tiles\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  conf.put("tile_dir", h.tile_dir());
 
   valhalla::baldr::GraphReader reader(conf);
   const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
@@ -225,8 +219,7 @@ void TestEdgeSearch() {
 int main() {
   test::suite suite("search");
 
-  //TODO: move to mjolnir?
-  //suite.test(TEST_CASE(make_tile));
+  suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestEdgeSearch));
 
