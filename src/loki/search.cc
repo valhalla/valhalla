@@ -189,6 +189,19 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
 
   //start where we are and crawl from there
   crawl(found_node, true);
+
+
+  //if it was a through location with a heading its pretty confusing.
+  //does the user want to come into and exit the location at the preferred
+  //angle? for now we are just saying that they want it to exit at the
+  //heading provided. this means that if it was node snapped we only
+  //want the outbound edges
+  if(location.stoptype_ == Location::StopType::THROUGH && location.heading_) {
+    auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
+      [](const PathLocation::PathEdge& e) { return e.end_node(); });
+    correlated.edges.erase(new_end, correlated.edges.end());
+  }
+
   if(correlated.edges.size() == 0)
     throw std::runtime_error("No suitable edges near location");
 
@@ -605,15 +618,6 @@ Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFi
     if (pp.projection_found()) {
       // Correlate
       auto inserted = searched.insert({pp.location(), finalize(pp, reader, edge_filter)});
-      // Through locations are used for routing and when routing its not useful to have
-      // incoming edges at node-snapped input locations this is because those edges will
-      // have been found as the path algorithm is progressing toward the location or?
-      if(inserted.second && pp.location().stoptype_ == Location::StopType::THROUGH) {
-        auto& edges = inserted.first->second.edges;
-        auto new_end = std::remove_if(edges.begin(), edges.end(),
-          [](const PathLocation::PathEdge& e) { return e.end_node(); });
-        edges.erase(new_end, edges.end());
-      }
     }
   }
 
