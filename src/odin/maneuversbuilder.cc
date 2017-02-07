@@ -2020,10 +2020,12 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
     Turn::Type new_turn_type = Turn::GetType(new_turn_degree);
 
     // Process simple right turn channel
-    // Combineable if begin of turn channel is relative right and
-    // final turn type is right or straight (not left)
+    // Combineable if begin of turn channel is relative right
+    // and next maneuver is not relative left direction
+    // and final turn type is right or straight (not left)
     if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight)
             || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight))
+        && (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kLeft)
         && ((new_turn_type == Turn::Type::kSlightRight)
             || (new_turn_type == Turn::Type::kRight)
             || (new_turn_type == Turn::Type::kSharpRight)
@@ -2032,10 +2034,12 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(
     }
 
     // Process simple left turn channel
-    // Combineable if begin of turn channel is relative left and
-    // final turn type is left or straight (not right)
+    // Combineable if begin of turn channel is relative left
+    // and next maneuver is not relative right direction
+    // and final turn type is left or straight (not right)
     if (((curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft)
             || (curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft))
+        && (next_man->begin_relative_direction() != Maneuver::RelativeDirection::kRight)
         && ((new_turn_type == Turn::Type::kSlightLeft)
             || (new_turn_type == Turn::Type::kLeft)
             || (new_turn_type == Turn::Type::kSharpLeft)
