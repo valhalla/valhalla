@@ -579,27 +579,40 @@ namespace loki {
 
 std::unordered_map<Location, PathLocation>
 Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
+  if(locations.empty())
+    return {};
+
+  // Get the unique set of input locations
   std::unordered_map<Location, PathLocation> searched;
+  std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
+  std::vector<ProjectPoint> pps;
+  pps.reserve(uniq_locations.size());
+  for (const auto& loc: uniq_locations) {
+    pps.emplace_back(loc, reader);
+  }
 
-  if (! locations.empty()) {
-    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-    std::vector<ProjectPoint> pps;
-    pps.reserve(uniq_locations.size());
-    for (const auto& loc: uniq_locations) {
-      pps.emplace_back(loc, reader);
-    }
+  // We keep pps sorted at each round to group the bins together
+  // and test that every projection finished by just testing the
+  // first one (finished projections are at the end when sorted).
+  for (std::sort(pps.begin(), pps.end()); pps.front().has_bin(); std::sort(pps.begin(), pps.end())) {
+    auto range = find_best_range(pps);
+    handle_bin(range.first, range.second, reader, edge_filter);
+  }
 
-    // We keep pps sorted a each round to group the bin together and
-    // to test that every projection finished by just testing the
-    // first one (finished projection are at the end when sorted).
-    for (std::sort(pps.begin(), pps.end()); pps.front().has_bin(); std::sort(pps.begin(), pps.end())) {
-      auto range = find_best_range(pps);
-      handle_bin(range.first, range.second, reader, edge_filter);
-    }
-
-    for (const auto& pp: pps) {
-      if (pp.projection_found()) {
-        searched.insert({pp.location(), finalize(pp, reader, edge_filter)});
+  // At this point we have candidates for each location so now we
+  // need to go get the actual correlated location with edge_id etc.
+  for (const auto& pp: pps) {
+    if (pp.projection_found()) {
+      // Correlate
+      auto inserted = searched.insert({pp.location(), finalize(pp, reader, edge_filter)});
+      // Through locations are used for routing and when routing its not useful to have
+      // incoming edges at node-snapped input locations this is because those edges will
+      // have been found as the path algorithm is progressing toward the location or?
+      if(inserted.second && pp.location().stoptype_ == Location::StopType::THROUGH) {
+        auto& edges = inserted.first->second.edges;
+        auto new_end = std::remove_if(edges.begin(), edges.end(),
+          [](const PathLocation::PathEdge& e) { return e.end_node(); });
+        edges.erase(new_end, edges.end());
       }
     }
   }
