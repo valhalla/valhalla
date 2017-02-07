@@ -675,7 +675,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     } while(request && (request = *request + api_key));
 
     //pull out all ROUTES
-    request = url((boost::format("/api/v1/routes?total=false&exclude_geometry=true&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    request = url((boost::format("/api/v1/routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
     request = *request + import_level;
