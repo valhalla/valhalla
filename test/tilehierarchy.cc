@@ -1,6 +1,6 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
-#include <valhalla/midgard/pointll.h>
+#include "midgard/pointll.h"
 
 #include "test.h"
 

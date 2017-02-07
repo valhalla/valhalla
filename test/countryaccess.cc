@@ -4,17 +4,17 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
-#include <valhalla/midgard/sequence.h>
+#include "midgard/sequence.h"
 
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/filesystem.hpp>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
+#include "baldr/graphconstants.h"
+#include "baldr/directededge.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
 
 using namespace std;
 using namespace valhalla::mjolnir;

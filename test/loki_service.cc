@@ -6,7 +6,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <thread>
 #include <unistd.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include "loki/service.h"
 

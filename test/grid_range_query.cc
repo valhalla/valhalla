@@ -1,7 +1,7 @@
 // -*- mode: c++ -*-
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/linesegment2.h>
+#include "midgard/pointll.h"
+#include "midgard/linesegment2.h"
 
 #include "test.h"
 #include "meili/grid_range_query.h"

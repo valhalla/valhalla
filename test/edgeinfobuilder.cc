@@ -4,11 +4,11 @@
 #include <iostream>
 #include <fstream>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/edgeinfo.h>
+#include "baldr/graphid.h"
+#include "baldr/edgeinfo.h"
 #include "mjolnir/edgeinfobuilder.h"
 #include <boost/shared_array.hpp>
-#include <valhalla/baldr/sign.h>
+#include "baldr/sign.h"
 #include <memory>
 
 using namespace std;

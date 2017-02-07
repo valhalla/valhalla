@@ -1,7 +1,7 @@
 #include "test.h"
 
 #include "thor/service.h"
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 #include <unistd.h>
 
 #include <thread>

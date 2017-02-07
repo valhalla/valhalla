@@ -1,8 +1,8 @@
 // -*- mode: c++ -*-
 #include <cmath>
 
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/util.h>
+#include "midgard/point2.h"
+#include "midgard/util.h"
 
 #include "test.h"
 #include "meili/geometry_helpers.h"

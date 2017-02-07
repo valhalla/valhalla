@@ -1,6 +1,6 @@
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/signinfo.h>
-#include <valhalla/mjolnir/uniquenames.h>
+#include "baldr/graphid.h"
+#include "baldr/signinfo.h"
+#include "mjolnir/uniquenames.h"
 
 #include "test.h"
 

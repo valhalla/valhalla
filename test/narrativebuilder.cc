@@ -1,6 +1,6 @@
 #include <regex>
 
-#include <valhalla/baldr/verbal_text_formatter_factory.h>
+#include "baldr/verbal_text_formatter_factory.h"
 
 #include "proto/trippath.pb.h"
 #include "proto/tripdirections.pb.h"
