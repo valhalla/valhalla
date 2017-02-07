@@ -26,7 +26,7 @@ The are several key features that we hope can differentiate the Valhalla project
 - Tiled hierarchical data structure. Should allow users to have a small memory footprint on memory constrained devices, enable offline routing, provide a means for regional extracts and partial updates.
 - Dynamic, runtime costing of edges and vertices within the graph via a plugin architecture. Should allow for customization and alternate route generation.
 - C++ based API. Should allow for cross compilation of the various pieces to enable routing on offline portable devices.
-- A plugin based narrative and maneuver generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
+- A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
 - Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
 
 Organization
@@ -122,7 +122,7 @@ The build will produce libraries, headers and binaries which you are free to use
 
     PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla >= 2.0.6])
 
-For more information on binaries, see [Command Line Tools](#Command-Line-Tools) section below and the [docs](docs).
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
 
