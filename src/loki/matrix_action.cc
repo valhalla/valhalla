@@ -3,7 +3,6 @@
 
 #include <boost/property_tree/info_parser.hpp>
 #include <unordered_map>
-#include <rapidjson/pointer.h>
 
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"

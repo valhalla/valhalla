@@ -2,9 +2,6 @@
 #include "loki/search.h"
 
 #include <boost/property_tree/info_parser.hpp>
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/pointer.h>
 
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"

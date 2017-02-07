@@ -3,7 +3,6 @@
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/json_parser.hpp>
-#include <rapidjson/pointer.h>
 
 using namespace prime_server;
 using namespace valhalla::baldr;

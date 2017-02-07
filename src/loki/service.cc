@@ -7,8 +7,6 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
 
 #include "midgard/logging.h"
 #include "sif/autocost.h"
@@ -92,8 +90,8 @@ namespace {
     //if its osrm compatible lets make the location object conform to our standard input
     if(action == loki_worker_t::VIAROUTE) {
       auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
-      auto loc = GetOptionalFromRapidJson<rapidjson::kArrayType>(d, "/loc");
-      if (!loc)
+      auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
+      if (! loc)
         throw valhalla_exception_t{400, 110};
       for(const auto& location : *loc) {
         Location l = Location::FromCsv(location.GetString());

@@ -8,7 +8,6 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <math.h>
-#include <rapidjson/pointer.h>
 
 using namespace prime_server;
 using namespace valhalla;

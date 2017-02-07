@@ -6,8 +6,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
-#include <rapidjson/pointer.h>
-
 using namespace prime_server;
 using namespace valhalla::baldr;
 

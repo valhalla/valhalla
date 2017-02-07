@@ -9,9 +9,6 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
-#include <rapidjson/document.h>
-#include <rapidjson/pointer.h>
-
 namespace valhalla {
 namespace baldr {
 
