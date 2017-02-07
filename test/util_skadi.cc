@@ -1,7 +1,7 @@
 #include "test.h"
 #include "skadi/util.h"
 
-#include <valhalla/midgard/util.h>
+#include "midgard/util.h"
 using namespace valhalla;
 
 namespace {

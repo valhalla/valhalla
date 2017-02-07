@@ -2,8 +2,8 @@
 #include <vector>
 #include <tuple>
 
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/linesegment2.h>
+#include "midgard/point2.h"
+#include "midgard/linesegment2.h"
 
 #include "meili/grid_traversal.h"
 #include "test.h"

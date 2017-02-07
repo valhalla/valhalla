@@ -5,42 +5,28 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <unordered_set>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/vector2.h>
-#include <valhalla/baldr/tilehierarchy.h>
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/location.h"
+#include "midgard/pointll.h"
+#include "midgard/vector2.h"
+#include "baldr/tilehierarchy.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-/*
- * to regenerate the test tile you'll want to:
- *
- * 1. add " libvalhalla_mjolnir = unstable" to the end of the pkg_check for
- *    VALHALLA_DEPS in configure.ac and re-run autogen/configure.
- * 2. uncomment the #define below.
- * 3. run "make check".
- */
-
-// #define MAKE_TEST_TILES
-
-#ifdef MAKE_TEST_TILES
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
-#include <valhalla/mjolnir/graphvalidator.h>
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/directededgebuilder.h"
+#include "mjolnir/graphvalidator.h"
 #include <boost/filesystem.hpp>
 
 namespace vj = valhalla::mjolnir;
 namespace bfs = boost::filesystem;
-#endif /* MAKE_TEST_TILES */
 
 namespace {
 
 const std::string test_tile_dir = "test/node_search_tiles";
 
-#ifdef MAKE_TEST_TILES
 struct graph_writer {
   graph_writer(const vb::TileHierarchy &hierarchy, uint8_t level);
 
@@ -345,7 +331,6 @@ void make_tile() {
 
   vj::GraphValidator::Validate(conf);
 }
-#endif /* MAKE_TEST_TILES */
 
 void test_single_node() {
   //make the config file
@@ -450,10 +435,7 @@ void test_opposite_in_another_tile() {
 int main() {
   test::suite suite("node_search");
 
-#ifdef MAKE_TEST_TILES
   suite.test(TEST_CASE(make_tile));
-#endif /* MAKE_TEST_TILES */
-
   suite.test(TEST_CASE(test_single_node));
   suite.test(TEST_CASE(test_small_node_block));
   suite.test(TEST_CASE(test_node_at_tile_boundary));

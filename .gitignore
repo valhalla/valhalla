@@ -155,7 +155,9 @@ test/trip_path_controller
 test/data/bin_tiles/bin/*
 test/data/amsterdam_tiles
 test/search
+test/search_tiles/
 test/node_search
+test/node_search_tiles/
 test/test_config
 test/serializers
 test/loki_service

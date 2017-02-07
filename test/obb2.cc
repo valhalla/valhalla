@@ -1,4 +1,4 @@
-#include "valhalla/midgard/obb2.h"
+#include "midgard/obb2.h"
 
 #include "test.h"
 

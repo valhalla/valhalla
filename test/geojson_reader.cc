@@ -1,7 +1,7 @@
 // -*- mode: c++ -*-
 #include <string>
 
-#include <valhalla/midgard/pointll.h>
+#include "midgard/pointll.h"
 
 #include "meili/measurement.h"
 #include "meili/geojson_reader.h"

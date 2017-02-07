@@ -14,7 +14,7 @@ using namespace valhalla::loki;
 namespace {
 //the cutoff at which we will assume the input is too far away from civilisation to be
 //worth correlating to the nearest graph elements
-constexpr float SEARCH_CUTTOFF = 35000.f;
+constexpr float SEARCH_CUTOFF = 35000.f;
 //during edge correlation, if you end up < 5 meters from the beginning or end of the
 //edge we just assume you were at that node and not actually along the edge
 //we keep it small because point and click interfaces are more accurate than gps input
@@ -323,7 +323,7 @@ struct ProjectPoint {
 
       //TODO: make configurable the radius at which we give up searching
       //the closest thing in this bin is further than what we have already
-      if(std::get<2>(bin) > SEARCH_CUTTOFF || std::get<2>(bin) > closest_distance()) {
+      if(std::get<2>(bin) > SEARCH_CUTOFF || std::get<2>(bin) > closest_distance()) {
         b->cur_tile = nullptr;
         break;
       }

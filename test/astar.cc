@@ -1,15 +1,15 @@
 #include "test.h"
 #include "thor/astar.h"
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/vector2.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/sif/pedestriancost.h>
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/thor/astar.h>
+#include "midgard/pointll.h"
+#include "midgard/vector2.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/location.h"
+#include "baldr/tilehierarchy.h"
+#include "sif/pedestriancost.h"
+#include "sif/costconstants.h"
+#include "thor/astar.h"
 
 namespace bpt = boost::property_tree;
 
@@ -29,8 +29,8 @@ namespace vt = valhalla::thor;
 // #define MAKE_TEST_TILES
 
 #ifdef MAKE_TEST_TILES
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/directededgebuilder.h"
 #endif /* MAKE_TEST_TILES */
 
 namespace {
