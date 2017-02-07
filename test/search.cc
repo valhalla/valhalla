@@ -182,9 +182,12 @@ void TestEdgeSearch() {
     { PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE}, PE{{t, l, 9}, 0, d.second, 0, S::NONE}, //leaving edges
       PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE}, PE{{t, l, 6}, 1, d.second, 0, S::NONE}  //arriving edges
     });
-  //snap to node as through location should just be outgoing
+  //snap to node as through location should be all edges
   Location x{a.second, Location::StopType::THROUGH};
-  search(x, true, a.second, { PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE}, PE{{t, l, 4}, 0, a.second, 0, S::NONE} }, true);
+  search(x, true, a.second,
+    { PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE}, PE{{t, l, 4}, 0, a.second, 0, S::NONE},
+      PE{{t, l, 1}, 1, a.second, 0, S::NONE}, PE{{t, l, 8}, 1, a.second, 0, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, S::NONE}
+    }, true);
   //with a heading should just be a single outgoing
   x.heading_ = 180;
   search(x, true, a.second, { PE{{t, l, 4}, 0, a.second, 0, S::NONE} }, true);
