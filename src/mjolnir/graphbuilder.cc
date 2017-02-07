@@ -1003,8 +1003,10 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     for (auto& j_ref : j_refs)
       exit_list.emplace_back(Sign::Type::kExitNumber, j_ref);
   }  else if (node.ref() && !fork) {
-    exit_list.emplace_back(Sign::Type::kExitNumber,
-            osmdata.node_ref.find(node.osmid)->second);
+    std::vector<std::string> n_refs = GetTagTokens(
+        osmdata.node_ref.find(node.osmid)->second);
+    for (auto& n_ref : n_refs)
+      exit_list.emplace_back(Sign::Type::kExitNumber, n_ref);
   }
 
   ////////////////////////////////////////////////////////////////////////////
