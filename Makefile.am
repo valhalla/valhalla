@@ -472,6 +472,7 @@ bin_PROGRAMS += \
 	valhalla_build_admins \
 	valhalla_build_transit \
 	valhalla_query_transit \
+	valhalla_validate_transit \
 	valhalla_ways_to_edges \
 	valhalla_build_speeds \
 	valhalla_build_statistics \
@@ -494,6 +495,9 @@ valhalla_build_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTI
 valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc
 valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_query_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
+valhalla_validate_transit_SOURCES = src/mjolnir/valhalla_validate_transit.cc
+valhalla_validate_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+valhalla_validate_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
 valhalla_ways_to_edges_SOURCES = src/mjolnir/valhalla_ways_to_edges.cc
 valhalla_ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 valhalla_ways_to_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz  libvalhalla.la
