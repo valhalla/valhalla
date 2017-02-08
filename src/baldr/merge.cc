@@ -88,34 +88,6 @@ private:
 
 namespace detail {
 
-bitset_t::bitset_t(size_t size) : bits(div_round_up(size, bits_per_value)) {}
-
-void bitset_t::set(const uint64_t id) {
-  if (id >= end_id()) {
-    throw std::runtime_error("id out of bounds");
-  }
-  bits[id / u64_size] |= u64_one << (id % u64_size);
-}
-
-bool bitset_t::get(const uint64_t id) const {
-  if (id >= end_id()) {
-    throw std::runtime_error("id out of bounds");
-  }
-  return bits[id / u64_size] & (u64_one << (id % u64_size));
-}
-
-bool edge_tracker::get(const GraphId &edge_id) const {
-  auto itr = m_edges_in_tiles.find(edge_id.Tile_Base());
-  assert(itr != m_edges_in_tiles.end());
-  return m_edge_set.get(edge_id.id() + itr->second);
-}
-
-void edge_tracker::set(const GraphId &edge_id) {
-  auto itr = m_edges_in_tiles.find(edge_id.Tile_Base());
-  assert(itr != m_edges_in_tiles.end());
-  m_edge_set.set(edge_id.id() + itr->second);
-}
-
 edge_collapser::edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<bool(const DirectedEdge *)> edge_pred, std::function<void(const path &)> func)
   : m_reader(reader)
   , m_tracker(tracker)
@@ -131,17 +103,32 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
   GraphId first, second;
 
   for (const auto &edge : iter::edges(m_reader, node_id)) {
-    // nodes which connect to ferries, transit or to a different level
-    // shouldn't be collapsed.
+    // nodes which connect to ferries, transit.
+    // Transitions to a different level shouldn't be collapsed (except
+    // possible onto local level)
     if (!m_edge_predictate(edge.first)) {
       return none;
     }
 
-    // shortcut edges should be ignored
-    if (edge.first->shortcut()) {
+    // shortcut edges and transition edges should be ignored
+    if (edge.first->shortcut() || edge.first->trans_down() ||
+        edge.first->trans_up()) {
       continue;
     }
 
+/* TODO - discuss and decide how to proceed with turn channels
+    // ignore turn channels - this allows merging across intersections
+    // with turn channels
+    if (edge.first->use() == Use::kTurnChannel) {
+      continue;
+    }
+
+    // igonore non-driveable edges - e.g., emergency access only
+    if ((edge.first->forwardaccess() & kVehicularAccess) == 0 &&
+        (edge.first->reverseaccess() & kVehicularAccess) == 0) {
+      continue;
+    }
+*/
     if (first) {
       if (second) {
         // can't add a third, that means this node is a true junction.
