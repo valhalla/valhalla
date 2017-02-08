@@ -119,6 +119,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_us_tx.h \
 	valhalla/baldr/verbal_text_formatter_factory.h \
 	valhalla/baldr/reutil.h \
+	valhalla/baldr/edgetracker.h \
 	valhalla/baldr/merge.h \
 	valhalla/sif/costconstants.h \
 	valhalla/sif/costfactory.h \
@@ -218,6 +219,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
 	src/baldr/graphtileheader.cc \
+	src/baldr/edgetracker.cc \
 	src/baldr/merge.cc \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
