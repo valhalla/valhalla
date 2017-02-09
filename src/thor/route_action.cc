@@ -117,15 +117,24 @@ namespace valhalla {
       thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination);
       path_algorithm->Clear();
 
+      // If we are continuing through a location we need to make sure we
+      // only allow the edge that was used previously (avoid u-turns)
+      if(!path.empty()) {
+        auto erasure_position = std::remove_if(destination->edges.begin(), destination->edges.end(),
+          [&path](const PathLocation::PathEdge& e){
+            return e.id != path.front().edgeid;
+        });
+        destination->edges.erase(erasure_position, destination->edges.end());
+      }
+
       // Get best path and keep it
       auto temp_path = get_path(path_algorithm, *origin, *destination);
       temp_path.swap(path);
 
-      // This leg had at least one through
+      // This leg had at least one through so merge the parts
       if(!temp_path.empty()) {
         std::for_each(temp_path.begin(), temp_path.end(),
           [&path](PathInfo& i) { i.elapsed_time += path.back().elapsed_time; });
-        // Can this mess up legitimate u-turns (a through on a cul-de-sac)?
         path.insert(path.end(), temp_path.begin() +
           (path.back().edgeid == temp_path.front().edgeid), temp_path.end());
       }
@@ -173,14 +182,23 @@ namespace valhalla {
       thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing, *origin, *destination);
       path_algorithm->Clear();
 
+      // If we are continuing through a location we need to make sure we
+      // only allow the edge that was used previously (avoid u-turns)
+      if(!path.empty()) {
+        auto erasure_position = std::remove_if(origin->edges.begin(), origin->edges.end(),
+          [&path](const PathLocation::PathEdge& e){
+            return e.id != path.back().edgeid;
+        });
+        origin->edges.erase(erasure_position, origin->edges.end());
+      }
+
       // Get best path and keep it
       auto temp_path = get_path(path_algorithm, *origin, *destination);
 
-      // This leg had at least one through
+      // This leg had at least one through so merge the parts
       if(!path.empty()) {
         std::for_each(temp_path.begin(), temp_path.end(),
           [&path](PathInfo& i) { i.elapsed_time += path.back().elapsed_time; });
-        // Can this mess up legitimate u-turns (a through on a cul-de-sac)?
         path.insert(path.end(), temp_path.begin() +
           (path.back().edgeid == temp_path.front().edgeid), temp_path.end());
       }// Didnt need to merge
