@@ -105,11 +105,13 @@ void test_from_json() {
     Location::ParseMethod::RAPIDJSON};
 
   for(const auto& m : methods) {
+    bool exception_caught = false;
     try {
       Location loc = Location::FromJson("something", m);
-      throw std::runtime_error("This should have been malformed json");
     } catch (...) {
+      exception_caught = true;
     }
+    if (! exception_caught) throw std::runtime_error("This should have been malformed json");
 
     // Test Lat/Lng and default type
     Location loc = Location::FromJson(make_json(lat, lng), m);

@@ -167,7 +167,7 @@ namespace valhalla {
       // Get the costing options if in the config or get the empty default.
       // Creates the cost in the cost factory
       std::string method_options = "/costing_options/" + *costing;
-      auto* method_options_ptr = rapidjson::Pointer(method_options.c_str()).Get(request);
+      auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
       try{
         cost_ptr_t c;
         if (method_options_ptr)

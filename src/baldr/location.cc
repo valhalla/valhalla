@@ -55,25 +55,21 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
   if (stoptype_ == StopType::THROUGH)
     location.AddMember("type", "through", a);
   else location.AddMember("type", "break", a);
-  auto helper_setter = [&](const std::string& attr, const std::string& s) {
-    location.AddMember(rapidjson::Value{}.SetString(attr.c_str(), attr.length(), a),
-            rapidjson::Value{}.SetString(s.c_str(), s.length(), a),
-            a);
-  };
+
   if(!name_.empty())
-    helper_setter("name", name_);
+    location.AddMember("name", name_, a);
   if(!street_.empty())
-    helper_setter("street", street_);
+    location.AddMember("street", street_, a);
   if(!city_.empty())
-    helper_setter("city", city_);
+    location.AddMember("city", city_, a);
   if(!state_.empty())
-    helper_setter("state", state_);
+    location.AddMember("state", state_, a);
   if(!zip_.empty())
-    helper_setter("postal_code", zip_);
+    location.AddMember("postal_code", zip_, a);
   if(!country_.empty())
-    helper_setter("country", country_);
+    location.AddMember("country", country_, a);
   if(date_time_ && !date_time_->empty())
-    helper_setter("date_time", *date_time_);
+    location.AddMember("date_time", *date_time_, a);
   if(heading_)
     location.AddMember("heading", *heading_, a);
   if(way_id_)
