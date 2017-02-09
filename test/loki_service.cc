@@ -161,6 +161,9 @@ namespace {
     );
     //request and receive
     client.batch();
+
+    // Make sure that all requests are tested
+    BOOST_ASSERT(request == requests.cend());
   }
 }
 
