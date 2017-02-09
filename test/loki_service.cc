@@ -52,7 +52,10 @@ namespace {
     http_request_t(GET, "/many_to_one?json={\"targets\":[{\"lon\":0,\"lat\":90}]}"),
     http_request_t(GET, "/many_to_many?json={\"locations\":[{\"lon\":0,\"lat\":90}]}"),
     http_request_t(GET, "/sources_to_targets?json={\"targets\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/sources_to_targets?json={\"locations\":[{\"lon\":0,\"lat\":90}]}")
+    http_request_t(GET, "/sources_to_targets?json={\"locations\":[{\"lon\":0,\"lat\":90}]}"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":"NONE","lat":90}, {"lon":"NONE","lat":90}]})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":-270}, {"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":90}, {"lon":0,"lat":90}], "coosting": "NONE"})"),
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
@@ -88,7 +91,10 @@ namespace {
     {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
     {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")}
+    {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
+    {400, R"({"error_code":131,"error":"Failed to parse source","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":131,"error":"Failed to parse source","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
   };
 
 
@@ -138,6 +144,7 @@ namespace {
     //client makes requests and gets back responses in a batch fashion
     auto request = requests.cbegin();
     std::string request_str;
+    int success_count = 0;
     http_client_t client(context, "ipc:///tmp/test_loki_server",
       [&request, &request_str]() {
         //we dont have any more requests so bail
@@ -149,13 +156,14 @@ namespace {
         ++request;
         return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
       },
-      [&request](const void* data, size_t size) {
+      [&request, &success_count](const void* data, size_t size) {
         auto response = http_response_t::from_string(static_cast<const char*>(data), size);
         if(response.code != responses[request - requests.cbegin() - 1].first)
           throw std::runtime_error("Expected Response Code: " + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code));
         if(response.body != responses[request - requests.cbegin() - 1].second)
           throw std::runtime_error("Expected Response: " + responses[request - requests.cbegin() - 1].second +", Actual Response: " + response.body);
 
+        ++success_count;
         return request != requests.cend();
       }, 1
     );
@@ -163,7 +171,7 @@ namespace {
     client.batch();
 
     // Make sure that all requests are tested
-    BOOST_ASSERT(request == requests.cend());
+    BOOST_ASSERT(success_count == requests.size());
   }
 }
 
