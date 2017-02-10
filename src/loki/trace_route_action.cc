@@ -87,7 +87,6 @@ namespace valhalla {
     void loki_worker_t::parse_trace(rapidjson::Document& request) {
       auto& allocator = request.GetAllocator();
       //we require uncompressed shape or encoded polyline
-      //auto* input_shape = rapidjson::Pointer("/shape").Get(request);
       auto input_shape = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/shape");
       auto encoded_polyline = GetOptionalFromRapidJson<std::string>(request, "/encoded_polyline");
       //we require shape or encoded polyline but we dont know which at first
