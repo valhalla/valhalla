@@ -17,6 +17,12 @@ namespace mjolnir {
 std::vector<std::string> GetTagTokens(const std::string& tag_value,
                                       char delim = ';');
 
+/**
+ * Remove double quotes.
+ * @param  s
+ * @return string string with no quotes.
+*/std::string remove_double_quotes(const std::string& s);
+
 }
 }
 #endif  // VALHALLA_MJOLNIR_UTIL_H_
