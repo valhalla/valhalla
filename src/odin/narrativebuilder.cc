@@ -46,7 +46,8 @@ NarrativeBuilder::NarrativeBuilder(
     const NarrativeDictionary& dictionary)
     : directions_options_(directions_options),
       trip_path_(trip_path),
-      dictionary_(dictionary) {
+      dictionary_(dictionary),
+      articulated_preposition_enabled_(false) {
 }
 
 void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
@@ -583,7 +584,13 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(
@@ -639,6 +646,11 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
       FormLength(maneuver, dictionary_.start_verbal_subset.metric_lengths,
                  dictionary_.start_verbal_subset.us_customary_lengths));
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -684,6 +696,11 @@ std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
     // Replace phrase tags with values
     boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
     boost::replace_all(instruction, kDestinationTag, destination);
+  }
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
   }
 
   return instruction;
@@ -738,6 +755,11 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
     boost::replace_all(instruction, kDestinationTag, destination);
   }
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -790,6 +812,11 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(
     boost::replace_all(instruction, kDestinationTag, destination);
   }
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -814,6 +841,11 @@ std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
   // Replace phrase tags with values
   boost::replace_all(instruction, kPreviousStreetNamesTag, prev_street_names);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -846,6 +878,11 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(
   boost::replace_all(instruction, kPreviousStreetNamesTag, prev_street_names);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -874,6 +911,11 @@ std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -904,6 +946,11 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -938,6 +985,11 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(
       FormLength(maneuver, dictionary_.continue_verbal_subset.metric_lengths,
                  dictionary_.continue_verbal_subset.us_customary_lengths));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -999,6 +1051,11 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
       FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -1080,6 +1137,11 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -1125,6 +1187,11 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
                                dictionary_.uturn_subset.relative_directions));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -1231,6 +1298,11 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -1280,6 +1352,11 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
   boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
   boost::replace_all(instruction, kNameSignTag, exit_name_sign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -1383,6 +1460,11 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
   boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -1445,6 +1527,11 @@ std::string NarrativeBuilder::FormRampInstruction(
   boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
   boost::replace_all(instruction, kNameSignTag, exit_name_sign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -1572,6 +1659,11 @@ std::string NarrativeBuilder::FormVerbalRampInstruction(
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
   boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -1636,6 +1728,11 @@ std::string NarrativeBuilder::FormExitInstruction(
   boost::replace_all(instruction, kBranchSignTag, exit_branch_sign);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
   boost::replace_all(instruction, kNameSignTag, exit_name_sign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -1763,6 +1860,11 @@ std::string NarrativeBuilder::FormVerbalExitInstruction(
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
   boost::replace_all(instruction, kNameSignTag, exit_name_sign);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -1822,6 +1924,11 @@ std::string NarrativeBuilder::FormKeepInstruction(
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -1948,6 +2055,11 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -1995,6 +2107,11 @@ std::string NarrativeBuilder::FormKeepToStayOnInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2079,6 +2196,11 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
   boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2106,6 +2228,11 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -2145,6 +2272,11 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2172,6 +2304,11 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver)
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2202,6 +2339,11 @@ std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
   // Replace phrase tags with values
   boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2230,6 +2372,11 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kOrdinalValueTag, ordinal_value);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2267,6 +2414,11 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2308,6 +2460,11 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2342,6 +2499,11 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kFerryLabelTag, ferry_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -2387,6 +2549,11 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kFerryLabelTag, ferry_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2446,6 +2613,10 @@ std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2526,6 +2697,10 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2562,6 +2737,11 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2596,6 +2776,11 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2632,6 +2817,11 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2666,6 +2856,11 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -2702,6 +2897,11 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2737,6 +2937,11 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
   boost::replace_all(instruction, kTransitStopTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2762,6 +2967,11 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -2785,6 +2995,11 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -2810,6 +3025,11 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -2833,6 +3053,11 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
   boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -2867,6 +3092,11 @@ std::string NarrativeBuilder::FormTransitInstruction(
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -2893,6 +3123,11 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
       FormTransitName(maneuver,
                       dictionary_.transit_verbal_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -2928,6 +3163,11 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -2957,6 +3197,11 @@ std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
           maneuver,
           dictionary_.transit_remain_on_verbal_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -2992,6 +3237,11 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 
 }
@@ -3021,6 +3271,11 @@ std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
           maneuver,
           dictionary_.transit_transfer_verbal_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -3082,6 +3337,10 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 
@@ -3144,6 +3403,11 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -3179,6 +3443,11 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
           dictionary_.post_transition_verbal_subset.us_customary_lengths));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -3201,6 +3470,11 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
   boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
 
   return instruction;
 }
@@ -3527,6 +3801,11 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver,
   boost::replace_all(instruction, kCurrentVerbalCueTag, current_verbal_cue);
   boost::replace_all(instruction, kNextVerbalCueTag, next_verbal_cue);
 
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
   return instruction;
 }
 
@@ -3564,6 +3843,19 @@ std::string NarrativeBuilder_csCZ::GetPluralCategory(size_t count) {
 ///////////////////////////////////////////////////////////////////////////////
 std::string NarrativeBuilder_hiIN::GetPluralCategory(size_t count) {
   return kPluralCategoryOtherKey;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+const std::unordered_map<std::string, std::string> NarrativeBuilder_itIT::articulated_prepositions_ =
+    { { " su il ", " sul " },
+      { " su la ", " sulla " } };
+
+
+void NarrativeBuilder_itIT::FormArticulatedPrepositions(
+    std::string& instruction) {
+  for (const auto& item : NarrativeBuilder_itIT::articulated_prepositions_) {
+    boost::replace_all(instruction, item.first, item.second);
+  }
 }
 
 
