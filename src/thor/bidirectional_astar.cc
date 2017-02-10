@@ -590,7 +590,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
   const NodeInfo* nodeinfo = nullptr;
   for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (edge.end_node()) {
+    if (origin.edges.size() > 1 && edge.end_node()) {
       continue;
     }
 
@@ -642,7 +642,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
   for (const auto& edge : dest.edges) {
     // If the destination is at a node, skip any outbound edges (so any
     // opposing inbound edges are not considered)
-    if (edge.begin_node()) {
+    if (dest.edges.size() > 1 && edge.begin_node()) {
       continue;
     }
 
