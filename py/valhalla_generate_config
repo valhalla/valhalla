@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import pprint
 
 #global default configuration
 config = {
@@ -188,7 +189,7 @@ config = {
   }
 }
 
-help = {
+help_text = {
   'mjolnir': {
     'max_cache_size': 'Number of bytes per thread used to store tile data in memory',
     'tile_dir': 'Location to read/write tiles to/from',
@@ -218,7 +219,7 @@ help = {
     }
   },
   'skadi': {
-    'actions':['height'],
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: height',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',
@@ -236,7 +237,7 @@ help = {
       'file_name': 'Output log file for the file logger',
       'long_request': 'Value used in processing to determine whether it took too long'
     },
-    'source_to_target_algorithm': 'select_optimal',
+    'source_to_target_algorithm': 'TODO: which matrix algorithm should be used',
     'service': {
       'proxy': 'IPC linux domain socket file location'
     }
@@ -299,7 +300,7 @@ help = {
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',
-      'file_name': 'Output log file for the file logger'
+      'file_name': 'Output log file for the file logger',
       'long_request': 'Value used in processing to determine whether it took too long'
     },
     'service': {
@@ -315,86 +316,102 @@ help = {
   },
   'service_limits': {
     'auto': {
-      'max_distance': 5000000.0,
-      'max_locations': 20
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'auto_shorter': {
-      'max_distance': 5000000.0,
-      'max_locations': 20
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'bus': {
-      'max_distance': 5000000.0,
-      'max_locations': 50
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'hov': {
-      'max_distance': 5000000.0,
-      'max_locations': 20
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'pedestrian': {
-      'max_distance': 250000.0,
-      'max_locations': 50,
-      'min_transit_walking_distance': 1,
-      'max_transit_walking_distance': 10000
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
+      'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
     'bicycle': {
-      'max_distance': 500000.0,
-      'max_locations': 50
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'multimodal': {
-      'max_distance': 500000.0,
-      'max_locations': 50
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'transit': {
-      'max_distance': 500000.0,
-      'max_locations': 50
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'truck': {
-      'max_distance': 5000000.0,
-      'max_locations': 20
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'sources_to_targets': {
-      'max_distance': 200000.0,
-      'max_locations': 50
+      'max_distance': 'Maximum b-line distance between 2 most distant locations in meters',
+      'max_locations': 'Maximum number of input locations'
     },
     'skadi': {
-      'max_shape': 750000,
-      'min_resample': 10.0
+      'max_shape': 'Maximum number of input shapes',
+      'min_resample': 'Smalled resampling distance to allow in meters'
     },
     'isochrone': {
-      'max_contours': 4,
-      'max_time': 120,
-      'max_locations': 1
+      'max_contours': 'Maximum number of input contours to allow',
+      'max_time': 'Maximum time value for any one contour',
+      'max_locations': 'Maximum number of input locations'
     },
     'trace': {
-      'max_distance': 162500.0,
-      'max_shape': 8000
+      'max_distance': 'Maximum input shape distance in meters',
+      'max_shape': 'Maximum number of input shape points'
     }
   }
 }
 
+#used to convert comma separated list of strings into a list
+def comma_separated_list(arg):
+  return arg.split(',')
 
 #returns a list of leaves of the tree, `\0` separated, stops at non dicts
-def get_leaves(path, tree, leaves):
+#while doing so it also adds arguments to the parser
+def add_leaf_args(path, tree, leaves, parser):
   #if we are at a dict go deeper
   if isinstance(tree, dict):
     for k, v in tree.iteritems():
-      get_leaves('\0'.join([path, k]) if len(path) else k, v, leaves)
+      add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves, parser)
   #we've reached a leaf
   else:
-    leaves.append((path, type(v))) #TODO store help string
+    keys = path.split('\0')
+    h = help_text
+    for k in keys:
+      h = h[k]
+    t = comma_separated_list if type(tree) == type([]) else type(tree)
+    arg = '--' + path.replace('_', '-').replace('\0', '-')
+    parser.add_argument(arg, type=t, help=h, default=tree)
+    leaves.append(path)
 
 #entry point to program
 if __name__ == '__main__':
 
-  #get the leaves of the default config so we cna use them as arguments and then overwrite them
-  leaves = []
-  get_leaves('', config, leaves)
-
-  print leaves
-
   #set up program options
-  #parser = argparse.ArgumentParser(description='Generate valhalla configuration')
-  #parser.add_argument('--max_cache_size', help='Number of bytes to allow in tile cache per thread')
+  leaves = []
+  parser = argparse.ArgumentParser(description='Generate valhalla configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  add_leaf_args('', config, leaves, parser)
+  args = parser.parse_args()
 
-  #print json.dumps(config, sort_keys=True, indent=4, separators=(',', ': '))
-  
+  #override the defaults given what was passed
+  for leaf in leaves:
+    keys = leaf.split('\0')
+    v = config
+    for k in keys[:-1]:
+      v = v[k]
+    v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
+
+
+  #show the config
+  print json.dumps(config, sort_keys=True, indent=2, separators=(',', ': '))  
