@@ -10,9 +10,8 @@ You can either download city-sized extracts from [Mapzen](https://mapzen.com/dat
 
 ```
 ./autogen.sh
-./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS"
-make test -j($nproc)
-sudo make install
+./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS" --enable-python-bindings
+make test -j$(nproc)
 ```
 
 ### Creating Data
