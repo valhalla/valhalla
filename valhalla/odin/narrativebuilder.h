@@ -542,10 +542,16 @@ class NarrativeBuilder {
    */
   bool IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& next_maneuver);
 
+  /**
+   * Combines a simple preposition and a definite article for certain languages.
+   */
+  virtual void FormArticulatedPrepositions(std::string& instruction) {}
+
   /////////////////////////////////////////////////////////////////////////////
   const DirectionsOptions& directions_options_;
   const EnhancedTripPath* trip_path_;
   const NarrativeDictionary& dictionary_;
+  bool articulated_preposition_enabled_;
 
 };
 
@@ -553,11 +559,11 @@ class NarrativeBuilder {
 class NarrativeBuilder_csCZ : public NarrativeBuilder {
 
  public:
-  NarrativeBuilder_csCZ(const DirectionsOptions& directions_options,
-                        const EnhancedTripPath* trip_path,
-                        const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
-  }
+    NarrativeBuilder_csCZ(const DirectionsOptions& directions_options,
+        const EnhancedTripPath* trip_path,
+        const NarrativeDictionary& dictionary) :
+        NarrativeBuilder(directions_options, trip_path, dictionary) {
+    }
 
  protected:
 
@@ -578,11 +584,11 @@ class NarrativeBuilder_csCZ : public NarrativeBuilder {
 class NarrativeBuilder_hiIN : public NarrativeBuilder {
 
  public:
-  NarrativeBuilder_hiIN(const DirectionsOptions& directions_options,
-                        const EnhancedTripPath* trip_path,
-                        const NarrativeDictionary& dictionary)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
-  }
+    NarrativeBuilder_hiIN(const DirectionsOptions& directions_options,
+        const EnhancedTripPath* trip_path,
+        const NarrativeDictionary& dictionary) :
+        NarrativeBuilder(directions_options, trip_path, dictionary) {
+    }
 
  protected:
 
@@ -596,6 +602,30 @@ class NarrativeBuilder_hiIN : public NarrativeBuilder {
    * count and the language rules.
    */
   std::string GetPluralCategory(size_t count) override;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class NarrativeBuilder_itIT : public NarrativeBuilder {
+
+ public:
+    NarrativeBuilder_itIT(const DirectionsOptions& directions_options,
+        const EnhancedTripPath* trip_path,
+        const NarrativeDictionary& dictionary) :
+        NarrativeBuilder(directions_options, trip_path, dictionary) {
+      // Enable articulated prepositions for Itailian
+      articulated_preposition_enabled_ = true;
+    }
+
+ protected:
+
+  /**
+   * Combines a simple preposition and a definite article for certain languages.
+   */
+  void FormArticulatedPrepositions(std::string& instruction) override;
+
+ private:
+  static const std::unordered_map<std::string, std::string> articulated_prepositions_;
 
 };
 
