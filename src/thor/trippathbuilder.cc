@@ -656,6 +656,7 @@ TripPath TripPathBuilder::Build(
   std::vector<PointLL> trip_shape;
   std::string arrival_time;
   bool assumed_schedule = false;
+  sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
@@ -792,9 +793,27 @@ TripPath TripPathBuilder::Build(
 
         if (transit_departure) {
 
+          uint32_t departure_time = transit_departure->departure_time();
+
+          //time will most likely be in the past due to the base schedule.
+          if (transit_departure->type() == kFrequencySchedule) {
+
+            uint32_t end_time = transit_departure->end_time();
+            uint32_t frequency = transit_departure->frequency();
+
+            uint32_t current_time = DateTime::seconds_from_midnight(*origin.date_time_);
+            if (prev_mode == TravelMode::kPedestrian)
+              current_time += mode_costing[static_cast<uint32_t>(mode)]->DefaultTransferCost().secs;
+            current_time += elapsedtime;
+
+            while (departure_time < current_time && departure_time < end_time)
+              departure_time += frequency;
+
+          }
+
           std::string dt = DateTime::get_duration(*origin.date_time_,
-                           (transit_departure->departure_time() - origin_sec_from_mid),
-                           DateTime::get_tz_db().from_index(node->timezone()));
+                                                  (departure_time - origin_sec_from_mid),
+                                                  DateTime::get_tz_db().from_index(node->timezone()));
 
           std::size_t found = dt.find_last_of(" "); // remove tz abbrev.
           if (found != std::string::npos)
@@ -808,10 +827,11 @@ TripPath TripPathBuilder::Build(
 
           // Copy the arrival time for use at the next transit stop
           arrival_time = DateTime::get_duration(*origin.date_time_,
-                                     (transit_departure->departure_time() +
-                                     transit_departure->elapsed_time()) -
-                                     origin_sec_from_mid,
-                                     DateTime::get_tz_db().from_index(node->timezone()));
+                                                (departure_time +
+                                                    transit_departure->elapsed_time()) -
+                                                    origin_sec_from_mid,
+                                                    DateTime::get_tz_db().from_index(node->timezone()));
+
 
           found = arrival_time.find_last_of(" "); //remove tz abbrev.
           if (found != std::string::npos)
@@ -970,6 +990,8 @@ TripPath TripPathBuilder::Build(
     // Update elapsed time at the end of the edge, store this at the next node.
     elapsedtime = edge_itr->elapsed_time;
 
+    // Update previous mode.
+    prev_mode = mode;
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
