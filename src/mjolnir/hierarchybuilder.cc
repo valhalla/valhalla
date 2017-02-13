@@ -29,8 +29,31 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// Sequence file name (as bin so it gets cleaned up)
-std::string nodes_file = std::string("new_nodes_to_old_nodes.bin");
+// Sequence file names (named as bin so it gets cleaned up/removed when done)
+std::string new_to_old_file = std::string("new_nodes_to_old_nodes.bin");
+std::string old_to_new_file = std::string("old_nodes_to_new_nodes.bin");
+
+// Structure to associate old nodes to new nodes. Stored in a sequence so
+// this can work on lower memory computers. Note that an original node can
+// associate to multiple nodes on different hierarchy levels. If a node does
+// not exist on a level, the associated node will be invalid.
+struct OldToNewNodes {
+  GraphId node_id;       // Old node
+  GraphId highway_node;  // New, associated node on highway level
+  GraphId arterial_node; // New, associated node on arterial level
+  GraphId local_node;    // New, associated node on local level
+  uint32_t density;      // Density at the node (for edge density)
+
+  OldToNewNodes(const GraphId& node, const GraphId& highway,
+                const GraphId& arterial, const GraphId& local,
+                const uint32_t d)
+      : node_id(node),
+        highway_node(highway),
+        arterial_node(arterial),
+        local_node(local),
+        density(d) {
+  }
+};
 
 // Add a downward transition edge if the node is valid.
 bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
@@ -60,13 +83,9 @@ bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
   }
 }
 
-// Form tiles in the new level.
-void FormTilesInNewLevel(GraphReader& reader,
-         const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
-  // Use the sequence that associate new nodes to old nodes
-  sequence<std::pair<GraphId, GraphId>> new_to_old(nodes_file, false);
-
+void SortSequences() {
   // Sort the new nodes. Sort so highway level is first
+  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
   new_to_old.sort(
     [](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b){
       if (a.first.level() == b.first.level()) {
@@ -79,6 +98,33 @@ void FormTilesInNewLevel(GraphReader& reader,
     }
   );
 
+  // Sort old to new by node Id
+  sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
+  old_to_new.sort([](const OldToNewNodes& a, const OldToNewNodes& b)
+                  {return a.node_id < b.node_id;});
+}
+
+// Convencience method to find the node association.
+OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& node) {
+  GraphId dmy;
+  OldToNewNodes target(node, dmy, dmy, dmy, 0);
+  auto iter = old_to_new.find(target, [](const OldToNewNodes& a, const OldToNewNodes& b)
+                              { return a.node_id < b.node_id;});
+  if (iter == old_to_new.end()) {
+    throw std::runtime_error("Didn't find node!");
+  } else {
+    return *iter;
+  }
+}
+
+// Form tiles in the new level.
+void FormTilesInNewLevel(GraphReader& reader) {
+  // Use the sequence that associate new nodes to old nodes
+  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
+
+  // Use the sorted sequence that associates old nodes to new nodes
+  sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
+
   // lambda to indicate whether a directed edge should be included
   auto include_edge = [&old_to_new](const DirectedEdge* directededge,
         const GraphId& base_node, const TileHierarchy& tile_hierarchy,
@@ -87,12 +133,12 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Transit connection edges should live on the lowest class level
       // where a new node exists
       uint8_t lowest_level;
-      auto f = old_to_new.find(base_node);
-      if (std::get<2>(f->second).Is_Valid()) {
+      auto f = find_nodes(old_to_new, base_node);
+      if (f.local_node.Is_Valid()) {
         lowest_level = 2;
-      } else if (std::get<1>(f->second).Is_Valid()) {
+      } else if (f.arterial_node.Is_Valid()) {
         lowest_level = 1;
-      } else if (std::get<0>(f->second).Is_Valid()) {
+      } else if (f.highway_node.Is_Valid()) {
         lowest_level = 0;
       }
       return (lowest_level == current_level);
@@ -181,15 +227,15 @@ void FormTilesInNewLevel(GraphReader& reader,
       if (directededge->use() == Use::kTransitConnection) {
         nodeb = directededge->endnode();
       } else {
-        auto new_nodes = old_to_new.find(directededge->endnode())->second;
+        auto new_nodes = find_nodes(old_to_new, directededge->endnode());
         if (current_level == 0) {
-          nodeb = std::get<0>(new_nodes);
+          nodeb = new_nodes.highway_node;
         } else if (current_level == 1) {
-          nodeb = std::get<1>(new_nodes);
+          nodeb = new_nodes.arterial_node;
         } else {
-          nodeb = std::get<2>(new_nodes);
+          nodeb = new_nodes.local_node;
         }
-        density2 = std::get<3>(new_nodes);
+        density2 = new_nodes.density;
       }
       if (!nodeb.Is_Valid()) {
         LOG_ERROR("Invalid end node - not found in old_to_new map");
@@ -241,17 +287,17 @@ void FormTilesInNewLevel(GraphReader& reader,
     }
 
     // Add transition edges
-    auto new_nodes = old_to_new.find(base_node)->second;
+    auto new_nodes = find_nodes(old_to_new, base_node);
     if (current_level == 0) {
-      AddDownwardTransition(std::get<1>(new_nodes), tilebuilder);
-      AddDownwardTransition(std::get<2>(new_nodes), tilebuilder);
+      AddDownwardTransition(new_nodes.arterial_node, tilebuilder);
+      AddDownwardTransition(new_nodes.local_node, tilebuilder);
     } else if (current_level == 1) {
-      AddDownwardTransition(std::get<2>(new_nodes), tilebuilder);
-      AddUpwardTransition(std::get<0>(new_nodes), tilebuilder);
+      AddDownwardTransition(new_nodes.local_node, tilebuilder);
+      AddUpwardTransition(new_nodes.highway_node, tilebuilder);
     }
     if (current_level == 2) {
-      AddUpwardTransition(std::get<1>(new_nodes), tilebuilder);
-      AddUpwardTransition(std::get<0>(new_nodes), tilebuilder);
+      AddUpwardTransition(new_nodes.arterial_node, tilebuilder);
+      AddUpwardTransition(new_nodes.highway_node, tilebuilder);
     }
 
     // Set the edge count for the new node
@@ -272,8 +318,7 @@ void FormTilesInNewLevel(GraphReader& reader,
  * to new nodes (using a mapping in memory) and from new nodes to old nodes
  * using a sequence (file).
  */
-void CreateNodeAssociations(GraphReader& reader,
-     std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
+void CreateNodeAssociations(GraphReader& reader) {
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
@@ -292,7 +337,10 @@ void CreateNodeAssociations(GraphReader& reader,
   };
 
   // Create a sequence to associate new nodes to old nodes
-  sequence<std::pair<GraphId, GraphId>> new_to_old(nodes_file, true);
+  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, true);
+
+  // Create a sequence to associate new nodes to old nodes
+  sequence<OldToNewNodes> old_to_new(old_to_new_file, true);
 
   // Hierarchy level information
   const auto& tile_hierarchy = reader.GetTileHierarchy();
@@ -361,8 +409,9 @@ void CreateNodeAssociations(GraphReader& reader,
 
       // Associate the old node to the new node(s). Entries in the tuple
       // that are invalid nodes indicate no node exists in the new level.
-      old_to_new[basenode] = std::make_tuple(highway_node, arterial_node,
-                                             local_node, nodeinfo->density());
+      OldToNewNodes assoc(basenode, highway_node, arterial_node,
+                           local_node, nodeinfo->density());
+      old_to_new.push_back(assoc);
     }
 
     // Check if we need to clear the tile cache
@@ -375,8 +424,10 @@ void CreateNodeAssociations(GraphReader& reader,
 /**
  * Update end nodes of transit connection directed edges.
  */
-void UpdateTransitConnections(GraphReader& reader,
-            const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
+void UpdateTransitConnections(GraphReader& reader) {
+  // Use the sorted sequence that associates old nodes to new nodes
+  sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
+
   const auto& tile_hierarchy = reader.GetTileHierarchy();
   auto tile_level = tile_hierarchy.levels().rbegin();
   auto& base_level = tile_level->second;
@@ -405,14 +456,14 @@ void UpdateTransitConnections(GraphReader& reader,
         // Update the end node of any transit connection edge
         if (directededge.use() == Use::kTransitConnection) {
           // Get the updated end node
-          auto f = old_to_new.find(directededge.endnode());
+          auto f = find_nodes(old_to_new, directededge.endnode());
           GraphId new_end_node;
-          if (std::get<2>(f->second).Is_Valid()) {
-            new_end_node = std::get<2>(f->second);
-          } else if (std::get<1>(f->second).Is_Valid()) {
-            new_end_node = std::get<1>(f->second);
-          } else if (std::get<0>(f->second).Is_Valid()) {
-            new_end_node = std::get<0>(f->second);
+          if (f.local_node.Is_Valid()) {
+            new_end_node = f.local_node;
+          } else if (f.arterial_node.Is_Valid()) {
+            new_end_node = f.arterial_node;
+          } else if (f.highway_node.Is_Valid()) {
+            new_end_node = f.highway_node;
           } else {
             LOG_ERROR("Transit Connection does not connect to valid node");
           }
@@ -432,15 +483,16 @@ void UpdateTransitConnections(GraphReader& reader,
 
 // Remove any base tiles that no longer have any data (nodes and edges
 // only exist on arterial and highway levels)
-void RemoveUnusedLocalTiles(const TileHierarchy& tile_hierarchy,
-          const std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>>& old_to_new) {
+void RemoveUnusedLocalTiles(const TileHierarchy& tile_hierarchy) {
+  // Iterate through the node association sequence
   std::unordered_map<GraphId, bool> tile_map;
+  sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
   for (auto itr = old_to_new.begin(); itr != old_to_new.end(); itr++) {
-    auto f = tile_map.find(itr->first.Tile_Base());
+    auto f = tile_map.find((*itr).node_id.Tile_Base());
     if (f == tile_map.end()) {
-      tile_map[itr->first.Tile_Base()] = std::get<2>(itr->second).Is_Valid();
+      tile_map[(*itr).node_id.Tile_Base()] = (*itr).local_node.Is_Valid();
     } else {
-      if (std::get<2>(itr->second).Is_Valid()) {
+      if ((*itr).local_node.Is_Valid()) {
         f->second = true;
       }
     }
@@ -476,19 +528,21 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   const auto& tile_hierarchy = reader.GetTileHierarchy();
 
   // Association of old nodes to new nodes
-  std::unordered_map<GraphId, std::tuple<GraphId, GraphId, GraphId, uint32_t>> old_to_new;
-  CreateNodeAssociations(reader, old_to_new);
+  CreateNodeAssociations(reader);
+
+  // Sort the sequences
+  SortSequences();
 
   // Iterate through the hierarchy (from highway down to local) and build
   // new tiles
-  FormTilesInNewLevel(reader, old_to_new);
+  FormTilesInNewLevel(reader);
 
   // Remove any base tiles that no longer have any data (nodes and edges
   // only exist on arterial and highway levels)
-  RemoveUnusedLocalTiles(tile_hierarchy, old_to_new);
+  RemoveUnusedLocalTiles(tile_hierarchy);
 
   // Update the end nodes to all transit connections in the transit hierarchy
-  UpdateTransitConnections(reader, old_to_new);
+  UpdateTransitConnections(reader);
   LOG_INFO("Done HierarchyBuilder");
 }
 
