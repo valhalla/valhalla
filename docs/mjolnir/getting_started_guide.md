@@ -26,10 +26,7 @@ However, if you would like to test out the graph with our API, you will also nee
 
 ### Data
 
-You can either download city-sized extracts from [Mapzen](https://mapzen.com/data/metro-extracts/).  However, if you are looking for larger extracts, they can be downloaded from [Geofabrik GmbH](http://http://download.geofabrik.de/).  If you wish to convert the entire planet, we are running conversions on quad-cores(CPU @ 2.70GHz) machines with 16 gigs of RAM utilizing a SSD.  Conversion with administrative areas, timezones, and transit data, but without elevation data will take around 12 hours.  This route graph will include motor vehicle, pedestrian, transit, and bicycle route information.
-
-### Build the Required Repositories.
-Build the repositories in this order: Midgard, Baldr, Sif, Skadi, Mjolnir
+You can either download city-sized extracts from [Mapzen](https://mapzen.com/data/metro-extracts/).  However, if you are looking for larger extracts, they can be downloaded from [Geofabrik GmbH](http://http://download.geofabrik.de/).  If you wish to convert the entire planet, we have successfully run conversions on quad-cores(CPU @ 2.70GHz) machines with 16 gigs of RAM utilizing a SSD.  Conversion with administrative areas and timezones, but without elevation data will take around 15 hours.  This route graph will include motor vehicle, pedestrian, and bicycle route information.
 
 ```
 ./autogen.sh
