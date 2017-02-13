@@ -320,10 +320,8 @@ namespace valhalla {
           }
           for (const std::string& x: state_iso)
             s_ss << " " << x;
-          std::cout <<  std::endl;
           for (const std::string& x: country_iso)
             c_ss << " " << x;
-          std::cout <<  std::endl;
           if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
           if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
         }

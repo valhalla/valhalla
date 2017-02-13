@@ -14,6 +14,9 @@
 #include <iomanip>
 #include <cmath>
 #include <boost/algorithm/string.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 namespace {
   struct dir_facet : public std::numpunct<char> {
@@ -85,16 +88,35 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid): he
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
     size_t filesize = file.tellg();
-    graphtile_.reset(new char[filesize]);
+    graphtile_.reset(new std::vector<char>(filesize));
     file.seekg(0, std::ios::beg);
-    file.read(graphtile_.get(), filesize);
+    file.read(&(*graphtile_)[0], filesize);
     file.close();
 
     // Set pointers to internal data structures
-    Initialize(graphid, graphtile_.get(), filesize);
+    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
   }
   else {
-    LOG_DEBUG("Tile " + file_location + " was not found");
+    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+    if (file.is_open()) {
+      // Pre-allocate assuming 66% compression rate
+      size_t filesize = file.tellg();
+      file.seekg(0, std::ios::beg);
+      graphtile_.reset(new std::vector<char>());
+      graphtile_->reserve(filesize * 3);
+
+      // Decompress tile into memory
+      boost::iostreams::filtering_ostream os;
+      os.push(boost::iostreams::gzip_decompressor());
+      os.push(boost::iostreams::back_inserter(*graphtile_));
+      os << file.rdbuf();
+
+      // Set pointers to internal data structures
+      Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    }
+    else {
+      LOG_DEBUG("Tile " + file_location + " was not found");
+    }
   }
 }
 
