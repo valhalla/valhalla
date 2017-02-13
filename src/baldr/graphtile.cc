@@ -522,7 +522,9 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
     //matching lineid and a workable time
-    if (lineid == dep.lineid() && current_time <= dep.departure_time()) {
+    if (lineid == dep.lineid() &&
+        ((current_time <= dep.departure_time() && dep.type() == kFixedSchedule) ||
+         (current_time <= dep.end_time() && dep.type() == kFrequencySchedule))) {
       found = mid;
       high = mid - 1;
     }//need a smaller lineid
@@ -538,11 +540,32 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   // calendar date, and does not have a calendar exception.
   for(; found < count && departures_[found].lineid() == lineid; ++found) {
     // Make sure valid departure time
-    if (departures_[found].departure_time() >= current_time &&
-      GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
-      (!wheelchair || departures_[found].wheelchair_accessible()) &&
-      (!bicycle || departures_[found].bicycle_accessible())) {
-      return &departures_[found];
+    if (departures_[found].type() == kFixedSchedule) {
+      if (departures_[found].departure_time() >= current_time &&
+          GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
+          (!wheelchair || departures_[found].wheelchair_accessible()) &&
+          (!bicycle || departures_[found].bicycle_accessible())) {
+        return &departures_[found];
+      }
+    } else {
+      uint32_t departure_time = departures_[found].departure_time();
+      uint32_t end_time = departures_[found].end_time();
+      uint32_t frequency = departures_[found].frequency();
+      while (departure_time < current_time && departure_time < end_time)
+        departure_time += frequency;
+
+      if (departure_time >= current_time && departure_time < end_time &&
+          GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
+          (!wheelchair || departures_[found].wheelchair_accessible()) &&
+          (!bicycle || departures_[found].bicycle_accessible())) {
+
+        const auto& d = departures_[found];
+        const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
+                                                           d.blockid(), d.headsign_offset(), departure_time,
+                                                           d.elapsed_time(), d.schedule_index(),
+                                                           d.wheelchair_accessible(), d.bicycle_accessible());
+        return dep;
+      }
     }
   }
 
