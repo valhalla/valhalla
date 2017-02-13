@@ -315,7 +315,7 @@ class GraphTile {
 
   // Graph tile memory, this must be shared so that we can put it into cache
   // Apparently you can std::move a non-copyable
-  boost::shared_array<char> graphtile_;
+  boost::shared_ptr<std::vector<char>> graphtile_;
 
   // Header information for the tile
   GraphTileHeader* header_;
