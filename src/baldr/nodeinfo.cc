@@ -246,13 +246,26 @@ void NodeInfo::set_name_consistency(const uint32_t from,
   }
 }
 
+// Get the connecting way id for a transit stop.
+uint64_t NodeInfo::connecting_wayid() const {
+  return way_heading_.connecting_wayid_;
+}
+
+/**
+ * Set the connecting way id for a transit stop.
+ * @param  wayid  Connecting wayid.
+ */
+void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
+  way_heading_.connecting_wayid_ = wayid;
+}
+
 // Get the heading of the local edge given its local index. Supports
 // up to 8 local edges. Headings are expanded from 8 bits.
 uint32_t NodeInfo::heading(const uint32_t localidx) const {
   // Make sure everything is 64 bit!
   uint64_t shift = localidx * 8;     // 8 bits per index
   return static_cast<uint32_t>(std::round(
-      ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift)
+      ((way_heading_.headings_ & (static_cast<uint64_t>(255) << shift)) >> shift)
           * kHeadingExpandFactor));
 }
 
@@ -265,7 +278,7 @@ void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
     // Has to be 64 bit!
     uint64_t hdg = static_cast<uint64_t>(std::round(
         (heading % 360) * kHeadingShrinkFactor));
-    headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
+    way_heading_.headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
   }
 }
 
