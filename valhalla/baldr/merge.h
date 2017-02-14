@@ -36,7 +36,10 @@ struct path {
 namespace detail {
 
 struct edge_collapser {
-  edge_collapser(GraphReader &reader, edge_tracker &tracker, std::function<bool(const DirectedEdge *)> edge_pred, std::function<void(const path &)> func);
+  edge_collapser(GraphReader &reader, edge_tracker &tracker,
+                 std::function<bool(const DirectedEdge *)> edge_merge_pred,
+                 std::function<bool(const DirectedEdge *)> edge_allowed_pred,
+                 std::function<void(const path &)> func);
   std::pair<GraphId, GraphId> nodes_reachable_from(GraphId node_id);
   GraphId next_node_id(GraphId last_node_id, GraphId node_id);
   GraphId edge_between(GraphId cur, GraphId next);
@@ -46,7 +49,8 @@ struct edge_collapser {
 private:
   GraphReader &m_reader;
   edge_tracker &m_tracker;
-  std::function<bool(const DirectedEdge *)> m_edge_predictate;
+  std::function<bool(const DirectedEdge *)> m_edge_merge_predicate;
+  std::function<bool(const DirectedEdge *)> m_edge_allowed_predicate;
   std::function<void(const path &)> m_func;
 };
 
@@ -61,13 +65,21 @@ path make_single_edge_path(GraphReader &reader, GraphId edge_id);
  *
  * @param tiles A range object over GraphId for the tiles to consider.
  * @param reader The graph to traverse.
- * @param edge_pred A predicate function which should return true for any edge that can be collapsed.
+ * @param edge_merge_pred   A predicate function which should return true for
+ *                          any edge that can be collapsed. This will return
+ *                          false if an edge is encountered such that merging
+ *                          at a node should not be performed.
+ * @param edge_allowed_pred A predicate function which should return true for
+ *                          any edge that can be allowed on the path.
  * @param func The function to execute for each discovered path.
  */
 template <typename TileSet>
-void merge(TileSet &tiles, GraphReader &reader, std::function<bool(const DirectedEdge *)> edge_pred, std::function<void(const path &)> func) {
+void merge(TileSet &tiles, GraphReader &reader,
+           std::function<bool(const DirectedEdge *)> edge_merge_pred,
+           std::function<bool(const DirectedEdge *)> edge_allowed_pred,
+           std::function<void(const path &)> func) {
   edge_tracker tracker = edge_tracker::create(tiles, reader);
-  detail::edge_collapser e(reader, tracker, edge_pred, func);
+  detail::edge_collapser e(reader, tracker, edge_merge_pred, edge_allowed_pred, func);
 
   // Iterate over tiles. Merge edges at nodes where the edges can be collapsed.
   for (GraphId tile_id : tiles) {
