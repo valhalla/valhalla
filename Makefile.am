@@ -516,7 +516,7 @@ endif
 
 bin_SCRIPTS = \
 	scripts/valhalla_build_elevation \
-	py/valhalla_build_config
+	scripts/valhalla_build_config
 if DATA_TOOLS
 bin_SCRIPTS += scripts/valhalla_build_timezones
 endif
