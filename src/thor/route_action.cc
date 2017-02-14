@@ -131,12 +131,12 @@ namespace valhalla {
       auto temp_path = get_path(path_algorithm, *origin, *destination);
       temp_path.swap(path);
 
-      // This leg had at least one through so merge the parts
+      // Merge through legs by updating the time and splicing the lists
       if(!temp_path.empty()) {
-        auto first_edge = temp_path.begin() + (path.back().edgeid == temp_path.front().edgeid);
-        std::for_each(first_edge, temp_path.end(),
-          [&path](PathInfo& i) { i.elapsed_time += path.back().elapsed_time; });
-        path.insert(path.end(), first_edge, temp_path.end());
+        auto offset = path.back().elapsed_time;
+        std::for_each(temp_path.begin(), temp_path.end(), [offset](PathInfo& i) { i.elapsed_time += offset; });
+        if(path.back().edgeid == temp_path.front().edgeid) path.pop_back();
+        path.insert(path.end(), temp_path.begin(), temp_path.end());
       }
 
       // Build trip path for this leg and add to the result if this
@@ -195,12 +195,12 @@ namespace valhalla {
       // Get best path and keep it
       auto temp_path = get_path(path_algorithm, *origin, *destination);
 
-      // This leg had at least one through so merge the parts
+      // Merge through legs by updating the time and splicing the lists
       if(!path.empty()) {
-        auto first_edge = temp_path.begin() + (path.back().edgeid == temp_path.front().edgeid);
-        std::for_each(first_edge, temp_path.end(),
-          [&path](PathInfo& i) { i.elapsed_time += path.back().elapsed_time; });
-        path.insert(path.end(), first_edge, temp_path.end());
+        auto offset = path.back().elapsed_time;
+        std::for_each(temp_path.begin(), temp_path.end(), [offset](PathInfo& i) { i.elapsed_time += offset; });
+        if(path.back().edgeid == temp_path.front().edgeid) path.pop_back();
+        path.insert(path.end(), temp_path.begin(), temp_path.end());
       }// Didnt need to merge
       else
         path.swap(temp_path);
