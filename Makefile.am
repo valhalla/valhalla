@@ -515,7 +515,8 @@ valhalla_associate_segments_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM
 endif
 
 bin_SCRIPTS = \
-	scripts/valhalla_build_elevation
+	scripts/valhalla_build_elevation \
+	py/valhalla_build_config
 if DATA_TOOLS
 bin_SCRIPTS += scripts/valhalla_build_timezones
 endif
