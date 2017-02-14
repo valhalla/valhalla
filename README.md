@@ -45,7 +45,6 @@ The Valhalla organization is comprised of several library modules each responsib
 - [Odin](https://github.com/valhalla/valhalla/tree/master/valhalla/odin) - Library used to generate manoeuvres and narrative based on a path. This set of directions information can be used as input to `tyr`.
 - [Tyr](https://github.com/valhalla/valhalla/tree/master/valhalla/tyr) - Service used to handle http requests for a route communicating with all of the other valhalla APIs. The service will format output from `odin` and support json (and eventually protocol buffer) output.
 - [Tools](https://github.com/valhalla/valhalla/tree/master/src) - A set command line tools that exercise bits of functionality from the library components above and provide the basis for quality testing and performance benchmarking.
-- [conf](https://github.com/valhalla/conf) - Runtime configuration files.
 - [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs.
 - [Chef](https://github.com/valhalla/chef-valhalla) - A chef cookbook demonstrating how to deploy the valhalla stack to a virtual machine (sample vagrant file included).
 
@@ -74,7 +73,7 @@ If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly a
      sudo apt-get install valhalla-bin
 
 Building from Source
-------------------
+--------------------
 
 Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself.
 
@@ -126,6 +125,32 @@ For more information on binaries, see [Command Line Tools](#command-line-tools) 
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
 
+Running
+-------
+
+The following bash should be enough to make some routing data and start a server using it:
+
+    #download some data and make tiles out of it
+    #NOTE: you can feed multiple extracts into pbfgraphbuilder
+    wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+    #get the config and setup
+    mkdir -p valhalla_tiles
+    valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+    #build routing tiles
+    #TODO: run valhalla_build_admins?
+    valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
+    #tar it up for running the server
+    find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
+
+    #grab the demos repo and open up the point and click routing sample
+    git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
+    firefox demos/routing/index-internal.html &
+    #NOTE: set the environment pulldown to 'localhost' to point it at your own server
+
+    #start up the server
+    valhalla_route_service valhalla.json 1
+
+    #HAVE FUN!
 
 Contributing
 ------------
