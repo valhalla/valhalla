@@ -133,10 +133,10 @@ namespace valhalla {
 
       // This leg had at least one through so merge the parts
       if(!temp_path.empty()) {
-        std::for_each(temp_path.begin(), temp_path.end(),
+        auto first_edge = temp_path.begin() + (path.back().edgeid == temp_path.front().edgeid);
+        std::for_each(first_edge, temp_path.end(),
           [&path](PathInfo& i) { i.elapsed_time += path.back().elapsed_time; });
-        path.insert(path.end(), temp_path.begin() +
-          (path.back().edgeid == temp_path.front().edgeid), temp_path.end());
+        path.insert(path.end(), first_edge, temp_path.end());
       }
 
       // Build trip path for this leg and add to the result if this
@@ -197,10 +197,10 @@ namespace valhalla {
 
       // This leg had at least one through so merge the parts
       if(!path.empty()) {
-        std::for_each(temp_path.begin(), temp_path.end(),
+        auto first_edge = temp_path.begin() + (path.back().edgeid == temp_path.front().edgeid);
+        std::for_each(first_edge, temp_path.end(),
           [&path](PathInfo& i) { i.elapsed_time += path.back().elapsed_time; });
-        path.insert(path.end(), temp_path.begin() +
-          (path.back().edgeid == temp_path.front().edgeid), temp_path.end());
+        path.insert(path.end(), first_edge, temp_path.end());
       }// Didnt need to merge
       else
         path.swap(temp_path);
