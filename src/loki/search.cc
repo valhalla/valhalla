@@ -29,7 +29,7 @@ constexpr float NO_HEADING = 30.f;
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
-constexpr float ANGLE_WIDTH = 88.f;
+constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
 
 //TODO: move this to midgard and test the crap out of it
 //we are essentially estimating the angle of the tangent
@@ -85,18 +85,18 @@ float tangent_angle(size_t index, const PointLL& point, const std::vector<PointL
 }
 
 bool heading_filter(const DirectedEdge* edge, const EdgeInfo& info,
-  const std::tuple<PointLL, float, int>& point, boost::optional<int> heading) {
+  const std::tuple<PointLL, float, int>& point, const Location& location) {
   //if its far enough away from the edge, the heading is pretty useless
-  if(!heading || std::get<1>(point) > NO_HEADING)
+  if(!location.heading_ || std::get<1>(point) > NO_HEADING)
     return false;
 
   //get the angle of the shape from this point
   auto angle = tangent_angle(std::get<2>(point), std::get<0>(point), info.shape(), edge->forward());
   //we want the closest distance between two angles which can be had
   //across 0 or between the two so we just need to know which is bigger
-  if(*heading > angle)
-    return std::min(*heading - angle, (360.f - *heading) + angle) > ANGLE_WIDTH;
-  return std::min(angle - *heading, (360.f - angle) + *heading) > ANGLE_WIDTH;
+  if(*location.heading_ > angle)
+    return std::min(*location.heading_ - angle, (360.f - *location.heading_) + angle) > location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
+  return std::min(angle - *location.heading_, (360.f - angle) + *location.heading_) > location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
 }
 
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
@@ -155,7 +155,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
       if(edge_filter(edge) != 0.0f) {
         PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
         std::get<2>(closest_point) = edge->forward() ? 0 : info.shape().size() - 2;
-        if(!heading_filter(edge, info, closest_point, location.heading_))
+        if(!heading_filter(edge, info, closest_point, location))
           correlated.edges.push_back(std::move(path_edge));
         else
           heading_filtered.emplace_back(std::move(path_edge));
@@ -170,7 +170,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
       if(edge_filter(other_edge) != 0.0f) {
         PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
         std::get<2>(closest_point) = other_edge->forward() ? 0 : info.shape().size() - 2;
-        if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
+        if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location))
           correlated.edges.push_back(std::move(path_edge));
         else
           heading_filtered.emplace_back(std::move(path_edge));
@@ -227,7 +227,7 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     auto side = get_side(closest_edge, closest_edge_info, closest_point, location.latlng_);
     //correlate the edge we found
     std::list<PathLocation::PathEdge> heading_filtered;
-    if(heading_filter(closest_edge, closest_edge_info, closest_point, location.heading_))
+    if(heading_filter(closest_edge, closest_edge_info, closest_point, location))
       heading_filtered.emplace_back(closest_edge_id, length_ratio, std::get<0>(closest_point), side);
     else
       correlated.edges.push_back(PathLocation::PathEdge{closest_edge_id, length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), side});
@@ -236,7 +236,7 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id, other_tile);
     const DirectedEdge* other_edge;
     if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
-      if(heading_filter(other_edge, closest_edge_info, closest_point, location.heading_))
+      if(heading_filter(other_edge, closest_edge_info, closest_point, location))
         heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), flip_side(side));
       else
         correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), flip_side(side)});
