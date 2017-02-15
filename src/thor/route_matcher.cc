@@ -31,10 +31,10 @@ float length_comparison(const float length, const bool exact_match) {
   // Alter tolerance based on exact_match flag
   float t, max_t;
   if (exact_match) {
-    t = length * 1.05f;
+    t = length * 0.05f;
     max_t = 25.0f;
   } else {
-    t = length * 1.1f;
+    t = length * 0.1f;
     max_t = 100.0f;
   }
   float tolerance = (t < kMinLengthTolerance) ? kMinLengthTolerance :
