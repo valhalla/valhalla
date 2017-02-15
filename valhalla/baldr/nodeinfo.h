@@ -293,6 +293,18 @@ class NodeInfo {
                             const bool c);
 
   /**
+   * Get the connecting way id for a transit stop.
+   * @return Returns the connecting way id for a transit stop.
+   */
+  uint64_t connecting_wayid() const;
+
+  /**
+   * Set the connecting way id for a transit stop.
+   * @param  wayid  Connecting wayid.
+   */
+  void set_connecting_wayid(const uint64_t wayid);
+
+  /**
    * Get the heading of the local edge given its local index. Supports
    * up to 8 local edges. Headings are stored rounded off to 2 degree
    * values.
@@ -341,16 +353,22 @@ class NodeInfo {
   uint32_t traffic_signal_     : 1;  // Traffic signal
   uint32_t spare_1             : 6;
 
-  // Transit stop index
+  // Transit stop index (for transit level) / name consistency for all
+  // other levels
   union NodeStop {
     uint32_t stop_index;
     uint32_t name_consistency;
   };
   NodeStop stop_;
 
-  // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
-  // nearest 2 degrees)
-  uint64_t headings_;
+  // Connecting way Id (for transit level) / headings of up to
+  // kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
+  // for all other levels.
+  union WayHeading {
+    uint64_t connecting_wayid_;
+    uint64_t headings_;
+  };
+  WayHeading way_heading_;
 };
 
 }
