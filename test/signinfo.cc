@@ -37,7 +37,7 @@ void ExitToTest() {
         exitsigns[2].text() != "Carlisle" && exitsigns[3].text() != "Harrisburg")
       throw std::runtime_error("Exitsign text is bad for US 11;To I 81;Carlisle;Harrisburg.");
   }
-  else throw std::runtime_error("US 11/To I 81/Carlisle/Harrisburg failed to be parsed.  " + exitsigns.size() );
+  else throw std::runtime_error("US 11/To I 81/Carlisle/Harrisburg failed to be parsed.  " + std::to_string(exitsigns.size()) );
 
   exitsigns.clear();
   osmdata.node_exit_to[node.osmid] = "US 11;Toward I 81;Carlisle;Harrisburg";
