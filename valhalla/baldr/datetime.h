@@ -67,26 +67,30 @@ namespace DateTime {
   /**
    * Adds a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   start_date
    * @param   end_date
+   * @param   tile_date seconds from epoch
    * @param   added_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the added date
    *          is in the start and end date range.
    */
-  uint64_t add_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
-                           const boost::gregorian::date& end_date, const boost::gregorian::date& added_date);
+  uint64_t add_service_day(const uint64_t& days,
+                           const boost::gregorian::date& end_date,
+                           const uint32_t tile_date,
+                           const boost::gregorian::date& added_date);
 
   /**
    * Removes a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   start_date
    * @param   end_date
+   * @param   tile_date seconds from epoch
    * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the removed date
    *          is in the start and end date range.
    */
-  uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
-                              const boost::gregorian::date& end_date, const boost::gregorian::date& removed_date);
+  uint64_t remove_service_day(const uint64_t& days,
+                              const boost::gregorian::date& end_date,
+                              const uint32_t tile_date,
+                              const boost::gregorian::date& removed_date);
 
   /**
    * Check if service is available for a date.
