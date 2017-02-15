@@ -52,116 +52,116 @@
       "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordest"],
       "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "metric_lengths": ["<KILOMETERS> quilòmetres", "1 quilòmetre", "mig quilòmetre", "<METERS> metres", "menys de 10 metres"],
-      "us_customary_lengths": ["<MILES> milles", "1 milla", "mitja milla", "<TENTHS_OF_MILE> dècim de milla", "1 dècim de milla", "<FEET> peus", "menys de 10 peus"],
+      "us_customary_lengths": ["<MILES> milles", "1 milla", "mitja milla", "<TENTHS_OF_MILE> dècima de milla", "1 dècima de milla", "<FEET> peus", "menys de 10 peus"],
       "example_phrases": {
         "0": ["Vés cap a l'est durant mitja milla.", "Vés cap al nord durant 1 quilòmetre."],
-        "1": ["Vés cap al sudoest per 5th Avenue durant 1 dècim de milla."],
+        "1": ["Vés cap al sudoest per 5th Avenue durant 1 dècima de milla."],
         "2": ["Vés cap al suf per North Prince Street, U.S. 2 22."],
         "4": ["Condueix cap a l'est durant mitja milla.", "Condueix cap al nord durant 1 quilòmetre."],
-        "5": ["Condueix cap al sudoest per 5th Avenue durant 1 dècim de milla."],
+        "5": ["Condueix cap al sudoest per 5th Avenue durant 1 dècima de milla."],
         "6": ["Condueix cap al sud per North Prince Street, U.S. 2 22."],
         "8": ["Camina cap a l'est durant mitja milla.", "Camina cap al nord durant 1 quilòmetre."],
-        "9": ["Camina cap al sudoest per 5th Avenue durant 1 dècim de milla."],
+        "9": ["Camina cap al sudoest per 5th Avenue durant 1 dècima de milla."],
         "10": ["Camina cap al sud per North Prince Street, U.S. 2 22."],
         "16": ["Pedala cap a l'est durant mitja milla.", "Pedala cap al nord durant 1 quilòmetre."],
-        "17": ["Pedala cap al sudoest per 5th Avenue durant 1 dècim de milla."],
+        "17": ["Pedala cap al sudoest per 5th Avenue durant 1 dècima de milla."],
         "18": ["Pedala cap al sud per North Prince Street, U.S. 2 22."]
       }
     },
     "destination": {
       "phrases": {
-        "0": "You have arrived at your destination.",
-        "1": "You have arrived at <DESTINATION>.",
-        "2": "Your destination is on the <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
+        "0": "Has arribat a la teva destinació.",
+        "1": "Has arribat a <DESTINATION>.",
+        "2": "La teva destinació és a <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> és a <RELATIVE_DIRECTION>."
       },
-      "relative_directions": ["left", "right"],
+      "relative_directions": ["l'esquerra", "la dreta"],
       "example_phrases": {
-        "0": ["You have arrived at your destination."],
-        "1": ["You have arrived at 3206 Powelton Avenue."],
-        "2": ["Your destination is on the left.", "Your destination is on the right."],
-        "3": ["Lancaster Brewing Company is on the left."]
+        "0": ["Has arribat a la teva destinació."],
+        "1": ["Has arribat a 3206 Powelton Avenue."],
+        "2": ["La teva destinació és a l'esquerra.", "La teva destianció és a la dreta."],
+        "3": ["Lancaster Brewing Company és a l'esquerra."]
       }
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "You will arrive at your destination.",
-        "1": "You will arrive at <DESTINATION>.",
-        "2": "Your destination will be on the <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> will be on the <RELATIVE_DIRECTION>."
+        "0": "Arribaràs a la teva destinació.",
+        "1": "Arribaràs a <DESTINATION>.",
+        "2": "La teva destinació estarà a <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> estarà a <RELATIVE_DIRECTION>."
       },
-      "relative_directions": ["left", "right"],
+      "relative_directions": ["l'esquerra", "la dreta"],
       "example_phrases": {
-        "0": ["You will arrive at your destination."],
-        "1": ["You will arrive at 32 o6 Powelton Avenue."],
-        "2": ["Your destination will be on the left.", "Your destination will be on the right."],
-        "3": ["Lancaster Brewing Company will be on the left."]
+        "0": ["Arribaràs a la teva destinació."],
+        "1": ["Arribaràs a 32 o6 Powelton Avenue."],
+        "2": ["La teva destinació estarà a l'esquerra.", "La teva destinació estarà a la dreta."],
+        "3": ["Lancaster Brewing Company estarà a l'esquerra."]
       }
     },
     "destination_verbal": {
       "phrases": {
-        "0": "You have arrived at your destination.",
-        "1": "You have arrived at <DESTINATION>.",
-        "2": "Your destination is on the <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> is on the <RELATIVE_DIRECTION>."
+        "0": "Has arribat a la teva destinació.",
+        "1": "Has arribat a <DESTINATION>.",
+        "2": "La teva destinació és a <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> és a <RELATIVE_DIRECTION>."
       },
-      "relative_directions": ["left", "right"],
+      "relative_directions": ["l'esquerra", "la dreta"],
       "example_phrases": {
-        "0": ["You have arrived at your destination."],
-        "1": ["You have arrived at 32 o6 Powelton Avenue."],
-        "2": ["Your destination is on the left.", "Your destination is on the right."],
-        "3": ["Lancaster Brewing Company is on the left."]
+        "0": ["Has arribat a la teva destinació."],
+        "1": ["Has arribat a 32 o6 Powelton Avenue."],
+        "2": ["La teva destinació és a l'esquerra.", "La teva destinació és a la dreta."],
+        "3": ["Lancaster Brewing Company és a l'esquerra."]
       }
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> ara és <STREET_NAMES>."
       },
       "example_phrases": {
-        "0": ["Vine Street becomes Middletown Road."]
+        "0": ["Vine Street ara és Middletown Road."]
       }
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> becomes <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES> ara és <STREET_NAMES>."
       },
       "example_phrases": {
-        "0": ["Vine Street becomes Middletown Road."]
+        "0": ["Vine Street ara és Middletown Road."]
       }
     },
     "continue": {
       "phrases": {
-        "0": "Continue.",
-        "1": "Continue on <STREET_NAMES>."
+        "0": "Continua.",
+        "1": "Continua per <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Continue."],
-        "1": ["Continue on 10th Avenue."]
+        "0": ["Continua."],
+        "1": ["Continua per 10th Avenue."]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Continue.",
-        "1": "Continue on <STREET_NAMES>."
+        "0": "Continua.",
+        "1": "Continua per <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Continue."],
-        "1": ["Continue on 10th Avenue."]
+        "0": ["Continua."],
+        "1": ["Continua per 10th Avenue."]
       }
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continue for <LENGTH>.",
-        "1": "Continue on <STREET_NAMES> for <LENGTH>."
+        "0": "Continua durant <LENGTH>.",
+        "1": "Continua per <STREET_NAMES> durant <LENGTH>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
-      "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
-      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
+      "metric_lengths": ["<KILOMETERS> quilòmetres", "1 quilòmetre", "mig quilòmetre", "<METERS> metres", "menys de 10 metres"],
+      "us_customary_lengths": ["<MILES> milles", "1 milla", "mitja milla", "<TENTHS_OF_MILE> dècima de milla", "1 dècima de milla", "<FEET> peus", "menys de 10 peus"],
       "example_phrases": {
-        "0": ["Continue for 300 feet."],
-        "1": ["Continue on 10th Avenue for 3 tenths of a mile."]
+        "0": ["Continua durant 300 peus."],
+        "1": ["Continue per 10th Avenue durant 3 dècimes de milla."]
       }
     },
     "bear": {
