@@ -1049,7 +1049,7 @@ void enhance(const boost::property_tree::ptree& pt,
               sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
               if (access_it != access_tags.end())
                 SetCountryAccess(directededge, access, access_it);
-              else LOG_WARN("access tags not found for " + e_offset.wayid());
+              else LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
             } else SetCountryAccess(directededge, access, target);
           }
         }
