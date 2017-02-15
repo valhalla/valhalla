@@ -219,9 +219,9 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   }
 
   // Serialize and return as a string
-  auto segments_json = json::array({});
+  auto segments = json::array({});
   for (const auto& seg : traffic_segment) {
-    segments_json->emplace_back(json::map
+    segments->emplace_back(json::map
       ({
         {"partial_start", seg.partial_start},
         {"partial_end", seg.partial_end},
@@ -232,9 +232,8 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
       })
     );
   }
-  auto result = json::map({{"segments",segments_json}});
   std::stringstream ss;
-  ss << *result;
+  ss << *json::map({{"segments",segments}});
   return ss.str();
 }
 
