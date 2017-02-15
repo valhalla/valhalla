@@ -116,6 +116,7 @@ void TestCollapseEdgeSimple() {
   vb::merge::merge(
     tiles, reader,
     [](const vb::DirectedEdge *) -> bool { return true; },
+    [](const vb::DirectedEdge *) -> bool { return true; },
     [&](const vb::merge::path &p) {
       count += 1;
       for (auto id : p.m_edges) {
@@ -178,6 +179,7 @@ void TestCollapseEdgeJunction() {
   vb::merge::merge(
     tiles, reader,
     [](const vb::DirectedEdge *) -> bool { return true; },
+    [](const vb::DirectedEdge *) -> bool { return true; },
     [&](const vb::merge::path &p) {
       count += 1;
       for (auto id : p.m_edges) {
@@ -236,6 +238,7 @@ void TestCollapseEdgeChain() {
 
   vb::merge::merge(
     tiles, reader,
+    [](const vb::DirectedEdge *) -> bool { return true; },
     [](const vb::DirectedEdge *) -> bool { return true; },
     [&](const vb::merge::path &p) {
       count += 1;

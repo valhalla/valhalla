@@ -179,4 +179,4 @@ http://localhost:8002/route?json={"locations":[{"lat":40.285488,"lon":-76.650597
 
 Batch Script Tool
 -----------------
-- [Batch Run_Route](../run_route_scripts/README.md)
+- [Batch Run_Route](./run_route_scripts/README.md)
