@@ -52,7 +52,7 @@ struct MatchedTrafficSegments {
   bool partial_start;                   // Begins along the segment
   bool partial_end;                     // Ends along the segment
   valhalla::baldr::GraphId segment_id;  // Traffic segment unique Id.
-  float begin_time;                     // Begin time along this segment.
+  float start_time;                     // Begin time along this segment.
   float end_time;                       // End time along this segment.
   uint32_t length;                      // Length in meters along this segment
 
@@ -62,7 +62,7 @@ struct MatchedTrafficSegments {
       : partial_start(start),
         partial_end(end),
         segment_id(id),
-        begin_time(bt),
+        start_time(bt),
         end_time(et),
         length(l) {
   }
@@ -71,10 +71,10 @@ struct MatchedTrafficSegments {
     boost::property_tree::ptree segment;
     segment.put<bool>("partial_start", partial_start);
     segment.put<bool>("partial_end", partial_end);
-    segment.put("segment_id", segment_id.value);
-    segment.put<float>("begin_time", begin_time);
+    segment.put<uint64_t>("segment_id", segment_id.value);
+    segment.put<float>("start_time", start_time);
     segment.put<float>("end_time", end_time);
-    segment.put("length", length);
+    segment.put<uint32_t>("length", length);
     return segment;
   }
 };

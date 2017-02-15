@@ -35,6 +35,7 @@ message TripPath {
     optional string country = 9;    
     optional string date_time = 10;   // ISO 8601 date/time YYYY-MM-DDThh:mm
     optional SideOfStreet side_of_street = 11;
+    optional uint32 original_index = 12;
   }
 
   message Sign {
