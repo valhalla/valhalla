@@ -150,7 +150,7 @@ struct sort_pair_by_tile {
   }
 };
 
-const sort_by_tile sort_pair_by_tile::sort_tile;
+const sort_by_tile sort_pair_by_tile::sort_tile = {};
 
 // temporary structure for holding a bunch of nodes and edges until they can be
 // renumbered to the format needed for storing in tiles.
