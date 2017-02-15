@@ -226,14 +226,15 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
         {"partial_start", seg.partial_start},
         {"partial_end", seg.partial_end},
         {"segment_id", seg.segment_id.value},
-        {"begin_time", json::fp_t{seg.start_time, 1}},
+        {"start_time", json::fp_t{seg.start_time, 1}},
         {"end_time", json::fp_t{seg.end_time, 1}},
         {"length", static_cast<uint64_t>(seg.length)},
       })
     );
   }
+  auto result = json::map({{"segments",segments_json}});
   std::stringstream ss;
-  ss << *segments_json;
+  ss << *result;
   return ss.str();
 }
 
