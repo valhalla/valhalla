@@ -65,11 +65,8 @@ class thor_worker_t {
   prime_server::worker_t::result_t jsonify_error(
       const baldr::valhalla_exception_t& exception,
       prime_server::http_request_info_t& request_info) const;
-  void update_origin(baldr::PathLocation& origin, bool prior_is_node,
-                     const baldr::GraphId& through_edge);
-  void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
-                baldr::PathLocation& destination,
-                std::vector<thor::PathInfo>& path_edges);
+  std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
+                baldr::PathLocation& destination);
   void log_admin(odin::TripPath&);
   valhalla::sif::cost_ptr_t get_costing(
       const boost::property_tree::ptree& request, const std::string& costing);
@@ -123,7 +120,7 @@ class thor_worker_t {
   std::vector<baldr::PathLocation> correlated_t;
   sif::CostFactory<sif::DynamicCost> factory;
   valhalla::sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
-  valhalla::baldr::GraphReader reader;
+  valhalla::baldr::GraphReader& reader;
   // Path algorithms (TODO - perhaps use a map?))
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;

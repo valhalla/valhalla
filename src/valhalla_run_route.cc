@@ -272,8 +272,8 @@ std::string GetFormattedTime(uint32_t seconds) {
 }
 
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
-                              TripPath& trip_path, Location origin,
-                              Location destination, PathStatistics& data) {
+                              TripPath& trip_path, const PathLocation& origin,
+                              const PathLocation& destination, PathStatistics& data) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(directions_options,
                                                     trip_path);
@@ -366,6 +366,16 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
       (boost::format("Total length: %.1f %s")
           % trip_directions.summary().length() % units).str(),
       " [NARRATIVE] ");
+  if(origin.date_time_) {
+    valhalla::midgard::logging::Log(
+        "Departed at: " + *origin.date_time_,
+        " [NARRATIVE] ");
+  }
+  if(destination.date_time_) {
+    valhalla::midgard::logging::Log(
+        "Arrived at: " + *destination.date_time_,
+        " [NARRATIVE] ");
+  }
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
   data.setManuevers(trip_directions.maneuver_size());
@@ -691,7 +701,7 @@ int main(int argc, char *argv[]) {
       // Try the the directions
       t1 = std::chrono::high_resolution_clock::now();
       TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                        locations[i], locations[i+1], data);
+                        path_location[i], path_location[i+1], data);
       t2 = std::chrono::high_resolution_clock::now();
       msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
