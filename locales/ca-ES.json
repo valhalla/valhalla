@@ -13,9 +13,9 @@
         "8": "Walk <CARDINAL_DIRECTION>.",
         "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
         "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "16": "Pedala cap al <CARDINAL_DIRECTION>.",
+        "17": "Pedala cap al <CARDINAL_DIRECTION> per <STREET_NAMES>.",
+        "18": "Pedala cap al <CARDINAL_DIRECTION> per <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       },
       "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
       "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
