@@ -794,11 +794,17 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
     // Set time at the origin lat, lon grid to 0
     isotile_->Set(origin.latlng_, 0);
 
+    // Only skip inbound edges if we have other options
+    bool has_other_edges = false;
+    std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+      has_other_edges = has_other_edges || !e.end_node();
+    });
+
     // Iterate through edges and add to adjacency list
     const NodeInfo* nodeinfo = nullptr;
     for (const auto& edge : (origin.edges)) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (edge.end_node()) {
+      if (has_other_edges && edge.end_node()) {
         continue;
       }
 
@@ -854,12 +860,18 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
     // Set time at the origin lat, lon grid to 0
     isotile_->Set(dest.latlng_, 0);
 
+    // Only skip outbound edges if we have other options
+    bool has_other_edges = false;
+    std::for_each(dest.edges.cbegin(), dest.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+      has_other_edges = has_other_edges || !e.begin_node();
+    });
+
     // Iterate through edges and add to adjacency list
     Cost c;
     for (const auto& edge : dest.edges) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (edge.begin_node()) {
+      if (has_other_edges && edge.begin_node()) {
         continue;
       }
 

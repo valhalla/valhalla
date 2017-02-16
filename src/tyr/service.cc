@@ -361,7 +361,7 @@ namespace {
         for(auto location = leg->location().begin() + index; location != leg->location().end(); ++location) {
           index = 1;
           auto loc = json::map({});
-          if (location->type() == valhalla::odin::TripDirections_Location_Type_kThrough) {
+          if (location->type() == odin::Location_Type_kThrough) {
             loc->emplace("type", std::string("through"));
           } else {
             loc->emplace("type", std::string("break"));
@@ -385,11 +385,13 @@ namespace {
           if (!location->date_time().empty())
             loc->emplace("date_time",location->date_time());
           if (location->has_side_of_street()) {
-            if (location->side_of_street() == TripDirections_Location_SideOfStreet_kLeft)
+            if (location->side_of_street() == odin::Location_SideOfStreet_kLeft)
               loc->emplace("side_of_street", std::string("left"));
-            else if (location->side_of_street() == TripDirections_Location_SideOfStreet_kRight)
+            else if (location->side_of_street() == odin::Location_SideOfStreet_kRight)
               loc->emplace("side_of_street", std::string("right"));
           }
+          if (location->has_original_index())
+            loc->emplace("original_index",static_cast<uint64_t>(location->original_index()));
 
           //loc->emplace("sideOfStreet",location->side_of_street());
 

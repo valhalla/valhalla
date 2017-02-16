@@ -109,7 +109,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   for (auto res : results) {
     // Make sure edge is valid
     if (res.edgeid().Is_Valid()) {
-      trace_edges.emplace_back(res.edgeid(), GetEdgeDist(res, matcher), times[idx]);
+      trace_edges.emplace_back(EdgeOnTrace{res.edgeid(), GetEdgeDist(res, matcher), static_cast<float>(times[idx])});
     }
     idx++;
   }
@@ -119,7 +119,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   std::vector<UniqueEdgeOnTrace> edges;
   for (auto edge : trace_edges) {
     if (!prior_edge.Is_Valid()) {
-      edges.emplace_back(edge.edge_id, edge.dist, edge.dist, edge.secs, edge.secs);
+      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, edge.dist, edge.dist, edge.secs, edge.secs});
     } else  if (edge.edge_id == prior_edge) {
       // Update the time at the end
       edges.back().end_pct = edge.dist;
@@ -133,7 +133,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
       edges.back().secs2   = edge.secs ;
 
       // New edge
-      edges.emplace_back(edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs);
+      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs});
     }
     prior_edge = edge.edge_id;
   }
@@ -168,8 +168,8 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
       } else {
         bool starts = (seg.starts_segment_ && edge.start_pct == 0.0f);
         bool ends =   (seg.ends_segment_ && edge.end_pct == 1.0f);
-        traffic_segment.emplace_back(!starts, !ends, seg.segment_id_,
-                              edge.secs1, edge.secs2, length);
+        traffic_segment.emplace_back(MatchedTrafficSegments{!starts, !ends, seg.segment_id_,
+                              edge.secs1, edge.secs2, static_cast<uint32_t>(length)});
         prior_segment = seg.segment_id_;
       }
     } else if (segments.size() > 1) {
@@ -204,8 +204,8 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
           bool ends =   seg.ends_segment_;
           float start_secs = edge.secs1;  // TODO!l
           float end_secs = edge.secs2;    // TODO!!
-          traffic_segment.emplace_back(!starts, !ends, seg.segment_id_,
-                                start_secs, end_secs, seg_length);
+          traffic_segment.emplace_back(MatchedTrafficSegments{!starts, !ends, seg.segment_id_,
+                                start_secs, end_secs, static_cast<uint32_t>(seg_length)});
           prior_segment = seg.segment_id_;
         }
       }
@@ -219,14 +219,21 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   }
 
   // Serialize and return as a string
-  boost::property_tree::ptree result;
-  boost::property_tree::ptree segments;
+  auto segments = json::array({});
   for (const auto& seg : traffic_segment) {
-    segments.push_back(std::make_pair("", seg.ToPtree()));
+    segments->emplace_back(json::map
+      ({
+        {"partial_start", seg.partial_start},
+        {"partial_end", seg.partial_end},
+        {"segment_id", seg.segment_id.value},
+        {"start_time", json::fp_t{seg.start_time, 1}},
+        {"end_time", json::fp_t{seg.end_time, 1}},
+        {"length", static_cast<uint64_t>(seg.length)},
+      })
+    );
   }
-  result.put_child("segments", segments);
   std::stringstream ss;
-  boost::property_tree::write_json(ss, result);
+  ss << *json::map({{"segments",segments}});
   return ss.str();
 }
 

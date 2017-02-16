@@ -69,9 +69,10 @@ namespace valhalla {
     //returns the optimal order of the path_locations
     auto order = optimizer.Solve(correlated.size(), time_costs);
     std::vector<PathLocation> best_order;
-    for (size_t i = 0; i< order.size(); i++)
+    for (size_t i = 0; i< order.size(); i++) {
+      LOG_INFO("Order from Optimizer::" + std::to_string(order[i]));
       best_order.emplace_back(correlated[order[i]]);
-
+    }
     auto trippaths = path_depart_at(best_order, costing, date_time_type, request_str);
     size_t order_index = 0;
     for (auto &trippath: trippaths) {

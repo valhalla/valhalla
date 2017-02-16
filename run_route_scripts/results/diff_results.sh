@@ -24,7 +24,7 @@ then
 fi
 
 # Verify diff directory does not alreadys exist
-DIFF_DIR="${OLD_DIR%/}_${NEW_DIR}_diff"
+DIFF_DIR=$(echo "${OLD_DIR}_${NEW_DIR}_diff" | sed -e "s@/@_@g")
 if [ -d "${DIFF_DIR}" ]
 then
   echo "${DIFF_DIR} already exists"

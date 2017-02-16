@@ -137,7 +137,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
-    std::vector<Location> locations{shape.front(), shape.back()};
+    std::vector<valhalla::baldr::Location> locations{shape.front(), shape.back()};
     locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
@@ -272,8 +272,8 @@ std::string GetFormattedTime(uint32_t seconds) {
 }
 
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
-                              TripPath& trip_path, Location origin,
-                              Location destination, PathStatistics& data) {
+                              TripPath& trip_path, const PathLocation& origin,
+                              const PathLocation& destination, PathStatistics& data) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(directions_options,
                                                     trip_path);
@@ -366,6 +366,16 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
       (boost::format("Total length: %.1f %s")
           % trip_directions.summary().length() % units).str(),
       " [NARRATIVE] ");
+  if(origin.date_time_) {
+    valhalla::midgard::logging::Log(
+        "Departed at: " + *origin.date_time_,
+        " [NARRATIVE] ");
+  }
+  if(destination.date_time_) {
+    valhalla::midgard::logging::Log(
+        "Arrived at: " + *destination.date_time_,
+        " [NARRATIVE] ");
+  }
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
   data.setManuevers(trip_directions.maneuver_size());
@@ -469,7 +479,7 @@ int main(int argc, char *argv[]) {
   directions_options.set_language("en-US");
 
   // Locations
-  std::vector<Location> locations;
+  std::vector<valhalla::baldr::Location> locations;
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
@@ -485,8 +495,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
     }
-    locations.push_back(Location::FromCsv(origin));
-    locations.push_back(Location::FromCsv(destination));
+    locations.push_back(valhalla::baldr::Location::FromCsv(origin));
+    locations.push_back(valhalla::baldr::Location::FromCsv(destination));
   }
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
@@ -497,7 +507,7 @@ int main(int argc, char *argv[]) {
 
     try {
       for (const auto& location : json_ptree.get_child("locations"))
-        locations.emplace_back(std::move(Location::FromPtree(location.second)));
+        locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
       if (locations.size() < 2)
         throw;
     } catch (...) {
@@ -691,7 +701,7 @@ int main(int argc, char *argv[]) {
       // Try the the directions
       t1 = std::chrono::high_resolution_clock::now();
       TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                        locations[i], locations[i+1], data);
+                        path_location[i], path_location[i+1], data);
       t2 = std::chrono::high_resolution_clock::now();
       msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
