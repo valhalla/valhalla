@@ -137,7 +137,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
-    std::vector<Location> locations{shape.front(), shape.back()};
+    std::vector<valhalla::baldr::Location> locations{shape.front(), shape.back()};
     locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
@@ -479,7 +479,7 @@ int main(int argc, char *argv[]) {
   directions_options.set_language("en-US");
 
   // Locations
-  std::vector<Location> locations;
+  std::vector<valhalla::baldr::Location> locations;
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
@@ -495,8 +495,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
     }
-    locations.push_back(Location::FromCsv(origin));
-    locations.push_back(Location::FromCsv(destination));
+    locations.push_back(valhalla::baldr::Location::FromCsv(origin));
+    locations.push_back(valhalla::baldr::Location::FromCsv(destination));
   }
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
@@ -507,7 +507,7 @@ int main(int argc, char *argv[]) {
 
     try {
       for (const auto& location : json_ptree.get_child("locations"))
-        locations.emplace_back(std::move(Location::FromPtree(location.second)));
+        locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
       if (locations.size() < 2)
         throw;
     } catch (...) {

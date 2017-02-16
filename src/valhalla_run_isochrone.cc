@@ -32,7 +32,6 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
-using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
@@ -182,7 +181,7 @@ int main(int argc, char *argv[]) {
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
-  TripPath trip_path;
+  valhalla::odin::TripPath trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {

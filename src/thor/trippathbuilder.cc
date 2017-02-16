@@ -327,15 +327,15 @@ TripPath_Traversability GetTripPathTraversability(Traversability traversability)
   }
 }
 
-TripPath_Location_SideOfStreet GetTripPathSideOfStreet(
+odin::Location_SideOfStreet GetTripPathSideOfStreet(
     PathLocation::SideOfStreet sos) {
   switch (sos) {
     case PathLocation::SideOfStreet::NONE:
-      return TripPath_Location_SideOfStreet_kNone;
+      return odin::Location_SideOfStreet_kNone;
     case PathLocation::SideOfStreet::LEFT:
-      return TripPath_Location_SideOfStreet_kLeft;
+      return odin::Location_SideOfStreet_kLeft;
     case PathLocation::SideOfStreet::RIGHT:
-      return TripPath_Location_SideOfStreet_kRight;
+      return odin::Location_SideOfStreet_kRight;
   }
 }
 
@@ -404,11 +404,11 @@ TripPath TripPathBuilder::Build(
   uint32_t local_level = graphreader.GetTileHierarchy().levels().rbegin()->first;
 
   // Set origin (assumed to be a break)
-  TripPath_Location* tp_orig = trip_path.add_location();
-  TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
+  odin::Location* tp_orig = trip_path.add_location();
+  odin::LatLng* orig_ll = tp_orig->mutable_ll();
   orig_ll->set_lat(origin.latlng_.lat());
   orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_type(TripPath_Location_Type_kBreak);
+  tp_orig->set_type(odin::Location_Type_kBreak);
   if (!origin.name_.empty())
     tp_orig->set_name(origin.name_);
   if (!origin.street_.empty())
@@ -426,11 +426,11 @@ TripPath TripPathBuilder::Build(
 
   // Add list of through locations
   for (auto through : through_loc) {
-    TripPath_Location* tp_through = trip_path.add_location();
-    TripPath_LatLng* through_ll = tp_through->mutable_ll();
+    odin::Location* tp_through = trip_path.add_location();
+    odin::LatLng* through_ll = tp_through->mutable_ll();
     through_ll->set_lat(through.latlng_.lat());
     through_ll->set_lng(through.latlng_.lng());
-    tp_through->set_type(TripPath_Location_Type_kThrough);
+    tp_through->set_type(odin::Location_Type_kThrough);
     if (!through.name_.empty())
       tp_through->set_name(through.name_);
     if (!through.street_.empty())
@@ -450,11 +450,11 @@ TripPath TripPathBuilder::Build(
   }
 
   // Set destination (assumed to be a break)
-  TripPath_Location* tp_dest = trip_path.add_location();
-  TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
+  odin::Location* tp_dest = trip_path.add_location();
+  odin::LatLng* dest_ll = tp_dest->mutable_ll();
   dest_ll->set_lat(dest.latlng_.lat());
   dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_type(TripPath_Location_Type_kBreak);
+  tp_dest->set_type(odin::Location_Type_kBreak);
   if (!dest.name_.empty())
     tp_dest->set_name(dest.name_);
   if (!dest.street_.empty())
@@ -628,11 +628,11 @@ TripPath TripPathBuilder::Build(
 
     // Set the bounding box of the shape
     AABB2<PointLL> bbox(shape);
-    TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+    odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
     // Set bounding box min lat/lon
     min_ll->set_lat(bbox.miny());
     min_ll->set_lng(bbox.minx());
-    TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+    odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
     // Set bounding box max lat/lon
     max_ll->set_lat(bbox.maxy());
     max_ll->set_lng(bbox.maxx());
@@ -749,7 +749,7 @@ TripPath TripPathBuilder::Build(
           transit_stop_info->set_name(graphtile->GetName(transit_stop->name_offset()));
 
         // Set latitude and longitude
-        TripPath_LatLng* stop_ll = transit_stop_info->mutable_ll();
+        odin::LatLng* stop_ll = transit_stop_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller.attributes.at(kNodeTransitStopInfoLatLon)) {
           stop_ll->set_lat(node->latlng().lat());
@@ -1027,11 +1027,11 @@ TripPath TripPathBuilder::Build(
 
   // Set the bounding box of the shape
   AABB2<PointLL> bbox(trip_shape);
-  TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
   // Set bounding box min lat/lon
   min_ll->set_lat(bbox.miny());
   min_ll->set_lng(bbox.minx());
-  TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
   // Set bounding box max lat/lon if requested
   max_ll->set_lat(bbox.maxy());
   max_ll->set_lng(bbox.maxx());
