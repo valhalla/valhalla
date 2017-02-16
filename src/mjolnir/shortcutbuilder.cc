@@ -600,12 +600,13 @@ uint32_t FormShortcuts(GraphReader& reader,
           }
 
           // Get edge info, shape, and names from the old tile and add
-          // to the new. Use edge length to protect against
-          // edges that have same end nodes but different lengths
+          // to the new. Use prior edgeinfo offset as the key to make sure
+          // edges that have the same end nodes are differentiated (this
+          // should be a valid key since tile sizes aren't changed)
           auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-          uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                          node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.shape(),
-                          tile->GetNames(directededge->edgeinfo_offset()), added);
+          uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(),
+                         node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.shape(),
+                         tile->GetNames(directededge->edgeinfo_offset()), added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
           // Set the superseded mask - this is the shortcut mask that
