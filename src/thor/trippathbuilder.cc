@@ -558,8 +558,11 @@ TripPath TripPathBuilder::Build(
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    uint32_t current_time = DateTime::seconds_from_midnight(*origin.date_time_);
-    current_time += path.front().elapsed_time;
+    uint32_t current_time = 0;
+    if (origin.date_time_) {
+      DateTime::seconds_from_midnight(*origin.date_time_);
+      current_time += path.front().elapsed_time;
+    }
 
     // Add trip edge
     auto trip_edge = AddTripEdge(
