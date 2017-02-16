@@ -175,7 +175,7 @@ void TryAddServiceDays(uint64_t days, std::string begin_date, std::string end_da
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
   auto a = DateTime::get_formatted_date(added_date);
-  uint64_t result = DateTime::add_service_day(days, b, e, a);
+  uint64_t result = DateTime::add_service_day(days, e, DateTime::days_from_pivot_date(b), a);
   if (value != result)
     throw std::runtime_error("Invalid bits set for added service day. " + added_date);
 }
@@ -185,7 +185,7 @@ void TryRemoveServiceDays(uint64_t days, std::string begin_date, std::string end
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
   auto r = DateTime::get_formatted_date(removed_date);
-  uint64_t result = DateTime::remove_service_day(days, b, e, r);
+  uint64_t result = DateTime::remove_service_day(days, e, DateTime::days_from_pivot_date(b), r);
   if (value != result)
     throw std::runtime_error("Invalid bits set for added service day. " + removed_date);
 }
@@ -346,6 +346,27 @@ void TestServiceDays() {
 
   //Test weekends for 60 days plus Columbus Day
   TryAddServiceDays(435749860008887046,"2015-09-25", "2017-09-28", "2015-10-12", 435749860009018118);
+
+  //Test adding 1 day where 21 and 24 already active.
+  TryAddServiceDays(9,"2017-02-21", "2017-02-24", "2017-02-22", 11);
+
+  //Test adding 1 day before start day where 21 and 24 already active.
+  TryAddServiceDays(9,"2017-02-21", "2017-02-24", "2017-02-20", 9);
+
+  //Test adding 1 day after end day where 21 and 24 already active.
+  TryAddServiceDays(9,"2017-02-21", "2017-02-24", "2017-02-25", 9);
+
+  //Test adding 1 day where 21 and 24 already active...should be no change as 21 already active.
+  TryAddServiceDays(9,"2017-02-21", "2017-02-24", "2017-02-21", 9);
+
+  //Test removing 1 day where 21, 22, and 24 is active.
+  TryRemoveServiceDays(11,"2017-02-21", "2017-02-24", "2017-02-22", 9);
+
+  //Test removing 1 day before start day where 21, 22, and 24 is active.
+  TryRemoveServiceDays(11,"2017-02-21", "2017-02-24", "2017-02-20", 11);
+
+  //Test removing 1 day after end where 21, 22, and 24 is active.
+  TryRemoveServiceDays(11,"2017-02-21", "2017-02-24", "2017-02-25", 11);
 
   //Try to add a date out of the date range
   TryAddServiceDays(435749860008887046,"2015-09-25", "2017-09-28", "2018-10-12", 435749860008887046);

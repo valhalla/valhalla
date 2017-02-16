@@ -51,7 +51,7 @@ genfiles/admin_lua_proc.h: lua/admin.lua
 genfiles/locales.h: locales/*.json
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@/locales && ./make_locales.sh *.json > @abs_builddir@/genfiles/locales.h
 
-PROTO_FILES = proto/osmformat.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto 
+PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto 
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
@@ -158,6 +158,7 @@ nobase_include_HEADERS = \
 	valhalla/loki/search.h \
 	valhalla/loki/node_search.h \
 	valhalla/loki/service.h \
+	valhalla/proto/tripcommon.pb.h \
 	valhalla/proto/trippath.pb.h \
 	valhalla/proto/tripdirections.pb.h \
 	valhalla/proto/directions_options.pb.h \
@@ -273,6 +274,7 @@ libvalhalla_la_SOURCES = \
 	src/loki/isochrone_action.cc \
 	src/loki/trace_route_action.cc \
 	src/loki/node_search.cc \
+	src/proto/tripcommon.pb.cc \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
 	src/proto/directions_options.pb.cc \

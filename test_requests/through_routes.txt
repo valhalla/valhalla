@@ -1,0 +1,6 @@
+-j '{"locations":[{"lat":40.34451,"lon":-76.61058,"type":"break"},{"lat":40.33156,"lon":-76.62268,"type":"through"},{"lat":40.31755,"lon":-76.6135,"type":"break"}],"costing":"auto"}'
+-j '{"locations":[{"lat":40.41062,"lon":-76.4729,"type":"break"},{"lat":40.40909,"lon":-76.47044,"type":"through"},{"lat":40.40815,"lon":-76.47389,"type":"break"}],"costing":"auto"}'
+-j '{"locations":[{"lat":40.37084,"lon":-76.55363,"type":"break"},{"lat":40.36917,"lon":-76.55578,"type":"through"},{"lat":40.36309,"lon":-76.56509,"type":"through"},{"lat":40.36093,"lon":-76.54921,"type":"break"}],"costing":"auto"}'
+-j '{"costing":"pedestrian","locations":[{"lon":-122.42256,"heading":81,"lat":37.75679,"type":"break"},{"lat":37.75863,"lon":-122.41907,"heading":175,"type":"through"},{"lat":37.75543,"lon":-122.41877,"type":"break"}]}'
+-j '{"costing":"auto","locations":[{"lon":-122.42256,"heading":81,"lat":37.75679,"type":"break"},{"lat":37.75863,"lon":-122.41907,"heading":175,"type":"through"},{"lat":37.75543,"lon":-122.41877,"type":"break"}]}'
+-j '{"costing":"auto","locations":[{"lon":-122.42256,"heading":81,"lat":37.75679,"type":"break"},{"lat":37.75863,"lon":-122.41907,"heading":174,"heading_tolerance":60,"type":"through"},{"lat":37.75543,"lon":-122.41877,"type":"break"}]}'

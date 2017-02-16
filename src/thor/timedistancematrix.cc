@@ -394,10 +394,16 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
 void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
+  // Only skip inbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+    has_other_edges = has_other_edges || !e.end_node();
+  });
+
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.edges) {
     // If origin is at a node - skip any inbound edge (dist = 1)
-    if (edge.end_node()) {
+    if (has_other_edges && edge.end_node()) {
       continue;
     }
 

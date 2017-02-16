@@ -402,6 +402,7 @@ if __name__ == '__main__':
   leaves = []
   parser = argparse.ArgumentParser(description='Generate valhalla configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   add_leaf_args('', config, leaves, parser)
+  #TODO: add argument to set base path and use in all other path based values
   args = parser.parse_args()
 
   #override the defaults given what was passed
@@ -411,7 +412,6 @@ if __name__ == '__main__':
     for k in keys[:-1]:
       v = v[k]
     v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
-
 
   #show the config
   print json.dumps(config, sort_keys=True, indent=2, separators=(',', ': '))  

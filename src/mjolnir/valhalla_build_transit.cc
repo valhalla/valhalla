@@ -492,7 +492,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     pair->set_service_end_date(DateTime::get_formatted_date(end_date).julian_day());
     for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
-      //TODO: if none of these were true we should skip
     }
 
     //trip
@@ -1082,13 +1081,13 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           //if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = DateTime::remove_service_day(days, start_date, end_date, d);
+            days = DateTime::remove_service_day(days, end_date, tile_date, d);
           }
 
           //if additions are between start and end date then turn on bit.
           for (const auto& x : sp.service_added_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = DateTime::add_service_day(days, start_date, end_date, d);
+            days = DateTime::add_service_day(days, end_date, tile_date, d);
           }
 
           TransitSchedule sched(days, dow_mask, end_day);
