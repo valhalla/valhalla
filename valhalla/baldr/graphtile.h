@@ -220,11 +220,13 @@ class GraphTile {
    * Get the departure given the directed edge Id and tripid
    * @param   lineid  Transit Line Id
    * @param   tripid  Trip Id.
+   * @param   current_time      Current time (seconds from midnight).
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departure is found.
    */
   const TransitDeparture* GetTransitDeparture(const uint32_t lineid,
-                                              const uint32_t tripid) const;
+                                              const uint32_t tripid,
+                                              const uint32_t current_time) const;
 
   /**
    * Get the departures based on the line Id
