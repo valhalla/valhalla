@@ -452,17 +452,32 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     }
     pair->set_route_index(route->second);
 
+    auto frequency_start_time = pair_pt.second.get<std::string>("frequency_start_time", "null");
+    auto frequency_end_time = pair_pt.second.get<std::string>("frequency_end_time", "null");
+    auto frequency_headway_seconds = pair_pt.second.get<std::string>("frequency_headway_seconds", "null");
+    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
+
+    // this will be empty for non frequency trips.
+    std::string frequency_time;
+
+    if (frequency_start_time != "null" && frequency_end_time != "null" && frequency_headway_seconds != "null") {
+      if (origin_time < frequency_start_time)
+        LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
+      pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
+      frequency_time = frequency_start_time + frequency_end_time;
+    }
+
     //uniq line id
     auto line_id = pair->origin_onestop_id() < pair->destination_onestop_id() ?
-                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id:
-                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id;
+                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id + frequency_time:
+                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
     pair->set_line_id(inserted.first->second);
     uniques.lock.unlock();
 
     //timing information
-    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
     auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
     auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
     auto end_date = pair_pt.second.get<std::string>("service_end_date", "null");
@@ -487,6 +502,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     uniques.lock.lock();
     inserted = uniques.trips.insert({trip, uniques.trips.size()});
     pair->set_trip_id(inserted.first->second);
@@ -543,16 +559,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       } else {
         LOG_WARN("Shape not found for " + shape_id);
       }
-    }
-    auto frequency_start_time = pair_pt.second.get<std::string>("frequency_start_time", "null");
-    auto frequency_end_time = pair_pt.second.get<std::string>("frequency_end_time", "null");
-    auto frequency_headway_seconds = pair_pt.second.get<std::string>("frequency_headway_seconds", "null");
-
-    if (frequency_start_time != "null" && frequency_end_time != "null" && frequency_headway_seconds != "null") {
-      if (origin_time < frequency_start_time)
-        LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
-      pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
-      pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
     }
   }
 
