@@ -584,6 +584,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
         const auto& d = departures_[found];
         const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
                                                            d.blockid(), d.headsign_offset(), departure_time,
+                                                           d.end_time(),d.frequency(),
                                                            d.elapsed_time(), d.schedule_index(),
                                                            d.wheelchair_accessible(), d.bicycle_accessible());
         return dep;
@@ -599,7 +600,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
 // Get the departure given the line Id and tripid
 const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
-                     const uint32_t tripid) const {
+                     const uint32_t tripid, const uint32_t current_time) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
     return nullptr;
@@ -628,9 +629,31 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   }
 
   // Iterate through departures until one is found with matching trip id
-  for(; found < count && departures_[found].lineid() == lineid; ++found)
-    if (departures_[found].tripid() == tripid)
-      return &departures_[found];
+  for(; found < count && departures_[found].lineid() == lineid; ++found) {
+    if (departures_[found].tripid() == tripid) {
+
+      if (departures_[found].type() == kFixedSchedule)
+        return &departures_[found];
+
+      uint32_t departure_time = departures_[found].departure_time();
+      uint32_t end_time = departures_[found].end_time();
+      uint32_t frequency = departures_[found].frequency();
+      while (departure_time < current_time && departure_time < end_time)
+        departure_time += frequency;
+
+      if (departure_time >= current_time && departure_time < end_time) {
+
+        const auto& d = departures_[found];
+
+        const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
+                                                           d.blockid(), d.headsign_offset(), departure_time,
+                                                           d.end_time(),d.frequency(),
+                                                           d.elapsed_time(), d.schedule_index(),
+                                                           d.wheelchair_accessible(), d.bicycle_accessible());
+        return dep;
+      }
+    }
+  }
 
   LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
            " and tripid = " + std::to_string(tripid));
