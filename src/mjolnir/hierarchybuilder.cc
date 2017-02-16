@@ -273,13 +273,16 @@ void FormTilesInNewLevel(GraphReader& reader) {
       }
 
       // Get edge info, shape, and names from the old tile and add to the
-      // new. Use the current edge info offset as the "index" to properly
-      // create edge pairs in the same tile.
+      // new. Cannot use edge info offset since edges in arterial and
+      // highway hierarchy can cross base tiles! Use a hash based on the lower
+      // 30 bits of way Id plus the length - chances of this being duplicated
+      // seems small!
       uint32_t idx = directededge->edgeinfo_offset();
       auto edgeinfo = tile->edgeinfo(idx);
-      uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(idx,
-                         nodea, nodeb, edgeinfo.wayid(), edgeinfo.shape(),
-                         tile->GetNames(idx), added);
+      uint32_t w = directededge->length() + (edgeinfo.wayid() & 0x3fffffff);
+      uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(w, nodea, nodeb,
+                             edgeinfo.wayid(), edgeinfo.shape(),
+                             tile->GetNames(idx), added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
