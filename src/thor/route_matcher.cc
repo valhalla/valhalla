@@ -69,16 +69,11 @@ const PathLocation::PathEdge* find_end_edge(
 }
 
 const GraphId find_start_node(GraphReader& reader, const GraphId& edge_id) {
-  const GraphTile* tile = reader.GetGraphTile(edge_id);
-  if (tile == nullptr) {
-    throw std::runtime_error("Tile is null");
+  auto* opp_edge = reader.GetOpposingEdge(edge_id);
+  if (opp_edge == nullptr) {
+    throw std::runtime_error("Couldn't get the opposing edge");
   }
-  const DirectedEdge* de = tile->directededge(edge_id);
-
-  GraphId opp_edge_id = tile->GetOpposingEdgeId(de);
-  const DirectedEdge* opp_de = tile->directededge(opp_edge_id);
-
-  return opp_de->endnode();
+  return opp_edge->endnode();
 }
 
 bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
