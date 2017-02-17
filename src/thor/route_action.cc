@@ -47,6 +47,7 @@ namespace valhalla {
     for (const auto &trippath: trippaths) {
       result.messages.emplace_back(trippath.SerializeAsString());
     }
+
     //get processing time for thor
     auto e = std::chrono::system_clock::now();
     std::chrono::duration<float, std::milli> elapsed_time = e - s;

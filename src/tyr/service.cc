@@ -390,6 +390,8 @@ namespace {
             else if (location->side_of_street() == odin::Location_SideOfStreet_kRight)
               loc->emplace("side_of_street", std::string("right"));
           }
+          if (location->has_original_index())
+            loc->emplace("original_index",static_cast<uint64_t>(location->original_index()));
 
           //loc->emplace("sideOfStreet",location->side_of_street());
 
