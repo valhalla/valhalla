@@ -450,174 +450,174 @@
     },
     "keep": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> at the fork.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
-        "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-        "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "Queda't a <RELATIVE_DIRECTION> a la bifurcació.",
+        "1": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN>.",
+        "2": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES>.",
+        "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES>.",
+        "4": "Queda't a <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
+        "5": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> cap a <TOWARD_SIGN>.",
+        "6": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES> cap a <TOWARD_SIGN>.",
+        "7": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES> cap a <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
-      "example_phrases": {
-        "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
-        "1": ["Keep right to take exit 62."],
-        "2": ["Keep right to take I 895 South."],
-        "3": ["Keep right to take exit 62 onto I 895 South."],
-        "4": ["Keep right toward Annapolis."],
-        "5": ["Keep right to take exit 62 toward Annapolis."],
-        "6": ["Keep right to take I 895 South toward Annapolis."],
-        "7": ["Keep right to take exit 62 onto I 895 South toward Annapolis."]
+      "relative_directions": ["l'esquerra", "el centre", "la dreta"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
+	  "example_phrases": {
+        "0": ["Queda't a l'esquerra a la bifuració.", "Queda't al centre a la bifurcació", "Queda't a la dreta a la bifurcació."],
+        "1": ["Queda't a la dreta per prendre la sortida 62."],
+        "2": ["Queda't a la dreta per prendre la I 895 South."],
+        "3": ["Queda't a la dreta per prendre la sortida 62 cap a I 895 South."],
+        "4": ["Queda't a la dreta cap a Annapolis."],
+        "5": ["Queda't a la dreta per prendre la sortida 62 cap a Annapolis."],
+        "6": ["Queda't a la dreta per prendre la I 895 South cap a Annapolis."],
+        "7": ["Queda't a la dreta per prendre la sortida 62 a I 895 South cap a Annapolis."]
       }
     },
     "keep_verbal": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> at the fork.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>.",
-        "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>.",
-        "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
-        "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "Queda't a <RELATIVE_DIRECTION> a la bifurcació.",
+        "1": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN>.",
+        "2": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES>.",
+        "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES>.",
+        "4": "Queda't a <RELATIVE_DIRECTION> cap a <TOWARD_SIGN>.",
+        "5": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> cap a <TOWARD_SIGN>.",
+        "6": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES> a <TOWARD_SIGN>.",
+        "7": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES> cap a <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "relative_directions": ["l'esquerra", "el centre", "la dreta"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Keep left at the fork.", "Keep straight at the fork.", "Keep right at the fork."],
-        "1": ["Keep right to take exit 62."],
-        "2": ["Keep right to take Interstate 8 95 South."],
-        "3": ["Keep right to take exit 62 onto Interstate 8 95 South."],
-        "4": ["Keep right toward Annapolis."],
-        "5": ["Keep right to take exit 62 toward Annapolis."],
-        "6": ["Keep right to take Interstate 8 95 South toward Annapolis."],
-        "7": ["Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."]
+       "0": ["Queda't a l'esquerra a la bifuració.", "Queda't al centre a la bifurcació", "Queda't a la dreta a la bifurcació."],
+        "1": ["Queda't a la dreta per prendre la sortida 62."],
+        "2": ["Queda't a la dreta per prendre la Interstate 895 South."],
+        "3": ["Queda't a la dreta per prendre la sortida 62 cap a Interstate 895 South."],
+        "4": ["Queda't a la dreta cap a Annapolis."],
+        "5": ["Queda't a la dreta per prendre la sortida 62 cap a Annapolis."],
+        "6": ["Queda't a la dreta per prendre la Interstate 895 South cap a Annapolis."],
+        "7": ["Queda't a la dreta per prendre la sortida 62 a Interstate 895 South cap a Annapolis."]
       }
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "1": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> per continuar per <STREET_NAMES>.",
+        "2": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>.",
+        "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "relative_directions": ["l'esquerra", "el centre", "la dreta"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Keep left to stay on I 95 South.", "Keep straight to stay on I 95 South.", "Keep right to stay on I 95 South."],
-        "1": ["Keep left to take exit 62 to stay on I 95 South."],
-        "2": ["Keep left to stay on I 95 South toward Baltimore."],
-        "3": ["Keep left to take exit 62 to stay on I 95 South toward Baltimore."]
+        "0": ["Queda't a l'esquerra per continuar per I 95 South.", "Queda't al centre per continuar per I 95 South.", "Queda't a la dreta per continuar per I 95 South."],
+        "1": ["Queda't a l'esquerra per prendre la sortida 62 per continuar per I 95 South."],
+        "2": ["Queda't a l'esquerra per continuar per I 95 South cap a Baltimore."],
+        "3": ["Queda't a l'esquerra per prendre la sortida 62 per continuar per I 95 South cap a Baltimore."]
       }
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "1": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>.",
-        "2": "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>.",
-        "3": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
+        "0": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "1": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> per continuar per <STREET_NAMES>.",
+        "2": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>.",
+        "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>."
       },
-      "relative_directions": ["left", "straight", "right"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "relative_directions": ["l'esquerra", "el centre", "la dreta"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Keep left to stay on Interstate 95 South.", "Keep straight to stay on Interstate 95 South.", "Keep right to stay on Interstate 95 South."],
-        "1": ["Keep left to take exit 62 to stay on Interstate 95 South."],
-        "2": ["Keep left to stay on I 95 South toward Baltimore."],
-        "3": ["Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."]
+        "0": ["Queda't a l'esquerra per continuar per Interstate 95 South.", "Queda't al centre per continuar per Interstate 95 South.", "Queda't a la dreta per continuar per Interstate 95 South."],
+        "1": ["Queda't a l'esquerra per prendre la sortida 62 per continuar per Interstate 95 South."],
+        "2": ["Queda't a l'esquerra per continuar per Interstate 95 South cap a Baltimore."],
+        "3": ["Queda't a l'esquerra per prendre la sortida 62 per continuar per Interstate 95 South cap a Baltimore."]
       }
     },
     "merge": {
       "phrases": {
-        "0": "Merge.",
-        "1": "Merge onto <STREET_NAMES>."
+        "0": "Enllaça.",
+        "1": "Enllaça amb <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Merge."],
-        "1": ["Merge onto I 76 West/Pennsylvania Turnpike."]
+        "0": ["Enllaça."],
+        "1": ["Enllaça amb I 76 West/Pennsylvania Turnpike."]
       }
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Merge.",
-        "1": "Merge onto <STREET_NAMES>."
+        "0": "Enllaça.",
+        "1": "Enllaça amb <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Merge."],
-        "1": ["Merge onto Interstate 76 West, Pennsylvania Turnpike."]
+        "0": ["Enllaça."],
+        "1": ["Enllaça amb Interstate 76 West, Pennsylvania Turnpike."]
       }
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Enter the roundabout.",
-        "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+        "0": "Entra a la rotonda.",
+        "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>."
       },
-      "ordinal_values": ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"],
+      "ordinal_values": ["1a", "2a", "3a", "4a", "5ena", "6ena", "7ena", "8ena", "9ena", "10ena"],
       "example_phrases": {
-        "0": ["Enter the roundabout."],
+        "0": ["Entra a la rotonda."],
         "1": [
-          "Enter the roundabout and take the 1st exit.",
-          "Enter the roundabout and take the 2nd exit.",
-          "Enter the roundabout and take the 3rd exit.",
-          "Enter the roundabout and take the 4th exit.",
-          "Enter the roundabout and take the 5th exit.",
-          "Enter the roundabout and take the 6th exit.",
-          "Enter the roundabout and take the 7th exit.",
-          "Enter the roundabout and take the 8th exit.",
-          "Enter the roundabout and take the 9th exit.",
-          "Enter the roundabout and take the 10th exit."
+          "Entra a la rotonda i pren la 1a sortida.",
+          "Entra a la rotonda i pren la 2a sortida.",
+          "Entra a la rotonda i pren la 3a sortida.",
+          "Entra a la rotonda i pren la 4a sortida.",
+          "Entra a la rotonda i pren la 5ena sortida.",
+          "Entra a la rotonda i pren la 6ena sortida.",
+          "Entra a la rotonda i pren la 7ena sortida.",
+          "Entra a la rotonda i pren la 8ena sortida.",
+          "Entra a la rotonda i pren la 9ena sortida.",
+          "Entra a la rotonda i pren la 10ena sortida.",
         ]
       }
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Enter the roundabout.",
-        "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."
+        "0": "Entra a la rotonda.",
+        "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>."
       },
-      "ordinal_values": ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"],
+      "ordinal_values": ["1a", "2a", "3a", "4a", "5ena", "6ena", "7ena", "8ena", "9ena", "10ena"],
       "example_phrases": {
-        "0": ["Enter the roundabout."],
+        "0": ["Entra a la rotonda."],
         "1": [
-          "Enter the roundabout and take the 1st exit.",
-          "Enter the roundabout and take the 2nd exit.",
-          "Enter the roundabout and take the 3rd exit.",
-          "Enter the roundabout and take the 4th exit.",
-          "Enter the roundabout and take the 5th exit.",
-          "Enter the roundabout and take the 6th exit.",
-          "Enter the roundabout and take the 7th exit.",
-          "Enter the roundabout and take the 8th exit.",
-          "Enter the roundabout and take the 9th exit.",
-          "Enter the roundabout and take the 10th exit."
+          "Entra a la rotonda i pren la 1a sortida.",
+          "Entra a la rotonda i pren la 2a sortida.",
+          "Entra a la rotonda i pren la 3a sortida.",
+          "Entra a la rotonda i pren la 4a sortida.",
+          "Entra a la rotonda i pren la 5ena sortida.",
+          "Entra a la rotonda i pren la 6ena sortida.",
+          "Entra a la rotonda i pren la 7ena sortida.",
+          "Entra a la rotonda i pren la 8ena sortida.",
+          "Entra a la rotonda i pren la 9ena sortida.",
+          "Entra a la rotonda i pren la 10ena sortida.",
         ]
       }
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Exit the roundabout.",
-        "1": "Exit the roundabout onto <STREET_NAMES>.",
-        "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "0": "Surt de la rotonda.",
+        "1": "Surt de la rotonda a <STREET_NAMES>.",
+        "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Exit the roundabout."],
-        "1": ["Exit the roundabout onto Philadelphia Road/MD 7."],
-        "2": ["Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."]
+        "0": ["Surt de la rotonda."],
+        "1": ["Surt de la rotonda a Philadelphia Road/MD 7."],
+        "2": ["Surt de la rotonda a Catoctin Mountain Highway/US 15. Continua per US 15."]
       }
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Exit the roundabout.",
-        "1": "Exit the roundabout onto <STREET_NAMES>.",
-        "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
+        "0": "Surt de la rotonda.",
+        "1": "Surt de la rotonda a <STREET_NAMES>.",
+        "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Exit the roundabout."],
-        "1": ["Exit the roundabout onto Philadelphia Road, Maryland 7."],
-        "2": ["Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."]
+        "0": ["Surt de la rotonda."],
+        "1": ["Surt de la rotonda a Philadelphia Road, Maryland 7."],
+        "2": ["Surt de la rotonda a Catoctin Mountain Highway, U.S. 15."]
       }
     },
     "enter_ferry": {
