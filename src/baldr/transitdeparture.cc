@@ -1,7 +1,5 @@
 #include "baldr/transitdeparture.h"
 
-#include <valhalla/midgard/logging.h>
-
 namespace valhalla {
 namespace baldr {
 
