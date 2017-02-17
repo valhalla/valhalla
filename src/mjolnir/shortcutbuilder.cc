@@ -458,12 +458,11 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
-      // edge exists).
-      // TODO - what should the wayId be?
+      // edge exists). Shortcuts use way Id = 0.
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(idx, start_node,
-                          end_node, -1, shape, names, forward);
+                          end_node, 0, shape, names, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
