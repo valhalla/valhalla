@@ -75,9 +75,10 @@ namespace valhalla {
     }
     auto trippaths = path_depart_at(best_order, costing, date_time_type, request_str);
     size_t order_index = 0;
-    for (auto &trippath: trippaths) {
+    for (auto& trippath: trippaths) {
       for (auto& location : *trippath.mutable_location())
         location.set_original_index(order[order_index++]);
+      --order_index;
       result.messages.emplace_back(trippath.SerializeAsString());
     }
     //get processing time for thor
