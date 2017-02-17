@@ -381,9 +381,6 @@ worker_t::result_t thor_worker_t::trace_attributes(
         break;
       }
     }
-  size_t order_index = 0;
-  for (auto& location : *trip_path.mutable_location())
-    location.set_original_index(order_index++);
 
   auto id = request.get_optional<std::string>("id");
   // Get the directions_options if they are in the request
