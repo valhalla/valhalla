@@ -78,6 +78,7 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
                               uint64_t wayid, const GraphTile* tile, const GraphTile* end_tile,
+                              std::set<uint64_t>& problem_ways,
                               uint32_t& dupcount, std::string& endnodeiso,
                               const uint32_t transit_level) {
   if (!end_tile) {
@@ -127,8 +128,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     // Transit connections. Match opposing edge if same way Id
     if (edge.use() == Use::kTransitConnection &&
         directededge->use() == Use::kTransitConnection &&
-        tile->edgeinfo(edge.edgeinfo_offset()).wayid() ==
-          end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
+        wayid == end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
       opp_index = i;
       continue;
     }
@@ -190,26 +190,35 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       // Set opposing index if match found
       if (match) {
         // Check if multiple edges match - log any duplicates
-        if (opp_index != absurd_index) {
-          if (startnode.level() != transit_level) {
+        if (opp_index != absurd_index && startnode.level() != transit_level) {
+          if (edge.is_shortcut()) {
+            std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
+            std::string name = (names.size() > 0) ? names[0] : "unnamed";
+            LOG_INFO("Duplicate shortcut for " + name + " at LL = " +
+                     std::to_string(nodeinfo->latlng().lat()) + "," +
+                     std::to_string(nodeinfo->latlng().lng()));
+          } else {
             LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) +
                      " and " + std::to_string(wayid2) + " level = " +
                      std::to_string(startnode.level()) +
                      " sametile = " + std::to_string(sametile));
+            problem_ways.insert(wayid);
+            problem_ways.insert(wayid2);
           }
           dupcount++;
         }
 
         // Set the internal intersection flag if matching opposing edge is
         // marked as an internal intersection edge
-        if (directededge->internal())
+        if (directededge->internal()) {
           edge.set_internal(true);
-
+        }
         opp_index = i;
       }
     }
   }
 
+  // No matching opposing edge found - log error cases
   if (opp_index == absurd_index) {
     if (edge.trans_up() || edge.trans_down()) {
       LOG_ERROR("No match found to a transition edge");
@@ -226,8 +235,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
                std::to_string(nodeinfo->stop_index()) + " has " +
                std::to_string(nodeinfo->edge_count())); */
     } else if (startnode.level() != transit_level) {
-      bool sc = edge.shortcut();
-      if (sc) {
+      if (edge.is_shortcut()) {
         LOG_ERROR((boost::format("No opposing shortcut edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5%")
           % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
           % startnode % edge.endnode()).str());
@@ -240,7 +248,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       uint32_t n = 0;
       directededge = end_tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-        if (sc == directededge->is_shortcut()) {
+        if (edge.is_shortcut() == directededge->is_shortcut()) {
           LOG_WARN((boost::format("    Length = %1% Endnode: %2% WayId = %3% EdgeInfoOffset = %4%") %
                 directededge->length() % directededge->endnode() %
                 end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid() %
@@ -249,7 +257,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
         }
       }
       if (n == 0) {
-        if (sc) {
+        if (edge.is_shortcut()) {
           LOG_WARN("No Shortcut edges found from end node");
         } else {
           LOG_WARN("No regular edges found from end node");
@@ -278,9 +286,12 @@ void validate(const boost::property_tree::ptree& pt,
 
     // vector to hold densities for each level
     std::vector<std::vector<float>> densities(numLevels);
+
     // Array to hold duplicates
     std::vector<uint32_t> duplicates (numLevels, 0);
 
+    // Vector to hold problem ways
+    std::set<uint64_t> problem_ways;
 
     // Check for more tiles
     while (true) {
@@ -303,8 +314,6 @@ void validate(const boost::property_tree::ptree& pt,
       level = tile_id.level();
       auto tileid = tile_id.tileid();
 
-      uint32_t dupcount = 0;
-
       // Get the tile
       GraphTileBuilder tilebuilder(hierarchy, tile_id, false);
 
@@ -318,6 +327,7 @@ void validate(const boost::property_tree::ptree& pt,
       lock.unlock();
 
       // Iterate through the nodes and the directed edges
+      uint32_t dupcount = 0;
       float roadlength = 0.0f;
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node = tile_id;
@@ -390,8 +400,8 @@ void validate(const boost::property_tree::ptree& pt,
           uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
                  0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
           uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
-                 wayid, tile, endnode_tile, dupcount, end_node_iso,
-                 transit_level);
+                 wayid, tile, endnode_tile, problem_ways, dupcount,
+                 end_node_iso, transit_level);
           directededge.set_opp_index(opp_index);
           if (directededge.use() == Use::kTransitConnection)
               directededge.set_opp_local_idx(opp_index);
@@ -471,7 +481,12 @@ void validate(const boost::property_tree::ptree& pt,
       lock.unlock();
 
       // Add possible duplicates to return class
-      duplicates[level] = dupcount;
+      duplicates[level] += dupcount;
+    }
+
+    // TODO - output problem ways - this could be a useful list!
+    for (auto w : problem_ways) {
+      LOG_INFO("Problem Way: " + std::to_string(w));
     }
 
     // Fill promise with return data
