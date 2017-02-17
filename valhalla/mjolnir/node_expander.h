@@ -32,25 +32,28 @@ struct Edge {
 
   // Attributes needed to sort the edges
   struct EdgeAttributes {
-    uint32_t llcount          : 16;
-    uint32_t importance       : 3;
-    uint32_t driveableforward : 1;
-    uint32_t driveablereverse : 1;
-    uint32_t traffic_signal   : 1;
-    uint32_t forward_signal   : 1;
-    uint32_t backward_signal  : 1;
-    uint32_t link             : 1;
-    uint32_t reclass_link     : 1;
-    uint32_t has_names        : 1;
-    uint32_t driveforward     : 1;   // For sorting in collect_node_edges
+    uint64_t llcount          : 16;
+    uint64_t importance       : 3;
+    uint64_t driveableforward : 1;
+    uint64_t driveablereverse : 1;
+    uint64_t traffic_signal   : 1;
+    uint64_t forward_signal   : 1;
+    uint64_t backward_signal  : 1;
+    uint64_t link             : 1;
+    uint64_t reclass_link     : 1;
+    uint64_t has_names        : 1;
+    uint64_t driveforward     : 1;   // For sorting in collect_node_edges
                                      //  - set based on source node
-    uint32_t shortlink        : 1;   // true if this is a link edge and is
+    uint64_t shortlink        : 1;   // true if this is a link edge and is
                                      //   short enough it may be internal to
                                      //   an intersection
-    uint32_t driveable_ferry  : 1;
-    uint32_t reclass_ferry    : 1;   // Has edge been reclassified due to
+    uint64_t driveable_ferry  : 1;
+    uint64_t reclass_ferry    : 1;   // Has edge been reclassified due to
                                      // ferry connection
-    uint32_t turn_channel     : 1;   // Link edge should be a turn channel
+    uint64_t turn_channel     : 1;   // Link edge should be a turn channel
+    uint64_t way_begin        : 1;   // True if first edge of way
+    uint64_t way_end          : 1;   // True if last edge of way
+    uint64_t spare            : 30;
   };
   EdgeAttributes attributes;
 
