@@ -79,7 +79,7 @@ std::string EnhancedTripPath::GetStateCode(int node_index) {
   return GetAdmin(node(node_index).admin_index())->state_code();
 }
 
-const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetOrigin() const {
+const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
   // Validate location count
   if (location_size() < 2) {
     throw valhalla_exception_t{400, 212};
@@ -88,7 +88,7 @@ const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetOrigin() const {
   return location(0);
 }
 
-const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetDestination() const {
+const ::valhalla::odin::Location& EnhancedTripPath::GetDestination() const {
   // Validate location count
   if (location_size() < 2) {
     throw valhalla_exception_t{400, 212};
