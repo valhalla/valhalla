@@ -558,11 +558,17 @@ TripPath TripPathBuilder::Build(
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
+    uint32_t current_time = 0;
+    if (origin.date_time_) {
+      DateTime::seconds_from_midnight(*origin.date_time_);
+      current_time += path.front().elapsed_time;
+    }
+
     // Add trip edge
     auto trip_edge = AddTripEdge(
         controller, path.front().edgeid, path.front().trip_id, 0,
         path.front().mode, travel_types[static_cast<int>(path.front().mode)],
-        edge, trip_path.add_node(), tile, std::abs(end_pct - start_pct));
+        edge, trip_path.add_node(), tile, current_time, std::abs(end_pct - start_pct));
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex))
@@ -656,6 +662,7 @@ TripPath TripPathBuilder::Build(
   std::vector<PointLL> trip_shape;
   std::string arrival_time;
   bool assumed_schedule = false;
+  sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
@@ -690,6 +697,12 @@ TripPath TripPathBuilder::Build(
     if (node->intersection() == IntersectionType::kFork) {
       if (controller.attributes.at(kNodeFork))
         trip_node->set_fork(true);
+    }
+
+    uint32_t current_time;
+    if (origin.date_time_) {
+      current_time = DateTime::seconds_from_midnight(*origin.date_time_);
+      current_time += elapsedtime;
     }
 
     // Assign the elapsed time from the start of the leg
@@ -765,9 +778,10 @@ TripPath TripPathBuilder::Build(
 
       // If this edge has a trip id then there is a transit departure
       if (trip_id) {
+
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
-                                  trip_id);
+                                  trip_id,current_time);
 
         assumed_schedule = false;
         uint32_t date, day = 0;
@@ -846,7 +860,8 @@ TripPath TripPathBuilder::Build(
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripPath_Edge* trip_edge = AddTripEdge(controller, edge, trip_id, block_id,
                                            mode, travel_type, directededge,
-                                           trip_node, graphtile, length_pct);
+                                           trip_node, graphtile, current_time,
+                                           length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -970,6 +985,8 @@ TripPath TripPathBuilder::Build(
     // Update elapsed time at the end of the edge, store this at the next node.
     elapsedtime = edge_itr->elapsed_time;
 
+    // Update previous mode.
+    prev_mode = mode;
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
@@ -1057,6 +1074,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
                                             const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
+                                            const uint32_t current_time,
                                             const float length_percentage) {
 
   // Index of the directed edge within the tile
@@ -1342,7 +1360,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
       transit_route_info->set_trip_id(trip_id);
 
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
-        directededge->lineid(), trip_id);
+        directededge->lineid(), trip_id, current_time);
 
     if (transit_departure) {
 
