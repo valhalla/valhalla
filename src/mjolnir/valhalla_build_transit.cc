@@ -1353,6 +1353,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder_transit.directededges().size());
     node.set_timezone(stop.timezone());
+    node.set_connecting_wayid(stop.osm_way_id());
 
  /** TODO - future when we get egress, station, platform hierarchy
     // Add any intra-station connections - these are always in the same tile?
