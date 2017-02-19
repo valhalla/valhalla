@@ -1,6 +1,5 @@
 #include "baldr/transitdeparture.h"
-
-#include "midgard/logging.h"
+#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace baldr {
@@ -71,7 +70,7 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
                  const uint32_t tripid, const uint32_t routeid,
                  const uint32_t blockid,
                  const uint32_t headsign_offset,
-                 const uint32_t start_time,
+                 const uint32_t departure_time,
                  const uint32_t end_time,
                  const uint32_t frequency,
                  const uint32_t elapsed_time,
@@ -113,10 +112,10 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
   }
   schedule_index_ = schedule_index;
 
-  if (start_time > kMaxStartTime) {
-    throw std::runtime_error("TransitDeparture: Exceeded maximum transit schedule start time");
+  if (departure_time > kMaxTransitDepartureTime) {
+    throw std::runtime_error("TransitDeparture: Exceeded maximum transit schedule departure time");
   }
-  departure_times_.frequency_.start_time_ = start_time;
+  departure_times_.frequency_.departure_time_ = departure_time;
 
   if (end_time > kMaxEndTime) {
     throw std::runtime_error("TransitDeparture: Exceeded maximum transit schedule end time");
@@ -137,6 +136,11 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
 
   wheelchair_accessible_ = wheelchair_accessible;
   bicycle_accessible_ =  bicycle_accessible;
+}
+
+// Get the type of departure.
+uint32_t TransitDeparture::type() const {
+  return type_;
 }
 
 // Get the line Id - for lookup of all departures along an edge. Each line Id
@@ -167,7 +171,9 @@ uint32_t TransitDeparture::headsign_offset() const {
 
 // Get the departure time.
 uint32_t TransitDeparture::departure_time() const {
-  return departure_times_.fixed_.departure_time_;
+  return (type_ == kFixedSchedule) ?
+        departure_times_.fixed_.departure_time_ :
+        departure_times_.frequency_.departure_time_;
 }
 
 // Get the elapsed time until arrival at the next stop.
@@ -175,11 +181,6 @@ uint32_t TransitDeparture::elapsed_time() const {
   return (type_ == kFixedSchedule) ?
         departure_times_.fixed_.elapsed_time_ :
         departure_times_.frequency_.elapsed_time_;
-}
-
-// Get the start time of frequency based departures.
-uint32_t TransitDeparture::start_time() const {
-  return departure_times_.frequency_.start_time_;
 }
 
 // Get the end time of frequency based departures.
@@ -210,14 +211,12 @@ bool TransitDeparture::bicycle_accessible() const {
 // operator < - for sorting. Sort by line Id and departure time.
 bool TransitDeparture::operator < (const TransitDeparture& other) const {
   if (lineid() == other.lineid()) {
-    if (departure_time() == other.departure_time()) {
-      return tripid_ < other.tripid_;
-    } else {
-      return departure_time() < other.departure_time();
-    }
-  } else {
-    return lineid() < other.lineid();
-  }
+    if (type() == other.type()) {
+      if (departure_time() == other.departure_time()) {
+        return tripid() < other.tripid();
+      } else return departure_time() < other.departure_time();
+    } else return type() < other.type();
+  } else return lineid() < other.lineid();
 }
 
 }
