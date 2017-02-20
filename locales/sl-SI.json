@@ -627,7 +627,7 @@
         "2": "Zapeljite na <FERRY_LABEL> <STREET_NAMES>."
       },
       "empty_street_name_labels": ["pešpot", "kolesarsko stezo", "stezo za gorsko kolo"],
-      "ferry_label": Trajekt",
+      "ferry_label": "Trajekt",
       "example_phrases": {
         "0": ["Zapeljite na trajekt."],
         "1": ["Zapeljite na Millersburg Ferry."],
