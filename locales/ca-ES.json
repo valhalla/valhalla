@@ -36,20 +36,20 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "0": "Vés cap <CARDINAL_DIRECTION> for <LENGTH>.",
+        "1": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "2": "Vés cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "4": "Condueix cap <CARDINAL_DIRECTION> durant <LENGTH>.",
+        "5": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "6": "Condueix cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "8": "Camina cap <CARDINAL_DIRECTION> durant <LENGTH>.",
+        "9": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "10": "Camina cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "16": "Pedala cap <CARDINAL_DIRECTION> durant <LENGTH>.",
+        "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>."
       },
-      "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordest"],
+      "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordoest"],
       "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "metric_lengths": ["<KILOMETERS> quilòmetres", "1 quilòmetre", "mig quilòmetre", "<METERS> metres", "menys de 10 metres"],
       "us_customary_lengths": ["<MILES> milles", "1 milla", "mitja milla", "<TENTHS_OF_MILE> dècima de milla", "1 dècima de milla", "<FEET> peus", "menys de 10 peus"],
@@ -622,375 +622,375 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Take the Ferry.",
-        "1": "Take the <STREET_NAMES>.",
-        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+        "0": "Agafa el ferri.",
+        "1": "Agafa <STREET_NAMES>.",
+        "2": "Agafa <STREET_NAMES> <FERRY_LABEL>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "ferry_label": "Ferry",
       "example_phrases": {
-        "0": ["Take the Ferry."],
-        "1": ["Take the Millersburg Ferry."],
-        "2": ["Take the Bridgeport - Port Jefferson Ferry."]
+        "0": ["Agafa el ferri."],
+        "1": ["Agafa el Millersburg Ferry."],
+        "2": ["Agafa el Bridgeport - Port Jefferson Ferry."]
       }
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Take the Ferry.",
-        "1": "Take the <STREET_NAMES>.",
-        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+        "0": "Agafa el ferri.",
+        "1": "Agafa el <STREET_NAMES>.",
+        "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>."
       },
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "ferry_label": "Ferry",
       "example_phrases": {
-        "0": ["Take the Ferry."],
-        "1": ["Take the Millersburg Ferry."],
-        "2": ["Take the Bridgeport - Port Jefferson Ferry."]
+        "0": ["Agafa el ferri."],
+        "1": ["Agafa el Millersburg Ferry."],
+        "2": ["Agafa el Bridgeport - Port Jefferson Ferry."]
       }
     },
     "exit_ferry": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "0": "Vés cap <CARDINAL_DIRECTION>.",
+        "1": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "2": "Vés cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "4": "Condueix cap <CARDINAL_DIRECTION>.",
+        "5": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "6": "Condueix cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "8": "Camina cap <CARDINAL_DIRECTION>.",
+        "9": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "10": "Camina cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "16": "Pedala cap <CARDINAL_DIRECTION>.",
+        "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordoest"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Head southeast."],
-        "1": ["Head west on Ferry Lane"],
-        "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."],
-        "4": ["Drive southeast."],
-        "5": ["Drive west on Ferry Lane"],
-        "6": ["Drive south on Summerfield Place/NY 114. Continue on NY 114."],
-        "8": ["Walk southeast."],
-        "9": ["Walk west on Ferry Lane"],
-        "10": ["Walk south on Summerfield Place/NY 114. Continue on NY 114."],
-        "16": ["Bike southeast."],
-        "17": ["Bike west on Ferry Lane"],
-        "18": ["Bike south on Summerfield Place/NY 114. Continue on NY 114."]
+        "0": ["Vés cap el sudoest."],
+        "1": ["Vés cap a l'oest a Ferry Lane"],
+        "2": ["Vés cap el sud a Summerfield Place/NY 114. Continua per NY 114."],
+        "4": ["Condueix cap el sudest."],
+        "5": ["Condueix cap a l'oest a Ferry Lane"],
+        "6": ["Condueix cap el sud a Summerfield Place/NY 114. Continua per NY 114."],
+        "8": ["Camina cap el sudoest."],
+        "9": ["Camina cap a l'oest a Ferry Lane"],
+        "10": ["Camina cap el sud a Summerfield Place/NY 114. Continua per NY 114."],
+        "16": ["Pedala cap el sudest southeast."],
+        "17": ["Pedala cap a l'oest a Ferry Lane"],
+        "18": ["Pedala cap al sud a Summerfield Place/NY 114. Continua per NY 114."]
       }
     },
     "exit_ferry_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "0": "Vés cap <CARDINAL_DIRECTION>.",
+        "1": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "2": "Vés cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "4": "Condueix cap <CARDINAL_DIRECTION>.",
+        "5": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "6": "Condueix cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "8": "Camina cap <CARDINAL_DIRECTION>.",
+        "9": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "10": "Camina cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "16": "Pedala cap <CARDINAL_DIRECTION>.",
+        "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordoest"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Head southeast."],
-        "1": ["Head west on Ferry Lane"],
-        "2": ["Head south on Summerfield Place, New York 1 14."],
-        "4": ["Drive southeast."],
-        "5": ["Drive west on Ferry Lane"],
-        "6": ["Drive south on Summerfield Place, New York 1 14."],
-        "8": ["Walk southeast."],
-        "9": ["Walk west on Ferry Lane"],
-        "10": ["Walk south on Summerfield Place, New York 1 14."],
-        "16": ["Bike southeast."],
-        "17": ["Bike west on Ferry Lane"],
-        "18": ["Bike south on Summerfield Place, New York 1 14."]
+        "0": ["Vés cap el sudest."],
+        "1": ["Vés cap l'oest a Ferry Lane"],
+        "2": ["Vés cap el sud a Summerfield Place, New York 1 14."],
+        "4": ["Condueix cap el sudest."],
+        "5": ["Condueix cap l'oest a Ferry Lane"],
+        "6": ["Condueix cap el sud a Summerfield Place, New York 1 14."],
+        "8": ["Camina cap el sudest."],
+        "9": ["Camina cap a l'oest aFerry Lane"],
+        "10": ["Camina cap el sud a Summerfield Place, New York 1 14."],
+        "16": ["Pedala cap el sudest."],
+        "17": ["Pedala cap a l'oest a Ferry Lane"],
+        "18": ["Pedala cap el sud a Summerfield Place, New York 1 14."]
       }
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP>.",
-        "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Entra a l'estació.",
+        "1": "Entra a <TRANSIT_STOP>.",
+        "2": "Entra a <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Enter the station."],
-        "1": ["Enter the Embarcadero Station."],
-        "2": ["Enter the 8 St - NYU Station."]
+        "0": ["Entra a l'estació."],
+        "1": ["Entra a Embarcadero Station."],
+        "2": ["Entra a 8 St - NYU Station."]
       }
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Enter the station.",
-        "1": "Enter the <TRANSIT_STOP>.",
-        "2": "Enter the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Entra a l'estació.",
+        "1": "Entra a <TRANSIT_STOP>.",
+        "2": "Entra a <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Enter the station."],
-        "1": ["Enter the Embarcadero Station."],
-        "2": ["Enter the 8 St - NYU Station."]
+        "0": ["Entra a l'estació."],
+        "1": ["Entra a Embarcadero Station."],
+        "2": ["Entra a 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Transfer at the station.",
-        "1": "Transfer at the <TRANSIT_STOP>.",
-        "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Transbordament a l'estació.",
+        "1": "Transbordament a <TRANSIT_STOP>.",
+        "2": "Transbordament a <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Transfer at the station."],
-        "1": ["Transfer at the Embarcadero Station."],
-        "2": ["Transfer at the 8 St - NYU Station."]
+        "0": ["Transbordament a l'estació."],
+        "1": ["Transbordament a Embarcadero Station."],
+        "2": ["Transbordament a 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Transfer at the station.",
-        "1": "Transfer at the <TRANSIT_STOP>.",
-        "2": "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Transbordament a l'estació.",
+        "1": "Transbordament a <TRANSIT_STOP>.",
+        "2": "Transbordament a <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Transfer at the station."],
-        "1": ["Transfer at the Embarcadero Station."],
-        "2": ["Transfer at the 8 St - NYU Station."]
+        "0": ["Transbordament a l'estació."],
+        "1": ["Transbordament a Embarcadero Station."],
+        "2": ["Transbordament a 8 St - NYU Station."]
       }
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Exit the station.",
-        "1": "Exit the <TRANSIT_STOP>.",
-        "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Surt de l'estació.",
+        "1": "Surt de <TRANSIT_STOP>.",
+        "2": "Surt de <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Exit the station."],
-        "1": ["Exit the Embarcadero Station."],
-        "2": ["Exit the 8 St - NYU Station."]
+        "0": ["Surt de l'estació."],
+        "1": ["Surt de Embarcadero Station."],
+        "2": ["Surt de 8 St - NYU Station."]
       }
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Exit the station.",
-        "1": "Exit the <TRANSIT_STOP>.",
-        "2": "Exit the <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Surt de l'estació.",
+        "1": "Surt de <TRANSIT_STOP>.",
+        "2": "Surt de <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Exit the station."],
-        "1": ["Exit the Embarcadero Station."],
-        "2": ["Exit the 8 St - NYU Station."]
+        "0": ["Surt de l'estació."],
+        "1": ["Surt de Embarcadero Station."],
+        "2": ["Surt de 8 St - NYU Station."]
       }
     },
     "depart": {
       "phrases": {
-        "0": "Depart: <TIME>.",
-        "1": "Depart: <TIME> from <TRANSIT_STOP>."
+        "0": "Sortida: <TIME>.",
+        "1": "Sortida: <TIME> de <TRANSIT_STOP>."
       },
       "example_phrases": {
-        "0": ["Depart: 8:02 AM."],
-        "1": ["Depart: 8:02 AM from 8 St - NYU."]
+        "0": ["Sortida: 8:02 AM."],
+        "1": ["Sortida: 8:02 AM de 8 St - NYU."]
       }
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Depart at <TIME>.",
-        "1": "Depart at <TIME> from <TRANSIT_STOP>."
+        "0": "Sortida a les <TIME>.",
+        "1": "Sortida a les <TIME> de <TRANSIT_STOP>."
       },
       "example_phrases": {
-        "0": ["Depart at 8:02 AM."],
-        "1": ["Depart at 8:02 AM from 8 St - NYU."]
+        "0": ["Sortida a les 8:02 AM."],
+        "1": ["Sortida a les 8:02 AM de 8 St - NYU."]
       }
     },
     "arrive": {
       "phrases": {
-        "0": "Arrive: <TIME>.",
-        "1": "Arrive: <TIME> at <TRANSIT_STOP>."
+        "0": "Arribada: <TIME>.",
+        "1": "Arribada: <TIME> a <TRANSIT_STOP>."
       },
       "example_phrases": {
-        "0": ["Arrive: 8:02 AM."],
-        "1": ["Arrive: 8:02 AM at 8 St - NYU."]
+        "0": ["Arribada: 8:02 AM."],
+        "1": ["Arribada: 8:02 AM a 8 St - NYU."]
       }
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrive at <TIME>.",
-        "1": "Arrive at <TIME> at <TRANSIT_STOP>."
+        "0": "Arribada a les <TIME>.",
+        "1": "Arribada a les <TIME> at <TRANSIT_STOP>."
       },
       "example_phrases": {
-        "0": ["Arrive at 8:02 AM."],
-        "1": ["Arrive at 8:02 AM at 8 St - NYU."]
+        "0": ["Arribada a les 8:02 AM."],
+        "1": ["Arribada a les 8:02 AM at 8 St - NYU."]
       }
     },
     "transit": {
       "phrases": {
-        "0": "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Agafa el <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Agafa el <TRANSIT_NAME> cap a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
-      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
-      "transit_stop_count_labels": {"one": "stop", "other": "stops"},
+      "empty_transit_name_labels": ["tramvia", "metro", "tren", "bus", "ferri", "telefèric", "gòndola", "funicular"],
+      "transit_stop_count_labels": {"one": "parada", "other": "parades"},
       "example_phrases": {
-        "0": ["Take the New Haven. (1 stop)", "Take the metro. (2 stops)", "Take the bus. (12 stops)"],
-        "1": ["Take the F toward JAMAICA - 179 ST. (10 stops)", "Take the ferry toward Staten Island. (1 stop)"]
+        "0": ["Agafa el New Haven. (1 parada)", "Agafa el metro. (2 parades)", "Agafa el bus. (12 parades)"],
+        "1": ["Agafa el F cap a JAMAICA - 179 ST. (10 parades)", "Agafa el ferri cap a Staten Island. (1 parada)"]
       }
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Take the <TRANSIT_NAME>.",
-        "1": "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "0": "Agafa el <TRANSIT_NAME>.",
+        "1": "Agafa el <TRANSIT_NAME> cap a <TRANSIT_HEADSIGN>."
       },
-      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
+      "empty_transit_name_labels": ["tramvia", "metro", "tren", "bus", "ferri", "telefèric", "gòndola", "funicular"],
       "example_phrases": {
-        "0": ["Take the New Haven."],
-        "1": ["Take the F toward JAMAICA - 179 ST."]
+        "0": ["Agafa el New Haven."],
+        "1": ["Agafa el F toward JAMAICA - 179 ST."]
       }
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Queda't al <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Queda't al <TRANSIT_NAME> cap a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
-      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
-      "transit_stop_count_labels": {"one": "stop", "other": "stops"},
+      "empty_transit_name_labels": ["tramvia", "metro", "tren", "bus", "ferri", "telefèric", "gòndola", "funicular"],
+      "transit_stop_count_labels": {"one": "parada", "other": "parades"},
       "example_phrases": {
-        "0": ["Remain on the New Haven. (1 stop)", "Remain on the train. (3 stops)"],
-        "1": ["Remain on the F toward JAMAICA - 179 ST. (10 stops)"]
+        "0": ["Queda't al New Haven. (1 parada)", "Queda't al tren. (3 parades)"],
+        "1": ["Queda't al F toward JAMAICA - 179 ST. (10 parades)"]
       }
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Remain on the <TRANSIT_NAME>.",
-        "1": "Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "0": "Queda't al <TRANSIT_NAME>.",
+        "1": "Queda't <TRANSIT_NAME> cap a <TRANSIT_HEADSIGN>."
       },
-      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
+      "empty_transit_name_labels": ["tramvia", "metro", "tren", "bus", "ferri", "telefèric", "gòndola", "funicular"],
       "example_phrases": {
-        "0": ["Remain on the New Haven."],
-        "1": ["Remain on the F toward JAMAICA - 179 ST."]
+        "0": ["Queda't al New Haven."],
+        "1": ["Queda't al F toward JAMAICA - 179 ST."]
       }
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "Transbordament per agafar el <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Transbordament per agafar el <TRANSIT_NAME> cap a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
-      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
-      "transit_stop_count_labels": {"one": "stop", "other": "stops"},
+      "empty_transit_name_labels": ["tramvia", "metro", "tren", "bus", "ferri", "telefèric", "gòndola", "funicular"],
+      "transit_stop_count_labels": {"one": "parada", "other": "parades"},
       "example_phrases": {
-        "0": ["Transfer to take the New Haven. (1 stop)", "Transfer to take the tram. (4 stops)"],
-        "1": ["Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"]
+        "0": ["Transbordament per agafar el New Haven. (1 parada)", "Transbordament per agafar el tramvia. (4 parades)"],
+        "1": ["Transbordament per agafar el F cap a JAMAICA - 179 ST. (10 parades)"]
       }
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Transfer to take the <TRANSIT_NAME>.",
-        "1": "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "0": "Transbordament per agafar el <TRANSIT_NAME>.",
+        "1": "Transbordament per agafar el <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
       },
-      "empty_transit_name_labels": ["tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"],
+      "empty_transit_name_labels": ["tramvia", "metro", "tren", "bus", "ferri", "telefèric", "gòndola", "funicular"],
       "example_phrases": {
-        "0": ["Transfer to take the New Haven."],
-        "1": ["Transfer to take the F toward JAMAICA - 179 ST."]
+        "0": ["Transbordament per agafar el New Haven."],
+        "1": ["Transbordament per agafar el F cap a JAMAICA - 179 ST."]
       }
     },
     "post_transit_connection_destination": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+        "0": "Vés cap <CARDINAL_DIRECTION>.",
+        "1": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "2": "Vés cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "4": "Condueix cap <CARDINAL_DIRECTION>.",
+        "5": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "6": "Condueix cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "8": "Camina cap <CARDINAL_DIRECTION>.",
+        "9": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "10": "Camina cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "16": "Pedala cap <CARDINAL_DIRECTION>.",
+        "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordoest"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Head west."],
-        "1": ["Head northeast on Broadway"],
-        "2": ["Head south on Summerfield Place/NY 114. Continue on NY 114."],
-        "4": ["Drive west."],
-        "5": ["Drive northeast on Broadway"],
-        "6": ["Drive south on Summerfield Place/NY 114. Continue on NY 114."],
-        "8": ["Walk west."],
-        "9": ["Walk northeast on Broadway"],
-        "10": ["Walk south on Summerfield Place/NY 114. Continue on NY 114."],
-        "16": ["Bike west."],
-        "17": ["Bike northeast on Broadway"],
-        "18": ["Bike south on Summerfield Place/NY 114. Continue on NY 114."]
+        "0": ["Vés cap a l'oest."],
+        "1": ["Vés cap el nordest a Broadway"],
+        "2": ["Vés cap el sud a Summerfield Place/NY 114. Continua per NY 114."],
+        "4": ["Conduiex cap a l'oest."],
+        "5": ["Condueix cap el nordest a Broadway"],
+        "6": ["Condueix cap el sud a Summerfield Place/NY 114. Continua per NY 114."],
+        "8": ["Camina cap a l'oest."],
+        "9": ["Camina cap el nordest a Broadway"],
+        "10": ["Camina cap el sud a Summerfield Place/NY 114. Continua per NY 114."],
+        "16": ["Pedala cap a l'oest."],
+        "17": ["Pedala cap el nordest a Broadway"],
+        "18": ["Pedala cap el sud a Summerfield Place/NY 114. Continua per NY 114."]
       }
     },
     "post_transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "0": "Vés cap <CARDINAL_DIRECTION>.",
+        "1": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "2": "Vés cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "4": "Condueix cap <CARDINAL_DIRECTION>.",
+        "5": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "6": "Condueix cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "8": "Camina cap <CARDINAL_DIRECTION>.",
+        "9": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "10": "Camina cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "16": "Pedala cap <CARDINAL_DIRECTION>.",
+        "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>."
       },
-      "cardinal_directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "cardinal_directions": ["el nord", "el nordest", "l'est", "el sudest", "el sud", "el sudoest", "l'oest", "el nordoest"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Head west."],
-        "1": ["Head northeast on Broadway"],
-        "2": ["Head south on Summerfield Place, New York 1 14."],
-        "4": ["Drive west."],
-        "5": ["Drive northeast on Broadway"],
-        "6": ["Drive south on Summerfield Place, New York 1 14."],
-        "8": ["Walk west."],
-        "9": ["Walk northeast on Broadway"],
-        "10": ["Walk south on Summerfield Place, New York 1 14."],
-        "16": ["Bike west."],
-        "17": ["Bike northeast on Broadway"],
-        "18": ["Bike south on Summerfield Place, New York 1 14."]
+        "0": ["Vés cap a l'oest."],
+        "1": ["Vés cap el nordest a Broadway"],
+        "2": ["Vés cap el sud a Summerfield Place, New York 1 14."],
+        "4": ["Condueix cap a l'oest."],
+        "5": ["Condueix cap el nordest a Broadway"],
+        "6": ["Conduiex cap el sud a Summerfield Place, New York 1 14."],
+        "8": ["Camina cap a l'oest."],
+        "9": ["Camina cap el nordest a Broadway"],
+        "10": ["Camina cap el sud a Summerfield Place, New York 1 14."],
+        "16": ["Pedala cap a l'oest."],
+        "17": ["Pedala cap el nordest a Broadway"],
+        "18": ["Pedala cap el sud a Summerfield Place, New York 1 14."]
       }
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "Continue for <LENGTH>.",
-        "1": "Continue on <STREET_NAMES> for <LENGTH>."
+        "0": "Continua durant <LENGTH>.",
+        "1": "Continua per <STREET_NAMES> durant <LENGTH>."
       },
-      "metric_lengths": ["<KILOMETERS> kilometers", "1 kilometer", "a half kilometer", "<METERS> meters", "less than 10 meters"],
-      "us_customary_lengths": ["<MILES> miles", "1 mile", "a half mile", "<TENTHS_OF_MILE> tenths of a mile", "1 tenth of a mile", "<FEET> feet", "less than 10 feet"],
-      "empty_street_name_labels": ["the walkway", "the cycleway", "the mountain bike trail"],
+      "metric_lengths": ["<KILOMETERS> quilòmetres", "1 quilòmetre", "mig quilòmetre", "<METERS> metres", "menys de 10 metres"],
+      "us_customary_lengths": ["<MILES> milles", "1 milla", "mitja milla", "<TENTHS_OF_MILE> dècima de milla", "1 dècima de milla", "<FEET> peus", "menys de 10 peus"],
+      "empty_street_name_labels": ["la vorera", "el carril bici", "la pista de bicicleta de muntanya"],
       "example_phrases": {
-        "0": ["Continue for 300 feet.", "Continue for 9 miles."],
-        "1": ["Continue on Pennsylvania 7 43 for 6.2 miles.", "Continue on Main Street, Vermont 30 for 1 tenth of a mile."]
+        "0": ["Continua durant 300 peus.", "Continua durant 9 milles."],
+        "1": ["Continua per Pennsylvania 7 43 durant 6.2 milles.", "Continua per Main Street, Vermont 30 durant 1 dècima de milla."]
       }
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "Travel <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+        "0": "Viatja <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
-      "transit_stop_count_labels": {"one": "stop", "other": "stops"},
+      "transit_stop_count_labels": {"one": "parada", "other": "parades"},
       "example_phrases": {
-        "0": ["Travel 1 stop.", "Travel 3 stops."]
+        "0": ["Viatja 1 parada.", "Viatja 3 parades."]
       }
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> i després <NEXT_VERBAL_CUE>"
       },
       "example_phrases": {
-        "0": ["Bear right onto East Fayette Street. Then Turn right onto North Gay Street."]
+        "0": ["Queda't a la dreta cap a East Fayette Street. I després gira a la dreta cap a North Gay Street."]
       }
     }
     
