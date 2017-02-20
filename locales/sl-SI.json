@@ -859,7 +859,7 @@
         "1": "Ostanite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
       },
       "empty_transit_name_labels": ["tramvaju", "podzemni železnici", "vlaku", "avtobusu", "trajektu", "nihalki", "kabinski žičnici", "žični vzpenjači"],
-      "transit_stop_count_labels": {"one": "postanek", "two": "postanka"; "few": "postanki", "other": "postankov"},
+      "transit_stop_count_labels": {"one": "postanek", "two": "postanka", "few": "postanki", "other": "postankov"},
       "example_phrases": {
         "0": ["Ostanite na New Haven. (1 stop)", "Ostanite na vlaku (3 postanki)."],
         "1": ["Ostanite na F proti JAMAICA - 179 ST. (10 postankov)."]
@@ -882,7 +882,7 @@
         "1": "Prestopite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
       },
       "empty_transit_name_labels": ["tramvaj", "podzemno železnico", "vlak", "avtobus", "trajekt", "nihalko", "kabinsko žičnico", "žično vzpenjačo"],
-      "transit_stop_count_labels": {"one": "postanek", "two": "postanka"; "few": "postanki", "other": "postankov"},
+      "transit_stop_count_labels": {"one": "postanek", "two": "postanka", "few": "postanki", "other": "postankov"},
       "example_phrases": {
         "0": ["Prestopite na New Haven (1 postanek).", "Prestopite na tramvaj (4 postanki)."],
         "1": ["Prestopite na F proti JAMAICA - 179 ST. (10 postankov)."]
@@ -980,7 +980,7 @@
       "phrases": {
         "0": "Potujte <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
-      "transit_stop_count_labels": {"one": "postanek", "two": "postanka"; "few": "postanki", "other": "postankov"},
+      "transit_stop_count_labels": {"one": "postanek", "two": "postanka", "few": "postanki", "other": "postankov"},
       "example_phrases": {
         "0": ["Potujte 1 postanek.", "Potujte 3 postanke."]
       }
