@@ -836,7 +836,7 @@
         "1": "Pojdite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
       },
       "empty_transit_name_labels": ["tramvaj", "podzemno železnico", "vlak", "avtobus", "trajekt", "nihalko", "kabinsko žičnico", "žično vzpenjačo"],
-      "transit_stop_count_labels": {"one": "postanek", "two": "postanka"; "few": "postanki", "other": "postankov"},
+      "transit_stop_count_labels": {"one": "postanek", "two": "postanka", "few": "postanki", "other": "postankov"},
       "example_phrases": {
         "0": ["Pojdite na New Haven (1 postanek).", "Pojdite na podzemno železnico (2 postanka).", "Pojdite na avtobus (12 postankov)."],
         "1": ["Pojdite na F proti JAMAICA - 179 ST. (10 postankov).", "Pojdite na trajekt proti Staten Island (1 postanek)."]
