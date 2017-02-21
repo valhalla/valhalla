@@ -592,11 +592,11 @@ namespace loki {
 
 std::unordered_map<Location, PathLocation>
 Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
+  std::unordered_map<Location, PathLocation> searched;
   if(locations.empty())
-    return {};
+    return searched;
 
   // Get the unique set of input locations
-  std::unordered_map<Location, PathLocation> searched;
   std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
   std::vector<ProjectPoint> pps;
   pps.reserve(uniq_locations.size());
