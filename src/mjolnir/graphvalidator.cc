@@ -194,7 +194,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
           if (edge.is_shortcut()) {
             std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
-            LOG_INFO("Duplicate shortcut for " + name + " at LL = " +
+            LOG_DEBUG("Duplicate shortcut for " + name + " at LL = " +
                      std::to_string(nodeinfo->latlng().lat()) + "," +
                      std::to_string(nodeinfo->latlng().lng()));
           } else {
@@ -485,9 +485,9 @@ void validate(const boost::property_tree::ptree& pt,
     }
 
     // TODO - output problem ways - this could be a useful list!
-    for (auto w : problem_ways) {
+/*    for (auto w : problem_ways) {
       LOG_INFO("Problem Way: " + std::to_string(w));
-    }
+    }*/
 
     // Fill promise with return data
     result.set_value(std::make_tuple(std::move(duplicates), std::move(densities), std::move(tweeners)));
