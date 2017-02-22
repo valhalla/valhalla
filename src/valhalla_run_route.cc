@@ -87,7 +87,6 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
                   bool using_astar, bool match_test) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
-  std::vector<PathLocation> through_loc;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   data.incPasses();
@@ -116,7 +115,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
   TripPathController controller;
   TripPath trip_path = TripPathBuilder::Build(controller, reader, mode_costing,
                                               pathedges, origin, dest,
-                                              through_loc);
+                                              std::list<PathLocation>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
