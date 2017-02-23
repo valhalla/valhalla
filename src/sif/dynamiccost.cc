@@ -238,5 +238,12 @@ bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
   return false;
 }
 
+// Adds a list of edges (GraphIds) to the user specified avoid list.
+void DynamicCost::AddUserAvoidEdges(const std::vector<GraphId>& avoid_edges) {
+  for (auto edgeid : avoid_edges) {
+    user_avoid_edges_.insert(edgeid);
+  }
+}
+
 }
 }

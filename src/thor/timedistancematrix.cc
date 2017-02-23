@@ -315,10 +315,18 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
         continue;
       }
 
-      // Get opposing edge and check if allowed.
-      const DirectedEdge* opp_edge = graphreader.GetOpposingEdge(edgeid);
+      // Get opposing edge Id and end node tile
+      const GraphTile* t2 = directededge->leaves_tile() ?
+           graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (t2 == nullptr) {
+        continue;
+      }
+      GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+
+      // Get opposing directed edge and check if allowed.
+      const DirectedEdge* opp_edge = t2->directededge(oppedge);
       if (opp_edge == nullptr ||
-         !costing->AllowedReverse(directededge, pred, opp_edge, tile, edgeid)) {
+         !costing->AllowedReverse(directededge, pred, opp_edge, t2, oppedge)) {
         continue;
       }
 

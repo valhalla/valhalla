@@ -130,15 +130,16 @@ class TruckCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           current tile
-   * @param  edgeid         edgeid that we care about
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& edgeid) const;
+                 const baldr::GraphId& opp_edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -340,6 +341,7 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
+       IsUserAvoidEdge(edgeid) ||
       (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
@@ -391,20 +393,21 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& edgeid) const {
+               const baldr::GraphId& opp_edgeid) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
        opp_edge->surface() == Surface::kImpassable ||
+       IsUserAvoidEdge(opp_edgeid) ||
       (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
 
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
-          tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
+          tile->GetAccessRestrictions(opp_edgeid.id(), kTruckAccess);
 
     for (const auto& restriction : restrictions ) {
       // TODO:  Need to handle restictions that take place only at certain
