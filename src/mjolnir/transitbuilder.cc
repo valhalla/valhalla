@@ -89,26 +89,6 @@ GraphId GetGraphId(const GraphId& nodeid,
   }
 }
 
-// Get PBF transit data given a GraphId / tile
-Transit read_pbf(const GraphId& id, const TileHierarchy& hierarchy,
-                 const std::string& transit_dir) {
-  std::string fname = GraphTile::FileSuffix(id, hierarchy);
-  fname = fname.substr(0, fname.size() - 3) + "pbf";
-  std::string file_name = transit_dir + '/' + fname;
-  std::fstream file(file_name, std::ios::in | std::ios::binary);
-  if(!file) {
-    throw std::runtime_error("Couldn't load " + file_name);
-  }
-  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
-  google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
-  cs.SetTotalBytesLimit(buffer.size() * 2, buffer.size() * 2);
-  Transit transit;
-  if(!transit.ParseFromCodedStream(&cs))
-    throw std::runtime_error("Couldn't load " + file_name);
-  return transit;
-}
-
 void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                 const TileHierarchy& hierarchy_local,
                 GraphTileBuilder& tilebuilder_transit,

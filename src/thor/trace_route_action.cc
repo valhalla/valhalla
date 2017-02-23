@@ -133,13 +133,10 @@ odin::TripPath thor_worker_t::route_match(const TripPathController& controller) 
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
   if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, correlated, path_infos)) {
-    // Empty through location list
-    std::vector<baldr::PathLocation> through_loc;
-
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
-                                             correlated.back(), through_loc,
+                                             correlated.back(), std::list<PathLocation>{},
                                              interrupt_callback);
   }
 
@@ -249,13 +246,10 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
     // assert origin.edges contains path_edges.front() &&
     // destination.edges contains path_edges.back()
 
-    // Empty through location list
-    std::vector<baldr::PathLocation> through_loc;
-
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
                                              mode_costing, path_edges, origin,
-                                             destination, through_loc,
+                                             destination, std::list<PathLocation>{},
                                              interrupt_callback);
   } else {
     throw baldr::valhalla_exception_t { 400, 442 };

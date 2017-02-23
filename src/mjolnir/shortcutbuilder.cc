@@ -458,12 +458,11 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
-      // edge exists).
-      // TODO - what should the wayId be?
+      // edge exists). Shortcuts use way Id = 0.
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(idx, start_node,
-                          end_node, -1, shape, names, forward);
+                          end_node, 0, shape, names, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -600,12 +599,13 @@ uint32_t FormShortcuts(GraphReader& reader,
           }
 
           // Get edge info, shape, and names from the old tile and add
-          // to the new. Use edge length to protect against
-          // edges that have same end nodes but different lengths
+          // to the new. Use prior edgeinfo offset as the key to make sure
+          // edges that have the same end nodes are differentiated (this
+          // should be a valid key since tile sizes aren't changed)
           auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-          uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                          node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.shape(),
-                          tile->GetNames(directededge->edgeinfo_offset()), added);
+          uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(),
+                         node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.shape(),
+                         tile->GetNames(directededge->edgeinfo_offset()), added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
           // Set the superseded mask - this is the shortcut mask that
