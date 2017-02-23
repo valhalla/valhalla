@@ -390,7 +390,7 @@ TripPath TripPathBuilder::Build(
     const TripPathController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
-    const std::vector<PathLocation>& through_loc,
+    const std::list<PathLocation>& through_loc,
     const std::function<void ()>* interrupt_callback) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
@@ -425,7 +425,7 @@ TripPath TripPathBuilder::Build(
     tp_orig->set_heading(*origin.heading_);
 
   // Add list of through locations
-  for (auto through : through_loc) {
+  for (const auto& through : through_loc) {
     odin::Location* tp_through = trip_path.add_location();
     odin::LatLng* through_ll = tp_through->mutable_ll();
     through_ll->set_lat(through.latlng_.lat());
