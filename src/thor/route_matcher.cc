@@ -42,39 +42,57 @@ float length_comparison(const float length, const bool exact_match) {
   return length + tolerance;
 }
 
-const PathLocation::PathEdge* find_end_edge(
-    const std::vector<baldr::PathLocation>& correlated) {
-  // Iterate through end edges
+// Get a map of end edges and the start node of each edge. This is used
+// to terminate the edge walking method.
+std::unordered_map<GraphId, PathLocation::PathEdge> GetEndEdges(
+        GraphReader& reader,
+        const std::vector<PathLocation>& correlated) {
+  std::unordered_map<GraphId, PathLocation::PathEdge> end_nodes;
   for (const auto& edge : correlated.back().edges) {
     // If destination is at a node - skip any outbound edge
-    if (edge.begin_node()) {
+    if (edge.begin_node() || !edge.id.Is_Valid()) {
       continue;
     }
-    return &edge;  //TODO special case
+
+    // Add the node which we look for to terminate edge walking. This is
+    // generally the start of the end edge, unless the end edge ends ends
+    // at a node (not partially along the edge)
+    if (edge.end_node()) {
+      // If this edge ends at a node add its end node
+      auto* tile = reader.GetGraphTile(edge.id);
+      auto* directededge = tile->directededge(edge.id);
+      end_nodes.insert({directededge->endnode(), edge});
+    } else {
+      // Get the start node of this edge
+      auto* opp_edge = reader.GetOpposingEdge(edge.id);
+      if (opp_edge == nullptr) {
+        throw std::runtime_error("Couldn't get the opposing edge");
+      }
+      end_nodes.insert({opp_edge->endnode(), edge});
+    }
   }
-  return nullptr;
+  if (end_nodes.size() == 0) {
+    throw std::runtime_error("No valid end edges are found");
+  }
+  return end_nodes;
 }
 
-const GraphId find_start_node(GraphReader& reader, const GraphId& edge_id) {
-  auto* opp_edge = reader.GetOpposingEdge(edge_id);
-  if (opp_edge == nullptr) {
-    throw std::runtime_error("Couldn't get the opposing edge");
-  }
-  return opp_edge->endnode();
-}
 
-bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
+bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
                       const TravelMode& mode, GraphReader& reader,
                       const std::vector<midgard::PointLL>& shape,
                       const std::vector<float>& distances,
                       size_t& correlated_index, const GraphTile* tile,
-                      const GraphId& node, const GraphId& stop_node,
+                      const GraphId& node,
+                      std::unordered_map<GraphId, PathLocation::PathEdge>& end_nodes,
                       EdgeLabel& prev_edge_label, float& elapsed_time,
                       std::vector<PathInfo>& path_infos,
-                      const bool from_transition) {
+                      const bool from_transition, GraphId& end_node) {
 
   // If node equals stop node then when are done expanding
-  if (node == stop_node) {
+  auto n = end_nodes.find(node);
+  if (n != end_nodes.end()) {
+    end_node = node;
     return true;
   }
 
@@ -107,8 +125,8 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         }
         if (expand_from_node(mode_costing, mode, reader, shape, distances,
                              correlated_index, end_node_tile, de->endnode(),
-                             stop_node, prev_edge_label, elapsed_time,
-                             path_infos, true)) {
+                             end_nodes, prev_edge_label, elapsed_time,
+                             path_infos, true, end_node)) {
           return true;
         } else {
           continue;
@@ -154,8 +172,8 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances,
                                  index, end_node_tile, de->endnode(),
-                                 stop_node, prev_edge_label, elapsed_time,
-                                 path_infos, false)) {
+                                 end_nodes, prev_edge_label, elapsed_time,
+                                 path_infos, false, end_node)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos
@@ -172,11 +190,12 @@ bool expand_from_node(const std::shared_ptr<sif::DynamicCost>* mode_costing,
 
 }
 
+// For the route path using an edge walking method.
 bool RouteMatcher::FormPath(
-    const std::shared_ptr<sif::DynamicCost>* mode_costing,
-    const sif::TravelMode& mode, baldr::GraphReader& reader,
+    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::TravelMode& mode, GraphReader& reader,
     const std::vector<midgard::PointLL>& shape,
-    const std::vector<baldr::PathLocation>& correlated,
+    const std::vector<PathLocation>& correlated,
     std::vector<PathInfo>& path_infos) {
   float elapsed_time = 0.f;
 
@@ -187,19 +206,9 @@ bool RouteMatcher::FormPath(
     distances.push_back(shape[i].Distance(shape[i-1]));
   }
 
-  // Process and validate end edge. TODO - can there be more than 1
-  // candidate?
-  const PathLocation::PathEdge* end_path_edge = find_end_edge(correlated);
-  if ((end_path_edge == nullptr) || !(end_path_edge->id.Is_Valid())) {
-    throw std::runtime_error("Invalid end edge id");
-  }
-  const GraphTile* end_edge_tile = reader.GetGraphTile(end_path_edge->id);
-  if (end_edge_tile == nullptr) {
-    throw std::runtime_error("End tile is null");
-  }
-
-  // Assign the end edge start node
-  const GraphId end_edge_start_node = find_start_node(reader, end_path_edge->id);
+  // Process and validate end edges (can be more than 1). Create a map of
+  // the end edges' start nodes and the edge information.
+  auto end_nodes = GetEndEdges(reader, correlated);
 
   // Iterate through start edges
   for (const auto& edge : correlated.front().edges) {
@@ -251,21 +260,43 @@ bool RouteMatcher::FormPath(
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge.id, de, {}, 0, 0, mode, 0};
 
-        // Continue walking shape to find the end edge...
+        // Continue walking shape to find the end node
+        GraphId end_node;
         if (expand_from_node(mode_costing, mode, reader, shape, distances, index,
-                             end_node_tile, de->endnode(), end_edge_start_node,
-                             prev_edge_label, elapsed_time, path_infos, false)) {
+                             end_node_tile, de->endnode(), end_nodes,
+                             prev_edge_label, elapsed_time, path_infos,
+                             false, end_node)) {
+          // If node equals stop node then when are done expanding - get
+          // the matching end edge
+          auto n = end_nodes.find(end_node);
+          if (n == end_nodes.end()) {
+            return false;
+          }
+
+          // If the end edge distance = 1.0 then we are done
+          if (n->second.dist == 1.0f) {
+            return true;
+          }
+
+          // Get the end edge and add transition time and partial time along
+          // the destination edge.
+          const GraphTile* end_edge_tile = reader.GetGraphTile(n->second.id);
+          if (end_edge_tile == nullptr) {
+            throw std::runtime_error("End edge tile is null");
+          }
+          const DirectedEdge* end_de = end_edge_tile->directededge(n->second.id);
+
           // Update the elapsed time based on transition cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
-              de, end_edge_tile->node(end_edge_start_node), prev_edge_label).secs;
+              de, end_edge_tile->node(n->first), prev_edge_label).secs;
 
           // Update the elapsed time based on edge cost
-          elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs
-              * end_path_edge->dist;
+          elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
+                                  n->second.dist;
 
           // Add end edge
           path_infos.emplace_back(mode, std::round(elapsed_time),
-                                  end_path_edge->id, 0);
+                                  n->second.id, 0);
 
           return true;
         } else {
@@ -275,8 +306,24 @@ bool RouteMatcher::FormPath(
       }
       index++;
     }
+
+    // Did not find the end of the origin edge. Check for special case where
+    // end is along the same edge.
+    for (auto end : end_nodes) {
+      if (end.second.id == edge.id) {
+        // Update the elapsed time based on edge cost
+        elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs *
+                               (end.second.dist - edge.dist);
+
+        // Add end edge
+        path_infos.emplace_back(mode, std::round(elapsed_time), edge.id, 0);
+        return true;
+      }
+    }
   }
-  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
+  // TODO - would be nice to know this, but if map-matching fallback is specified
+  // this would not fall back.
+//  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
   return false;
 }
 
