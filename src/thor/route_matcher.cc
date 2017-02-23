@@ -321,7 +321,9 @@ bool RouteMatcher::FormPath(
       }
     }
   }
-  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
+  // TODO - would be nice to know this, but if map-matching fallback is specified
+  // this would not fall back.
+//  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
   return false;
 }
 
