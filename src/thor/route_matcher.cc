@@ -288,7 +288,7 @@ bool RouteMatcher::FormPath(
 
           // Update the elapsed time based on transition cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
-              de, end_edge_tile->node(n->first), prev_edge_label).secs;
+              end_de, end_edge_tile->node(n->first), prev_edge_label).secs;
 
           // Update the elapsed time based on edge cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
