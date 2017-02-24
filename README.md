@@ -58,19 +58,21 @@ Get Valhalla from Personal Package Archive (PPA)
 
 If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
 
-     #get some dependencies in other ppas
-     if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
-       sudo add-apt-repository -y ppa:kevinkreiser/libsodium
-       sudo add-apt-repository -y ppa:kevinkreiser/libpgm
-       sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
-       sudo add-apt-repository -y ppa:kevinkreiser/czmq
-     fi
-     sudo add-apt-repository -y ppa:kevinkreiser/prime-server
-     #grab all of the valhalla software from ppa
-     sudo add-apt-repository ppa:kevinkreiser/prime-server
-     sudo add-apt-repository ppa:valhalla-routing/valhalla
-     sudo apt-get update
-     sudo apt-get install valhalla-bin
+```bash
+#get some dependencies in other ppas
+if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
+  sudo add-apt-repository -y ppa:kevinkreiser/libsodium
+  sudo add-apt-repository -y ppa:kevinkreiser/libpgm
+  sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
+  sudo add-apt-repository -y ppa:kevinkreiser/czmq
+fi
+sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+#grab all of the valhalla software from ppa
+sudo add-apt-repository ppa:kevinkreiser/prime-server
+sudo add-apt-repository ppa:valhalla-routing/valhalla
+sudo apt-get update
+sudo apt-get install valhalla-bin
+```
 
 Building from Source
 --------------------
@@ -79,20 +81,22 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
-      sudo add-apt-repository -y ppa:kevinkreiser/libsodium
-      sudo add-apt-repository -y ppa:kevinkreiser/libpgm
-      sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
-      sudo add-apt-repository -y ppa:kevinkreiser/czmq
-    fi
-    sudo add-apt-repository -y ppa:kevinkreiser/prime-server
-    sudo apt-get update
-    sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
-    #if you plan to compile with data building support, see below for more info
-    sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
-    if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
-    #if you plan to compile with python bindings, see below for more info
-    sudo apt-get install -y python-all-dev
+```bash
+if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
+ sudo add-apt-repository -y ppa:kevinkreiser/libsodium
+ sudo add-apt-repository -y ppa:kevinkreiser/libpgm
+ sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
+ sudo add-apt-repository -y ppa:kevinkreiser/czmq
+fi
+sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+sudo apt-get update
+sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
+#if you plan to compile with data building support, see below for more info
+sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
+if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
+#if you plan to compile with python bindings, see below for more info
+sudo apt-get install -y python-all-dev
+```
 
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
@@ -103,13 +107,15 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
 After getting the dependencies install it with:
 
-    git submodule update --init --recursive
-    ./autogen.sh
-    # on macOS you need to tell linkers how to reach home-brewed sqlite3
-    # export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3"
-    ./configure
-    make test -j$(nproc)
-    sudo make install
+```bash
+git submodule update --init --recursive
+./autogen.sh
+# on macOS you need to tell linkers how to reach home-brewed sqlite3
+# export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3"
+./configure
+make test -j$(nproc)
+sudo make install
+```
 
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
 
@@ -130,29 +136,31 @@ Running
 
 The following bash should be enough to make some routing data and start a server using it:
 
-    #download some data and make tiles out of it
-    #NOTE: you can feed multiple extracts into pbfgraphbuilder
-    wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
-    #get the config and setup
-    mkdir -p valhalla_tiles
-    valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
-    #build routing tiles
-    #TODO: run valhalla_build_admins?
-    valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
-    #tar it up for running the server
-    find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
+```bash
+#download some data and make tiles out of it
+#NOTE: you can feed multiple extracts into pbfgraphbuilder
+wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+#get the config and setup
+mkdir -p valhalla_tiles
+valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+#build routing tiles
+#TODO: run valhalla_build_admins?
+valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
+#tar it up for running the server
+find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
 
-    #grab the demos repo and open up the point and click routing sample
-    git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
-    firefox demos/routing/index-internal.html &
-    #NOTE: set the environment pulldown to 'localhost' to point it at your own server
+#grab the demos repo and open up the point and click routing sample
+git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
+firefox demos/routing/index-internal.html &
+#NOTE: set the environment pulldown to 'localhost' to point it at your own server
 
-    #start up the server
-    valhalla_route_service valhalla.json 1
-    #curl it directly if you like:
-    curl http://localhost:8002/route --data '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
+#start up the server
+valhalla_route_service valhalla.json 1
+#curl it directly if you like:
+curl http://localhost:8002/route --data '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
 
-    #HAVE FUN!
+#HAVE FUN!
+```
 
 Contributing
 ------------
@@ -187,10 +195,12 @@ Command Line Tools
 ####valhalla_run_route
 A C++ application that will create a route path with guidance instructions for the specified route request.
 
-    #Usage:
-    ./valhalla_run_route -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
-    #Example:
-    ./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+```bash
+#Usage:
+./valhalla_run_route -j '<JSON_ROUTE_REQUEST>' --config <CONFIG_FILE>
+#Example:
+./valhalla_run_route -j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+```
 
 Batch Script Tool
 -----------------
