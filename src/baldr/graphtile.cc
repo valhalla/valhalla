@@ -17,6 +17,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/copy.hpp>
 
 namespace {
   struct dir_facet : public std::numpunct<char> {
@@ -98,17 +99,17 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid): he
   else {
     std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
     if (file.is_open()) {
-      // Pre-allocate assuming 66% compression rate
+      // Pre-allocate assuming 3.25:1 compression ratio (based on scanning some large NA tiles)
       size_t filesize = file.tellg();
       file.seekg(0, std::ios::beg);
       graphtile_.reset(new std::vector<char>());
-      graphtile_->reserve(filesize * 3);
+      graphtile_->reserve(filesize * 3 + filesize/4);  // TODO: read the gzip footer and get the real size?
 
       // Decompress tile into memory
       boost::iostreams::filtering_ostream os;
       os.push(boost::iostreams::gzip_decompressor());
       os.push(boost::iostreams::back_inserter(*graphtile_));
-      os << file.rdbuf();
+      boost::iostreams::copy(file, os);
 
       // Set pointers to internal data structures
       Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
