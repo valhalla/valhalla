@@ -25,7 +25,8 @@ namespace thor {
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(float cost_threshold)
-    : access_mode_(kAutoAccess),
+    : mode_(TravelMode::kDrive),
+      access_mode_(kAutoAccess),
       source_count_(0),
       remaining_sources_(0),
       target_count_(0),
