@@ -41,6 +41,8 @@ boost::property_tree::ptree Location::ToPtree() const {
     location.put("date_time", *date_time_);
   if(heading_)
     location.put("heading", *heading_);
+  if(heading_tolerance_)
+    location.put("heading_tolerance", *heading_tolerance_);
   if(way_id_)
     location.put("way_id", *way_id_);
 
@@ -91,6 +93,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   location.date_time_ = pt.get_optional<std::string>("date_time");
   location.heading_ = pt.get_optional<int>("heading");
+  location.heading_tolerance_ = pt.get_optional<int>("heading_tolerance");
   location.way_id_ = pt.get_optional<uint64_t>("way_id");
 
   auto name = pt.get_optional<std::string>("name");
@@ -210,7 +213,8 @@ bool Location::operator==(const Location& o) const {
   return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ &&
          name_ == o.name_ && street_ == o.street_ && city_ == o.city_ &&
          state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
-         date_time_ == o.date_time_ && heading_ == o.heading_ && way_id_ == o.way_id_;
+         date_time_ == o.date_time_ && heading_ == o.heading_ &&
+         heading_tolerance_ == o.heading_tolerance_ && way_id_ == o.way_id_;
 }
 
 }

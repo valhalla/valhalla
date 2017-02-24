@@ -1,9 +1,9 @@
 #include "test.h"
 
 #include "mjolnir/graphtilebuilder.h"
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/tilehierarchy.h>
+#include "baldr/graphid.h"
+#include "midgard/pointll.h"
+#include "baldr/tilehierarchy.h"
 #include <string>
 #include <vector>
 #include <fstream>

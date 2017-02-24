@@ -18,6 +18,7 @@
 #include "sif/costfactory.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
+#include "mjolnir/util.h"
 #include "proto/trippath.pb.h"
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"
@@ -45,16 +46,6 @@ struct City {
   }
 };
 
-std::string remove_parens(const std::string& s) {
-  std::string ret;
-  for (auto c : s) {
-    if (c != '"') {
-      ret += c;
-    }
-  }
-  return ret;
-}
-
 std::vector<City> ParseCityFile(const std::string& filename) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep{";"};
@@ -76,19 +67,19 @@ std::vector<City> ParseCityFile(const std::string& filename) {
           break;
         case 1:
           // Country (remove first and last char)
-          city.country = remove_parens(t);
+          city.country = remove_double_quotes(t);
           break;
         case 2:
           // City
-          city.city = remove_parens(t);
+          city.city = remove_double_quotes(t);
           break;
         case 3:
           // Latitude
-          lat = std::atof(remove_parens(t).c_str());
+          lat = std::atof(remove_double_quotes(t).c_str());
           break;
         case 4:
           // Longitude
-          lng = std::atof(remove_parens(t).c_str());
+          lng = std::atof(remove_double_quotes(t).c_str());
           break;
         }
         field_num++;

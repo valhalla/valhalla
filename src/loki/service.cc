@@ -187,7 +187,8 @@ namespace valhalla {
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
         max_time(config.get<unsigned int>("service_limits.isochrone.max_time")),
-        max_shape(config.get<size_t>("service_limits.trace.max_shape")) {
+        max_shape(config.get<size_t>("service_limits.trace.max_shape")),
+        healthcheck(false) {
 
       // Keep a string noting which actions we support, throw if one isnt supported
       for (const auto& kv : config.get_child("loki.actions")) {

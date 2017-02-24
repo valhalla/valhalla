@@ -1,10 +1,10 @@
-#include "valhalla/midgard/polyline2.h"
+#include "midgard/polyline2.h"
 
 #include "test.h"
 
 #include <vector>
 
-#include "valhalla/midgard/point2.h"
+#include "midgard/point2.h"
 
 using namespace std;
 using namespace valhalla::midgard;

@@ -65,7 +65,7 @@ namespace valhalla {
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), matcher_factory(config), reader(config.get_child("mjolnir")),
+      config(config), matcher_factory(config), reader(matcher_factory.graphreader()),
       long_request(config.get<float>("thor.logging.long_request")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
@@ -320,10 +320,8 @@ namespace valhalla {
           }
           for (const std::string& x: state_iso)
             s_ss << " " << x;
-          std::cout <<  std::endl;
           for (const std::string& x: country_iso)
             c_ss << " " << x;
-          std::cout <<  std::endl;
           if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
           if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
         }

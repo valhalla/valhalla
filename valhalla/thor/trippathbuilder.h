@@ -39,7 +39,7 @@ class TripPathBuilder {
       const std::shared_ptr<sif::DynamicCost>* mode_costing,
       const std::vector<PathInfo>& path, baldr::PathLocation& origin,
       baldr::PathLocation& dest,
-      const std::vector<baldr::PathLocation>& through_loc,
+      const std::list<baldr::PathLocation>& through_loc,
       const std::function<void ()>* interrupt_callback = nullptr);
 
   /**
@@ -52,6 +52,7 @@ class TripPathBuilder {
    * @param  directededge  Directed edge information.
    * @param  trip_node     Trip node to add the edge information to.
    * @param  graphtile     Graph tile for accessing data.
+   * @param   current_time Current time (seconds from midnight).
    * @param  length_pct    Scale for the edge length for the partial distance
    *                       at begin and end edges
    */
@@ -64,6 +65,7 @@ class TripPathBuilder {
                                           const baldr::DirectedEdge* directededge,
                                           odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile,
+                                          const uint32_t current_time,
                                           const float length_percentage = 1.f);
 
   /**

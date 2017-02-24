@@ -726,6 +726,14 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // (ramps and turn channels) are involved.
   if (allramps) {
     stop_impact /= 2;
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
+             bestrc < RoadClass::kUnclassified) {
+    // Ramp may be crossing a road (not a path or service road)
+    if (nodeinfo.traffic_signal()) {
+      stop_impact = 4;
+    } else if (count > 3) {
+      stop_impact += 2;
+    }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
     stop_impact += 2;
@@ -1041,7 +1049,7 @@ void enhance(const boost::property_tree::ptree& pt,
               sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
               if (access_it != access_tags.end())
                 SetCountryAccess(directededge, access, access_it);
-              else LOG_WARN("access tags not found for " + e_offset.wayid());
+              else LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
             } else SetCountryAccess(directededge, access, target);
           }
         }

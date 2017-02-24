@@ -3,30 +3,22 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/filesystem.hpp>
 #include <unordered_set>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/vector2.h>
-#include <valhalla/baldr/tilehierarchy.h>
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/location.h"
+#include "midgard/pointll.h"
+#include "midgard/vector2.h"
+#include "baldr/tilehierarchy.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-/*
- * to regenerate the test tile you'll want to:
- *  add -I../mjolnir to the compile line
- *  add ../mjolnir/libvalhalla_mjolnir.la to the link line
- *  uncomment the commented sections in this file
- *  and delete the test tile: test/fake_tiles/2/000/519/120.gph
- */
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/directededgebuilder.h"
 
-/*
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
-*/
 
 namespace {
 
@@ -44,16 +36,21 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-TileHierarchy h("test/fake_tiles");
+TileHierarchy h("test/search_tiles");
 GraphId tile_id = h.GetGraphId({.125,.125}, 2);
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
 std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
-/*
+
 void make_tile() {
   using namespace valhalla::mjolnir;
   using namespace valhalla::baldr;
+
+  // make sure that all the old tiles are gone before trying to make new ones.
+  if (boost::filesystem::is_directory(h.tile_dir())) {
+    boost::filesystem::remove_all(h.tile_dir());
+  }
 
   //basic tile information
   GraphTileBuilder tile(h, tile_id, false);
@@ -62,7 +59,6 @@ void make_tile() {
   auto add_node = [&edge_index] (const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
     NodeInfo node_builder;
     node_builder.set_latlng(v.second);
-    node_builder.set_bestrc(RoadClass::kSecondary);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
     edge_index += edge_count;
@@ -71,7 +67,7 @@ void make_tile() {
   auto add_edge = [&tile] (const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
     const uint32_t name, const uint32_t opposing, const bool forward) {
 
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1, {}, {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
     std::vector<PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
     if(!forward)
@@ -140,15 +136,13 @@ void make_tile() {
   auto bins = GraphTileBuilder::BinEdges(h, &reloaded, tweeners);
   GraphTileBuilder::AddBins(h, &reloaded, bins);
 }
-*/
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
-  const std::vector<PathLocation::PathEdge>& expected_edges){
+  const std::vector<PathLocation::PathEdge>& expected_edges, bool exact = false){
   using namespace valhalla::loki;
   //make the config file
-  std::stringstream json; json << "{ \"tile_dir\": \"test/fake_tiles\" }";
   boost::property_tree::ptree conf;
-  boost::property_tree::json_parser::read_json(json, conf);
+  conf.put("tile_dir", h.tile_dir());
 
   valhalla::baldr::GraphReader reader(conf);
   const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
@@ -165,8 +159,13 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
       expected_point, location.latlng_.Distance(expected_point), expected_edge.sos});
   }
+  //note that this just checks that p has the edges that answer has
+  //p can have more edges than answer has and that wont fail this check!
   if(!(answer == p))
     throw std::runtime_error("Did not find expected edges");
+  //if you want to enforce that the result didnt have more then expected
+  if(exact && answer.edges.size() != p.edges.size())
+    throw std::logic_error("Got more edges than expected");
 }
 
 void TestEdgeSearch() {
@@ -183,6 +182,15 @@ void TestEdgeSearch() {
     { PE{{t, l, 7}, 0, d.second, 0, S::NONE}, PE{{t, l, 8}, 0, d.second, 0, S::NONE}, PE{{t, l, 9}, 0, d.second, 0, S::NONE}, //leaving edges
       PE{{t, l, 0}, 1, d.second, 0, S::NONE}, PE{{t, l, 3}, 1, d.second, 0, S::NONE}, PE{{t, l, 6}, 1, d.second, 0, S::NONE}  //arriving edges
     });
+  //snap to node as through location should be all edges
+  Location x{a.second, Location::StopType::THROUGH};
+  search(x, true, a.second,
+    { PE{{t, l, 2}, 0, a.second, 0, S::NONE}, PE{{t, l, 3}, 0, a.second, 0, S::NONE}, PE{{t, l, 4}, 0, a.second, 0, S::NONE},
+      PE{{t, l, 1}, 1, a.second, 0, S::NONE}, PE{{t, l, 8}, 1, a.second, 0, S::NONE}, PE{{t, l, 5}, 1, a.second, 0, S::NONE}
+    }, true);
+  //with a heading should just be a single outgoing
+  x.heading_ = 180;
+  search(x, true, a.second, { PE{{t, l, 4}, 0, a.second, 0, S::NONE} }, true);
 
   //mid point search
   auto answer = a.second.MidPoint(d.second);
@@ -194,7 +202,7 @@ void TestEdgeSearch() {
   search({answer}, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
 
   //with heading
-  Location x{answer};
+  x = {answer};
   x.heading_ = 90;
   search(x, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE} });
   x.heading_ = 0;
@@ -225,8 +233,7 @@ void TestEdgeSearch() {
 int main() {
   test::suite suite("search");
 
-  //TODO: move to mjolnir?
-  //suite.test(TEST_CASE(make_tile));
+  suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestEdgeSearch));
 

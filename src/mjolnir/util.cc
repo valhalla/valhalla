@@ -18,5 +18,16 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value,
   return tokens;
 }
 
+// remove double quotes.
+std::string remove_double_quotes(const std::string& s) {
+  std::string ret;
+  for (auto c : s) {
+    if (c != '"') {
+      ret += c;
+    }
+  }
+  return ret;
+}
+
 }
 }

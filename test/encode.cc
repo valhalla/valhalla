@@ -1,6 +1,6 @@
-#include "valhalla/midgard/util.h"
-#include "valhalla/midgard/encoded.h"
-#include "valhalla/midgard/pointll.h"
+#include "midgard/util.h"
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
 #include "test.h"
 
 #include <string>

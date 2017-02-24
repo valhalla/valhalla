@@ -146,8 +146,25 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
     const auto first_way_node_index = current_way_node_index;
     const auto last_way_node_index = first_way_node_index + way.node_count() - 1;
 
+    // Validate - make sure all nodes for this edge are valid
+    bool valid = true;
+    for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
+      const auto wn = (*way_nodes[ni]).node;
+      if (wn.lat == 0.0 && wn.lng == 0.0) {
+        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid)) + " in way " +
+                     std::to_string(way.way_id());
+        valid = false;
+      }
+    }
+    if (!valid) {
+      LOG_ERROR("Do not add edge!");
+      current_way_node_index = last_way_node_index + 1;
+      continue;
+    }
+
     // Remember this edge starts here
     Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+    edge.attributes.way_begin = true;
 
     // Remember this node as starting this edge
     way_node.node.attributes_.link_edge = way.link();
@@ -190,6 +207,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
         edge.attributes.backward_signal = way_node.node.backward_signal();
       }
     }
+    edge.attributes.way_end = true;
   }
   LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
@@ -445,6 +463,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
+
+        // Make sure node has edges
+        if (bundle.node_edges.size() == 0) {
+          LOG_ERROR("Node has no edges - skip");
+          continue;
+        }
+
         const auto& node = bundle.node;
         PointLL node_ll{node.lng, node.lat};
 
@@ -689,7 +714,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess)
               && ((directededge.link()
                   && (!((bundle.link_count == 2)
-                      && (bundle.driveforward_count == 1)))) || fork)) {
+                      && (bundle.driveforward_count == 1)))) || fork)
+              && ((edge.attributes.driveableforward && edge.attributes.way_begin)
+                  || (edge.attributes.driveablereverse
+                      && edge.attributes.way_end))) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
@@ -974,11 +1002,16 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
   // NUMBER
   // Exit sign number
   if (way.junction_ref_index() != 0) {
-    exit_list.emplace_back(Sign::Type::kExitNumber,
-            osmdata.ref_offset_map.name(way.junction_ref_index()));
+
+    std::vector<std::string> j_refs = GetTagTokens(
+        osmdata.ref_offset_map.name(way.junction_ref_index()));
+    for (auto& j_ref : j_refs)
+      exit_list.emplace_back(Sign::Type::kExitNumber, j_ref);
   }  else if (node.ref() && !fork) {
-    exit_list.emplace_back(Sign::Type::kExitNumber,
-            osmdata.node_ref.find(node.osmid)->second);
+    std::vector<std::string> n_refs = GetTagTokens(
+        osmdata.node_ref.find(node.osmid)->second);
+    for (auto& n_ref : n_refs)
+      exit_list.emplace_back(Sign::Type::kExitNumber, n_ref);
   }
 
   ////////////////////////////////////////////////////////////////////////////

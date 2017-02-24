@@ -4,7 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/sif/costconstants.h>
+#include "sif/costconstants.h"
 
 #include "test.h"
 #include "meili/universal_cost.h"

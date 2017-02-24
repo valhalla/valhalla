@@ -220,11 +220,13 @@ class GraphTile {
    * Get the departure given the directed edge Id and tripid
    * @param   lineid  Transit Line Id
    * @param   tripid  Trip Id.
+   * @param   current_time      Current time (seconds from midnight).
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departure is found.
    */
   const TransitDeparture* GetTransitDeparture(const uint32_t lineid,
-                                              const uint32_t tripid) const;
+                                              const uint32_t tripid,
+                                              const uint32_t current_time) const;
 
   /**
    * Get the departures based on the line Id
@@ -315,7 +317,7 @@ class GraphTile {
 
   // Graph tile memory, this must be shared so that we can put it into cache
   // Apparently you can std::move a non-copyable
-  boost::shared_array<char> graphtile_;
+  boost::shared_ptr<std::vector<char>> graphtile_;
 
   // Header information for the tile
   GraphTileHeader* header_;

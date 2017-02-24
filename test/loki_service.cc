@@ -6,7 +6,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <thread>
 #include <unistd.h>
-#include <valhalla/midgard/logging.h>
+#include "midgard/logging.h"
 
 #include "loki/service.h"
 
@@ -177,7 +177,7 @@ namespace {
 
 int main(void) {
   //make this whole thing bail if it doesnt finish fast
-  alarm(90);
+  alarm(120);
 
   test::suite suite("Loki Service");
 

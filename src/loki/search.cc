@@ -14,7 +14,7 @@ using namespace valhalla::loki;
 namespace {
 //the cutoff at which we will assume the input is too far away from civilisation to be
 //worth correlating to the nearest graph elements
-constexpr float SEARCH_CUTTOFF = 35000.f;
+constexpr float SEARCH_CUTOFF = 35000.f;
 //during edge correlation, if you end up < 5 meters from the beginning or end of the
 //edge we just assume you were at that node and not actually along the edge
 //we keep it small because point and click interfaces are more accurate than gps input
@@ -29,7 +29,7 @@ constexpr float NO_HEADING = 30.f;
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
-constexpr float ANGLE_WIDTH = 88.f;
+constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
 
 //TODO: move this to midgard and test the crap out of it
 //we are essentially estimating the angle of the tangent
@@ -85,18 +85,18 @@ float tangent_angle(size_t index, const PointLL& point, const std::vector<PointL
 }
 
 bool heading_filter(const DirectedEdge* edge, const EdgeInfo& info,
-  const std::tuple<PointLL, float, int>& point, boost::optional<int> heading) {
+  const std::tuple<PointLL, float, int>& point, const Location& location) {
   //if its far enough away from the edge, the heading is pretty useless
-  if(!heading || std::get<1>(point) > NO_HEADING)
+  if(!location.heading_ || std::get<1>(point) > NO_HEADING)
     return false;
 
   //get the angle of the shape from this point
   auto angle = tangent_angle(std::get<2>(point), std::get<0>(point), info.shape(), edge->forward());
   //we want the closest distance between two angles which can be had
   //across 0 or between the two so we just need to know which is bigger
-  if(*heading > angle)
-    return std::min(*heading - angle, (360.f - *heading) + angle) > ANGLE_WIDTH;
-  return std::min(angle - *heading, (360.f - angle) + *heading) > ANGLE_WIDTH;
+  if(*location.heading_ > angle)
+    return std::min(*location.heading_ - angle, (360.f - *location.heading_) + angle) > location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
+  return std::min(angle - *location.heading_, (360.f - angle) + *location.heading_) > location.heading_tolerance_.get_value_or(DEFAULT_ANGLE_WIDTH);
 }
 
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
@@ -155,7 +155,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
       if(edge_filter(edge) != 0.0f) {
         PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
         std::get<2>(closest_point) = edge->forward() ? 0 : info.shape().size() - 2;
-        if(!heading_filter(edge, info, closest_point, location.heading_))
+        if(!heading_filter(edge, info, closest_point, location))
           correlated.edges.push_back(std::move(path_edge));
         else
           heading_filtered.emplace_back(std::move(path_edge));
@@ -170,7 +170,7 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
       if(edge_filter(other_edge) != 0.0f) {
         PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), std::get<1>(closest_point), PathLocation::NONE};
         std::get<2>(closest_point) = other_edge->forward() ? 0 : info.shape().size() - 2;
-        if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
+        if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location))
           correlated.edges.push_back(std::move(path_edge));
         else
           heading_filtered.emplace_back(std::move(path_edge));
@@ -189,6 +189,19 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
 
   //start where we are and crawl from there
   crawl(found_node, true);
+
+
+  //if it was a through location with a heading its pretty confusing.
+  //does the user want to come into and exit the location at the preferred
+  //angle? for now we are just saying that they want it to exit at the
+  //heading provided. this means that if it was node snapped we only
+  //want the outbound edges
+  if(location.stoptype_ == Location::StopType::THROUGH && location.heading_) {
+    auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
+      [](const PathLocation::PathEdge& e) { return e.end_node(); });
+    correlated.edges.erase(new_end, correlated.edges.end());
+  }
+
   if(correlated.edges.size() == 0)
     throw std::runtime_error("No suitable edges near location");
 
@@ -214,7 +227,7 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     auto side = get_side(closest_edge, closest_edge_info, closest_point, location.latlng_);
     //correlate the edge we found
     std::list<PathLocation::PathEdge> heading_filtered;
-    if(heading_filter(closest_edge, closest_edge_info, closest_point, location.heading_))
+    if(heading_filter(closest_edge, closest_edge_info, closest_point, location))
       heading_filtered.emplace_back(closest_edge_id, length_ratio, std::get<0>(closest_point), side);
     else
       correlated.edges.push_back(PathLocation::PathEdge{closest_edge_id, length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), side});
@@ -223,7 +236,7 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
     auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id, other_tile);
     const DirectedEdge* other_edge;
     if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
-      if(heading_filter(other_edge, closest_edge_info, closest_point, location.heading_))
+      if(heading_filter(other_edge, closest_edge_info, closest_point, location))
         heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), flip_side(side));
       else
         correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, std::get<0>(closest_point), std::get<1>(closest_point), flip_side(side)});
@@ -323,7 +336,7 @@ struct ProjectPoint {
 
       //TODO: make configurable the radius at which we give up searching
       //the closest thing in this bin is further than what we have already
-      if(std::get<2>(bin) > SEARCH_CUTTOFF || std::get<2>(bin) > closest_distance()) {
+      if(std::get<2>(bin) > SEARCH_CUTOFF || std::get<2>(bin) > closest_distance()) {
         b->cur_tile = nullptr;
         break;
       }
@@ -580,27 +593,31 @@ namespace loki {
 std::unordered_map<Location, PathLocation>
 Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
   std::unordered_map<Location, PathLocation> searched;
+  if(locations.empty())
+    return searched;
 
-  if (! locations.empty()) {
-    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-    std::vector<ProjectPoint> pps;
-    pps.reserve(uniq_locations.size());
-    for (const auto& loc: uniq_locations) {
-      pps.emplace_back(loc, reader);
-    }
+  // Get the unique set of input locations
+  std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
+  std::vector<ProjectPoint> pps;
+  pps.reserve(uniq_locations.size());
+  for (const auto& loc: uniq_locations) {
+    pps.emplace_back(loc, reader);
+  }
 
-    // We keep pps sorted a each round to group the bin together and
-    // to test that every projection finished by just testing the
-    // first one (finished projection are at the end when sorted).
-    for (std::sort(pps.begin(), pps.end()); pps.front().has_bin(); std::sort(pps.begin(), pps.end())) {
-      auto range = find_best_range(pps);
-      handle_bin(range.first, range.second, reader, edge_filter);
-    }
+  // We keep pps sorted at each round to group the bins together
+  // and test that every projection finished by just testing the
+  // first one (finished projections are at the end when sorted).
+  for (std::sort(pps.begin(), pps.end()); pps.front().has_bin(); std::sort(pps.begin(), pps.end())) {
+    auto range = find_best_range(pps);
+    handle_bin(range.first, range.second, reader, edge_filter);
+  }
 
-    for (const auto& pp: pps) {
-      if (pp.projection_found()) {
-        searched.insert({pp.location(), finalize(pp, reader, edge_filter)});
-      }
+  // At this point we have candidates for each location so now we
+  // need to go get the actual correlated location with edge_id etc.
+  for (const auto& pp: pps) {
+    if (pp.projection_found()) {
+      // Correlate
+      auto inserted = searched.insert({pp.location(), finalize(pp, reader, edge_filter)});
     }
   }
 

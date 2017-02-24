@@ -14,6 +14,10 @@
 #include <iomanip>
 #include <cmath>
 #include <boost/algorithm/string.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/copy.hpp>
 
 namespace {
   struct dir_facet : public std::numpunct<char> {
@@ -84,16 +88,35 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid): he
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
     size_t filesize = file.tellg();
-    graphtile_.reset(new char[filesize]);
+    graphtile_.reset(new std::vector<char>(filesize));
     file.seekg(0, std::ios::beg);
-    file.read(graphtile_.get(), filesize);
+    file.read(&(*graphtile_)[0], filesize);
     file.close();
 
     // Set pointers to internal data structures
-    Initialize(graphid, graphtile_.get(), filesize);
+    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
   }
   else {
-    LOG_DEBUG("Tile " + file_location + " was not found");
+    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+    if (file.is_open()) {
+      // Pre-allocate assuming 3.25:1 compression ratio (based on scanning some large NA tiles)
+      size_t filesize = file.tellg();
+      file.seekg(0, std::ios::beg);
+      graphtile_.reset(new std::vector<char>());
+      graphtile_->reserve(filesize * 3 + filesize/4);  // TODO: read the gzip footer and get the real size?
+
+      // Decompress tile into memory
+      boost::iostreams::filtering_ostream os;
+      os.push(boost::iostreams::gzip_decompressor());
+      os.push(boost::iostreams::back_inserter(*graphtile_));
+      boost::iostreams::copy(file, os);
+
+      // Set pointers to internal data structures
+      Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    }
+    else {
+      LOG_DEBUG("Tile " + file_location + " was not found");
+    }
   }
 }
 
@@ -522,7 +545,9 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
     //matching lineid and a workable time
-    if (lineid == dep.lineid() && current_time <= dep.departure_time()) {
+    if (lineid == dep.lineid() &&
+        ((current_time <= dep.departure_time() && dep.type() == kFixedSchedule) ||
+         (current_time <= dep.end_time() && dep.type() == kFrequencySchedule))) {
       found = mid;
       high = mid - 1;
     }//need a smaller lineid
@@ -538,11 +563,33 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   // calendar date, and does not have a calendar exception.
   for(; found < count && departures_[found].lineid() == lineid; ++found) {
     // Make sure valid departure time
-    if (departures_[found].departure_time() >= current_time &&
-      GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
-      (!wheelchair || departures_[found].wheelchair_accessible()) &&
-      (!bicycle || departures_[found].bicycle_accessible())) {
-      return &departures_[found];
+    if (departures_[found].type() == kFixedSchedule) {
+      if (departures_[found].departure_time() >= current_time &&
+          GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
+          (!wheelchair || departures_[found].wheelchair_accessible()) &&
+          (!bicycle || departures_[found].bicycle_accessible())) {
+        return &departures_[found];
+      }
+    } else {
+      uint32_t departure_time = departures_[found].departure_time();
+      uint32_t end_time = departures_[found].end_time();
+      uint32_t frequency = departures_[found].frequency();
+      while (departure_time < current_time && departure_time < end_time)
+        departure_time += frequency;
+
+      if (departure_time >= current_time && departure_time < end_time &&
+          GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
+          (!wheelchair || departures_[found].wheelchair_accessible()) &&
+          (!bicycle || departures_[found].bicycle_accessible())) {
+
+        const auto& d = departures_[found];
+        const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
+                                                           d.blockid(), d.headsign_offset(), departure_time,
+                                                           d.end_time(),d.frequency(),
+                                                           d.elapsed_time(), d.schedule_index(),
+                                                           d.wheelchair_accessible(), d.bicycle_accessible());
+        return dep;
+      }
     }
   }
 
@@ -554,7 +601,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
 // Get the departure given the line Id and tripid
 const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
-                     const uint32_t tripid) const {
+                     const uint32_t tripid, const uint32_t current_time) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
     return nullptr;
@@ -583,9 +630,31 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   }
 
   // Iterate through departures until one is found with matching trip id
-  for(; found < count && departures_[found].lineid() == lineid; ++found)
-    if (departures_[found].tripid() == tripid)
-      return &departures_[found];
+  for(; found < count && departures_[found].lineid() == lineid; ++found) {
+    if (departures_[found].tripid() == tripid) {
+
+      if (departures_[found].type() == kFixedSchedule)
+        return &departures_[found];
+
+      uint32_t departure_time = departures_[found].departure_time();
+      uint32_t end_time = departures_[found].end_time();
+      uint32_t frequency = departures_[found].frequency();
+      while (departure_time < current_time && departure_time < end_time)
+        departure_time += frequency;
+
+      if (departure_time >= current_time && departure_time < end_time) {
+
+        const auto& d = departures_[found];
+
+        const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
+                                                           d.blockid(), d.headsign_offset(), departure_time,
+                                                           d.end_time(),d.frequency(),
+                                                           d.elapsed_time(), d.schedule_index(),
+                                                           d.wheelchair_accessible(), d.bicycle_accessible());
+        return dep;
+      }
+    }
+  }
 
   LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
            " and tripid = " + std::to_string(tripid));

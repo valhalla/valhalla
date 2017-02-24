@@ -56,9 +56,11 @@ struct Departure {
   uint32_t headsign_offset;
   uint32_t dep_time;
   uint32_t schedule_index;
+  uint32_t frequency_end_time;
+  uint16_t elapsed_time;
+  uint16_t frequency;
   float    orig_dist_traveled;
   float    dest_dist_traveled;
-  uint16_t elapsed_time;
   bool     wheelchair_accessible;
   bool     bicycle_accessible;
 };
@@ -78,60 +80,6 @@ struct StopEdges {
   std::vector<GraphId> intrastation; // List of intra-station connections
   std::vector<TransitLine> lines;    // Set of unique route/stop pairs
 };
-
-std::string remove_parens(const std::string& s) {
-  std::string ret;
-  for (auto c : s) {
-    if (c != '"') {
-      ret += c;
-    }
-  }
-  return ret;
-}
-
-std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
-  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-  boost::char_separator<char> sep{","};
-  std::vector<OneStopTest> onestoptests;
-  std::string default_date_time = DateTime::get_testing_date_time();
-
-  // Open file
-  std::string line;
-  std::ifstream file(filename);
-  if (file.is_open()) {
-    while (getline(file, line)) {
-      tokenizer tok{line, sep};
-      uint32_t field_num = 0;
-      OneStopTest onestoptest{};
-      for (const auto &t : tok) {
-        switch (field_num) {
-        case 0:
-          onestoptest.origin = remove_parens(t);
-          break;
-        case 1:
-          onestoptest.destination = remove_parens(t);
-          break;
-        case 2:
-          onestoptest.route_id = remove_parens(t);
-          break;
-        case 3:
-          onestoptest.date_time = remove_parens(t);
-          break;
-        }
-        field_num++;
-      }
-      if (onestoptest.date_time.empty())
-        onestoptest.date_time = default_date_time;
-
-      onestoptests.emplace_back(std::move(onestoptest));
-    }
-    file.close();
-  } else {
-    std::cout << "One stop test file: " << filename << " not found" << std::endl;
-  }
-
-  return onestoptests;
-}
 
 // Struct to hold stats information during each threads work
 struct builder_stats {
@@ -387,7 +335,8 @@ void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
       type = Transit_VehicleType::Transit_VehicleType_kRail;
     else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
              vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
-             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus")
+             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
+             vehicle_type == "demand_and_response_bus_service")
       type = Transit_VehicleType::Transit_VehicleType_kBus;
     else if (vehicle_type == "ferry")
       type = Transit_VehicleType::Transit_VehicleType_kFerry;
@@ -503,17 +452,32 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     }
     pair->set_route_index(route->second);
 
+    auto frequency_start_time = pair_pt.second.get<std::string>("frequency_start_time", "null");
+    auto frequency_end_time = pair_pt.second.get<std::string>("frequency_end_time", "null");
+    auto frequency_headway_seconds = pair_pt.second.get<std::string>("frequency_headway_seconds", "null");
+    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
+
+    // this will be empty for non frequency trips.
+    std::string frequency_time;
+
+    if (frequency_start_time != "null" && frequency_end_time != "null" && frequency_headway_seconds != "null") {
+      if (origin_time < frequency_start_time)
+        LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
+      pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
+      frequency_time = frequency_start_time + frequency_end_time;
+    }
+
     //uniq line id
     auto line_id = pair->origin_onestop_id() < pair->destination_onestop_id() ?
-                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id:
-                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id;
+                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id + frequency_time:
+                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
     pair->set_line_id(inserted.first->second);
     uniques.lock.unlock();
 
     //timing information
-    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
     auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
     auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
     auto end_date = pair_pt.second.get<std::string>("service_end_date", "null");
@@ -528,7 +492,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     pair->set_service_end_date(DateTime::get_formatted_date(end_date).julian_day());
     for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
-      //TODO: if none of these were true we should skip
     }
 
     //trip
@@ -538,6 +501,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     uniques.lock.lock();
     inserted = uniques.trips.insert({trip, uniques.trips.size()});
     pair->set_trip_id(inserted.first->second);
@@ -729,7 +693,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     } while(request && (request = *request + api_key));
 
     //pull out all ROUTES
-    request = url((boost::format("/api/v1/routes?total=false&exclude_geometry=true&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    request = url((boost::format("/api/v1/routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
     request = *request + import_level;
@@ -1045,6 +1009,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           dep.dep_time = sp.origin_departure_time();
           dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
 
+          dep.frequency_end_time = sp.has_frequency_end_time() ? sp.frequency_end_time() : 0;
+          dep.frequency = sp.has_frequency_headway_seconds() ? sp.frequency_headway_seconds() : 0;
+
           if (!sp.bikes_allowed()) {
             stop_access[dep.orig_pbf_graphid] |= kBicycleAccess;
             stop_access[dep.dest_pbf_graphid] |= kBicycleAccess;
@@ -1114,13 +1081,13 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           //if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = DateTime::remove_service_day(days, start_date, end_date, d);
+            days = DateTime::remove_service_day(days, end_date, tile_date, d);
           }
 
           //if additions are between start and end date then turn on bit.
           for (const auto& x : sp.service_added_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = DateTime::add_service_day(days, start_date, end_date, d);
+            days = DateTime::add_service_day(days, end_date, tile_date, d);
           }
 
           TransitSchedule sched(days, dow_mask, end_day);
@@ -1386,6 +1353,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder_transit.directededges().size());
     node.set_timezone(stop.timezone());
+    node.set_connecting_wayid(stop.osm_way_id());
 
  /** TODO - future when we get egress, station, platform hierarchy
     // Add any intra-station connections - these are always in the same tile?
@@ -1696,12 +1664,23 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
          }
 
          try {
-           // Form transit departures
-           TransitDeparture td(lineid, dep.trip, dep.route,
-                               dep.blockid, dep.headsign_offset, dep.dep_time,
-                               dep.elapsed_time, dep.schedule_index,
-                               dep.wheelchair_accessible, dep.bicycle_accessible);
-           tilebuilder_transit.AddTransitDeparture(std::move(td));
+           if (dep.frequency == 0) {
+             // Form transit departures -- fixed departure time
+             TransitDeparture td(lineid, dep.trip, dep.route,
+                                 dep.blockid, dep.headsign_offset, dep.dep_time,
+                                 dep.elapsed_time, dep.schedule_index,
+                                 dep.wheelchair_accessible, dep.bicycle_accessible);
+             tilebuilder_transit.AddTransitDeparture(std::move(td));
+           } else {
+
+             // Form transit departures -- frequency departure time
+             TransitDeparture td(lineid, dep.trip, dep.route,
+                                 dep.blockid, dep.headsign_offset,
+                                 dep.dep_time, dep.frequency_end_time,
+                                 dep.frequency, dep.elapsed_time, dep.schedule_index,
+                                 dep.wheelchair_accessible, dep.bicycle_accessible);
+             tilebuilder_transit.AddTransitDeparture(std::move(td));
+           }
          } catch(const std::exception& e) {
            LOG_ERROR(e.what());
          }

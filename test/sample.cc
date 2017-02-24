@@ -2,8 +2,8 @@
 #include "skadi/sample.h"
 #include "pixels.h"
 
-#include <valhalla/midgard/sequence.h>
-#include <valhalla/midgard/util.h>
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 
 using namespace valhalla;
 
