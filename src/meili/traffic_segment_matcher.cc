@@ -119,7 +119,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   std::vector<UniqueEdgeOnTrace> edges;
   for (auto& edge : trace_edges) {
     if (!prior_edge.Is_Valid()) {
-      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, edge.dist, edge.dist, edge.secs, edge.secs, &edge - &trace_edges.front()});
+      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, edge.dist, edge.dist, edge.secs, edge.secs, &edge - &trace_edges.front(), &edge - &trace_edges.front()});
     } else  if (edge.edge_id == prior_edge) {
       // Update the time at the end
       edges.back().end_pct = edge.dist;
@@ -134,7 +134,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
       edges.back().end_secs = edge.secs ;
 
       // New edge
-      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs});
+      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs, &edge - &trace_edges.front(), &edge - &trace_edges.front()});
     }
     prior_edge = edge.edge_id;
   }
