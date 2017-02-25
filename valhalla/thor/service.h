@@ -120,7 +120,6 @@ class thor_worker_t {
   std::vector<baldr::PathLocation> correlated_t;
   sif::CostFactory<sif::DynamicCost> factory;
   valhalla::sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
-  valhalla::baldr::GraphReader& reader;
   // Path algorithms (TODO - perhaps use a map?))
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
@@ -130,6 +129,7 @@ class thor_worker_t {
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
+  valhalla::baldr::GraphReader& reader;
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
 
