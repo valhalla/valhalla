@@ -205,12 +205,8 @@ namespace valhalla {
       if (!healthcheck)
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
-      rapidjson::StringBuffer buffer;
-      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-      request.Accept(writer);
-
       worker_t::result_t result{true};
-      result.messages.emplace_back(buffer.GetString());
+      result.messages.emplace_back(rapidjson::to_string(request));
 
       return result;
     }
