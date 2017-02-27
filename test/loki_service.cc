@@ -171,7 +171,7 @@ namespace {
     client.batch();
 
     // Make sure that all requests are tested
-    test::assert_bool(success_count == requests.size(), "Expected passed tests count: " + std::to_string(requests.size()) + "Actual passed tests count: " + std::to_string(success_count));
+    test::assert_bool(success_count == requests.size(), "Expected passed tests count: " + std::to_string(requests.size()) + " Actual passed tests count: " + std::to_string(success_count));
   }
 }
 
