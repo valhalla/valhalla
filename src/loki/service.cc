@@ -70,12 +70,12 @@ namespace {
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
       //skip json or empty entries
-      if(kv.first == "json" || kv.first.size() == 0 || kv.second.size() == 0)
+      if(kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
         continue;
 
       //turn single value entries into single key value
       if(kv.second.size() == 1) {
-        d.AddMember({kv.second.front(), allocator}, {kv.first, allocator}, allocator);
+        d.AddMember({kv.first, allocator}, {kv.second.front(), allocator}, allocator);
         continue;
       }
 
