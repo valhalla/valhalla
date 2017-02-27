@@ -76,11 +76,8 @@ namespace valhalla {
       init_trace(request);
 
       //pass it on to thor
-      rapidjson::StringBuffer buffer;
-      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-      request.Accept(writer);
       worker_t::result_t result{true};
-      result.messages.emplace_back(buffer.GetString());
+      result.messages.emplace_back(rapidjson::to_string(request));
       return result;
     }
 
