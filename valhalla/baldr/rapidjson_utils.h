@@ -5,18 +5,8 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/pointer.h>
-#include <type_traits>
 
 namespace rapidjson{
-
-template<typename T, typename P>
-bool Is(const P* ptr){
-  if (std::is_convertible<T, double>::value){
-    return ptr->IsNumber();
-  }else{
-    return ptr->Is<T>();
-  }
-}
 
 template<typename T>
 inline std::string to_string(const T& document_or_value) {
@@ -33,9 +23,8 @@ namespace valhalla{
 template<typename T, typename V>
 inline boost::optional<T> GetOptionalFromRapidJson(V&& v, const char* source){
   auto* ptr= rapidjson::Pointer{source}.Get(std::forward<V>(v));
-  if(! ptr || ! rapidjson::template Is<T>(ptr)) {
+  if(!ptr || !ptr->template Is<T>())
     return boost::none;
-  }
   return ptr->template Get<T>();
 }
 
