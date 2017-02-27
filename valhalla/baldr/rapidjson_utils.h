@@ -5,6 +5,7 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/pointer.h>
+#include <type_traits>
 
 namespace rapidjson{
 
@@ -22,10 +23,10 @@ namespace valhalla{
 
 template<typename T, typename V>
 inline boost::optional<T> GetOptionalFromRapidJson(V&& v, const char* source){
-  auto* ptr= rapidjson::Pointer{source}.Get(std::forward<V>(v));
-  if(!ptr || !ptr->template Is<T>())
-    return boost::none;
-  return ptr->template Get<T>();
+  auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
+  if(ptr && (ptr->template Is<T>() || (std::is_arithmetic<T>::value && ptr->IsNumber())))
+    return ptr->template Get<T>();
+  return boost::none;
 }
 
 }
