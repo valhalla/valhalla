@@ -142,16 +142,13 @@ namespace valhalla {
       if(!connected)
         throw valhalla_exception_t{400, 170};
 
-      rapidjson::StringBuffer buffer;
-      rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
-      request.Accept(writer);
-
       //ok send on the request with correlated origin and destination filled out
       //using the boost ptree info format
-      //TODO: make a protobuf request object and pass that along, can be come
+      //TODO: make a protobuf request object and pass that along, can become
       //part of thors path proto object and then get copied into odins trip object
+      //in fact just do this for all request types
       worker_t::result_t result{true};
-      result.messages.emplace_back(buffer.GetString());
+      result.messages.emplace_back(rapidjson::to_string(request));
 
       return result;
     }
