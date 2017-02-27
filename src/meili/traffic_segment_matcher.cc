@@ -50,14 +50,14 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   // Form trace positions
   std::vector<PointLL> trace;
   std::vector<uint32_t> times;
-  auto trace_pt = request.get_child_optional("trace");
+  auto trace_pts = request.get_child_optional("trace");
 
-  if (trace_pt) {
-    for (const auto& pts : *trace_pt) {
-      float lat = pts.second.get<float>("lat");
-      float lon = pts.second.get<float>("lon");
+  if (trace_pts) {
+    for (const auto& pt : *trace_pts) {
+      float lat = pt.second.get<float>("lat");
+      float lon = pt.second.get<float>("lon");
       trace.emplace_back(lon, lat);
-      times.push_back(pts.second.get<int>("time"));
+      times.push_back(pt.second.get<int>("time"));
     }
   } else {
     LOG_ERROR("Could not form trace from input JSON= " + json);
