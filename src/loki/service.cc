@@ -63,8 +63,8 @@ namespace {
       throw valhalla_exception_t{400, 100};
 
     // In case where the query is empty
-    if (! d.IsObject()){
-      d.SetObject();
+    if (!d.IsObject() && !d.IsArray()){
+      d.SetObject(); d.SetArray();
     }
 
     //throw the query params into the ptree
