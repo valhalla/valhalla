@@ -128,7 +128,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
   if (! lat) throw std::runtime_error{"lat is missing"};
 
   if (*lat < -90.0f || *lat > 90.0f)
-      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+    throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
 
   auto lon = GetOptionalFromRapidJson<float>(d, "/lon");
   if (! lon) throw std::runtime_error{"lon is missing"};
