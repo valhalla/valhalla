@@ -194,7 +194,13 @@ namespace baldr {
     {500,"Failed to parse intermediate request format"},
     {501,"Failed to parse TripDirections"},
 
-    {599,"Unknown"}
+    {599,"Unknown"},
+
+    // meili project 6xx
+    {600,"Failed to parse json request"},
+    {601,"Insufficiently specified required parameter 'trace'"},
+    {602,"The config is incorrectly loaded"},
+    {603,"Sequence size not equal to match result size"}
   };
 
   struct valhalla_exception_t: public std::runtime_error {
