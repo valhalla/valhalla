@@ -93,7 +93,7 @@ namespace valhalla {
             break;
           case MANY_TO_ONE:
             // Copy
-            targets_child.PushBack(rapidjson::Value{*request_locations->End(), allocator},allocator);
+            targets_child.PushBack(rapidjson::Value{*(request_locations->End() - 1), allocator},allocator);
             request.AddMember("targets", targets_child, allocator);
             // Move
             request.AddMember("sources", *request_locations, allocator);
