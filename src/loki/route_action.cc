@@ -74,7 +74,7 @@ namespace valhalla {
       if (! date_type_pointer.Get(request) && (*costing == "multimodal" || *costing == "transit")) {
         date_type_pointer.Set(request, 0);
       }
-      auto& locations_array = request["/locations"];
+      auto& locations_array = request["locations"];
       //check the date stuff
       auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
       if (auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type")) {
