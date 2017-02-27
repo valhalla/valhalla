@@ -298,11 +298,8 @@ namespace valhalla {
         //log request if greater than X (ms)
         auto work_units = locations.size() ? locations.size() : 1;
         if (!healthcheck && !info.spare && elapsed_time.count() / work_units > long_request) {
-          rapidjson::StringBuffer buffer;
-          rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-          request_rj.Accept(writer);
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("loki::request exceeded threshold::"+ std::string(buffer.GetString()));
+          LOG_WARN("loki::request exceeded threshold::"+ rapidjson::to_string(request_rj));
           midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
 
