@@ -34,7 +34,7 @@ template<typename T, typename V>
 inline boost::optional<T> GetOptionalFromRapidJson(V&& v, const char* source){
   auto* ptr= rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if(! ptr || ! rapidjson::template Is<T>(ptr)) {
-    return boost::nonde;
+    return boost::none;
   }
   return ptr->template Get<T>();
 }
