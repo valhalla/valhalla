@@ -2,6 +2,8 @@
 #define VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 
 #include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 #include <rapidjson/pointer.h>
 #include <type_traits>
 
@@ -14,6 +16,14 @@ bool Is(const P* ptr){
   }else{
     return ptr->Is<T>();
   }
+}
+
+template<typename T>
+inline std::string to_string(const T& document_or_value) {
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  document_or_value.Accept(writer);
+  return std::string(buffer.GetString(), buffer.GetSize());
 }
 
 }
