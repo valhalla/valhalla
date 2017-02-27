@@ -27,19 +27,24 @@ struct UniqueEdgeOnTrace {
   valhalla::baldr::GraphId edge_id;
   float start_pct;
   float end_pct;
-  float secs1;
-  float secs2;
+  float start_secs;
+  float end_secs;
+  long int begin_edge_index;
+  long int end_edge_index;
+
 };
 
 
 // Matched traffic segment.
-struct MatchedTrafficSegments {
+struct MatchedTrafficSegment {
   bool partial_start;                   // Begins along the segment
   bool partial_end;                     // Ends along the segment
   valhalla::baldr::GraphId segment_id;  // Traffic segment unique Id.
   float start_time;                     // Begin time along this segment.
   float end_time;                       // End time along this segment.
   uint32_t length;                      // Length in meters along this segment
+  long int begin_shape_index;
+  long int end_shape_index;
 };
 
 /**

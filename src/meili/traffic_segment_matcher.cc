@@ -50,14 +50,14 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   // Form trace positions
   std::vector<PointLL> trace;
   std::vector<uint32_t> times;
-  auto trace_pt = request.get_child_optional("trace");
+  auto trace_pts = request.get_child_optional("trace");
 
-  if (trace_pt) {
-    for (const auto& lls : *trace_pt) {
-      float lat = lls.second.get<float>("lat");
-      float lon = lls.second.get<float>("lon");
+  if (trace_pts) {
+    for (const auto& pt : *trace_pts) {
+      float lat = pt.second.get<float>("lat");
+      float lon = pt.second.get<float>("lon");
       trace.emplace_back(lon, lat);
-      times.push_back(lls.second.get<int>("time"));
+      times.push_back(pt.second.get<int>("time"));
     }
   } else {
     LOG_ERROR("Could not form trace from input JSON= " + json);
@@ -95,7 +95,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   }
 
   if (sequence.size() != results.size()) {
-    LOG_ERROR("Sequence size not equal to match reslt size");
+    LOG_ERROR("Sequence size not equal to match result size");
     return "{\"foo\":\"bar\"}";
   }
 
@@ -106,7 +106,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   // Form a list of edges for each result - match times to each.
   size_t idx = 0;
   std::vector<EdgeOnTrace> trace_edges;
-  for (auto res : results) {
+  for (const auto& res : results) {
     // Make sure edge is valid
     if (res.edgeid().Is_Valid()) {
       trace_edges.emplace_back(EdgeOnTrace{res.edgeid(), GetEdgeDist(res, matcher), static_cast<float>(times[idx])});
@@ -117,29 +117,35 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   // Iterate through the edges and form a list of unique edges
   GraphId prior_edge;
   std::vector<UniqueEdgeOnTrace> edges;
-  for (auto edge : trace_edges) {
+  for (auto& edge : trace_edges) {
     if (!prior_edge.Is_Valid()) {
-      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, edge.dist, edge.dist, edge.secs, edge.secs});
+      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, edge.dist, edge.dist, edge.secs, edge.secs, &edge - &trace_edges.front(), &edge - &trace_edges.front()});
     } else  if (edge.edge_id == prior_edge) {
       // Update the time at the end
       edges.back().end_pct = edge.dist;
-      edges.back().secs2   = edge.secs;
+      edges.back().end_secs = edge.secs;
+      edges.back().end_edge_index = &edge - &trace_edges.front();
     } else {
       // TODO - verify that the edges are connected.
       // what if these edges are not connected?
 
       // Update time and distance at the end of the prior edge
       edges.back().end_pct = 1.0f;
-      edges.back().secs2   = edge.secs ;
+      edges.back().end_secs = edge.secs ;
 
       // New edge
-      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs});
+      edges.emplace_back(UniqueEdgeOnTrace{edge.edge_id, 0.0f, edge.dist, edge.secs, edge.secs, &edge - &trace_edges.front(), &edge - &trace_edges.front()});
     }
     prior_edge = edge.edge_id;
   }
 
+  //TODO: when we are generating segments we need to be careful about the times
+  //used. we should use the lengths with the percentages along to do a linear
+  //combination to properly set the begin and end times of a given segment. this also
+  //means that the time is now floating point (or only second resolution)
+
   GraphId prior_segment;
-  std::vector<MatchedTrafficSegments> traffic_segment;
+  std::vector<MatchedTrafficSegment> traffic_segment;
   for (const auto& edge : edges) {
     // Get the directed edge Id and tile
     GraphId edge_id = edge.edge_id;
@@ -159,17 +165,20 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
         // No segment associated to this edge...
         LOG_DEBUG("Traffic segment ID is invalid");
       } else if (seg.segment_id_ == prior_segment) {
+        // A continuation of a segment
         // Update end time, end_pct, and length of the current segment
-        traffic_segment.back().end_time = edge.secs2;
+        traffic_segment.back().end_time = edge.end_secs;
         traffic_segment.back().length += length;
+        traffic_segment.back().end_shape_index = edge.end_edge_index;
         if (seg.ends_segment_ && edge.end_pct == 1.0f) {
           traffic_segment.back().partial_end = false;
         }
       } else {
+        // A new segment
         bool starts = (seg.starts_segment_ && edge.start_pct == 0.0f);
         bool ends =   (seg.ends_segment_ && edge.end_pct == 1.0f);
-        traffic_segment.emplace_back(MatchedTrafficSegments{!starts, !ends, seg.segment_id_,
-                              edge.secs1, edge.secs2, static_cast<uint32_t>(length)});
+        traffic_segment.emplace_back(MatchedTrafficSegment{!starts, !ends, seg.segment_id_,
+                              edge.start_secs, edge.end_secs, static_cast<uint32_t>(length), edge.begin_edge_index, edge.end_edge_index});
         prior_segment = seg.segment_id_;
       }
     } else if (segments.size() > 1) {
@@ -178,7 +187,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
         // Skip this segment chunk if outside the range of the edge traversed
         // by this part of the trace
         if (!seg.segment_id_.Is_Valid() ||
-            seg.end_percent_   < edge.start_pct ||
+            seg.end_percent_ < edge.start_pct ||
             seg.begin_percent_ > edge.end_pct) {
           continue;
         }
@@ -192,8 +201,12 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
 
         if (seg.segment_id_ == prior_segment) {
           // TODO: Update end time, end_pct, and length of the current segment
-          traffic_segment.back().end_time = edge.secs2;
+          traffic_segment.back().end_time = edge.end_secs;
           traffic_segment.back().length += seg_length;
+          for (size_t i = edge.begin_edge_index; i <= edge.end_edge_index; ++i) {
+            if(trace_edges[i].dist < seg.end_percent_)
+              traffic_segment.back().end_shape_index = i;
+          }
           if (seg.ends_segment_) {
             // Mark this segment as ended
             traffic_segment.back().partial_end = false;
@@ -202,10 +215,17 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
           // Compute start time, end time, and length along this segment
           bool starts = seg.starts_segment_;
           bool ends =   seg.ends_segment_;
-          float start_secs = edge.secs1;  // TODO!l
-          float end_secs = edge.secs2;    // TODO!!
-          traffic_segment.emplace_back(MatchedTrafficSegments{!starts, !ends, seg.segment_id_,
-                                start_secs, end_secs, static_cast<uint32_t>(seg_length)});
+          float start_secs = edge.start_secs;  // TODO!l
+          float end_secs = edge.end_secs;    // TODO!!
+          traffic_segment.emplace_back(MatchedTrafficSegment{!starts, !ends, seg.segment_id_,
+                                start_secs, end_secs, static_cast<uint32_t>(seg_length),
+                                edge.begin_edge_index, edge.end_edge_index});
+          for (size_t i = edge.begin_edge_index; i <= edge.end_edge_index; ++i) {
+            if(trace_edges[i].dist < seg.begin_percent_)
+              traffic_segment.back().begin_shape_index = i;
+            if(trace_edges[i].dist < seg.end_percent_)
+              traffic_segment.back().end_shape_index = i;
+          }
           prior_segment = seg.segment_id_;
         }
       }
@@ -229,6 +249,8 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
         {"start_time", json::fp_t{seg.start_time, 1}},
         {"end_time", json::fp_t{seg.end_time, 1}},
         {"length", static_cast<uint64_t>(seg.length)},
+        {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
+        {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
       })
     );
   }
