@@ -100,6 +100,15 @@ class GraphReader {
   bool AreEdgesConnected(const GraphId& edge1, const GraphId& edge2);
 
   /**
+   * Gets the shortcut edge that includes the specified edge.
+   * @param  edgeid  Graph Id of a directed edge.
+   * @return Returns the graph Id of the shortcut directed edge that include
+   *         the specified edge. Returns an invalid GraphId if the edge is not
+   *         part of a shortcut.
+   */
+  GraphId GetShortcut(const GraphId& id);
+
+  /**
    * Convenience method to get the relative edge density (from the
    * begin node of an edge).
    * @param   edgeid  Graph Id of the directed edge.

@@ -134,15 +134,16 @@ class PedestrianCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           current tile
-   * @param  edgeid         edgeid that we care about
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& edgeid) const;
+                 const baldr::GraphId& opp_edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -423,7 +424,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
 
   if (!(edge->forwardaccess() & access_mask_) ||
        (edge->surface() > minimal_allowed_surface_) ||
-        edge->is_shortcut() ||
+        edge->is_shortcut() || IsUserAvoidEdge(edgeid) ||
  //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
@@ -442,7 +443,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& edgeid) const {
+               const baldr::GraphId& opp_edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Do not check max walking distance and assume we are not allowing
@@ -450,7 +451,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // multimodal routes).
   if (!(opp_edge->forwardaccess() & access_mask_) ||
        (opp_edge->surface() > minimal_allowed_surface_) ||
-        opp_edge->is_shortcut() ||
+        opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
  //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
         opp_edge->use() == Use::kTransitConnection) {
     return false;
