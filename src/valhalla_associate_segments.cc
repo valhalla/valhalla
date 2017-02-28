@@ -135,7 +135,7 @@ using leftovers_t = std::vector<std::pair<GraphId, vb::TrafficChunk > >;
 struct edge_association {
   explicit edge_association(const bpt::ptree &pt);
 
-  std::pair<uint32_t, uint32_t> add_tile(const std::string &file_name, std::mutex& lock);
+  std::pair<uint32_t, uint32_t> add_tile(const std::string &file_name);
   const leftovers_t& leftovers() const { return m_leftover_associations; }
 
 private:
@@ -356,10 +356,12 @@ edge_association::edge_association(const bpt::ptree &pt)
   , m_tile(nullptr) {
 }
 
-vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb::GraphTile*& tile) {
+vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb::GraphTile*& tile,
+                      uint32_t& current_length) {
   //walk from this edge to the next one if there is only one choice of where
   //to walk if there are more choices then just return invalid to signify
   //stopping this is trying to mimic what osmlr generation does
+  uint32_t next_length = 0;
   if(tile->id() != edge_id.Tile_Base())
     tile = reader.GetGraphTile(edge_id);
   const auto* edge = tile->directededge(edge_id);
@@ -368,18 +370,24 @@ vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb:
   const auto* node = tile->node(edge->endnode());
   const auto* child_edge = tile->directededge(node->edge_index());
   vb::GraphId next;
-  for(int i = 0; i < node->edge_count(); ++i) {
-    if(!child_edge->trans_up() && child_edge->use() != Use::kTransitConnection &&
-      !child_edge->trans_down() && !child_edge->IsTransitLine())
+  for(int i = 0; i < node->edge_count(); ++i, child_edge++) {
+    // Skip transition edges, shortcuts, transit connections (or transit lines)
+    // and the opposing edge to the incoming edge (to prevent U-turns).
+    if(i != edge->opp_index() && !child_edge->trans_up() &&
+       child_edge->use() != Use::kTransitConnection &&
+      !child_edge->trans_down() && !child_edge->IsTransitLine() &&
+      !child_edge->is_shortcut())
     {
       if(next.Is_Valid())
         return {};
       else {
         next = edge->endnode();
         next.fields.id = node->edge_index() + i;
+        next_length = child_edge->length();
       }
     }
   }
+  current_length += next_length;
   return next;
 }
 
@@ -448,7 +456,8 @@ vb::GraphId edge_association::find_common_edge(
 }
 
 std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLocation &dest,
-                              vb::GraphReader& reader, const vb::GraphTile* tile) {
+                              vb::GraphReader& reader, const vb::GraphTile* tile,
+                              uint32_t total_length) {
   //check for the easy case
   for (const auto &origin_edge : origin.edges)
     for (const auto &dest_edge : dest.edges)
@@ -458,6 +467,7 @@ std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLoca
   //see if we can easily find a longer path
   for (const auto &origin_edge : origin.edges) {
     //try walking from here
+    uint32_t current_length = 0;
     std::vector<vb::GraphId> edges{origin_edge.id};
     do {
       //for each ending edge
@@ -467,20 +477,23 @@ std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLoca
           return edges;
       }
       //get the next edge
-      edges.push_back(next_edge(edges.back(), reader, tile));
+      edges.push_back(next_edge(edges.back(), reader, tile, current_length));
       //if the edge is invalid we have no where to go
-    } while(edges.back().Is_Valid() && edges.size() < 1000);
-
-    // TODO - more robust method of detecting infinite loop
-    if (edges.size() == 1000) {
-/*      for (auto edge : edges) {
+    } while(edges.back().Is_Valid() && current_length < (total_length * 1.1f));
+/*
+    // Temporary - log an issue - exceeding length. This seems to occur
+    // for "disconnected" ways. Ways that do not connect to anything!
+    if (current_length >= (total_length * 1.1f)) {
+      std::cout << "Exceeding length: current = " << current_length << " total = "
+          << total_length << std::endl;
+      for (auto edge : edges) {
         const GraphTile* tile = reader.GetGraphTile(edge);
         const DirectedEdge* de = tile->directededge(edge);
         auto ei = tile->edgeinfo(de->edgeinfo_offset());
         std::cout << edge << " wayId = " << ei.wayid() << std::endl;
-      }*/
+      }
       return {};
-    }
+    } */
   }
 
   //fail try a route?
@@ -581,7 +594,7 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
   std::remove_if(dest.edges.begin(), dest.edges.end(), [](const vb::PathLocation::PathEdge& e){return e.begin_node();});
 
   // check if its a trivial path between edges
-  auto walked_edges = walk(origin, dest, m_reader, m_tile);
+  auto walked_edges = walk(origin, dest, m_reader, m_tile, total_length);
   if (walked_edges.size()) {
     // TODO: check bearing, length, FRC, FOW, etc...
 
@@ -817,7 +830,7 @@ vb::GraphId parse_file_name(const std::string &file_name) {
   return vb::GraphTile::GetTileId(file_name);
 }
 
-std::pair<uint32_t, uint32_t> edge_association::add_tile(const std::string &file_name, std::mutex& lock) {
+std::pair<uint32_t, uint32_t> edge_association::add_tile(const std::string &file_name) {
   //read the osmlr tile
   pbf::Tile tile;
   {
@@ -852,10 +865,8 @@ std::pair<uint32_t, uint32_t> edge_association::add_tile(const std::string &file
   }
 
   //finish this tile
-  lock.lock();
   m_reader.Clear();
   m_tile_builder->UpdateTrafficSegments();
-  lock.unlock();
 
   return std::make_pair(success_count, failure_count);
 }
@@ -882,7 +893,7 @@ void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr
       break;
 
     //get the local associations
-    auto stats = e.add_tile(osmlr_filename, lock);
+    auto stats = e.add_tile(osmlr_filename);
 
     success_count += stats.first;
     failure_count += stats.second;
