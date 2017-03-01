@@ -55,10 +55,27 @@ std::string to_string(const vb::GraphId &i) {
 
 namespace {
 
-// be permissive here, as we do want to collect traffic on most vehicular
-// routes.
-constexpr uint32_t vehicular = vb::kAutoAccess | vb::kTruckAccess |
-    vb::kTaxiAccess | vb::kBusAccess | vb::kHOVAccess;
+// 10 meter length matching tolerance
+constexpr uint32_t kLengthTolerance = 10;
+
+enum class MatchType : uint8_t {
+  kWalk = 0,
+  kShortestPath = 1
+};
+
+struct MatchStats {
+  uint32_t success_count;
+  uint32_t failure_count;
+  uint32_t walk_count;
+  uint32_t path_count;
+
+  MatchStats()
+    : success_count(0),
+      failure_count(0),
+      walk_count(0),
+      path_count(0) {
+  }
+};
 
 vm::PointLL interp(vm::PointLL a, vm::PointLL b, double frac) {
   return vm::PointLL(a.AffineCombination(1.0 - frac, frac, b));
@@ -135,17 +152,16 @@ using leftovers_t = std::vector<std::pair<GraphId, vb::TrafficChunk > >;
 struct edge_association {
   explicit edge_association(const bpt::ptree &pt);
 
-  std::pair<uint32_t, uint32_t> add_tile(const std::string &file_name);
+  MatchStats add_tile(const std::string &file_name);
   const leftovers_t& leftovers() const { return m_leftover_associations; }
 
 private:
-  bool match_segment(vb::GraphId segment_id, const pbf::Segment &segment);
-  std::vector<vb::GraphId> match_edges(const pbf::Segment &segment, uint8_t level);
+  bool match_segment(vb::GraphId segment_id, const pbf::Segment &segment,
+                     MatchType& match_type);
+  std::vector<vb::GraphId> match_edges(const pbf::Segment &segment, uint8_t level,
+                                       MatchType& match_type);
   vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
   vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
-  std::vector<vb::GraphId> find_nodes_within(float dist, const vm::PointLL &pt);
-  vb::GraphId find_common_edge(const std::vector<vb::GraphId> &origins,
-                               const std::vector<vb::GraphId> &dests);
 
   void assign_one_to_one(const vb::GraphId& edge_id, const vb::GraphId& segment_id);
   void assign_one_to_many(const std::vector<vb::GraphId> &edges, const vb::GraphId& segment_id);
@@ -169,20 +185,19 @@ struct edge_score {
 };
 
 // Use this method to determine whether an edge should be allowed along the
-// merged path.
-// TODO - update to skip turn channels, internal edges, roundabouts when OSMLR
-// creation is updated to also skip them.
+// merged path. This method should match the predicate used to create OSMLR
+// segments.
 bool allow_edge_pred(const vb::DirectedEdge *edge) {
   return (!edge->trans_up() && !edge->trans_down() && !edge->is_shortcut() &&
            edge->use() != vb::Use::kTransitConnection &&
-    //       edge->use() != vb::Use::kTurnChannel && !edge->internal() &&
-           edge->use() != vb::Use::kFerry && // !edge->roundabout() &&
+           edge->use() != vb::Use::kTurnChannel && !edge->internal() &&
+           edge->use() != vb::Use::kFerry && !edge->roundabout() &&
           (edge->forwardaccess() & vb::kVehicularAccess) != 0);
 }
 
+// Check if oneway. Assumes forward access is allowed. Edge is oneway if
+// no reverse vehicular access is allowed
 bool is_oneway(const vb::DirectedEdge *e) {
-  // TODO: don't need to find opposite edge, as this info already in the
-  // reverseaccess mask?
   return (e->reverseaccess() & vb::kVehicularAccess) == 0;
 }
 
@@ -272,14 +287,16 @@ DistanceOnlyCost::~DistanceOnlyCost() {
 }
 
 uint32_t DistanceOnlyCost::access_mode() const {
-  return vehicular;
+  return vb::kVehicularAccess;
 }
 
 bool DistanceOnlyCost::Allowed(const vb::DirectedEdge* edge,
-                               const vs::EdgeLabel&,
+                               const vs::EdgeLabel& pred,
                                const vb::GraphTile*&,
                                const vb::GraphId&) const {
-  return allow_edge_pred(edge);
+  // Do not allow U-turns/back-tracking
+  return allow_edge_pred(edge) &&
+        (pred.opp_local_idx() != edge->localedgeidx());
 }
 
 bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
@@ -287,7 +304,9 @@ bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
                                       const vb::DirectedEdge* opp_edge,
                                       const vb::GraphTile*& tile,
                                       const vb::GraphId& edgeid) const {
-  return allow_edge_pred(edge);
+  // Do not allow U-turns/back-tracking
+  return allow_edge_pred(edge) &&
+        (pred.opp_local_idx() != edge->localedgeidx());
 }
 
 bool DistanceOnlyCost::Allowed(const vb::NodeInfo*) const {
@@ -335,7 +354,7 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
   //we dont want non real edges but also we want the edges to be on the right level
   //also right now only driveable edges please
   auto edge_filter = [level](const DirectedEdge* edge) -> float {
-    return edge->endnode().level() == level && (edge->forwardaccess() & vehicular) &&
+    return edge->endnode().level() == level && (edge->forwardaccess() & vb::kVehicularAccess) &&
       !(edge->trans_up() || edge->trans_down() || edge->is_shortcut() || edge->IsTransitLine());
   };
 
@@ -356,33 +375,38 @@ edge_association::edge_association(const bpt::ptree &pt)
   , m_tile(nullptr) {
 }
 
+//walk from this edge to the next one if there is only one choice of where
+//to walk if there are more choices then just return invalid to signify
+//stopping this is trying to mimic what osmlr generation does
 vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb::GraphTile*& tile,
                       uint32_t& current_length) {
-  //walk from this edge to the next one if there is only one choice of where
-  //to walk if there are more choices then just return invalid to signify
-  //stopping this is trying to mimic what osmlr generation does
   uint32_t next_length = 0;
   if(tile->id() != edge_id.Tile_Base())
     tile = reader.GetGraphTile(edge_id);
   const auto* edge = tile->directededge(edge_id);
-  if(tile->id() != edge->endnode().Tile_Base())
-    tile = reader.GetGraphTile(edge->endnode());
-  const auto* node = tile->node(edge->endnode());
+
+  // Get the end node (need a new tile if the edge leaves the current tile)
+  GraphId end_node = edge->endnode();
+  if (edge->leaves_tile())
+    tile = reader.GetGraphTile(end_node);
+  const auto* node = tile->node(end_node);
+
+  // Get child edges of this node
   const auto* child_edge = tile->directededge(node->edge_index());
   vb::GraphId next;
   for(int i = 0; i < node->edge_count(); ++i, child_edge++) {
     // Skip transition edges, shortcuts, transit connections (or transit lines)
     // and the opposing edge to the incoming edge (to prevent U-turns).
     if(i != edge->opp_index() && !child_edge->trans_up() &&
-       child_edge->use() != Use::kTransitConnection &&
-      !child_edge->trans_down() && !child_edge->IsTransitLine() &&
-      !child_edge->is_shortcut())
+         !child_edge->trans_down() && !child_edge->is_shortcut() &&
+          child_edge->use() != Use::kTransitConnection &&
+         !child_edge->IsTransitLine())
     {
+      // Return invalid GraphId if more than 1 candidate edge exists
       if(next.Is_Valid())
         return {};
       else {
-        next = edge->endnode();
-        next.fields.id = node->edge_index() + i;
+        next = {end_node.tileid(), end_node.level(), node->edge_index() + i};
         next_length = child_edge->length();
       }
     }
@@ -408,98 +432,6 @@ private:
   const vb::GraphTile *m_last_tile;
 };
 
-vb::GraphId edge_association::find_common_edge(
-  const std::vector<vb::GraphId> &origins,
-  const std::vector<vb::GraphId> &dests) {
-
-  std::unordered_set<vb::GraphId> start_edges;
-  vb::GraphId found;
-
-  last_tile_cache cache(m_reader);
-  uint32_t count, edge_index;
-  for (auto node : origins) {
-    auto *tile = cache.get(node);
-    const auto *edges = tile->GetDirectedEdges(node.id(), count, edge_index);
-    const auto base = node.Tile_Base();
-    for (uint32_t i = 0; i < count; ++i) {
-      start_edges.insert(base + uint64_t(edge_index + i));
-    }
-  }
-
-  if (start_edges.empty()) {
-    return vb::GraphId();
-  }
-
-  for (auto node : dests) {
-    auto *tile = cache.get(node);
-    const auto *edges = tile->GetDirectedEdges(node.id(), count, edge_index);
-    const auto base = node.Tile_Base();
-    for (uint32_t i = 0; i < count; ++i) {
-      auto *edge = tile->directededge(edge_index + i);
-      auto endnode = edge->endnode();
-      auto *opp_tile = (endnode.Tile_Base() == base) ? tile : m_reader.GetGraphTile(endnode);
-      auto opp_id = opp_tile->GetOpposingEdgeId(edge);
-
-      auto itr = start_edges.find(opp_id);
-      if (itr != start_edges.end()) {
-        if (found) {
-          // already found a candidate, and can't have two candidates.
-          return vb::GraphId();
-        } else {
-          found = opp_id;
-        }
-      }
-    }
-  }
-
-  return found;
-}
-
-std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLocation &dest,
-                              vb::GraphReader& reader, const vb::GraphTile* tile,
-                              uint32_t total_length) {
-  //check for the easy case
-  for (const auto &origin_edge : origin.edges)
-    for (const auto &dest_edge : dest.edges)
-      if (origin_edge.id == dest_edge.id)
-        return {origin_edge.id};
-
-  //see if we can easily find a longer path
-  for (const auto &origin_edge : origin.edges) {
-    //try walking from here
-    uint32_t current_length = 0;
-    std::vector<vb::GraphId> edges{origin_edge.id};
-    do {
-      //for each ending edge
-      for (const auto &dest_edge : dest.edges) {
-        //is does this complete the path
-        if (edges.back().id() == dest_edge.id)
-          return edges;
-      }
-      //get the next edge
-      edges.push_back(next_edge(edges.back(), reader, tile, current_length));
-      //if the edge is invalid we have no where to go
-    } while(edges.back().Is_Valid() && current_length < (total_length * 1.1f));
-/*
-    // Temporary - log an issue - exceeding length. This seems to occur
-    // for "disconnected" ways. Ways that do not connect to anything!
-    if (current_length >= (total_length * 1.1f)) {
-      std::cout << "Exceeding length: current = " << current_length << " total = "
-          << total_length << std::endl;
-      for (auto edge : edges) {
-        const GraphTile* tile = reader.GetGraphTile(edge);
-        const DirectedEdge* de = tile->directededge(edge);
-        auto ei = tile->edgeinfo(de->edgeinfo_offset());
-        std::cout << edge << " wayId = " << ei.wayid() << std::endl;
-      }
-      return {};
-    } */
-  }
-
-  //fail try a route?
-  return {};
-}
-
 // given two bearings in degrees, return the unsigned angle between them.
 int bear_diff(int bear1, int bear2) {
   int bear_diff = std::abs(bear1 - bear2);
@@ -518,42 +450,52 @@ uint32_t abs_u32_diff(uint32_t a, uint32_t b) {
   return (a > b) ? (a - b) : (b - a);
 }
 
-vm::AABB2<vm::PointLL> expand_bbox_at_point(float dist, const vm::PointLL &pt) {
-  float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
-  float delta_lng = dist / meters_per_lng;
-  float delta_lat = dist / vm::kMetersPerDegreeLat;
+// Walk a path between origin and destination edges.
+std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLocation &dest,
+                              vb::GraphReader& reader, const uint32_t total_length) {
+  // Create a set of ending edges. Skip edges that begin at a node (outbound)
+  std::unordered_set<GraphId> dest_edges;
+  for (const auto &dest_edge : dest.edges) {
+    if (dest_edge.begin_node()) {
+      continue;
+    }
+    dest_edges.insert(dest_edge.id);
+  }
 
-  return vm::AABB2<vm::PointLL>(
-    {pt.lng() - delta_lng, pt.lat() - delta_lat},
-    {pt.lng() + delta_lng, pt.lat() + delta_lat});
+  // Walk edges until there is no valid continuing edge (means there are no
+  // valid continuing edges or more than 1) or we have exceeded the length.
+  for (const auto &origin_edge : origin.edges) {
+    // Skip edges ending at a node (inbound)
+    if (origin_edge.end_node()) {
+      continue;
+    }
+
+    // Walk a path from this edge
+    auto* tile = reader.GetGraphTile(origin_edge.id);
+    uint32_t walked_length = tile->directededge(origin_edge.id)->length();
+    std::vector<vb::GraphId> edges{origin_edge.id};
+    do {
+      // Return the path edges if we found a destination edge
+      if (dest_edges.find(edges.back()) != dest_edges.end() &&
+          abs_u32_diff(walked_length, total_length) < kLengthTolerance) {
+        return edges;
+      }
+
+      // Get the next edge, update the walked length
+      edges.push_back(next_edge(edges.back(), reader, tile, walked_length));
+
+      // Continue while next edge is valid and length does not exceed total
+      // plus the tolerance
+    } while(edges.back().Is_Valid() && walked_length < (total_length + kLengthTolerance));
+  }
+  // Edge walking did not find a candidate path
+  return {};
 }
 
-std::vector<vb::GraphId> edge_association::find_nodes_within(float dist, const vm::PointLL &pt) {
-
-  const auto bbox = expand_bbox_at_point(dist, pt);
-  return vl::nodes_in_bbox(bbox, m_reader);
-}
-
-std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segment, uint8_t level) {
+std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segment, uint8_t level,
+                                                       MatchType& match_type) {
   const size_t size = segment.lrps_size();
   assert(size >= 2);
-
-  std::vector<std::vector<edge_score> > locs;
-  locs.resize(size - 1);
-
-  auto origin_coord = coord_for_lrp(segment.lrps(0));
-  auto origin_nodes = find_nodes_within(10.0, origin_coord);
-  if (origin_nodes.size() == 0) {
-    LOG_DEBUG("Unable to find node near origin " + std::to_string(origin_coord) + ". Segment cannot be matched, discarding.");
-    return std::vector<vb::GraphId>();
-  }
-
-  auto dest_coord = coord_for_lrp(segment.lrps(size - 1));
-  auto dest_nodes = find_nodes_within(10.0, dest_coord);
-  if (dest_nodes.size() == 0) {
-    LOG_DEBUG("Unable to find node near destination " + std::to_string(dest_coord) + ". Segment cannot be matched, discarding.");
-    return std::vector<vb::GraphId>();
-  }
 
   // calculate total length of the segment for comparison to common edges or
   // short "walked" paths.
@@ -561,32 +503,9 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
   for (const auto &lrp : segment.lrps()) {
     total_length += lrp.length();
   }
-  auto common_edge_id = find_common_edge(origin_nodes, dest_nodes);
-  if (common_edge_id) {
-    // TODO: check bearing, length, FRC, FOW, etc...
 
-    auto *tile = m_reader.GetGraphTile(common_edge_id);
-    auto *edge = tile->directededge(common_edge_id);
-
-    auto &lrp = segment.lrps(0);
-
-    vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
-    int bear = bear_diff(bearing(tile, common_edge_id, 0.0), lrp.bear());
-    int len = abs_u32_diff(edge->length(), total_length);
-    FormOfWay fow = FormOfWay(lrp.start_fow());
-
-    if ((road_class == edge->classification()) &&
-        (bear < 10) && (len < 10) &&
-        (fow == form_of_way(edge))) {
-
-      // if the edge matches all our expectations, then we can just assume
-      // we found the right edge and return it. this should be significantly
-      // faster than running a whole route to check.
-      std::vector<vb::GraphId> edges;
-      edges.emplace_back(common_edge_id);
-      return edges;
-    }
-  }
+  auto origin_coord = coord_for_lrp(segment.lrps(0));
+  auto dest_coord = coord_for_lrp(segment.lrps(size - 1));
 
   auto origin = loki_search_single(vb::Location(origin_coord), m_reader, level);
   std::remove_if(origin.edges.begin(), origin.edges.end(), [](const vb::PathLocation::PathEdge& e){return e.end_node();});
@@ -594,37 +513,36 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
   std::remove_if(dest.edges.begin(), dest.edges.end(), [](const vb::PathLocation::PathEdge& e){return e.begin_node();});
 
   // check if its a trivial path between edges
-  auto walked_edges = walk(origin, dest, m_reader, m_tile, total_length);
+  auto walked_edges = walk(origin, dest, m_reader, total_length);
   if (walked_edges.size()) {
-    // TODO: check bearing, length, FRC, FOW, etc...
-
-    uint32_t walked_length = 0;
-    for (auto edge_id : walked_edges) {
-      auto *tile = m_reader.GetGraphTile(walked_edges.front());
-      auto *edge = tile->directededge(walked_edges.front());
-      walked_length += edge->length();
-    }
-
+    // Check bearing, road classification, and form of way
     auto *tile = m_reader.GetGraphTile(walked_edges.front());
     auto *edge = tile->directededge(walked_edges.front());
-
     auto &lrp = segment.lrps(0);
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
-    int bear = bear_diff(bearing(tile, walked_edges.front(), 0.0), lrp.bear());
-    int len = abs_u32_diff(walked_length, total_length);
+    uint16_t walked_bearing = bearing(tile, walked_edges.front(), 0.0);
+    int bear = bear_diff(walked_bearing, lrp.bear());
     FormOfWay fow = FormOfWay(lrp.start_fow());
-
     if ((road_class == edge->classification()) &&
-        (bear < 10) && (len < 10) &&
-        (fow == form_of_way(edge))) {
+        (bear < 10) && (fow == form_of_way(edge))) {
 
       // if the edge matches all our expectations, then we can just assume
       // we found the right edge and return it. this should be significantly
       // faster than running a whole route to check.
       // TODO: the first and last match edges could be partial, the TrafficAssociation
       // must be made aware of this and use the percentages returned in the PathEdge
+      match_type = MatchType::kWalk;
       return walked_edges;
+    } else {
+     if (road_class != edge->classification()) {
+        LOG_DEBUG("Road class mismatch");
+      } else if (bear >= 10) {
+        LOG_DEBUG("Bearing mismatch: bear = " + std::to_string(walked_bearing) + " LRP bearing = " +
+                 std::to_string(lrp.bear()));
+      } else {
+        LOG_DEBUG("Form of way mismatch");
+      }
     }
   }
 
@@ -719,11 +637,11 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
   // remove duplicate instances of the edge ID in the path info
   auto new_end = std::unique(edges.begin(), edges.end());
   edges.erase(new_end, edges.end());
+  match_type = MatchType::kShortestPath;
   return edges;
 }
 
 static const float kApproxEqualDistanceSquared = 100.0f;
-
 bool approx_equal(const vm::PointLL &a, const vm::PointLL &b) {
   return a.DistanceSquared(b) <= kApproxEqualDistanceSquared;
 }
@@ -753,8 +671,9 @@ vm::PointLL edge_association::lookup_start_coord(const vb::GraphId& edge_id) {
   return lookup_end_coord(node_id.Tile_Base() + uint64_t(node->edge_index() + opp_index));
 }
 
-bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment &segment) {
-  auto edges = match_edges(segment, segment_id.level());
+bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment &segment,
+                                     MatchType& match_type) {
+  auto edges = match_edges(segment, segment_id.level(), match_type);
   if (edges.empty()) {
     LOG_DEBUG("Unable to match segment " + std::to_string(segment_id) + ".");
     return false;
@@ -830,7 +749,7 @@ vb::GraphId parse_file_name(const std::string &file_name) {
   return vb::GraphTile::GetTileId(file_name);
 }
 
-std::pair<uint32_t, uint32_t> edge_association::add_tile(const std::string &file_name) {
+MatchStats edge_association::add_tile(const std::string &file_name) {
   //read the osmlr tile
   pbf::Tile tile;
   {
@@ -841,24 +760,29 @@ std::pair<uint32_t, uint32_t> edge_association::add_tile(const std::string &file
   }
 
   //get a tile builder ready for this tile
-  uint32_t success_count = 0;
-  uint32_t failure_count = 0;
   auto base_id = parse_file_name(file_name);
   m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.GetTileHierarchy(), base_id, false));
   m_tile_builder->InitializeTrafficSegments();
   m_tile = m_reader.GetGraphTile(base_id);
 
   //do the matching of the segments in this osmlr tile
+  MatchStats stats;
   std::cout.precision(16);
   uint64_t entry_id = 0;
+  MatchType match_type = MatchType::kWalk;
   for (auto &entry : tile.entries()) {
     if (!entry.has_marker()) {
       assert(entry.has_segment());
       auto &segment = entry.segment();
-      if (match_segment(base_id + entry_id, segment)) {
-        success_count++;
+      if (match_segment(base_id + entry_id, segment, match_type)) {
+        stats.success_count++;
+        if (match_type == MatchType::kWalk) {
+          stats.walk_count++;
+        } else {
+          stats.path_count++;
+        }
       } else {
-        failure_count++;
+        stats.failure_count++;
       }
     }
     entry_id += 1;
@@ -868,7 +792,7 @@ std::pair<uint32_t, uint32_t> edge_association::add_tile(const std::string &file
   m_reader.Clear();
   m_tile_builder->UpdateTrafficSegments();
 
-  return std::make_pair(success_count, failure_count);
+  return stats;
 }
 
 void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr_tiles, std::mutex& lock,
@@ -878,8 +802,7 @@ void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr
   //of a tile.
   edge_association e(pt);
 
-  uint32_t success_count = 0;
-  uint32_t failure_count = 0;
+  MatchStats total;
   while(true) {
     //get a file to work with
     std::string osmlr_filename;
@@ -895,11 +818,14 @@ void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr
     //get the local associations
     auto stats = e.add_tile(osmlr_filename);
 
-    success_count += stats.first;
-    failure_count += stats.second;
-
-    LOG_INFO("Success = " + std::to_string(success_count) +
-            " Failure = " + std::to_string(failure_count));
+    total.success_count += stats.success_count;
+    total.failure_count += stats.failure_count;
+    total.walk_count += stats.walk_count;
+    total.path_count += stats.path_count;
+    LOG_INFO("Success = " + std::to_string(total.success_count) +
+            " Failure = " + std::to_string(total.failure_count) +
+            " Walk = " + std::to_string(total.walk_count) +
+            " Path = " + std::to_string(total.path_count))
   }
 
   //pass it back
