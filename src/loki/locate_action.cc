@@ -123,8 +123,8 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_locate(const boost::property_tree::ptree& request) {
-      parse_locations(request);
+    void loki_worker_t::init_locate(boost::property_tree::ptree& request) {
+      locations = parse_locations(request, "locations");
       if(locations.size() < 1)
         throw valhalla_exception_t{400, 120};
       auto costing = request.get_optional<std::string>("costing");
@@ -136,7 +136,7 @@ namespace valhalla {
       }
     }
 
-    worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_info_t& request_info) {
+    worker_t::result_t loki_worker_t::locate(boost::property_tree::ptree& request, http_request_info_t& request_info) {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
