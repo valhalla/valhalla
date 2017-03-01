@@ -62,41 +62,31 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_matrix(ACTION_TYPE action, boost::property_tree::ptree& request) {
-      auto request_locations = request.get_child_optional("locations");
-      auto request_sources = request.get_child_optional("sources");
-      auto request_targets = request.get_child_optional("targets");
-
-      //we require locations
-      if (!request_locations) {
-        if (!request_sources || !request_targets) {
-          throw valhalla_exception_t{400, 112};
-        }
-      }
-
-      //if MATRIX OR OPTIMIZED and not using sources & targets parameters
-      //deprecated way of specifying
-      if (!request_sources && !request_targets) {
-        if (request_locations->size() < 2)
+      //we require sources and targets
+      try {
+        sources = parse_locations(request, "sources", valhalla_exception_t{400, 112});
+        targets = parse_locations(request, "targets", valhalla_exception_t{400, 112});
+      }//deprecated using locations
+      catch(const valhalla_exception_t& e) {
+        locations = parse_locations(request, "locations", valhalla_exception_t{400, 112});
+        if (locations.size() < 2)
           throw valhalla_exception_t{400, 120};
-
         //create new sources and targets ptree from locations
-        boost::property_tree::ptree sources_child, targets_child;
+        boost::property_tree::ptree sources_child, targets_child, locations_child = request.get_child("locations");
         switch (action) {
           case ONE_TO_MANY:
-            sources_child.push_back(request_locations->front());
-            for(const auto& reqloc : *request_locations)
+            sources_child.push_back(locations_child.front());
+            for(const auto& reqloc : locations_child)
               targets_child.push_back(reqloc);
-
             break;
           case MANY_TO_ONE:
-            for(const auto& reqloc : *request_locations)
+            for(const auto& reqloc : locations_child)
               sources_child.push_back(reqloc);
-
-            targets_child.push_back(request_locations->back());
+            targets_child.push_back(locations_child.back());
             break;
           case MANY_TO_MANY:
           case OPTIMIZED_ROUTE:
-            for(const auto& reqloc : *request_locations) {
+            for(const auto& reqloc : locations_child) {
               sources_child.push_back(reqloc);
               targets_child.push_back(reqloc);
             }
@@ -105,41 +95,20 @@ namespace valhalla {
         //add these back in the original request (in addition to locations while being deprecated
         request.add_child("sources", sources_child);
         request.add_child("targets", targets_child);
-        request_sources = request.get_child("sources");
-        request_targets = request.get_child("targets");
+        sources = parse_locations(request, "sources", valhalla_exception_t{400, 112});
+        targets = parse_locations(request, "targets", valhalla_exception_t{400, 112});
+      }
 
-      }
-      for(const auto& source : *request_sources) {
-        try{
-          sources.push_back(baldr::Location::FromPtree(source.second));
-          sources.back().heading_.reset();
-        }
-        catch (...) {
-          throw valhalla_exception_t{400, 131};
-        }
-      }
-      for(const auto& target : *request_targets) {
-        try{
-          targets.push_back(baldr::Location::FromPtree(target.second));
-          targets.back().heading_.reset();
-        }
-        catch (...) {
-          throw valhalla_exception_t{400, 132};
-        }
-      }
-      if(sources.size() < 1)
-        throw valhalla_exception_t{400, 121};
-      if (!healthcheck)
-        valhalla::midgard::logging::Log("source_count::" + std::to_string(request_sources->size()), " [ANALYTICS] ");
-
-      if(targets.size() < 1)
-        throw valhalla_exception_t{400, 122};
-      if (!healthcheck)
-        valhalla::midgard::logging::Log("target_count::" + std::to_string(request_targets->size()), " [ANALYTICS] ");
+      //sanitize
+      if(sources.size() < 1) throw valhalla_exception_t{400, 121};
+      for(auto& s : sources) s.heading_.reset();
+      if(targets.size() < 1) throw valhalla_exception_t{400, 122};
+      for(auto& t : targets) t.heading_.reset();
 
       //no locations!
       request.erase("locations");
 
+      //need costing
       parse_costing(request);
     }
 

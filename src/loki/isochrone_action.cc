@@ -13,9 +13,9 @@ const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_isochrones(const boost::property_tree::ptree& request) {
+    void loki_worker_t::init_isochrones(boost::property_tree::ptree& request) {
       //strip off unused information
-      parse_locations(request);
+      locations = parse_locations(request, "locations");
       if(locations.size() < 1)
         throw valhalla_exception_t{400, 120};
       for(auto& l : locations)

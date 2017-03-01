@@ -31,18 +31,19 @@ namespace valhalla {
      protected:
 
       prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_info_t& request_info) const;
-      void parse_locations(const boost::property_tree::ptree& request);
+      std::vector<baldr::Location> parse_locations(const boost::property_tree::ptree& request, const std::string& node,
+        boost::optional<baldr::valhalla_exception_t> required_exception = baldr::valhalla_exception_t{400, 110});
       void parse_trace(boost::property_tree::ptree& request);
-      void parse_costing(const boost::property_tree::ptree& request);
+      void parse_costing(boost::property_tree::ptree& request);
       void locations_from_shape(boost::property_tree::ptree& request);
 
-      void init_locate(const boost::property_tree::ptree& request);
-      void init_route(const boost::property_tree::ptree& request);
+      void init_locate(boost::property_tree::ptree& request);
+      void init_route(boost::property_tree::ptree& request);
       void init_matrix(ACTION_TYPE action, boost::property_tree::ptree& request);
-      void init_isochrones(const boost::property_tree::ptree& request);
+      void init_isochrones(boost::property_tree::ptree& request);
       void init_trace(boost::property_tree::ptree& request);
 
-      prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t locate(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
       prime_server::worker_t::result_t route(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
       prime_server::worker_t::result_t matrix(ACTION_TYPE action,boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
       prime_server::worker_t::result_t isochrones(boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
