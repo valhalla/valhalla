@@ -542,7 +542,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
     if (!costing_->AllowedReverse(directededge, pred, opp_edge,
-                      tile, edgeid)) {
+                      t2, oppedge)) {
       continue;
     }
 
