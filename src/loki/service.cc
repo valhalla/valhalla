@@ -193,7 +193,11 @@ namespace valhalla {
             }
           }
           auto &avoid_edges = costing_options.add_child("avoid_edges", boost::property_tree::ptree{});
-          for(auto avoid : avoids) avoid_edges.put("", avoid);
+          for(auto avoid : avoids) {
+            boost::property_tree::ptree value;
+            value.put("", avoid);
+            avoid_edges.push_back(std::make_pair("", value));
+          }
         }//swallow all failures on optional avoids
         catch(...) {
           LOG_WARN("Failed to find avoid_locations");
