@@ -333,10 +333,21 @@ class DynamicCost {
   virtual bool IsExcluded(const baldr::GraphTile*& tile,
                           const baldr::NodeInfo* node);
 
-  // Adds a list of edges (GraphIds) to the user specified avoid list.
+  /**
+   * Adds a list of edges (GraphIds) to the user specified avoid list.
+   * This can be used by test programs - alternatively a list of avoid
+   * edges will be passed in the property tree for the costing options
+   * of a specified type.
+   * @param  avoid_edges  Set of edge Ids to avoid.
+   */
   void AddUserAvoidEdges(const std::vector<baldr::GraphId>& avoid_edges);
 
-  // Check if the edge is in the user-specified avoid list.
+  /**
+   * Check if the edge is in the user-specified avoid list.
+   * @param  edgeid  Directed edge Id.
+   * @return Returns true if the edge Id is in the user avoid edges set,
+   *         false otherwise.
+   */
   bool IsUserAvoidEdge(const baldr::GraphId& edgeid) const {
     return (user_avoid_edges_.size() != 0 &&
             user_avoid_edges_.find(edgeid) != user_avoid_edges_.end());
