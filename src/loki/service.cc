@@ -149,7 +149,7 @@ namespace valhalla {
       return parsed;
     }
 
-    void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
+    void loki_worker_t::parse_costing(boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
       if (!costing)
@@ -161,10 +161,14 @@ namespace valhalla {
       if(*costing == "multimodal")
         *costing = "pedestrian";
 
-      // Get the costing options if in the config or get the empty default.
+      // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
       std::string method_options = "costing_options." + *costing;
-      auto costing_options = request.get_child(method_options,{});
+      if(!request.get_child_optional(method_options)) {
+        request.add_child("costing_options", boost::property_tree::ptree{})
+                 .add_child(*costing, boost::property_tree::ptree{});
+      }
+      auto& costing_options = request.get_child(method_options);
       try{
         auto c = factory.Create(*costing, costing_options);
         edge_filter = c->GetEdgeFilter();
@@ -172,6 +176,28 @@ namespace valhalla {
       }
       catch(const std::runtime_error&) {
         throw valhalla_exception_t{400, 125, "'" + *costing + "'"};
+      }
+
+      // See if we have avoids and take care of them
+      auto avoid_locations = parse_locations(request, "avoid_locations", boost::none);
+      if(!avoid_locations.empty()) {
+        try {
+          auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
+          std::unordered_set<uint64_t> avoids;
+          for(const auto& result : results) {
+            for(const auto& edge : result.second.edges) {
+              auto inserted = avoids.insert(edge.id);
+              GraphId shortcut;
+              if(inserted.second && (shortcut = reader.GetShortcut(edge.id)).Is_Valid())
+                avoids.insert(shortcut);
+            }
+          }
+          auto &avoid_edges = costing_options.add_child("avoid_edges", boost::property_tree::ptree{});
+          for(auto avoid : avoids) avoid_edges.put("", avoid);
+        }//swallow all failures on optional avoids
+        catch(...) {
+          LOG_WARN("Failed to find avoid_locations");
+        }
       }
     }
 
