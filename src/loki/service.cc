@@ -132,22 +132,21 @@ namespace valhalla {
       return result;
     }
 
-    void loki_worker_t::parse_locations(const boost::property_tree::ptree& request) {
-      //we require locations
-      auto request_locations = request.get_child_optional("locations");
-      if (!request_locations)
-        throw valhalla_exception_t{400, 110};
-
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
+    std::vector<baldr::Location> loki_worker_t::parse_locations(const boost::property_tree::ptree& request, const std::string& node,
+      boost::optional<baldr::valhalla_exception_t> required_exception) {
+      std::vector<baldr::Location> parsed;
+      auto request_locations = request.get_child_optional(node);
+      if (request_locations) {
+        for(const auto& location : *request_locations) {
+          try { parsed.push_back(baldr::Location::FromPtree(location.second)); }
+          catch (...) { throw valhalla_exception_t{400, 130}; }
         }
-        catch (...) {
-          throw valhalla_exception_t{400, 130};
-        }
+        if (!healthcheck)
+          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
       }
-      if (!healthcheck)
-        valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+      else if(required_exception)
+        throw *required_exception;
+      return parsed;
     }
 
     void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
