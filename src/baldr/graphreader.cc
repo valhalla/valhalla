@@ -236,14 +236,13 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
   return false;
 }
 
-// Get the shortcut edge that this edge is part of.
+// Get the shortcut edge that includes this edge.
 GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
   auto continuing_edge = [](const GraphTile* tile, const GraphId& edgeid,
                             const NodeInfo* nodeinfo) {
-    uint32_t count = 0;
     uint32_t idx = nodeinfo->edge_index();
     const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
     const DirectedEdge* directededge = tile->directededge(idx);
@@ -253,16 +252,16 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
           directededge->use() == Use::kTransitConnection) {
         continue;
       }
-      continuing_edge = directededge;
-      if (count++ > 1) {
+      if (continuing_edge != nullptr) {
         return static_cast<const DirectedEdge*>(nullptr);
       }
+      continuing_edge = directededge;
     }
     return continuing_edge;
   };
 
-  // No shortcuts on the local level.
-  if (id.level() == tile_hierarchy_.levels().rbegin()->second.level) {
+  // No shortcuts on the local level or transit level.
+  if (id.level() >= tile_hierarchy_.levels().rbegin()->second.level) {
     return { };
   }
 

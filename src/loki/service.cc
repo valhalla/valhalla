@@ -132,25 +132,24 @@ namespace valhalla {
       return result;
     }
 
-    void loki_worker_t::parse_locations(const boost::property_tree::ptree& request) {
-      //we require locations
-      auto request_locations = request.get_child_optional("locations");
-      if (!request_locations)
-        throw valhalla_exception_t{400, 110};
-
-      for(const auto& location : *request_locations) {
-        try{
-          locations.push_back(baldr::Location::FromPtree(location.second));
+    std::vector<baldr::Location> loki_worker_t::parse_locations(const boost::property_tree::ptree& request, const std::string& node,
+      boost::optional<baldr::valhalla_exception_t> required_exception) {
+      std::vector<baldr::Location> parsed;
+      auto request_locations = request.get_child_optional(node);
+      if (request_locations) {
+        for(const auto& location : *request_locations) {
+          try { parsed.push_back(baldr::Location::FromPtree(location.second)); }
+          catch (...) { throw valhalla_exception_t{400, 130}; }
         }
-        catch (...) {
-          throw valhalla_exception_t{400, 130};
-        }
+        if (!healthcheck)
+          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
       }
-      if (!healthcheck)
-        valhalla::midgard::logging::Log("location_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+      else if(required_exception)
+        throw *required_exception;
+      return parsed;
     }
 
-    void loki_worker_t::parse_costing(const boost::property_tree::ptree& request) {
+    void loki_worker_t::parse_costing(boost::property_tree::ptree& request) {
       //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
       if (!costing)
@@ -162,10 +161,14 @@ namespace valhalla {
       if(*costing == "multimodal")
         *costing = "pedestrian";
 
-      // Get the costing options if in the config or get the empty default.
+      // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
       std::string method_options = "costing_options." + *costing;
-      auto costing_options = request.get_child(method_options,{});
+      if(!request.get_child_optional(method_options)) {
+        request.add_child("costing_options", boost::property_tree::ptree{})
+                 .add_child(*costing, boost::property_tree::ptree{});
+      }
+      auto& costing_options = request.get_child(method_options);
       try{
         auto c = factory.Create(*costing, costing_options);
         edge_filter = c->GetEdgeFilter();
@@ -173,6 +176,32 @@ namespace valhalla {
       }
       catch(const std::runtime_error&) {
         throw valhalla_exception_t{400, 125, "'" + *costing + "'"};
+      }
+
+      // See if we have avoids and take care of them
+      auto avoid_locations = parse_locations(request, "avoid_locations", boost::none);
+      if(!avoid_locations.empty()) {
+        try {
+          auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
+          std::unordered_set<uint64_t> avoids;
+          for(const auto& result : results) {
+            for(const auto& edge : result.second.edges) {
+              auto inserted = avoids.insert(edge.id);
+              GraphId shortcut;
+              if(inserted.second && (shortcut = reader.GetShortcut(edge.id)).Is_Valid())
+                avoids.insert(shortcut);
+            }
+          }
+          auto &avoid_edges = costing_options.add_child("avoid_edges", boost::property_tree::ptree{});
+          for(auto avoid : avoids) {
+            boost::property_tree::ptree value;
+            value.put("", avoid);
+            avoid_edges.push_back(std::make_pair("", value));
+          }
+        }//swallow all failures on optional avoids
+        catch(...) {
+          LOG_WARN("Failed to find avoid_locations");
+        }
       }
     }
 
