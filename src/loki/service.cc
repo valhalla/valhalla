@@ -135,24 +135,24 @@ namespace valhalla {
     }
 
 
-    void loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
+    std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
       boost::optional<baldr::valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
-      auto locations_array = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, "/" + node);
-      if (!locations_array) {
-        for(const auto& location : *locations_array) {
+      auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
+      if (!request_locations) {
+        for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
           catch (...) { throw valhalla_exception_t{400, 130}; }
         }
         if (!healthcheck)
-          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
       }
       else if(required_exception)
         throw *required_exception;
       return parsed;
     }
 
-    void loki_worker_t::parse_costing(const rapidjson::Document& request) {
+    void loki_worker_t::parse_costing(rapidjson::Document& request) {
       //using the costing we can determine what type of edge filtering to use
       auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
       if (!costing)
@@ -170,8 +170,7 @@ namespace valhalla {
       auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
       auto& allocator = request.GetAllocator();
       if(!method_options_ptr)
-        request.AddMember("costing_options", rapidjson::Value{rapidjson::kObjectType, allocator}, allocator)
-               .AddMember(*costing, rapidjson::Value{rapidjson::kObjectType, allocator}, allocator);
+        request.AddMember(rapidjson::Value(method_options, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
       method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
 
       try{
@@ -201,10 +200,10 @@ namespace valhalla {
                 avoids.insert(shortcut);
             }
           }
-          rapidjson::Value avoid_edges{rapidjson::kArrayType}
+          rapidjson::Value avoid_edges{rapidjson::kArrayType};
           for(auto avoid : avoids)
-            avoid_edges.PushBack(rapidjson::Value{avoid, allocator}, allocator);
-          method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator)
+            avoid_edges.PushBack(rapidjson::Value(avoid), allocator);
+          method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator);
         }//swallow all failures on optional avoids
         catch(...) {
           LOG_WARN("Failed to find avoid_locations");
