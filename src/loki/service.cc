@@ -136,13 +136,13 @@ namespace valhalla {
 
 
     std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
-      boost::optional<baldr::valhalla_exception_t> required_exception) {
+      unsigned location_parse_error_code, boost::optional<baldr::valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
       auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
       if (request_locations) {
         for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
-          catch (...) { throw valhalla_exception_t{400, 130}; }
+          catch (...) { throw valhalla_exception_t{400, location_parse_error_code}; }
         }
         if (!healthcheck)
           valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
@@ -187,7 +187,7 @@ namespace valhalla {
       }
 
       // See if we have avoids and take care of them
-      auto avoid_locations = parse_locations(request, "avoid_locations", boost::none);
+      auto avoid_locations = parse_locations(request, "avoid_locations", 133, boost::none);
       if(!avoid_locations.empty()) {
         try {
           auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
