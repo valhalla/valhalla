@@ -139,7 +139,7 @@ namespace valhalla {
       boost::optional<baldr::valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
       auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
-      if (!request_locations) {
+      if (request_locations) {
         for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
           catch (...) { throw valhalla_exception_t{400, 130}; }
