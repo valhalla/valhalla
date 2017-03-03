@@ -65,11 +65,11 @@ namespace valhalla {
     void loki_worker_t::init_matrix(ACTION_TYPE action, rapidjson::Document& request) {
       //we require sources and targets
       try {
-        sources = parse_locations(request, "sources", valhalla_exception_t{400, 112});
-        targets = parse_locations(request, "targets", valhalla_exception_t{400, 112});
+        sources = parse_locations(request, "sources", 131, valhalla_exception_t{400, 112});
+        targets = parse_locations(request, "targets", 132, valhalla_exception_t{400, 112});
       }//deprecated using locations
       catch(const valhalla_exception_t& e) {
-        locations = parse_locations(request, "locations", valhalla_exception_t{400, 112});
+        locations = parse_locations(request, "locations");
         if (locations.size() < 2)
           throw valhalla_exception_t{400, 120};
         //create new sources and targets ptree from locations
@@ -94,8 +94,8 @@ namespace valhalla {
             break;
         }
         //add these back in the original request (in addition to locations while being deprecated
-        sources = parse_locations(request, "sources", valhalla_exception_t{400, 112});
-        targets = parse_locations(request, "targets", valhalla_exception_t{400, 112});
+        sources = parse_locations(request, "sources", 131, valhalla_exception_t{400, 112});
+        targets = parse_locations(request, "targets", 132, valhalla_exception_t{400, 112});
       }
 
       //sanitize
