@@ -164,16 +164,16 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs;
 
         // Add edge and update correlated index
-        path_infos.emplace_back(mode, std::round(elapsed_time), edge_id, 0);
+        path_infos.emplace_back(mode, elapsed_time, edge_id, 0);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances,
-                                 index, end_node_tile, de->endnode(),
-                                 end_nodes, prev_edge_label, elapsed_time,
-                                 path_infos, false, end_node)) {
+                             index, end_node_tile, de->endnode(),
+                             end_nodes, prev_edge_label, elapsed_time,
+                             path_infos, false, end_node)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos
@@ -197,7 +197,7 @@ bool RouteMatcher::FormPath(
     const std::vector<midgard::PointLL>& shape,
     const std::vector<PathLocation>& correlated,
     std::vector<PathInfo>& path_infos) {
-  float elapsed_time = 0.f;
+  float elapsed_time = 0.0f;
 
   // Form distances between shape points
   std::vector<float> distances;
@@ -254,8 +254,7 @@ bool RouteMatcher::FormPath(
             * (1 - edge.dist);
 
         // Add begin edge
-        path_infos.emplace_back(mode, std::round(elapsed_time),
-                                edge.id, 0);
+        path_infos.emplace_back(mode, elapsed_time, edge.id, 0);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge.id, de, {}, 0, 0, mode, 0};
@@ -295,8 +294,7 @@ bool RouteMatcher::FormPath(
                                   n->second.dist;
 
           // Add end edge
-          path_infos.emplace_back(mode, std::round(elapsed_time),
-                                  n->second.id, 0);
+          path_infos.emplace_back(mode, elapsed_time, n->second.id, 0);
 
           return true;
         } else {
@@ -316,7 +314,7 @@ bool RouteMatcher::FormPath(
                                (end.second.dist - edge.dist);
 
         // Add end edge
-        path_infos.emplace_back(mode, std::round(elapsed_time), edge.id, 0);
+        path_infos.emplace_back(mode, elapsed_time, edge.id, 0);
         return true;
       }
     }

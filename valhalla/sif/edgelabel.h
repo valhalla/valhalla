@@ -384,8 +384,8 @@ class EdgeLabel {
    * to determine the cost at the connection.
    * @return  Returns the transition cost (including penalties) in seconds.
    */
-  uint32_t transition_cost() const {
-    return transition_cost_;
+  float transition_cost() const {
+    return transition_cost_.cost;
   }
 
   /**
@@ -395,8 +395,8 @@ class EdgeLabel {
    * different node than the forward search.
    * @return  Returns the transition cost (without penalties) in seconds.
    */
-  uint32_t transition_secs() const {
-    return transition_secs_;
+  float transition_secs() const {
+    return transition_cost_.secs;
   }
 
   /**
@@ -404,8 +404,7 @@ class EdgeLabel {
    * @param  tc  Transition cost.
    */
   void set_transition_cost(const Cost& tc) {
-    transition_cost_ = tc.cost;
-    transition_secs_ = tc.secs;
+    transition_cost_ = tc;
   }
 
   /**
@@ -454,6 +453,9 @@ class EdgeLabel {
 
   // Cost and elapsed time along the path.
   Cost cost_;
+
+  // Transition cost (for recovering elapsed time on reverse path)
+  Cost transition_cost_;
 
   // Sort cost - includes A* heuristic.
   float sortcost_;
@@ -507,18 +509,11 @@ class EdgeLabel {
   uint32_t not_thru_pruning_ : 1;
 
   // Block Id and prior operator (index to an internal mapping).
-  // 0 indicates no prior.
-  uint32_t blockid_          : 22; // Really only needs 20 bits
+  //          0 indicates no prior.
+  // on_complex_rest_: Edge is part of a complex restriction.
+  uint32_t blockid_          : 21; // Really only needs 20 bits
   uint32_t transit_operator_ : 10;
-
-  /**
-   * transition_cost_: Transition cost (used in bidirectional path search).
-   * transition_secs_: Transition time (used in bidirectional path search).
-   * on_complex_rest_: Edge is part of a complex restriction.
-   */
-  uint32_t transition_cost_ : 16;
-  uint32_t transition_secs_ : 15;
-  uint32_t on_complex_rest_ : 1;
+  uint32_t on_complex_rest_  : 1;
 };
 
 }

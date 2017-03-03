@@ -254,7 +254,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
     if (!costing_->AllowedReverse(directededge, pred, opp_edge,
-                              tile, edgeid)) {
+                              t2, oppedge)) {
       continue;
     }
 
@@ -298,7 +298,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     adjacencylist_reverse_->add(idx, sortcost);
     edgestatus_reverse_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_reverse_.emplace_back(pred_idx, edgeid, oppedge,
-                 directededge, newcost, sortcost, dist,mode_, tc,
+                 directededge, newcost, sortcost, dist, mode_, tc,
                  (pred.not_thru_pruning() || !directededge->not_thru()));
   }
 }
@@ -759,8 +759,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
       secs += edgelabel.cost().secs - edgelabels_reverse_[predidx].cost().secs;
     }
     secs += tc;
-    path.emplace_back(edgelabel.mode(),static_cast<uint32_t>(secs),
-                            oppedge, edgelabel.tripid());
+    path.emplace_back(edgelabel.mode(), secs, oppedge, edgelabel.tripid());
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;

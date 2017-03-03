@@ -25,8 +25,8 @@ class GridRangeQuery
       bbox_(bbox),
       square_width_(square_width),
       square_height_(square_height),
-      ncols_((bbox.maxx() - bbox.minx()) / square_width),
-      nrows_((bbox.maxy() - bbox.miny()) / square_height),
+      ncols_(ceil((bbox.maxx() - bbox.minx()) / square_width)),
+      nrows_(ceil((bbox.maxy() - bbox.miny()) / square_height)),
       grid_(bbox.minx(), bbox.miny(), square_width, square_height, ncols_, nrows_),
 #ifdef GRID_USE_VECTOR
       items_()

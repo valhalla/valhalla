@@ -236,6 +236,78 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
   return false;
 }
 
+// Get the shortcut edge that includes this edge.
+GraphId GraphReader::GetShortcut(const GraphId& id) {
+  // Lambda to get continuing edge at a node. Skips the specified edge Id
+  // transition edges, shortcut edges, and transit connections. Returns
+  // nullptr if more than one edge remains or no continuing edge is found.
+  auto continuing_edge = [](const GraphTile* tile, const GraphId& edgeid,
+                            const NodeInfo* nodeinfo) {
+    uint32_t idx = nodeinfo->edge_index();
+    const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
+    const DirectedEdge* directededge = tile->directededge(idx);
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
+      if (directededge->trans_up() || directededge->trans_down() ||
+          idx == edgeid.id() || directededge->is_shortcut() ||
+          directededge->use() == Use::kTransitConnection) {
+        continue;
+      }
+      if (continuing_edge != nullptr) {
+        return static_cast<const DirectedEdge*>(nullptr);
+      }
+      continuing_edge = directededge;
+    }
+    return continuing_edge;
+  };
+
+  // No shortcuts on the local level or transit level.
+  if (id.level() >= tile_hierarchy_.levels().rbegin()->second.level) {
+    return { };
+  }
+
+  // If this edge is a shortcut return this edge Id
+  const GraphTile* tile = GetGraphTile(id);
+  const DirectedEdge* directededge = tile->directededge(id);
+  if (directededge->is_shortcut()) {
+    return id;
+  }
+
+  // Walk backwards along the opposing directed edge until a shortcut
+  // beginning is found or to get the continuing edge until a node that starts
+  // the shortcut is found or there are 2 or more other regular edges at the
+  // node.
+  GraphId edgeid = id;
+  const NodeInfo* node = nullptr;
+  const DirectedEdge* cont_de = nullptr;
+  while (true) {
+    // Get the continuing directed edge. Initial case is to use the opposing
+    // directed edge.
+    cont_de = (node == nullptr) ? GetOpposingEdge(id) :
+                continuing_edge(tile, edgeid, node);
+    if (cont_de == nullptr) {
+      return { };
+    }
+
+    // Get the end node and end node tile
+    GraphId endnode = cont_de->endnode();
+    if (cont_de->leaves_tile()) {
+      tile = GetGraphTile(endnode.Tile_Base());
+    }
+    node = tile->node(endnode);
+
+    // Get the opposing edge Id and its directed edge
+    uint32_t idx = node->edge_index() + cont_de->opp_index();
+    edgeid = { endnode.tileid(), endnode.level(), idx };
+    directededge = tile->directededge(edgeid);
+    if (directededge->superseded()) {
+      // Get the shortcut edge Id that supersedes this edge
+      uint32_t idx = node->edge_index() + (directededge->superseded() - 1);
+      return GraphId(endnode.tileid(), endnode.level(), idx);
+    }
+  }
+  return { };
+}
+
 // Convenience method to get the relative edge density (from the
 // begin node of an edge).
 uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {

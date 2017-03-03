@@ -134,22 +134,22 @@ namespace valhalla {
       return result;
     }
 
-    void loki_worker_t::parse_locations(const rapidjson::Document& request) {
-      //we require locations
-      auto locations_array = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, "/locations");
-      if (! locations_array)
-        throw valhalla_exception_t{400, 110};
 
-      for(const auto& location : *locations_array) {
-        try{
-          locations.push_back(baldr::Location::FromRapidJson(location));
+    void loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
+      boost::optional<baldr::valhalla_exception_t> required_exception) {
+      std::vector<baldr::Location> parsed;
+      auto locations_array = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, "/" + node);
+      if (!locations_array) {
+        for(const auto& location : *locations_array) {
+          try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
+          catch (...) { throw valhalla_exception_t{400, 130}; }
         }
-        catch (...) {
-          throw valhalla_exception_t{400, 130};
-        }
+        if (!healthcheck)
+          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
       }
-      if (!healthcheck)
-        valhalla::midgard::logging::Log("location_count::" + std::to_string(locations_array->Size()), " [ANALYTICS] ");
+      else if(required_exception)
+        throw *required_exception;
+      return parsed;
     }
 
     void loki_worker_t::parse_costing(const rapidjson::Document& request) {
@@ -164,10 +164,16 @@ namespace valhalla {
       if(*costing == "multimodal")
         *costing = "pedestrian";
 
-      // Get the costing options if in the config or get the empty default.
+      // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
       std::string method_options = "/costing_options/" + *costing;
       auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      auto& allocator = request.GetAllocator();
+      if(!method_options_ptr)
+        request.AddMember("costing_options", rapidjson::Value{rapidjson::kObjectType, allocator}, allocator)
+               .AddMember(*costing, rapidjson::Value{rapidjson::kObjectType, allocator}, allocator);
+      method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+
       try{
         cost_ptr_t c;
         if (method_options_ptr)
@@ -179,6 +185,30 @@ namespace valhalla {
       }
       catch(const std::runtime_error&) {
         throw valhalla_exception_t{400, 125, "'" + *costing + "'"};
+      }
+
+      // See if we have avoids and take care of them
+      auto avoid_locations = parse_locations(request, "avoid_locations", boost::none);
+      if(!avoid_locations.empty()) {
+        try {
+          auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
+          std::unordered_set<uint64_t> avoids;
+          for(const auto& result : results) {
+            for(const auto& edge : result.second.edges) {
+              auto inserted = avoids.insert(edge.id);
+              GraphId shortcut;
+              if(inserted.second && (shortcut = reader.GetShortcut(edge.id)).Is_Valid())
+                avoids.insert(shortcut);
+            }
+          }
+          rapidjson::Value avoid_edges{rapidjson::kArrayType}
+          for(auto avoid : avoids)
+            avoid_edges.PushBack(rapidjson::Value{avoid, allocator}, allocator);
+          method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator)
+        }//swallow all failures on optional avoids
+        catch(...) {
+          LOG_WARN("Failed to find avoid_locations");
+        }
       }
     }
 
