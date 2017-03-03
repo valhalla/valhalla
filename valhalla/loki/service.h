@@ -32,7 +32,7 @@ namespace valhalla {
 
       prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_info_t& request_info) const;
       std::vector<baldr::Location> parse_locations(const rapidjson::Document& request, const std::string& node,
-        boost::optional<baldr::valhalla_exception_t> required_exception = baldr::valhalla_exception_t{400, 110});
+        unsigned location_parse_error_code, boost::optional<baldr::valhalla_exception_t> required_exception = baldr::valhalla_exception_t{400, 110});
       void parse_trace(rapidjson::Document& request);
       void parse_costing(rapidjson::Document& request);
       void locations_from_shape(rapidjson::Document& request);
