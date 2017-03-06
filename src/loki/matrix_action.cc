@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "baldr/datetime.h"
+
 #include "midgard/logging.h"
 
 using namespace prime_server;
