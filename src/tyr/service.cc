@@ -8,6 +8,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <google/protobuf/util/json_util.h>
+
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
@@ -459,6 +461,11 @@ namespace {
       // TODO: multiple legs.
       auto legs = json::array({});
       for(const auto& directions_leg : directions_legs) {
+        // GDG
+        std::string leg_json_str;
+        google::protobuf::util::MessageToJsonString(directions_leg, &leg_json_str);
+        std::cout << leg_json_str << std::endl;
+
         auto leg = json::map({});
         auto summary = json::map({});
         auto maneuvers = json::array({});
