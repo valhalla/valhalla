@@ -55,8 +55,14 @@ std::string to_string(const vb::GraphId &i) {
 
 namespace {
 
+// Distance tolerance (meters) for node searching
+constexpr float kNodeDistanceTolerance = 20.0;
+
 // 10 meter length matching tolerance
 constexpr uint32_t kLengthTolerance = 10;
+
+// Bearing tolerance in degrees
+constexpr uint16_t kBearingTolerance = 10;
 
 enum class MatchType : uint8_t {
   kWalk = 0,
@@ -126,22 +132,35 @@ uint16_t bearing(const std::vector<vm::PointLL> &shape) {
 }
 
 uint16_t bearing(const vb::GraphTile *tile, vb::GraphId edge_id, float dist) {
-  std::vector<vm::PointLL> shape;
   const auto *edge = tile->directededge(edge_id);
-  uint32_t edgeinfo_offset = edge->edgeinfo_offset();
-  auto edgeinfo = tile->edgeinfo(edgeinfo_offset);
-  uint32_t edge_len = edge->length();
-
-  shape = edgeinfo.shape();
+  std::vector<vm::PointLL> shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
   if (!edge->forward()) {
     std::reverse(shape.begin(), shape.end());
   }
 
   if (dist > 0.0) {
+    uint32_t edge_len = edge->length();
     chop_subsegment(shape, uint32_t(dist * edge_len));
   }
-
   return bearing(shape);
+}
+
+// given two bearings in degrees, return the unsigned angle between them.
+int bear_diff(int bear1, int bear2) {
+  int bear_diff = std::abs(bear1 - bear2);
+  if (bear_diff > 180) {
+    bear_diff = 360 - bear_diff;
+  }
+  if (bear_diff < 0) {
+    bear_diff += 360;
+  }
+  return bear_diff;
+}
+
+// given two uint32_t, return the absolute difference between them, which will
+// always fit into another uint32_t.
+inline uint32_t abs_u32_diff(const uint32_t a, const uint32_t b) {
+  return (a > b) ? (a - b) : (b - a);
 }
 
 struct partial_chunk {
@@ -179,11 +198,6 @@ private:
   leftovers_t m_leftover_associations;
 };
 
-struct edge_score {
-  vb::GraphId id;
-  int score;
-};
-
 // Use this method to determine whether an edge should be allowed along the
 // merged path. This method should match the predicate used to create OSMLR
 // segments.
@@ -193,12 +207,6 @@ bool allow_edge_pred(const vb::DirectedEdge *edge) {
            edge->use() != vb::Use::kTurnChannel && !edge->internal() &&
            edge->use() != vb::Use::kFerry && !edge->roundabout() &&
           (edge->forwardaccess() & vb::kVehicularAccess) != 0);
-}
-
-// Check if oneway. Assumes forward access is allowed. Edge is oneway if
-// no reverse vehicular access is allowed
-bool is_oneway(const vb::DirectedEdge *e) {
-  return (e->reverseaccess() & vb::kVehicularAccess) == 0;
 }
 
 enum class FormOfWay {
@@ -212,26 +220,13 @@ enum class FormOfWay {
   kOther = 7
 };
 
-std::ostream &operator<<(std::ostream &out, FormOfWay fow) {
-  switch (fow) {
-  case FormOfWay::kUndefined:           out << "undefined";            break;
-  case FormOfWay::kMotorway:            out << "motorway";             break;
-  case FormOfWay::kMultipleCarriageway: out << "multiple_carriageway"; break;
-  case FormOfWay::kSingleCarriageway:   out << "single_carriageway";   break;
-  case FormOfWay::kRoundabout:          out << "roundabout";           break;
-  case FormOfWay::kTrafficSquare:       out << "traffic_square";       break;
-  case FormOfWay::kSlipRoad:            out << "sliproad";             break;
-  default:
-    out << "other";
-  }
-  return out;
-}
-
 FormOfWay form_of_way(const vb::DirectedEdge *e) {
-  bool oneway = is_oneway(e);
+  // Check if oneway. Assumes forward access is allowed. Edge is oneway if
+  // no reverse vehicular access is allowed
+  bool oneway = (e->reverseaccess() & vb::kVehicularAccess) == 0;
   auto rclass = e->classification();
 
-  // if it's a slip road, return that. TODO: am i doing this right?
+  // if it's a link (ramp or turn channel) return slip road
   if (e->link()) {
     return FormOfWay::kSlipRoad;
   }
@@ -334,17 +329,14 @@ float DistanceOnlyCost::AStarCostFactor() const {
   return 1.0f;
 }
 
-vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference &lrp) {
-  int32_t lng = lrp.coord().lng();
-  int32_t lat = lrp.coord().lat();
-  vm::PointLL coord(double(lng) / 10000000, double(lat) / 10000000);
-  return coord;
+inline vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference &lrp) {
+  return { static_cast<double>(lrp.coord().lng()) * 0.0000001,
+           static_cast<double>(lrp.coord().lat()) * 0.0000001 };
 }
 
 vb::Location location_for_lrp(const pbf::Segment::LocationReference &lrp) {
-  int32_t lng = lrp.coord().lng();
-  int32_t lat = lrp.coord().lat();
-  vb::Location location({double(lng) / 10000000, double(lat) / 10000000});
+  vb::Location location({ static_cast<double>(lrp.coord().lng()) * 0.0000001,
+                          static_cast<double>(lrp.coord().lat()) * 0.0000001 });
   if(lrp.has_bear())
     location.heading_ = lrp.bear();
   return location;
@@ -354,8 +346,7 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
   //we dont want non real edges but also we want the edges to be on the right level
   //also right now only driveable edges please
   auto edge_filter = [level](const DirectedEdge* edge) -> float {
-    return edge->endnode().level() == level && (edge->forwardaccess() & vb::kVehicularAccess) &&
-      !(edge->trans_up() || edge->trans_down() || edge->is_shortcut() || edge->IsTransitLine());
+    return (edge->endnode().level() == level && allow_edge_pred(edge)) ? 1.0f : 0.0f;
   };
 
   //we only have one location so we only get one result
@@ -364,6 +355,7 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
   auto results = vl::Search(locs, reader, edge_filter, vl::PassThroughNodeFilter);
   if(results.size())
     path_loc = std::move(results.begin()->second);
+
   return path_loc;
 }
 
@@ -375,48 +367,11 @@ edge_association::edge_association(const bpt::ptree &pt)
   , m_tile(nullptr) {
 }
 
-//walk from this edge to the next one if there is only one choice of where
-//to walk if there are more choices then just return invalid to signify
-//stopping this is trying to mimic what osmlr generation does
-vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb::GraphTile*& tile,
-                      uint32_t& current_length) {
-  uint32_t next_length = 0;
-  if(tile->id() != edge_id.Tile_Base())
-    tile = reader.GetGraphTile(edge_id);
-  const auto* edge = tile->directededge(edge_id);
-
-  // Get the end node (need a new tile if the edge leaves the current tile)
-  GraphId end_node = edge->endnode();
-  if (edge->leaves_tile())
-    tile = reader.GetGraphTile(end_node);
-  const auto* node = tile->node(end_node);
-
-  // Get child edges of this node
-  const auto* child_edge = tile->directededge(node->edge_index());
-  vb::GraphId next;
-  for(int i = 0; i < node->edge_count(); ++i, child_edge++) {
-    // Skip transition edges, shortcuts, transit connections (or transit lines)
-    // and the opposing edge to the incoming edge (to prevent U-turns).
-    if(i != edge->opp_index() && !child_edge->trans_up() &&
-         !child_edge->trans_down() && !child_edge->is_shortcut() &&
-          child_edge->use() != Use::kTransitConnection &&
-         !child_edge->IsTransitLine())
-    {
-      // Return invalid GraphId if more than 1 candidate edge exists
-      if(next.Is_Valid())
-        return {};
-      else {
-        next = {end_node.tileid(), end_node.level(), node->edge_index() + i};
-        next_length = child_edge->length();
-      }
-    }
-  }
-  current_length += next_length;
-  return next;
-}
-
 struct last_tile_cache {
-  last_tile_cache(GraphReader &reader) : m_reader(reader) {}
+  last_tile_cache(vb::GraphReader &reader)
+      : m_reader(reader),
+        m_last_tile(nullptr) {
+  }
 
   inline const vb::GraphTile *get(vb::GraphId id) {
     if (id.Tile_Base() != m_last_id) {
@@ -432,50 +387,172 @@ private:
   const vb::GraphTile *m_last_tile;
 };
 
-// given two bearings in degrees, return the unsigned angle between them.
-int bear_diff(int bear1, int bear2) {
-  int bear_diff = std::abs(bear1 - bear2);
-  if (bear_diff > 180) {
-    bear_diff = 360 - bear_diff;
-  }
-  if (bear_diff < 0) {
-    bear_diff += 360;
-  }
-  return bear_diff;
+// Find nodes within a specified distance of a point
+std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
+                              const float dist, const vm::PointLL &pt) {
+  // Create a bounding box
+  float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
+  float delta_lng = kNodeDistanceTolerance / meters_per_lng;
+  float delta_lat = kNodeDistanceTolerance / vm::kMetersPerDegreeLat;
+  vm::AABB2<vm::PointLL> bbox({pt.lng() - delta_lng, pt.lat() - delta_lat},
+                              {pt.lng() + delta_lng, pt.lat() + delta_lat});
+  return vl::nodes_in_bbox(bbox, reader);
 }
 
-// given two uint32_t, return the absolute difference between them, which will
-// always fit into another uint32_t.
-uint32_t abs_u32_diff(uint32_t a, uint32_t b) {
-  return (a > b) ? (a - b) : (b - a);
+// Add edges from each node
+std::vector<vb::PathLocation::PathEdge> GetEdgesFromNodes(vb::GraphReader& reader,
+                                    const std::vector<vb::GraphId>& nodes,
+                                    const bool origin) {
+  last_tile_cache cache(reader);
+  uint32_t count, edge_index;
+  PointLL dmy;
+  std::vector<vb::PathLocation::PathEdge> edges;
+  for (auto node : nodes) {
+    auto* tile = cache.get(node);
+    const NodeInfo* nodeinfo = tile->node(node);
+    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+      // Skip non-regular edges
+      if (directededge->trans_up() || directededge->trans_down() ||
+          directededge->is_shortcut() || directededge->roundabout() ||
+          directededge->use() == vb::Use::kTransitConnection ||
+          directededge->use() == vb::Use::kTurnChannel ||
+          directededge->internal() || directededge->use() == vb::Use::kFerry) {
+        continue;
+      }
+
+      // If origin - add outbound edges that have vehicular access
+      if (origin && (directededge->forwardaccess() & vb::kVehicularAccess) != 0) {
+        edges.emplace_back(edgeid, 0.0f, dmy, 1.0f);
+      }
+
+      // If destination, add incoming, opposing edge if it has vehicular access
+      if (!origin && (directededge->reverseaccess() & vb::kVehicularAccess) != 0) {
+        GraphId opp_edge_id = reader.GetOpposingEdgeId(edgeid);
+        edges.emplace_back(opp_edge_id, 1.0f, dmy, 1.0f);
+      }
+    }
+  }
+  return edges;
+}
+
+//walk from this edge to the next one if there is only one choice of where
+//to walk if there are more choices then just return invalid to signify
+//stopping. This is trying to mimic what OSMLR generation does
+vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb::GraphTile*& tile,
+                      uint32_t& current_length) {
+  if(tile->id() != edge_id.Tile_Base())
+    tile = reader.GetGraphTile(edge_id);
+  const auto* edge = tile->directededge(edge_id);
+
+  // Get the end node (need a new tile if the edge leaves the current tile)
+  GraphId end_node = edge->endnode();
+  if (edge->leaves_tile())
+    tile = reader.GetGraphTile(end_node);
+  const auto* node = tile->node(end_node);
+
+  // Get child edges of this node
+  vb::GraphId next;
+  uint32_t next_length = 0;
+  const auto* child_edge = tile->directededge(node->edge_index());
+  for(int i = 0; i < node->edge_count(); ++i, child_edge++) {
+    // Skip U-turns and edges that are not allowed
+    if (i != edge->opp_index() && allow_edge_pred(child_edge)) {
+      // Return invalid GraphId if more than 1 candidate edge exists
+      if (next.Is_Valid())
+        return {};
+      else {
+        next = {end_node.tileid(), end_node.level(), node->edge_index() + i};
+        next_length = child_edge->length();
+      }
+    }
+  }
+  current_length += next_length;
+  return next;
 }
 
 // Walk a path between origin and destination edges.
-std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLocation &dest,
-                              vb::GraphReader& reader, const uint32_t total_length) {
-  // Create a set of ending edges. Skip edges that begin at a node (outbound)
-  std::unordered_set<GraphId> dest_edges;
-  for (const auto &dest_edge : dest.edges) {
-    if (dest_edge.begin_node()) {
-      continue;
+std::vector<vb::GraphId> walk(vb::GraphReader& reader, uint8_t level,
+                              const pbf::Segment &segment) {
+  // Calculate total length of the segment for comparison to common edges or
+  // short "walked" paths.
+  uint32_t total_length = 0;
+  for (const auto &lrp : segment.lrps()) {
+    total_length += lrp.length();
+  }
+
+  // TODO - differentiate whether LRP is at a node
+  bool origin_at_node = true;
+  auto origin_coord = coord_for_lrp(segment.lrps(0));
+  std::vector<vb::PathLocation::PathEdge> origin_edges;
+  if (origin_at_node) {
+    // Find nearby nodes and get allowed outbound edges
+    auto origin_nodes = find_nearby_nodes(reader, kNodeDistanceTolerance, origin_coord);
+    origin_edges = GetEdgesFromNodes(reader, origin_nodes, true);
+  } else {
+    // Use edge search with loki and remove inbound edges at a node
+    auto origin = loki_search_single(vb::Location(origin_coord), reader, level);
+    for (const auto& origin_edge : origin.edges) {
+      origin_edges.push_back(origin_edge);
     }
+    std::remove_if(origin_edges.begin(), origin_edges.end(),
+         [](const vb::PathLocation::PathEdge& e){return e.end_node();});
+  }
+
+  // TODO - differentiate whether LRP is at a node
+  bool dest_at_node = true;
+  const size_t size = segment.lrps_size();
+  auto dest_coord = coord_for_lrp(segment.lrps(size - 1));
+  std::vector<vb::PathLocation::PathEdge> destination_edges;
+  if (dest_at_node) {
+    // Find nearby nodes and get allowed inbound edges
+    auto dest_nodes = find_nearby_nodes(reader, kNodeDistanceTolerance, dest_coord);
+    destination_edges = GetEdgesFromNodes(reader, dest_nodes, false);
+  } else {
+    // Use edge search with loki and remove outbound edges at a node
+    auto dest = loki_search_single(vb::Location(location_for_lrp(segment.lrps(size - 1))), reader, level);
+    for (const auto& dest_edge : dest.edges) {
+      destination_edges.push_back(dest_edge);
+    }
+    std::remove_if(destination_edges.begin(), destination_edges.end(),
+            [](const vb::PathLocation::PathEdge& e){return e.begin_node();});
+  }
+
+  // Create a set of ending edges for faster lookup
+  std::unordered_set<GraphId> dest_edges;
+  for (const auto& dest_edge : destination_edges) {
     dest_edges.insert(dest_edge.id);
   }
 
-  // Walk edges until there is no valid continuing edge (means there are no
-  // valid continuing edges or more than 1) or we have exceeded the length.
-  for (const auto &origin_edge : origin.edges) {
-    // Skip edges ending at a node (inbound)
-    if (origin_edge.end_node()) {
+  // Walk edges until there is not a continuing edge (means there are 0 or
+  // more than 1 continuing edge) or we have exceeded the length.
+  uint32_t max_length = total_length + kLengthTolerance;
+  FormOfWay fow = FormOfWay(segment.lrps(0).start_fow());
+  vb::RoadClass road_class = vb::RoadClass(segment.lrps(0).start_frc());
+  for (const auto& origin_edge : origin_edges) {
+    // Check that this edge matches road class and form of way
+    // TODO - what are implications for data updates?
+    auto* tile = reader.GetGraphTile(origin_edge.id);
+    const auto* edge = tile->directededge(origin_edge.id);
+    if (road_class != edge->classification() ||  fow != form_of_way(edge)) {
       continue;
     }
 
+    // Check the bearing for this edge and make sure within tolerance
+    if (total_length > 5 && edge->length() > 5) {
+      uint16_t walked_bearing = bearing(tile, origin_edge.id, 0.0);
+      if (bear_diff(walked_bearing, segment.lrps(0).bear()) > kBearingTolerance) {
+        continue;
+      }
+    }
+
     // Walk a path from this edge
-    auto* tile = reader.GetGraphTile(origin_edge.id);
-    uint32_t walked_length = tile->directededge(origin_edge.id)->length();
+    uint32_t walked_length = edge->length();
     std::vector<vb::GraphId> edges{origin_edge.id};
     do {
-      // Return the path edges if we found a destination edge
+      // Return the path edges if we found a destination edge and length of
+      // the path is within tolerance
       if (dest_edges.find(edges.back()) != dest_edges.end() &&
           abs_u32_diff(walked_length, total_length) < kLengthTolerance) {
         return edges;
@@ -486,7 +563,7 @@ std::vector<vb::GraphId> walk(const vb::PathLocation &origin, const vb::PathLoca
 
       // Continue while next edge is valid and length does not exceed total
       // plus the tolerance
-    } while(edges.back().Is_Valid() && walked_length < (total_length + kLengthTolerance));
+    } while(edges.back().Is_Valid() && walked_length < max_length);
   }
   // Edge walking did not find a candidate path
   return {};
@@ -497,57 +574,20 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
   const size_t size = segment.lrps_size();
   assert(size >= 2);
 
-  // calculate total length of the segment for comparison to common edges or
-  // short "walked" paths.
-  uint32_t total_length = 0;
-  for (const auto &lrp : segment.lrps()) {
-    total_length += lrp.length();
+  // Try to match edges by walking a path from the first LRP to the last LRP
+  // in the OSMLR segment. This uses a strategy similar to how OSMLR segments
+  // are created
+  std::vector<vb::GraphId> edges = walk(m_reader, level, segment);
+  if (edges.size()) {
+    match_type = MatchType::kWalk;
+    return edges;
   }
 
-  auto origin_coord = coord_for_lrp(segment.lrps(0));
-  auto dest_coord = coord_for_lrp(segment.lrps(size - 1));
-
-  auto origin = loki_search_single(vb::Location(origin_coord), m_reader, level);
-  std::remove_if(origin.edges.begin(), origin.edges.end(), [](const vb::PathLocation::PathEdge& e){return e.end_node();});
-  auto dest = loki_search_single(vb::Location(location_for_lrp(segment.lrps(size - 1))), m_reader, level);
-  std::remove_if(dest.edges.begin(), dest.edges.end(), [](const vb::PathLocation::PathEdge& e){return e.begin_node();});
-
-  // check if its a trivial path between edges
-  auto walked_edges = walk(origin, dest, m_reader, total_length);
-  if (walked_edges.size()) {
-    // Check bearing, road classification, and form of way
-    auto *tile = m_reader.GetGraphTile(walked_edges.front());
-    auto *edge = tile->directededge(walked_edges.front());
-    auto &lrp = segment.lrps(0);
-
-    vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
-    uint16_t walked_bearing = bearing(tile, walked_edges.front(), 0.0);
-    int bear = bear_diff(walked_bearing, lrp.bear());
-    FormOfWay fow = FormOfWay(lrp.start_fow());
-    if ((road_class == edge->classification()) &&
-        (bear < 10) && (fow == form_of_way(edge))) {
-
-      // if the edge matches all our expectations, then we can just assume
-      // we found the right edge and return it. this should be significantly
-      // faster than running a whole route to check.
-      // TODO: the first and last match edges could be partial, the TrafficAssociation
-      // must be made aware of this and use the percentages returned in the PathEdge
-      match_type = MatchType::kWalk;
-      return walked_edges;
-    } else {
-     if (road_class != edge->classification()) {
-        LOG_DEBUG("Road class mismatch");
-      } else if (bear >= 10) {
-        LOG_DEBUG("Bearing mismatch: bear = " + std::to_string(walked_bearing) + " LRP bearing = " +
-                 std::to_string(lrp.bear()));
-      } else {
-        LOG_DEBUG("Form of way mismatch");
-      }
-    }
-  }
+  // Fall back to A* shortest path to form the path edges
 
   // check all the interim points of the location reference
-  std::vector<vb::GraphId> edges;
+  auto origin_coord = coord_for_lrp(segment.lrps(0));
+  auto origin = loki_search_single(vb::Location(origin_coord), m_reader, level);
   for (size_t i = 0; i < size - 1; ++i) {
     auto &lrp = segment.lrps(i);
     auto coord = coord_for_lrp(lrp);
@@ -555,7 +595,7 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
 
-    dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, level);
+    auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, level);
     if (dest.edges.size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) + ". Segment cannot be matched, discarding.");
       return std::vector<vb::GraphId>();
@@ -563,8 +603,7 @@ std::vector<vb::GraphId> edge_association::match_edges(const pbf::Segment &segme
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
-    auto path = m_path_algo->GetBestPath(
-      origin, dest, m_reader, &m_costing, m_travel_mode);
+    auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
 
     if (path.empty()) {
       // what to do if there's no path?
@@ -675,7 +714,8 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
                                      MatchType& match_type) {
   auto edges = match_edges(segment, segment_id.level(), match_type);
   if (edges.empty()) {
-    LOG_DEBUG("Unable to match segment " + std::to_string(segment_id) + ".");
+    LOG_INFO("Unable to match segment " + std::to_string(segment_id) + " value = " +
+              std::to_string(segment_id.value));
     return false;
   }
 
