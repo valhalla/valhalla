@@ -108,7 +108,8 @@ namespace baldr {
     {130,"Failed to parse location"},
     {131,"Failed to parse source"},
     {132,"Failed to parse target"},
-
+    {133,"Failed to parse avoid"},
+    
     {140,"Action does not support multimodal costing"},
     {141,"Arrive by for multimodal not implemented yet"},
     {142,"Arrive by not implemented for isochrones"},
