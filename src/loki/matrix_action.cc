@@ -69,7 +69,10 @@ namespace valhalla {
         targets = parse_locations(request, "targets", 132, valhalla_exception_t{400, 112});
       }//deprecated using locations
       catch(const valhalla_exception_t& e) {
-        locations = parse_locations(request, "locations");
+        if(request.HasMember("locations"))
+          locations = parse_locations(request, "locations", 130, valhalla_exception_t{400, 112});
+        else
+          throw e;
         if (locations.size() < 2)
           throw valhalla_exception_t{400, 120};
         //create new sources and targets ptree from locations
@@ -81,21 +84,24 @@ namespace valhalla {
             sources_child.PushBack(rapidjson::Value{*request_locations->Begin(), allocator}, allocator);
             request.AddMember("sources", sources_child, allocator);
             request.AddMember("targets", *request_locations, allocator);
+            sources = { locations.front() };
+            targets.swap(locations);
             break;
           case MANY_TO_ONE:
             targets_child.PushBack(rapidjson::Value{*(request_locations->End() - 1), allocator},allocator);
             request.AddMember("targets", targets_child, allocator);
             request.AddMember("sources", *request_locations, allocator);
+            targets = { locations.back() };
+            sources.swap(locations);
             break;
           case MANY_TO_MANY:
           case OPTIMIZED_ROUTE:
             request.AddMember("targets", rapidjson::Value{request["locations"], allocator}, allocator);
             request.AddMember("sources", *request_locations, allocator);
+            targets = locations;
+            sources.swap(locations);
             break;
         }
-        //add these back in the original request (in addition to locations while being deprecated
-        sources = parse_locations(request, "sources", 131, valhalla_exception_t{400, 112});
-        targets = parse_locations(request, "targets", 132, valhalla_exception_t{400, 112});
       }
 
       //sanitize
