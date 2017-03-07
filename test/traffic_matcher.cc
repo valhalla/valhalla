@@ -24,6 +24,7 @@ namespace {
       measurements = m;
       match_results = r;
       segments = meili::TrafficSegmentMatcher::form_segments(m, r);
+      return segments;
     }
 
     std::vector<meili::Measurement> measurements;
