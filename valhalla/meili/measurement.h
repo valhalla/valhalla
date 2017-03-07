@@ -4,7 +4,7 @@
 #define MMP_MEASUREMENT_H_
 
 #include <valhalla/midgard/pointll.h>
-
+#include <cinttypes>
 
 namespace valhalla {
 
@@ -15,10 +15,12 @@ class Measurement
  public:
   Measurement(const midgard::PointLL& lnglat,
               float gps_accuracy,
-              float search_radius):
+              float search_radius,
+              uint32_t epoch_time = 0):
       lnglat_(lnglat),
       gps_accuracy_(gps_accuracy),
-      search_radius_(search_radius)
+      search_radius_(search_radius),
+      epoch_time_(epoch_time)
   {
     if (gps_accuracy_ < 0.f) {
       throw std::invalid_argument("expect non-negative gps_accuracy");
@@ -40,6 +42,9 @@ class Measurement
   float gps_accuracy() const
   { return gps_accuracy_; }
 
+  uint32_t epoch_time() const
+  { return epoch_time_; }
+
  private:
 
   midgard::PointLL lnglat_;
@@ -47,6 +52,8 @@ class Measurement
   float gps_accuracy_;
 
   float search_radius_;
+
+  uint32_t epoch_time_;
 };
 
 }
