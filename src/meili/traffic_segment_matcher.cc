@@ -31,38 +31,20 @@ float GetEdgeDist(const valhalla::meili::MatchResult& res,
 namespace valhalla {
 namespace meili {
 
-TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config)
-    : reader(config.get_child("mjolnir")),
-      matcher_factory(config) {
+TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config):
+  matcher_factory(config), reader(matcher_factory.graphreader()) {
 }
 
-std::string  TrafficSegmentMatcher::match(const std::string& json) {
-  // From ptree from JSON string
+std::string TrafficSegmentMatcher::match(const std::string& json) {
+  //try to parse json
   boost::property_tree::ptree request;
-  try {
-    std::stringstream stream(json);
-    boost::property_tree::read_json(stream, request);
-  } catch (...) {
-    LOG_ERROR("Error parsing JSON= " + json);
-    return "{\"foo\":\"bar\"}";
-  }
+  try { std::stringstream stream(json); boost::property_tree::read_json(stream, request); }
+  catch (...) { throw std::runtime_error("Couln't parse json input"); }
 
-  // Form trace positions
-  std::vector<PointLL> trace;
-  std::vector<uint32_t> times;
+  //check for required parameters
   auto trace_pts = request.get_child_optional("trace");
-
-  if (trace_pts) {
-    for (const auto& pt : *trace_pts) {
-      float lat = pt.second.get<float>("lat");
-      float lon = pt.second.get<float>("lon");
-      trace.emplace_back(lon, lat);
-      times.push_back(pt.second.get<int>("time"));
-    }
-  } else {
-    LOG_ERROR("Could not form trace from input JSON= " + json);
-    return "{\"foo\":\"bar\"}";
-  }
+  if (!trace_pts)
+    throw std::runtime_error("Missing required json array 'trace'");
 
   // Need to add a ptree to set the mode to use within matching
   // TODO - do we need to overrides to defaults?
@@ -70,34 +52,32 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   boost::property_tree::ptree trace_config;
   trace_config.put<std::string>("mode", "auto");
 
-  // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
   std::shared_ptr<valhalla::meili::MapMatcher> matcher;
-  try {
-    matcher.reset(matcher_factory.Create(trace_config));
-  } catch (const std::invalid_argument& ex) {
-    // TODO - what to return?
-    return "{\"foo\":\"bar\"}";
-  }
+  try { matcher.reset(matcher_factory.Create(trace_config)); }
+  catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }
 
   // Populate a measurement sequence to pass to the map matcher
   std::vector<valhalla::meili::Measurement> sequence;
-  for (const auto& coord : trace) {
-    sequence.emplace_back(coord,
-                          matcher->config().get<float>("gps_accuracy"),
-                          matcher->config().get<float>("search_radius"));
+  try {
+    float default_accuracy = matcher->config().get<float>("gps_accuracy");
+    float default_radius = matcher->config().get<float>("search_radius");
+    for (const auto& pt : *trace_pts) {
+      float lat = pt.second.get<float>("lat");
+      float lon = pt.second.get<float>("lon");
+      uint32_t epoch_time = pt.second.get<uint32_t>("time");
+      float accuracy = pt.second.get<float>("accuracy", default_accuracy);
+      sequence.emplace_back(PointLL{lon, lat}, accuracy, default_radius, epoch_time);
+    }
   }
+  catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time"); }
+  if(sequence.empty())
+    return R"({"segments":[]})";
 
   // Create the vector of matched path results
-  std::vector<valhalla::meili::MatchResult> results;
-  if (sequence.size() > 0) {
-    results = matcher->OfflineMatch(sequence);
-  }
-
-  if (sequence.size() != results.size()) {
-    LOG_ERROR("Sequence size not equal to match result size");
-    return "{\"foo\":\"bar\"}";
-  }
+  std::vector<valhalla::meili::MatchResult> results = matcher->OfflineMatch(sequence);
+  if (sequence.size() != results.size())
+    throw std::runtime_error("Sequence size not equal to match result size");
 
   // TODO - more robust list of edges. Handle cases where multiple
   // edges lie on the path between GPS locations (sequence) and
@@ -109,7 +89,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   for (const auto& res : results) {
     // Make sure edge is valid
     if (res.edgeid().Is_Valid()) {
-      trace_edges.emplace_back(EdgeOnTrace{res.edgeid(), GetEdgeDist(res, matcher), static_cast<float>(times[idx])});
+      trace_edges.emplace_back(EdgeOnTrace{res.edgeid(), GetEdgeDist(res, matcher), static_cast<float>(sequence[idx].epoch_time())});
     }
     idx++;
   }

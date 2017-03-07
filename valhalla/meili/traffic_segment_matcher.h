@@ -70,8 +70,8 @@ class TrafficSegmentMatcher {
   std::string match(const std::string& json);
 
  protected:
-  valhalla::baldr::GraphReader reader;
   valhalla::meili::MapMatcherFactory matcher_factory;
+  valhalla::baldr::GraphReader& reader;
 };
 
 }
