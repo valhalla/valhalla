@@ -591,7 +591,8 @@ check_PROGRAMS = \
 	test/thor_service \
 	test/trip_path_controller \
 	test/astar \
-	test/serializers
+	test/serializers \
+	test/traffic_matcher
 test_logging_SOURCES = test/logging.cc test/test.cc
 test_logging_CPPFLAGS = $(DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
 test_logging_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -790,6 +791,9 @@ test_astar_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_serializers_SOURCES = test/serializers.cc test/test.cc
 test_serializers_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_serializers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_traffic_matcher_SOURCES = test/traffic_matcher.cc test/test.cc
+test_traffic_matcher_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_traffic_matcher_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 
 if DATA_TOOLS
 check_PROGRAMS += \
