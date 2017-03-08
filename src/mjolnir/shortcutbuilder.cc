@@ -141,7 +141,7 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
 
 // Get the GraphId of the opposing edge.
 GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
-                        GraphReader& reader) {
+                        GraphReader& reader, const uint64_t wayid) {
   // Get the tile at the end node
   const GraphTile* tile = reader.GetGraphTile(edge->endnode());
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
@@ -153,10 +153,16 @@ GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
+    if (directededge->trans_down() || directededge->trans_up() ||
+        directededge->use() == Use::kTransitConnection) {
+      continue;
+    }
     if (directededge->endnode() == node &&
         directededge->classification() == edge->classification() &&
         directededge->length() == edge->length() &&
-      ((directededge->link() && edge->link()) || (directededge->use() == edge->use()))) {
+      ((directededge->link() && edge->link()) ||
+       (directededge->use() == edge->use())) &&
+       wayid == tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
       return edgeid;
     }
   }
@@ -258,9 +264,11 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
   const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
+  uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
   const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
-  GraphId oppedge1 = GetOpposingEdge(node, edge1, reader);
-  GraphId oppedge2 = GetOpposingEdge(node, edge2, reader);
+  uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
+  GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
+  GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
   const DirectedEdge* oppdiredge1 =
       reader.GetGraphTile(oppedge1)->directededge(oppedge1);
   const DirectedEdge* oppdiredge2 =
@@ -443,7 +451,9 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
           // Break out of loop. This case can happen when a shortcut edge
           // enters another shortcut edge (but is not driveable in reverse
           // direction from the node).
-          LOG_INFO("Edge not found in edge pairs?");
+          const DirectedEdge* de = tile->directededge(next_edge_id);
+          LOG_ERROR("Edge not found in edge pairs. WayID = " +
+               std::to_string(tile->edgeinfo(de->edgeinfo_offset()).wayid()));
           break;
         }
 

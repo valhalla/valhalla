@@ -67,6 +67,14 @@ DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
   for (uint32_t level = 0; level < n_levels; level++) {
     hierarchy_limits_.emplace_back(HierarchyLimits(pt, level));
   }
+
+  // Parse property tree to get avoid edges
+  auto avoid_edges = pt.get_child_optional("avoid_edges");
+  if (avoid_edges) {
+    for (auto& edgeid : *avoid_edges) {
+      user_avoid_edges_.insert(GraphId(edgeid.second.get_value<uint64_t>()));
+    }
+  }
 }
 
 DynamicCost::~DynamicCost() {
