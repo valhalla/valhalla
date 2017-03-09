@@ -91,7 +91,7 @@ config = {
     },
     'pedestrian': {
       'turn_penalty_factor': 100,
-      'search_radius': 25
+      'search_radius': 50
     },
     'bicycle': {
       'turn_penalty_factor': 140
