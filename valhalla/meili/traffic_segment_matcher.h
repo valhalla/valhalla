@@ -2,6 +2,7 @@
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
 #include <string>
+#include <vector>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 
@@ -16,22 +17,12 @@ namespace valhalla {
 namespace meili {
 
 // Structure to identify each edge matched to a GPS trace
-struct EdgeOnTrace {
-  valhalla::baldr::GraphId edge_id;
-  float dist;
-  float secs;
-};
-
-// Unique edges along the GPS trace
-struct UniqueEdgeOnTrace {
-  valhalla::baldr::GraphId edge_id;
-  float start_pct;
-  float end_pct;
-  float start_secs;
-  float end_secs;
-  long int begin_edge_index;
-  long int end_edge_index;
-
+struct trace_edge_t {
+  baldr::GraphId edge_id;      //the id for the edge
+  float begin_dist_offset;     //distance from first trace point along entire path to beginning of edge
+  float end_dist_offset;       //distance from first trace point along entire path to end of edge
+  float begin_time_offset;     //time from first trace point along entire path to beginning of edge
+  float end_time_offset;       //time from first trace point along entire path to end of edge
 };
 
 
@@ -39,7 +30,7 @@ struct UniqueEdgeOnTrace {
 struct MatchedTrafficSegment {
   bool partial_start;                   // Begins along the segment
   bool partial_end;                     // Ends along the segment
-  valhalla::baldr::GraphId segment_id;  // Traffic segment unique Id.
+  baldr::GraphId segment_id;            // Traffic segment unique Id.
   float start_time;                     // Begin time along this segment.
   float end_time;                       // End time along this segment.
   uint32_t length;                      // Length in meters along this segment
@@ -79,7 +70,7 @@ class TrafficSegmentMatcher {
    * @param  json string of gps data {"trace":[{"lat":0,"lon":0,time:0},...]}
    * @return the list of measurements from the json trace
    */
-  static std::vector<meili::Measurement> parse_measurements(const std::string& json,
+  static std::vector<Measurement> parse_measurements(const std::string& json,
     float default_accuracy, float default_search_radius);
 
   /**
@@ -92,16 +83,24 @@ class TrafficSegmentMatcher {
  protected:
 
   /**
-   * Turns measurements and the matching results into a set of traffic segments
-   * @param  the original measurements in the input
-   * @param  the matched results given the input measurements
+   * Turns the matching results into a set of edges forming the path the input measurements traversed
+   * it also injects fake match results corresponding to the end points of the path edges can be used
+   * as a chronology against which we can interpolate the traffic segment end points
+   * @param  the matched results of the input measurements
+   * @param  the matcher used to generate the match
+   * @return the edges along the matched path
+   */
+  virtual std::vector<trace_edge_t> form_edges(std::vector<MatchResult>& match_results,
+    const std::shared_ptr<MapMatcher>& matcher) const;
+
+  /**
+   * Turns trace edges and matching results into a set of traffic segments
    * @return the vector of traffic segments along the path described by the match results
    */
-  virtual std::vector<MatchedTrafficSegment> form_segments(const std::vector<meili::Measurement>& measurements,
-    const std::vector<valhalla::meili::MatchResult>& match_results);
+  virtual std::vector<MatchedTrafficSegment> form_segments(const std::vector<trace_edge_t>& trace_edges,
+    const std::vector<MatchResult>& match_results) const;
 
   valhalla::meili::MapMatcherFactory matcher_factory;
-  valhalla::baldr::GraphReader& reader;
 };
 
 }

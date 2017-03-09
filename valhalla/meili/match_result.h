@@ -17,22 +17,26 @@ class MatchResult
   MatchResult(const midgard::PointLL& lnglat,
               float distance,
               const baldr::GraphId edgeid,
+              float distance_along,
+              float epoch_time = 0,
               StateId stateid = kInvalidStateId)
       : lnglat_(lnglat),
-        distance_(distance),
+        distance_from_(distance),
         edgeid_(edgeid),
-        stateid_(stateid) {}
+        stateid_(stateid),
+        epoch_time_(epoch_time),
+        distance_along_(distance_along){}
 
-  MatchResult(const midgard::PointLL& lnglat)
-      : MatchResult(lnglat, 0.f, {}, kInvalidStateId) {}
+  MatchResult(const midgard::PointLL& lnglat, float epoch_time = 0)
+      : MatchResult(lnglat, 0.f, {}, -1.f, epoch_time) {}
 
   // Coordinate of the match point
   const midgard::PointLL& lnglat() const
   { return lnglat_; }
 
   // Distance from measurement to the match point
-  float distance() const
-  { return distance_; }
+  float distance_from() const
+  { return distance_from_; }
 
   // Which edge this match point stays
   const baldr::GraphId& edgeid() const
@@ -44,14 +48,21 @@ class MatchResult
   bool HasState() const
   { return stateid_ != kInvalidStateId; }
 
+  float distance_along() const
+  { return distance_along_; }
+
  private:
   midgard::PointLL lnglat_;
 
-  float distance_;
+  float distance_from_;
 
   baldr::GraphId edgeid_;
 
   StateId stateid_;
+
+  float distance_along_;
+
+  float epoch_time_;
 };
 
 }

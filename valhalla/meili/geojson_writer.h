@@ -162,7 +162,7 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
   writer.String("distances");
   writer.StartArray();
   for (const auto& result : results) {
-    writer.Double(result.distance());
+    writer.Double(result.distance_from());
   }
   writer.EndArray();
 

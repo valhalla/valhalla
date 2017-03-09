@@ -1,43 +1,25 @@
-#include <vector>
-#include <string>
+#include <algorithm>
 #include <boost/property_tree/json_parser.hpp>
 
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-
 #include "meili/traffic_segment_matcher.h"
 
 using namespace valhalla::baldr;
 
 namespace {
 
-float GetEdgeDist(const valhalla::meili::MatchResult& res,
-                  std::shared_ptr<valhalla::meili::MapMatcher> matcher) {
-  if (res.HasState()) {
-    bool found = false;
-    const auto& state = matcher->mapmatching().state(res.stateid());
-    PathLocation loc = state.candidate();
-    for (const auto& e : loc.edges) {
-     if (e.id == res.edgeid()) {
-       return e.dist;
-     }
-    }
-  }
-  return 1.0f;
 }
-
-};
 
 namespace valhalla {
 namespace meili {
 
-TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config):
-  matcher_factory(config), reader(matcher_factory.graphreader()) {
+TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
 }
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
   // Create a matcher
-  std::shared_ptr<valhalla::meili::MapMatcher> matcher;
+  std::shared_ptr<MapMatcher> matcher;
   float default_accuracy, default_search_radius;
   try {
     matcher.reset(matcher_factory.Create("auto")); //TODO: get the mode from the request
@@ -53,22 +35,62 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
 
   // Create the vector of matched path results
   auto match_results = matcher->OfflineMatch(measurements);
+  if (match_results.size() != measurements.size())
+    throw std::runtime_error("Sequence size not equal to match result size");
+
+  // Get the edges associated with the entire connected trace path
+  // NOTE: it may not be entirely connected so we much check for that
+  auto trace_edges = form_edges(match_results, matcher);
 
   // Get the segments along the measurments
-  auto traffic_segments = form_segments(measurements, match_results);
+  auto traffic_segments = form_segments(trace_edges, match_results);
 
   //give back json
   return serialize(traffic_segments);
 }
 
-std::vector<MatchedTrafficSegment> TrafficSegmentMatcher::form_segments(const std::vector<meili::Measurement>& measurements,
-  const std::vector<valhalla::meili::MatchResult>& match_results) {
-  if (measurements.size() != match_results.size())
-    throw std::runtime_error("Sequence size not equal to match result size");
+std::vector<trace_edge_t> TrafficSegmentMatcher::form_edges(std::vector<MatchResult>& match_results,
+  const std::shared_ptr<meili::MapMatcher>& matcher) const {
+  //NOTE: at this point if the input didnt match to an entirely connected path it will throw and we lose the whole thing
+  //get all of the edges along the path from the state info
+  auto segments = ConstructRoute(matcher->mapmatching(), match_results.begin(), match_results.end());
+  //merging the edges that are the same into the first ones record
+  auto segment_itr = segments.begin();
+  while(segment_itr != segments.end()) {
+    auto initial_edge = segment_itr;
+    ++segment_itr;
+    while(segment_itr != segments.end() && segment_itr->edgeid == initial_edge->edgeid) {
+      initial_edge->target = segment_itr->target;
+      ++segment_itr;
+    }
+  }
 
-  //TODO:
+  //delete duplicates that we copied to the initial edge
+  auto remove_pos = std::remove_if(segments.begin(), segments.end(), [&segments](const EdgeSegment& s){
+    return &segments.back() != &s && s.edgeid == (&s + 1)->edgeid;
+  });
+  segments.erase(remove_pos, segments.end());
 
+  //NOTE: an alternate version of ConstructRoute would make stuff above and this next part moot
+  //rip through the edges to get their lengths figured out
+  std::vector<trace_edge_t> edges;
+  float total_length = -segments.front().source *
+    matcher->graphreader().GetGraphTile(segments.front().edgeid)->directededge(segments.front().edgeid)->length();
+  for(const auto& segment : segments) {
+    float length = matcher->graphreader().GetGraphTile(segment.edgeid)->directededge(segment.edgeid)->length();
+    edges.push_back({segment.edgeid, total_length, total_length + length});
+    total_length += length;
+  }
+
+  //TODO: add match results for the ends of each edge, then back fill the time information
+
+  return edges;
+}
+
+std::vector<MatchedTrafficSegment> TrafficSegmentMatcher::form_segments(const std::vector<trace_edge_t>& trace_edges,
+  const std::vector<MatchResult>& match_results) const {
   std::vector<MatchedTrafficSegment> traffic_segments;
+
   return traffic_segments;
 }
 
@@ -85,13 +107,13 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
     throw std::runtime_error("Missing required json array 'trace'");
 
   // Populate a measurement sequence to pass to the map matcher
-  std::vector<valhalla::meili::Measurement> measurements;
+  std::vector<Measurement> measurements;
   try {
     for (const auto& pt : *trace_pts) {
-      float lat = pt.second.get<float>("lat");
-      float lon = pt.second.get<float>("lon");
-      uint32_t epoch_time = pt.second.get<uint32_t>("time");
-      float accuracy = pt.second.get<float>("accuracy", default_accuracy);
+      auto lat = pt.second.get<float>("lat");
+      auto lon = pt.second.get<float>("lon");
+      auto epoch_time = pt.second.get<float>("time"); //surely this wont make it to 2038-01-19 03:14:08
+      auto accuracy = pt.second.get<float>("accuracy", default_accuracy);
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }

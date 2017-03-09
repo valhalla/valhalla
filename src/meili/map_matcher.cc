@@ -31,13 +31,14 @@ struct Interpolation {
   baldr::GraphId edgeid;
   float sq_distance;
   float route_distance;
+  float edge_distance;
 
   float sortcost(const MapMatching& mm, float mmt_dist) const
   { return mm.CalculateTransitionCost(0.f, route_distance, mmt_dist) + mm.CalculateEmissionCost(sq_distance); }
 };
 
 
-// Find the interpolation along the route where the transitin cost +
+// Find the interpolation along the route where the transition cost +
 // emission cost is minimal
 template <typename segment_iterator_t>
 Interpolation
@@ -56,7 +57,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
   float minimal_cost = std::numeric_limits<float>::infinity();
 
   // Invalid edgeid indicates that no interpolation found
-  Interpolation best_interp{{}, {}, 0.f, 0.f};
+  Interpolation best_interp;
 
   for (auto segment = begin; segment != end; segment++) {
     const auto directededge = helpers::edge_directededge(mapmatching.graphreader(), segment->edgeid, tile);
@@ -88,7 +89,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
     // beginning segment
     const auto route_distance = segment_begin_route_distance + distance_to_segment_ends;
 
-    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance};
+    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance, offset};
     const auto cost = interp.sortcost(mapmatching, match_measurement_distance);
     if (cost < minimal_cost) {
       minimal_cost = cost;
@@ -103,7 +104,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
 }
 
 
-// Iterpolate measurements along the route from prevous state to
+// Interpolate measurements along the route from previous state to
 // current state, or along the route from current state to next state
 std::vector<MatchResult>
 InterpolateMeasurements(const MapMatching& mapmatching,
@@ -120,7 +121,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
 
   if (!state.IsValid()) {
     for (const auto& measurement: interpolated_measurements) {
-      results.emplace_back(measurement.lnglat());
+      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
     }
     return results;
   }
@@ -137,7 +138,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
 
   if (upstream_route.empty() && downstream_route.empty()) {
     for (const auto& measurement: interpolated_measurements) {
-      results.emplace_back(measurement.lnglat());
+      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
     }
     return results;
   }
@@ -166,19 +167,19 @@ InterpolateMeasurements(const MapMatching& mapmatching,
       const auto down_cost = down_interp.sortcost(mapmatching, match_measurement_distance),
                    up_cost = up_interp.sortcost(mapmatching, match_measurement_distance);
       if (down_cost < up_cost) {
-        results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
+        results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time());
       } else {
-        results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
+        results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time());
       }
 
     } else if (up_interp.edgeid.Is_Valid()) {
-      results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid);
+      results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time());
 
     } else if (down_interp.edgeid.Is_Valid()) {
-      results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid);
+      results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time());
 
     } else {
-      results.emplace_back(measurement.lnglat());
+      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
     }
   }
 
@@ -211,7 +212,7 @@ InterpolateTimedMeasurements(const MapMatching& mapmatching,
       } else {
         auto& results = resultmap[time];
         for (const auto& measurement: it->second) {
-          results.push_back(MatchResult(measurement.lnglat()));
+          results.push_back(MatchResult(measurement.lnglat(), measurement.epoch_time()));
         }
       }
     }
@@ -227,7 +228,7 @@ InterpolateTimedMeasurements(const MapMatching& mapmatching,
 // state
 MatchResult
 FindMatchResult(const MapMatching::state_iterator& previous_state,
-                const State& state,
+                const State& state, const Measurement& measurement,
                 const MapMatching::state_iterator& next_state)
 {
   baldr::GraphId edgeid;
@@ -259,7 +260,7 @@ FindMatchResult(const MapMatching::state_iterator& previous_state,
   const auto& c = state.candidate();
   //Note: technically a candidate can have correlated to more than one place in the graph
   //but the way its used in meili we only correlated it to one place so .front() is safe
-  return {c.edges.front().projected, std::sqrt(c.edges.front().score), edgeid, state.id()};
+  return {c.edges.front().projected, std::sqrt(c.edges.front().score), edgeid, c.edges.front().dist, measurement.epoch_time(), state.id()};
 }
 
 
@@ -281,10 +282,11 @@ FindMatchResults(const MapMatching& mapmatching,
                 next_state = MapMatching::state_iterator(nullptr);
        state != state_rend;
        next_state = state, state++, previous_state = std::next(state)) {
+    const auto& measurement = mapmatching.measurement(time);
     if (state.IsValid()) {
-      results.push_back(FindMatchResult(previous_state, *state, next_state));
+      results.push_back(FindMatchResult(previous_state, *state, measurement, next_state));
     } else {
-      results.emplace_back(mapmatching.measurement(time).lnglat());
+      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
     }
     time--;
   }

@@ -13,24 +13,33 @@ using namespace valhalla;
 
 namespace {
 
+  //here we hijack a couple of methods and save off some state while we're at it
+  //this way the standard calling pattern used from the outside is the same as in the test
+  //but we now have the internal state so we can see what is going on at more detail
   class testable_matcher : public meili::TrafficSegmentMatcher {
    public:
     using meili::TrafficSegmentMatcher::TrafficSegmentMatcher;
 
-    //this way we call the standard functions that someone would from the outside
-    //but we save the state so we can see what is going on from the tests
-    std::vector<meili::MatchedTrafficSegment> form_segments(const std::vector<meili::Measurement>& m,
-      const std::vector<valhalla::meili::MatchResult>& r) override {
-      measurements = m;
+    std::vector<meili::trace_edge_t> form_edges(std::vector<meili::MatchResult>& r, const std::shared_ptr<meili::MapMatcher>& m) const override {
+      matcher = m;
+      edges = meili::TrafficSegmentMatcher::form_edges(r, m);
+      return edges;
+    }
+
+    std::vector<meili::MatchedTrafficSegment> form_segments(const std::vector<meili::trace_edge_t>& e, const std::vector<meili::MatchResult>& r) const override {
       match_results = r;
-      segments = meili::TrafficSegmentMatcher::form_segments(m, r);
+      segments = meili::TrafficSegmentMatcher::form_segments(e, r);
       return segments;
     }
 
-    std::vector<meili::Measurement> measurements;
-    std::vector<valhalla::meili::MatchResult> match_results;
-    std::vector<meili::MatchedTrafficSegment> segments;
+    mutable std::shared_ptr<meili::MapMatcher> matcher;
+    mutable std::vector<meili::trace_edge_t> edges;
+    mutable std::vector<valhalla::meili::MatchResult> match_results;
+    mutable std::vector<meili::MatchedTrafficSegment> segments;
   };
+
+  //TODO: build the test tiles in the test, need to move traffic association into library to do that
+  //currently all the logic is in the application
 
   void test_matcher() {
     //fake config
