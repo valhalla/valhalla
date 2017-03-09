@@ -46,6 +46,48 @@ float FastInvSqrt(float x) {
   // x *= 1.5f - xhalf*x*x;          // repeating step increases accuracy
 }
 
+// Trim the front of a polyline (represented as a list or vector of Point2).
+// Returns the trimmed portion of the polyline. The supplied polyline is
+// altered (the trimmed part is removed).
+template <class container_t>
+container_t trim_front(container_t& pts, const float dist) {
+  // Return if less than 2 points
+  if (pts.size() < 2) {
+    return {};
+  }
+
+  // Walk the polyline and accumulate length until it exceeds dist
+  container_t result;
+  result.push_back(pts.front());
+  double d = 0.0f;
+  for (auto p1 = pts.begin(), p2 = std::next(pts.begin()); p2 != pts.end(); ++p1, ++p2) {
+    double segdist = p1->Distance(*p2);
+    if ((d + segdist) > dist) {
+      double frac = (dist - d) / segdist;
+      auto midpoint = p1->AffineCombination((1.0-frac), frac, *p2);
+      result.push_back(midpoint);
+
+      // Remove used part of polyline
+      pts.erase(pts.begin(), p1);
+      pts.front() = midpoint;
+      return result;
+    } else {
+      d += segdist;
+      result.push_back(*p2);
+    }
+  }
+
+  // Used all of the polyline without exceeding dist
+  pts.clear();
+  return result;
+}
+
+// Explicit instantiations
+template std::vector<PointLL> trim_front<std::vector<PointLL> >(std::vector<PointLL>&, const float);
+template std::vector<Point2> trim_front<std::vector<Point2> >(std::vector<Point2>&, const float);
+template std::list<PointLL> trim_front<std::list<PointLL> >(std::list<PointLL>&, const float);
+template std::list<Point2> trim_front<std::list<Point2> >(std::list<Point2>&, const float);
+
 memory_status::memory_status(const std::unordered_set<std::string> interest){
   //grab the vm stats from the file
   std::ifstream file("/proc/self/status");

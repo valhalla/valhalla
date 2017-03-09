@@ -189,6 +189,8 @@ namespace valhalla {
       // See if we have avoids and take care of them
       auto avoid_locations = parse_locations(request, "avoid_locations", 133, boost::none);
       if(!avoid_locations.empty()) {
+        if(avoid_locations.size() > max_avoid_locations)
+          throw valhalla_exception_t{400, 157, std::to_string(max_avoid_locations)};
         try {
           auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
           std::unordered_set<uint64_t> avoids;
@@ -214,8 +216,8 @@ namespace valhalla {
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
         config(config), reader(config.get_child("mjolnir")), connectivity_map(config.get_child("mjolnir")),
         long_request(config.get<float>("loki.logging.long_request")),
-        max_contours(config.get<unsigned int>("service_limits.isochrone.max_contours")),
-        max_time(config.get<unsigned int>("service_limits.isochrone.max_time")),
+        max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
+        max_time(config.get<size_t>("service_limits.isochrone.max_time")),
         max_shape(config.get<size_t>("service_limits.trace.max_shape")),
         healthcheck(false) {
 
@@ -223,16 +225,18 @@ namespace valhalla {
       for (const auto& kv : config.get_child("loki.actions")) {
         auto path = "/" + kv.second.get_value<std::string>();
         if(PATH_TO_ACTION.find(path) == PATH_TO_ACTION.cend())
-          throw valhalla_exception_t{400, 105, path};
+          throw std::runtime_error("Path action not supported " + path);
         action_str.append("'" + path + "' ");
         actions.insert(path);
       }
       // Make sure we have at least something to support!
       if(action_str.empty())
-        throw valhalla_exception_t{400, 102};
+        throw std::runtime_error("The config actions for Loki are incorrectly loaded");
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
+        if(kv.first == "max_avoid_locations")
+          continue;
         if (kv.first != "skadi" && kv.first != "trace")
           max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         if (kv.first != "skadi" && kv.first != "isochrone")
@@ -240,15 +244,17 @@ namespace valhalla {
       }
       //this should never happen
       if (max_locations.empty())
-        throw valhalla_exception_t{400, 103};
+        throw std::runtime_error("Missing max_locations configuration");
 
       if (max_distance.empty())
-        throw valhalla_exception_t{400, 104};
+        throw std::runtime_error("Missing max_distance configuration");
 
       min_transit_walking_dis =
-        config.get<int>("service_limits.pedestrian.min_transit_walking_distance");
+        config.get<size_t>("service_limits.pedestrian.min_transit_walking_distance");
       max_transit_walking_dis =
-        config.get<int>("service_limits.pedestrian.max_transit_walking_distance");
+        config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
+
+      max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
 
       // Register edge/node costing methods
       // TODO: move this into the loop above
@@ -260,7 +266,6 @@ namespace valhalla {
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("truck", sif::CreateTruckCost);
       factory.Register("transit", sif::CreateTransitCost);
-
     }
 
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
