@@ -186,7 +186,7 @@ config = {
       'max_distance': 162500.0,
       'max_shape': 8000
     },
-    'avoid_locations': 50    
+    'max_avoid_locations': 50    
   }
 }
 
@@ -371,6 +371,7 @@ help_text = {
       'max_distance': 'Maximum input shape distance in meters',
       'max_shape': 'Maximum number of input shape points'
     }
+    'max_avoid_locations': 'Maximum number of avoid locations to allow in request'
   }
 }
 
