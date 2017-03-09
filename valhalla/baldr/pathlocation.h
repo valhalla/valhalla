@@ -7,6 +7,7 @@
 #include <valhalla/baldr/graphid.h>
 
 #include <boost/property_tree/ptree.hpp>
+#include <rapidjson/document.h>
 
 namespace valhalla{
 namespace baldr{
@@ -58,6 +59,12 @@ struct PathLocation : public Location {
    * @return ptree
    */
   boost::property_tree::ptree ToPtree(size_t index) const;
+
+  /**
+   * Serializes this object to rapidjson
+   * @return rapidjson::Value
+   */
+  rapidjson::Value ToRapidJson(size_t index, rapidjson::Document::AllocatorType& allocator) const;
 
   /**
    * Serializes one of these objects from a ptree and a list of locations
