@@ -7,6 +7,7 @@
 #include <valhalla/midgard/pointll.h>
 
 #include <boost/property_tree/ptree.hpp>
+#include <rapidjson/document.h>
 
 namespace valhalla{
 namespace baldr{
@@ -42,18 +43,29 @@ struct Location {
    * @return ptree
    */
   boost::property_tree::ptree ToPtree() const;
-
+  /**
+   * Serializes this object to rapidjson::Value
+   * @return rapidjson::Value
+   */
+  rapidjson::Value ToRapidJson(rapidjson::Document::AllocatorType& a) const;
   /**
    * conversion.
    * @param  pt  a property tree representation of the location
    */
   static Location FromPtree(const boost::property_tree::ptree& pt);
+  /**
+   * conversion.
+   * @param  d a rapidjson representation of the location
+   */
+  static Location FromRapidJson(const rapidjson::Value& d);
 
   /**
    * conversion.
    * @param  json  a json representation of the location
+   * @param  method use ptree or rapidjson, ptree by default
    */
-  static Location FromJson(const std::string& json);
+  enum class ParseMethod: int { PTREE, RAPIDJSON };
+  static Location FromJson(const std::string& json, const ParseMethod& method = ParseMethod::PTREE);
 
   /**
    * conversion.

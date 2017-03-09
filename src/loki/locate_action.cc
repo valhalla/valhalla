@@ -3,6 +3,7 @@
 
 #include "baldr/json.h"
 #include "baldr/pathlocation.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
 using namespace prime_server;
@@ -123,12 +124,11 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_locate(boost::property_tree::ptree& request) {
+    void loki_worker_t::init_locate(rapidjson::Document& request) {
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
         throw valhalla_exception_t{400, 120};
-      auto costing = request.get_optional<std::string>("costing");
-      if (costing)
+      if(request.HasMember("costing"))
         parse_costing(request);
       else {
         edge_filter = loki::PassThroughEdgeFilter;
@@ -136,25 +136,25 @@ namespace valhalla {
       }
     }
 
-    worker_t::result_t loki_worker_t::locate(boost::property_tree::ptree& request, http_request_info_t& request_info) {
+    worker_t::result_t loki_worker_t::locate(rapidjson::Document& request, http_request_info_t& request_info) {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
-      auto verbose = request.get<bool>("verbose", false);
+      bool verbose = GetOptionalFromRapidJson<bool>(request, "/verbose").get_value_or(false);
       const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
-
+      auto id = GetOptionalFromRapidJson<std::string>(request, "/id");
       for(const auto& location : locations) {
         try {
-          json->emplace_back(serialize(request.get_optional<std::string>("id"), projections.at(location), reader, verbose));
+          json->emplace_back(serialize(id, projections.at(location), reader, verbose));
         }
         catch(const std::exception& e) {
-          json->emplace_back(serialize(request.get_optional<std::string>("id"), location.latlng_, "No data found for location", verbose));
+          json->emplace_back(serialize(id, location.latlng_, "No data found for location", verbose));
         }
       }
 
       std::ostringstream stream;
       //jsonp callback if need be
-      auto jsonp = request.get_optional<std::string>("jsonp");
+      auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
       if(jsonp)
         stream << *jsonp << '(';
       stream << *json;

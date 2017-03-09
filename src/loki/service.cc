@@ -14,6 +14,7 @@
 #include "sif/pedestriancost.h"
 #include "baldr/json.h"
 #include "baldr/errorcode_util.h"
+#include "baldr/rapidjson_utils.h"
 
 #include "loki/service.h"
 #include "loki/search.h"
@@ -45,63 +46,64 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  boost::property_tree::ptree from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
-    boost::property_tree::ptree pt;
+  rapidjson::Document from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
+    rapidjson::Document d;
 
+    auto& allocator = d.GetAllocator();
     //parse the input
-    try {
-      //throw the json into the ptree
-      auto json = request.query.find("json");
-      if (json != request.query.end() && json->second.size()
-        && json->second.front().size()) {
-        std::istringstream is(json->second.front());
-        boost::property_tree::read_json(is, pt);
-      }//no json parameter, check the body
-      else if(!request.body.empty()) {
-        std::istringstream is(request.body);
-        boost::property_tree::read_json(is, pt);
-      }
+    const auto& json = request.query.find("json");
+    if (json != request.query.end() && json->second.size()
+      && json->second.front().size()) {
+      d.Parse(json->second.front().c_str());
+    }//no json parameter, check the body
+    else if(!request.body.empty()) {
+      d.Parse(request.body.c_str());
     }
-    catch(...) {
+    if (d.HasParseError())
       throw valhalla_exception_t{400, 100};
+
+    // In case where the query is empty
+    if (!d.IsObject() && !d.IsArray()){
+      d.SetObject(); d.SetArray();
     }
 
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
       //skip json or empty entries
-      if(kv.first == "json" || kv.first.size() == 0 || kv.second.size() == 0)
+      if(kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
         continue;
 
       //turn single value entries into single key value
       if(kv.second.size() == 1) {
-        pt.add(kv.first, kv.second.front());
+        d.AddMember({kv.first, allocator}, {kv.second.front(), allocator}, allocator);
         continue;
       }
 
       //make an array of values for this key
-      boost::property_tree::ptree array;
+      rapidjson::Value array{rapidjson::kArrayType};
       for(const auto& value : kv.second) {
-        boost::property_tree::ptree element;
-        element.put("", value);
-        array.push_back(std::make_pair("", element));
+        array.PushBack({value, allocator}, allocator);
       }
-      pt.add_child(kv.first, array);
+      d.AddMember({kv.first, allocator}, array, allocator);
     }
 
     //if its osrm compatible lets make the location object conform to our standard input
     if(action == loki_worker_t::VIAROUTE) {
-      auto& array = pt.put_child("locations", boost::property_tree::ptree());
-      for(const auto& location : pt.get_child("loc")) {
-        Location l = Location::FromCsv(location.second.get_value<std::string>());
-        boost::property_tree::ptree element;
-        element.put("lon", l.latlng_.first);
-        element.put("lat", l.latlng_.second);
-        array.push_back(std::make_pair("", element));
+      auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
+      auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
+      if (! loc)
+        throw valhalla_exception_t{400, 110};
+      for(const auto& location : *loc) {
+        Location l = Location::FromCsv(location.GetString());
+        rapidjson::Value ele{rapidjson::kObjectType};
+        ele.AddMember("lon", l.latlng_.first, allocator)
+            .AddMember("lat", l.latlng_.second, allocator);
+        array.PushBack(ele, allocator);
       }
-      pt.erase("loc");
+      d.RemoveMember("loc");
     }
 
-    return pt;
+    return d;
   }
 }
 
@@ -132,26 +134,27 @@ namespace valhalla {
       return result;
     }
 
-    std::vector<baldr::Location> loki_worker_t::parse_locations(const boost::property_tree::ptree& request, const std::string& node,
-      boost::optional<baldr::valhalla_exception_t> required_exception) {
+
+    std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
+      unsigned location_parse_error_code, boost::optional<baldr::valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
-      auto request_locations = request.get_child_optional(node);
+      auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
       if (request_locations) {
         for(const auto& location : *request_locations) {
-          try { parsed.push_back(baldr::Location::FromPtree(location.second)); }
-          catch (...) { throw valhalla_exception_t{400, 130}; }
+          try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
+          catch (...) { throw valhalla_exception_t{400, location_parse_error_code}; }
         }
         if (!healthcheck)
-          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->size()), " [ANALYTICS] ");
+          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
       }
       else if(required_exception)
         throw *required_exception;
       return parsed;
     }
 
-    void loki_worker_t::parse_costing(boost::property_tree::ptree& request) {
+    void loki_worker_t::parse_costing(rapidjson::Document& request) {
       //using the costing we can determine what type of edge filtering to use
-      auto costing = request.get_optional<std::string>("costing");
+      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
       if (!costing)
         throw valhalla_exception_t{400, 124};
       else if (!healthcheck)
@@ -163,14 +166,19 @@ namespace valhalla {
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
-      std::string method_options = "costing_options." + *costing;
-      if(!request.get_child_optional(method_options)) {
-        request.add_child("costing_options", boost::property_tree::ptree{})
-                 .add_child(*costing, boost::property_tree::ptree{});
-      }
-      auto& costing_options = request.get_child(method_options);
+      std::string method_options = "/costing_options/" + *costing;
+      auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      auto& allocator = request.GetAllocator();
+      if(!method_options_ptr)
+        request.AddMember(rapidjson::Value(method_options, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
+      method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+
       try{
-        auto c = factory.Create(*costing, costing_options);
+        cost_ptr_t c;
+        if (method_options_ptr)
+          c = factory.Create(*costing, *method_options_ptr);
+        else 
+          c = factory.Create(*costing, rapidjson::Value{});
         edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }
@@ -179,7 +187,7 @@ namespace valhalla {
       }
 
       // See if we have avoids and take care of them
-      auto avoid_locations = parse_locations(request, "avoid_locations", boost::none);
+      auto avoid_locations = parse_locations(request, "avoid_locations", 133, boost::none);
       if(!avoid_locations.empty()) {
         try {
           auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
@@ -192,12 +200,10 @@ namespace valhalla {
                 avoids.insert(shortcut);
             }
           }
-          auto &avoid_edges = costing_options.add_child("avoid_edges", boost::property_tree::ptree{});
-          for(auto avoid : avoids) {
-            boost::property_tree::ptree value;
-            value.put("", avoid);
-            avoid_edges.push_back(std::make_pair("", value));
-          }
+          rapidjson::Value avoid_edges{rapidjson::kArrayType};
+          for(auto avoid : avoids)
+            avoid_edges.PushBack(rapidjson::Value(avoid), allocator);
+          method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator);
         }//swallow all failures on optional avoids
         catch(...) {
           LOG_WARN("Failed to find avoid_locations");
@@ -277,12 +283,12 @@ namespace valhalla {
           return jsonify_error({404, 106, action_str}, info);
 
         //parse the query's json
-        auto request_pt = from_request(action->second, request);
-        jsonp = request_pt.get_optional<std::string>("jsonp");
+        auto request_rj = from_request(action->second, request);
+        jsonp = GetOptionalFromRapidJson<std::string>(request_rj, "/jsonp");
         //let further processes more easily know what kind of request it was
-        request_pt.put<int>("action", action->second);
+        rapidjson::SetValueByPointer(request_rj, "/action", action->second);
         //flag healthcheck requests; do not send to logstash
-        healthcheck = request_pt.get<bool>("healthcheck", false);
+        healthcheck = GetOptionalFromRapidJson<bool>(request_rj, "/healthcheck").get_value_or(false);
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
@@ -292,24 +298,24 @@ namespace valhalla {
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            result = route(request_pt, info);
+            result = route(request_rj, info);
             break;
           case LOCATE:
-            result = locate(request_pt, info);
+            result = locate(request_rj, info);
             break;
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
           case OPTIMIZED_ROUTE:
-            result = matrix(action->second, request_pt, info);
+            result = matrix(action->second, request_rj, info);
             break;
           case ISOCHRONE:
-            result = isochrones(request_pt, info);
+            result = isochrones(request_rj, info);
             break;
           case TRACE_ATTRIBUTES:
           case TRACE_ROUTE:
-            result = trace_route(request_pt, info);
+            result = trace_route(request_rj, info);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
@@ -321,10 +327,8 @@ namespace valhalla {
         //log request if greater than X (ms)
         auto work_units = locations.size() ? locations.size() : 1;
         if (!healthcheck && !info.spare && elapsed_time.count() / work_units > long_request) {
-          std::stringstream ss;
-          boost::property_tree::json_parser::write_json(ss, request_pt, false);
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("loki::request exceeded threshold::"+ ss.str());
+          LOG_WARN("loki::request exceeded threshold::"+ rapidjson::to_string(request_rj));
           midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
 

@@ -4,6 +4,7 @@
 #include <boost/property_tree/info_parser.hpp>
 
 #include "baldr/datetime.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
 using namespace prime_server;
@@ -37,7 +38,8 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_route(boost::property_tree::ptree& request) {
+
+    void loki_worker_t::init_route(rapidjson::Document& request) {
       locations = parse_locations(request, "locations");
       //need to check location size here instead of in parse_locations because of locate action needing a different size
       if(locations.size() < 2)
@@ -45,18 +47,19 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::route(boost::property_tree::ptree& request, http_request_info_t& request_info) {
+    worker_t::result_t loki_worker_t::route(rapidjson::Document& request, http_request_info_t& request_info) {
       init_route(request);
-      auto costing = request.get<std::string>("costing");
-      check_locations(locations.size(), max_locations.find(costing)->second);
-      check_distance(reader, locations, max_distance.find(costing)->second);
+      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
+      check_locations(locations.size(), max_locations.find(*costing)->second);
+      check_distance(reader, locations, max_distance.find(*costing)->second);
+      auto& allocator = request.GetAllocator();
 
       // Validate walking distances (make sure they are in the accepted range)
-      if (costing == "multimodal" || costing == "transit") {
-        auto transit_start_end_max_distance =
-            request.get<int>("costing_options.pedestrian.transit_start_end_max_distance", min_transit_walking_dis);
-        auto transit_transfer_max_distance =
-            request.get<int>("costing_options.pedestrian.transit_transfer_max_distance", min_transit_walking_dis);
+      if (*costing == "multimodal" || *costing == "transit") {
+        auto transit_start_end_max_distance = GetOptionalFromRapidJson<int>(request,
+            "/costing_options/pedestrian/transit_start_end_max_distance").get_value_or(min_transit_walking_dis);
+        auto transit_transfer_max_distance =GetOptionalFromRapidJson<int>(request,
+            "/costing_options/pedestrian/transit_transfer_max_distance").get_value_or(min_transit_walking_dis);
 
         if (transit_start_end_max_distance < min_transit_walking_dis || transit_start_end_max_distance > max_transit_walking_dis) {
           throw valhalla_exception_t{400, 155, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
@@ -67,39 +70,37 @@ namespace valhalla {
                                    " (Meters)"};
         }
       }
-
-      auto date_type = request.get_optional<int>("date_time.type");
+      auto date_type_pointer = rapidjson::Pointer("/date_time/type");
       //default to current date_time for mm or transit.
-      if (!date_type && (costing == "multimodal" || costing == "transit")) {
-        request.add("date_time.type", 0);
-        date_type = request.get_optional<int>("date_time.type");
+      if (! date_type_pointer.Get(request) && (*costing == "multimodal" || *costing == "transit")) {
+        date_type_pointer.Set(request, 0);
       }
-
+      auto& locations_array = request["locations"];
       //check the date stuff
-      auto date_time_value = request.get_optional<std::string>("date_time.value");
-      if (date_type) {
+      auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
+      if (auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type")) {
         //not yet on this
-        if(date_type == 2 && (costing == "multimodal" || costing == "transit"))
+        if(*date_type == 2 && (*costing == "multimodal" || *costing == "transit"))
           return jsonify_error({501, 141}, request_info);
 
         //what kind
         switch(*date_type) {
         case 0: //current
-          request.get_child("locations").front().second.add("date_time", "current");
+          locations_array.Begin()->AddMember("date_time", "current", allocator);
           break;
         case 1: //depart
           if(!date_time_value)
             throw valhalla_exception_t{400, 160};
           if (!DateTime::is_iso_local(*date_time_value))
             throw valhalla_exception_t{400, 162};
-          request.get_child("locations").front().second.add("date_time", *date_time_value);
+          locations_array.Begin()->AddMember("date_time", *date_time_value, allocator);
           break;
         case 2: //arrive
           if(!date_time_value)
             throw valhalla_exception_t{400, 161};
           if (!DateTime::is_iso_local(*date_time_value))
             throw valhalla_exception_t{400, 162};
-          request.get_child("locations").back().second.add("date_time", *date_time_value);
+          locations_array.End()->AddMember("date_time", *date_time_value, allocator);
           break;
         default:
           throw valhalla_exception_t{400, 163};
@@ -113,7 +114,7 @@ namespace valhalla {
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
           const auto& correlated = projections.at(locations[i]);
-          request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, correlated.ToRapidJson(i,allocator));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
@@ -142,15 +143,13 @@ namespace valhalla {
       if(!connected)
         throw valhalla_exception_t{400, 170};
 
-      std::stringstream stream;
-      boost::property_tree::write_json(stream, request, false);
-
       //ok send on the request with correlated origin and destination filled out
       //using the boost ptree info format
-      //TODO: make a protobuf request object and pass that along, can be come
+      //TODO: make a protobuf request object and pass that along, can become
       //part of thors path proto object and then get copied into odins trip object
+      //in fact just do this for all request types
       worker_t::result_t result{true};
-      result.messages.emplace_back(stream.str());
+      result.messages.emplace_back(rapidjson::to_string(request));
 
       return result;
     }
