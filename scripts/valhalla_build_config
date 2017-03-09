@@ -185,7 +185,8 @@ config = {
     'trace': {
       'max_distance': 162500.0,
       'max_shape': 8000
-    }
+    },
+    'avoid_locations': 50    
   }
 }
 
