@@ -217,6 +217,23 @@ void TestTrimFront() {
   if (std::abs(d2 - l2) > tolerance) {
     throw std::logic_error("length of remaining polyline 2 does not match");
   }
+
+  // Make sure if trim distance exceeds polyline length that the entire
+  // polyline is returned and none remains
+  std::list<Point2> pts3 = { { -81.0f, -45.0f }, { -18.0f, 17.0f}, { 8.0f, 8.0f },
+             { 6.0f, 19.0f }, { 49.0f,  -5.0f }, { 75.0f, 45.0f } };
+  size_t n = pts3.size();
+  l = length(pts3);
+  auto trim3 = trim_front(pts3, l + 1.0f);
+  if (std::abs(length(trim3) - l) > tolerance) {
+    throw std::logic_error("length of trimmed polyline not equal to original length when trim distance exceeds length");
+  }
+  if (trim3.size() != n) {
+    throw std::logic_error("trimmed polyline not equal size of original when trim distance exceeds length");
+  }
+  if (pts3.size() > 0)  {
+    throw std::logic_error("some of original polyline remains when trim distance exceeds length");
+  }
 }
 
 }
