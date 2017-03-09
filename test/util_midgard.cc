@@ -187,6 +187,38 @@ void TestIterable() {
     throw std::logic_error("cumulative product failed");
 }
 
+void TestTrimFront() {
+  std::vector<Point2> pts = { { -1.0f, -1.0f }, { -1.0f, 1.0f}, { 0.0f, 1.0f },
+         { 1.0f, 1.0f }, { 4.0f,  5.0f }, { 5.0f, 5.0f } };
+
+  constexpr float tolerance = 0.0001f;
+  float l = length(pts);
+  auto trim = trim_front(pts, 9.0f);
+  if (std::abs(length(trim) - 9.0f) > tolerance) {
+    throw std::logic_error("incorrect length of trimmed polyline");
+  }
+  if (std::abs(l - length(pts) - 9.0f) > tolerance) {
+    throw std::logic_error("length of remaining polyline not correct");
+  }
+  if (pts.size() != 2) {
+    throw std::logic_error("number of remaining points not correct");
+  }
+
+  std::list<Point2> pts2 = { { -81.0f, -45.0f }, { -18.0f, 17.0f}, { 8.0f, 8.0f },
+           { 6.0f, 19.0f }, { 49.0f,  -5.0f }, { 75.0f, 45.0f } };
+  l = length(pts2);
+  float d = l * 0.75f;
+  auto trim2 = trim_front(pts2, d);
+  if (std::abs(length(trim2) - d) >tolerance) {
+    throw std::logic_error("incorrect length of trimmed polyline 2");
+  }
+  float d2 = l * 0.25f;
+  float l2 = length(pts2);
+  if (std::abs(d2 - l2) > tolerance) {
+    throw std::logic_error("length of remaining polyline 2 does not match");
+  }
+}
+
 }
 
 int main() {
@@ -207,6 +239,9 @@ int main() {
   suite.test(TEST_CASE(TestResample));
 
   suite.test(TEST_CASE(TestIterable));
+
+  // trim_front of a polyline
+  suite.test(TEST_CASE(TestTrimFront));
 
   return suite.tear_down();
 }
