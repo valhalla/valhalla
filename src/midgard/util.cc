@@ -60,7 +60,7 @@ container_t trim_front(container_t& pts, const float dist) {
   container_t result;
   result.push_back(pts.front());
   double d = 0.0f;
-  for (auto p1 = pts.cbegin(), p2 = std::next(pts.cbegin()); p2 != pts.cend(); ++p1, ++p2) {
+  for (auto p1 = pts.begin(), p2 = std::next(pts.begin()); p2 != pts.end(); ++p1, ++p2) {
     double segdist = p1->Distance(*p2);
     if ((d + segdist) > dist) {
       double frac = (dist - d) / segdist;
