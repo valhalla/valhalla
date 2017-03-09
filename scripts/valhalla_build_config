@@ -4,8 +4,6 @@ import argparse
 import json
 import pprint
 
-thisisntvalidpython
-
 #global default configuration
 config = {
   'mjolnir': {
