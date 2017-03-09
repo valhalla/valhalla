@@ -58,6 +58,7 @@ namespace {
     http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":90}, {"lon":0,"lat":90}], "coosting": "NONE"})"),
     http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0}]})"),
     http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}]})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}]})"),
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
@@ -99,6 +100,7 @@ namespace {
     {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":131,"error":"Failed to parse source","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":132,"error":"Failed to parse target","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":157,"error":"Exceeded max avoid locations:0","status_code":400,"status":"Bad Request"})"},
   };
 
 
@@ -115,23 +117,24 @@ namespace {
 
     //make the config file
     boost::property_tree::ptree config;
-    std::stringstream json; json << R"({ 
-      "mjolnir": { "tile_dir": "test/tiles" }, 
-      "loki": { "actions": [ "locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone" ], 
-                  "logging": { "long_request": 100.0 }, 
+    std::stringstream json; json << R"({
+      "mjolnir": { "tile_dir": "test/tiles" },
+      "loki": { "actions": [ "locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone" ],
+                  "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_loki_proxy" } }, 
-      "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } }, 
+      "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
-      "service_limits": { 
-        "auto": { "max_distance": 5000000.0, "max_locations": 20 }, 
-        "pedestrian": { "max_distance": 250000.0, "max_locations": 50, 
+      "service_limits": {
+        "auto": { "max_distance": 5000000.0, "max_locations": 20 },
+        "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
         "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 }, 
-        "sources_to_targets": { "max_distance": 200000.0, "max_locations": 50}, 
-        "optimized_route": { "max_distance": 200000.0, "max_locations": 50}, 
-        "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1}, 
-        "trace": { "max_distance": 65000.0, "max_shape": 1000 } 
-      }, 
-      "costing_options": { "auto": {}, "pedestrian": {} } 
+        "sources_to_targets": { "max_distance": 200000.0, "max_locations": 50},
+        "optimized_route": { "max_distance": 200000.0, "max_locations": 50},
+        "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1},
+        "trace": { "max_distance": 65000.0, "max_shape": 1000 },
+        "max_avoid_locations": 0
+      },
+      "costing_options": { "auto": {}, "pedestrian": {} }
     })";
     boost::property_tree::json_parser::read_json(json, config);
 
