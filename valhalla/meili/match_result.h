@@ -11,58 +11,22 @@
 namespace valhalla {
 namespace meili {
 
-class MatchResult
+struct MatchResult
 {
- public:
-  MatchResult(const midgard::PointLL& lnglat,
-              float distance,
-              const baldr::GraphId edgeid,
-              float distance_along,
-              float epoch_time = 0,
-              StateId stateid = kInvalidStateId)
-      : lnglat_(lnglat),
-        distance_from_(distance),
-        edgeid_(edgeid),
-        stateid_(stateid),
-        epoch_time_(epoch_time),
-        distance_along_(distance_along){}
-
-  MatchResult(const midgard::PointLL& lnglat, float epoch_time = 0)
-      : MatchResult(lnglat, 0.f, {}, -1.f, epoch_time) {}
-
   // Coordinate of the match point
-  const midgard::PointLL& lnglat() const
-  { return lnglat_; }
-
+  midgard::PointLL lnglat;
   // Distance from measurement to the match point
-  float distance_from() const
-  { return distance_from_; }
-
+  float distance_from;
   // Which edge this match point stays
-  const baldr::GraphId& edgeid() const
-  { return edgeid_; }
+  baldr::GraphId edgeid;
+  // Percentage distance along the edge
+  float distance_along;
+  // Optional epoch time for this match point copied from original measurement
+  float epoch_time;
+  // Sequential state id
+  StateId stateid;
 
-  StateId stateid() const
-  { return stateid_; }
-
-  bool HasState() const
-  { return stateid_ != kInvalidStateId; }
-
-  float distance_along() const
-  { return distance_along_; }
-
- private:
-  midgard::PointLL lnglat_;
-
-  float distance_from_;
-
-  baldr::GraphId edgeid_;
-
-  StateId stateid_;
-
-  float distance_along_;
-
-  float epoch_time_;
+  bool HasState() const { return stateid != kInvalidStateId; }
 };
 
 }

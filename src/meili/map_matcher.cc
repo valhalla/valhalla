@@ -121,7 +121,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
 
   if (!state.IsValid()) {
     for (const auto& measurement: interpolated_measurements) {
-      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
+      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
     }
     return results;
   }
@@ -138,7 +138,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
 
   if (upstream_route.empty() && downstream_route.empty()) {
     for (const auto& measurement: interpolated_measurements) {
-      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
+      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
     }
     return results;
   }
@@ -167,19 +167,19 @@ InterpolateMeasurements(const MapMatching& mapmatching,
       const auto down_cost = down_interp.sortcost(mapmatching, match_measurement_distance),
                    up_cost = up_interp.sortcost(mapmatching, match_measurement_distance);
       if (down_cost < up_cost) {
-        results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time());
+        results.emplace_back(MatchResult{down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
       } else {
-        results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time());
+        results.emplace_back(MatchResult{up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
       }
 
     } else if (up_interp.edgeid.Is_Valid()) {
-      results.emplace_back(up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time());
+      results.emplace_back(MatchResult{up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
 
     } else if (down_interp.edgeid.Is_Valid()) {
-      results.emplace_back(down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time());
+      results.emplace_back(MatchResult{down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
 
     } else {
-      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
+      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
     }
   }
 
@@ -212,7 +212,7 @@ InterpolateTimedMeasurements(const MapMatching& mapmatching,
       } else {
         auto& results = resultmap[time];
         for (const auto& measurement: it->second) {
-          results.push_back(MatchResult(measurement.lnglat(), measurement.epoch_time()));
+          results.push_back({measurement.lnglat(), 0.f, {}, -1.f, measurement.epoch_time(), kInvalidStateId});
         }
       }
     }
@@ -286,7 +286,7 @@ FindMatchResults(const MapMatching& mapmatching,
     if (state.IsValid()) {
       results.push_back(FindMatchResult(previous_state, *state, measurement, next_state));
     } else {
-      results.emplace_back(measurement.lnglat(), measurement.epoch_time());
+      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
     }
     time--;
   }

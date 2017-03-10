@@ -66,24 +66,42 @@ std::vector<trace_edge_t> TrafficSegmentMatcher::form_edges(std::vector<MatchRes
   }
 
   //delete duplicates that we copied to the initial edge
-  auto remove_pos = std::remove_if(segments.begin(), segments.end(), [&segments](const EdgeSegment& s){
+  segment_itr = std::remove_if(segments.begin(), segments.end(), [&segments](const EdgeSegment& s){
     return &segments.back() != &s && s.edgeid == (&s + 1)->edgeid;
   });
-  segments.erase(remove_pos, segments.end());
+  segments.erase(segment_itr, segments.end());
 
-  //NOTE: an alternate version of ConstructRoute would make stuff above and this next part moot
-  //rip through the edges to get their lengths figured out
-  std::vector<trace_edge_t> edges;
-  float total_length = -segments.front().source *
-    matcher->graphreader().GetGraphTile(segments.front().edgeid)->directededge(segments.front().edgeid)->length();
+  //go through each edge and each match keeping the distance each point is along the entire trace
+  //TODO: do we care about actually setting the lat,lon on these, probably not...
+  std::vector<float> distances;
+  size_t match_index = 0;
   for(const auto& segment : segments) {
-    float length = matcher->graphreader().GetGraphTile(segment.edgeid)->directededge(segment.edgeid)->length();
-    edges.push_back({segment.edgeid, total_length, total_length + length});
-    total_length += length;
+     float length = matcher->graphreader().GetGraphTile(segment.edgeid)->directededge(segment.edgeid)->length();
+    //get the distance and match result for the begin node of the edge
+    distances.push_back(&segment == &segments.front() ? -segments.front().source * length : distances.back());
+    match_results.insert(match_results.begin() + match_index, MatchResult{{}, 0.f, segments.front().edgeid, 0.f, -1.f, kInvalidStateId});
+    //add distances for all the match points that happened on this edge
+    auto begin_distance = distances.back();
+    for(match_index += 1; match_index < match_results.size() && match_results[match_index].edgeid == segment.edgeid; ++match_index)
+      distances.push_back(match_results[match_index++].distance_along * length + begin_distance);
+    //add the end node of the edge
+    distances.push_back(begin_distance + length);
+    match_results.insert(match_results.begin() + match_index, MatchResult{{}, 0.f, segments.front().edgeid, 1.f, -1.f, kInvalidStateId});
+  }
+
+  //finally back fill the time information for those points that dont have it
+  size_t left = std::find_if(match_results.cbegin(), match_results.cend(),
+    [](const MatchResult& m) { return m.epoch_time != -1.f; }) - match_results.cbegin();
+  size_t right = std::find_if(match_results.cbegin() + left, match_results.cend(),
+    [](const MatchResult& m) { return m.epoch_time != -1.f; }) - match_results.cbegin();
+  for(size_t i = 0; i < match_results.size() && left < match_results.size() && right < match_results.size(); ++i) {
+    if(match_results[i].epoch_time == -1.f) {
+      //while(match_results[left])
+    }
   }
 
   //TODO: add match results for the ends of each edge, then back fill the time information
-
+  std::vector<trace_edge_t> edges;
   return edges;
 }
 
@@ -112,7 +130,7 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
     for (const auto& pt : *trace_pts) {
       auto lat = pt.second.get<float>("lat");
       auto lon = pt.second.get<float>("lon");
-      auto epoch_time = pt.second.get<float>("time"); //surely this wont make it to 2038-01-19 03:14:08
+      auto epoch_time = pt.second.get<float>("time"); //surely this wont last until 2038-01-19T03:14:08Z
       auto accuracy = pt.second.get<float>("accuracy", default_accuracy);
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }

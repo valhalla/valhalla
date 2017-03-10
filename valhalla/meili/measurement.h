@@ -16,7 +16,7 @@ class Measurement
   Measurement(const midgard::PointLL& lnglat,
               float gps_accuracy,
               float search_radius,
-              uint32_t epoch_time = -1):
+              float epoch_time = -1.f):
       lnglat_(lnglat),
       gps_accuracy_(gps_accuracy),
       search_radius_(search_radius),
