@@ -84,10 +84,6 @@ namespace baldr {
     // loki project 1xx
     {100,"Failed to parse json request"},
     {101,"Try a POST or GET request instead"},
-    {102,"The config actions for Loki are incorrectly loaded"},
-    {103,"Missing max_locations configuration"},
-    {104,"Missing max_distance configuration"},
-    {105,"Path action not supported"},
     {106,"Try any of"},
     {107,"Not Implemented"},
 
@@ -121,6 +117,7 @@ namespace baldr {
     {154,"Path distance exceeds the max distance limit"},
     {155,"Outside the valid walking distance at the beginning or end of a multimodal route"},
     {156,"Outside the valid walking distance between stops of a multimodal route"},
+    {157,"Exceeded max avoid locations"},
 
     {160,"Date and time required for origin for date_type of depart at"},
     {161,"Date and time required for destination for date_type of arrive by"},

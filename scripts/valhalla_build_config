@@ -91,7 +91,7 @@ config = {
     },
     'pedestrian': {
       'turn_penalty_factor': 100,
-      'search_radius': 25
+      'search_radius': 50
     },
     'bicycle': {
       'turn_penalty_factor': 140
@@ -185,7 +185,8 @@ config = {
     'trace': {
       'max_distance': 162500.0,
       'max_shape': 8000
-    }
+    },
+    'max_avoid_locations': 50    
   }
 }
 
@@ -369,7 +370,8 @@ help_text = {
     'trace': {
       'max_distance': 'Maximum input shape distance in meters',
       'max_shape': 'Maximum number of input shape points'
-    }
+    },
+    'max_avoid_locations': 'Maximum number of avoid locations to allow in request'
   }
 }
 

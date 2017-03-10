@@ -20,7 +20,7 @@ dependencies:
     - (rc=0; for f in *.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
     - (rc=0; for f in lua/*.lua; do lua $f || rc=$?; done; exit $rc;)
     - (rc=0; for f in locales/*.json; do python -c "import json; json.load(open('$f'))" || rc=$?; done; exit $rc;)
-    - (scripts/valhalla_build_config | jq '.')
+    - scripts/valhalla_build_config
     # great sadness: this has to go here if we want to have caching, as the cache is _only_ saved after the dependencies step.
     - (mkdir -p ${HOME}/.ccache && echo "max_size = 2.5G" > ${HOME}/.ccache/ccache.conf)
     - ./autogen.sh
