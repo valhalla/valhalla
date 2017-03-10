@@ -129,14 +129,19 @@ namespace valhalla {
       // Add first and last locations to request
       
       rapidjson::Value locations_child{rapidjson::kArrayType};
-      locations_child.PushBack(locations.front().ToRapidJson(allocator), allocator).
-          PushBack(locations.back().ToRapidJson(allocator), allocator);
+      locations_child.PushBack(locations.front().ToRapidJson(allocator), allocator);
+      locations_child.PushBack(locations.back().ToRapidJson(allocator), allocator);
       rapidjson::Pointer("/locations").Set(request, locations_child);
 
       // Add first and last correlated locations to request
-      auto projections = loki::Search(locations, reader, edge_filter, node_filter);
-      rapidjson::Pointer("/correlated_0").Set(request, projections.at(locations.front()).ToRapidJson(0, allocator));
-      rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(0, allocator));
+      try{
+        auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+        rapidjson::Pointer("/correlated_0").Set(request, projections.at(locations.front()).ToRapidJson(0, allocator));
+        rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(0, allocator));
+      }
+      catch(const std::exception&) {
+        throw valhalla_exception_t{400, 171};
+      }
     }
 
   }
