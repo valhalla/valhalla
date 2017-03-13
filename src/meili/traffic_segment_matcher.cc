@@ -5,9 +5,46 @@
 #include "midgard/pointll.h"
 #include "meili/traffic_segment_matcher.h"
 
-using namespace valhalla::baldr;
-
 namespace {
+
+  void clean_segments(std::vector<valhalla::meili::EdgeSegment>& segments) {
+    //merging the edges that are the same into the first ones record
+    auto segment_itr = segments.begin();
+    while(segment_itr != segments.end()) {
+      auto initial_edge = segment_itr;
+      ++segment_itr;
+      while(segment_itr != segments.end() && segment_itr->edgeid == initial_edge->edgeid) {
+        initial_edge->target = segment_itr->target;
+        ++segment_itr;
+      }
+    }
+
+    //delete duplicates that we copied to the initial edge
+    segment_itr = std::remove_if(segments.begin(), segments.end(), [&segments](const valhalla::meili::EdgeSegment& s){
+      return &segments.back() != &s && s.edgeid == (&s + 1)->edgeid;
+    });
+    segments.erase(segment_itr, segments.end());
+  }
+
+  bool is_connected(const valhalla::baldr::GraphId& a, const valhalla::baldr::GraphId& b, valhalla::baldr::GraphReader& reader) {
+    //we have to find this node
+    const valhalla::baldr::GraphTile* tile;
+    auto node_b = reader.GetOpposingEdge(b, tile)->endnode();
+    //from edges that leave this node
+    if(tile->id() != a.Tile_Base())
+      tile = reader.GetGraphTile(a);
+    auto node_a = tile->directededge(a)->endnode();
+    if(node_a == node_b)
+      return true;
+    //check the transition edges
+    if(tile->id() != node_a.Tile_Base())
+      tile = reader.GetGraphTile(a);
+    for(const auto& edge : tile->GetDirectedEdges(node_a)) {
+      if((edge.trans_down() || edge.trans_up()) && edge.endnode() == node_b) {
+        return true;
+      }
+    }
+  }
 
 }
 
@@ -39,75 +76,125 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
     throw std::runtime_error("Sequence size not equal to match result size");
 
   // Get the edges associated with the entire connected trace path
-  // NOTE: it may not be entirely connected so we much check for that
-  auto trace_edges = form_edges(match_results, matcher);
+  auto interpolations = interpolate_matches(match_results, matcher);
 
-  // Get the segments along the measurments
-  auto traffic_segments = form_segments(trace_edges, match_results);
+  // Get the segments along the measurements
+  auto traffic_segments = form_segments(interpolations, matcher->graphreader());
+
+  // Check if we are overcommitted, maybe we move this to the python interface
+  if(matcher_factory.graphreader().OverCommitted())
+    matcher_factory.graphreader().Clear();
 
   //give back json
   return serialize(traffic_segments);
 }
 
-std::vector<trace_edge_t> TrafficSegmentMatcher::form_edges(std::vector<MatchResult>& match_results,
+std::list<std::list<interpolation_t> > TrafficSegmentMatcher::interpolate_matches(const std::vector<MatchResult>& matches,
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
-  //NOTE: at this point if the input didnt match to an entirely connected path it will throw and we lose the whole thing
-  //get all of the edges along the path from the state info
-  auto segments = ConstructRoute(matcher->mapmatching(), match_results.begin(), match_results.end());
-  //merging the edges that are the same into the first ones record
-  auto segment_itr = segments.begin();
-  while(segment_itr != segments.end()) {
-    auto initial_edge = segment_itr;
-    ++segment_itr;
-    while(segment_itr != segments.end() && segment_itr->edgeid == initial_edge->edgeid) {
-      initial_edge->target = segment_itr->target;
-      ++segment_itr;
+
+  // Get all of the edges along the path from the state info
+  auto segments = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
+  clean_segments(segments);
+
+  // Find each set of continuous edges
+  std::list<std::list<interpolation_t> > interpolations;
+  for(auto begin_segment = segments.cbegin(), end_segment = segments.cbegin() + 1; begin_segment != segments.cend(); begin_segment = end_segment) {
+    //find the end of the this block
+    while(end_segment != segments.cend()) {
+      if(!is_connected(std::prev(end_segment)->edgeid, end_segment->edgeid, matcher->graphreader()))
+        break;
+      ++end_segment;
     }
-  }
 
-  //delete duplicates that we copied to the initial edge
-  segment_itr = std::remove_if(segments.begin(), segments.end(), [&segments](const EdgeSegment& s){
-    return &segments.back() != &s && s.edgeid == (&s + 1)->edgeid;
-  });
-  segments.erase(segment_itr, segments.end());
-
-  //go through each edge and each match keeping the distance each point is along the entire trace
-  //TODO: do we care about actually setting the lat,lon on these, probably not...
-  std::vector<float> distances;
-  size_t match_index = 0;
-  for(const auto& segment : segments) {
-     float length = matcher->graphreader().GetGraphTile(segment.edgeid)->directededge(segment.edgeid)->length();
-    //get the distance and match result for the begin node of the edge
-    distances.push_back(&segment == &segments.front() ? -segments.front().source * length : distances.back());
-    match_results.insert(match_results.begin() + match_index, MatchResult{{}, 0.f, segments.front().edgeid, 0.f, -1.f, kInvalidStateId});
-    //add distances for all the match points that happened on this edge
-    auto begin_distance = distances.back();
-    for(match_index += 1; match_index < match_results.size() && match_results[match_index].edgeid == segment.edgeid; ++match_index)
-      distances.push_back(match_results[match_index++].distance_along * length + begin_distance);
-    //add the end node of the edge
-    distances.push_back(begin_distance + length);
-    match_results.insert(match_results.begin() + match_index, MatchResult{{}, 0.f, segments.front().edgeid, 1.f, -1.f, kInvalidStateId});
-  }
-
-  //finally back fill the time information for those points that dont have it
-  size_t left = std::find_if(match_results.cbegin(), match_results.cend(),
-    [](const MatchResult& m) { return m.epoch_time != -1.f; }) - match_results.cbegin();
-  size_t right = std::find_if(match_results.cbegin() + left, match_results.cend(),
-    [](const MatchResult& m) { return m.epoch_time != -1.f; }) - match_results.cbegin();
-  for(size_t i = 0; i < match_results.size() && left < match_results.size() && right < match_results.size(); ++i) {
-    if(match_results[i].epoch_time == -1.f) {
-      //while(match_results[left])
+    //go through each edge and each match keeping the distance each point is along the entire trace
+    std::list<interpolation_t> interpolated;
+    size_t i = 0;
+    for(auto segment = begin_segment; segment != end_segment; ++segment) {
+      float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
+      float total_length = segment == begin_segment ? -segments.front().source * edge_length : interpolated.back().total_distance;
+      //get the distance and match result for the begin node of the edge
+      interpolated.emplace_back(interpolation_t{matches[i].edgeid, total_length, 0.f, i});
+      //add distances for all the match points that happened on this edge
+      for(++i; i < matches.size() && matches[i].edgeid == segment->edgeid; ++i) {
+        interpolated.emplace_back(interpolation_t{matches[i].edgeid, matches[i].distance_along * edge_length + total_length,
+          matches[i].distance_along, i, matches[i].epoch_time});
+      }
+      //add the end node of the edge
+      interpolated.emplace_back(interpolation_t{matches[i].edgeid, edge_length + total_length, 1.f, i - 1});
     }
+
+    //finally backfill the time information for those points that dont have it
+    auto backfill = interpolated.begin();
+    while(backfill != interpolated.end()) {
+      //this one is done already
+      if(backfill->epoch_time != 0) {
+        ++backfill;
+        continue;
+      }
+      //find the range that have values (or the ends of the range
+      auto left = backfill != interpolated.begin() ? std::prev(backfill) : backfill;
+      auto right = std::next(backfill);
+      for(; right != interpolated.end() && right->epoch_time == 0.f; ++right);
+      //backfill between left and right
+      while(backfill != right) {
+        //if both indices are valid we interpolate
+        if(left != interpolated.begin() && right != interpolated.end()) {
+          auto time_diff = right->epoch_time - left->epoch_time;
+          auto distance_diff = right->total_distance - left->total_distance;
+          auto distance_ratio = (backfill->total_distance - left->total_distance) / distance_diff;
+          backfill->epoch_time = distance_ratio * time_diff;
+        }//if left index is valid we carry it forward if we can
+        else if(left != interpolated.begin() && backfill->total_distance == left->total_distance) {
+          backfill->epoch_time = left->epoch_time;
+          backfill->original_index = left->original_index;
+        }
+        //right index is valid we carry it forward if we can
+        else if(right != interpolated.end()&& backfill->total_distance == right->total_distance) {
+          backfill->epoch_time = right->epoch_time;
+          backfill->original_index = right->original_index;
+        }
+        //next backfill
+        ++backfill;
+      }
+    }
+
+    //keep this set of interpolations
+    interpolations.emplace_back(std::move(interpolated));
   }
 
-  //TODO: add match results for the ends of each edge, then back fill the time information
-  std::vector<trace_edge_t> edges;
-  return edges;
+  //give back the distances and updated match results
+  return interpolations;
 }
 
-std::vector<MatchedTrafficSegment> TrafficSegmentMatcher::form_segments(const std::vector<trace_edge_t>& trace_edges,
-  const std::vector<MatchResult>& match_results) const {
-  std::vector<MatchedTrafficSegment> traffic_segments;
+std::list<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::list<std::list<interpolation_t> >& interpolations,
+  baldr::GraphReader& reader) const {
+  //loop over the interpolations to get at the edges
+  std::list<traffic_segment_t> traffic_segments;
+  for(const auto& interpolated : interpolations) {
+    const baldr::GraphTile* tile = nullptr;
+    baldr::GraphId edge;
+    for(const auto& interpolation : interpolated) {
+      //skip this edge we have it already
+      if(interpolation.edge == edge)
+        continue;
+      //get the right tile
+      if((!tile || tile->id() != interpolation.edge.Tile_Base()) &&
+          !(tile = reader.GetGraphTile(interpolation.edge.Tile_Base())))
+        continue;
+      //get segments for this edge
+      auto segments = tile->GetTrafficSegments(interpolation.edge.id());
+      for(const auto& segment : segments) {
+        //start new segment
+        if(traffic_segments.empty() || traffic_segments.back().segment_id != segment.segment_id_) {
+          //traffic_segment_t t{segment.segment_id_};
+          traffic_segments.emplace_back();
+        }//continue
+        else {
+
+        }
+      }
+    }
+  }
 
   return traffic_segments;
 }
@@ -139,16 +226,16 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
   return measurements;
 }
 
-std::string TrafficSegmentMatcher::serialize(const std::vector<MatchedTrafficSegment>& traffic_segments) {
-  auto segments = json::array({});
+std::string TrafficSegmentMatcher::serialize(const std::list<traffic_segment_t>& traffic_segments) {
+  auto segments = baldr::json::array({});
   for (const auto& seg : traffic_segments) {
-    segments->emplace_back(json::map
+    segments->emplace_back(baldr::json::map
       ({
         {"partial_start", seg.partial_start},
         {"partial_end", seg.partial_end},
         {"segment_id", seg.segment_id.value},
-        {"start_time", json::fp_t{seg.start_time, 1}},
-        {"end_time", json::fp_t{seg.end_time, 1}},
+        {"start_time", baldr::json::fp_t{seg.start_time, 1}},
+        {"end_time", baldr::json::fp_t{seg.end_time, 1}},
         {"length", static_cast<uint64_t>(seg.length)},
         {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
         {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
@@ -156,7 +243,7 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<MatchedTrafficSeg
     );
   }
   std::stringstream ss;
-  ss << *json::map({{"segments",segments}});
+  ss << *baldr::json::map({{"segments",segments}});
   return ss.str();
 }
 

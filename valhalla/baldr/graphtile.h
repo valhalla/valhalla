@@ -121,6 +121,20 @@ class GraphTile {
   const DirectedEdge* directededge(const size_t idx) const;
 
   /**
+   * Get an iterable set of directed edges from a node in this tile
+   * @param  node  GraphId of the node from which the edges leave
+   * @return returns an iterable collection of directed edges
+   */
+  iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
+
+  /**
+   * Get an iterable set of directed edges from a node in this tile
+   * @param  idx  Index of the node within the current tile
+   * @return returns an iterable collection of directed edges
+   */
+  iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+
+  /**
    * Convenience method to get opposing edge Id given a directed edge.
    * The end node of the directed edge must be in this tile.
    * @param  edge  Directed edge.

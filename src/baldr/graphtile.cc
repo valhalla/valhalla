@@ -395,6 +395,32 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
                            std::to_string(header_->directededgecount()));
 }
 
+iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
+  if (node.id() < header_->nodecount()) {
+    const auto& nodeinfo = nodes_[node.id()];
+    const auto* edge = directededge(nodeinfo.edge_index());
+    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+  }
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                             std::to_string(node.tileid()) + "," +
+                             std::to_string(node.level()) + "," +
+                             std::to_string(node.id()) + " nodecount= " +
+                             std::to_string(header_->nodecount()));
+}
+
+iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
+  if (idx < header_->nodecount()) {
+    const auto& nodeinfo = nodes_[idx];
+    const auto* edge = directededge(nodeinfo.edge_index());
+    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+  }
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(idx)  + " nodecount= " +
+                           std::to_string(header_->nodecount()));
+}
+
 // Convenience method to get opposing edge Id given a directed edge.
 // The end node of the directed edge must be in this tile.
 GraphId GraphTile::GetOpposingEdgeId(const DirectedEdge* edge) const {

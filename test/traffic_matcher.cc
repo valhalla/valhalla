@@ -20,22 +20,24 @@ namespace {
    public:
     using meili::TrafficSegmentMatcher::TrafficSegmentMatcher;
 
-    std::vector<meili::trace_edge_t> form_edges(std::vector<meili::MatchResult>& r, const std::shared_ptr<meili::MapMatcher>& m) const override {
+    std::list<std::list<meili::interpolation_t> > interpolate_matches(const std::vector<meili::MatchResult>& r,
+      const std::shared_ptr<meili::MapMatcher>& m) const override {
+      matches = r;
       matcher = m;
-      edges = meili::TrafficSegmentMatcher::form_edges(r, m);
-      return edges;
+      interpolations = meili::TrafficSegmentMatcher::interpolate_matches(r, m);
+      return interpolations;
     }
 
-    std::vector<meili::MatchedTrafficSegment> form_segments(const std::vector<meili::trace_edge_t>& e, const std::vector<meili::MatchResult>& r) const override {
-      match_results = r;
-      segments = meili::TrafficSegmentMatcher::form_segments(e, r);
+    std::list<meili::traffic_segment_t> form_segments(const std::list<std::list<meili::interpolation_t> >& i,
+      baldr::GraphReader& r) const override {
+      segments = meili::TrafficSegmentMatcher::form_segments(i, r);
       return segments;
     }
 
+    mutable std::vector<valhalla::meili::MatchResult> matches;
     mutable std::shared_ptr<meili::MapMatcher> matcher;
-    mutable std::vector<meili::trace_edge_t> edges;
-    mutable std::vector<valhalla::meili::MatchResult> match_results;
-    mutable std::vector<meili::MatchedTrafficSegment> segments;
+    mutable std::list<std::list<meili::interpolation_t> > interpolations;
+    mutable std::list<meili::traffic_segment_t> segments;
   };
 
   //TODO: build the test tiles in the test, need to move traffic association into library to do that
