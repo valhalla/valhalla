@@ -103,24 +103,6 @@ struct CandidateEdge {
   }
 };
 
-// Information for a many segments to one edge (chunk) match.
-struct TemporaryChunk {
-  vb::GraphId segment_id; // Traffic segment Id
-  float edge_start;       // Start percent of the edge along the segment
-  float edge_end;         // End percent of the edge along the segment
-  float seg_start;        // Begin percent of the segment along the edge
-  float seg_end;          // End percent of the segment along the edge
-
-  TemporaryChunk(const vb::GraphId& id, const float e1, const float e2,
-                 const float s1, const float s2)
-    : segment_id(id),
-      edge_start(e1),
-      edge_end(e2),
-      seg_start(s1),
-      seg_end(s2) {
-  }
-};
-
 uint16_t bearing(const std::vector<vm::PointLL> &shape) {
   // OpenLR says to use 20m along the edge, but we could use the
   // GetOffsetForHeading function, which adapts it to the road class.
@@ -169,8 +151,9 @@ uint32_t match_score(const float length_diff, const float origin_diff,
 }
 
 // Edge association
-using leftovers_t = std::vector<std::pair<GraphId, vb::TrafficChunk > >;
-using chunk_t = std::unordered_map<vb::GraphId, std::vector<TemporaryChunk> >;
+using leftovers_t = std::vector<std::pair<vb::GraphId, vb::TrafficChunk > >;
+using chunk_t = std::unordered_map<vb::GraphId, std::vector<vb::TrafficChunk> >;
+using chunks_t = std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk > > >;
 struct edge_association {
   explicit edge_association(const bpt::ptree &pt);
 
@@ -815,7 +798,7 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   // Walk the matched edges. Any full edges get associated to the segment.
   // Partial edges get saved for later
   uint32_t i = 0;
-  uint32_t path_length = 0;
+//  uint32_t path_length = 0;
   for (const auto& edge : edges) {
     if (edge.start_pct == 0.0f && edge.end_pct == 1.0f) {
       // Full edge. Form association for this edge. First edge "starts"
@@ -833,18 +816,20 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
       float e1 = edge.start_pct;
       float e2 = edge.end_pct;
 
-      // Compute the percentages of the segment along the edge
+/*      // Compute the percentages of the segment along the edge.
+      // TODO - do we need these?
       float s1 = static_cast<float>(path_length) /
                     static_cast<float>(segment_length);
       float s2 = static_cast<float>(path_length + edge.length) /
-                    static_cast<float>(segment_length);
+                    static_cast<float>(segment_length); */
 
       // Add the temporary chunk information for this edge to the map
-      traffic_chunks[edge.edgeid].emplace_back(segment_id, e1, e2, s1, s2);
+      traffic_chunks[edge.edgeid].emplace_back(segment_id, e1, e2,
+                   (e1 == 0.0f), (e2 == 1.0f));
     }
 
     // Increment the path length and index in the matched edge list
-    path_length += edge.length;
+//    path_length += edge.length;
     i++;
   }
   return true;
@@ -928,16 +913,16 @@ void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr
 }
 
 void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId, leftovers_t>& leftovers,
-  std::mutex& lock) {
+                               std::mutex& lock) {
 
   //something so we can open up a tile builder
   TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
 
   while(true) {
-    //get a file to work with
+    // Get leftovers from a tile
     leftovers_t associations;
     lock.lock();
-    if(leftovers.size()) {
+    if (leftovers.size()) {
       associations = std::move(leftovers.begin()->second);
       leftovers.erase(leftovers.begin());
     }
@@ -945,11 +930,36 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
     if(associations.empty())
       break;
 
-    //write the associations
+    // Write leftovers
     vj::GraphTileBuilder tile_builder(hierarchy, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     for(const auto& association : associations)
       tile_builder.AddTrafficSegment(association.first, association.second);
+    tile_builder.UpdateTrafficSegments();
+  }
+}
+
+void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>& chunks,
+                               std::mutex& lock) {
+  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  while(true) {
+    // Get chunks
+    lock.lock();
+    std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk>>> associated_chunks;
+    if (chunks.size()) {
+      associated_chunks = std::move(chunks.begin()->second);
+      chunks.erase(chunks.begin());
+    }
+    lock.unlock();
+    if(associated_chunks.empty())
+      break;
+
+    // Write chunks
+    vj::GraphTileBuilder tile_builder(hierarchy, associated_chunks.front().first.Tile_Base(), false);
+    tile_builder.InitializeTrafficSegments();
+    for(const auto& chunk : associated_chunks) {
+      tile_builder.AddTrafficSegments(chunk.first, chunk.second);
+    }
     tile_builder.UpdateTrafficSegments();
   }
 }
@@ -1051,7 +1061,8 @@ int main(int argc, char** argv) {
   uint32_t path_count = 0;
   uint32_t leftover_count = 0;
   uint32_t chunk_count = 0;
-  std::unordered_map<GraphId, leftovers_t> leftovers;
+  std::unordered_map<vb::GraphId, leftovers_t> leftovers;
+  std::unordered_map<vb::GraphId, chunks_t> chunks;
   for (auto& result : results) {
     auto associations = result.get_future().get();
     success_count += associations.success_count();
@@ -1067,6 +1078,16 @@ int main(int argc, char** argv) {
     leftover_count += associations.leftovers().size();
 
     // Temporary chunks
+    using single_chunk_t = std::pair<vb::GraphId, std::vector<vb::TrafficChunk>>;
+    for (const auto& association : associations.chunks()) {
+      vb::GraphId tileid = association.first.Tile_Base();
+      single_chunk_t c = std::make_pair(association.first, association.second);
+      if (chunks.find(tileid) == chunks.end()) {
+        chunks[tileid] = { c };
+      } else {
+        chunks[tileid].push_back(c);
+      }
+    }
     chunk_count += associations.chunks().size();
   }
   LOG_INFO("Success = " + std::to_string(success_count) +
@@ -1078,7 +1099,7 @@ int main(int argc, char** argv) {
 
   LOG_INFO("Associating neighbouring traffic segments with " + std::to_string(num_threads) + " threads");
 
-  //write all the leftovers
+  // Write all the leftovers
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(add_leftover_associations, std::cref(pt), std::ref(leftovers),
@@ -1088,6 +1109,19 @@ int main(int argc, char** argv) {
   //wait for it to finish
   for (auto& thread : threads)
     thread->join();
+
+  // Write all the chunks
+  LOG_INFO("Adding chunks (edge associations to multiple segments) " + std::to_string(num_threads) + " threads");
+  for (auto& thread : threads) {
+    results.emplace_back();
+    thread.reset(new std::thread(add_chunks, std::cref(pt), std::ref(chunks), std::ref(lock)));
+  }
+
+  //wait for it to finish
+  for (auto& thread : threads)
+    thread->join();
+  LOG_INFO("Finished");
+
   LOG_INFO("Finished");
 
   return EXIT_SUCCESS;
