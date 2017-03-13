@@ -39,10 +39,7 @@ class Navigator {
 
   void SnapToRoute();
 
-
   /////////////////////////////////////////////////////////////////////////////
-//  const DirectionsOptions& directions_options_;
-//  bool articulated_preposition_enabled_;
   valhalla::Route route_;
 
 };
