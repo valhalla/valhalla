@@ -56,9 +56,8 @@ std::string to_string(const vb::GraphId &i) {
 namespace {
 
 // Distance tolerance (meters) for node searching
-// TODO - need to make this larger when we have data updates in place!
-// For some reason if this is set to 1 the all node-node walks work, but
-// if set to 20 it sometimes fails - falls back to A*
+// TODO - need to increase this to allow some tolerance for data edits.
+// However - this sometimes causes fallbacks to A* (not sure why yet!)
 constexpr float kNodeDistanceTolerance = 1.0;
 
 // 10 meter length matching tolerance
@@ -192,9 +191,13 @@ struct edge_association {
   uint32_t path_count() const { return path_count_; }
 
 private:
+  std::vector<CandidateEdge> candidate_edges(bool origin,
+                        const pbf::Segment::LocationReference &lrp,
+                        const uint8_t level);
   bool match_segment(vb::GraphId segment_id, const pbf::Segment &segment,
                      MatchType& match_type);
-  std::vector<EdgeMatch> match_edges(const pbf::Segment &segment, uint8_t level,
+  std::vector<EdgeMatch> match_edges(const pbf::Segment &segment,
+                    const vb::GraphId& segment_id,
                     const uint32_t segment_length, MatchType& match_type);
   std::vector<EdgeMatch> walk(uint8_t level, const uint32_t segment_length,
                     const pbf::Segment& segment);
@@ -411,7 +414,16 @@ std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
   float delta_lat = kNodeDistanceTolerance / vm::kMetersPerDegreeLat;
   vm::AABB2<vm::PointLL> bbox({pt.lng() - delta_lng, pt.lat() - delta_lat},
                               {pt.lng() + delta_lng, pt.lat() + delta_lat});
-  return vl::nodes_in_bbox(bbox, reader);
+  auto nodes = vl::nodes_in_bbox(bbox, reader);
+
+  // Remove nodes on the local level (TODO-make this configurable?)
+  std::vector<vb::GraphId> non_local_nodes;
+  for (const auto node : nodes) {
+    if (node.level() < 2) {
+      non_local_nodes.emplace_back(node);
+    }
+  }
+  return non_local_nodes;
 }
 
 // Add edges from each node
@@ -501,46 +513,43 @@ edge_association::edge_association(const bpt::ptree &pt)
     m_tile(nullptr) {
 }
 
+// Get a list of candidate edges for the location.
+std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
+                      const pbf::Segment::LocationReference &lrp,
+                      const uint8_t level) {
+  auto ll = coord_for_lrp(lrp);
+  std::vector<CandidateEdge> edges;
+  if (lrp.at_node()) {
+    // Find nearby nodes and get allowed edges
+    auto nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, ll);
+    edges = GetEdgesFromNodes(m_reader, nodes, ll, origin);
+  } else {
+    // Use edge search with loki
+    auto loc = loki_search_single(vb::Location(ll), m_reader, level);
+    for (const auto& edge : loc.edges) {
+      edges.emplace_back(edge, 0.0f);  // TODO??
+    }
+    if (origin) {
+      // Remove inbound edges to an origin node
+      std::remove_if(edges.begin(), edges.end(),
+         [](const CandidateEdge& e){return e.edge.end_node();});
+    } else {
+      // remove outbound edges to a destination node
+      std::remove_if(edges.begin(), edges.end(),
+         [](const CandidateEdge& e){return e.edge.begin_node();});
+    }
+  }
+  return edges;
+}
+
 // Walk a path between origin and destination edges.
 std::vector<EdgeMatch> edge_association::walk(uint8_t level,
                             const uint32_t segment_length,
                             const pbf::Segment& segment) {
-  // If the origin LRP is at a node - find nearby nodes and test outbound
-  // edges. Otherwise use loki search to find the edge(s).
-  auto origin_coord = coord_for_lrp(segment.lrps(0));
-  std::vector<CandidateEdge> origin_edges;
-  if (segment.lrps(0).at_node()) {
-    // Find nearby nodes and get allowed outbound edges
-    auto origin_nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, origin_coord);
-    origin_edges = GetEdgesFromNodes(m_reader, origin_nodes, origin_coord, true);
-  } else {
-    // Use edge search with loki and remove inbound edges at a node
-    auto origin = loki_search_single(vb::Location(origin_coord), m_reader, level);
-    for (const auto& origin_edge : origin.edges) {
-      origin_edges.emplace_back(origin_edge, 0.0f);  // TODO??
-    }
-    std::remove_if(origin_edges.begin(), origin_edges.end(),
-         [](const CandidateEdge& e){return e.edge.end_node();});
-  }
-
-  // If the destination LRP is at a node - find nearby nodes and test inbound
-  // edges. Otherwise use loki search to find the edge(s)
-  const size_t size = segment.lrps_size();
-  auto dest_coord = coord_for_lrp(segment.lrps(size - 1));
-  std::vector<CandidateEdge> destination_edges;
-  if (segment.lrps(size - 1).at_node()) {
-    // Find nearby nodes and get allowed inbound edges
-    auto dest_nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, dest_coord);
-    destination_edges = GetEdgesFromNodes(m_reader, dest_nodes, dest_coord, false);
-  } else {
-    // Use edge search with loki and remove outbound edges at a node
-    auto dest = loki_search_single(vb::Location(location_for_lrp(segment.lrps(size - 1))), m_reader, level);
-    for (const auto& dest_edge : dest.edges) {
-      destination_edges.emplace_back(dest_edge, 0.0f);   // TODO??
-    }
-    std::remove_if(destination_edges.begin(), destination_edges.end(),
-            [](const CandidateEdge& e){return e.edge.begin_node();});
-  }
+  // Get the candidate origin and destination edges
+  size_t n = segment.lrps_size();
+  auto origin_edges = candidate_edges(true, segment.lrps(0), level);
+  auto destination_edges = candidate_edges(false, segment.lrps(n-1), level);
 
   // Create a map of candidate destination edges for faster lookup
   std::unordered_map<GraphId, CandidateEdge> dest_edges;
@@ -551,6 +560,7 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
   // Walk edges until there is not a continuing edge (means there are 0 or
   // more than 1 continuing edge) or we have exceeded the length. Keep track
   // of the best matched path.
+  uint32_t edge_length = 0;
   uint32_t best_score = std::numeric_limits<uint32_t>::max();
   uint32_t max_length = segment_length + kLengthTolerance;
   FormOfWay fow = FormOfWay(segment.lrps(0).start_fow());
@@ -558,7 +568,8 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
   std::vector<EdgeMatch> best_path;
   for (const auto& origin_edge : origin_edges) {
     // Check that this edge matches road class and form of way
-    // TODO - what are implications for data updates?
+    // TODO - what are implications for data updates - perhaps allow
+    // differing values but use this in the "scoring"
     auto* tile = m_reader.GetGraphTile(origin_edge.edge.id);
     const auto* edge = tile->directededge(origin_edge.edge.id);
     if (road_class != edge->classification() ||  fow != form_of_way(edge)) {
@@ -566,12 +577,17 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
     }
 
     // Check the bearing for this edge and make sure within tolerance
+    // TODO - short edges have bearing inaccuracy (what is too short?)
     if (segment_length > 5 && edge->length() > 5) {
       uint16_t walked_bearing = bearing(tile, origin_edge.edge.id, origin_edge.edge.dist);
       if (bear_diff(walked_bearing, segment.lrps(0).bear()) > kBearingTolerance) {
         continue;
       }
     }
+
+    // Walk a path from this origin edge.
+    std::vector<EdgeMatch> edges;
+    edges.emplace_back(origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f);
 
     // Check if the origin edge matches a destination edge
     auto dest = dest_edges.find(origin_edge.edge.id);
@@ -582,45 +598,45 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
       if (d < kLengthTolerance) {
         uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
         if (score < best_score) {
-          best_path = { {origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f } };
+          best_path = edges;
+          best_path.back().end_pct = dest->second.edge.dist;
           best_score = score;
         }
       }
-    } else {
-      // Walk a path from this edge
-      uint32_t edge_length = 0;
-      uint32_t walked_length = edge->length() * (1.0f - origin_edge.edge.dist);
-      std::vector<EdgeMatch> edges;
-      edges.emplace_back(origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f);
-      do {
-        // Return the path edges if we found a destination edge and length of
-        // the path is within tolerance.
-        auto dest = dest_edges.find(edges.back().edgeid);
-        if (dest != dest_edges.end()) {
-          // Decrease walked length by remainder of the dest edge length
-          walked_length -= edge_length * (1 - dest->second.edge.dist);
+    }
 
-          // Check if this path is a better match
-          uint32_t d = abs_u32_diff(walked_length, segment_length);
-          if (d < kLengthTolerance) {
-            uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
-            if (score < best_score) {
-              best_path = edges;
-              best_path.back().end_pct = dest->second.edge.dist;
-              best_score = score;
-            }
+    // Continue even if the origin edge matches a destination edge - this could
+    // be to a different nearby node but it is not the optimal one.
+    uint32_t walked_length = edge->length() * (1.0f - origin_edge.edge.dist);
+    while (true) {
+      // Get the next edge. Break if next edge is invalid.
+      GraphId edgeid = next_edge(edges.back().edgeid, m_reader, tile, edge_length);
+      if (!edgeid.Is_Valid()) {
+        break;
+      }
+
+      // Check if this is a destination edge
+      auto dest = dest_edges.find(edgeid);
+      if (dest != dest_edges.end()) {
+        // Check if this path is within tolerance and a better match
+        uint32_t length = walked_length + (edge_length * dest->second.edge.dist);
+        uint32_t d = abs_u32_diff(length, segment_length);
+        if (d < kLengthTolerance) {
+          uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
+          if (score < best_score) {
+            best_path = edges;
+            best_path.emplace_back(edgeid, edge_length, 0.0f, dest->second.edge.dist);
+            best_score = score;
           }
         }
+      }
 
-        // Get the next edge, update the walked length. Add the matched edge
-        // (assume full edge)
-        GraphId edgeid = next_edge(edges.back().edgeid, m_reader, tile, edge_length);
-        edges.emplace_back(edgeid, edge_length, 0.0f, 1.0f);
-        walked_length += edge_length;
-
-        // Continue while next edge is valid and length does not exceed total
-        // plus the tolerance
-      } while(edges.back().edgeid.Is_Valid() && walked_length < max_length);
+      // Add the full edge to the path - break if exceeds max length.
+      walked_length += edge_length;
+      if (walked_length > max_length) {
+        break;
+      }
+      edges.emplace_back(edgeid, edge_length, 0.0f, 1.0f);
     }
   }
   // Edge walking did not find a candidate path
@@ -628,7 +644,8 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
 }
 
 // Match the OSMLR segment to Valhalla edges.
-std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment, uint8_t level,
+std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment,
+                            const vb::GraphId& segment_id,
                             const uint32_t segment_length, MatchType& match_type) {
   const size_t size = segment.lrps_size();
   assert(size >= 2);
@@ -636,17 +653,25 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
   // Try to match edges by walking a path from the first LRP to the last LRP
   // in the OSMLR segment. This uses a strategy similar to how OSMLR segments
   // are created
-  std::vector<EdgeMatch> edges = walk(level, segment_length, segment);
+  std::vector<EdgeMatch> edges = walk(segment_id.level(), segment_length, segment);
   if (edges.size()) {
     match_type = MatchType::kWalk;
     return edges;
+  }
+
+  // TODO - this should not happen if both are at nodes! Does not happen
+  // with low node tolerance, but as node search tolerance is raised we get
+  // fallback cases where we shouldn't
+  if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
+    LOG_INFO("Fall back to A*: " + std::to_string(segment_id) + " value = " +
+                  std::to_string(segment_id.value));
   }
 
   // Fall back to A* shortest path to form the path edges
 
   // check all the interim points of the location reference
   auto origin_coord = coord_for_lrp(segment.lrps(0));
-  auto origin = loki_search_single(vb::Location(origin_coord), m_reader, level);
+  auto origin = loki_search_single(vb::Location(origin_coord), m_reader, segment_id.level());
   for (size_t i = 0; i < size - 1; ++i) {
     auto &lrp = segment.lrps(i);
     auto coord = coord_for_lrp(lrp);
@@ -654,7 +679,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
 
-    auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, level);
+    auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
     if (dest.edges.size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) + ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
@@ -774,7 +799,7 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
     segment_length += lrp.length();
   }
 
-  auto edges = match_edges(segment, segment_id.level(), segment_length, match_type);
+  auto edges = match_edges(segment, segment_id, segment_length, match_type);
   if (edges.empty()) {
     size_t n = segment.lrps_size();
     if (segment.lrps(0).at_node() && segment.lrps(n-1).at_node()) {
