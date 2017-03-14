@@ -64,13 +64,14 @@ namespace valhalla {
       std::string action_str;
       std::unordered_map<std::string, size_t> max_locations;
       std::unordered_map<std::string, float> max_distance;
+      size_t max_avoid_locations;
       float long_request;
       // Minimum and maximum walking distances (to validate input).
-      unsigned int min_transit_walking_dis;
-      unsigned int max_transit_walking_dis;
-      unsigned int max_contours;
-      unsigned int max_time;
-      unsigned int max_shape;
+      size_t min_transit_walking_dis;
+      size_t max_transit_walking_dis;
+      size_t max_contours;
+      size_t max_time;
+      size_t max_shape;
       bool healthcheck;
     };
   }

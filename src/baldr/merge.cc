@@ -116,6 +116,11 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
       continue;
     }
 
+    // Exclude merging at a node where loops occur (non-unique end node)
+    if (edge.first->endnode() == first || edge.first->endnode() == second) {
+      return none;
+    }
+
     if (first) {
       if (second) {
         // can't add a third, that means this node is a true junction.

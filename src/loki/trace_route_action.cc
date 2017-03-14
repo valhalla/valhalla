@@ -125,18 +125,22 @@ namespace valhalla {
       locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
       locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
-      auto& allocator = request.GetAllocator();
       // Add first and last locations to request
-      
+      auto& allocator = request.GetAllocator();
       rapidjson::Value locations_child{rapidjson::kArrayType};
-      locations_child.PushBack(locations.front().ToRapidJson(allocator), allocator).
-          PushBack(locations.back().ToRapidJson(allocator), allocator);
+      locations_child.PushBack(locations.front().ToRapidJson(allocator), allocator);
+      locations_child.PushBack(locations.back().ToRapidJson(allocator), allocator);
       rapidjson::Pointer("/locations").Set(request, locations_child);
 
       // Add first and last correlated locations to request
-      auto projections = loki::Search(locations, reader, edge_filter, node_filter);
-      rapidjson::Pointer("/correlated_0").Set(request, projections.at(locations.front()).ToRapidJson(0, allocator));
-      rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(0, allocator));
+      try{
+        auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+        rapidjson::Pointer("/correlated_0").Set(request, projections.at(locations.front()).ToRapidJson(0, allocator));
+        rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(1, allocator));
+      }
+      catch(const std::exception&) {
+        throw valhalla_exception_t{400, 171};
+      }
     }
 
   }

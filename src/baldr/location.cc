@@ -50,7 +50,7 @@ boost::property_tree::ptree Location::ToPtree() const {
 }
 
 rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) const {
-  rapidjson::Value location;
+  rapidjson::Value location(rapidjson::kObjectType);
 
   location.AddMember("lat", latlng_.lat(), a);
   location.AddMember("lon", latlng_.lng(), a);
