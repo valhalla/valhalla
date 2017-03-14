@@ -563,7 +563,12 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
     // TODO - short edges have bearing inaccuracy (what is too short?)
     if (segment_length > 5 && edge->length() > 5) {
       uint16_t walked_bearing = bearing(tile, origin_edge.edge.id, origin_edge.edge.dist);
-      if (bear_diff(walked_bearing, segment.lrps(0).bear()) > kBearingTolerance) {
+      // Increase bearing tolerance if LRP is not at a node and edge length is long
+      float tolerance = kBearingTolerance;
+      if (!segment.lrps(0).at_node() && edge->length() > 1000) {
+        tolerance = 45.0f;
+      }
+      if (bear_diff(walked_bearing, segment.lrps(0).bear()) > tolerance) {
         continue;
       }
     }
