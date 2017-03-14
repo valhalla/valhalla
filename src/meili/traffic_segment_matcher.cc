@@ -64,6 +64,7 @@ namespace {
       //get segments for this edge
       edge = marker.edge;
       auto segments = tile->GetTrafficSegments(edge);
+      //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //new one
         if(merged.empty() || merged.back()->segment_id_ != segment.segment_id_) {
@@ -74,7 +75,6 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
         }
-
       }
     }
     return merged;
