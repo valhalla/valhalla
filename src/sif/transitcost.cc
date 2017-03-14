@@ -568,7 +568,12 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const baldr::TransitDeparture* departure,
                            const uint32_t curr_time) const {
   // Separate wait time from time on transit
-  float wait_time = departure->departure_time() - curr_time;
+  // adjust the time if it is after midnight.
+  uint32_t current = curr_time;
+  while (current >= 86400)
+    current -= 86400;
+
+  float wait_time = departure->departure_time() - current;
 
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;
