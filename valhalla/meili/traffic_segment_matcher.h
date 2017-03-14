@@ -27,18 +27,12 @@ struct interpolation_t {
 
 // Matched traffic segment.
 struct traffic_segment_t {
-  baldr::GraphId segment_id;            // Traffic segment unique Id.
-
-  bool partial_start;                   // Begins along the segment
-  float start_time;                     // Begin time along this segment.
-  long int begin_shape_index;           // Begins at this index of original input
-
-  bool partial_end;                     // Ends along the segment
-  float end_time;                       // End time along this segment.
-  long int end_shape_index;             // Ends at this index of original input
-
+  baldr::GraphId segment_id;            // Traffic segment unique Id
+  float start_time;                     // Begin time along this segment, if <= 0 then no begin match
+  size_t begin_shape_index;           // Begins at this index of original input
+  float end_time;                       // End time along this segment, if <= 0 then no end match
+  size_t end_shape_index;             // Ends at this index of original input
   uint32_t length;                      // Length in meters along this segment
-
 };
 
 /**
@@ -81,7 +75,7 @@ class TrafficSegmentMatcher {
    * @param  traffic segments to be jsonified
    * @return the jsonified traffic segments in string form
    */
-  static std::string serialize(const std::list<traffic_segment_t>& traffic_segments);
+  static std::string serialize(const std::vector<traffic_segment_t>& traffic_segments);
 
  protected:
 
@@ -94,7 +88,7 @@ class TrafficSegmentMatcher {
    * @param  the matcher used to generate the match
    * @return the interpolation points one for each match result and node of each path edge
    */
-  virtual std::list<std::list<interpolation_t> > interpolate_matches(const std::vector<MatchResult>& matches,
+  virtual std::list<std::vector<interpolation_t> > interpolate_matches(const std::vector<MatchResult>& matches,
     const std::shared_ptr<MapMatcher>& matcher) const;
 
   /**
@@ -104,7 +98,7 @@ class TrafficSegmentMatcher {
    * @param  the graph reader with which we can get access to the segments for a given edge
    * @return the vector of traffic segments along the matched path
    */
-  virtual std::list<traffic_segment_t> form_segments(const std::list<std::list<interpolation_t> >& interpolations,
+  virtual std::vector<traffic_segment_t> form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
     baldr::GraphReader& reader) const;
 
   valhalla::meili::MapMatcherFactory matcher_factory;

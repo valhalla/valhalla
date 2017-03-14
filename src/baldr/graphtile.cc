@@ -805,8 +805,14 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
+std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const GraphId& edge) const {
+  if(edge.Tile_Base() != header_->graphid())
+    throw std::runtime_error("Wrong tile for edge id");
+  return GetTrafficSegments(edge.id());
+}
+
 // Get traffic segment(s) associated to this edge.
-std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const size_t idx) const {
+std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) const {
   if (idx < header_->traffic_id_count()) {
     const TrafficAssociation& t = traffic_segments_[idx];
     if (!t.chunk()) {
@@ -832,16 +838,15 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const size_t idx) cons
      }
      return segments;
     }
-  } else if (header_->traffic_id_count() == 0) {
-    // Tile does not contain traffic
+  }// Tile does not contain traffic
+  else if (header_->traffic_id_count() == 0)
     return { };
-  } else {
-    throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(idx)  + " traffic Id count= " +
-                           std::to_string(header_->traffic_id_count()));
-  }
+  //you were out of bounds
+  throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
+                         std::to_string(header_->graphid().tileid()) + "," +
+                         std::to_string(header_->graphid().level()) + "," +
+                         std::to_string(idx)  + " traffic Id count= " +
+                         std::to_string(header_->traffic_id_count()));
 }
 
 

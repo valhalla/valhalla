@@ -320,11 +320,19 @@ class GraphTile {
 
   /**
    * Get traffic segment(s) associated to this edge.
-   * @param  edge  GraphId of the directed edge.
+   * @param   edge  GraphId of the directed edge.
    * @return  Returns a list of traffic segment Ids and weights that associate
    *          to this edge.
    */
-  std::vector<TrafficSegment> GetTrafficSegments(const size_t idx) const;
+  std::vector<TrafficSegment> GetTrafficSegments(const GraphId& edge) const;
+
+  /**
+   * Get traffic segment(s) associated to this edge.
+   * @param   idx  index of the directed edge within the tile.
+   * @return  Returns a list of traffic segment Ids and weights that associate
+   *          to this edge.
+   */
+  std::vector<TrafficSegment> GetTrafficSegments(const uint32_t idx) const;
 
 
  protected:

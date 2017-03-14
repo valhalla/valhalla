@@ -9,7 +9,8 @@
 
 #include <unordered_map>
 #include <algorithm>
-#include <iostream>
+#include <cstdio>
+#include <unistd.h>
 
 #include "config.h"
 
@@ -161,6 +162,12 @@ int main(int argc, char *argv[]) {
   bool ferries = vm.count("ferries");
   bool unnamed = vm.count("unnamed");
 
+  //crack open stdout
+  FILE* const std_out = fdopen(dup(fileno(stdout)), "wb");
+  auto write_string = [&std_out](const std::string& s) {
+    fwrite(&s.front(), sizeof(std::string::value_type), s.size(), std_out);
+  };
+
   //parse the config
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config.c_str(), pt);
@@ -229,7 +236,7 @@ int main(int argc, char *argv[]) {
       ++set;
 
       //shortcuts arent real and maybe we dont want ferries
-      if(edge.e->shortcut() || (!ferries && edge.e->use() == Use::kFerry))
+      if(edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry))
         continue;
 
       //no name no thanks
@@ -278,14 +285,16 @@ int main(int argc, char *argv[]) {
       for(const auto& e : edges)
         extend(reader, t, e, shape);
 
-      //output it
+      //output it as: shape,name,name,...
       auto encoded = encode(shape);
-      std::cout << encoded << column_separator;
-      for(const auto& name : names)
-        std::cout << name << (&name == &names.back() ? "" : column_separator);
-      std::cout << row_separator;
-      std::cout.flush();
-
+      write_string(encoded);
+      write_string(column_separator);
+      for(const auto& name : names) {
+        write_string(name);
+        if(&name != &names.back())
+          write_string(column_separator);
+      }
+      write_string(row_separator);
     }
 
     //check progress
@@ -294,6 +303,7 @@ int main(int argc, char *argv[]) {
       LOG_INFO(std::to_string(progress = procent) + "%");
   }
   LOG_INFO("Done");
+  fclose(std_out);
 
   for(uint64_t i = 0; i < edge_count; ++i) {
     if(!edge_set.get(i)) {

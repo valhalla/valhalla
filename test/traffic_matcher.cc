@@ -20,7 +20,7 @@ namespace {
    public:
     using meili::TrafficSegmentMatcher::TrafficSegmentMatcher;
 
-    std::list<std::list<meili::interpolation_t> > interpolate_matches(const std::vector<meili::MatchResult>& r,
+    std::list<std::vector<meili::interpolation_t> > interpolate_matches(const std::vector<meili::MatchResult>& r,
       const std::shared_ptr<meili::MapMatcher>& m) const override {
       matches = r;
       matcher = m;
@@ -28,7 +28,7 @@ namespace {
       return interpolations;
     }
 
-    std::list<meili::traffic_segment_t> form_segments(const std::list<std::list<meili::interpolation_t> >& i,
+    std::vector<meili::traffic_segment_t> form_segments(const std::list<std::vector<meili::interpolation_t> >& i,
       baldr::GraphReader& r) const override {
       segments = meili::TrafficSegmentMatcher::form_segments(i, r);
       return segments;
@@ -36,8 +36,8 @@ namespace {
 
     mutable std::vector<valhalla::meili::MatchResult> matches;
     mutable std::shared_ptr<meili::MapMatcher> matcher;
-    mutable std::list<std::list<meili::interpolation_t> > interpolations;
-    mutable std::list<meili::traffic_segment_t> segments;
+    mutable std::list<std::vector<meili::interpolation_t> > interpolations;
+    mutable std::vector<meili::traffic_segment_t> segments;
   };
 
   //TODO: build the test tiles in the test, need to move traffic association into library to do that

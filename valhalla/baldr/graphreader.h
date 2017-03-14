@@ -38,6 +38,14 @@ class GraphReader {
   const GraphTile* GetGraphTile(const GraphId& graphid);
 
   /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @param tile the tile pointer that may already contain a graphtile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile);
+
+  /**
    * Get a pointer to a graph tile object given a PointLL and a Level
    * @param pointll  the lat,lng that the tile covers
    * @param level    the hierarchy level to use when getting the tile

@@ -46,6 +46,40 @@ namespace {
     }
   }
 
+  struct merged_traffic_segment_t {
+    valhalla::baldr::TrafficSegment segment;
+    valhalla::baldr::GraphId begin_edge;
+    valhalla::baldr::GraphId end_edge;
+    const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
+    valhalla::baldr::TrafficSegment* operator->() { return &segment; }
+  };
+  std::vector<merged_traffic_segment_t> merge_segments(const std::vector<valhalla::meili::interpolation_t>& markers, valhalla::baldr::GraphReader& reader) {
+    std::vector<merged_traffic_segment_t> merged;
+    const valhalla::baldr::GraphTile* tile = nullptr;
+    valhalla::baldr::GraphId edge;
+    for(const auto& marker : markers) {
+      //skip if its a repeat or we cant get the tile
+      if(marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
+        continue;
+      //get segments for this edge
+      edge = marker.edge;
+      auto segments = tile->GetTrafficSegments(edge);
+      for(const auto& segment : segments) {
+        //new one
+        if(merged.empty() || merged.back()->segment_id_ != segment.segment_id_) {
+          merged.emplace_back(merged_traffic_segment_t{segment, edge});
+        }//continue one
+        else {
+          merged.back().end_edge = edge;
+          merged.back()->end_percent_ = segment.end_percent_;
+          merged.back()->ends_segment_ = segment.ends_segment_;
+        }
+
+      }
+    }
+    return merged;
+  }
+
 }
 
 namespace valhalla {
@@ -81,15 +115,14 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
   // Get the segments along the measurements
   auto traffic_segments = form_segments(interpolations, matcher->graphreader());
 
-  // Check if we are overcommitted, maybe we move this to the python interface
-  if(matcher_factory.graphreader().OverCommitted())
-    matcher_factory.graphreader().Clear();
+  // Check if we are overcommitted on either cache and and clear if needed
+  matcher_factory.ClearFullCache();
 
   //give back json
   return serialize(traffic_segments);
 }
 
-std::list<std::list<interpolation_t> > TrafficSegmentMatcher::interpolate_matches(const std::vector<MatchResult>& matches,
+std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matches(const std::vector<MatchResult>& matches,
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   // Get all of the edges along the path from the state info
@@ -97,7 +130,7 @@ std::list<std::list<interpolation_t> > TrafficSegmentMatcher::interpolate_matche
   clean_segments(segments);
 
   // Find each set of continuous edges
-  std::list<std::list<interpolation_t> > interpolations;
+  std::list<std::vector<interpolation_t> > interpolations;
   for(auto begin_segment = segments.cbegin(), end_segment = segments.cbegin() + 1; begin_segment != segments.cend(); begin_segment = end_segment) {
     //find the end of the this block
     while(end_segment != segments.cend()) {
@@ -107,7 +140,7 @@ std::list<std::list<interpolation_t> > TrafficSegmentMatcher::interpolate_matche
     }
 
     //go through each edge and each match keeping the distance each point is along the entire trace
-    std::list<interpolation_t> interpolated;
+    std::vector<interpolation_t> interpolated;
     size_t i = 0;
     for(auto segment = begin_segment; segment != end_segment; ++segment) {
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
@@ -166,33 +199,54 @@ std::list<std::list<interpolation_t> > TrafficSegmentMatcher::interpolate_matche
   return interpolations;
 }
 
-std::list<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::list<std::list<interpolation_t> >& interpolations,
+std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
   baldr::GraphReader& reader) const {
-  //loop over the interpolations to get at the edges
-  std::list<traffic_segment_t> traffic_segments;
-  for(const auto& interpolated : interpolations) {
-    const baldr::GraphTile* tile = nullptr;
-    baldr::GraphId edge;
-    for(const auto& interpolation : interpolated) {
-      //skip this edge we have it already
-      if(interpolation.edge == edge)
-        continue;
-      //get the right tile
-      if((!tile || tile->id() != interpolation.edge.Tile_Base()) &&
-          !(tile = reader.GetGraphTile(interpolation.edge.Tile_Base())))
-        continue;
-      //get segments for this edge
-      auto segments = tile->GetTrafficSegments(interpolation.edge.id());
-      for(const auto& segment : segments) {
-        //start new segment
-        if(traffic_segments.empty() || traffic_segments.back().segment_id != segment.segment_id_) {
-          //traffic_segment_t t{segment.segment_id_};
-          traffic_segments.emplace_back();
-        }//continue
-        else {
+  //loop over each set of interpolations
+  std::vector<traffic_segment_t> traffic_segments;
+  for(const auto& markers : interpolations) {
 
-        }
+    //get all the segments for this matched path merging them into single entries
+    auto merged_segments = merge_segments(markers, reader);
+
+    //go over the segments and move the interpolation markers accordingly
+    auto left = markers.cbegin(), right = markers.cbegin();
+    for(const auto& segment : merged_segments){
+      //move the left marker right until its adjacent to the segment begin
+      left = std::find_if(left, markers.cend(), [&segment](const interpolation_t& mark) {
+        return mark.edge == segment.begin_edge && mark.edge_distance >= segment->begin_percent_;
+      });
+      left = std::prev(left);
+
+      //interpolate the length and time at the start
+      float start_time = 0, start_length = 0;
+      if(segment->starts_segment_) {
+        auto next = segment->begin_percent_ == left->edge_distance ? left : std::next(left);
+        float start_diff = next->edge_distance - left->edge_distance;
+        float start_ratio = start_diff == 0.f ? 0.f : (segment->begin_percent_ - left->edge_distance) / start_diff;
+        start_length = start_ratio * left->total_distance + (1.f - start_ratio) * next->total_distance;
+        start_time = start_ratio * left->epoch_time + (1.f - start_ratio) * next->epoch_time;
       }
+
+      //move the right marker right until its adjacent to the segment end
+      right = std::find_if(right, markers.cend(), [&segment](const interpolation_t& mark) {
+        return mark.edge == segment.end_edge && mark.edge_distance >= segment->end_percent_;
+      });
+
+      //interpolate the length and time at the end
+      float end_time = 0, end_length = 0;
+      if(segment->ends_segment_) {
+        auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
+        float end_diff = right->edge_distance - prev->edge_distance;
+        float end_ratio = end_diff == 0.f ? 0.f : (segment->end_percent_ - prev->edge_distance) / end_diff;
+        end_length = end_ratio * prev->total_distance + (1.f - end_ratio) * right->total_distance;
+        end_time = end_ratio * prev->epoch_time + (1.f - end_ratio) * right->epoch_time;
+      }
+
+      //figure out the total length of the segment
+      uint32_t length = (segment->starts_segment_ && segment->ends_segment_ ? end_length - end_time : 0.f) + .5f;
+
+      //this is what we know so far
+      traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, right->original_index, length});
     }
   }
 
@@ -226,13 +280,11 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
   return measurements;
 }
 
-std::string TrafficSegmentMatcher::serialize(const std::list<traffic_segment_t>& traffic_segments) {
+std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t>& traffic_segments) {
   auto segments = baldr::json::array({});
   for (const auto& seg : traffic_segments) {
     segments->emplace_back(baldr::json::map
       ({
-        {"partial_start", seg.partial_start},
-        {"partial_end", seg.partial_end},
         {"segment_id", seg.segment_id.value},
         {"start_time", baldr::json::fp_t{seg.start_time, 1}},
         {"end_time", baldr::json::fp_t{seg.end_time, 1}},
