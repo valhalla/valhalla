@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
       ++set;
 
       //shortcuts arent real and maybe we dont want ferries
-      if(edge.e->shortcut() || (!ferries && edge.e->use() == Use::kFerry))
+      if(edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry))
         continue;
 
       //no name no thanks
