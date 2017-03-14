@@ -77,13 +77,6 @@ struct EdgeMatch {
   uint32_t length;
   float start_pct;
   float end_pct;
-
-  EdgeMatch(const GraphId& e, const uint32_t l, const float start, const float end)
-    : edgeid(e),
-      length(l),
-      start_pct(start),
-      end_pct(end) {
-  }
 };
 
 // Candidate edges for the start and end. Includes the path edge plus
@@ -575,7 +568,7 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
 
     // Walk a path from this origin edge.
     std::vector<EdgeMatch> edges;
-    edges.emplace_back(origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f);
+    edges.emplace_back(EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f});
 
     // Check if the origin edge matches a destination edge
     auto dest = dest_edges.find(origin_edge.edge.id);
@@ -613,7 +606,7 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
           uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
           if (score < best_score) {
             best_path = edges;
-            best_path.emplace_back(edgeid, edge_length, 0.0f, dest->second.edge.dist);
+            best_path.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.dist});
             best_score = score;
           }
         }
@@ -624,7 +617,7 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
       if (walked_length > max_length) {
         break;
       }
-      edges.emplace_back(edgeid, edge_length, 0.0f, 1.0f);
+      edges.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, 1.0f});
     }
   }
   // Edge walking did not find a candidate path
@@ -740,7 +733,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     for (const auto &info : path) {
       const GraphTile* tile = m_reader.GetGraphTile(info.edgeid);
       const DirectedEdge* edge = tile->directededge(info.edgeid);
-      edges.emplace_back(info.edgeid, edge->length(), 0.0f, 1.0f);  // TODO - set first and last edge full_edge flag
+      edges.emplace_back(EdgeMatch{info.edgeid, edge->length(), 0.0f, 1.0f});  // TODO - set first and last edge full_edge flag
     }
 
     // use dest as next origin
