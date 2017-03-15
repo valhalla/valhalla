@@ -232,10 +232,6 @@ int main(int argc, char *argv[]) {
          edge.e->trans_down() || edge.e->IsTransitLine()) //these 2 should never happen
         continue;
 
-      //shortcuts arent real and maybe we dont want ferries
-      if(edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry))
-        continue;
-
       //get the opposing edge as well (ensure a valid edge is returned)
       edge_t opposing_edge = opposing(reader, tile, edge);
       if (opposing_edge.e == nullptr) {
@@ -243,6 +239,10 @@ int main(int argc, char *argv[]) {
       }
       edge_set.set(tile_set.find(opposing_edge.i.Tile_Base())->second + opposing_edge.i.id());
       ++set;
+
+      //shortcuts arent real and maybe we dont want ferries
+      if(edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry))
+        continue;
 
       //no name no thanks
       auto edge_info = tile->edgeinfo(edge.e->edgeinfo_offset());
