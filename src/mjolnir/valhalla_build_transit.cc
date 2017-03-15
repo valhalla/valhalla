@@ -1012,8 +1012,8 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           //is this past midnight?
           //adjust the time if it is after midnight.
           //all departures are stored this way even frequencies.
-          while (origin_seconds >= 86400)
-            origin_seconds -= 86400;
+          while (origin_seconds >= kSecondsPerDay)
+            origin_seconds -= kSecondsPerDay;
 
           dep.dep_time = origin_seconds;
           dep.elapsed_time = sp.destination_arrival_time() - sp.origin_departure_time();
@@ -1023,8 +1023,8 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
             uint32_t frequency_end_time = sp.frequency_end_time();
             //adjust the end time if it is after midnight.
-            while (frequency_end_time >= 86400)
-              frequency_end_time -= 86400;
+            while (frequency_end_time >= kSecondsPerDay)
+              frequency_end_time -= kSecondsPerDay;
 
             dep.frequency_end_time = frequency_end_time;
             dep.frequency = sp.frequency_headway_seconds();

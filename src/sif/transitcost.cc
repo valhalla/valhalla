@@ -570,8 +570,8 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Separate wait time from time on transit
   // adjust the time if it is after midnight.
   uint32_t current = curr_time;
-  while (current >= 86400)
-    current -= 86400;
+  while (current >= kSecondsPerDay)
+    current -= kSecondsPerDay;
 
   float wait_time = departure->departure_time() - current;
 
@@ -579,7 +579,7 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   // current time is before midnight say 86340 which causes a negative
   // wait time.
   if (wait_time < 0.0f)
-    wait_time = (86400 - current) + departure->departure_time();
+    wait_time += kSecondsPerDay;
 
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;

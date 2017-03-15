@@ -537,8 +537,8 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
   // adjust the time if it is after midnight.
   uint32_t current = current_time;
-  while (current >= 86400)
-    current -= 86400;
+  while (current >= kSecondsPerDay)
+    current -= kSecondsPerDay;
 
   // Departures are sorted by edge Id and then by departure time.
   // Binary search to find a departure with matching line Id.
@@ -614,8 +614,8 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
 
   // adjust the time if it is after midnight.
   uint32_t current = current_time;
-  while (current >= 86400)
-    current -= 86400;
+  while (current >= kSecondsPerDay)
+    current -= kSecondsPerDay;
 
   // Departures are sorted by edge Id and then by departure time.
   // Binary search to find a departure with matching line Id.
