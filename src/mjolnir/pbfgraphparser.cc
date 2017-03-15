@@ -216,6 +216,18 @@ struct graph_callback : public OSMPBF::Callback {
       return;
     }
 
+    // Throw away closed features with following tags: building, landuse,
+    // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
+    if (nodes[0] == nodes[nodes.size()-1]) {
+      for (const auto& tag : results) {
+        if (tag.first == "building" || tag.first == "landuse" ||
+            tag.first == "leisure"  || tag.first == "natural") {
+          //LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
+          return;
+        }
+      }
+    }
+
     // Check for ways that loop back on themselves (simple check) and add
     // any wayids that have loops to a vector
     if (nodes.size() > 2) {
