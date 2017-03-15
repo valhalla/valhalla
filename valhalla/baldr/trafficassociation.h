@@ -26,6 +26,15 @@ struct TrafficSegment {
         starts_segment_(starts),
         ends_segment_(ends) {
   }
+  json::MapPtr json() const {
+    return json::map({
+      {"segment_id", segment_id_.value},
+      {"begin_percent", json::fp_t{begin_percent_, 3}},
+      {"end_percent", json::fp_t{end_percent_, 3}},
+      {"starts_segment", starts_segment_},
+      {"ends_segment", ends_segment_},
+    });
+  }
 };
 
 /**
