@@ -575,6 +575,12 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   float wait_time = departure->departure_time() - current;
 
+  // handle case where departure time is after midnight say 60 and
+  // current time is before midnight say 86340 which causes a negative
+  // wait time.
+  if (wait_time < 0.0f)
+    wait_time = (86400 - current) + departure->departure_time();
+
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;
   if (edge->use() == Use::kBus) {
