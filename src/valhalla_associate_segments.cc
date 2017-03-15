@@ -795,40 +795,21 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
 
   // Walk the matched edges. Any full edges get associated to the segment.
   // Partial edges get saved for later
-  uint32_t i = 0;
-//  uint32_t path_length = 0;
-  for (const auto& edge : edges) {
+  for (size_t i = 0; i < edges.size(); ++i) {
+    // Form association for this edge. First edge "starts"
+    // the traffic segment and the last edge ends the segment.
+    const auto& edge = edges[i];
+    vb::TrafficChunk assoc(segment_id, edge.start_pct, edge.end_pct, i == 0, i == (edges.size() - 1));
+    // Full edge.
     if (edge.start_pct == 0.0f && edge.end_pct == 1.0f) {
-      // Full edge. Form association for this edge. First edge "starts"
-      // the traffic segment and the last edge ends the segment.
-      vb::TrafficChunk assoc(segment_id, 0.0f, 1.0f, (i == 0), (i == edges.size() - 1));
-
       // Store the local segment and leave the non local for later
-      if(m_tile_builder->id() == edge.edgeid.Tile_Base()) {
+      if(m_tile_builder->id() == edge.edgeid.Tile_Base())
         m_tile_builder->AddTrafficSegment(edge.edgeid, assoc);
-      } else {
-        m_leftover_associations.emplace_back(std::make_pair(edge.edgeid, assoc));
-      }
-    } else {
-      // Compute percentages of the edge along the segment
-      float e1 = edge.start_pct;
-      float e2 = edge.end_pct;
-
-/*      // Compute the percentages of the segment along the edge.
-      // TODO - do we need these?
-      float s1 = static_cast<float>(path_length) /
-                    static_cast<float>(segment_length);
-      float s2 = static_cast<float>(path_length + edge.length) /
-                    static_cast<float>(segment_length); */
-
-      // Add the temporary chunk information for this edge to the map
-      traffic_chunks[edge.edgeid].emplace_back(segment_id, e1, e2,
-                   (e1 == 0.0f), (e2 == 1.0f));
-    }
-
-    // Increment the path length and index in the matched edge list
-//    path_length += edge.length;
-    i++;
+      else
+        m_leftover_associations.emplace_back(std::make_pair(edge.edgeid, std::move(assoc)));
+    }// Add the temporary chunk information for this edge to the map
+    else
+      traffic_chunks[edge.edgeid].emplace_back(std::move(assoc));
   }
   return true;
 }
