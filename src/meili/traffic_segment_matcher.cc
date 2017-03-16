@@ -68,7 +68,7 @@ namespace {
       for(const auto& segment : segments) {
         //new one
         if(merged.empty() || merged.back()->segment_id_ != segment.segment_id_) {
-          merged.emplace_back(merged_traffic_segment_t{segment, edge});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
         }//continue one
         else {
           merged.back().end_edge = edge;
@@ -129,6 +129,10 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   auto segments = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
   clean_segments(segments);
 
+  //TODO: backtracking could have happened. maybe it really happened but maybe there were positional
+  //inaccuracies. for now we should detect when there are backtracks and give up otherwise the
+  //the timing reported here might be suspect
+
   // Find each set of continuous edges
   std::list<std::vector<interpolation_t> > interpolations;
   for(auto begin_segment = segments.cbegin(), end_segment = segments.cbegin() + 1; begin_segment != segments.cend(); begin_segment = end_segment) {
@@ -146,28 +150,28 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
       float total_length = segment == begin_segment ? -segments.front().source * edge_length : interpolated.back().total_distance;
       //get the distance and match result for the begin node of the edge
-      interpolated.emplace_back(interpolation_t{matches[i].edgeid, total_length, 0.f, i});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, i, -1});
       //add distances for all the match points that happened on this edge
-      for(++i; i < matches.size() && matches[i].edgeid == segment->edgeid; ++i) {
-        interpolated.emplace_back(interpolation_t{matches[i].edgeid, matches[i].distance_along * edge_length + total_length,
+      for(; i < matches.size() && matches[i].edgeid == segment->edgeid; ++i) {
+        interpolated.emplace_back(interpolation_t{segment->edgeid, matches[i].distance_along * edge_length + total_length,
           matches[i].distance_along, i, matches[i].epoch_time});
       }
       //add the end node of the edge
-      interpolated.emplace_back(interpolation_t{matches[i].edgeid, edge_length + total_length, 1.f, i - 1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, i - 1, -1});
     }
 
     //finally backfill the time information for those points that dont have it
     auto backfill = interpolated.begin();
     while(backfill != interpolated.end()) {
       //this one is done already
-      if(backfill->epoch_time != 0) {
+      if(backfill->epoch_time != -1) {
         ++backfill;
         continue;
       }
       //find the range that have values (or the ends of the range
       auto left = backfill != interpolated.begin() ? std::prev(backfill) : backfill;
       auto right = std::next(backfill);
-      for(; right != interpolated.end() && right->epoch_time == 0.f; ++right);
+      for(; right != interpolated.end() && right->epoch_time == -1; ++right);
       //backfill between left and right
       while(backfill != right) {
         //if both indices are valid we interpolate
@@ -215,16 +219,17 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       left = std::find_if(left, markers.cend(), [&segment](const interpolation_t& mark) {
         return mark.edge == segment.begin_edge && mark.edge_distance >= segment->begin_percent_;
       });
-      left = std::prev(left);
+      if(left->edge_distance > segment->begin_percent_)
+        left = std::prev(left);
 
       //interpolate the length and time at the start
-      float start_time = 0, start_length = 0;
-      if(segment->starts_segment_) {
-        auto next = segment->begin_percent_ == left->edge_distance ? left : std::next(left);
+      float start_time = -1, start_length = -1;
+      auto next = segment->begin_percent_ == left->edge_distance ? left : std::next(left);
+      if(segment->starts_segment_ && left->epoch_time != -1 && next->epoch_time != -1) {
         float start_diff = next->edge_distance - left->edge_distance;
-        float start_ratio = start_diff == 0.f ? 0.f : (segment->begin_percent_ - left->edge_distance) / start_diff;
-        start_length = start_ratio * left->total_distance + (1.f - start_ratio) * next->total_distance;
-        start_time = start_ratio * left->epoch_time + (1.f - start_ratio) * next->epoch_time;
+        float coef = start_diff == 0.f ? 0.f : (segment->begin_percent_ - left->edge_distance) / start_diff;
+        start_length = coef * left->total_distance + (1.f - coef) * next->total_distance;
+        start_time = coef * left->epoch_time + (1.f - coef) * next->epoch_time;
       }
 
       //move the right marker right until its adjacent to the segment end
@@ -233,17 +238,21 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       });
 
       //interpolate the length and time at the end
-      float end_time = 0, end_length = 0;
-      if(segment->ends_segment_) {
-        auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
+      float end_time = -1, end_length = -1;
+      auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
+      if(segment->ends_segment_ && prev->epoch_time != -1 && right->epoch_time != -1) {
         float end_diff = right->edge_distance - prev->edge_distance;
-        float end_ratio = end_diff == 0.f ? 0.f : (segment->end_percent_ - prev->edge_distance) / end_diff;
-        end_length = end_ratio * prev->total_distance + (1.f - end_ratio) * right->total_distance;
-        end_time = end_ratio * prev->epoch_time + (1.f - end_ratio) * right->epoch_time;
+        float coef = end_diff == 0.f ? 0.f : (segment->end_percent_ - prev->edge_distance) / end_diff;
+        end_length = coef * prev->total_distance + (1.f - coef) * right->total_distance;
+        end_time = coef * prev->epoch_time + (1.f - coef) * right->epoch_time;
       }
 
+      //if we didnt have a start or end time then we are past where we had interpolations
+      if(start_time == -1 && end_time == -1)
+        break;
+
       //figure out the total length of the segment
-      uint32_t length = (segment->starts_segment_ && segment->ends_segment_ ? end_length - end_time : 0.f) + .5f;
+      int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
       //this is what we know so far
       traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, right->original_index, length});
@@ -269,14 +278,19 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
   std::vector<Measurement> measurements;
   try {
     for (const auto& pt : *trace_pts) {
-      auto lat = pt.second.get<float>("lat");
-      auto lon = pt.second.get<float>("lon");
-      auto epoch_time = pt.second.get<float>("time"); //surely this wont last until 2038-01-19T03:14:08Z
-      auto accuracy = pt.second.get<float>("accuracy", default_accuracy);
+      float lat = pt.second.get<double>("lat");
+      float lon = pt.second.get<double>("lon");
+      float epoch_time = pt.second.get<double>("time");
+      float accuracy = pt.second.get<double>("accuracy", default_accuracy);
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }
   catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time"); }
+  if(measurements.size() < 2)
+    throw std::runtime_error("2 or more trace points are required");
+  for(size_t i = 1; i < measurements.size(); ++i)
+    if(measurements[i - 1].epoch_time() > measurements[i].epoch_time())
+      throw std::runtime_error("Trace points must be in chronological order");
   return measurements;
 }
 

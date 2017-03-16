@@ -27,12 +27,12 @@ struct interpolation_t {
 
 // Matched traffic segment.
 struct traffic_segment_t {
-  baldr::GraphId segment_id;            // Traffic segment unique Id
-  float start_time;                     // Begin time along this segment, if <= 0 then no begin match
-  size_t begin_shape_index;           // Begins at this index of original input
-  float end_time;                       // End time along this segment, if <= 0 then no end match
-  size_t end_shape_index;             // Ends at this index of original input
-  uint32_t length;                      // Length in meters along this segment
+  baldr::GraphId segment_id;   // Traffic segment unique Id
+  float start_time;            // Begin time along this segment, if < 0 then no begin match
+  size_t begin_shape_index;    // Begins at this index of original input
+  float end_time;              // End time along this segment, if < 0 then no end match
+  size_t end_shape_index;      // Ends at this index of original input
+  int length;                  // Length in meters along this segment, if < 0 then no match
 };
 
 /**
