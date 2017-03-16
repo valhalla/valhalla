@@ -2,6 +2,7 @@
 #define VALHALLA_MIDGARD_CONSTANTS_H_
 
 #include <math.h>
+ #include <stdint.h>
 
 namespace valhalla {
 namespace midgard {
@@ -9,6 +10,7 @@ namespace midgard {
 // Time constants
 constexpr float kSecPerHour = 3600.0f;
 constexpr float kHourPerSec = 1.0f / 3600.0f;
+constexpr uint32_t kSecondsPerDay = 86400;
 
 // Distance constants
 constexpr float kMetersPerKm        = 1000.0f;
