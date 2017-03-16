@@ -486,6 +486,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
     pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
@@ -1006,11 +1007,28 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           } else dep.shapeid = 0;
 
           dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
-          dep.dep_time = sp.origin_departure_time();
-          dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
 
-          dep.frequency_end_time = sp.has_frequency_end_time() ? sp.frequency_end_time() : 0;
-          dep.frequency = sp.has_frequency_headway_seconds() ? sp.frequency_headway_seconds() : 0;
+          uint32_t origin_seconds = sp.origin_departure_time();
+          //is this past midnight?
+          //adjust the time if it is after midnight.
+          //all departures are stored this way even frequencies.
+          while (origin_seconds >= kSecondsPerDay)
+            origin_seconds -= kSecondsPerDay;
+
+          dep.dep_time = origin_seconds;
+          dep.elapsed_time = sp.destination_arrival_time() - sp.origin_departure_time();
+
+          dep.frequency_end_time = 0;
+          dep.frequency = 0;
+          if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
+            uint32_t frequency_end_time = sp.frequency_end_time();
+            //adjust the end time if it is after midnight.
+            while (frequency_end_time >= kSecondsPerDay)
+              frequency_end_time -= kSecondsPerDay;
+
+            dep.frequency_end_time = frequency_end_time;
+            dep.frequency = sp.frequency_headway_seconds();
+          }
 
           if (!sp.bikes_allowed()) {
             stop_access[dep.orig_pbf_graphid] |= kBicycleAccess;

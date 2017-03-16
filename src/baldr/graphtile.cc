@@ -535,6 +535,11 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
     return nullptr;
   }
 
+  // adjust the time if it is after midnight.
+  uint32_t current = current_time;
+  while (current >= kSecondsPerDay)
+    current -= kSecondsPerDay;
+
   // Departures are sorted by edge Id and then by departure time.
   // Binary search to find a departure with matching line Id.
   int32_t low = 0;
@@ -546,8 +551,8 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
     const auto& dep = departures_[mid];
     //matching lineid and a workable time
     if (lineid == dep.lineid() &&
-        ((current_time <= dep.departure_time() && dep.type() == kFixedSchedule) ||
-         (current_time <= dep.end_time() && dep.type() == kFrequencySchedule))) {
+        ((current <= dep.departure_time() && dep.type() == kFixedSchedule) ||
+         (current <= dep.end_time() && dep.type() == kFrequencySchedule))) {
       found = mid;
       high = mid - 1;
     }//need a smaller lineid
@@ -564,7 +569,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   for(; found < count && departures_[found].lineid() == lineid; ++found) {
     // Make sure valid departure time
     if (departures_[found].type() == kFixedSchedule) {
-      if (departures_[found].departure_time() >= current_time &&
+      if (departures_[found].departure_time() >= current &&
           GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
           (!wheelchair || departures_[found].wheelchair_accessible()) &&
           (!bicycle || departures_[found].bicycle_accessible())) {
@@ -574,10 +579,10 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
       uint32_t departure_time = departures_[found].departure_time();
       uint32_t end_time = departures_[found].end_time();
       uint32_t frequency = departures_[found].frequency();
-      while (departure_time < current_time && departure_time < end_time)
+      while (departure_time < current && departure_time < end_time)
         departure_time += frequency;
 
-      if (departure_time >= current_time && departure_time < end_time &&
+      if (departure_time >= current && departure_time < end_time &&
           GetTransitSchedule(departures_[found].schedule_index())->IsValid(day, dow, date_before_tile) &&
           (!wheelchair || departures_[found].wheelchair_accessible()) &&
           (!bicycle || departures_[found].bicycle_accessible())) {
@@ -606,6 +611,11 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   if (count == 0) {
     return nullptr;
   }
+
+  // adjust the time if it is after midnight.
+  uint32_t current = current_time;
+  while (current >= kSecondsPerDay)
+    current -= kSecondsPerDay;
 
   // Departures are sorted by edge Id and then by departure time.
   // Binary search to find a departure with matching line Id.
@@ -639,13 +649,11 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
       uint32_t departure_time = departures_[found].departure_time();
       uint32_t end_time = departures_[found].end_time();
       uint32_t frequency = departures_[found].frequency();
-      while (departure_time < current_time && departure_time < end_time)
+      while (departure_time < current && departure_time < end_time)
         departure_time += frequency;
 
-      if (departure_time >= current_time && departure_time < end_time) {
-
+      if (departure_time >= current && departure_time < end_time) {
         const auto& d = departures_[found];
-
         const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
                                                            d.blockid(), d.headsign_offset(), departure_time,
                                                            d.end_time(),d.frequency(),
