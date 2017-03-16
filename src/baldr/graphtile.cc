@@ -643,9 +643,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
         departure_time += frequency;
 
       if (departure_time >= current_time && departure_time < end_time) {
-
         const auto& d = departures_[found];
-
         const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
                                                            d.blockid(), d.headsign_offset(), departure_time,
                                                            d.end_time(),d.frequency(),

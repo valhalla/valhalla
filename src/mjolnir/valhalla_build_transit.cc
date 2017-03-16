@@ -486,6 +486,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
     pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
@@ -1104,6 +1105,33 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
             dep.schedule_index = sched_itr->second;
           }
 
+          //is this passed midnight?
+          //adjust the time if it is after midnight.
+          //create a departure for before midnight and one after
+          uint32_t origin_seconds = sp.origin_departure_time();
+          if (origin_seconds >= kSecondsPerDay) {
+
+            // Add the current dep to the departures list
+            // and then update it with new dep time.  This
+            // dep will be used when the start time is after
+            // midnight.
+            departures.emplace(dep.orig_pbf_graphid, dep);
+            while (origin_seconds >= kSecondsPerDay)
+              origin_seconds -= kSecondsPerDay;
+
+            dep.dep_time = origin_seconds;
+            dep.frequency_end_time = 0;
+            dep.frequency = 0;
+            if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
+              uint32_t frequency_end_time = sp.frequency_end_time();
+              //adjust the end time if it is after midnight.
+              while (frequency_end_time >= kSecondsPerDay)
+                frequency_end_time -= kSecondsPerDay;
+
+              dep.frequency_end_time = frequency_end_time;
+              dep.frequency = sp.frequency_headway_seconds();
+            }
+          }
           // Add to the departures list
           departures.emplace(dep.orig_pbf_graphid, std::move(dep));
         }
