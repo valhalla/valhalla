@@ -1105,13 +1105,16 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
             dep.schedule_index = sched_itr->second;
           }
 
-          //is this past midnight?
+          //is this passed midnight?
           //adjust the time if it is after midnight.
           //create a departure for before midnight and one after
           uint32_t origin_seconds = sp.origin_departure_time();
           if (origin_seconds >= kSecondsPerDay) {
 
-            // Add to the departures list
+            // Add the current dep to the departures list
+            // and then update it with new dep time.  This
+            // dep will be used when the start time is after
+            // midnight.
             departures.emplace(dep.orig_pbf_graphid, dep);
             while (origin_seconds >= kSecondsPerDay)
               origin_seconds -= kSecondsPerDay;
