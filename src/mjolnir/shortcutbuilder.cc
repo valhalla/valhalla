@@ -614,7 +614,7 @@ uint32_t FormShortcuts(GraphReader& reader,
           // should be a valid key since tile sizes aren't changed)
           auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
           uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(),
-                         node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.shape(),
+                         node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.encoded_shape(),
                          tile->GetNames(directededge->edgeinfo_offset()), added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
