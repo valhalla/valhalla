@@ -42,9 +42,8 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   try {
     std::stringstream stream(json);
     boost::property_tree::read_json(stream, request);
-  } catch (...) {
-    LOG_ERROR("Error parsing JSON= " + json);
-    return "{\"foo\":\"bar\"}";
+  } catch (const std::exception&) {
+    throw valhalla_exception_t{400, 600};
   }
 
   // Form trace positions
@@ -60,8 +59,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
       times.push_back(pt.second.get<int>("time"));
     }
   } else {
-    LOG_ERROR("Could not form trace from input JSON= " + json);
-    return "{\"foo\":\"bar\"}";
+    throw valhalla_exception_t{400, 601};
   }
 
   // Need to add a ptree to set the mode to use within matching
@@ -75,9 +73,8 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   std::shared_ptr<valhalla::meili::MapMatcher> matcher;
   try {
     matcher.reset(matcher_factory.Create(trace_config));
-  } catch (const std::invalid_argument& ex) {
-    // TODO - what to return?
-    return "{\"foo\":\"bar\"}";
+  } catch (const std::exception&x) {
+    throw valhalla_exception_t{400, 601};
   }
 
   // Populate a measurement sequence to pass to the map matcher
@@ -95,8 +92,7 @@ std::string  TrafficSegmentMatcher::match(const std::string& json) {
   }
 
   if (sequence.size() != results.size()) {
-    LOG_ERROR("Sequence size not equal to match result size");
-    return "{\"foo\":\"bar\"}";
+    throw valhalla_exception_t{400, 603};
   }
 
   // TODO - more robust list of edges. Handle cases where multiple
