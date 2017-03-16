@@ -119,7 +119,7 @@ namespace valhalla {
 
     worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action, rapidjson::Document& request, http_request_info_t& request_info) {
       init_matrix(action, request);
-      auto costing = request["costing"].GetString();
+      std::string costing = request["costing"].GetString();
       if (costing == "multimodal")
         return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
 
