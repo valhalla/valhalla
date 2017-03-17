@@ -823,7 +823,7 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
         // Segment associated to this edge
         segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
       }
-      TrafficSegment seg(segment_id, 0.0f, 1.0f, true, true);
+      TrafficSegment seg(segment_id, 0.0f, 1.0f, t.starts_segment(), t.ends_segment());
       return { seg };
     } else {
       // This edge associates to more than 1 segment (or the segment is in
