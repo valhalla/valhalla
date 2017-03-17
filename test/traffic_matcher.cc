@@ -60,7 +60,7 @@ namespace {
     std::stringstream conf_json; conf_json << R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "meili":{"mode":"auto","grid":{"cache_size":100240,"size":500},
-               "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,
+               "default":{"beta":3,"breakage_distance":10000,"geometry":false,"gps_accuracy":5.0,
                           "interpolation_distance":10,"max_route_distance_factor":3,"max_search_radius":100,
                           "route":true,"search_radius":50,"sigma_z":4.07,"turn_penalty_factor":0}}
     })";
