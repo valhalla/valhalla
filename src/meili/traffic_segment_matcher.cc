@@ -145,19 +145,20 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
     //go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
-    size_t i = 0;
+    size_t i = 0, last_index = 0;
     for(auto segment = begin_segment; segment != end_segment; ++segment) {
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
       float total_length = segment == begin_segment ? -segments.front().source * edge_length : interpolated.back().total_distance;
       //get the distance and match result for the begin node of the edge
-      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, i, -1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
       //add distances for all the match points that happened on this edge
       for(; i < matches.size() && matches[i].edgeid == segment->edgeid; ++i) {
         interpolated.emplace_back(interpolation_t{segment->edgeid, matches[i].distance_along * edge_length + total_length,
           matches[i].distance_along, i, matches[i].epoch_time});
+        last_index = i;
       }
       //add the end node of the edge
-      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, i - 1, -1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, last_index, -1});
     }
 
     //finally backfill the time information for those points that dont have it
