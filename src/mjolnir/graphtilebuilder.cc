@@ -584,6 +584,64 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
    const std::list<PointLL>&, const std::vector<std::string>&, bool&);
 
+// AddEdgeInfo - accepts an encoded shape string.
+uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
+                     const baldr::GraphId& nodea,
+                     const baldr::GraphId& nodeb,
+                     const uint64_t wayid,
+                     const std::string& llstr,
+                     const std::vector<std::string>& names,
+                     bool& added){
+  // If we haven't yet added edge info for this edge tuple
+  auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
+  auto existing_edge_offset_item = edge_offset_map_.find(edge_tuple_item);
+  if (existing_edge_offset_item == edge_offset_map_.end()) {
+    // Add a new EdgeInfo to the list and get a reference to it
+    edgeinfo_list_.emplace_back();
+    EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
+    edgeinfo.set_wayid(wayid);
+    edgeinfo.set_encoded_shape(llstr);
+
+    // Add names to the common text/name list. Skip blank names.
+    std::vector<NameInfo> name_info_list;
+    name_info_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
+    size_t name_count = 0;
+    for (const auto& name : names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
+      if (!(name.empty())) {
+        // Add name and add its offset to edge info's list.
+        NameInfo ni({AddName(name)});
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      }
+    }
+    edgeinfo.set_name_info_list(name_info_list);
+
+    // Add to the map
+    edge_offset_map_.emplace(edge_tuple_item, edge_info_offset_);
+
+    // Set current edge offset
+    uint32_t current_edge_offset = edge_info_offset_;
+
+    // Update edge offset for next item
+    edge_info_offset_ += edgeinfo.SizeOf();
+
+    // Return the offset to this edge info
+    added = true;
+    return current_edge_offset;
+  }
+
+  // Already have this edge - return the offset
+  added = false;
+  return existing_edge_offset_item->second;
+}
+
 // Add a name to the text list
 uint32_t GraphTileBuilder::AddName(const std::string& name) {
   if (name.empty()) {

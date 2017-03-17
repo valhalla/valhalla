@@ -84,10 +84,13 @@ struct StopEdges {
 // Struct to hold stats information during each threads work
 struct builder_stats {
   uint32_t no_dir_edge_count;
-
+  uint32_t dep_count;
+  uint32_t midnight_dep_count;
   // Accumulate stats from all threads
   void operator()(const builder_stats& other) {
     no_dir_edge_count += other.no_dir_edge_count;
+    dep_count += other.dep_count;
+    midnight_dep_count += other.midnight_dep_count;
   }
 };
 
@@ -486,6 +489,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
     pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
@@ -941,7 +945,8 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     const Transit& transit,
     std::unordered_map<GraphId, uint16_t>& stop_access,
     const std::string& file,
-    const GraphId& tile_id, std::mutex& lock) {
+    const GraphId& tile_id, std::mutex& lock,
+    builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
   std::unordered_multimap<GraphId, Departure> departures;
 
@@ -1104,8 +1109,37 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
             dep.schedule_index = sched_itr->second;
           }
 
+          //is this passed midnight?
+          //adjust the time if it is after midnight.
+          //create a departure for before midnight and one after
+          uint32_t origin_seconds = sp.origin_departure_time();
+          if (origin_seconds >= kSecondsPerDay) {
+
+            // Add the current dep to the departures list
+            // and then update it with new dep time.  This
+            // dep will be used when the start time is after
+            // midnight.
+            stats.midnight_dep_count++;
+            departures.emplace(dep.orig_pbf_graphid, dep);
+            while (origin_seconds >= kSecondsPerDay)
+              origin_seconds -= kSecondsPerDay;
+
+            dep.dep_time = origin_seconds;
+            dep.frequency_end_time = 0;
+            dep.frequency = 0;
+            if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
+              uint32_t frequency_end_time = sp.frequency_end_time();
+              //adjust the end time if it is after midnight.
+              while (frequency_end_time >= kSecondsPerDay)
+                frequency_end_time -= kSecondsPerDay;
+
+              dep.frequency_end_time = frequency_end_time;
+              dep.frequency = sp.frequency_headway_seconds();
+            }
+          }
           // Add to the departures list
           departures.emplace(dep.orig_pbf_graphid, std::move(dep));
+          stats.dep_count++;
         }
       }
     }
@@ -1525,7 +1559,11 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
                  std::vector<OneStopTest>& onestoptests,
                  std::promise<builder_stats>& results) {
 
-  uint32_t no_dir_edge_count = 0;
+  builder_stats stats;
+  stats.no_dir_edge_count = 0;
+  stats.dep_count = 0;
+  stats.midnight_dep_count = 0;
+
   GraphReader reader_transit_level(pt);
   const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
@@ -1620,7 +1658,8 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Process schedule stop pairs (departures)
     std::unordered_multimap<GraphId, Departure> departures =
                 ProcessStopPairs(tilebuilder_transit,tile_creation_date,
-                                 transit, stop_access, file, tile_id, lock);
+                                 transit, stop_access, file, tile_id, lock,
+                                 stats);
 
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.stops_size(); i++) {
@@ -1701,7 +1740,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, hierarchy_transit_level, tile_id, file, transit_dir,
                lock, all_tiles, stop_edge_map, stop_access, shapes, distances,
-               route_types, onestoptests, no_dir_edge_count);
+               route_types, onestoptests, stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.stops_size()) + " stops, " +
@@ -1716,7 +1755,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   }
 
   // Send back the statistics
-  results.set_value({no_dir_edge_count});
+  results.set_value(stats);
 }
 
 void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
@@ -1777,12 +1816,17 @@ void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   // Check all of the outcomes, to see about maximum density (km/km2)
   builder_stats stats{};
   uint32_t total_no_dir_edge_count = 0;
+  uint32_t total_dep_count = 0;
+  uint32_t total_midnight_dep_count = 0;
+
   for (auto& result : results) {
     // If something bad went down this will rethrow it
     try {
       auto thread_stats = result.get_future().get();
       stats(thread_stats);
       total_no_dir_edge_count += stats.no_dir_edge_count;
+      total_dep_count += stats.dep_count;
+      total_midnight_dep_count += stats.midnight_dep_count;
     }
     catch(std::exception& e) {
       //TODO: throw further up the chain?
@@ -1792,6 +1836,14 @@ void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   if (total_no_dir_edge_count)
     LOG_ERROR("There were " + std::to_string(total_no_dir_edge_count) + " nodes with no directed edges");
 
+  if (total_dep_count) {
+    float percent = static_cast<float>(total_midnight_dep_count) / static_cast<float>(total_dep_count);
+    percent *= 100;
+
+    LOG_INFO("There were " + std::to_string(total_dep_count) + " departures and " +
+              std::to_string(total_midnight_dep_count) + " midnight departures were added: " +
+              std::to_string(percent) + "% increase.");
+  }
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
