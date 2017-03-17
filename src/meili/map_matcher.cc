@@ -255,12 +255,14 @@ FindMatchResult(const MapMatching::state_iterator& previous_state,
     }
   }
 
+  // Attempt to get the right edge
+  for(const auto& edge : state.candidate().edges)
+    if(edge.id == edgeid)
+      return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), state.id()};
   // If we failed to infer the route and the edge, at least we know
   // which point it matches
-  const auto& c = state.candidate();
-  //Note: technically a candidate can have correlated to more than one place in the graph
-  //but the way its used in meili we only correlated it to one place so .front() is safe
-  return {c.edges.front().projected, std::sqrt(c.edges.front().score), edgeid, c.edges.front().dist, measurement.epoch_time(), state.id()};
+  const auto& edge = state.candidate().edges.front();
+  return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), state.id()};
 }
 
 
