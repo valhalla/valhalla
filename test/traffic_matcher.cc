@@ -43,16 +43,16 @@ namespace {
   //TODO: build the test tiles in the test, need to move traffic association into library to do that
   //currently all the logic is in the application
 
-  using ots_t = meili::traffic_segment_t;
+  using ots_t = meili::traffic_segment_t; //id,start time,start idx,end time,end idx,length
   using ots_matches_t = std::vector<ots_t>;
   using sid_t = baldr::GraphId;
   std::vector<std::pair<std::string, ots_matches_t> > test_cases {
     //partial, partial
     std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":1}]})",
-      ots_matches_t{ots_t{sid_t(772127161),-1,0,-1,0,-1}, ots_t{sid_t(805681593),-1,0,-1,1,-1}}),
+      ots_matches_t{ots_t{sid_t(772127161),-1,0,.5f,0,-1}, ots_t{sid_t(805681593),.5f,0,-1,1,-1}}),
     //partial, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":1}]})",
-      ots_matches_t{ots_t{sid_t(772127161),-1,0,-1,0,-1}, ots_t{sid_t(805681593),-1,0,-1,0,1000}, ots_t{sid_t(839236025),-1,0,-1,1,-1}}),
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":3}]})",
+      ots_matches_t{ots_t{sid_t(772127161),-1,0,1.f,0,-1}, ots_t{sid_t(805681593),1.f,0,2.5f,0,1000}, ots_t{sid_t(839236025),2.5f,0,-1,1,-1}}),
   };
 
   void test_matcher() {
@@ -73,8 +73,28 @@ namespace {
     //some edges should have no matches and most will have no segments
     for(const auto& test_case : test_cases) {
       auto json = matcher.match(test_case.first);
-      if(test_case.second.size() != matcher.segments.size())
+      std::stringstream json_ss; json_ss << json;
+      boost::property_tree::ptree answer;
+      boost::property_tree::read_json(json_ss, answer);
+
+      const auto& a_segs = test_case.second;
+      const auto& b_segs = matcher.segments;
+      if(a_segs.size() != b_segs.size())
         throw std::logic_error("wrong number of segments matched");
+      for(size_t i = 0; i < test_case.second.size(); ++i) {
+        const auto& a = test_case.second[i];
+        const auto& b = matcher.segments[i];
+        if(a.begin_shape_index != b.begin_shape_index)
+          throw std::logic_error("begin_shape_index mismatch");
+        if(a.end_shape_index != b.end_shape_index)
+          throw std::logic_error("end_shape_index mismatch");
+        if(std::fabs(a.start_time - b.start_time) > .25)
+          throw std::logic_error("start time is out of tolerance");
+        if(std::fabs(a.end_time - b.end_time) > .25)
+          throw std::logic_error("end time is out of tolerance");
+        if(std::fabs(a.length - b.length) > 50)
+          throw std::logic_error("length is out of tolerance");
+      }
     }
 
   }
