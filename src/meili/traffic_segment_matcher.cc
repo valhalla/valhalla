@@ -228,8 +228,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       if(segment->starts_segment_ && left->epoch_time != -1 && next->epoch_time != -1) {
         float start_diff = next->edge_distance - left->edge_distance;
         float coef = start_diff == 0.f ? 0.f : (segment->begin_percent_ - left->edge_distance) / start_diff;
-        start_length = coef * left->total_distance + (1.f - coef) * next->total_distance;
-        start_time = coef * left->epoch_time + (1.f - coef) * next->epoch_time;
+        start_length = (1.f - coef) * left->total_distance + coef * next->total_distance;
+        start_time = (1.f - coef) * left->epoch_time + coef * next->epoch_time;
       }
 
       //move the right marker right until its adjacent to the segment end
@@ -243,8 +243,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       if(segment->ends_segment_ && prev->epoch_time != -1 && right->epoch_time != -1) {
         float end_diff = right->edge_distance - prev->edge_distance;
         float coef = end_diff == 0.f ? 0.f : (segment->end_percent_ - prev->edge_distance) / end_diff;
-        end_length = coef * prev->total_distance + (1.f - coef) * right->total_distance;
-        end_time = coef * prev->epoch_time + (1.f - coef) * right->epoch_time;
+        end_length = (1.f - coef) * prev->total_distance + coef * right->total_distance;
+        end_time = (1.f - coef) * prev->epoch_time + coef * right->epoch_time;
       }
 
       //if we didnt have a start or end time then we are past where we had interpolations
@@ -255,7 +255,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
       //this is what we know so far
-      traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, right->original_index, length});
+      //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
+      traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length});
     }
   }
 
