@@ -27,14 +27,16 @@ namespace {
     const valhalla::baldr::GraphTile* tile;
     auto node_b = reader.GetOpposingEdge(b, tile)->endnode();
     //from edges that leave this node
-    if(tile->id() != a.Tile_Base())
-      tile = reader.GetGraphTile(a);
+    //NOTE: whats the effect if we cant check if its connected
+    if(!reader.GetGraphTile(a, tile))
+      return false;
     auto node_a = tile->directededge(a)->endnode();
     if(node_a == node_b)
       return true;
-    //check the transition edges
-    if(tile->id() != node_a.Tile_Base())
-      tile = reader.GetGraphTile(a);
+    //check the transition edges from the end node
+    //NOTE: whats the effect if we cant check if its connected
+    if(!reader.GetGraphTile(node_a, tile))
+      return false;
     for(const auto& edge : tile->GetDirectedEdges(node_a)) {
       if((edge.trans_down() || edge.trans_up()) && edge.endnode() == node_b) {
         return true;
