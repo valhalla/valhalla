@@ -7,23 +7,19 @@
 
 namespace {
 
-  void clean_segments(std::vector<valhalla::meili::EdgeSegment>& segments) {
-    //merging the edges that are the same into the first ones record
-    auto segment_itr = segments.begin();
-    while(segment_itr != segments.end()) {
-      auto initial_edge = segment_itr;
-      ++segment_itr;
-      while(segment_itr != segments.end() && segment_itr->edgeid == initial_edge->edgeid) {
-        initial_edge->target = segment_itr->target;
-        ++segment_itr;
-      }
+  void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
+    //merging the edges that are the same into the final edges record
+    for(auto edge_itr = edges.begin(); edge_itr != edges.end(); ++edge_itr) {
+      auto prev = std::prev(edge_itr);
+      if(edge_itr != edges.begin() && edge_itr->edgeid == prev->edgeid)
+        edge_itr->source = prev->source;
     }
 
-    //delete duplicates that we copied to the initial edge
-    segment_itr = std::remove_if(segments.begin(), segments.end(), [&segments](const valhalla::meili::EdgeSegment& s){
-      return &segments.back() != &s && s.edgeid == (&s + 1)->edgeid;
+    //delete duplicates that we copied to the final edge
+    auto edge_itr = std::remove_if(edges.begin(), edges.end(), [&edges](const valhalla::meili::EdgeSegment& s){
+      return &edges.back() != &s && s.edgeid == (&s + 1)->edgeid;
     });
-    segments.erase(segment_itr, segments.end());
+    edges.erase(edge_itr, edges.end());
   }
 
   bool is_connected(const valhalla::baldr::GraphId& a, const valhalla::baldr::GraphId& b, valhalla::baldr::GraphReader& reader) {
@@ -129,8 +125,8 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   // Get all of the edges along the path from the state info
-  auto segments = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
-  clean_segments(segments);
+  auto edges = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
+  clean_edges(edges);
 
   //TODO: backtracking could have happened. maybe it really happened but maybe there were positional
   //inaccuracies. for now we should detect when there are backtracks and give up otherwise the
@@ -138,20 +134,20 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
   // Find each set of continuous edges
   std::list<std::vector<interpolation_t> > interpolations;
-  for(auto begin_segment = segments.cbegin(), end_segment = segments.cbegin() + 1; begin_segment != segments.cend(); begin_segment = end_segment) {
+  for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
-    while(end_segment != segments.cend()) {
-      if(!is_connected(std::prev(end_segment)->edgeid, end_segment->edgeid, matcher->graphreader()))
+    while(end_edge != edges.cend()) {
+      if(!is_connected(std::prev(end_edge)->edgeid, end_edge->edgeid, matcher->graphreader()))
         break;
-      ++end_segment;
+      ++end_edge;
     }
 
     //go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
     size_t i = 0, last_index = 0;
-    for(auto segment = begin_segment; segment != end_segment; ++segment) {
+    for(auto segment = begin_edge; segment != end_edge; ++segment) {
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
-      float total_length = segment == begin_segment ? -segments.front().source * edge_length : interpolated.back().total_distance;
+      float total_length = segment == begin_edge ? -edges.front().source * edge_length : interpolated.back().total_distance;
       //get the distance and match result for the begin node of the edge
       interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
       //add distances for all the match points that happened on this edge
