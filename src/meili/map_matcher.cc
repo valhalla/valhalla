@@ -255,12 +255,13 @@ FindMatchResult(const MapMatching::state_iterator& previous_state,
     }
   }
 
-  // Attempt to get the right edge
+  // If we get a valid edge and find it in the state that's good
   for(const auto& edge : state.candidate().edges)
     if(edge.id == edgeid)
       return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), state.id()};
-  // If we failed to infer the route and the edge, at least we know
-  // which point it matches
+
+  // If we failed to get a valid edge or can't find it
+  // At least we know which point it matches
   const auto& edge = state.candidate().edges.front();
   return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), state.id()};
 }
