@@ -63,6 +63,8 @@ namespace {
     //TODO: add test where its all full segments
     //TODO: add test where you are on at the start of a segment, you get off on a small road in between,
     //but come back on again before the segment ends, this segment should be seen twice in output as partials
+    //TODO: add test where you are consecutively in the same spot at different times, ie you aren't moving
+    //TODO: add test where there is discontinuity in matches so it has to do two sets of matches
   };
 
   void test_matcher() {

@@ -22,15 +22,15 @@ struct interpolation_t {
   float total_distance;  //distance along the path
   float edge_distance;   //ratio of the distance along the edge
   size_t original_index; //index into the original measurements
-  float epoch_time;      //seconds from epoch
+  double epoch_time;     //seconds from epoch
 };
 
 // Matched traffic segment.
 struct traffic_segment_t {
   baldr::GraphId segment_id;   // Traffic segment unique Id
-  float start_time;            // Begin time along this segment, if < 0 then no begin match
+  double start_time;           // Begin time along this segment, if < 0 then no begin match
   size_t begin_shape_index;    // Begins at this index of original input
-  float end_time;              // End time along this segment, if < 0 then no end match
+  double end_time;             // End time along this segment, if < 0 then no end match
   size_t end_shape_index;      // Ends at this index of original input
   int length;                  // Length in meters along this segment, if < 0 then no match
 };

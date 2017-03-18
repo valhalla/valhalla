@@ -22,7 +22,7 @@ struct MatchResult
   // Percentage distance along the edge
   float distance_along;
   // Optional epoch time for this match point copied from original measurement
-  float epoch_time;
+  double epoch_time;
   // Sequential state id
   StateId stateid;
 

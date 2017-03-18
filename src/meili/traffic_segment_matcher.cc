@@ -7,23 +7,19 @@
 
 namespace {
 
-  void clean_segments(std::vector<valhalla::meili::EdgeSegment>& segments) {
-    //merging the edges that are the same into the first ones record
-    auto segment_itr = segments.begin();
-    while(segment_itr != segments.end()) {
-      auto initial_edge = segment_itr;
-      ++segment_itr;
-      while(segment_itr != segments.end() && segment_itr->edgeid == initial_edge->edgeid) {
-        initial_edge->target = segment_itr->target;
-        ++segment_itr;
-      }
+  void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
+    //merging the edges that are the same into the final edges record
+    for(auto edge_itr = edges.begin(); edge_itr != edges.end(); ++edge_itr) {
+      auto prev = std::prev(edge_itr);
+      if(edge_itr != edges.begin() && edge_itr->edgeid == prev->edgeid)
+        edge_itr->source = prev->source;
     }
 
-    //delete duplicates that we copied to the initial edge
-    segment_itr = std::remove_if(segments.begin(), segments.end(), [&segments](const valhalla::meili::EdgeSegment& s){
-      return &segments.back() != &s && s.edgeid == (&s + 1)->edgeid;
+    //delete duplicates that we copied to the final edge
+    auto edge_itr = std::remove_if(edges.begin(), edges.end(), [&edges](const valhalla::meili::EdgeSegment& s){
+      return &edges.back() != &s && s.edgeid == (&s + 1)->edgeid;
     });
-    segments.erase(segment_itr, segments.end());
+    edges.erase(edge_itr, edges.end());
   }
 
   bool is_connected(const valhalla::baldr::GraphId& a, const valhalla::baldr::GraphId& b, valhalla::baldr::GraphReader& reader) {
@@ -31,14 +27,16 @@ namespace {
     const valhalla::baldr::GraphTile* tile;
     auto node_b = reader.GetOpposingEdge(b, tile)->endnode();
     //from edges that leave this node
-    if(tile->id() != a.Tile_Base())
-      tile = reader.GetGraphTile(a);
+    //NOTE: whats the effect if we cant check if its connected
+    if(!reader.GetGraphTile(a, tile))
+      return false;
     auto node_a = tile->directededge(a)->endnode();
     if(node_a == node_b)
       return true;
-    //check the transition edges
-    if(tile->id() != node_a.Tile_Base())
-      tile = reader.GetGraphTile(a);
+    //check the transition edges from the end node
+    //NOTE: whats the effect if we cant check if its connected
+    if(!reader.GetGraphTile(node_a, tile))
+      return false;
     for(const auto& edge : tile->GetDirectedEdges(node_a)) {
       if((edge.trans_down() || edge.trans_up()) && edge.endnode() == node_b) {
         return true;
@@ -129,8 +127,8 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   // Get all of the edges along the path from the state info
-  auto segments = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
-  clean_segments(segments);
+  auto edges = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
+  clean_edges(edges);
 
   //TODO: backtracking could have happened. maybe it really happened but maybe there were positional
   //inaccuracies. for now we should detect when there are backtracks and give up otherwise the
@@ -138,20 +136,20 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
   // Find each set of continuous edges
   std::list<std::vector<interpolation_t> > interpolations;
-  for(auto begin_segment = segments.cbegin(), end_segment = segments.cbegin() + 1; begin_segment != segments.cend(); begin_segment = end_segment) {
+  for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
-    while(end_segment != segments.cend()) {
-      if(!is_connected(std::prev(end_segment)->edgeid, end_segment->edgeid, matcher->graphreader()))
+    while(end_edge != edges.cend()) {
+      if(!is_connected(std::prev(end_edge)->edgeid, end_edge->edgeid, matcher->graphreader()))
         break;
-      ++end_segment;
+      ++end_edge;
     }
 
     //go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
     size_t i = 0, last_index = 0;
-    for(auto segment = begin_segment; segment != end_segment; ++segment) {
+    for(auto segment = begin_edge; segment != end_edge; ++segment) {
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
-      float total_length = segment == begin_segment ? -segments.front().source * edge_length : interpolated.back().total_distance;
+      float total_length = segment == begin_edge ? -edges.front().source * edge_length : interpolated.back().total_distance;
       //get the distance and match result for the begin node of the edge
       interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
       //add distances for all the match points that happened on this edge
@@ -180,10 +178,10 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
       while(backfill != right) {
         //if both indices are valid we interpolate
         if(left != interpolated.begin() && right != interpolated.end()) {
-          auto time_diff = right->epoch_time - left->epoch_time;
-          auto distance_diff = right->total_distance - left->total_distance;
-          auto distance_ratio = (backfill->total_distance - left->total_distance) / distance_diff;
-          backfill->epoch_time = distance_ratio * time_diff;
+          double time_diff = right->epoch_time - left->epoch_time;
+          float distance_diff = right->total_distance - left->total_distance;
+          float distance_ratio = distance_diff > 0 ? (backfill->total_distance - left->total_distance) / distance_diff : 0.f;
+          backfill->epoch_time = left->epoch_time + distance_ratio * time_diff;
         }//if left index is valid we carry it forward if we can
         else if(left != interpolated.begin() && backfill->total_distance == left->total_distance) {
           backfill->epoch_time = left->epoch_time;
@@ -227,11 +225,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         left = std::prev(left);
 
       //interpolate the length and time at the start
-      float start_time = -1, start_length = -1;
+      double start_time = -1;
+      float start_length = -1;
       auto next = segment->begin_percent_ == left->edge_distance ? left : std::next(left);
       if(segment->starts_segment_ && left->epoch_time != -1 && next->epoch_time != -1) {
         float start_diff = next->edge_distance - left->edge_distance;
-        float coef = start_diff == 0.f ? 0.f : (segment->begin_percent_ - left->edge_distance) / start_diff;
+        float coef = start_diff > 0.f ? (segment->begin_percent_ - left->edge_distance) / start_diff : 0.f;
         start_length = (1.f - coef) * left->total_distance + coef * next->total_distance;
         start_time = (1.f - coef) * left->epoch_time + coef * next->epoch_time;
       }
@@ -242,11 +241,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       });
 
       //interpolate the length and time at the end
-      float end_time = -1, end_length = -1;
+      double end_time = -1;
+      float end_length = -1;
       auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
       if(segment->ends_segment_ && prev->epoch_time != -1 && right->epoch_time != -1) {
         float end_diff = right->edge_distance - prev->edge_distance;
-        float coef = end_diff == 0.f ? 0.f : (segment->end_percent_ - prev->edge_distance) / end_diff;
+        float coef = end_diff > 0.f ? (segment->end_percent_ - prev->edge_distance) / end_diff : 0.f;
         end_length = (1.f - coef) * prev->total_distance + coef * right->total_distance;
         end_time = (1.f - coef) * prev->epoch_time + coef * right->epoch_time;
       }
@@ -283,10 +283,10 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
   std::vector<Measurement> measurements;
   try {
     for (const auto& pt : *trace_pts) {
-      float lat = pt.second.get<double>("lat");
-      float lon = pt.second.get<double>("lon");
-      float epoch_time = pt.second.get<double>("time");
-      float accuracy = pt.second.get<double>("accuracy", default_accuracy);
+      double lat = pt.second.get<double>("lat");
+      double lon = pt.second.get<double>("lon");
+      double epoch_time = pt.second.get<double>("time");
+      double accuracy = pt.second.get<double>("accuracy", default_accuracy);
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }
