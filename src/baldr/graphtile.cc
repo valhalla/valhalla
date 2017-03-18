@@ -813,17 +813,17 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const GraphId& edge) c
 std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) const {
   if (idx < header_->traffic_id_count()) {
     const TrafficAssociation& t = traffic_segments_[idx];
+    //normal ots's
     if (!t.chunk()) {
-      // Make sure there is an associated segment. If count == 0 make sure
-      // we return an invalid segment Id
-      GraphId segment_id;
-      if (t.count() == 1) {
-        // Segment associated to this edge
-        segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
-      }
+      //single association should always be 1 segment
+      if (t.count() != 1)
+        return {};
+      //return the one
+      GraphId segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
       TrafficSegment seg(segment_id, 0.0f, 1.0f, t.starts_segment(), t.ends_segment());
       return { seg };
-    } else {
+    }//chunked ots's
+    else {
       // This edge associates to more than 1 segment (or the segment is in
       // a different tile. Get traffic chunks.
       auto c = t.GetChunkCountAndIndex();
@@ -833,8 +833,8 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
         segments.emplace_back(chunk->segment_id(), chunk->begin_percent(),
                               chunk->end_percent(), chunk->starts_segment(),
                               chunk->ends_segment());
-     }
-     return segments;
+      }
+      return segments;
     }
   }// Tile does not contain traffic
   else if (header_->traffic_id_count() == 0)
