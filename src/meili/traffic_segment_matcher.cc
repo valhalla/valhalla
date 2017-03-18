@@ -305,8 +305,8 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
     segments->emplace_back(baldr::json::map
       ({
         {"segment_id", seg.segment_id.value},
-        {"start_time", baldr::json::fp_t{seg.start_time, 1}},
-        {"end_time", baldr::json::fp_t{seg.end_time, 1}},
+        {"start_time", baldr::json::fp_t{seg.start_time, 3}},
+        {"end_time", baldr::json::fp_t{seg.end_time, 3}},
         {"length", static_cast<int64_t>(seg.length)},
         {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
         {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
