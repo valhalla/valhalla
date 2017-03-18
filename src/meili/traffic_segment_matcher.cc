@@ -180,9 +180,9 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
       while(backfill != right) {
         //if both indices are valid we interpolate
         if(left != interpolated.begin() && right != interpolated.end()) {
-          auto time_diff = right->epoch_time - left->epoch_time;
-          auto distance_diff = right->total_distance - left->total_distance;
-          auto distance_ratio = (backfill->total_distance - left->total_distance) / distance_diff;
+          double time_diff = right->epoch_time - left->epoch_time;
+          float distance_diff = right->total_distance - left->total_distance;
+          float distance_ratio = (backfill->total_distance - left->total_distance) / distance_diff;
           backfill->epoch_time = distance_ratio * time_diff;
         }//if left index is valid we carry it forward if we can
         else if(left != interpolated.begin() && backfill->total_distance == left->total_distance) {
@@ -227,7 +227,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         left = std::prev(left);
 
       //interpolate the length and time at the start
-      float start_time = -1, start_length = -1;
+      double start_time = -1;
+      float start_length = -1;
       auto next = segment->begin_percent_ == left->edge_distance ? left : std::next(left);
       if(segment->starts_segment_ && left->epoch_time != -1 && next->epoch_time != -1) {
         float start_diff = next->edge_distance - left->edge_distance;
@@ -242,7 +243,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       });
 
       //interpolate the length and time at the end
-      float end_time = -1, end_length = -1;
+      double end_time = -1;
+      float end_length = -1;
       auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
       if(segment->ends_segment_ && prev->epoch_time != -1 && right->epoch_time != -1) {
         float end_diff = right->edge_distance - prev->edge_distance;
@@ -283,10 +285,10 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
   std::vector<Measurement> measurements;
   try {
     for (const auto& pt : *trace_pts) {
-      float lat = pt.second.get<double>("lat");
-      float lon = pt.second.get<double>("lon");
-      float epoch_time = pt.second.get<double>("time");
-      float accuracy = pt.second.get<double>("accuracy", default_accuracy);
+      double lat = pt.second.get<double>("lat");
+      double lon = pt.second.get<double>("lon");
+      double epoch_time = pt.second.get<double>("time");
+      double accuracy = pt.second.get<double>("accuracy", default_accuracy);
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }
