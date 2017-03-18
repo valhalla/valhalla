@@ -57,6 +57,7 @@ namespace {
     std::vector<merged_traffic_segment_t> merged;
     const valhalla::baldr::GraphTile* tile = nullptr;
     valhalla::baldr::GraphId edge;
+    bool continuable = false;
     for(const auto& marker : markers) {
       //skip if its a repeat or we cant get the tile
       if(marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
@@ -70,12 +71,14 @@ namespace {
         if(merged.empty() || merged.back()->segment_id_ != segment.segment_id_) {
           merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
         }//continue one
-        else {
+        else if(continuable){
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
         }
       }
+      //if we just handled some segments we could continue them
+      continuable = !segments.empty();
     }
     return merged;
   }

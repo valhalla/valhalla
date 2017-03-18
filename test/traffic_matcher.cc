@@ -59,6 +59,10 @@ namespace {
     //full, full, partial
     std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":6}]})",
       ots_matches_t{ots_t{sid_t(0),0.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,5.f,0,1000}, ots_t{sid_t(0),5.f,0,-1,0,-1}}),
+
+    //TODO: add test where its all full segments
+    //TODO: add test where you are on at the start of a segment, you get off on a small road in between,
+    //but come back on again before the segment ends, this segment should be seen twice in output as partials
   };
 
   void test_matcher() {
