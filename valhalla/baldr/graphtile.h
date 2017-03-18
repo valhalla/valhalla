@@ -121,6 +121,20 @@ class GraphTile {
   const DirectedEdge* directededge(const size_t idx) const;
 
   /**
+   * Get an iterable set of directed edges from a node in this tile
+   * @param  node  GraphId of the node from which the edges leave
+   * @return returns an iterable collection of directed edges
+   */
+  iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
+
+  /**
+   * Get an iterable set of directed edges from a node in this tile
+   * @param  idx  Index of the node within the current tile
+   * @return returns an iterable collection of directed edges
+   */
+  iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+
+  /**
    * Convenience method to get opposing edge Id given a directed edge.
    * The end node of the directed edge must be in this tile.
    * @param  edge  Directed edge.
@@ -306,11 +320,19 @@ class GraphTile {
 
   /**
    * Get traffic segment(s) associated to this edge.
-   * @param  edge  GraphId of the directed edge.
+   * @param   edge  GraphId of the directed edge.
    * @return  Returns a list of traffic segment Ids and weights that associate
    *          to this edge.
    */
-  std::vector<TrafficSegment> GetTrafficSegments(const size_t idx) const;
+  std::vector<TrafficSegment> GetTrafficSegments(const GraphId& edge) const;
+
+  /**
+   * Get traffic segment(s) associated to this edge.
+   * @param   idx  index of the directed edge within the tile.
+   * @return  Returns a list of traffic segment Ids and weights that associate
+   *          to this edge.
+   */
+  std::vector<TrafficSegment> GetTrafficSegments(const uint32_t idx) const;
 
 
  protected:

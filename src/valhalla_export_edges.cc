@@ -296,7 +296,7 @@ int main(int argc, char *argv[]) {
       for(const auto& e : edges)
         extend(reader, t, e, shape);
 
-      //output it
+      //output it as: shape,name,name,...
       auto encoded = encode(shape);
       std::cout << encoded << column_separator;
       for(const auto& name : names)

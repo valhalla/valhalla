@@ -182,21 +182,21 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
   auto first_result_with_state = std::find_if(
       results.begin(), results.end(),
       [](const meili::MatchResult& result) {
-        return result.HasState() && result.edgeid().Is_Valid();
+        return result.HasState() && result.edgeid.Is_Valid();
       });
 
   auto last_result_with_state = std::find_if(
       results.rbegin(), results.rend(),
       [](const meili::MatchResult& result) {
-        return result.HasState() && result.edgeid().Is_Valid();
+        return result.HasState() && result.edgeid.Is_Valid();
       });
 
   if ((first_result_with_state != results.end())
       && (last_result_with_state != results.rend())) {
     baldr::PathLocation origin = matcher->mapmatching().state(
-        first_result_with_state->stateid()).candidate();
+        first_result_with_state->stateid).candidate();
     baldr::PathLocation destination = matcher->mapmatching().state(
-        last_result_with_state->stateid()).candidate();
+        last_result_with_state->stateid).candidate();
 
     bool found_origin = false;
     for (const auto& e : origin.edges) {

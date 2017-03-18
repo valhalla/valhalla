@@ -72,8 +72,10 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt)
 
 // Method to test if tile exists
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
-  if(tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend())
-    return true;
+  //if you are using an extract only check that
+  if(!tile_extract_->tiles.empty())
+    return tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend();
+  //otherwise check memory or disk
   if(cache_.find(graphid) != cache_.end())
     return true;
   std::string file_location = tile_hierarchy_.tile_dir() + "/" +
@@ -82,9 +84,11 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   return stat(file_location.c_str(), &buffer) == 0;
 }
 bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
+  //if you are using an extract only check that
   auto extract = get_extract_instance(pt);
-  if(extract->tiles.find(graphid) != extract->tiles.cend())
-    return true;
+  if(!extract->tiles.empty())
+    return extract->tiles.find(graphid) != extract->tiles.cend();
+  //otherwise check the disk
   TileHierarchy tile_hierarchy(pt.get<std::string>("tile_dir"));
   std::string file_location = tile_hierarchy.tile_dir() + "/" +
     GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy);
@@ -137,6 +141,12 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     auto inserted = cache_.emplace(base, std::move(tile));
     return &inserted.first->second;
   }
+}
+
+const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
+  if(!tile || tile->id() != graphid.Tile_Base())
+    tile = GetGraphTile(graphid);
+  return tile;
 }
 
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
