@@ -38,12 +38,16 @@ class GraphReader {
   const GraphTile* GetGraphTile(const GraphId& graphid);
 
   /**
-   * Get a pointer to a graph tile object given a GraphId.
+   * Get a pointer to a graph tile object given a GraphId. This method also
+   * supplies the current graph tile - so if the same tile is requested again
+   * it does not have to look up the tile in the cache.
    * @param graphid  the graphid of the tile
    * @param tile the tile pointer that may already contain a graphtile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile);
+  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
+    return (tile && tile->id() == graphid.Tile_Base()) ? tile : GetGraphTile(graphid);
+  }
 
   /**
    * Get a pointer to a graph tile object given a PointLL and a Level
