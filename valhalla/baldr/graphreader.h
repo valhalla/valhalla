@@ -46,7 +46,9 @@ class GraphReader {
    * @return GraphTile* a pointer to the graph tile
    */
   const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
-    return (tile && tile->id() == graphid.Tile_Base()) ? tile : GetGraphTile(graphid);
+    if(!tile || tile->id() != graphid.Tile_Base())
+      tile = GetGraphTile(graphid);
+    return tile;
   }
 
   /**
