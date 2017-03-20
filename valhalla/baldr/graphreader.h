@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
 #include <unordered_map>
+#include <mutex>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
@@ -12,8 +13,182 @@ namespace valhalla {
 namespace baldr {
 
 /**
- * Class that manages access to GraphTiles. Reads new tiles where necessary
- * and manages a memory cache of active tiles. It is NOT thread-safe!
+ * Class that manages simple tile cache.
+ * It is NOT thread-safe!
+ */
+class TileCache {
+ public:
+  /**
+  * Constructor.
+  * @param max_size  maximum size of the cache
+  */
+  TileCache(size_t max_size);
+
+  /**
+  * Destructor.
+  */
+  virtual ~TileCache() = default;
+
+  /**
+   * Reserves enough cache to hold (max_cache_size / tile_size) items.
+   * @param tile_size appeoximate size of one tile
+   */
+  virtual void Reserve(size_t tile_size);
+
+  /**
+   * Checks if tile exists in the cache.
+   * @param graphid  the graphid of the tile
+   * @return true if tile exists in the cache
+   */
+  virtual bool Contains(const GraphId& graphid) const;
+
+  /**
+   * Puts a copy of a tile of into the cache.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  virtual const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size);
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  virtual const GraphTile* Get(const GraphId& graphid) const;
+
+  /**
+   * Lets you know if the cache is too large.
+   * @return true if the cache is over committed with respect to the limit
+   */
+  virtual bool OverCommitted() const;
+
+  /**
+   * Clears the cache.
+   */
+  virtual void Clear();
+
+ protected:
+  // The actual cached GraphTile objects
+  std::unordered_map<GraphId, GraphTile> cache_;
+
+  // The current cache size in bytes
+  size_t cache_size_;
+
+  // The max cache size in bytes
+  size_t max_cache_size_;
+};
+
+/**
+ * Tile cache synchronized using external mutex.
+ * It is thread-safe.
+ */
+class SynchronizedTileCache : public TileCache {
+ public:
+  /**
+  * Constructor.
+  * @param max_size  maximum size of the cache
+  * @param mutex reference to an external mutex
+  */
+  SynchronizedTileCache(std::mutex& mutex, size_t max_size);
+  /**
+   * Reserves enough cache to hold (max_cache_size / tile_size) items.
+   * @param tile_size appeoximate size of one tile
+   */
+  void Reserve(size_t tile_size) override;
+
+  /**
+   * Checks if tile exists in the cache.
+   * @param graphid  the graphid of the tile
+   * @return true if tile exists in the cache
+   */
+  bool Contains(const GraphId& graphid) const override;
+
+  /**
+   * Puts a copy of a tile of into the cache.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  const GraphTile* Get(const GraphId& graphid) const override;
+
+  /**
+   * Lets you know if the cache is too large.
+   * @return true if the cache is over committed with respect to the limit
+   */
+  bool OverCommitted() const override;
+
+  /**
+   * Clears the cache.
+   */
+  void Clear() override;
+
+ protected:
+  /**
+   * Puts a copy of a tile of into the cache without locking.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  const GraphTile* PutNoLock(const GraphId& graphid, const GraphTile& tile, size_t size);
+
+ private:
+  std::mutex& mutex_ref_;
+};
+
+/**
+ * Cache that fowards copies of tiles to other instances.
+ * It is thread-safe.
+ */
+class CopyForwardingTileCache final : public SynchronizedTileCache {
+ public:
+  /**
+  * Constructor.
+  * @param max_size  maximum size of the cache
+  */
+  CopyForwardingTileCache(size_t max_size);
+
+  /**
+  * Destructor.
+  */
+  ~CopyForwardingTileCache();
+
+  /**
+   * Puts a copy of a tile of into all caches.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
+
+ private:
+  static std::mutex mutex_;
+  static std::unordered_set<CopyForwardingTileCache*> members_;
+};
+
+/**
+ * Creates tile caches.
+ */
+class TileCacheFactory final {
+  TileCacheFactory() = delete;
+ public:
+  /**
+   * Constructs tile cache.
+   * @param pt  Property tree listing the configuration for the cahce configration
+   */
+  static TileCache* createTileCache(const boost::property_tree::ptree& pt);
+};
+
+/**
+ * Class that manages access to GraphTiles.
+ * Uses TileCache to keep a cache of tiles.
  */
 class GraphReader {
  public:
@@ -145,14 +320,7 @@ class GraphReader {
   // Information about where the tiles are kept
   const TileHierarchy tile_hierarchy_;
 
-  // The actual cached GraphTile objects
-  std::unordered_map<GraphId, GraphTile> cache_;
-
-  // The current cache size in bytes
-  size_t cache_size_;
-
-  // The max cache size in bytes
-  size_t max_cache_size_;
+  std::unique_ptr<TileCache> cache_;
 };
 
 }
