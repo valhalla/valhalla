@@ -131,6 +131,22 @@ class EdgeLabel {
 
   /**
    * Update an existing edge label with new predecessor and cost information.
+   * The mode, edge Id, and end node remain the same.
+   * @param predecessor Predecessor directed edge in the shortest path.
+   * @param cost        True cost (and elapsed time in seconds) to the edge.
+   * @param sortcost    Cost for sorting (includes A* heuristic).
+   * @param tc            Transition cost onto the edge.
+   */
+  void Update(const uint32_t predecessor, const Cost& cost,
+              const float sortcost, const Cost& tc) {
+    predecessor_ = predecessor;
+    cost_ = cost;
+    sortcost_ = sortcost;
+    transition_cost_ = tc;
+  }
+
+  /**
+   * Update an existing edge label with new predecessor and cost information.
    * Update distance as well (used in time distance matrix)
    * @param predecessor   Predecessor directed edge in the shortest path.
    * @param cost          True cost (and elapsed time in seconds) to the edge.
@@ -397,14 +413,6 @@ class EdgeLabel {
    */
   float transition_secs() const {
     return transition_cost_.secs;
-  }
-
-  /**
-   * Set the transition cost.
-   * @param  tc  Transition cost.
-   */
-  void set_transition_cost(const Cost& tc) {
-    transition_cost_ = tc;
   }
 
   /**
