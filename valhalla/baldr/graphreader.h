@@ -39,8 +39,8 @@ class GraphReader {
 
   /**
    * Get a pointer to a graph tile object given a GraphId. This method also
-   * supplies the current graph tile - so if the same tile is requested again
-   * it does not have to look up the tile in the cache.
+   * supplies the current graph tile - so if the same tile is requested in
+   * succession it does not have to look up the tile in the cache.
    * @param graphid  the graphid of the tile
    * @param tile the tile pointer that may already contain a graphtile
    * @return GraphTile* a pointer to the graph tile
