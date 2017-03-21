@@ -220,11 +220,7 @@ class GraphReader {
    * @param tile the tile pointer that may already contain a graphtile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
-    if(!tile || tile->id() != graphid.Tile_Base())
-      tile = GetGraphTile(graphid);
-    return tile;
-  }
+  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile);
 
   /**
    * Get a pointer to a graph tile object given a PointLL and a Level
