@@ -878,7 +878,7 @@ TripPath TripPathBuilder::Build(
 
     // We need to clip the shape if its at the beginning or end and isnt a full length
     if (is_first_edge || is_last_edge) {
-      float length = static_cast<float>(directededge->length()) * length_pct;
+      float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
       if (directededge->forward() == is_last_edge) {
         AddPartialShape<std::vector<PointLL>::const_iterator>(
             trip_shape, edgeinfo.shape().begin(), edgeinfo.shape().end(),
@@ -1135,9 +1135,11 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
         GetTripPathRoadClass(directededge->classification()));
   }
 
-  // Set length if requested
-  if (controller.attributes.at(kEdgeLength))
-    trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
+  // Set length if requested. Convert to km
+  if (controller.attributes.at(kEdgeLength)) {
+    float km = std::max((directededge->length() * 0.001f * length_percentage), 0.001f);
+    trip_edge->set_length(km);
+  }
 
   // Set speed if requested
   if (controller.attributes.at(kEdgeSpeed))
