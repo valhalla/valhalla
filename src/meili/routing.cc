@@ -488,13 +488,13 @@ find_shortest_path(baldr::GraphReader& reader,
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, other_tile)) continue;
 
         // Turn cost only for non transition edges
-        float turn_cost = 0.f;
+        float turn_cost = label_turn_cost;
         if (pred_edgelabel && turn_cost_table && !other_edge->trans_up() && !other_edge->trans_down()) {
           const auto other_heading = get_outbound_edge_heading(other_tile, other_edge, *nodeinfo);
           // TODO: test it assert(0 <= other_heading && other_heading < 360);
           const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
           // TODO: test it assert(0 <= turn_degree && turn_degree <= 180);
-          turn_cost = label_turn_cost + turn_cost_table[turn_degree];
+          turn_cost += turn_cost_table[turn_degree];
         }
 
         // If destinations found along the edge, add segments to each
@@ -560,11 +560,11 @@ find_shortest_path(baldr::GraphReader& reader,
           if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, tile)) continue;
 
           // U-turn cost
-          float turn_cost = 0.f;
+          float turn_cost = label_turn_cost;
           if (pred_edgelabel && turn_cost_table
               && pred_edgelabel->edgeid() != origin_edge.id
               && pred_edgelabel->opp_local_idx() == directededge->localedgeidx()) {
-            turn_cost = label_turn_cost + turn_cost_table[0];
+            turn_cost += turn_cost_table[0];
           }
 
           // All destinations on this origin edge
