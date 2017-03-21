@@ -102,7 +102,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 // Expand from a node in the forward direction
 void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
        const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-       EdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
+       const EdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
   // Expand from end node in forward direction.
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -151,7 +151,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // expanding on the next lower level (so we can still transition down to
     // that level).
     if (directededge->is_shortcut() &&
-        hierarchy_limits_reverse_[edgeid.level()+1].StopExpanding()) {
+        hierarchy_limits_forward_[edgeid.level()+1].StopExpanding()) {
       shortcuts |= directededge->shortcut();
     }
     Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
@@ -198,7 +198,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 // Expand from a node in reverse direction.
 void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
          const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-         EdgeLabel& pred, const uint32_t pred_idx,
+         const EdgeLabel& pred, const uint32_t pred_idx,
          const DirectedEdge* opp_pred_edge, const bool from_transition) {
   // Expand from end node in reverse direction.
   uint32_t shortcuts = 0;
@@ -501,8 +501,7 @@ void BidirectionalAStar::CheckIfLowerCostPathForward(const uint32_t idx,
   if (dc > 0) {
     float oldsortcost = edgelabels_forward_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
-    edgelabels_forward_[idx].Update(predindex, newcost, newsortcost);
-    edgelabels_forward_[idx].set_transition_cost(tc);
+    edgelabels_forward_[idx].Update(predindex, newcost, newsortcost, tc);
     adjacencylist_forward_->decrease(idx, newsortcost, oldsortcost);
   }
 }
@@ -519,8 +518,7 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
   if (dc > 0) {
     float oldsortcost = edgelabels_reverse_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
-    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost);
-    edgelabels_reverse_[idx].set_transition_cost(tc);
+    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost, tc);
     adjacencylist_reverse_->decrease(idx, newsortcost, oldsortcost);
   }
 }

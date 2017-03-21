@@ -115,7 +115,7 @@ class BidirectionalAStar : public PathAlgorithm {
   void ExpandForward(baldr::GraphReader& graphreader,
            const baldr::GraphTile* tile,
            const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
-           sif::EdgeLabel& pred, const uint32_t pred_idx,
+           const sif::EdgeLabel& pred, const uint32_t pred_idx,
            const bool from_transition);
 
   /**
@@ -124,7 +124,7 @@ class BidirectionalAStar : public PathAlgorithm {
   void ExpandReverse(baldr::GraphReader& graphreader,
            const baldr::GraphTile* tile,
            const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
-           sif::EdgeLabel& pred, const uint32_t pred_idx,
+           const sif::EdgeLabel& pred, const uint32_t pred_idx,
            const baldr::DirectedEdge* opp_pred_edge,
            const bool from_transition);
 
