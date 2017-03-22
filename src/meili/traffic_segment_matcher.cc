@@ -154,7 +154,14 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
       //get the distance and match result for the begin node of the edge
       interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
       //add distances for all the match points that happened on this edge
-      for(; i < matches.size() && matches[i].edgeid == segment->edgeid; ++i) {
+      for(; i < matches.size(); ++i) {
+        //skip unroutable ones, we dont know what edge they were on
+        if(!matches[i].edgeid.Is_Valid())
+          continue;
+        //if its a valid one that doesnt match we move on
+        else if(matches[i].edgeid != segment->edgeid)
+          break;
+        //it was the right thing we were looking for
         interpolated.emplace_back(interpolation_t{segment->edgeid, matches[i].distance_along * edge_length + total_length,
           matches[i].distance_along, i, matches[i].epoch_time});
         last_index = i;
