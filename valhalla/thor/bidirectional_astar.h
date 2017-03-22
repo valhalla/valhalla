@@ -81,6 +81,7 @@ class BidirectionalAStar : public PathAlgorithm {
   std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
 
   // A* heuristic
+  float cost_diff_;
   AStarHeuristic astarheuristic_forward_;
   AStarHeuristic astarheuristic_reverse_;
 
