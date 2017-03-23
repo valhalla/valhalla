@@ -111,15 +111,16 @@ class AutoCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           current tile
-   * @param  edgeid         edgeid that we care about
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& edgeid) const;
+                 const baldr::GraphId& opp_edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -336,9 +337,10 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   // a not thru region and a heading selected an edge entering the
   // region.
   if (!(edge->forwardaccess() & kAutoAccess) ||
-      (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
+       IsUserAvoidEdge(edgeid) ||
       (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
@@ -351,15 +353,16 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& edgeid) const {
+               const baldr::GraphId& opp_edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
-       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable ||
+        IsUserAvoidEdge(opp_edgeid) ||
        (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
@@ -631,15 +634,16 @@ class BusCost : public AutoCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           current tile
-   * @param  edgeid         edgeid that we care about
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& edgeid) const;
+                 const baldr::GraphId& opp_edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -708,9 +712,10 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kBusAccess) ||
-      (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
+       IsUserAvoidEdge(edgeid) ||
       (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
@@ -723,15 +728,16 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
-                             const baldr::GraphId& edgeid) const {
+                             const baldr::GraphId& opp_edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
-       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable ||
+        IsUserAvoidEdge(opp_edgeid) ||
        (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
@@ -791,15 +797,16 @@ class HOVCost : public AutoCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           current tile
-   * @param  edgeid         edgeid that we care about
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& edgeid) const;
+                 const baldr::GraphId& opp_edgeid) const;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -876,9 +883,10 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
   // a not thru region and a heading selected an edge entering the
   // region.
   if (!(edge->forwardaccess() & kHOVAccess) ||
-      (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
-       edge->surface() == Surface::kImpassable) {
+       edge->surface() == Surface::kImpassable ||
+       IsUserAvoidEdge(edgeid)) {
     return false;
   }
   return true;
@@ -890,15 +898,16 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
-                             const baldr::GraphId& edgeid) const {
+                             const baldr::GraphId& opp_edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kHOVAccess) ||
-       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
+       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
-        opp_edge->surface() == Surface::kImpassable) {
+        opp_edge->surface() == Surface::kImpassable ||
+        IsUserAvoidEdge(opp_edgeid)) {
     return false;
   }
   return true;

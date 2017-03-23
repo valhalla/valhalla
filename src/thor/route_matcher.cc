@@ -164,16 +164,16 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs;
 
         // Add edge and update correlated index
-        path_infos.emplace_back(mode, std::round(elapsed_time), edge_id, 0);
+        path_infos.emplace_back(mode, elapsed_time, edge_id, 0);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances,
-                                 index, end_node_tile, de->endnode(),
-                                 end_nodes, prev_edge_label, elapsed_time,
-                                 path_infos, false, end_node)) {
+                             index, end_node_tile, de->endnode(),
+                             end_nodes, prev_edge_label, elapsed_time,
+                             path_infos, false, end_node)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos
@@ -197,7 +197,7 @@ bool RouteMatcher::FormPath(
     const std::vector<midgard::PointLL>& shape,
     const std::vector<PathLocation>& correlated,
     std::vector<PathInfo>& path_infos) {
-  float elapsed_time = 0.f;
+  float elapsed_time = 0.0f;
 
   // Form distances between shape points
   std::vector<float> distances;
@@ -254,8 +254,7 @@ bool RouteMatcher::FormPath(
             * (1 - edge.dist);
 
         // Add begin edge
-        path_infos.emplace_back(mode, std::round(elapsed_time),
-                                edge.id, 0);
+        path_infos.emplace_back(mode, elapsed_time, edge.id, 0);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge.id, de, {}, 0, 0, mode, 0};
@@ -288,15 +287,14 @@ bool RouteMatcher::FormPath(
 
           // Update the elapsed time based on transition cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
-              de, end_edge_tile->node(n->first), prev_edge_label).secs;
+              end_de, end_edge_tile->node(n->first), prev_edge_label).secs;
 
           // Update the elapsed time based on edge cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
                                   n->second.dist;
 
           // Add end edge
-          path_infos.emplace_back(mode, std::round(elapsed_time),
-                                  n->second.id, 0);
+          path_infos.emplace_back(mode, elapsed_time, n->second.id, 0);
 
           return true;
         } else {
@@ -316,12 +314,14 @@ bool RouteMatcher::FormPath(
                                (end.second.dist - edge.dist);
 
         // Add end edge
-        path_infos.emplace_back(mode, std::round(elapsed_time), edge.id, 0);
+        path_infos.emplace_back(mode, elapsed_time, edge.id, 0);
         return true;
       }
     }
   }
-  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
+  // TODO - would be nice to know this, but if map-matching fallback is specified
+  // this would not fall back.
+//  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
   return false;
 }
 

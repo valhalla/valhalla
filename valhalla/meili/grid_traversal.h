@@ -161,8 +161,7 @@ class GridTraversal
       }
     }
     // Right side of the grid
-    else {
-      // Assert maxx_ <= origin.x()
+    else if (origin.x() >= maxx_) {
       const auto right_row = IntersectsRow(origin, tangent, ncols_ - 1);
       if (dest.x() < maxx_ && IsValidSquare(ncols_ - 1, right_row)) {
         return {ncols_ - 1, right_row};
@@ -177,8 +176,7 @@ class GridTraversal
       }
     }
     // Top side of the grid
-    else {
-      // Assert maxy_ <= origin.y()
+    else if (origin.y() >= maxy_) {
       const auto top_col = IntersectsColumn(origin, cotangent, nrows_ - 1);
       if (dest.y() < maxy_ && IsValidSquare(top_col, nrows_ - 1)) {
         return {top_col, nrows_ - 1};

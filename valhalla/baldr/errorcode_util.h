@@ -84,10 +84,6 @@ namespace baldr {
     // loki project 1xx
     {100,"Failed to parse json request"},
     {101,"Try a POST or GET request instead"},
-    {102,"The config actions for Loki are incorrectly loaded"},
-    {103,"Missing max_locations configuration"},
-    {104,"Missing max_distance configuration"},
-    {105,"Path action not supported"},
     {106,"Try any of"},
     {107,"Not Implemented"},
 
@@ -108,7 +104,8 @@ namespace baldr {
     {130,"Failed to parse location"},
     {131,"Failed to parse source"},
     {132,"Failed to parse target"},
-
+    {133,"Failed to parse avoid"},
+    
     {140,"Action does not support multimodal costing"},
     {141,"Arrive by for multimodal not implemented yet"},
     {142,"Arrive by not implemented for isochrones"},
@@ -120,6 +117,7 @@ namespace baldr {
     {154,"Path distance exceeds the max distance limit"},
     {155,"Outside the valid walking distance at the beginning or end of a multimodal route"},
     {156,"Outside the valid walking distance between stops of a multimodal route"},
+    {157,"Exceeded max avoid locations"},
 
     {160,"Date and time required for origin for date_type of depart at"},
     {161,"Date and time required for destination for date_type of arrive by"},
@@ -209,6 +207,9 @@ namespace baldr {
       code_itr = kHttpStatusCodes.find(status_code);
       status_code_body = code_itr == kHttpStatusCodes.cend() ? "" : code_itr->second;
 
+    }
+    const char* what() const noexcept override {
+      return error_code_message.c_str();
     }
     unsigned error_code;
     unsigned status_code;

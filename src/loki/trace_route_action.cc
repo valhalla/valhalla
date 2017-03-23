@@ -4,6 +4,7 @@
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
+#include "baldr/rapidjson_utils.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <math.h>
@@ -52,14 +53,14 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_trace(boost::property_tree::ptree& request) {
+    void loki_worker_t::init_trace(rapidjson::Document& request) {
       parse_costing(request);
       parse_trace(request);
 
       // Determine max factor, defaults to 1. This factor is used to increase
       // the max value when an edge_walk shape match is requested
       float max_factor = 1.0f;
-      auto shape_match = request.get<std::string>("shape_match", "walk_or_snap");
+      std::string shape_match = rapidjson::GetValueByPointerWithDefault(request, "/shape_match", "walk_or_snap").GetString();
       if (shape_match == "edge_walk")
         max_factor = 5.0f;
 
@@ -71,41 +72,39 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    worker_t::result_t loki_worker_t::trace_route(boost::property_tree::ptree& request, http_request_info_t& request_info) {
+    worker_t::result_t loki_worker_t::trace_route(rapidjson::Document& request, http_request_info_t& request_info) {
       init_trace(request);
 
       //pass it on to thor
-      std::stringstream stream;
-      boost::property_tree::write_json(stream, request, false);
       worker_t::result_t result{true};
-      result.messages.emplace_back(stream.str());
+      result.messages.emplace_back(rapidjson::to_string(request));
       return result;
     }
 
-    void loki_worker_t::parse_trace(boost::property_tree::ptree& request) {
+    void loki_worker_t::parse_trace(rapidjson::Document& request) {
+      auto& allocator = request.GetAllocator();
       //we require uncompressed shape or encoded polyline
-      auto input_shape = request.get_child_optional("shape");
-      auto encoded_polyline = request.get_optional<std::string>("encoded_polyline");
-
+      auto input_shape = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/shape");
+      auto encoded_polyline = GetOptionalFromRapidJson<std::string>(request, "/encoded_polyline");
       //we require shape or encoded polyline but we dont know which at first
       try {
         //uncompressed shape
         if (input_shape) {
           for (const auto& latlng : *input_shape) {
-            shape.push_back(Location::FromPtree(latlng.second).latlng_);
+            shape.push_back(Location::FromRapidJson(latlng).latlng_);
           }
         }//compressed shape
         //if we receive as encoded then we need to add as shape to request
         else if (encoded_polyline) {
           shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
-          boost::property_tree::ptree shape_child;
+          rapidjson::Value shape_array{rapidjson::kArrayType};
           for(const auto& pt : shape) {
-            boost::property_tree::ptree point_child;
-            point_child.put("lon", static_cast<double>(pt.first));
-            point_child.put("lat", static_cast<double>(pt.second));
-            shape_child.push_back(std::make_pair("", point_child));
+            rapidjson::Value point_child{rapidjson::kObjectType};
+            point_child.AddMember("lon", static_cast<double>(pt.first), allocator).
+                AddMember("lat", static_cast<double>(pt.second), allocator);
+            shape_array.PushBack(point_child, allocator);
           }
-          request.add_child("shape", shape_child);
+          request.AddMember("shape", shape_array, allocator);
         }/* else if (gpx) {
           //TODO:Add support
         } else if (geojson){
@@ -121,22 +120,27 @@ namespace valhalla {
 
     }
 
-    void loki_worker_t::locations_from_shape(boost::property_tree::ptree& request) {
+    void loki_worker_t::locations_from_shape(rapidjson::Document& request) {
       std::vector<Location> locations{shape.front(), shape.back()};
       locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
       locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
       // Add first and last locations to request
-      boost::property_tree::ptree locations_child;
-      locations_child.push_back(std::make_pair("", locations.front().ToPtree()));
-      locations_child.push_back(std::make_pair("", locations.back().ToPtree()));
-      request.put_child("locations", locations_child);
+      auto& allocator = request.GetAllocator();
+      rapidjson::Value locations_child{rapidjson::kArrayType};
+      locations_child.PushBack(locations.front().ToRapidJson(allocator), allocator);
+      locations_child.PushBack(locations.back().ToRapidJson(allocator), allocator);
+      rapidjson::Pointer("/locations").Set(request, locations_child);
 
       // Add first and last correlated locations to request
-      auto projections = loki::Search(locations, reader, edge_filter, node_filter);
-      request.put_child("correlated_0", projections.at(locations.front()).ToPtree(0));
-      request.put_child("correlated_1", projections.at(locations.back()).ToPtree(1));
-
+      try{
+        auto projections = loki::Search(locations, reader, edge_filter, node_filter);
+        rapidjson::Pointer("/correlated_0").Set(request, projections.at(locations.front()).ToRapidJson(0, allocator));
+        rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(1, allocator));
+      }
+      catch(const std::exception&) {
+        throw valhalla_exception_t{400, 171};
+      }
     }
 
   }

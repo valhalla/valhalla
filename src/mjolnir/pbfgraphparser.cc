@@ -216,6 +216,18 @@ struct graph_callback : public OSMPBF::Callback {
       return;
     }
 
+    // Throw away closed features with following tags: building, landuse,
+    // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
+    if (nodes[0] == nodes[nodes.size()-1]) {
+      for (const auto& tag : results) {
+        if (tag.first == "building" || tag.first == "landuse" ||
+            tag.first == "leisure"  || tag.first == "natural") {
+          //LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
+          return;
+        }
+      }
+    }
+
     // Check for ways that loop back on themselves (simple check) and add
     // any wayids that have loops to a vector
     if (nodes.size() > 2) {
@@ -248,8 +260,12 @@ struct graph_callback : public OSMPBF::Callback {
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
-      if(inserted.second == false)
+      if(inserted.second == false) {
         intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
+
+        // Update the index in case the node is used again (a future loop)
+        inserted.first->second = i;
+      }
     }
     intersection_.set(nodes.front());
     intersection_.set(nodes.back());

@@ -31,6 +31,7 @@ json::Value GraphId::json() const {
       {"level", static_cast<uint64_t>(fields.level)},
       {"tile_id", static_cast<uint64_t>(fields.tileid)},
       {"id", static_cast<uint64_t>(fields.id)},
+      {"value", value},
     });
   return static_cast<std::nullptr_t>(nullptr);
 }

@@ -274,8 +274,8 @@ ConstructRoute(const MapMatching& mapmatching,
     }
 
     if (prev_match != end) {
-      const auto& prev_state = mapmatching.state(prev_match->stateid()),
-                     state = mapmatching.state(match->stateid());
+      const auto& prev_state = mapmatching.state(prev_match->stateid),
+                     state = mapmatching.state(match->stateid);
       auto segments = MergeRoute(prev_state, state);
 
       if (!ValidateRoute(mapmatching.graphreader(), segments.begin(), segments.end(), tile)) {

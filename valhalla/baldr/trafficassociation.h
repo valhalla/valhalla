@@ -26,6 +26,15 @@ struct TrafficSegment {
         starts_segment_(starts),
         ends_segment_(ends) {
   }
+  json::MapPtr json() const {
+    return json::map({
+      {"segment_id", segment_id_.value},
+      {"begin_percent", json::fp_t{begin_percent_, 3}},
+      {"end_percent", json::fp_t{end_percent_, 3}},
+      {"starts_segment", starts_segment_},
+      {"ends_segment", ends_segment_},
+    });
+  }
 };
 
 /**
@@ -43,8 +52,8 @@ class TrafficChunk {
   TrafficChunk(const GraphId& segment_id, const float begin_percent,
                const float end_percent, const bool starts, const bool ends)
       : segment_id_(segment_id.value),
-        begin_percent_(begin_percent  * kPercentFactor),
-        end_percent_(end_percent * kPercentFactor),
+        begin_percent_((begin_percent  * kPercentFactor) + 0.5f),
+        end_percent_((end_percent * kPercentFactor) + 0.5f),
         starts_segment_(starts),
         ends_segment_(ends) {
   }

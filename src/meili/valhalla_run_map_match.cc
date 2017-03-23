@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     for (const auto& result : results) {
       if (result.HasState()) {
         std::cout << mmt_id << " ";
-        std::cout << result.distance() << std::endl;
+        std::cout << result.distance_from << std::endl;
         count++;
       }
       mmt_id++;
