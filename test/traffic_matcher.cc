@@ -67,6 +67,8 @@ namespace {
     //TODO: add test where there is discontinuity in matches so it has to do two sets of matches
     //TODO: add test where intermediate trace points dont get matches, this causes their times to not be used
     //for interpolation but we can still get valid segments on the edges for the entire trace
+    //TODO: add a test where you enter a segment, leave it and come back onto it where it starts, via loop,
+    //then finish it and you should see partial, then full and the full should not count the length of the partial in it
   };
 
   void test_matcher() {
