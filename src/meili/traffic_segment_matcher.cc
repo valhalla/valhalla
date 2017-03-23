@@ -42,6 +42,8 @@ namespace {
         return true;
       }
     }
+    //not connected
+    return false;
   }
 
   struct merged_traffic_segment_t {
@@ -65,15 +67,14 @@ namespace {
       auto segments = tile->GetTrafficSegments(edge);
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
-        //new one
-        if(merged.empty() || merged.back()->segment_id_ != segment.segment_id_) {
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
-        }//continue one
-        else if(continuable){
+        //continue one
+        if(continuable && merged.back()->segment_id_ == segment.segment_id_){
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
-        }
+        }//new one
+        else
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
       }
       //if we just handled some segments we could continue them
       continuable = !segments.empty();
@@ -126,7 +127,7 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
 std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matches(const std::vector<MatchResult>& matches,
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
-  // Get all of the edges along the path from the state info
+  //get all of the edges along the path from the state info
   auto edges = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
   clean_edges(edges);
 
@@ -134,7 +135,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   //inaccuracies. for now we should detect when there are backtracks and give up otherwise the
   //the timing reported here might be suspect
 
-  // Find each set of continuous edges
+  //find each set of continuous edges
   std::list<std::vector<interpolation_t> > interpolations;
   for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
@@ -153,7 +154,14 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
       //get the distance and match result for the begin node of the edge
       interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
       //add distances for all the match points that happened on this edge
-      for(; i < matches.size() && matches[i].edgeid == segment->edgeid; ++i) {
+      for(; i < matches.size(); ++i) {
+        //skip unroutable ones, we dont know what edge they were on
+        if(!matches[i].edgeid.Is_Valid())
+          continue;
+        //if its a valid one that doesnt match we move on
+        else if(matches[i].edgeid != segment->edgeid)
+          break;
+        //it was the right thing we were looking for
         interpolated.emplace_back(interpolation_t{segment->edgeid, matches[i].distance_along * edge_length + total_length,
           matches[i].distance_along, i, matches[i].epoch_time});
         last_index = i;
@@ -261,6 +269,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
       traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length});
+
+      //if the right side of this was the end of this edge then at least we need to start from the next edge
+      if(segment->end_percent_ == 1.f) {
+        ++right;
+        left = right;
+      }
     }
   }
 
