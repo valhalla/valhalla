@@ -1,4 +1,5 @@
 #include "baldr/double_bucket_queue.h"
+#include <algorithm>
 
 namespace valhalla {
 namespace baldr {
@@ -50,78 +51,60 @@ void DoubleBucketQueue::clear() {
 }
 
 // The specified label now has a smaller cost.  Reorders it in the sorted list
+// TODO - could use labelcost_ functor and remove previouscost - but this
+// requires all code that decreases cost call decrease before
+// updating the label.
 void DoubleBucketQueue::decrease(const uint32_t label, const float newcost,
                                  const float previouscost) {
   // Get the buckets of the previous and new costs. Nothing needs to be done
   // if old cost and the new cost are in the same buckets.
-  auto& prevbucket = get_bucket(previouscost);
-  auto& newbucket  = get_bucket(newcost);
+  bucket_t& prevbucket = get_bucket(previouscost);
+  bucket_t& newbucket  = get_bucket(newcost);
   if (prevbucket != newbucket) {
-    // Remove the label index from the old bucket and add to end of newbucket
-    for (auto it = prevbucket.begin(); it != prevbucket.end(); ++it) {
-      if (*it == label) {
-        prevbucket.erase(it);
-        break;
-      }
-    }
+    // Add label to newbucket and remove from previous bucket
     newbucket.push_back(label);
+    auto old_label = std::find(prevbucket.begin(), prevbucket.end(), label);
+    prevbucket.erase(old_label);
   }
 }
 
 // Remove the label with the lowest cost
-uint32_t DoubleBucketQueue::pop() {
-  const auto nextlabel = [this]() {
-    uint32_t label = currentbucket_->front();
-    currentbucket_->pop_front();
-    return label;
-  };
-
-  // Return a label from lowest non-empty bucket.
-  for ( ; currentbucket_ != buckets_.end(); currentbucket_++,
-          currentcost_ += bucketsize_) {
-    if (!currentbucket_->empty()) {
-      return nextlabel();
+uint32_t DoubleBucketQueue::pop()  {
+  if (empty()) {
+    // No labels found in the low-level buckets.
+    if (overflowbucket_.empty()) {
+      // Return an invalid label if no labels are in the overflow buckets.
+      // Reset currentbucket to the last bucket - in case another access of
+      // adjacency list is done.
+      currentbucket_--;
+      return kInvalidLabel;
+    } else {
+      // Move labels from the overflow bucket to the low level buckets.
+      // Return invalid label if still empty.
+      empty_overflow();
+      if (empty()) {
+        return kInvalidLabel;
+      }
     }
   }
 
-  // No labels found in the low-level buckets. Return an invalid label if no
-  // labels are in the overflow buckets
-  if (overflowbucket_.empty()) {
-    // Reset currentbucket to the last bucket - in case another access of
-    // adjacency list is done
-    currentbucket_--;
-    return kInvalidLabel;
-  }
-
-  // Move labels from the overflow bucket to the low level buckets. Then find
-  // smallest bucket that is not empty and set it as the currentbucket and
-  // return its first label.
-  empty_overflow();
-  for (currentbucket_ = buckets_.begin(); currentbucket_ != buckets_.end();
-           currentbucket_++, currentcost_ += bucketsize_) {
-    if (!currentbucket_->empty()) {
-      return nextlabel();
-    }
-  }
-  return kInvalidLabel;
+  // Return label from lowest non-empty bucket
+  uint32_t label = currentbucket_->back();
+  currentbucket_->pop_back();
+  return label;
 }
 
 // Empties the overflow bucket by placing the labels into the
 // low level buckets.
-void DoubleBucketQueue::empty_overflow() {
+void DoubleBucketQueue::empty_overflow()  {
   bool found = false;
-  std::vector<uint32_t> tmp;
   while (!found && !overflowbucket_.empty()) {
     // Adjust cost range
     mincost_ += bucketrange_;
     maxcost_ += bucketrange_;
-    currentcost_ = mincost_;
 
-    tmp.clear();
-    while (!overflowbucket_.empty()) {
-      uint32_t label = overflowbucket_.front();
-      overflowbucket_.pop_front();
-
+    bucket_t tmp;
+    for (const auto& label : overflowbucket_) {
       // Get the cost (using the label cost function)
       float cost = labelcost_(label);
       if (cost < maxcost_) {
@@ -132,12 +115,13 @@ void DoubleBucketQueue::empty_overflow() {
       }
     }
 
-    // Clear overflow and add any labels that lie outside the new range
-    overflowbucket_.clear();
-    for (auto label : tmp) {
-      overflowbucket_.push_back(label);
-    }
+    // Add any labels that lie outside the new range back to overflow bucket
+    overflowbucket_ = tmp;
   }
+
+  // Reset current cost and bucket to beginning of low level buckets
+  currentcost_ = mincost_;
+  currentbucket_ = buckets_.begin();
 }
 
 }

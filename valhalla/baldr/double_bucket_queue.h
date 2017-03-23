@@ -2,7 +2,6 @@
 #define VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 
 #include <vector>
-#include <deque>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -15,12 +14,16 @@ constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
  */
 using LabelCost = std::function<float (const uint32_t label)>;
 
+// Bucket type and bucket list type.
+using bucket_t = std::vector<uint32_t>;
+using buckets_t = std::vector<bucket_t>;
+
 /**
- * Double Bucket Queue. Contains a bucket sort implementation for performance.
- * An "overflow" bucket is maintained to allow reduced memory use. Costs
- * outside the current bucket "range" get placed into the overflow bucket and
- * are moved into the low-level buckets as needed. Each bucket stores label
- * indexes into external data.
+ * Double Bucket Queue - a form of priority queue. Contains a bucket sort
+ * implementation for performance. An "overflow" bucket is maintained to allow
+ * reduced memory use. Costs outside the current bucket "range" get placed
+ * into the overflow bucket and are moved into the low-level buckets as
+ * needed. Each bucket stores label indexes into external data.
  */
 class DoubleBucketQueue {
  public:
@@ -53,7 +56,7 @@ class DoubleBucketQueue {
    * given the cost. If the cost is greater than maxcost_ the label
    * is placed in the overflow bucket. If the cost is < the current bucket
    * cost then the label is placed in the current bucket to prevent underflow.
-   * @param   label  Label index to add to the adjacency list.
+   * @param   label  Label index to add to the queue.
    * @param   cost   Cost for this label.
    */
   void add(const uint32_t label, const float cost) {
@@ -87,13 +90,13 @@ class DoubleBucketQueue {
   float currentcost_;  // Current cost
 
   // Low level buckets
-  std::vector<std::deque<uint32_t>> buckets_;
+  buckets_t buckets_;
 
   // Current bucket
-  std::vector<std::deque<uint32_t>>::iterator currentbucket_;
+  buckets_t::iterator currentbucket_;
 
   // Overflow bucket
-  std::deque<uint32_t> overflowbucket_;
+  bucket_t overflowbucket_;
 
   // Cost function to get cost given the label index.
   LabelCost labelcost_;
@@ -103,11 +106,24 @@ class DoubleBucketQueue {
    * @param  cost  Cost.
    * @return Returns the bucket that the cost lies within.
    */
-  std::deque<uint32_t>& get_bucket(const float cost) {
+  bucket_t& get_bucket(const float cost) {
     return (cost < currentcost_) ? *currentbucket_ :
              (cost < maxcost_) ?
                buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
                overflowbucket_;
+  }
+
+  /**
+   * Increments currentbucket_in the low-level buckets until a non-empty
+   * bucket is found.
+   * @return  Returns true if the low-level buckets are all empty.
+   */
+  bool empty() {
+    while (currentbucket_->empty() && currentbucket_ != buckets_.end()) {
+      currentbucket_++;
+      currentcost_ += bucketsize_;
+    }
+    return currentbucket_ == buckets_.end();
   }
 
   /**
