@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
+
 using namespace valhalla::baldr;
 
 namespace {

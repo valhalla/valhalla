@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+#include "config.h"
 
 #include <stdexcept>
 #include <iostream>
