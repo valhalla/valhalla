@@ -269,6 +269,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
       traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length});
+
+      //if the right side of this was the end of this edge then at least we need to start from the next edge
+      if(segment->end_percent_ == 1.f) {
+        ++right;
+        left = right;
+      }
     }
   }
 
