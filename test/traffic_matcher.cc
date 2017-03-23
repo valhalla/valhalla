@@ -65,6 +65,10 @@ namespace {
     //but come back on again before the segment ends, this segment should be seen twice in output as partials
     //TODO: add test where you are consecutively in the same spot at different times, ie you aren't moving
     //TODO: add test where there is discontinuity in matches so it has to do two sets of matches
+    //TODO: add test where intermediate trace points dont get matches, this causes their times to not be used
+    //for interpolation but we can still get valid segments on the edges for the entire trace
+    //TODO: add a test where you enter a segment, leave it and come back onto it where it starts, via loop,
+    //then finish it and you should see partial, then full and the full should not count the length of the partial in it
   };
 
   void test_matcher() {
@@ -74,7 +78,7 @@ namespace {
       "meili":{"mode":"auto","grid":{"cache_size":100240,"size":500},
                "default":{"beta":3,"breakage_distance":10000,"geometry":false,"gps_accuracy":5.0,
                           "interpolation_distance":10,"max_route_distance_factor":3,"max_search_radius":100,
-                          "route":true,"search_radius":50,"sigma_z":4.07,"turn_penalty_factor":0}}
+                          "route":true,"search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}}
     })";
     boost::property_tree::ptree conf;
     boost::property_tree::read_json(conf_json, conf);

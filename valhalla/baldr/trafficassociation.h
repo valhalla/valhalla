@@ -52,8 +52,8 @@ class TrafficChunk {
   TrafficChunk(const GraphId& segment_id, const float begin_percent,
                const float end_percent, const bool starts, const bool ends)
       : segment_id_(segment_id.value),
-        begin_percent_(begin_percent  * kPercentFactor),
-        end_percent_(end_percent * kPercentFactor),
+        begin_percent_((begin_percent  * kPercentFactor) + 0.5f),
+        end_percent_((end_percent * kPercentFactor) + 0.5f),
         starts_segment_(starts),
         ends_segment_(ends) {
   }
