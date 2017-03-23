@@ -6,6 +6,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/graphtilestorage.h>
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
@@ -18,17 +19,18 @@ namespace baldr {
 class GraphReader {
  public:
   /**
-   * Constructor using tiles as separate files.
-   * @param pt  Property tree listing the configuration for the tile hierarchy
+   * Constructor
+   * @param tile_storage the tile storage to use
+   * @param pt the configuration for the tilehierarchy
    */
-  GraphReader(const boost::property_tree::ptree& pt);
+  GraphReader(const std::shared_ptr<GraphTileStorage>& tile_storage, const boost::property_tree::ptree& pt);
 
   /**
    * Test if tile exists
    * @param  graphid  GraphId of the tile to test (tile id and level).
    */
   bool DoesTileExist(const GraphId& graphid) const;
-  static bool DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid);
+  static bool DoesTileExist(const TileHierarchy& tile_hierarchy, const GraphId& graphid);
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
@@ -123,10 +125,6 @@ class GraphReader {
   std::unordered_set<GraphId> GetTileSet() const;
 
  protected:
-  // (Tar) extract of tiles - the contents are empty if not being used
-  struct tile_extract_t;
-  std::shared_ptr<const tile_extract_t> tile_extract_;
-  static std::shared_ptr<const GraphReader::tile_extract_t> get_extract_instance(const boost::property_tree::ptree& pt);
 
   // Information about where the tiles are kept
   const TileHierarchy tile_hierarchy_;

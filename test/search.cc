@@ -7,11 +7,11 @@
 #include <unordered_set>
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/location.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -36,7 +36,7 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-TileHierarchy h("test/search_tiles");
+TileFsHierarchy h("test/search_tiles");
 GraphId tile_id = h.GetGraphId({.125,.125}, 2);
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
@@ -144,7 +144,7 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
   boost::property_tree::ptree conf;
   conf.put("tile_dir", h.tile_dir());
 
-  valhalla::baldr::GraphReader reader(conf);
+  valhalla::baldr::GraphFsReader reader(conf);
   const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
 
   if((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)

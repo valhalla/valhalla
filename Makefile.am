@@ -93,6 +93,9 @@ nobase_include_HEADERS = \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
+	valhalla/baldr/graphfsreader.h \
+	valhalla/baldr/graphtilestorage.h \
+	valhalla/baldr/graphtilefsstorage.h \
 	valhalla/baldr/graphtile.h \
 	valhalla/baldr/graphtileheader.h \
 	valhalla/baldr/json.h \
@@ -103,6 +106,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/sign.h \
 	valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \
+	valhalla/baldr/tilefshierarchy.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
 	valhalla/baldr/streetnames.h \
@@ -220,6 +224,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
 	src/baldr/graphreader.cc \
+	src/baldr/graphtilefsstorage.cc \
 	src/baldr/graphtile.cc \
 	src/baldr/graphtileheader.cc \
 	src/baldr/edgetracker.cc \

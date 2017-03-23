@@ -4,7 +4,6 @@
 #include "baldr/graphreader.h"
 
 #include "midgard/pointll.h"
-#include <boost/filesystem.hpp>
 #include <list>
 #include <iomanip>
 #include <random>
@@ -208,10 +207,10 @@ namespace {
 
 namespace valhalla {
   namespace baldr {
-    connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt)
-      :tile_hierarchy(pt.get<std::string>("tile_dir")) {
+    connectivity_map_t::connectivity_map_t(const std::shared_ptr<GraphTileStorage>& storage, const boost::property_tree::ptree& pt)
+      :tile_hierarchy(storage) {
       // See what kind of tiles we are dealing with here by getting a graphreader
-      GraphReader reader(pt);
+      GraphReader reader(storage, pt);
       auto tiles = reader.GetTileSet();
       transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
 

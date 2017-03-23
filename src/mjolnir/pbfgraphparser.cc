@@ -13,7 +13,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "midgard/sequence.h"
@@ -1071,7 +1071,7 @@ struct graph_callback : public OSMPBF::Callback {
   }
 
   // List of the tile levels to be created
-  TileHierarchy tile_hierarchy_;
+  TileFsHierarchy tile_hierarchy_;
 
   //Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

@@ -103,7 +103,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
     }
 
     // Check if this tile has real-time speeds
-    std::vector<uint8_t>& speeds = GetRealTimeSpeeds(node.tileid(), graphreader);
+    std::vector<uint8_t>& speeds = GetRealTimeSpeeds(node, graphreader);
 
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -187,23 +187,14 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
   return {};      // Should never get here
 }
 
-std::vector<uint8_t>& TrafficAlgorithm::GetRealTimeSpeeds(const uint32_t tileid,
+std::vector<uint8_t>& TrafficAlgorithm::GetRealTimeSpeeds(const GraphId& graphid,
                                GraphReader& graphreader) {
   // Check if this tile has real-time speeds
+  uint32_t tileid = graphid.tileid();
   auto rts = real_time_speeds_.find(tileid);
   if (rts == real_time_speeds_.end()) {
-    // Try to load the speeds file
-    std::ifstream rtsfile;
-    std::string traffic_dir = graphreader.GetTileHierarchy().tile_dir() + "/traffic/";
-    std::string fname = traffic_dir + std::to_string(tileid) + ".spd";
-    rtsfile.open(fname, std::ios::binary | std::ios::in | std::ios::ate);
-    if (rtsfile.is_open()) {
-      uint32_t count = rtsfile.tellg();
-      LOG_INFO("Load real time speeds: count = " + std::to_string(count));
-      rtsfile.seekg(0, rtsfile.beg);
-      std::vector<uint8_t> spds(count);
-      rtsfile.read((char*)(&spds.front()), count);
-      rtsfile.close();
+    std::vector<uint8_t> spds;
+    if (graphreader.GetTileHierarchy().tile_storage()->ReadTileRealTimeSpeeds(graphid, graphreader.GetTileHierarchy(), spds)) {
       real_time_speeds_[tileid] = spds;
       return real_time_speeds_[tileid];
     } else {

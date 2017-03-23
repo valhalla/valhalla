@@ -14,6 +14,7 @@
 #include "sif/pedestriancost.h"
 #include "baldr/json.h"
 #include "baldr/errorcode_util.h"
+#include "baldr/graphtilefsstorage.h"
 #include "baldr/rapidjson_utils.h"
 
 #include "loki/service.h"
@@ -214,7 +215,7 @@ namespace valhalla {
     }
 
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
-        config(config), reader(config.get_child("mjolnir")), connectivity_map(config.get_child("mjolnir")),
+        config(config), reader(config.get_child("mjolnir")), connectivity_map(std::make_shared<GraphTileFsStorage>(config.get_child("mjolnir")), config.get_child("mjolnir")),
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
         max_time(config.get<size_t>("service_limits.isochrone.max_time")),

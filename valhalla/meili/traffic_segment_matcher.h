@@ -5,7 +5,7 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/graphid.h"
 #include "baldr/json.h"
 #include "meili/map_matcher.h"
@@ -70,7 +70,7 @@ class TrafficSegmentMatcher {
   std::string match(const std::string& json);
 
  protected:
-  valhalla::baldr::GraphReader reader;
+  valhalla::baldr::GraphFsReader reader;
   valhalla::meili::MapMatcherFactory matcher_factory;
 };
 

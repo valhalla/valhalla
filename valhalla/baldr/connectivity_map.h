@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/graphtilestorage.h>
 
 #include <vector>
 #include <unordered_map>
@@ -16,9 +17,10 @@ namespace valhalla {
      public:
       /**
        * Constructs the connectivity map
+       * @param storage the graph storage handler
        * @param pt   the ptree sub child labeled mjolnir in the valhalla json config
        */
-      connectivity_map_t(const boost::property_tree::ptree& pt);
+      connectivity_map_t(const std::shared_ptr<GraphTileStorage>& storage, const boost::property_tree::ptree& pt);
 
       /**
        * Returns the color for the given graphid

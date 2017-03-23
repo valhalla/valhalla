@@ -2,9 +2,6 @@
 
 #include <string>
 #include <iostream>
-#include <fstream>
-#include <sys/stat.h>
-#include <boost/filesystem.hpp>
 
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
@@ -21,75 +18,26 @@ namespace {
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t : public midgard::tar {
-  tile_extract_t(const boost::property_tree::ptree& pt):tar(pt.get<std::string>("tile_extract","")) {
-    //if you really meant to load it
-    if(pt.get_optional<std::string>("tile_extract")) {
-      //map files to graph ids
-      for(auto& c : contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        }
-        catch(...){}
-      }
-      //couldn't load it
-      if(tiles.empty()) {
-        LOG_WARN("Tile extract could not be loaded");
-      }//loaded ok but with possibly bad blocks
-      else {
-        LOG_INFO("Tile extract successfully loaded");
-        if(corrupt_blocks)
-          LOG_WARN("Tile extract had " + std::to_string(corrupt_blocks) + " corrupt blocks");
-      }
-    }
-  }
-  // TODO: dont remove constness, and actually make graphtile read only?
-  std::unordered_map<uint64_t, std::pair<char*, size_t> > tiles;
-};
-
-std::shared_ptr<const GraphReader::tile_extract_t> GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
-  static std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(new GraphReader::tile_extract_t(pt));
-  return tile_extract;
-}
-
 // Constructor using separate tile files
-GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_hierarchy_(pt.get<std::string>("tile_dir")),
-      cache_size_(0),
-      tile_extract_(get_extract_instance(pt)) {
+GraphReader::GraphReader(const std::shared_ptr<GraphTileStorage>& tile_storage, const boost::property_tree::ptree& pt)
+    : tile_hierarchy_(tile_storage),
+      cache_size_(0) {
   max_cache_size_ = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
-  // Reserve cache (based on whether using individual tile files or shared,
-  // mmap'd file
-  if (!tile_extract_->tiles.empty()) {
-    cache_.reserve(max_cache_size_/AVERAGE_MM_TILE_SIZE);
-  } else {
-    // Assume avg of 2 megs per tile
-    cache_.reserve(max_cache_size_/AVERAGE_TILE_SIZE);
-  }
+  // Assume avg of 2 megs per tile
+  // TODO: for mmapped tiles, should assume 4KB per tile
+  cache_.reserve(max_cache_size_/AVERAGE_TILE_SIZE);
 }
 
 // Method to test if tile exists
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
-  if(tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend())
-    return true;
   if(cache_.find(graphid) != cache_.end())
     return true;
-  std::string file_location = tile_hierarchy_.tile_dir() + "/" +
-    GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy_);
-  struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0;
+  return DoesTileExist(tile_hierarchy_, graphid);
 }
-bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
-  auto extract = get_extract_instance(pt);
-  if(extract->tiles.find(graphid) != extract->tiles.cend())
-    return true;
-  TileHierarchy tile_hierarchy(pt.get<std::string>("tile_dir"));
-  std::string file_location = tile_hierarchy.tile_dir() + "/" +
-    GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy);
-  struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0;
+
+bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const GraphId& graphid) {
+  return tile_hierarchy.tile_storage()->DoesTileExist(graphid, tile_hierarchy);
 }
 
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
@@ -109,34 +57,15 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return &cached->second;
   }
 
-  // Try getting it from the memmapped tar extract
-  if (!tile_extract_->tiles.empty()) {
-    // Do we have this tile
-    auto t = tile_extract_->tiles.find(base);
-    if(t == tile_extract_->tiles.cend())
-      return nullptr;
+  // This reads the tile from disk
+  GraphTile tile(tile_hierarchy_, base);
+  if (!tile.header())
+    return nullptr;
 
-    // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second);
-    if (!tile.header())
-      return nullptr;
-
-    // Keep a copy in the cache and return it
-    cache_size_ += AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
-    auto inserted = cache_.emplace(base, std::move(tile));
-    return &inserted.first->second;
-  }// Try getting it from flat file
-  else {
-    // This reads the tile from disk
-    GraphTile tile(tile_hierarchy_, base);
-    if (!tile.header())
-      return nullptr;
-
-    // Keep a copy in the cache and return it
-    cache_size_ += tile.header()->end_offset();
-    auto inserted = cache_.emplace(base, std::move(tile));
-    return &inserted.first->second;
-  }
+  // Keep a copy in the cache and return it
+  cache_size_ += tile.header()->end_offset();
+  auto inserted = cache_.emplace(base, std::move(tile));
+  return &inserted.first->second;
 }
 
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
@@ -168,6 +97,7 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid) {
   const GraphTile* NO_TILE = nullptr;
   return GetOpposingEdgeId(edgeid, NO_TILE);
 }
+
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
   tile = GetGraphTile(edgeid);
   if(!tile)
@@ -204,6 +134,7 @@ const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid) {
   const GraphTile* NO_TILE = nullptr;
   return GetOpposingEdge(edgeid, NO_TILE);
 }
+
 const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile) {
   GraphId oppedgeid = GetOpposingEdgeId(edgeid, tile);
   return oppedgeid.Is_Valid() ? tile->directededge(oppedgeid) : nullptr;
@@ -320,32 +251,7 @@ uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
 
 
 std::unordered_set<GraphId> GraphReader::GetTileSet() const {
-  //either mmap'd tiles
-  std::unordered_set<GraphId> tiles;
-  if(tile_extract_->tiles.size()) {
-    for(const auto& t : tile_extract_->tiles)
-      tiles.emplace(t.first);
-  }//or individually on disk
-  else {
-    //for each level
-    for(uint8_t level = 0; level < tile_hierarchy_.levels().rbegin()->first + 1; ++level) {
-      //crack open this level of tiles directory
-      boost::filesystem::path root_dir(tile_hierarchy_.tile_dir() + '/' + std::to_string(level) + '/');
-      if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
-        //iterate over all the files in there
-        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-          if (!boost::filesystem::is_directory(i->path())) {
-            //add it if it can be parsed as a valid tile file name
-            try { tiles.emplace(GraphTile::GetTileId(i->path().string())); }
-            catch (...) { }
-          }
-        }
-      }
-    }
-  }
-
-  //give them back
-  return tiles;
+  return tile_hierarchy_.tile_storage()->FindTiles(tile_hierarchy_);
 }
 
 }

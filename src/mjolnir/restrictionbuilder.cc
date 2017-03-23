@@ -17,7 +17,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -217,7 +217,7 @@ void build(const boost::property_tree::ptree& pt,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
            std::promise<DataQuality>& result) {
   sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
-  GraphReader reader(hierarchy_properties);
+  GraphFsReader reader(hierarchy_properties);
   DataQuality stats;
 
   // Get some things we need throughout
@@ -510,7 +510,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
                                const std::unordered_multimap<uint64_t, uint64_t>& end_map) {
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
+  GraphFsReader reader(hierarchy_properties);
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto level = tile_hierarchy.levels().rbegin();
   for ( ; level != tile_hierarchy.levels().rend(); ++level) {
@@ -522,7 +522,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     for (uint32_t id = 0; id < tile_level.tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, tile_level.level, 0);
-      if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+      if (GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
         tempqueue.push_back(tile_id);
       }
     }

@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include "baldr/graphtile.h"
+#include "baldr/tilefshierarchy.h"
 
 #include <vector>
 
@@ -17,7 +18,7 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
 };
 
 void file_suffix() {
-  TileHierarchy h("/data/valhalla");
+  TileFsHierarchy h("/data/valhalla");
 
   if(GraphTile::FileSuffix(GraphId(2, 2, 0), h) != "2/000/000/002.gph")
     throw std::runtime_error("Unexpected graphtile suffix");

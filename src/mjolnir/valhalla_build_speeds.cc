@@ -17,7 +17,8 @@
 
 #include "midgard/logging.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 
@@ -228,7 +229,7 @@ int main(int argc, char** argv) {
   LOG_INFO("Done reading ways to edges file");
 
   // Get Valhalla tiles
-  valhalla::baldr::TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  valhalla::baldr::TileFsHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
@@ -238,7 +239,7 @@ int main(int argc, char** argv) {
   // Iterate through the way Ids
   uint8_t speed;
   uint32_t stored_speeds = 0;
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphFsReader reader(pt.get_child("mjolnir"));
   for (auto way : way_speeds) {
     uint32_t wayid   = way.first;
     const WaySpeed& speeds = way.second;

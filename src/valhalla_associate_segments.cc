@@ -1,5 +1,6 @@
 #include "midgard/logging.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/merge.h"
 #include "loki/search.h"
 #include "loki/node_search.h"
@@ -180,7 +181,7 @@ private:
   vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
   vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
 
-  vb::GraphReader m_reader;
+  vb::GraphFsReader m_reader;
   vs::TravelMode m_travel_mode;
   std::shared_ptr<vt::PathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
@@ -914,7 +915,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
                                std::mutex& lock) {
 
   //something so we can open up a tile builder
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
 
   while(true) {
     // Get leftovers from a tile
@@ -939,7 +940,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
 
 void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>& chunks,
                                std::mutex& lock) {
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   while(true) {
     // Get chunks
     lock.lock();

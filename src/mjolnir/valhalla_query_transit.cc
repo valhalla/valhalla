@@ -19,7 +19,8 @@
 #include <google/protobuf/io/coded_stream.h>
 
 #include "baldr/datetime.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
+#include "baldr/tilefshierarchy.h"
 #include "midgard/util.h"
 #include "midgard/logging.h"
 
@@ -394,7 +395,7 @@ int main(int argc, char *argv[]) {
 
   // Get the tile
   PointLL stopll(lng, lat);
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   auto local_level = hierarchy.levels().rbegin()->second.level;
   auto tiles = hierarchy.levels().rbegin()->second.tiles;
   uint32_t tileid = tiles.TileId(stopll);

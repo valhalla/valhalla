@@ -3,7 +3,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include <string>
 #include <vector>
 #include <fstream>
@@ -103,7 +103,7 @@ void TestDuplicateEdgeInfo() {
     throw std::runtime_error("Why on earth would it be found but then insert just fine");
 
   //load a test builder
-  test_graph_tile_builder test(TileHierarchy("test/data/builder_tiles"), GraphId(0,2,0), false);
+  test_graph_tile_builder test(TileFsHierarchy("test/data/builder_tiles"), GraphId(0,2,0), false);
   //add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0,2,0), GraphId(0,2,1), 1234, std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, added);
@@ -138,12 +138,12 @@ void TestAddBins() {
 
     //load a tile
     GraphId id(test_tile.second,2,0);
-    GraphTile t(TileHierarchy("test/data/bin_tiles/no_bin"), id);
+    GraphTile t(TileFsHierarchy("test/data/bin_tiles/no_bin"), id);
     if(!t.header())
       throw std::runtime_error("Couldn't load test tile");
 
     //alter the config to point to another dir
-    TileHierarchy h("test/data/bin_tiles/bin");
+    TileFsHierarchy h("test/data/bin_tiles/bin");
 
     //send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
@@ -184,7 +184,7 @@ void TestAddBins() {
       throw std::logic_error("New tiles edgeinfo or names arent matching up");
 
     //check that appending works
-    t = GraphTile(TileHierarchy("test/data/bin_tiles/bin"), id);
+    t = GraphTile(TileFsHierarchy("test/data/bin_tiles/bin"), id);
     GraphTileBuilder::AddBins(h, &t, bins);
     for(auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());

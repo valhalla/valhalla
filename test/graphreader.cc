@@ -1,6 +1,7 @@
 #include "test.h"
 
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/connectivity_map.h"
 
 #include <fcntl.h>
@@ -11,11 +12,11 @@ using namespace valhalla::baldr;
 
 namespace {
 
-class test_reader : public GraphReader {
+class test_reader : public GraphFsReader {
  public:
-  using GraphReader::GraphReader;
-  using GraphReader::cache_size_;
-  using GraphReader::max_cache_size_;
+  using GraphFsReader::GraphFsReader;
+  using GraphFsReader::cache_size_;
+  using GraphFsReader::max_cache_size_;
 };
 
 test_reader make_cache(std::string cache_size) {
@@ -34,7 +35,7 @@ test_reader make_cache(std::string cache_size) {
 void TestOutOfRangeLL() {
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
-  GraphReader reader(pt);
+  GraphFsReader reader(pt);
 
   // Latitude out of range
   if (reader.GetGraphTile({60.0f, 100.0f}) != nullptr)
@@ -69,7 +70,7 @@ void TestCacheLimits() {
     throw std::runtime_error("Cache should be over committed");
 }
 
-void touch_tile(const uint32_t tile_id, const TileHierarchy& tile_hierarchy) {
+void touch_tile(const uint32_t tile_id, const TileFsHierarchy& tile_hierarchy) {
   auto suffix = GraphTile::FileSuffix({tile_id, 2, 0}, tile_hierarchy);
   auto fullpath = tile_hierarchy.tile_dir() + '/' + suffix;
   boost::filesystem::create_directories(boost::filesystem::path(fullpath).parent_path());
@@ -82,7 +83,7 @@ void TestConnectivityMap() {
   //get the hierarchy to create some tiles
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
-  TileHierarchy th("test/gphrdr_test");
+  TileFsHierarchy th("test/gphrdr_test");
   const auto& level = th.levels().find(2)->second;
   boost::filesystem::remove_all(th.tile_dir());
 
@@ -118,7 +119,7 @@ void TestConnectivityMap() {
   touch_tile(d1, th);
 
   //check that it looks right
-  connectivity_map_t conn(pt);
+  connectivity_map_t conn(th.tile_storage(), pt);
   if(conn.get_color({a0, 2, 0}) != conn.get_color({a1, 2, 0}))
     throw std::runtime_error("a's should be connected");
   if(conn.get_color({a0, 2, 0}) != conn.get_color({a2, 2, 0}))

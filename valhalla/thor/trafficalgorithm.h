@@ -58,7 +58,7 @@ protected:
    * Get address of the real-time speed table for the specified tile.
    * Loads the speeds if they are not yet loaded.
    */
-  std::vector<uint8_t>& GetRealTimeSpeeds(const uint32_t tileid,
+  std::vector<uint8_t>& GetRealTimeSpeeds(const baldr::GraphId& graphid,
                                           baldr::GraphReader& graphreader);
 };
 
