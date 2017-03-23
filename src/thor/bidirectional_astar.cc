@@ -76,15 +76,20 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  float mincost = astarheuristic_forward_.Get(origll);
-  adjacencylist_forward_.reset(new DoubleBucketQueue(mincost, range, bucketsize,
+  float mincostf  = astarheuristic_forward_.Get(origll);
+  adjacencylist_forward_.reset(new DoubleBucketQueue(mincostf, range, bucketsize,
                                                  forward_edgecost));
   edgestatus_forward_.reset(new EdgeStatus());
 
-  mincost = astarheuristic_reverse_.Get(destll);
-  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincost, range, bucketsize,
+  float mincostr = astarheuristic_reverse_.Get(destll);
+  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincostr, range, bucketsize,
                                                  reverse_edgecost));
   edgestatus_reverse_.reset(new EdgeStatus());
+
+  // Set the cost diff between forward and reverse searches (due to distance
+  // approximator differences). This is used to "even" the forward and reverse
+  // searches.
+  cost_diff_ = mincostf - mincostr;
 
   // Initialize best connection with max cost
   best_connection_ = { GraphId(), GraphId(),
@@ -407,7 +412,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     }
 
     // Expand from the search direction with lower sort cost.
-    if (pred.sortcost() < pred2.sortcost()) {
+    if ((pred.sortcost() + cost_diff_) < pred2.sortcost()) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
