@@ -105,12 +105,6 @@ class BucketQueue
     }
   }
 
-  float cost(const key_t& key) const
-  {
-    const auto it = costmap_.find(key);
-    return it == costmap_.end()? -1.f : it->second;
-  }
-
   key_t pop()
   {
     if (empty()) {
