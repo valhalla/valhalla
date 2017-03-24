@@ -166,7 +166,12 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      CheckIfLowerCostPathForward(edgestatus.index(), pred_idx, newcost, tc);
+      EdgeLabel& lab = edgelabels_forward_[edgestatus.index()];
+      if (newcost.cost <  lab.cost().cost) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjacencylist_forward_->decrease(edgestatus.index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, tc);
+      }
       continue;
     }
 
@@ -286,9 +291,13 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (edgestatus.set() != EdgeSet::kUnreached) {
-      CheckIfLowerCostPathReverse(edgestatus.index(), pred_idx,
-                               newcost, tc);
+    if (edgestatus.set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels_reverse_[edgestatus.index()];
+      if (newcost.cost < lab.cost().cost ) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjacencylist_reverse_->decrease(edgestatus.index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, tc);
+      }
       continue;
     }
 
@@ -493,39 +502,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     }
   }
   return {};    // If we are here the route failed
-}
-
-// Check if edge is temporarily labeled and this path has less cost. If
-// less cost the predecessor is updated and the sort cost is decremented
-// by the difference in real cost (A* heuristic doesn't change)
-void BidirectionalAStar::CheckIfLowerCostPathForward(const uint32_t idx,
-                                         const uint32_t predindex,
-                                         const Cost& newcost,
-                                         const Cost& tc) {
-  float dc = edgelabels_forward_[idx].cost().cost - newcost.cost;
-  if (dc > 0) {
-    float oldsortcost = edgelabels_forward_[idx].sortcost();
-    float newsortcost = oldsortcost - dc;
-    edgelabels_forward_[idx].Update(predindex, newcost, newsortcost, tc);
-    adjacencylist_forward_->decrease(idx, newsortcost, oldsortcost);
-  }
-}
-
-// Check if edge is temporarily labeled and this path has less cost. If
-// less cost the predecessor is updated and the sort cost is decremented
-// by the difference in real cost (A* heuristic doesn't change). This is
-// done for the reverse search.
-void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
-                                         const uint32_t predindex,
-                                         const Cost& newcost,
-                                         const Cost& tc) {
-  float dc = edgelabels_reverse_[idx].cost().cost - newcost.cost;
-  if (dc > 0) {
-    float oldsortcost = edgelabels_reverse_[idx].sortcost();
-    float newsortcost = oldsortcost - dc;
-    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost, tc);
-    adjacencylist_reverse_->decrease(idx, newsortcost, oldsortcost);
-  }
 }
 
 // The edge on the forward search connects to a reached edge on the reverse
