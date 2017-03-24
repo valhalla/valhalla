@@ -31,41 +31,43 @@ namespace valhalla {
         throw valhalla_exception_t{400, 152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
-        const int c = GetOptionalFromRapidJson<int>(contour, "/time").get_value_or(-1);
-        if(c < prev || c == -1)
-          throw valhalla_exception_t{400, 111};
-        if(c > max_time)
-          throw valhalla_exception_t{400, 151, std::to_string(max_time)};
-        prev = c;
+        if (contour.HasMember("time")) {
+          const int c = contour["time"].IsFloat() ?  GetOptionalFromRapidJson<float>(contour, "/time").get_value_or(-1) : GetOptionalFromRapidJson<int>(contour, "/time").get_value_or(-1);
+
+          if(c < prev || c == -1)
+            throw valhalla_exception_t{400, 111};
+          if(c > max_time)
+            throw valhalla_exception_t{400, 151, std::to_string(max_time)};
+          prev = c;
+        }
       }
       parse_costing(request);
     }
-
     worker_t::result_t loki_worker_t::isochrones(rapidjson::Document& request, http_request_info_t& request_info) {
       init_isochrones(request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
         throw valhalla_exception_t{400, 150, std::to_string(max_locations.find("isochrone")->second)};
 
-      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing").get_value_or("");
-      auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type");
-
       auto& allocator = request.GetAllocator();
-      //default to current date_time for mm or transit.
-      if (! date_type && (costing == "multimodal" || costing == "transit")) {
-        rapidjson::SetValueByPointer(request, "/date_time/type", 0);
-        date_type = 0;
-      }
+      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing").get_value_or("");
+      if (request.HasMember("date_time")) {
+        auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type").get_value_or(-1);
 
-      //check the date stuff
-      auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
-      if (date_type) {
+        //default to current date_time for mm or transit.
+        if (! date_type && (costing == "multimodal" || costing == "transit")) {
+          rapidjson::SetValueByPointer(request, "/date_time/type", 0);
+          date_type = 0;
+        }
+
+        //check the date stuff
+        auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
         //not yet on this
-        if(! date_type || *date_type == 2) {
+        if(! date_type || date_type == 2) {
           jsonify_error({501, 142}, request_info);
         }
         //what kind
-        switch(*date_type) {
+        switch(date_type) {
         case 0: //current
           rapidjson::GetValueByPointer(request, "/locations/0")->AddMember("date_time", "current", allocator);
           break;
