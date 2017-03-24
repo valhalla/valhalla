@@ -50,21 +50,23 @@ void DoubleBucketQueue::clear() {
   currentbucket_ = buckets_.begin();
 }
 
-// The specified label now has a smaller cost.  Reorders it in the sorted list
-// TODO - could use labelcost_ functor and remove previouscost - but this
-// requires all code that decreases cost call decrease before
-// updating the label.
-void DoubleBucketQueue::decrease(const uint32_t label, const float newcost,
-                                 const float previouscost) {
+// The specified label now has a smaller cost. Reorders it in the sorted list.
+// Uses the labelcost_ function to get the bucket that the label is currently
+// within.
+void DoubleBucketQueue::decrease(const uint32_t label, const float newcost) {
   // Get the buckets of the previous and new costs. Nothing needs to be done
   // if old cost and the new cost are in the same buckets.
-  bucket_t& prevbucket = get_bucket(previouscost);
+  bucket_t& prevbucket = get_bucket(labelcost_(label));
   bucket_t& newbucket  = get_bucket(newcost);
   if (prevbucket != newbucket) {
     // Add label to newbucket and remove from previous bucket
     newbucket.push_back(label);
-    auto old_label = std::find(prevbucket.begin(), prevbucket.end(), label);
-    prevbucket.erase(old_label);
+    for (auto it = prevbucket.begin(); it != prevbucket.end(); ++it) {
+      if (*it == label) {
+        prevbucket.erase(it);
+        return;
+      }
+    }
   }
 }
 

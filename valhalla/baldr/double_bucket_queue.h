@@ -65,13 +65,12 @@ class DoubleBucketQueue {
 
   /**
    * The specified label index now has a smaller cost.  Reorders it in the
-   * sorted bucket list.
+   * sorted bucket list. Uses the labelcost_ function to get the bucket that
+   * the label is currently within.
    * @param  label        Label index to reorder.
    * @param  newcost      New sort cost.
-   * @param  previouscost Previous cost.
    */
-  void decrease(const uint32_t label, const float newcost,
-                const float previouscost);
+  void decrease(const uint32_t label, const float newcost);
 
   /**
    * Removes the lowest cost label index from the sorted buckets.
