@@ -316,7 +316,7 @@ namespace valhalla {
             break;
           case TRACE_ATTRIBUTES:
           case TRACE_ROUTE:
-            result = trace_route(request_rj, info);
+            result = trace_route(action->second, request_rj, info);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
