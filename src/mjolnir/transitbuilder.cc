@@ -1,6 +1,5 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "proto/transit.pb.h"
 
 #include <list>
 #include <future>
@@ -19,8 +18,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include <google/protobuf/io/coded_stream.h>
 
 #include "baldr/datetime.h"
 #include "baldr/graphtile.h"
@@ -76,9 +73,7 @@ struct builder_stats {
   }
 };
 
-// Converts a stop's pbf graph Id to a Valhalla graph Id by adding the
-// tile's node count. Returns an Invalid GraphId if the tile is not found
-// in the list of Valhalla tiles
+// Converts a transit stop GraphId on local level to be on the transit level
 GraphId GetGraphId(const GraphId& nodeid,
                    const std::unordered_set<GraphId>& tiles) {
   auto t = tiles.find(nodeid.Tile_Base());
@@ -93,7 +88,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                 const TileHierarchy& hierarchy_local,
                 GraphTileBuilder& tilebuilder_transit,
                 const TileHierarchy& hierarchy_transit,
-                const std::string& transit_dir,
                 const GraphTile* tile,
                 GraphReader& reader_transit_level,
                 std::mutex& lock,
@@ -171,7 +165,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
            connection_edges[added_edges].osm_node.id() == nodeid) {
       const OSMConnectionEdge& conn = connection_edges[added_edges];
 
-      // Add the tile's node count to the pbf Graph Id
+      // Get the transit node Graph Id
       GraphId endnode = GetGraphId(conn.stop_node, tiles);
       if (!endnode.Is_Valid()) {
         continue;
@@ -425,14 +419,17 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
 }
 
 // Add connection edges from the transit stop to an OSM edge
-void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
+void AddOSMConnection(const GraphId& transit_stop_node,
+                      const NodeInfo* transit_node,
+                      const std::string& stop_name,
+                      const GraphTile* tile,
                       GraphReader& reader_local_level,
                       const TileHierarchy& tilehierarchy,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
 
-  PointLL stop_ll = {stop.lon(), stop.lat() };
-  uint64_t wayid = stop.osm_way_id();
+  PointLL stop_ll = transit_node->latlng();
+  uint64_t wayid = transit_node->connecting_wayid();
 
   float mindist = 10000000.0f;
   uint32_t edgelength = 0;
@@ -483,7 +480,8 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
     // Check for invalid tile Ids...are we still no good?
     if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
       const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
-      LOG_ERROR("No closest edge found for this stop: " + stop.name() + " way Id = " +
+
+      LOG_ERROR("No closest edge found for this stop: " + stop_name + " way Id = " +
                 std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
                 std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) +
                 ", " + std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) +
@@ -498,8 +496,7 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
   // Check if stop is in same tile as the start node
   uint32_t conn_count = 0;
   float length = 0.0f;
-  GraphId stop_pbf_graphid = GraphId(stop.graphid());
-  if (stop_pbf_graphid.Tile_Base() == startnode.Tile_Base()) {
+  if (transit_stop_node.Tile_Base() == startnode.Tile_Base()) {
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
     std::list<PointLL> shape;
@@ -511,14 +508,14 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
     length = std::max(1.0f, valhalla::midgard::length(shape));
 
     // Add connection to start node
-    connection_edges.push_back({startnode, stop_pbf_graphid, length,
+    connection_edges.push_back({startnode, transit_stop_node, length,
                                 wayid, names, shape});
     conn_count++;
   }
 
   // Check if stop is in same tile as end node
   float length2 = 0.0f;
-  if (stop_pbf_graphid.Tile_Base() == endnode.Tile_Base()) {
+  if (transit_stop_node.Tile_Base() == endnode.Tile_Base()) {
     // Add connection to end node
     if (startnode.tileid() == endnode.tileid()) {
       // Add shape from the end to closest point on edge
@@ -531,7 +528,7 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
       length2 = std::max(1.0f, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
-      connection_edges.push_back({endnode, stop_pbf_graphid, length2,
+      connection_edges.push_back({endnode, transit_stop_node, length2,
                                   wayid, names, shape2});
       conn_count++;
     }
@@ -541,13 +538,12 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
   if (length != 0.0f && length2 != 0.0 && (length + length2) < edgelength-1) {
     LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
              std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop "
-             + stop.name());
+             + stop_name);
   }
   if (conn_count == 0) {
-    LOG_ERROR("Stop " + stop.name() + " has no connections to OSM! Stop TileId = " +
-              std::to_string(stop_pbf_graphid.tileid()) + " Start Node Tile: " +
-              std::to_string(startnode.tileid()) + " End Node Tile: " +
-              std::to_string(endnode.tileid()));
+    LOG_ERROR("Stop " + stop_name + " has no connections to OSM!" +
+              " Start Node Tile: " + std::to_string(startnode.tileid()) +
+              " End Node Tile: " + std::to_string(endnode.tileid()));
   }
 }
 
@@ -577,34 +573,6 @@ void build(const std::string& transit_dir,
 
     GraphId tile_id = tile_start->Tile_Base();
 
-    // Get transit pbf tile
-    std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), hierarchy_local_level);
-    boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
-    file_name += ".pbf";
-    const std::string file = transit_dir + file_name;
-
-    // Make sure it exists
-    if (!boost::filesystem::exists(file)) {
-      LOG_ERROR("File not found.  " + file);
-      return;
-    }
-
-    Transit transit; {
-      std::fstream input(file, std::ios::in | std::ios::binary);
-      if (!input) {
-        LOG_ERROR("Error opening file:  " + file);
-        return;
-      }
-      std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-      google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
-      google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
-      cs.SetTotalBytesLimit(buffer.size() * 2, buffer.size() * 2);
-      if (!transit.ParseFromCodedStream(&cs)) {
-        LOG_ERROR("Failed to parse file: " + file);
-        return;
-      }
-    }
-
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
@@ -617,6 +585,7 @@ void build(const std::string& transit_dir,
 
     lock.unlock();
 
+    // Iterate through all the transit tiles and form connections from
     // Iterate through stops and form connections to OSM network. Each
     // stop connects to 1 or 2 OSM nodes along the closest OSM way.
     // TODO - future - how to handle connections that reach nodes
@@ -624,19 +593,24 @@ void build(const std::string& transit_dir,
     // iteration...?
     // TODO - handle a list of connections/egrees points
     // TODO - what if we split the edge and insert a node?
+    GraphId transit_stop_node(tile_id.tileid(), tile_id.level(), 0);
     std::vector<OSMConnectionEdge> connection_edges;
     std::unordered_multimap<GraphId, GraphId> children;
-    for (uint32_t i = 0; i < transit.stops_size(); i++) {
-      const Transit_Stop& stop = transit.stops(i);
+    for (uint32_t i = 0; i < transit_tile->header()->nodecount(); i++, transit_stop_node++) {
+      const NodeInfo* transit_stop = transit_tile->node(i);
+
+      auto ts = transit_tile->GetTransitStop(transit_stop->stop_index());
+      std::string stop_name = transit_tile->GetName(ts->name_offset());
 
       // Form connections to the stop
-      // TODO - deal with hierarchy (only connect egress locations)
-      AddOSMConnection(stop, local_tile, reader_local_level,
-                       hierarchy_local_level, lock, connection_edges);
+      // TODO - deal with station hierarchy (only connect egress locations)
+      AddOSMConnection(transit_stop_node, transit_stop, stop_name, local_tile,
+                       reader_local_level, hierarchy_local_level, lock,
+                       connection_edges);
 
       /** TODO - parent/child relationships
       if (stop.type == 0 && stop.parent.Is_Valid()) {
-        children.emplace(stop.parent, stop.pbf_graphid);
+        children.emplace(stop.parent, transit_stop_node);
       }       **/
     }
 
@@ -649,7 +623,7 @@ void build(const std::string& transit_dir,
 
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, hierarchy_local_level, tilebuilder_transit,
-                   hierarchy_transit_level, transit_dir, local_tile, reader_transit_level,
+                   hierarchy_transit_level, local_tile, reader_transit_level,
                    lock, tiles, connection_edges);
 
     // Write the new file
@@ -681,7 +655,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
-  // Also bail if nothing inside
+
+  // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back('/');
   GraphReader reader(hierarchy_properties);
   const auto& hierarchy = reader.GetTileHierarchy();
@@ -706,6 +681,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       }
     }
   }
+
+  // Bail if no matching tiles
   if (!tiles.size()) {
     LOG_INFO("No transit tiles found. Transit will not be added.");
     return;
