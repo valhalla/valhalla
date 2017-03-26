@@ -109,8 +109,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
   costs.push_back(10.f);
   dbqueue.add(idx, 10.f);
 
-  size_t i = 0;
-  for (; i < loop_count; i++) {
+  for (size_t i = 0; i < loop_count; i++) {
     const auto key = dbqueue.pop();
     if (key == kInvalidLabel) {
       break;
@@ -148,7 +147,6 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
     }
   }
 
-  std::cout << i << std::endl;
   TryRemove(dbqueue, addedLabels.size(), costs);
 }
 
