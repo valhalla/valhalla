@@ -30,8 +30,7 @@ inline typename std::enable_if<!std::is_arithmetic<T>::value, boost::optional<T>
   if(!ptr)
     return boost::none;
   //if its the exact right type give it back
-  //or you want a number but is not quite the same type then convert
-  if(ptr->template Is<T>() || (std::is_arithmetic<T>::value && ptr->IsNumber()))
+  if(ptr->template Is<T>())
     return ptr->template Get<T>();
   //give up
   return boost::none;
@@ -45,14 +44,26 @@ inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> 
   if(!ptr)
     return boost::none;
   //if its the exact right type give it back
-  //or you want a number but is not quite the same type then convert
-  if(ptr->template Is<T>() || (std::is_arithmetic<T>::value && ptr->IsNumber()))
+  if(ptr->template Is<T>())
     return ptr->template Get<T>();
-  //finally, try to convert from a string
+  //try to convert from a string
   if(ptr->IsString()) {
     try { return boost::lexical_cast<T>(ptr->template Get<std::string>()); }
     catch (...) { }
   }
+  //numbers are strict in rapidjson but we don't want that strictness because it aborts the program (wtf?)
+  if(ptr->IsBool())
+    return static_cast<T>(ptr->GetBool());
+  if(ptr->IsInt())
+    return static_cast<T>(ptr->GetInt());
+  if(ptr->IsUint())
+    return static_cast<T>(ptr->GetUint());
+  if(ptr->IsInt64())
+      return static_cast<T>(ptr->GetInt64());
+  if(ptr->IsUint64())
+    return static_cast<T>(ptr->GetUint64());
+  if(ptr->IsDouble())
+    return static_cast<T>(ptr->GetDouble());
   //give up
   return boost::none;
 }
