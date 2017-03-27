@@ -61,12 +61,7 @@ void DoubleBucketQueue::decrease(const uint32_t label, const float newcost) {
   if (prevbucket != newbucket) {
     // Add label to newbucket and remove from previous bucket
     newbucket.push_back(label);
-    for (auto it = prevbucket.begin(); it != prevbucket.end(); ++it) {
-      if (*it == label) {
-        prevbucket.erase(it);
-        return;
-      }
-    }
+    prevbucket.erase(std::remove(prevbucket.begin(), prevbucket.end(), label));
   }
 }
 
