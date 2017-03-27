@@ -81,7 +81,7 @@ class thor_worker_t {
       const std::string &request_str);
   std::list<valhalla::odin::TripPath> path_depart_at(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
-      const boost::optional<int> &date_time_type,
+      const boost::optional<float> &date_time_type,
       const std::string &request_str);
 
   void parse_locations(const boost::property_tree::ptree& request);
@@ -93,7 +93,7 @@ class thor_worker_t {
   prime_server::worker_t::result_t route(
       const boost::property_tree::ptree& request,
       const std::string &request_str,
-      const boost::optional<int> &date_time_type, const bool header_dnt);
+      const boost::optional<float> &date_time_type, const bool header_dnt);
   prime_server::worker_t::result_t matrix(
       ACTION_TYPE matrix_type, const boost::property_tree::ptree &request,
       prime_server::http_request_info_t& request_info);
@@ -127,7 +127,7 @@ class thor_worker_t {
   Isochrone isochrone_gen;
   float long_request;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
-  boost::optional<int> date_time_type;
+  boost::optional<float> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
   valhalla::baldr::GraphReader& reader;
   std::unordered_set<std::string> trace_customizable;

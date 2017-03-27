@@ -170,7 +170,7 @@ namespace valhalla {
             return isochrone(request, info);
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, request.get_optional<int>("date_time.type"), info.spare);
+            return route(request, request_str, request.get_optional<float>("date_time.type"), info.spare);
           case TRACE_ROUTE:
             return trace_route(request, request_str, info.spare);
           case TRACE_ATTRIBUTES:
@@ -250,14 +250,14 @@ namespace valhalla {
         throw valhalla_exception_t{400, 410};
 
       //type - 0: current, 1: depart, 2: arrive
-      auto date_time_type = request.get_optional<int>("date_time.type");
+      auto date_time_type = request.get_optional<float>("date_time.type");
       auto date_time_value = request.get_optional<std::string>("date_time.value");
 
-      if (date_time_type == 0) //current.
+      if (static_cast<int>(*date_time_type) == 0) //current.
         locations.front().date_time_ = "current";
-      else if (date_time_type == 1) //depart at
+      else if (static_cast<int>(*date_time_type) == 1) //depart at
         locations.front().date_time_ = date_time_value;
-      else if (date_time_type == 2) //arrive)
+      else if (static_cast<int>(*date_time_type) == 2) //arrive)
         locations.back().date_time_ = date_time_value;
     }
 
