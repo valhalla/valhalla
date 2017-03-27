@@ -174,8 +174,7 @@ void test_from_json() {
 
     // Test country, way_id, and date_time.
     loc = Location::FromJson(
-        make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code, country, way_id, date_time),
-        m);
+        make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code, country, way_id, date_time), m);
     if ((loc.country_ != country))
       throw std::runtime_error("Json location parsing failed: Test country, way_id, and date_time country" );
     if (*loc.way_id_ != way_id)
@@ -189,12 +188,10 @@ void test_from_json() {
     if ((loc.stoptype_ != Location::StopType::BREAK))
       throw std::runtime_error("Json location parsing failed: Test wrong thing is always break");
 
-
     // Test everything
     loc = Location::FromJson(
         make_json(lat, lng, type_default, heading, name, street, city, state,
-                   postal_code, country,boost::none, date_time),
-                   m);
+                   postal_code, country,boost::none, date_time), m);
     if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat)
         || !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng)
         || (loc.stoptype_ != Location::StopType::BREAK)
@@ -207,6 +204,16 @@ void test_from_json() {
         || (loc.country_ != country)
         || (loc.date_time_ != date_time))
       throw std::runtime_error("Json location parsing failed: Test everything");
+
+    // Test large way_id
+    loc = Location::FromJson(R"({"lat":0,"lon":0,"way_id":18446744073709551614})", m);
+    if(*loc.way_id_ != 18446744073709551614ULL)
+      throw std::runtime_error("Wrong way id");
+
+    // Test floating point heading
+    loc = Location::FromJson(R"({"lat":0,"lon":0,"heading":37.1})", m);
+    if(*loc.heading_ != 37)
+      throw std::runtime_error("Wrong heading");
   }
 
 }
