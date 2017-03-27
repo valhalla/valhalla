@@ -238,9 +238,9 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       auto next = segment->begin_percent_ == left->edge_distance ? left : std::next(left);
       if(segment->starts_segment_ && left->epoch_time != -1 && next->epoch_time != -1) {
         float start_diff = next->edge_distance - left->edge_distance;
-        float coef = start_diff > 0.f ? (segment->begin_percent_ - left->edge_distance) / start_diff : 0.f;
-        start_length = (1.f - coef) * left->total_distance + coef * next->total_distance;
-        start_time = (1.f - coef) * left->epoch_time + coef * next->epoch_time;
+        float ratio = start_diff > 0.f ? (segment->begin_percent_ - left->edge_distance) / start_diff : 0.f;
+        start_length = left->total_distance + (next->total_distance - left->total_distance) * ratio;
+        start_time = left->epoch_time + (next->epoch_time - left->epoch_time) * ratio;
       }
 
       //move the right marker right until its adjacent to the segment end
@@ -254,9 +254,9 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
       if(segment->ends_segment_ && prev->epoch_time != -1 && right->epoch_time != -1) {
         float end_diff = right->edge_distance - prev->edge_distance;
-        float coef = end_diff > 0.f ? (segment->end_percent_ - prev->edge_distance) / end_diff : 0.f;
-        end_length = (1.f - coef) * prev->total_distance + coef * right->total_distance;
-        end_time = (1.f - coef) * prev->epoch_time + coef * right->epoch_time;
+        float ratio = end_diff > 0.f ? (segment->end_percent_ - prev->edge_distance) / end_diff : 0.f;
+        end_length = prev->total_distance + (right->total_distance - prev->total_distance) * ratio;
+        end_time = prev->epoch_time + (right->epoch_time - prev->epoch_time) * ratio;
       }
 
       //if we didnt have a start or end time then we are past where we had interpolations
