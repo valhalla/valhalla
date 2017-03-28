@@ -76,7 +76,7 @@ config = {
       'sigma_z': 4.07,
       'gps_accuracy': 5.0,
       'beta': 3,
-      'max_route_distance_factor': 3,
+      'max_route_distance_factor': 5,
       'breakage_distance': 2000,
       'interpolation_distance': 10,
       'search_radius': 50,
@@ -183,8 +183,8 @@ config = {
       'max_locations': 1
     },
     'trace': {
-      'max_distance': 162500.0,
-      'max_shape': 8000
+      'max_distance': 200000.0,
+      'max_shape': 16000
     },
     'max_avoid_locations': 50    
   }

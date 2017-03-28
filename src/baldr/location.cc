@@ -144,9 +144,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
   Location location{{*lon,*lat}, stop_type};
 
   location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
-
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
-
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
   if (auto name = GetOptionalFromRapidJson<std::string>(d, "/name"))
