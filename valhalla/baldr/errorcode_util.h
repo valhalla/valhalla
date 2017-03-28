@@ -208,6 +208,9 @@ namespace baldr {
       status_code_body = code_itr == kHttpStatusCodes.cend() ? "" : code_itr->second;
 
     }
+    const char* what() const noexcept override {
+      return error_code_message.c_str();
+    }
     unsigned error_code;
     unsigned status_code;
     std::string error_code_message;

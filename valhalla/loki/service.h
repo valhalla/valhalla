@@ -47,7 +47,7 @@ namespace valhalla {
       prime_server::worker_t::result_t route(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
       prime_server::worker_t::result_t matrix(ACTION_TYPE action,rapidjson::Document& request, prime_server::http_request_info_t& request_info);
       prime_server::worker_t::result_t isochrones(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t trace_route(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
+      prime_server::worker_t::result_t trace_route(ACTION_TYPE action,rapidjson::Document& request, prime_server::http_request_info_t& request_info);
 
       boost::property_tree::ptree config;
       boost::optional<std::string> jsonp;

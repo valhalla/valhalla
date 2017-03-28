@@ -81,6 +81,7 @@ class BidirectionalAStar : public PathAlgorithm {
   std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
 
   // A* heuristic
+  float cost_diff_;
   AStarHeuristic astarheuristic_forward_;
   AStarHeuristic astarheuristic_reverse_;
 
@@ -115,7 +116,7 @@ class BidirectionalAStar : public PathAlgorithm {
   void ExpandForward(baldr::GraphReader& graphreader,
            const baldr::GraphTile* tile,
            const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
-           sif::EdgeLabel& pred, const uint32_t pred_idx,
+           const sif::EdgeLabel& pred, const uint32_t pred_idx,
            const bool from_transition);
 
   /**
@@ -124,7 +125,7 @@ class BidirectionalAStar : public PathAlgorithm {
   void ExpandReverse(baldr::GraphReader& graphreader,
            const baldr::GraphTile* tile,
            const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
-           sif::EdgeLabel& pred, const uint32_t pred_idx,
+           const sif::EdgeLabel& pred, const uint32_t pred_idx,
            const baldr::DirectedEdge* opp_pred_edge,
            const bool from_transition);
 

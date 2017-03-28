@@ -49,24 +49,20 @@ namespace {
 
   rapidjson::Document from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
     rapidjson::Document d;
-
     auto& allocator = d.GetAllocator();
     //parse the input
     const auto& json = request.query.find("json");
-    if (json != request.query.end() && json->second.size()
-      && json->second.front().size()) {
+    if (json != request.query.end() && json->second.size() && json->second.front().size())
       d.Parse(json->second.front().c_str());
-    }//no json parameter, check the body
-    else if(!request.body.empty()) {
+    //no json parameter, check the body
+    else if(!request.body.empty())
       d.Parse(request.body.c_str());
-    }
+    //no json at all
+    else
+      d.SetObject();
+    //if parsing failed
     if (d.HasParseError())
       throw valhalla_exception_t{400, 100};
-
-    // In case where the query is empty
-    if (!d.IsObject() && !d.IsArray()){
-      d.SetObject(); d.SetArray();
-    }
 
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
@@ -321,7 +317,7 @@ namespace valhalla {
             break;
           case TRACE_ATTRIBUTES:
           case TRACE_ROUTE:
-            result = trace_route(request_rj, info);
+            result = trace_route(action->second, request_rj, info);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet

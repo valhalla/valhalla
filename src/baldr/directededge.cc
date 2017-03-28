@@ -546,6 +546,7 @@ json::MapPtr DirectedEdge::json() const {
   return json::map({
     {"end_node", endnode().json()},
     {"speed", static_cast<uint64_t>(speed_)},
+    {"speed_limit", static_cast<uint64_t>(speed_limit_)},
     //{"opp_index", static_cast<bool>(opp_index_)},
     //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
     //{"restrictions", restrictions_},
@@ -585,15 +586,15 @@ json::MapPtr DirectedEdge::json() const {
       {"link", static_cast<bool>(link_)},
       {"internal", static_cast<bool>(internal_)},
     })},
-    //{"hierarchy", json::map({
-    //  {"", localedgeidx_},
-    //  {"", opp_local_idx_},
-    //  {"", shortcut_},
-    //  {"", superseded_},
-    //  {"", trans_up_},
-    //  {"", trans_down_},
-    //  {"", is_shortcut_},
-    //})},
+    /*{"hierarchy", json::map({
+      {"local_edge_index", static_cast<uint64_t>(localedgeidx_)},
+      {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
+      {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
+      {"superseded_mask", static_cast<uint64_t>(superseded_)},
+      {"transition_up", use() == Use::kTransitionUp},
+      {"transition_down", use() == Use::kTransitionDown},
+      {"shortcut", static_cast<bool>(is_shortcut_)},
+    })},*/
   });
 }
 

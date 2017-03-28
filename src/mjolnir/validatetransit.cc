@@ -478,7 +478,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     return false;
   }
 
-  LOG_INFO("Success!  There were " + std::to_string(failure_count) + " failures.");
+  LOG_INFO("Success!  Validation tests passed.");
   return true;
 
 }

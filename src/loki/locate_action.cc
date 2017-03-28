@@ -24,21 +24,24 @@ namespace {
         auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
         //they want MOAR!
         if(verbose) {
-          array->emplace_back(
-            json::map({
-              {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-              {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
-              {"side_of_street",
-                edge.sos == PathLocation::LEFT ? std::string("left") :
-                  (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
-              },
-              {"percent_along", json::fp_t{edge.dist, 5} },
-              {"score", json::fp_t{edge.score, 1}},
-              {"edge_id", edge.id.json()},
-              {"edge", directed_edge->json()},
-              {"edge_info", edge_info.json()},
-            })
-          );
+          auto segments = tile->GetTrafficSegments(edge.id);
+          auto segments_array = json::array({});
+          for(const auto& segment : segments)
+            segments_array->emplace_back(segment.json());
+          array->emplace_back(json::map({
+            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
+            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+            {"side_of_street",
+              edge.sos == PathLocation::LEFT ? std::string("left") :
+                (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
+            },
+            {"percent_along", json::fp_t{edge.dist, 5} },
+            {"score", json::fp_t{edge.score, 1}},
+            {"edge_id", edge.id.json()},
+            {"edge", directed_edge->json()},
+            {"edge_info", edge_info.json()},
+            {"traffic_segments", segments_array},
+          }));
         }//they want it lean and mean
         else {
           array->emplace_back(
