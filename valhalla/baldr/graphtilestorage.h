@@ -25,6 +25,12 @@ class GraphTileStorage {
   virtual ~GraphTileStorage() = default;
 
   /**
+   * Gets the average (uncompressed) tile size.
+   * This is used to configure tile cache size.
+   */
+  virtual size_t GetAverageTileSize() const = 0;
+
+  /**
    * Gets the list of all tile ids available given tile hierarchy.
    * @param  tile_hierarchy The tile hierachy to use.
    * @return Returns the list of all available tile ids.

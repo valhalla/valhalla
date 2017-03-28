@@ -19,6 +19,9 @@
 #include <boost/iostreams/copy.hpp>
 
 namespace {
+  constexpr size_t AVERAGE_TILE_SIZE = 2097152; //2 megs
+  constexpr size_t AVERAGE_MM_TILE_SIZE = 1024; //1k
+
   struct dir_facet : public std::numpunct<char> {
    protected:
     virtual char do_thousands_sep() const {
@@ -90,6 +93,14 @@ std::shared_ptr<const GraphTileFsStorage::tile_extract_t> GraphTileFsStorage::ge
 GraphTileFsStorage::GraphTileFsStorage(const boost::property_tree::ptree& pt)
     : tile_dir_(pt.get<std::string>("tile_dir")),
       tile_extract_(get_extract_instance(pt)) {
+}
+
+size_t GraphTileFsStorage::GetAverageTileSize() const {
+  if (tile_extract_->tiles.size()) {
+    return AVERAGE_MM_TILE_SIZE;
+  } else {
+    return AVERAGE_TILE_SIZE;
+  }
 }
 
 std::unordered_set<GraphId> GraphTileFsStorage::FindTiles(const TileHierarchy& tile_hierarchy) const {

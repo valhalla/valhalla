@@ -26,6 +26,12 @@ class GraphTileFsStorage : public GraphTileStorage {
   ~GraphTileFsStorage() = default;
 
   /**
+   * Gets the average (uncompressed) tile size.
+   * This is used to configure tile cache size.
+   */
+  size_t GetAverageTileSize() const override;
+
+  /**
    * Gets the list of all tile ids available given tile hierarchy.
    * @param  tile_hierarchy The tile hierachy to use.
    * @return Returns the list of all available tile ids.

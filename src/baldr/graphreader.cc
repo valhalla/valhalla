@@ -11,8 +11,6 @@ using namespace valhalla::baldr;
 
 namespace {
   constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
-  constexpr size_t AVERAGE_TILE_SIZE = 2097152; //2 megs
-  constexpr size_t AVERAGE_MM_TILE_SIZE = 1024; //1k
 }
 
 namespace valhalla {
@@ -172,7 +170,7 @@ GraphReader::GraphReader(const std::shared_ptr<GraphTileStorage>& tile_storage, 
     : tile_hierarchy_(tile_storage),
       cache_(TileCacheFactory::createTileCache(pt)) {
   // Reserve cache
-  cache_->Reserve(AVERAGE_TILE_SIZE);
+  cache_->Reserve(tile_storage->GetAverageTileSize());
 }
 
 // Method to test if tile exists
