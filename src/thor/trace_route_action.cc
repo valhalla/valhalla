@@ -110,7 +110,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
   //log request if greater than X (ms)
   if (!healthcheck && !header_dnt
-      && (elapsed_time.count() / correlated.size()) > long_request) {
+      && (elapsed_time.count() / shape.size()) > (long_request / 2200)) {
     LOG_WARN(
         "thor::trace_route elapsed time (ms)::"
             + std::to_string(elapsed_time.count()));

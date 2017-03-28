@@ -294,7 +294,7 @@ namespace valhalla {
       if (!trace_options) {
         return;
       }
-      
+
       for (const auto& pair : *trace_options) {
         const auto& name = pair.first;
         const auto& values = pair.second.data();
