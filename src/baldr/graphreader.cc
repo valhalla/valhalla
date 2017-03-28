@@ -171,10 +171,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 GraphReader::GraphReader(const std::shared_ptr<GraphTileStorage>& tile_storage, const boost::property_tree::ptree& pt)
     : tile_hierarchy_(tile_storage),
       cache_(TileCacheFactory::createTileCache(pt)) {
-  // Reserve cache (based on whether using individual tile files or shared,
-  // Reserve cache (based on whether using individual tile files or shared,
-  // mmap'd file
-  cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
+  // Reserve cache
+  cache_->Reserve(AVERAGE_TILE_SIZE);
 }
 
 // Method to test if tile exists
