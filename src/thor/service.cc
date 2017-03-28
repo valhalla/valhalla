@@ -153,6 +153,9 @@ namespace valhalla {
         healthcheck = request.get<bool>("healthcheck", false);
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
+        boost::optional<int> date_time_type;
+        if (request.find("date_time.type") != request.not_found())
+          date_time_type = request.get<float>("date_time.type");
         // Allow the request to be aborted
         astar.set_interrupt(&interrupt);
         bidir_astar.set_interrupt(&interrupt);
@@ -170,7 +173,7 @@ namespace valhalla {
             return isochrone(request, info);
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, static_cast<int>(*request.get_optional<float>("date_time.type")), info.spare);
+            return route(request, request_str, date_time_type, info.spare);
           case TRACE_ROUTE:
             return trace_route(request, request_str, info.spare);
           case TRACE_ATTRIBUTES:
@@ -250,14 +253,17 @@ namespace valhalla {
         throw valhalla_exception_t{400, 410};
 
       //type - 0: current, 1: depart, 2: arrive
-      auto date_time_type = request.get_optional<float>("date_time.type");
+      if (request.find("date_time.type") == request.not_found())
+        return;
+
+      int date_time_type = request.get<float>("date_time.type");
       auto date_time_value = request.get_optional<std::string>("date_time.value");
 
-      if (static_cast<int>(*date_time_type) == 0) //current.
+      if (date_time_type == 0) //current.
         locations.front().date_time_ = "current";
-      else if (static_cast<int>(*date_time_type) == 1) //depart at
+      else if (date_time_type == 1) //depart at
         locations.front().date_time_ = date_time_value;
-      else if (static_cast<int>(*date_time_type) == 2) //arrive)
+      else if (date_time_type == 2) //arrive)
         locations.back().date_time_ = date_time_value;
     }
 
