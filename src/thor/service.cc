@@ -170,7 +170,7 @@ namespace valhalla {
             return isochrone(request, info);
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, request.get_optional<float>("date_time.type"), info.spare);
+            return route(request, request_str, static_cast<int>(*request.get_optional<float>("date_time.type")), info.spare);
           case TRACE_ROUTE:
             return trace_route(request, request_str, info.spare);
           case TRACE_ATTRIBUTES:

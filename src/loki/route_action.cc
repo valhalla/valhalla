@@ -56,9 +56,9 @@ namespace valhalla {
 
       // Validate walking distances (make sure they are in the accepted range)
       if (*costing == "multimodal" || *costing == "transit") {
-        auto transit_start_end_max_distance = GetOptionalFromRapidJson<float>(request,
+        auto transit_start_end_max_distance = GetOptionalFromRapidJson<int>(request,
             "/costing_options/pedestrian/transit_start_end_max_distance").get_value_or(min_transit_walking_dis);
-        auto transit_transfer_max_distance = GetOptionalFromRapidJson<float>(request,
+        auto transit_transfer_max_distance = GetOptionalFromRapidJson<int>(request,
             "/costing_options/pedestrian/transit_transfer_max_distance").get_value_or(min_transit_walking_dis);
 
         if (transit_start_end_max_distance < min_transit_walking_dis || transit_start_end_max_distance > max_transit_walking_dis) {
@@ -78,13 +78,13 @@ namespace valhalla {
       auto& locations_array = request["locations"];
       //check the date stuff
       auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
-      if (auto date_type = GetOptionalFromRapidJson<float>(request, "/date_time/type")) {
+      if (boost::optional<int> date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type")) {
         //not yet on this
         if(*date_type == 2 && (*costing == "multimodal" || *costing == "transit"))
           return jsonify_error({501, 141}, request_info);
 
         //what kind
-        switch(static_cast<int>(*date_type)) {
+        switch(*date_type) {
         case 0: //current
           locations_array.Begin()->AddMember("date_time", "current", allocator);
           break;

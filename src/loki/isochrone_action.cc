@@ -31,7 +31,7 @@ namespace valhalla {
         throw valhalla_exception_t{400, 152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
-        const int c = GetOptionalFromRapidJson<float>(contour, "/time").get_value_or(-1);
+        const int c = GetOptionalFromRapidJson<int>(contour, "/time").get_value_or(-1);
         if(c < prev || c == -1)
           throw valhalla_exception_t{400, 111};
         if(c > max_time)
@@ -47,7 +47,7 @@ namespace valhalla {
         throw valhalla_exception_t{400, 150, std::to_string(max_locations.find("isochrone")->second)};
 
       auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing").get_value_or("");
-      auto date_type = GetOptionalFromRapidJson<float>(request, "/date_time/type");
+      auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type");
 
       auto& allocator = request.GetAllocator();
       //default to current date_time for mm or transit.
@@ -64,7 +64,7 @@ namespace valhalla {
           jsonify_error({501, 142}, request_info);
         }
         //what kind
-        switch(static_cast<int>(*date_type)) {
+        switch(*date_type) {
         case 0: //current
           rapidjson::GetValueByPointer(request, "/locations/0")->AddMember("date_time", "current", allocator);
           break;

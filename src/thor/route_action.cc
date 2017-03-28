@@ -31,7 +31,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-  worker_t::result_t thor_worker_t::route(const boost::property_tree::ptree& request, const std::string &request_str, const boost::optional<float> &date_time_type, const bool header_dnt){
+  worker_t::result_t thor_worker_t::route(const boost::property_tree::ptree& request, const std::string &request_str, const boost::optional<int> &date_time_type, const bool header_dnt){
     parse_locations(request);
     auto costing = parse_costing(request);
 
@@ -170,7 +170,7 @@ namespace valhalla {
     return trip_paths;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<float> &date_time_type, const std::string &request_str) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type, const std::string &request_str) {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
