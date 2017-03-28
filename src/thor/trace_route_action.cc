@@ -60,42 +60,33 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
     switch (shape_match->second) {
       case EDGE_WALK:
         try {
-          //TODO: remove after dev complete
-          LOG_INFO("in " + shape_match->first);
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
             throw valhalla_exception_t{400, 443};
         } catch (const valhalla_exception_t& e) {
-          LOG_INFO(shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm");
-          throw valhalla_exception_t{400, 443};
+          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          //TODO: remove after dev complete
-          LOG_INFO("in " + shape_match->first);
           trip_path = map_match(controller);
         } catch (const valhalla_exception_t& e) {
-          LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
-          throw valhalla_exception_t{400, 444};
+          throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
       // then we want to fallback to try and use meili map matching to match to local route network.
       //No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
-        //TODO: remove after dev complete
-        LOG_INFO("in " + shape_match->first);
         trip_path = route_match(controller);
         if (trip_path.node().size() == 0) {
-          LOG_INFO(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
+          LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
             trip_path = map_match(controller);
           } catch (const valhalla_exception_t& e) {
-            LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
-            throw valhalla_exception_t{400, 444};
+            throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
         }
         break;
@@ -207,7 +198,6 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
     }
 
     if (!found_origin) {
-      LOG_INFO("Could not find origin edge");
       // 1. origin must be at a node, so we can reuse any one of
       // origin's edges
 
@@ -229,7 +219,6 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
     }
 
     if (!found_destination) {
-      LOG_INFO("Could not find destination edge");
       // 1. destination must be at a node, so we can reuse any one of
       // destination's edges
 
