@@ -305,11 +305,19 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
     }
   }
   catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time"); }
+  //not enough data
   if(measurements.size() < 2)
     throw std::runtime_error("2 or more trace points are required");
+  //out of order data, should we reorder?
   for(size_t i = 1; i < measurements.size(); ++i)
     if(measurements[i - 1].epoch_time() > measurements[i].epoch_time())
       throw std::runtime_error("Trace points must be in chronological order");
+  //same time different place?
+  auto remove_itr = std::remove_if(measurements.begin(), measurements.end(),[&measurements](const Measurement& m){
+    return &measurements.back() != &m && m.epoch_time() == (&m + 1)->epoch_time();
+  });
+  measurements.erase(remove_itr, measurements.end());
+  //done with them
   return measurements;
 }
 
