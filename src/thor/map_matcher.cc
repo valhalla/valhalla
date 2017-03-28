@@ -47,9 +47,7 @@ std::vector<PathInfo> MapMatcher::FormPath(
       if (prior_edge.Is_Valid()
           && !matcher->graphreader().AreEdgesConnected(prior_edge, edge_id)) {
         PointLL ll = nodeinfo->latlng();
-        LOG_INFO("Edges are not connected at LL = "
-            + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-        throw valhalla_exception_t { 400, 442 };
+        throw valhalla_exception_t { 400, 442, "Edges are not connected at LL = "+ std::to_string(ll.lat()) + "," + std::to_string(ll.lng()) };
       }
 
       // TODO: slight difference in time between route and trace_route
