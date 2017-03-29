@@ -10,18 +10,12 @@
 #include "midgard/logging.h"
 #include "baldr/graphreader.h"
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/error/en.h"
-
 #include "meili/universal_cost.h"
 #include "meili/geojson_reader.h"
 #include "meili/geojson_writer.h"
 #include "meili/map_matcher_factory.h"
 #include "meili/map_matcher.h"
 #include "meili/match_result.h"
-
 
 using namespace prime_server;
 using namespace valhalla;

@@ -9,8 +9,7 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/truckcost.h>
 #include <valhalla/sif/transitcost.h>
-#include <rapidjson/document.h>
-#include <rapidjson/prettywriter.h>
+#include <baldr/rapidjson_utils.h>
 namespace valhalla {
 namespace sif {
 

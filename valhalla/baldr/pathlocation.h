@@ -7,7 +7,7 @@
 #include <valhalla/baldr/graphid.h>
 
 #include <boost/property_tree/ptree.hpp>
-#include <rapidjson/document.h>
+#include <baldr/rapidjson_utils.h>
 
 namespace valhalla{
 namespace baldr{
