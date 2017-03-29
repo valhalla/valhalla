@@ -93,8 +93,8 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   location.date_time_ = pt.get_optional<std::string>("date_time");
   location.heading_ = pt.get_optional<float>("heading");
-  location.heading_tolerance_ = pt.get_optional<int>("heading_tolerance");
-  location.way_id_ = pt.get_optional<uint64_t>("way_id");
+  location.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
+  location.way_id_ = pt.get_optional<long double>("way_id");
 
   auto name = pt.get_optional<std::string>("name");
   if (name)
@@ -144,7 +144,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
   Location location{{*lon,*lat}, stop_type};
 
   location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
-  location.heading_ = GetOptionalFromRapidJson<float>(d, "/heading");
+  location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
   if (auto name = GetOptionalFromRapidJson<std::string>(d, "/name"))

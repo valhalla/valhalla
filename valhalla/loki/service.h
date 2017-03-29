@@ -14,7 +14,7 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/sif/costfactory.h>
-#include <rapidjson/document.h>
+#include <baldr/rapidjson_utils.h>
 
 namespace valhalla {
   namespace loki {

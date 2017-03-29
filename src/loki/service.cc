@@ -162,19 +162,21 @@ namespace valhalla {
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
-      std::string method_options = "/costing_options/" + *costing;
-      auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
       auto& allocator = request.GetAllocator();
-      if(!method_options_ptr)
-        request.AddMember(rapidjson::Value(method_options, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
-      method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      if(!method_options_ptr) {
+        auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        if(!costing_options) {
+          request.AddMember(rapidjson::Value("costing_options", allocator), rapidjson::Value(rapidjson::kObjectType), allocator);
+          costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        }
+        costing_options->AddMember(rapidjson::Value(*costing, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
+        method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
+      }
 
       try{
         cost_ptr_t c;
-        if (method_options_ptr)
-          c = factory.Create(*costing, *method_options_ptr);
-        else 
-          c = factory.Create(*costing, rapidjson::Value{});
+        c = factory.Create(*costing, *method_options_ptr);
         edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }

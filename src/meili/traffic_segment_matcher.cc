@@ -5,6 +5,8 @@
 #include "midgard/pointll.h"
 #include "meili/traffic_segment_matcher.h"
 
+#include <cstdio>
+
 namespace {
 
   void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
@@ -82,6 +84,22 @@ namespace {
     return merged;
   }
 
+
+  //TODO: remove this when debugging phase is finally over
+  void print(const valhalla::meili::interpolation_t& i) {
+    printf("%lu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
+  }
+  void print(const merged_traffic_segment_t& m) {
+    printf("%lu:\t%lu->%lu\t%d->%d\t%.2f->%.2f\n",
+      m.segment.segment_id_.value, m.begin_edge.value, m.end_edge.value,
+      m.segment.starts_segment_, m.segment.ends_segment_,
+      m.segment.begin_percent_, m.segment.end_percent_);
+  }
+  void print(const valhalla::meili::traffic_segment_t& t) {
+    printf("%lu\t%.2f kph\t%d\t%.2f->%.2f\t%lu->%lu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
+      t.length, t.start_time, t.end_time, t.begin_shape_index, t.end_shape_index);
+  }
+
 }
 
 namespace valhalla {
@@ -137,6 +155,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
   //find each set of continuous edges
   std::list<std::vector<interpolation_t> > interpolations;
+  size_t idx = 0;
   for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
     while(end_edge != edges.cend()) {
@@ -147,27 +166,27 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
     //go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
-    size_t i = 0, last_index = 0;
+    size_t last_idx = idx;
     for(auto segment = begin_edge; segment != end_edge; ++segment) {
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
       float total_length = segment == begin_edge ? -edges.front().source * edge_length : interpolated.back().total_distance;
       //get the distance and match result for the begin node of the edge
-      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_idx, -1});
       //add distances for all the match points that happened on this edge
-      for(; i < matches.size(); ++i) {
+      for(; idx < matches.size(); ++idx) {
         //skip unroutable ones, we dont know what edge they were on
-        if(!matches[i].edgeid.Is_Valid())
+        if(!matches[idx].edgeid.Is_Valid())
           continue;
         //if its a valid one that doesnt match we move on
-        else if(matches[i].edgeid != segment->edgeid)
+        else if(matches[idx].edgeid != segment->edgeid)
           break;
         //it was the right thing we were looking for
-        interpolated.emplace_back(interpolation_t{segment->edgeid, matches[i].distance_along * edge_length + total_length,
-          matches[i].distance_along, i, matches[i].epoch_time});
-        last_index = i;
+        interpolated.emplace_back(interpolation_t{segment->edgeid, matches[idx].distance_along * edge_length + total_length,
+          matches[idx].distance_along, idx, matches[idx].epoch_time});
+        last_idx = idx;
       }
       //add the end node of the edge
-      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, last_index, -1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, last_idx, -1});
     }
 
     //finally backfill the time information for those points that dont have it
@@ -219,8 +238,17 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
   std::vector<traffic_segment_t> traffic_segments;
   for(const auto& markers : interpolations) {
 
+    /*printf("\nInterpolations:\n");
+    for(const auto& marker : markers)
+      print(marker);*/
+
     //get all the segments for this matched path merging them into single entries
     auto merged_segments = merge_segments(markers, reader);
+
+    /*printf("\nMerged Segments:\n");
+    for(const auto& segment : merged_segments)
+      print(segment);
+    printf("\nReported Segments:\n");*/
 
     //go over the segments and move the interpolation markers accordingly
     auto left = markers.cbegin(), right = markers.cbegin();
@@ -270,6 +298,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
       traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length});
 
+      //print(traffic_segments.back());
+
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
         ++right;
@@ -305,11 +335,19 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
     }
   }
   catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time"); }
+  //not enough data
   if(measurements.size() < 2)
     throw std::runtime_error("2 or more trace points are required");
+  //out of order data, should we reorder?
   for(size_t i = 1; i < measurements.size(); ++i)
     if(measurements[i - 1].epoch_time() > measurements[i].epoch_time())
       throw std::runtime_error("Trace points must be in chronological order");
+  //same time different place?
+  auto remove_itr = std::remove_if(measurements.begin(), measurements.end(),[&measurements](const Measurement& m){
+    return &measurements.back() != &m && m.epoch_time() == (&m + 1)->epoch_time();
+  });
+  measurements.erase(remove_itr, measurements.end());
+  //done with them
   return measurements;
 }
 

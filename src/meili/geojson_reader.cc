@@ -1,8 +1,4 @@
-#include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
-
 #include "meili/geojson_reader.h"
-
 
 namespace valhalla {
 
