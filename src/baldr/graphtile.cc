@@ -395,6 +395,32 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
                            std::to_string(header_->directededgecount()));
 }
 
+iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
+  if (node.id() < header_->nodecount()) {
+    const auto& nodeinfo = nodes_[node.id()];
+    const auto* edge = directededge(nodeinfo.edge_index());
+    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+  }
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                             std::to_string(node.tileid()) + "," +
+                             std::to_string(node.level()) + "," +
+                             std::to_string(node.id()) + " nodecount= " +
+                             std::to_string(header_->nodecount()));
+}
+
+iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
+  if (idx < header_->nodecount()) {
+    const auto& nodeinfo = nodes_[idx];
+    const auto* edge = directededge(nodeinfo.edge_index());
+    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+  }
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(idx)  + " nodecount= " +
+                           std::to_string(header_->nodecount()));
+}
+
 // Convenience method to get opposing edge Id given a directed edge.
 // The end node of the directed edge must be in this tile.
 GraphId GraphTile::GetOpposingEdgeId(const DirectedEdge* edge) const {
@@ -643,9 +669,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
         departure_time += frequency;
 
       if (departure_time >= current_time && departure_time < end_time) {
-
         const auto& d = departures_[found];
-
         const TransitDeparture *dep = new TransitDeparture(d.lineid(),d.tripid(), d.routeid(),
                                                            d.blockid(), d.headsign_offset(), departure_time,
                                                            d.end_time(),d.frequency(),
@@ -779,21 +803,27 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
+std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const GraphId& edge) const {
+  if(edge.Tile_Base() != header_->graphid())
+    throw std::runtime_error("Wrong tile for edge id");
+  return GetTrafficSegments(edge.id());
+}
+
 // Get traffic segment(s) associated to this edge.
-std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const size_t idx) const {
+std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) const {
   if (idx < header_->traffic_id_count()) {
     const TrafficAssociation& t = traffic_segments_[idx];
+    //normal ots's
     if (!t.chunk()) {
-      // Make sure there is an associated segment. If count == 0 make sure
-      // we return an invalid segment Id
-      GraphId segment_id;
-      if (t.count() == 1) {
-        // Segment associated to this edge
-        segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
-      }
-      TrafficSegment seg(segment_id, 0.0f, 1.0f, true, true);
+      //single association should always be 1 segment
+      if (t.count() != 1)
+        return {};
+      //return the one
+      GraphId segment_id = { header_->graphid().tileid(), header_->graphid().level(), t.id() };
+      TrafficSegment seg(segment_id, 0.0f, 1.0f, t.starts_segment(), t.ends_segment());
       return { seg };
-    } else {
+    }//chunked ots's
+    else {
       // This edge associates to more than 1 segment (or the segment is in
       // a different tile. Get traffic chunks.
       auto c = t.GetChunkCountAndIndex();
@@ -803,19 +833,18 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const size_t idx) cons
         segments.emplace_back(chunk->segment_id(), chunk->begin_percent(),
                               chunk->end_percent(), chunk->starts_segment(),
                               chunk->ends_segment());
-     }
-     return segments;
+      }
+      return segments;
     }
-  } else if (header_->traffic_id_count() == 0) {
-    // Tile does not contain traffic
+  }// Tile does not contain traffic
+  else if (header_->traffic_id_count() == 0)
     return { };
-  } else {
-    throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(idx)  + " traffic Id count= " +
-                           std::to_string(header_->traffic_id_count()));
-  }
+  //you were out of bounds
+  throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
+                         std::to_string(header_->graphid().tileid()) + "," +
+                         std::to_string(header_->graphid().level()) + "," +
+                         std::to_string(idx)  + " traffic Id count= " +
+                         std::to_string(header_->traffic_id_count()));
 }
 
 

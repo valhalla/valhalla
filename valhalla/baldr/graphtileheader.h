@@ -38,7 +38,9 @@ class GraphTileHeader {
    * Get the GraphId (tileid and level) of this tile.
    * @return  Returns the graph Id.
    */
-  const baldr::GraphId& graphid() const;
+  const baldr::GraphId& graphid() const{
+    return graphid_;
+  }
 
   /**
    * Set the graph Id of this tile.
@@ -50,7 +52,9 @@ class GraphTileHeader {
    * Gets the date when this tile was created. Days since pivot date.
    * @return  Returns the date this tile was created.
    */
-  uint32_t date_created() const;
+  uint32_t date_created() const {
+    return date_created_;
+  }
 
   /**
    * Set the date created.
@@ -62,7 +66,9 @@ class GraphTileHeader {
    * Gets the version of this tile.
    * @return  Returns the version of this tile.
    */
-  std::string version() const;
+  std::string version() const {
+    return version_;
+  }
 
   /**
    * Set the version string.
@@ -74,7 +80,9 @@ class GraphTileHeader {
    * Returns the data set Id (latest OSM changeset Id).
    * @return  Returns the data set Id.
    */
-  uint64_t dataset_id() const;
+  uint64_t dataset_id() const {
+    return dataset_id_;
+  }
 
   /**
    * Set the data set Id (latest OSM changeset Id).
@@ -86,7 +94,9 @@ class GraphTileHeader {
    * Get the relative road density within this tile.
    * @return  Returns the relative density for this tile (0-15).
    */
-  uint32_t density() const;
+  uint32_t density() const {
+    return static_cast<uint32_t>(density_);
+  }
 
   /**
    * Set the relative road density within this tile.
@@ -98,7 +108,9 @@ class GraphTileHeader {
    * Get the relative quality of name assignment for this tile.
    * @return  Returns relative name quality for this tile (0-15).
    */
-  uint32_t name_quality() const;
+  uint32_t name_quality() const {
+    return static_cast<uint32_t>(name_quality_);
+  }
 
   /**
    * Set the relative quality of name assignment for this tile.
@@ -110,7 +122,9 @@ class GraphTileHeader {
    * Get the relative quality of speed assignment for this tile.
    * @return  Returns relative speed quality for this tile (0-15).
    */
-  uint32_t speed_quality() const;
+  uint32_t speed_quality() const {
+    return static_cast<uint32_t>(speed_quality_);
+  }
 
   /**
    * Set the relative quality of speed assignment for this tile.
@@ -122,7 +136,9 @@ class GraphTileHeader {
    * Get the relative quality of exit signs for this tile.
    * @return  Returns relative exit sign quality for this tile (0-15).
    */
-  uint32_t exit_quality() const;
+  uint32_t exit_quality() const {
+    return static_cast<uint32_t>(exit_quality_);
+  }
 
   /**
    * Set the relative quality of exit signs for this tile.
@@ -134,7 +150,9 @@ class GraphTileHeader {
    * Gets the number of nodes in this tile.
    * @return  Returns the number of nodes.
    */
-  uint32_t nodecount() const;
+  uint32_t nodecount() const {
+    return nodecount_;
+  }
 
   /**
    * Sets the number of nodes in this tile.
@@ -146,7 +164,9 @@ class GraphTileHeader {
    * Gets the number of directed edges in this tile.
    * @return  Returns the number of directed edges.
    */
-  uint32_t directededgecount() const;
+  uint32_t directededgecount() const {
+    return directededgecount_;
+  }
 
   /**
    * Sets the number of directed edges in this tile.
@@ -158,7 +178,9 @@ class GraphTileHeader {
    * Gets the number of signs in this tile.
    * @return  Returns the number of signs.
    */
-  uint32_t signcount() const;
+  uint32_t signcount() const {
+    return signcount_;
+  }
 
   /**
    * Sets the number of signs within this tile.
@@ -170,7 +192,9 @@ class GraphTileHeader {
    * Gets the number of transit departures in this tile.
    * @return  Returns the number of transit departures.
    */
-  uint32_t departurecount() const;
+  uint32_t departurecount() const {
+    return departurecount_;
+  }
 
   /**
    * Sets the number of transit departures in this tile.
@@ -182,7 +206,9 @@ class GraphTileHeader {
    * Gets the number of transit stops in this tile.
    * @return  Returns the number of transit stops.
    */
-  uint32_t stopcount() const;
+  uint32_t stopcount() const {
+    return stopcount_;
+  }
 
   /**
    * Sets the number of transit stops in this tile.
@@ -194,7 +220,9 @@ class GraphTileHeader {
    * Gets the number of transit routes in this tile.
    * @return  Returns the number of transit routes.
    */
-  uint32_t routecount() const;
+  uint32_t routecount() const {
+    return routecount_;
+  }
 
   /**
    * Sets the number of transit routes in this tile.
@@ -206,7 +234,9 @@ class GraphTileHeader {
    * Gets the number of transit schedules in this tile.
    * @return  Returns the number of transit schedules.
    */
-  uint32_t schedulecount() const;
+  uint32_t schedulecount() const {
+    return schedulecount_;
+  }
 
   /**
    * Sets the number of transit schedules in this tile.
@@ -218,7 +248,9 @@ class GraphTileHeader {
    * Gets the number of transit transfers in this tile.
    * @return  Returns the number of transit transfers.
    */
-  uint32_t transfercount() const;
+  uint32_t transfercount() const  {
+    return transfercount_;
+  }
 
   /**
    * Sets the number of transit transfers in this tile.
@@ -230,7 +262,9 @@ class GraphTileHeader {
    * Gets the number of access restrictions in this tile.
    * @return  Returns the number of restrictions.
    */
-  uint32_t access_restriction_count() const;
+  uint32_t access_restriction_count() const {
+    return access_restriction_count_;
+  }
 
   /**
    * Sets the number of access restrictions in this tile.
@@ -242,7 +276,9 @@ class GraphTileHeader {
    * Gets the number of admin records in this tile.
    * @return  Returns the number of admin records.
    */
-  uint32_t admincount() const;
+  uint32_t admincount() const {
+    return admincount_;
+  }
 
   /**
    * Sets the number of admin records within this tile.
@@ -255,7 +291,9 @@ class GraphTileHeader {
    * @return  Returns the number of bytes to offset to the the list of
    *          complex restrictions.
    */
-  uint32_t complex_restriction_forward_offset() const;
+  uint32_t complex_restriction_forward_offset() const {
+    return complex_restriction_forward_offset_;
+  }
 
   /**
    * Sets the offset to the list of complex restrictions in the forward direction.
@@ -269,7 +307,9 @@ class GraphTileHeader {
    * @return  Returns the number of bytes to offset to the the list of
    *          complex restrictions.
    */
-  uint32_t complex_restriction_reverse_offset() const;
+  uint32_t complex_restriction_reverse_offset() const {
+    return complex_restriction_reverse_offset_;
+  }
 
   /**
    * Sets the offset to the list of complex restrictions in the reverse direction.
@@ -282,7 +322,9 @@ class GraphTileHeader {
    * Gets the offset to the edge info.
    * @return  Returns the number of bytes to offset to the edge information.
    */
-  uint32_t edgeinfo_offset() const;
+  uint32_t edgeinfo_offset() const {
+    return edgeinfo_offset_;
+  }
 
   /**
    * Sets the offset to the edge info.
@@ -294,7 +336,9 @@ class GraphTileHeader {
    * Gets the offset to the text list.
    * @return  Returns the number of bytes to offset to the text list.
    */
-  uint32_t textlist_offset() const;
+  uint32_t textlist_offset() const {
+    return textlist_offset_;
+  }
 
   /**
    * Sets the offset to the text list.
@@ -329,7 +373,9 @@ class GraphTileHeader {
    * Gets the number of traffic segment Ids in this tile.
    * @return  Returns the number of traffic segment Ids.
    */
-  uint32_t traffic_id_count() const;
+  uint32_t traffic_id_count() const {
+    return traffic_id_count_;
+  }
 
   /**
    * Sets the number of traffic segment Ids in this tile.
@@ -341,7 +387,9 @@ class GraphTileHeader {
    * Gets the offset to the traffic segment Ids.
    * @return  Returns the number of bytes to offset to the traffic segment Ids.
    */
-  uint32_t traffic_segmentid_offset() const;
+  uint32_t traffic_segmentid_offset() const {
+    return traffic_segmentid_offset_;
+  }
 
   /**
    * Sets the offset to the traffic segment Ids.
@@ -351,11 +399,13 @@ class GraphTileHeader {
 
   /**
    * Gets the offset to the traffic chunks. Chunks occur when an edge
-   * is associated to more than one traffic segment. CHunks store lists of
+   * is associated to more than one traffic segment. Chunks store lists of
    * segment Ids and "weights".
    * @return  Returns the number of bytes to offset to the traffic chunks.
    */
-  uint32_t traffic_chunk_offset() const;
+  uint32_t traffic_chunk_offset() const  {
+    return traffic_chunk_offset_;
+  }
 
   /**
    * Sets the offset to the traffic chunks.

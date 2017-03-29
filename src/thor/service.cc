@@ -153,6 +153,9 @@ namespace valhalla {
         healthcheck = request.get<bool>("healthcheck", false);
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
+        boost::optional<int> date_time_type;
+        if (request.find("date_time.type") != request.not_found())
+          date_time_type = request.get<float>("date_time.type");
         // Allow the request to be aborted
         astar.set_interrupt(&interrupt);
         bidir_astar.set_interrupt(&interrupt);
@@ -170,7 +173,7 @@ namespace valhalla {
             return isochrone(request, info);
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, request.get_optional<int>("date_time.type"), info.spare);
+            return route(request, request_str, date_time_type, info.spare);
           case TRACE_ROUTE:
             return trace_route(request, request_str, info.spare);
           case TRACE_ATTRIBUTES:
@@ -250,7 +253,10 @@ namespace valhalla {
         throw valhalla_exception_t{400, 410};
 
       //type - 0: current, 1: depart, 2: arrive
-      auto date_time_type = request.get_optional<int>("date_time.type");
+      if (request.find("date_time.type") == request.not_found())
+        return;
+
+      int date_time_type = request.get<float>("date_time.type");
       auto date_time_value = request.get_optional<std::string>("date_time.value");
 
       if (date_time_type == 0) //current.
@@ -288,7 +294,7 @@ namespace valhalla {
       if (!trace_options) {
         return;
       }
-      
+
       for (const auto& pair : *trace_options) {
         const auto& name = pair.first;
         const auto& values = pair.second.data();

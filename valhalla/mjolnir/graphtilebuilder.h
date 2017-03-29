@@ -168,7 +168,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
-   * @param  lls  The shape of the target edge.
+   * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
@@ -180,6 +180,33 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
                        const shape_container_t& lls,
+                       const std::vector<std::string>& names,
+                       bool& added);
+
+  /**
+   * Add the edge info to the tile. This method accepts an encoded shape
+   * string.
+   *
+   * @param  edgeindex  The index of the edge - used with nodea and nodeb to
+   *                    form tuple that uniquely identifies the edge info since
+   *                    there are two directed edges per edge info.
+   * @param  nodea  One of two nodes - used with edgeindex and nodeb to
+   *                form tuple that uniquely identifies the edge info since
+   *                there are two directed edges per edge info.
+   * @param  nodeb  One of two nodes - used with edgeindex and nodea to
+   *                form tuple that uniquely identifies the edge info since
+   *                there are two directed edges per edge info.
+   * @param  wayid  The target edge is part of this the way id.
+   * @param  llstr  The shape of the target edge as an encoded string.
+   * @param  names  The names of the target edge.
+   * @param  added  Set to true if the target edge was newly added to the list,
+   *                set to false if the target edge was already in the list.
+   *
+   * @return  The edge info offset that will be stored in the directed edge.
+   */
+  uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
+                       const baldr::GraphId& nodeb, const uint64_t wayid,
+                       const std::string& llstr,
                        const std::vector<std::string>& names,
                        bool& added);
 

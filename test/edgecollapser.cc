@@ -73,9 +73,10 @@ const boost::property_tree::ptree fake_config =
   read_json("{\"tile_dir\": \"/file/does/not/exist\"}");
 
 struct test_graph_reader : public vb::GraphReader {
-  test_graph_reader(std::unordered_map<vb::GraphId, vb::GraphTile> &&tiles)
+  test_graph_reader(const std::unordered_map<vb::GraphId, vb::GraphTile>& tiles)
     : GraphReader(fake_config) {
-    cache_ = std::move(tiles);
+    for (const auto& it : tiles)
+      cache_->Put(it.first, it.second, 0);
   }
 };
 

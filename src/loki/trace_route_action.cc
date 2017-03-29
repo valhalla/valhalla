@@ -8,13 +8,31 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <math.h>
+#include <unordered_map>
 
 using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
+using namespace valhalla::loki;
+
+namespace std {
+  template <>
+  struct hash<loki_worker_t::ACTION_TYPE>
+  {
+    std::size_t operator()(const loki_worker_t::ACTION_TYPE& a) const {
+      return std::hash<int>()(a);
+    }
+  };
+}
 
 namespace {
+
+const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
+  {loki_worker_t::TRACE_ROUTE, "trace_route"},
+  {loki_worker_t::TRACE_ATTRIBUTES, "trace_attributes"}
+};
+
 
 void check_shape(const std::vector<PointLL>& shape, unsigned int max_shape,
                  float max_factor = 1.0f) {
@@ -72,8 +90,11 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    worker_t::result_t loki_worker_t::trace_route(rapidjson::Document& request, http_request_info_t& request_info) {
+    worker_t::result_t loki_worker_t::trace_route(ACTION_TYPE action, rapidjson::Document& request, http_request_info_t& request_info) {
       init_trace(request);
+      std::string costing = request["costing"].GetString();
+      if (costing == "multimodal")
+        return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
 
       //pass it on to thor
       worker_t::result_t result{true};

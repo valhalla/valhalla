@@ -51,13 +51,22 @@ struct edge_t {
   operator bool() const { return i.Is_Valid() && e; }
 };
 
+// Get the opposing edge - if the opposing index is invalid return a nullptr
+// for the directed edge. This should not occur but this can happen in
+// GraphValidator if it fails to find an opposing edge.
 edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* edge) {
-  if(edge->leaves_tile())
-    tile = reader.GetGraphTile(edge->endnode());
+  const GraphTile* t = edge->leaves_tile() ? reader.GetGraphTile(edge->endnode()) : tile;
   auto id = edge->endnode();
-  auto* node = tile->node(edge->endnode());
-  id.fields.id = tile->node(id)->edge_index() + edge->opp_index();
-  return {id, tile->directededge(id)};
+  id.fields.id = t->node(id)->edge_index() + edge->opp_index();
+
+  // Check for invalid opposing index
+  if (edge->opp_index() == kMaxEdgesPerNode) {
+    PointLL ll = t->node(edge->endnode())->latlng();
+    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) +
+              " LL = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+    return {id, nullptr};
+  }
+  return {id, t->directededge(id)};
 }
 
 edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set, const bitset_t& edge_set, GraphReader& reader,
@@ -223,13 +232,16 @@ int main(int argc, char *argv[]) {
          edge.e->trans_down() || edge.e->IsTransitLine()) //these 2 should never happen
         continue;
 
-      //get the opposing edge as well
+      //get the opposing edge as well (ensure a valid edge is returned)
       edge_t opposing_edge = opposing(reader, tile, edge);
+      if (opposing_edge.e == nullptr) {
+        continue;
+      }
       edge_set.set(tile_set.find(opposing_edge.i.Tile_Base())->second + opposing_edge.i.id());
       ++set;
 
       //shortcuts arent real and maybe we dont want ferries
-      if(edge.e->shortcut() || (!ferries && edge.e->use() == Use::kFerry))
+      if(edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry))
         continue;
 
       //no name no thanks
@@ -255,6 +267,9 @@ int main(int argc, char *argv[]) {
         //mark them to never be used again
         edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());
         edge_t other = opposing(reader, t, edge);
+        if (other.e == nullptr) {
+          continue;
+        }
         edge_set.set(tile_set.find(other.i.Tile_Base())->second + other.i.id());
         set += 2;
         //keep this
@@ -267,6 +282,9 @@ int main(int argc, char *argv[]) {
         //mark them to never be used again
         edge_set.set(tile_set.find(edge.i.Tile_Base())->second + edge.i.id());
         edge_t other = opposing(reader, t, edge);
+        if (other.e == nullptr) {
+          continue;
+        }
         edge_set.set(tile_set.find(other.i.Tile_Base())->second + other.i.id());
         set += 2;
         //keep this
@@ -278,7 +296,7 @@ int main(int argc, char *argv[]) {
       for(const auto& e : edges)
         extend(reader, t, e, shape);
 
-      //output it
+      //output it as: shape,name,name,...
       auto encoded = encode(shape);
       std::cout << encoded << column_separator;
       for(const auto& name : names)

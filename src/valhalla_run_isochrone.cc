@@ -108,6 +108,7 @@ int main(int argc, char *argv[]) {
 
   // Locations
   std::vector<Location> locations;
+  std::vector<Location> avoid_locations;
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
@@ -137,6 +138,15 @@ int main(int argc, char *argv[]) {
       }
     } catch (...) {
       throw std::runtime_error("Requires a single location");
+    }
+
+    // Process avoid locations
+    try {
+      for (const auto& location : json_ptree.get_child("avoid_locations")) {
+        avoid_locations.emplace_back(std::move(Location::FromPtree(location.second)));
+      }
+    } catch (...) {
+      LOG_INFO("No avoid locations");
     }
 
     // Parse out the type of route - this provides the costing method to use
@@ -213,9 +223,21 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // Find avoid locations
+  std::vector<GraphId> avoid_edges;
+  const auto avoids = Search(avoid_locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  for (auto loc : avoid_locations) {
+    for (auto& e : avoids.at(loc).edges) {
+      avoid_edges.push_back(e.id);
+    }
+  }
+  if (avoid_edges.size() > 0) {
+    mode_costing[static_cast<uint32_t>(mode)]->AddUserAvoidEdges(avoid_edges);
+  }
+
   // For multimodal - hack the date time for now!
   if (routetype == "multimodal") {
-      path_location.front().date_time_ = "current";
+    path_location.front().date_time_ = "current";
   }
 
   // Compute the isotile

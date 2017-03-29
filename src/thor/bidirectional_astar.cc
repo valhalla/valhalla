@@ -76,15 +76,20 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  float mincost = astarheuristic_forward_.Get(origll);
-  adjacencylist_forward_.reset(new DoubleBucketQueue(mincost, range, bucketsize,
+  float mincostf  = astarheuristic_forward_.Get(origll);
+  adjacencylist_forward_.reset(new DoubleBucketQueue(mincostf, range, bucketsize,
                                                  forward_edgecost));
   edgestatus_forward_.reset(new EdgeStatus());
 
-  mincost = astarheuristic_reverse_.Get(destll);
-  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincost, range, bucketsize,
+  float mincostr = astarheuristic_reverse_.Get(destll);
+  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincostr, range, bucketsize,
                                                  reverse_edgecost));
   edgestatus_reverse_.reset(new EdgeStatus());
+
+  // Set the cost diff between forward and reverse searches (due to distance
+  // approximator differences). This is used to "even" the forward and reverse
+  // searches.
+  cost_diff_ = mincostf - mincostr;
 
   // Initialize best connection with max cost
   best_connection_ = { GraphId(), GraphId(),
@@ -102,7 +107,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 // Expand from a node in the forward direction
 void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
        const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-       EdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
+       const EdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
   // Expand from end node in forward direction.
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -151,7 +156,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // expanding on the next lower level (so we can still transition down to
     // that level).
     if (directededge->is_shortcut() &&
-        hierarchy_limits_reverse_[edgeid.level()+1].StopExpanding()) {
+        hierarchy_limits_forward_[edgeid.level()+1].StopExpanding()) {
       shortcuts |= directededge->shortcut();
     }
     Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
@@ -198,7 +203,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 // Expand from a node in reverse direction.
 void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
          const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-         EdgeLabel& pred, const uint32_t pred_idx,
+         const EdgeLabel& pred, const uint32_t pred_idx,
          const DirectedEdge* opp_pred_edge, const bool from_transition) {
   // Expand from end node in reverse direction.
   uint32_t shortcuts = 0;
@@ -407,7 +412,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     }
 
     // Expand from the search direction with lower sort cost.
-    if (pred.sortcost() < pred2.sortcost()) {
+    if ((pred.sortcost() + cost_diff_) < pred2.sortcost()) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
@@ -501,8 +506,7 @@ void BidirectionalAStar::CheckIfLowerCostPathForward(const uint32_t idx,
   if (dc > 0) {
     float oldsortcost = edgelabels_forward_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
-    edgelabels_forward_[idx].Update(predindex, newcost, newsortcost);
-    edgelabels_forward_[idx].set_transition_cost(tc);
+    edgelabels_forward_[idx].Update(predindex, newcost, newsortcost, tc);
     adjacencylist_forward_->decrease(idx, newsortcost, oldsortcost);
   }
 }
@@ -519,8 +523,7 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
   if (dc > 0) {
     float oldsortcost = edgelabels_reverse_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
-    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost);
-    edgelabels_reverse_[idx].set_transition_cost(tc);
+    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost, tc);
     adjacencylist_reverse_->decrease(idx, newsortcost, oldsortcost);
   }
 }

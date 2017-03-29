@@ -279,10 +279,11 @@ void FormTilesInNewLevel(GraphReader& reader) {
       // encoded shape plus way Id.
       uint32_t idx = directededge->edgeinfo_offset();
       auto edgeinfo = tile->edgeinfo(idx);
-      uint32_t w = hasher(edgeinfo.encoded_shape() +
-                          std::to_string(edgeinfo.wayid()));
+      std::string encoded_shape = edgeinfo.encoded_shape();
+      uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(w, nodea, nodeb,
-                    edgeinfo.wayid(), edgeinfo.shape(), tile->GetNames(idx), added);
+                    edgeinfo.wayid(), encoded_shape,
+                    tile->GetNames(idx), added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge

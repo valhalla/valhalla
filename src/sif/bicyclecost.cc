@@ -591,7 +591,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
     factor = (0.5f + useroads_ * 0.5f);
-  } else if (edge->use() == Use::kFootway) {
+  } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
     factor = 0.75f + (useroads_ * 0.5f);

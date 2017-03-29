@@ -11,47 +11,22 @@
 namespace valhalla {
 namespace meili {
 
-class MatchResult
+struct MatchResult
 {
- public:
-  MatchResult(const midgard::PointLL& lnglat,
-              float distance,
-              const baldr::GraphId edgeid,
-              StateId stateid = kInvalidStateId)
-      : lnglat_(lnglat),
-        distance_(distance),
-        edgeid_(edgeid),
-        stateid_(stateid) {}
-
-  MatchResult(const midgard::PointLL& lnglat)
-      : MatchResult(lnglat, 0.f, {}, kInvalidStateId) {}
-
   // Coordinate of the match point
-  const midgard::PointLL& lnglat() const
-  { return lnglat_; }
-
+  midgard::PointLL lnglat;
   // Distance from measurement to the match point
-  float distance() const
-  { return distance_; }
-
+  float distance_from;
   // Which edge this match point stays
-  const baldr::GraphId& edgeid() const
-  { return edgeid_; }
+  baldr::GraphId edgeid;
+  // Percentage distance along the edge
+  float distance_along;
+  // Optional epoch time for this match point copied from original measurement
+  double epoch_time;
+  // Sequential state id
+  StateId stateid;
 
-  StateId stateid() const
-  { return stateid_; }
-
-  bool HasState() const
-  { return stateid_ != kInvalidStateId; }
-
- private:
-  midgard::PointLL lnglat_;
-
-  float distance_;
-
-  baldr::GraphId edgeid_;
-
-  StateId stateid_;
+  bool HasState() const { return stateid != kInvalidStateId; }
 };
 
 }

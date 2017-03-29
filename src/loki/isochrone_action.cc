@@ -31,7 +31,7 @@ namespace valhalla {
         throw valhalla_exception_t{400, 152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
-        const size_t c = GetOptionalFromRapidJson<size_t>(contour, "/time").get_value_or(-1);
+        const int c = GetOptionalFromRapidJson<int>(contour, "/time").get_value_or(-1);
         if(c < prev || c == -1)
           throw valhalla_exception_t{400, 111};
         if(c > max_time)
@@ -40,7 +40,6 @@ namespace valhalla {
       }
       parse_costing(request);
     }
-
     worker_t::result_t loki_worker_t::isochrones(rapidjson::Document& request, http_request_info_t& request_info) {
       init_isochrones(request);
       //check that location size does not exceed max
