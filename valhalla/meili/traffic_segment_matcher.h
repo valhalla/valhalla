@@ -14,8 +14,6 @@
 #include "meili/map_matcher_factory.h"
 #include "meili/match_route.h"
 
-#include <cstdio>
-
 namespace valhalla {
 namespace meili {
 
