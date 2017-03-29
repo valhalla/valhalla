@@ -48,24 +48,20 @@ namespace {
 
   rapidjson::Document from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
     rapidjson::Document d;
-
     auto& allocator = d.GetAllocator();
     //parse the input
     const auto& json = request.query.find("json");
-    if (json != request.query.end() && json->second.size()
-      && json->second.front().size()) {
+    if (json != request.query.end() && json->second.size() && json->second.front().size())
       d.Parse(json->second.front().c_str());
-    }//no json parameter, check the body
-    else if(!request.body.empty()) {
+    //no json parameter, check the body
+    else if(!request.body.empty())
       d.Parse(request.body.c_str());
-    }
+    //no json at all
+    else
+      d.SetObject();
+    //if parsing failed
     if (d.HasParseError())
       throw valhalla_exception_t{400, 100};
-
-    // In case where the query is empty
-    if (!d.IsObject() && !d.IsArray()){
-      d.SetObject(); d.SetArray();
-    }
 
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
@@ -166,19 +162,21 @@ namespace valhalla {
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
-      std::string method_options = "/costing_options/" + *costing;
-      auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
       auto& allocator = request.GetAllocator();
-      if(!method_options_ptr)
-        request.AddMember(rapidjson::Value(method_options, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
-      method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      if(!method_options_ptr) {
+        auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        if(!costing_options) {
+          request.AddMember(rapidjson::Value("costing_options", allocator), rapidjson::Value(rapidjson::kObjectType), allocator);
+          costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        }
+        costing_options->AddMember(rapidjson::Value(*costing, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
+        method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
+      }
 
       try{
         cost_ptr_t c;
-        if (method_options_ptr)
-          c = factory.Create(*costing, *method_options_ptr);
-        else 
-          c = factory.Create(*costing, rapidjson::Value{});
+        c = factory.Create(*costing, *method_options_ptr);
         edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }
@@ -320,7 +318,7 @@ namespace valhalla {
             break;
           case TRACE_ATTRIBUTES:
           case TRACE_ROUTE:
-            result = trace_route(request_rj, info);
+            result = trace_route(action->second, request_rj, info);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet

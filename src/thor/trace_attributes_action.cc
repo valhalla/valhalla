@@ -340,42 +340,33 @@ worker_t::result_t thor_worker_t::trace_attributes(
     switch (shape_match->second) {
       case EDGE_WALK:
         try {
-          //TODO: remove after dev complete
-          LOG_INFO("in " + shape_match->first);
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
             throw valhalla_exception_t{400, 443};
         } catch (const valhalla_exception_t& e) {
-          LOG_INFO(shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm");
-          throw valhalla_exception_t{400, 443};
+          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          //TODO: remove after dev complete
-          LOG_INFO("in " + shape_match->first);
           trip_path = map_match(controller);
         } catch (const valhalla_exception_t& e) {
-          LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
-          throw valhalla_exception_t{400, 444};
+          throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
       // then we want to fallback to try and use meili map matching to match to local route network.
       //No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
-        //TODO: remove after dev complete
-        LOG_INFO("in " + shape_match->first);
         trip_path = route_match(controller);
         if (trip_path.node().size() == 0) {
-          LOG_INFO(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
+          LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
             trip_path = map_match(controller);
           } catch (const valhalla_exception_t& e) {
-            LOG_INFO(shape_match->first + " algorithm failed to snap the shape points to the correct shape.");
-            throw valhalla_exception_t{400, 444};
+            throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
         }
         break;
@@ -408,7 +399,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
   auto e = std::chrono::system_clock::now();
   std::chrono::duration<float, std::milli> elapsed_time = e - s;
   //log request if greater than X (ms)
-  if (!healthcheck && !request_info.spare && (elapsed_time.count() / correlated.size()) > long_request) {
+  if (!healthcheck && !request_info.spare && (elapsed_time.count() / shape.size()) > (long_request / 1100)) {
     LOG_WARN("thor::trace_attributes elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
     LOG_WARN("thor::trace_attributes exceeded threshold::"+ request_str);
     midgard::logging::Log("valhalla_thor_long_request_trace_attributes", " [ANALYTICS] ");

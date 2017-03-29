@@ -490,7 +490,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     }
   }
 
-  LOG_DEBUG("edge found for this stop: " + stop.name() + " way Id = " +
+  LOG_DEBUG("edge found for this stop: " + stop_name + " way Id = " +
             std::to_string(wayid));
 
   // Check if stop is in same tile as the start node

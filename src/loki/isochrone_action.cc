@@ -40,7 +40,6 @@ namespace valhalla {
       }
       parse_costing(request);
     }
-
     worker_t::result_t loki_worker_t::isochrones(rapidjson::Document& request, http_request_info_t& request_info) {
       init_isochrones(request);
       //check that location size does not exceed max
