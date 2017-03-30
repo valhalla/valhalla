@@ -465,8 +465,13 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     std::string frequency_time;
 
     if (frequency_start_time != "null" && frequency_end_time != "null" && frequency_headway_seconds != "null") {
-      if (origin_time < frequency_start_time)
-        LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+
+      // this should never happen and if it does then it is a bad frequency.  just continue
+      if (origin_time < frequency_start_time) {
+        tile.mutable_stop_pairs()->RemoveLast();
+        continue;
+        //LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      }
       pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
       pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
       frequency_time = frequency_start_time + frequency_end_time;
