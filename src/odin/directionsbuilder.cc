@@ -132,47 +132,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   trip_directions.set_leg_count(etp->leg_count());
 
   // Populate locations
-  for (const auto& path_location : etp->location()) {
-    auto* direction_location = trip_directions.add_location();
-    direction_location->mutable_ll()->set_lat(path_location.ll().lat());
-    direction_location->mutable_ll()->set_lng(path_location.ll().lng());
-    if (path_location.type() == TripPath_Location_Type_kThrough) {
-      direction_location->set_type(TripDirections_Location_Type_kThrough);
-    } else {
-      direction_location->set_type(TripDirections_Location_Type_kBreak);
-    }
-
-    if (path_location.has_heading())
-      direction_location->set_heading(path_location.heading());
-    if (path_location.has_name())
-      direction_location->set_name(path_location.name());
-    if (path_location.has_street())
-      direction_location->set_street(path_location.street());
-    if (path_location.has_city())
-      direction_location->set_city(path_location.city());
-    if (path_location.has_state())
-      direction_location->set_state(path_location.state());
-    if (path_location.has_postal_code())
-      direction_location->set_postal_code(path_location.postal_code());
-    if (path_location.has_country())
-      direction_location->set_country(path_location.country());
-    if (path_location.has_date_time())
-      direction_location->set_date_time(path_location.date_time());
-    if (path_location.has_side_of_street()) {
-      if (path_location.side_of_street()
-          == TripPath_Location_SideOfStreet_kLeft) {
-        direction_location->set_side_of_street(
-            TripDirections_Location_SideOfStreet_kLeft);
-      } else if (path_location.side_of_street()
-          == TripPath_Location_SideOfStreet_kRight) {
-        direction_location->set_side_of_street(
-            TripDirections_Location_SideOfStreet_kRight);
-      } else {
-        direction_location->set_side_of_street(
-            TripDirections_Location_SideOfStreet_kNone);
-      }
-    }
-  }
+  trip_directions.mutable_location()->CopyFrom(etp->location());
 
   // Populate maneuvers
   for (const auto& maneuver : maneuvers) {

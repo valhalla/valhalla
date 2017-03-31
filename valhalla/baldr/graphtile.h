@@ -121,6 +121,20 @@ class GraphTile {
   const DirectedEdge* directededge(const size_t idx) const;
 
   /**
+   * Get an iterable set of directed edges from a node in this tile
+   * @param  node  GraphId of the node from which the edges leave
+   * @return returns an iterable collection of directed edges
+   */
+  iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
+
+  /**
+   * Get an iterable set of directed edges from a node in this tile
+   * @param  idx  Index of the node within the current tile
+   * @return returns an iterable collection of directed edges
+   */
+  iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+
+  /**
    * Convenience method to get opposing edge Id given a directed edge.
    * The end node of the directed edge must be in this tile.
    * @param  edge  Directed edge.
@@ -220,11 +234,13 @@ class GraphTile {
    * Get the departure given the directed edge Id and tripid
    * @param   lineid  Transit Line Id
    * @param   tripid  Trip Id.
+   * @param   current_time      Current time (seconds from midnight).
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departure is found.
    */
   const TransitDeparture* GetTransitDeparture(const uint32_t lineid,
-                                              const uint32_t tripid) const;
+                                              const uint32_t tripid,
+                                              const uint32_t current_time) const;
 
   /**
    * Get the departures based on the line Id
@@ -304,17 +320,24 @@ class GraphTile {
 
   /**
    * Get traffic segment(s) associated to this edge.
-   * @param  edge  GraphId of the directed edge.
+   * @param   edge  GraphId of the directed edge.
    * @return  Returns a list of traffic segment Ids and weights that associate
    *          to this edge.
    */
-  std::vector<TrafficSegment> GetTrafficSegments(const size_t idx) const;
+  std::vector<TrafficSegment> GetTrafficSegments(const GraphId& edge) const;
+
+  /**
+   * Get traffic segment(s) associated to this edge.
+   * @param   idx  index of the directed edge within the tile.
+   * @return  Returns a list of traffic segment Ids and weights that associate
+   *          to this edge.
+   */
+  std::vector<TrafficSegment> GetTrafficSegments(const uint32_t idx) const;
 
 
  protected:
 
   // Graph tile memory, this must be shared so that we can put it into cache
-  // Apparently you can std::move a non-copyable
   boost::shared_ptr<std::vector<char>> graphtile_;
 
   // Header information for the tile

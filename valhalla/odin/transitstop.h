@@ -30,7 +30,7 @@ struct TransitStop {
   std::string departure_date_time;
   bool is_parent_stop;
   bool assumed_schedule;
-  TripDirections_LatLng ll;
+  LatLng ll;
 };
 
 }

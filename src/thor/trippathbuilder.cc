@@ -327,15 +327,15 @@ TripPath_Traversability GetTripPathTraversability(Traversability traversability)
   }
 }
 
-TripPath_Location_SideOfStreet GetTripPathSideOfStreet(
+odin::Location_SideOfStreet GetTripPathSideOfStreet(
     PathLocation::SideOfStreet sos) {
   switch (sos) {
     case PathLocation::SideOfStreet::NONE:
-      return TripPath_Location_SideOfStreet_kNone;
+      return odin::Location_SideOfStreet_kNone;
     case PathLocation::SideOfStreet::LEFT:
-      return TripPath_Location_SideOfStreet_kLeft;
+      return odin::Location_SideOfStreet_kLeft;
     case PathLocation::SideOfStreet::RIGHT:
-      return TripPath_Location_SideOfStreet_kRight;
+      return odin::Location_SideOfStreet_kRight;
   }
 }
 
@@ -390,7 +390,7 @@ TripPath TripPathBuilder::Build(
     const TripPathController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
-    const std::vector<PathLocation>& through_loc,
+    const std::list<PathLocation>& through_loc,
     const std::function<void ()>* interrupt_callback) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
@@ -404,11 +404,11 @@ TripPath TripPathBuilder::Build(
   uint32_t local_level = graphreader.GetTileHierarchy().levels().rbegin()->first;
 
   // Set origin (assumed to be a break)
-  TripPath_Location* tp_orig = trip_path.add_location();
-  TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
+  odin::Location* tp_orig = trip_path.add_location();
+  odin::LatLng* orig_ll = tp_orig->mutable_ll();
   orig_ll->set_lat(origin.latlng_.lat());
   orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_type(TripPath_Location_Type_kBreak);
+  tp_orig->set_type(odin::Location_Type_kBreak);
   if (!origin.name_.empty())
     tp_orig->set_name(origin.name_);
   if (!origin.street_.empty())
@@ -425,12 +425,12 @@ TripPath TripPathBuilder::Build(
     tp_orig->set_heading(*origin.heading_);
 
   // Add list of through locations
-  for (auto through : through_loc) {
-    TripPath_Location* tp_through = trip_path.add_location();
-    TripPath_LatLng* through_ll = tp_through->mutable_ll();
+  for (const auto& through : through_loc) {
+    odin::Location* tp_through = trip_path.add_location();
+    odin::LatLng* through_ll = tp_through->mutable_ll();
     through_ll->set_lat(through.latlng_.lat());
     through_ll->set_lng(through.latlng_.lng());
-    tp_through->set_type(TripPath_Location_Type_kThrough);
+    tp_through->set_type(odin::Location_Type_kThrough);
     if (!through.name_.empty())
       tp_through->set_name(through.name_);
     if (!through.street_.empty())
@@ -450,11 +450,11 @@ TripPath TripPathBuilder::Build(
   }
 
   // Set destination (assumed to be a break)
-  TripPath_Location* tp_dest = trip_path.add_location();
-  TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
+  odin::Location* tp_dest = trip_path.add_location();
+  odin::LatLng* dest_ll = tp_dest->mutable_ll();
   dest_ll->set_lat(dest.latlng_.lat());
   dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_type(TripPath_Location_Type_kBreak);
+  tp_dest->set_type(odin::Location_Type_kBreak);
   if (!dest.name_.empty())
     tp_dest->set_name(dest.name_);
   if (!dest.street_.empty())
@@ -558,11 +558,17 @@ TripPath TripPathBuilder::Build(
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
+    uint32_t current_time = 0;
+    if (origin.date_time_) {
+      DateTime::seconds_from_midnight(*origin.date_time_);
+      current_time += path.front().elapsed_time;
+    }
+
     // Add trip edge
     auto trip_edge = AddTripEdge(
         controller, path.front().edgeid, path.front().trip_id, 0,
         path.front().mode, travel_types[static_cast<int>(path.front().mode)],
-        edge, trip_path.add_node(), tile, std::abs(end_pct - start_pct));
+        edge, trip_path.add_node(), tile, current_time, std::abs(end_pct - start_pct));
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex))
@@ -628,11 +634,11 @@ TripPath TripPathBuilder::Build(
 
     // Set the bounding box of the shape
     AABB2<PointLL> bbox(shape);
-    TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+    odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
     // Set bounding box min lat/lon
     min_ll->set_lat(bbox.miny());
     min_ll->set_lng(bbox.minx());
-    TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+    odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
     // Set bounding box max lat/lon
     max_ll->set_lat(bbox.maxy());
     max_ll->set_lng(bbox.maxx());
@@ -656,6 +662,7 @@ TripPath TripPathBuilder::Build(
   std::vector<PointLL> trip_shape;
   std::string arrival_time;
   bool assumed_schedule = false;
+  sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
@@ -690,6 +697,12 @@ TripPath TripPathBuilder::Build(
     if (node->intersection() == IntersectionType::kFork) {
       if (controller.attributes.at(kNodeFork))
         trip_node->set_fork(true);
+    }
+
+    uint32_t current_time;
+    if (origin.date_time_) {
+      current_time = DateTime::seconds_from_midnight(*origin.date_time_);
+      current_time += elapsedtime;
     }
 
     // Assign the elapsed time from the start of the leg
@@ -749,7 +762,7 @@ TripPath TripPathBuilder::Build(
           transit_stop_info->set_name(graphtile->GetName(transit_stop->name_offset()));
 
         // Set latitude and longitude
-        TripPath_LatLng* stop_ll = transit_stop_info->mutable_ll();
+        odin::LatLng* stop_ll = transit_stop_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller.attributes.at(kNodeTransitStopInfoLatLon)) {
           stop_ll->set_lat(node->latlng().lat());
@@ -765,9 +778,10 @@ TripPath TripPathBuilder::Build(
 
       // If this edge has a trip id then there is a transit departure
       if (trip_id) {
+
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
-                                  trip_id);
+                                  trip_id,current_time);
 
         assumed_schedule = false;
         uint32_t date, day = 0;
@@ -846,7 +860,8 @@ TripPath TripPathBuilder::Build(
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripPath_Edge* trip_edge = AddTripEdge(controller, edge, trip_id, block_id,
                                            mode, travel_type, directededge,
-                                           trip_node, graphtile, length_pct);
+                                           trip_node, graphtile, current_time,
+                                           length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -863,7 +878,7 @@ TripPath TripPathBuilder::Build(
 
     // We need to clip the shape if its at the beginning or end and isnt a full length
     if (is_first_edge || is_last_edge) {
-      float length = static_cast<float>(directededge->length()) * length_pct;
+      float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
       if (directededge->forward() == is_last_edge) {
         AddPartialShape<std::vector<PointLL>::const_iterator>(
             trip_shape, edgeinfo.shape().begin(), edgeinfo.shape().end(),
@@ -970,6 +985,8 @@ TripPath TripPathBuilder::Build(
     // Update elapsed time at the end of the edge, store this at the next node.
     elapsedtime = edge_itr->elapsed_time;
 
+    // Update previous mode.
+    prev_mode = mode;
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
@@ -1027,11 +1044,11 @@ TripPath TripPathBuilder::Build(
 
   // Set the bounding box of the shape
   AABB2<PointLL> bbox(trip_shape);
-  TripPath_LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
   // Set bounding box min lat/lon
   min_ll->set_lat(bbox.miny());
   min_ll->set_lng(bbox.minx());
-  TripPath_LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
   // Set bounding box max lat/lon if requested
   max_ll->set_lat(bbox.maxy());
   max_ll->set_lng(bbox.maxx());
@@ -1057,6 +1074,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
                                             const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
+                                            const uint32_t current_time,
                                             const float length_percentage) {
 
   // Index of the directed edge within the tile
@@ -1117,9 +1135,11 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
         GetTripPathRoadClass(directededge->classification()));
   }
 
-  // Set length if requested
-  if (controller.attributes.at(kEdgeLength))
-    trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
+  // Set length if requested. Convert to km
+  if (controller.attributes.at(kEdgeLength)) {
+    float km = std::max((directededge->length() * 0.001f * length_percentage), 0.001f);
+    trip_edge->set_length(km);
+  }
 
   // Set speed if requested
   if (controller.attributes.at(kEdgeSpeed))
@@ -1342,7 +1362,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
       transit_route_info->set_trip_id(trip_id);
 
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
-        directededge->lineid(), trip_id);
+        directededge->lineid(), trip_id, current_time);
 
     if (transit_departure) {
 

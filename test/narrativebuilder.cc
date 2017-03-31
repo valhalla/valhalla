@@ -3559,7 +3559,7 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
 
   // Add location info to trip path
   TripPath path;
-  TripPath_Location* location;
+  Location* location;
   // origin
   location = path.add_location();
   // destination
@@ -3599,7 +3599,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
 
   // Add location info to trip path
   TripPath path;
-  TripPath_Location* location;
+  Location* location;
   // origin
   location = path.add_location();
   // destination
@@ -3639,12 +3639,12 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
 
   // Add location info to trip path
   TripPath path;
-  TripPath_Location* location;
+  Location* location;
   // origin
   location = path.add_location();
   // destination
   location = path.add_location();
-  location->set_side_of_street(TripPath_Location_SideOfStreet_kRight);
+  location->set_side_of_street(Location_SideOfStreet_kRight);
 
   TryBuild(directions_options, maneuvers, expected_maneuvers,
            static_cast<EnhancedTripPath*>(&path));
@@ -3679,13 +3679,13 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
 
   // Add location info to trip path
   TripPath path;
-  TripPath_Location* location;
+  Location* location;
   // origin
   location = path.add_location();
   // destination
   location = path.add_location();
   location->set_name("Lancaster Brewing Company");
-  location->set_side_of_street(TripPath_Location_SideOfStreet_kLeft);
+  location->set_side_of_street(Location_SideOfStreet_kLeft);
 
   TryBuild(directions_options, maneuvers, expected_maneuvers,
            static_cast<EnhancedTripPath*>(&path));

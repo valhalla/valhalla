@@ -164,6 +164,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
 
     // Remember this edge starts here
     Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+    edge.attributes.way_begin = true;
 
     // Remember this node as starting this edge
     way_node.node.attributes_.link_edge = way.link();
@@ -206,6 +207,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
         edge.attributes.backward_signal = way_node.node.backward_signal();
       }
     }
+    edge.attributes.way_end = true;
   }
   LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
@@ -712,7 +714,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess)
               && ((directededge.link()
                   && (!((bundle.link_count == 2)
-                      && (bundle.driveforward_count == 1)))) || fork)) {
+                      && (bundle.driveforward_count == 1)))) || fork)
+              && ((edge.attributes.driveableforward && edge.attributes.way_begin)
+                  || (edge.attributes.driveablereverse
+                      && edge.attributes.way_end))) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }

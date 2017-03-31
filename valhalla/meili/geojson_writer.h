@@ -4,9 +4,7 @@
 
 #include <vector>
 
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/error/en.h>
+#include <baldr/rapidjson_utils.h>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
@@ -162,14 +160,14 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
   writer.String("distances");
   writer.StartArray();
   for (const auto& result : results) {
-    writer.Double(result.distance());
+    writer.Double(result.distance_from);
   }
   writer.EndArray();
 
   writer.String("graphids");
   writer.StartArray();
   for (const auto& result : results) {
-    writer.Uint64(result.edgeid().id());
+    writer.Uint64(result.edgeid.id());
   }
   writer.EndArray();
 
@@ -178,7 +176,7 @@ void serialize_verbose(rapidjson::Writer<buffer_t>& writer,
   for (const auto& result : results) {
     writer.StartArray();
     if (result.HasState()) {
-      const auto& state = mapmatching.state(result.stateid());
+      const auto& state = mapmatching.state(result.stateid);
       for (const auto& other_state : mapmatching.states(state.time())) {
         serialize_state(writer, *other_state, mapmatcher);
       }
@@ -387,8 +385,8 @@ void GeoJSONRouteWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& 
   writer.String("matched_coordinates");
   writer.StartArray();
   for (const auto& result : results) {
-    if (result.edgeid().Is_Valid()) {
-      serialize_coordinate(writer, result.lnglat());
+    if (result.edgeid.Is_Valid()) {
+      serialize_coordinate(writer, result.lnglat);
     } else {
       writer.Null();
     }
@@ -438,7 +436,7 @@ void GeoJSONMatchedPointsWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffe
   writer.String("coordinates");
   writer.StartArray();
   for (const auto& result : results) {
-    serialize_coordinate(writer, result.lnglat());
+    serialize_coordinate(writer, result.lnglat);
   }
   writer.EndArray();
 

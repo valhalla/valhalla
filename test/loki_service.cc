@@ -30,65 +30,77 @@ namespace {
     http_request_t(POST, "/route"),
     http_request_t(GET, "/many_to_one"),
     http_request_t(POST, "/many_to_many"),
-    http_request_t(GET, "/locate?json={\"locations\":[{\"lon\":0}]}"),
-    http_request_t(POST, "/locate", "{\"locations\":[{\"lon\":0}]}"),
-    http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":-90}], \"costing\": \"pedestrian\"}"),
-    http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":-90}], \"costing\": \"pedestrian\"}"),
-    http_request_t(GET, "/locate?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"yak\"}"),
-    http_request_t(POST, "/locate", "{\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"yak\"}"),
-    http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}"),
-    http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}"),
-    http_request_t(GET, "/one_to_many?json={\"sources\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/many_to_one?json={\"targets\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/many_to_many?json={\"locations\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/sources_to_targets?json={\"targets\":[{\"lon\":0,\"lat\":90}]}"),
-    http_request_t(GET, "/sources_to_targets?json={\"locations\":[{\"lon\":0,\"lat\":90}]}")
+    http_request_t(GET, R"(/locate?json={"locations":[{"lon":0}]})"),
+    http_request_t(POST, "/locate", R"({"locations":[{"lon":0}]})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90}]})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}]})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}]})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian"})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian"})"),
+    http_request_t(GET, R"(/locate?json={"locations":[{"lon":0,"lat":90}], "costing": "yak"})"),
+    http_request_t(POST, "/locate", R"({"locations":[{"lon":0,"lat":90}], "costing": "yak"})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto"})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto"})"),
+    http_request_t(GET, R"(/one_to_many?json={"sources":[{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/many_to_one?json={"targets":[{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/many_to_many?json={"locations":[{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"targets":[{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"locations":[{"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":"NONE","lat":90}, {"lon":"NONE","lat":90}]})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":-270}, {"lon":0,"lat":90}]})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":90}, {"lon":0,"lat":90}], "coosting": "NONE"})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0}]})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}]})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}]})"),
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
-    {405, std::string("{\"error_code\":101,\"error\":\"Try a POST or GET request instead\",\"status_code\":405,\"status\":\"Method Not Allowed\"}")},
-    {405, std::string("{\"error_code\":101,\"error\":\"Try a POST or GET request instead\",\"status_code\":405,\"status\":\"Method Not Allowed\"}")},
-    {405, std::string("{\"error_code\":101,\"error\":\"Try a POST or GET request instead\",\"status_code\":405,\"status\":\"Method Not Allowed\"}")},
-    {405, std::string("{\"error_code\":101,\"error\":\"Try a POST or GET request instead\",\"status_code\":405,\"status\":\"Method Not Allowed\"}")},
-    {405, std::string("{\"error_code\":101,\"error\":\"Try a POST or GET request instead\",\"status_code\":405,\"status\":\"Method Not Allowed\"}")},
-    {405, std::string("{\"error_code\":101,\"error\":\"Try a POST or GET request instead\",\"status_code\":405,\"status\":\"Method Not Allowed\"}")},
-    {404, std::string("{\"error_code\":106,\"error\":\"Try any of:\'\\/locate\' \'\\/route\' \'\\/one_to_many\' \'\\/many_to_one\' \'\\/many_to_many\' \'\\/sources_to_targets\' \'\\/optimized_route\' \'\\/isochrone\' \",\"status_code\":404,\"status\":\"Not Found\"}")},
-    {404, std::string("{\"error_code\":106,\"error\":\"Try any of:\'\\/locate\' \'\\/route\' \'\\/one_to_many\' \'\\/many_to_one\' \'\\/many_to_many\' \'\\/sources_to_targets\' \'\\/optimized_route\' \'\\/isochrone\' \",\"status_code\":404,\"status\":\"Not Found\"}")},
-    {400, std::string("{\"error_code\":100,\"error\":\"Failed to parse json request\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":100,\"error\":\"Failed to parse json request\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":110,\"error\":\"Insufficiently specified required parameter \'locations\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":110,\"error\":\"Insufficiently specified required parameter \'locations\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":130,\"error\":\"Failed to parse location\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":130,\"error\":\"Failed to parse location\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":124,\"error\":\"No edge\\/node costing provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":124,\"error\":\"No edge\\/node costing provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":124,\"error\":\"No edge\\/node costing provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":124,\"error\":\"No edge\\/node costing provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":154,\"error\":\"Path distance exceeds the max distance limit\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":154,\"error\":\"Path distance exceeds the max distance limit\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":125,\"error\":\"No costing method found:'yak'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":125,\"error\":\"No costing method found:'yak'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":150,\"error\":\"Exceeded max locations:20\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":150,\"error\":\"Exceeded max locations:20\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":112,\"error\":\"Insufficiently specified required parameter \'locations\' or \'sources & targets\'\",\"status_code\":400,\"status\":\"Bad Request\"}")},
-    {400, std::string("{\"error_code\":120,\"error\":\"Insufficient number of locations provided\",\"status_code\":400,\"status\":\"Bad Request\"}")}
+    {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
+    {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
+    {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
+    {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
+    {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
+    {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
+    {404, R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/one_to_many' '\/many_to_one' '\/many_to_many' '\/sources_to_targets' '\/optimized_route' '\/isochrone' ","status_code":404,"status":"Not Found"})"},
+    {404, R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/one_to_many' '\/many_to_one' '\/many_to_many' '\/sources_to_targets' '\/optimized_route' '\/isochrone' ","status_code":404,"status":"Not Found"})"},
+    {400, R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":110,"error":"Insufficiently specified required parameter 'locations'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":110,"error":"Insufficiently specified required parameter 'locations'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":112,"error":"Insufficiently specified required parameter 'locations' or 'sources & targets'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":112,"error":"Insufficiently specified required parameter 'locations' or 'sources & targets'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":130,"error":"Failed to parse location","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":130,"error":"Failed to parse location","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":120,"error":"Insufficient number of locations provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":120,"error":"Insufficient number of locations provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":154,"error":"Path distance exceeds the max distance limit","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":154,"error":"Path distance exceeds the max distance limit","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":125,"error":"No costing method found:'yak'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":125,"error":"No costing method found:'yak'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":150,"error":"Exceeded max locations:20","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":150,"error":"Exceeded max locations:20","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":112,"error":"Insufficiently specified required parameter 'locations' or 'sources & targets'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":112,"error":"Insufficiently specified required parameter 'locations' or 'sources & targets'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":120,"error":"Insufficient number of locations provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":112,"error":"Insufficiently specified required parameter 'locations' or 'sources & targets'","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":120,"error":"Insufficient number of locations provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":130,"error":"Failed to parse location","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":130,"error":"Failed to parse location","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":131,"error":"Failed to parse source","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":132,"error":"Failed to parse target","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":157,"error":"Exceeded max avoid locations:0","status_code":400,"status":"Bad Request"})"},
   };
 
 
@@ -105,24 +117,25 @@ namespace {
 
     //make the config file
     boost::property_tree::ptree config;
-    std::stringstream json; json << "{ \
-      \"mjolnir\": { \"tile_dir\": \"test/tiles\" }, \
-      \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\",\"sources_to_targets\",\"optimized_route\",\"isochrone\" ], \
-                  \"logging\": { \"long_request\": 100.0 }, \
-                  \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
-      \"thor\": { \"service\": { \"proxy\": \"ipc:///tmp/test_thor_proxy\" } }, \
-      \"httpd\": { \"service\": { \"loopback\": \"ipc:///tmp/test_loki_results\", \"interrupt\": \"ipc:///tmp/test_loki_interrupt\" } }, \
-      \"service_limits\": { \
-        \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
-        \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50, \
-        \"min_transit_walking_distance\": 1, \"max_transit_walking_distance\": 10000 }, \
-        \"sources_to_targets\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
-        \"optimized_route\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
-        \"isochrone\": { \"max_contours\": 4, \"max_time\": 120, \"max_locations\": 1}, \
-        \"trace\": { \"max_distance\": 65000.0, \"max_shape\": 1000 } \
-      }, \
-     \"costing_options\": { \"auto\": {}, \"pedestrian\": {} } \
-      }";
+    std::stringstream json; json << R"({
+      "mjolnir": { "tile_dir": "test/tiles" },
+      "loki": { "actions": [ "locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone" ],
+                  "logging": { "long_request": 100.0 },
+                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" } }, 
+      "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
+      "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
+      "service_limits": {
+        "auto": { "max_distance": 5000000.0, "max_locations": 20 },
+        "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
+        "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 }, 
+        "sources_to_targets": { "max_distance": 200000.0, "max_locations": 50},
+        "optimized_route": { "max_distance": 200000.0, "max_locations": 50},
+        "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1},
+        "trace": { "max_distance": 65000.0, "max_shape": 1000 },
+        "max_avoid_locations": 0
+      },
+      "costing_options": { "auto": {}, "pedestrian": {} }
+    })";
     boost::property_tree::json_parser::read_json(json, config);
 
     //service worker
@@ -138,6 +151,7 @@ namespace {
     //client makes requests and gets back responses in a batch fashion
     auto request = requests.cbegin();
     std::string request_str;
+    int success_count = 0;
     http_client_t client(context, "ipc:///tmp/test_loki_server",
       [&request, &request_str]() {
         //we dont have any more requests so bail
@@ -149,18 +163,22 @@ namespace {
         ++request;
         return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
       },
-      [&request](const void* data, size_t size) {
+      [&request, &success_count](const void* data, size_t size) {
         auto response = http_response_t::from_string(static_cast<const char*>(data), size);
         if(response.code != responses[request - requests.cbegin() - 1].first)
           throw std::runtime_error("Expected Response Code: " + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code));
         if(response.body != responses[request - requests.cbegin() - 1].second)
           throw std::runtime_error("Expected Response: " + responses[request - requests.cbegin() - 1].second +", Actual Response: " + response.body);
 
+        ++success_count;
         return request != requests.cend();
       }, 1
     );
     //request and receive
     client.batch();
+
+    // Make sure that all requests are tested
+    test::assert_bool(success_count == requests.size(), "Expected passed tests count: " + std::to_string(requests.size()) + " Actual passed tests count: " + std::to_string(success_count));
   }
 }
 

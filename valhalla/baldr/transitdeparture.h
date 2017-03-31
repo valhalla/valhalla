@@ -17,10 +17,10 @@ struct FixedDeparture {
 };
 
 struct FrequencyDeparture {
-  uint64_t start_time_   : 17; // Start time of departures (seconds from midnight)
-  uint64_t end_time_     : 17; // End time of departures (seconds from midnight)
-  uint64_t frequency_    : 13; // Interval between departures (seconds)
-  uint64_t elapsed_time_ : 17; // Time (secs) until arrival at next stop
+  uint64_t departure_time_  : 17; // Departure time (seconds from midnight)
+  uint64_t end_time_        : 17; // End time of departures (seconds from midnight)
+  uint64_t frequency_       : 13; // Interval between departures (seconds)
+  uint64_t elapsed_time_    : 17; // Time (secs) until arrival at next stop
 };
 
 /**
@@ -59,7 +59,7 @@ class TransitDeparture {
    * @param  routeid  Route index within the tile.
    * @param  blockid  Block Id.
    * @param  headsign_offset  Offset to headsign within the text/name table.
-   * @param  start_time   Start time for departures (seconds from midnight)
+   * @param  departure_time   Departure time (seconds from midnight)
    * @param  end_time     End time for departures (seconds from midnight)
    * @param  frequency    Seconds between successive departures.
    * @param  elapsed_time     Elapsed time to next stop
@@ -75,6 +75,12 @@ class TransitDeparture {
                    const uint32_t schedule_index,
                    const bool wheelchair_accessible,
                    const bool bicycle_accessible);
+
+  /**
+   * Get the type of departure.
+   * @return  Returns the departure type.
+   */
+  uint32_t type() const;
 
   /**
    * Get the line Id - for lookup of all departures along this edge. Each
@@ -118,12 +124,6 @@ class TransitDeparture {
    * @return  Returns the time in seconds.
    */
   uint32_t elapsed_time() const;
-
-  /**
-   * Get the start time of frequency based departures.
-   * @return  Returns the start time in seconds from midnight.
-   */
-  uint32_t start_time() const;
 
   /**
    * Get the end time of frequency based departures.

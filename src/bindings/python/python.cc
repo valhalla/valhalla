@@ -6,9 +6,6 @@
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/python/str.hpp>
-#include <boost/python/dict.hpp>
-#include <boost/python/extract.hpp>
 #include <boost/python.hpp>
 
 #include "midgard/logging.h"

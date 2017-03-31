@@ -153,6 +153,7 @@ void FormTilesInNewLevel(GraphReader& reader) {
   bool added = false;
   uint8_t current_level;
   GraphId tile_id;
+  std::hash<std::string> hasher;
   GraphTileBuilder* tilebuilder = nullptr;
   const auto& tile_hierarchy = reader.GetTileHierarchy();
   for (auto new_node = new_to_old.begin(); new_node != new_to_old.end(); new_node++) {
@@ -273,13 +274,16 @@ void FormTilesInNewLevel(GraphReader& reader) {
       }
 
       // Get edge info, shape, and names from the old tile and add to the
-      // new. Use the current edge info offset as the "index" to properly
-      // create edge pairs in the same tile.
+      // new. Cannot use edge info offset since edges in arterial and
+      // highway hierarchy can cross base tiles! Use a hash based on the
+      // encoded shape plus way Id.
       uint32_t idx = directededge->edgeinfo_offset();
       auto edgeinfo = tile->edgeinfo(idx);
-      uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(idx,
-                         nodea, nodeb, edgeinfo.wayid(), edgeinfo.shape(),
-                         tile->GetNames(idx), added);
+      std::string encoded_shape = edgeinfo.encoded_shape();
+      uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
+      uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(w, nodea, nodeb,
+                    edgeinfo.wayid(), encoded_shape,
+                    tile->GetNames(idx), added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge

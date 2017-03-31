@@ -41,9 +41,9 @@ class EnhancedTripPath : public TripPath {
 
   std::string GetStateCode(int node_index);
 
-  const ::valhalla::odin::TripPath_Location& GetOrigin() const;
+  const ::valhalla::odin::Location& GetOrigin() const;
 
-  const ::valhalla::odin::TripPath_Location& GetDestination() const;
+  const ::valhalla::odin::Location& GetDestination() const;
 
   float GetLength(const DirectionsOptions::Units& units);
 

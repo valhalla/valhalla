@@ -209,15 +209,16 @@ class BicycleCost : public DynamicCost {
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           current tile
-   * @param  edgeid         edgeid that we care about
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::GraphTile*& tile,
-                 const baldr::GraphId& edgeid) const;
+                 const baldr::GraphId& opp_edgeid) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -511,10 +512,10 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
-  if (!(edge->forwardaccess() & kBicycleAccess) ||
-        edge->is_shortcut() ||
-      (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx()))) {
+  if (!(edge->forwardaccess() & kBicycleAccess) || edge->is_shortcut() ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+      IsUserAvoidEdge(edgeid)) {
     return false;
   }
 
@@ -534,15 +535,16 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& edgeid) const {
+               const baldr::GraphId& opp_edgeid) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
         opp_edge->is_shortcut() || opp_edge->use() == Use::kTransitConnection ||
-       (pred.opp_local_idx() == edge->localedgeidx() && !pred.deadend()) ||
-       (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) {
+       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+       IsUserAvoidEdge(opp_edgeid)) {
     return false;
   }
 
@@ -589,7 +591,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
     factor = (0.5f + useroads_ * 0.5f);
-  } else if (edge->use() == Use::kFootway) {
+  } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
     factor = 0.75f + (useroads_ * 0.5f);

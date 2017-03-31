@@ -67,6 +67,14 @@ DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
   for (uint32_t level = 0; level < n_levels; level++) {
     hierarchy_limits_.emplace_back(HierarchyLimits(pt, level));
   }
+
+  // Parse property tree to get avoid edges
+  auto avoid_edges = pt.get_child_optional("avoid_edges");
+  if (avoid_edges) {
+    for (auto& edgeid : *avoid_edges) {
+      user_avoid_edges_.insert(GraphId(edgeid.second.get_value<uint64_t>()));
+    }
+  }
 }
 
 DynamicCost::~DynamicCost() {
@@ -236,6 +244,13 @@ bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
 bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile,
                              const baldr::NodeInfo* node) {
   return false;
+}
+
+// Adds a list of edges (GraphIds) to the user specified avoid list.
+void DynamicCost::AddUserAvoidEdges(const std::vector<GraphId>& avoid_edges) {
+  for (auto edgeid : avoid_edges) {
+    user_avoid_edges_.insert(edgeid);
+  }
 }
 
 }

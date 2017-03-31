@@ -11,24 +11,15 @@ using namespace valhalla::baldr;
 
 namespace {
 
-class test_reader : public GraphReader {
+class test_cache : public TileCache {
  public:
-  using GraphReader::GraphReader;
-  using GraphReader::cache_size_;
-  using GraphReader::max_cache_size_;
+  using TileCache::TileCache;
+  using TileCache::cache_size_;
+  using TileCache::max_cache_size_;
 };
 
-test_reader make_cache(std::string cache_size) {
-  std::stringstream json; json << "\
-  {"
-    + cache_size +
-    "\"tile_dir\": \"/data/valhalla\"\
-  }";
-
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(json, pt);
-
-  return {pt};
+test_cache make_cache(size_t cache_size) {
+  return {cache_size};
 }
 
 void TestOutOfRangeLL() {
@@ -46,16 +37,13 @@ void TestOutOfRangeLL() {
 }
 
 void TestCacheLimits() {
-  if(make_cache("\"max_cache_size\": 0,").OverCommitted())
+  if(make_cache(0).OverCommitted())
     throw std::runtime_error("Cache should be over committed");
 
-  if(make_cache("\"max_cache_size\": 1,").OverCommitted())
+  if(make_cache(1).OverCommitted())
     throw std::runtime_error("Cache should be under committed");
 
-  if(make_cache("").OverCommitted())
-    throw std::runtime_error("Cache should be under committed");
-
-  auto cache = make_cache("");
+  auto cache = make_cache(10);
   cache.cache_size_ = cache.max_cache_size_ + 1;
   if(!cache.OverCommitted())
     throw std::runtime_error("Cache should be over committed");

@@ -56,9 +56,11 @@ struct Departure {
   uint32_t headsign_offset;
   uint32_t dep_time;
   uint32_t schedule_index;
+  uint32_t frequency_end_time;
+  uint16_t elapsed_time;
+  uint16_t frequency;
   float    orig_dist_traveled;
   float    dest_dist_traveled;
-  uint16_t elapsed_time;
   bool     wheelchair_accessible;
   bool     bicycle_accessible;
 };
@@ -82,10 +84,13 @@ struct StopEdges {
 // Struct to hold stats information during each threads work
 struct builder_stats {
   uint32_t no_dir_edge_count;
-
+  uint32_t dep_count;
+  uint32_t midnight_dep_count;
   // Accumulate stats from all threads
   void operator()(const builder_stats& other) {
     no_dir_edge_count += other.no_dir_edge_count;
+    dep_count += other.dep_count;
+    midnight_dep_count += other.midnight_dep_count;
   }
 };
 
@@ -333,7 +338,9 @@ void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
       type = Transit_VehicleType::Transit_VehicleType_kRail;
     else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
              vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
-             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus")
+             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
+             vehicle_type == "demand_and_response_bus_service" ||
+             vehicle_type == "regional_bus_service")
       type = Transit_VehicleType::Transit_VehicleType_kBus;
     else if (vehicle_type == "ferry")
       type = Transit_VehicleType::Transit_VehicleType_kFerry;
@@ -449,17 +456,37 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     }
     pair->set_route_index(route->second);
 
+    auto frequency_start_time = pair_pt.second.get<std::string>("frequency_start_time", "null");
+    auto frequency_end_time = pair_pt.second.get<std::string>("frequency_end_time", "null");
+    auto frequency_headway_seconds = pair_pt.second.get<std::string>("frequency_headway_seconds", "null");
+    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
+
+    // this will be empty for non frequency trips.
+    std::string frequency_time;
+
+    if (frequency_start_time != "null" && frequency_end_time != "null" && frequency_headway_seconds != "null") {
+
+      // this should never happen and if it does then it is a bad frequency.  just continue
+      if (origin_time < frequency_start_time) {
+        tile.mutable_stop_pairs()->RemoveLast();
+        continue;
+        //LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      }
+      pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
+      pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
+      frequency_time = frequency_start_time + frequency_end_time;
+    }
+
     //uniq line id
     auto line_id = pair->origin_onestop_id() < pair->destination_onestop_id() ?
-                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id:
-                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id;
+                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id + frequency_time:
+                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
     pair->set_line_id(inserted.first->second);
     uniques.lock.unlock();
 
     //timing information
-    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
     auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
     auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
     auto end_date = pair_pt.second.get<std::string>("service_end_date", "null");
@@ -468,6 +495,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
     pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
@@ -483,6 +511,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
+
     uniques.lock.lock();
     inserted = uniques.trips.insert({trip, uniques.trips.size()});
     pair->set_trip_id(inserted.first->second);
@@ -922,7 +951,8 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
     const Transit& transit,
     std::unordered_map<GraphId, uint16_t>& stop_access,
     const std::string& file,
-    const GraphId& tile_id, std::mutex& lock) {
+    const GraphId& tile_id, std::mutex& lock,
+    builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
   std::unordered_multimap<GraphId, Departure> departures;
 
@@ -989,6 +1019,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
           dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
           dep.dep_time = sp.origin_departure_time();
           dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
+
+          dep.frequency_end_time = sp.has_frequency_end_time() ? sp.frequency_end_time() : 0;
+          dep.frequency = sp.has_frequency_headway_seconds() ? sp.frequency_headway_seconds() : 0;
 
           if (!sp.bikes_allowed()) {
             stop_access[dep.orig_pbf_graphid] |= kBicycleAccess;
@@ -1082,8 +1115,37 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
             dep.schedule_index = sched_itr->second;
           }
 
+          //is this passed midnight?
+          //adjust the time if it is after midnight.
+          //create a departure for before midnight and one after
+          uint32_t origin_seconds = sp.origin_departure_time();
+          if (origin_seconds >= kSecondsPerDay) {
+
+            // Add the current dep to the departures list
+            // and then update it with new dep time.  This
+            // dep will be used when the start time is after
+            // midnight.
+            stats.midnight_dep_count++;
+            departures.emplace(dep.orig_pbf_graphid, dep);
+            while (origin_seconds >= kSecondsPerDay)
+              origin_seconds -= kSecondsPerDay;
+
+            dep.dep_time = origin_seconds;
+            dep.frequency_end_time = 0;
+            dep.frequency = 0;
+            if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
+              uint32_t frequency_end_time = sp.frequency_end_time();
+              //adjust the end time if it is after midnight.
+              while (frequency_end_time >= kSecondsPerDay)
+                frequency_end_time -= kSecondsPerDay;
+
+              dep.frequency_end_time = frequency_end_time;
+              dep.frequency = sp.frequency_headway_seconds();
+            }
+          }
           // Add to the departures list
           departures.emplace(dep.orig_pbf_graphid, std::move(dep));
+          stats.dep_count++;
         }
       }
     }
@@ -1331,6 +1393,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder_transit.directededges().size());
     node.set_timezone(stop.timezone());
+    node.set_connecting_wayid(stop.osm_way_id());
 
  /** TODO - future when we get egress, station, platform hierarchy
     // Add any intra-station connections - these are always in the same tile?
@@ -1502,7 +1565,11 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
                  std::vector<OneStopTest>& onestoptests,
                  std::promise<builder_stats>& results) {
 
-  uint32_t no_dir_edge_count = 0;
+  builder_stats stats;
+  stats.no_dir_edge_count = 0;
+  stats.dep_count = 0;
+  stats.midnight_dep_count = 0;
+
   GraphReader reader_transit_level(pt);
   const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
@@ -1597,7 +1664,8 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Process schedule stop pairs (departures)
     std::unordered_multimap<GraphId, Departure> departures =
                 ProcessStopPairs(tilebuilder_transit,tile_creation_date,
-                                 transit, stop_access, file, tile_id, lock);
+                                 transit, stop_access, file, tile_id, lock,
+                                 stats);
 
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.stops_size(); i++) {
@@ -1641,12 +1709,23 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
          }
 
          try {
-           // Form transit departures
-           TransitDeparture td(lineid, dep.trip, dep.route,
-                               dep.blockid, dep.headsign_offset, dep.dep_time,
-                               dep.elapsed_time, dep.schedule_index,
-                               dep.wheelchair_accessible, dep.bicycle_accessible);
-           tilebuilder_transit.AddTransitDeparture(std::move(td));
+           if (dep.frequency == 0) {
+             // Form transit departures -- fixed departure time
+             TransitDeparture td(lineid, dep.trip, dep.route,
+                                 dep.blockid, dep.headsign_offset, dep.dep_time,
+                                 dep.elapsed_time, dep.schedule_index,
+                                 dep.wheelchair_accessible, dep.bicycle_accessible);
+             tilebuilder_transit.AddTransitDeparture(std::move(td));
+           } else {
+
+             // Form transit departures -- frequency departure time
+             TransitDeparture td(lineid, dep.trip, dep.route,
+                                 dep.blockid, dep.headsign_offset,
+                                 dep.dep_time, dep.frequency_end_time,
+                                 dep.frequency, dep.elapsed_time, dep.schedule_index,
+                                 dep.wheelchair_accessible, dep.bicycle_accessible);
+             tilebuilder_transit.AddTransitDeparture(std::move(td));
+           }
          } catch(const std::exception& e) {
            LOG_ERROR(e.what());
          }
@@ -1667,7 +1746,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, hierarchy_transit_level, tile_id, file, transit_dir,
                lock, all_tiles, stop_edge_map, stop_access, shapes, distances,
-               route_types, onestoptests, no_dir_edge_count);
+               route_types, onestoptests, stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.stops_size()) + " stops, " +
@@ -1682,7 +1761,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   }
 
   // Send back the statistics
-  results.set_value({no_dir_edge_count});
+  results.set_value(stats);
 }
 
 void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
@@ -1743,12 +1822,17 @@ void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   // Check all of the outcomes, to see about maximum density (km/km2)
   builder_stats stats{};
   uint32_t total_no_dir_edge_count = 0;
+  uint32_t total_dep_count = 0;
+  uint32_t total_midnight_dep_count = 0;
+
   for (auto& result : results) {
     // If something bad went down this will rethrow it
     try {
       auto thread_stats = result.get_future().get();
       stats(thread_stats);
       total_no_dir_edge_count += stats.no_dir_edge_count;
+      total_dep_count += stats.dep_count;
+      total_midnight_dep_count += stats.midnight_dep_count;
     }
     catch(std::exception& e) {
       //TODO: throw further up the chain?
@@ -1758,6 +1842,14 @@ void build(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   if (total_no_dir_edge_count)
     LOG_ERROR("There were " + std::to_string(total_no_dir_edge_count) + " nodes with no directed edges");
 
+  if (total_dep_count) {
+    float percent = static_cast<float>(total_midnight_dep_count) / static_cast<float>(total_dep_count);
+    percent *= 100;
+
+    LOG_INFO("There were " + std::to_string(total_dep_count) + " departures and " +
+              std::to_string(total_midnight_dep_count) + " midnight departures were added: " +
+              std::to_string(percent) + "% increase.");
+  }
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();

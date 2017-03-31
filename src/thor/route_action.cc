@@ -47,6 +47,7 @@ namespace valhalla {
     for (const auto &trippath: trippaths) {
       result.messages.emplace_back(trippath.SerializeAsString());
     }
+
     //get processing time for thor
     auto e = std::chrono::system_clock::now();
     std::chrono::duration<float, std::milli> elapsed_time = e - s;
@@ -143,7 +144,7 @@ namespace valhalla {
       // location is a BREAK or if this is the last location
       if (origin->stoptype_ == Location::StopType::BREAK) {
         // Move destination back to the last break and collect the throughs
-        std::vector<PathLocation> throughs;
+        std::list<PathLocation> throughs;
         while(destination->stoptype_ != Location::StopType::BREAK) {
           throughs.push_back(*destination);
           --destination;
@@ -209,9 +210,9 @@ namespace valhalla {
       // location is a BREAK or if this is the last location
       if (destination->stoptype_ == Location::StopType::BREAK) {
         // Move origin back to the last break and collect the throughs
-        std::vector<PathLocation> throughs;
+        std::list<PathLocation> throughs;
         while(origin->stoptype_ != Location::StopType::BREAK) {
-          throughs.push_back(*origin);
+          throughs.push_front(*origin);
           --origin;
         }
 

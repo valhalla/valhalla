@@ -36,6 +36,8 @@ message Transit {
     optional uint32 shape_id = 20;
     optional float origin_dist_traveled = 21;
     optional float destination_dist_traveled = 22;
+    optional uint32 frequency_end_time = 23;
+    optional uint32 frequency_headway_seconds = 24;
   }
    
   enum VehicleType {

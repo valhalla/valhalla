@@ -696,12 +696,12 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   // Determine if the destination has a side of street
   // and set the appropriate destination maneuver type
   switch (trip_path_->GetDestination().side_of_street()) {
-    case TripPath_Location_SideOfStreet_kLeft: {
+    case Location_SideOfStreet_kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestinationLeft);
       LOG_TRACE("ManeuverType=DESTINATION_LEFT");
       break;
     }
-    case TripPath_Location_SideOfStreet_kRight: {
+    case Location_SideOfStreet_kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestinationRight);
       LOG_TRACE("ManeuverType=DESTINATION_RIGHT");
       break;
@@ -757,12 +757,12 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   // Determine if the origin has a side of street
   // and set the appropriate start maneuver type
   switch (trip_path_->GetOrigin().side_of_street()) {
-    case TripPath_Location_SideOfStreet_kLeft: {
+    case Location_SideOfStreet_kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStartLeft);
       LOG_TRACE("ManeuverType=START_LEFT");
       break;
     }
-    case TripPath_Location_SideOfStreet_kRight: {
+    case Location_SideOfStreet_kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStartRight);
       LOG_TRACE("ManeuverType=START_RIGHT");
       break;

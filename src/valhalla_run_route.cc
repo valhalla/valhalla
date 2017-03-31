@@ -87,7 +87,6 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
                   bool using_astar, bool match_test) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
-  std::vector<PathLocation> through_loc;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   data.incPasses();
@@ -116,7 +115,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
   TripPathController controller;
   TripPath trip_path = TripPathBuilder::Build(controller, reader, mode_costing,
                                               pathedges, origin, dest,
-                                              through_loc);
+                                              std::list<PathLocation>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
@@ -137,7 +136,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
-    std::vector<Location> locations{shape.front(), shape.back()};
+    std::vector<valhalla::baldr::Location> locations{shape.front(), shape.back()};
     locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
@@ -479,7 +478,7 @@ int main(int argc, char *argv[]) {
   directions_options.set_language("en-US");
 
   // Locations
-  std::vector<Location> locations;
+  std::vector<valhalla::baldr::Location> locations;
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
@@ -495,8 +494,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
     }
-    locations.push_back(Location::FromCsv(origin));
-    locations.push_back(Location::FromCsv(destination));
+    locations.push_back(valhalla::baldr::Location::FromCsv(origin));
+    locations.push_back(valhalla::baldr::Location::FromCsv(destination));
   }
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
@@ -507,7 +506,7 @@ int main(int argc, char *argv[]) {
 
     try {
       for (const auto& location : json_ptree.get_child("locations"))
-        locations.emplace_back(std::move(Location::FromPtree(location.second)));
+        locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
       if (locations.size() < 2)
         throw;
     } catch (...) {
