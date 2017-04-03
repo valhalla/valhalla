@@ -1,6 +1,4 @@
 // -*- mode: c++ -*-
-#include "baldr/rapidjson_utils.h"
-
 #include "test.h"
 #include "meili/geojson_writer.h"
 
