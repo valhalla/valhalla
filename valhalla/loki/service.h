@@ -72,6 +72,8 @@ namespace valhalla {
       size_t max_contours;
       size_t max_time;
       size_t max_shape;
+      float max_gps_accuracy;
+      float max_search_radius;
       bool healthcheck;
     };
   }

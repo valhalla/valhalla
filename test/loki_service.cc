@@ -131,7 +131,7 @@ namespace {
         "sources_to_targets": { "max_distance": 200000.0, "max_locations": 50},
         "optimized_route": { "max_distance": 200000.0, "max_locations": 50},
         "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1},
-        "trace": { "max_distance": 65000.0, "max_shape": 1000 },
+        "trace": { "max_distance": 65000.0, "max_gps_accuracy": 100.0, "max_shape": 16000, "max_search_radius": 100 },
         "max_avoid_locations": 0
       },
       "costing_options": { "auto": {}, "pedestrian": {} }

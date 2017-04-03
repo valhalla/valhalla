@@ -118,6 +118,7 @@ namespace baldr {
     {155,"Outside the valid walking distance at the beginning or end of a multimodal route"},
     {156,"Outside the valid walking distance between stops of a multimodal route"},
     {157,"Exceeded max avoid locations"},
+    {158,"Input trace option is out of bounds"},
 
     {160,"Date and time required for origin for date_type of depart at"},
     {161,"Date and time required for destination for date_type of arrive by"},
