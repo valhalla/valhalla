@@ -66,7 +66,7 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
       "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 }
 
-void check_gps_accuracy(const float input_gps_accuracy, float max_gps_accuracy) {
+void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accuracy) {
   if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f)
     throw valhalla_exception_t { 400, 158 };
 
@@ -74,7 +74,7 @@ void check_gps_accuracy(const float input_gps_accuracy, float max_gps_accuracy) 
       "gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters", " [ANALYTICS] ");
 }
 
-void check_search_radius(const float input_search_radius, float max_search_radius) {
+void check_search_radius(const float input_search_radius, const float max_search_radius) {
   if (input_search_radius > max_search_radius || input_search_radius < 0.f)
     throw valhalla_exception_t { 400, 158 };
 
@@ -110,9 +110,9 @@ namespace valhalla {
       auto input_search_radius = GetOptionalFromRapidJson<float>(request, "/trace_options/search_radius");
       auto input_turn_penalty_factor = GetOptionalFromRapidJson<float>(request, "/trace_options/turn_penalty_factor");
       if (input_gps_accuracy)
-        check_gps_accuracy(*input_gps_accuracy, max_gps_accuracy.find("trace")->second);
+        check_gps_accuracy(*input_gps_accuracy, max_gps_accuracy);
       if (input_search_radius)
-        check_search_radius(*input_search_radius, max_search_radius.find("trace")->second);
+        check_search_radius(*input_search_radius, max_search_radius);
       if (input_turn_penalty_factor)
         check_turn_penalty_factor(*input_turn_penalty_factor);
 

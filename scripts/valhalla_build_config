@@ -266,7 +266,6 @@ help_text = {
       'breakage_distance': 'TODO: ',
       'interpolation_distance': 'TODO: ',
       'search_radius': 'TODO: ',
-      'max_search_radius': 'TODO: ',
       'geometry': 'TODO: ',
       'route': 'TODO: ',
       'turn_penalty_factor': 'TODO: '

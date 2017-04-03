@@ -233,11 +233,6 @@ namespace valhalla {
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
-        if (kv.first == "trace") {
-          max_gps_accuracy.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_gps_accuracy"));
-          max_search_radius.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_search_radius"));
-        }
-
         if(kv.first == "max_avoid_locations")
           continue;
         if (kv.first != "skadi" && kv.first != "trace")
@@ -258,6 +253,9 @@ namespace valhalla {
         config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
       max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+      max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
+      max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
+
 
       // Register edge/node costing methods
       // TODO: move this into the loop above
