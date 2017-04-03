@@ -72,6 +72,8 @@ namespace valhalla {
       size_t max_contours;
       size_t max_time;
       size_t max_shape;
+      std::unordered_map<std::string, float> max_gps_accuracy;
+      std::unordered_map<std::string, float> max_search_radius;
       bool healthcheck;
     };
   }

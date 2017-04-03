@@ -66,6 +66,26 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
       "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 }
 
+void check_gps_accuracy(const float input_gps_accuracy, float max_gps_accuracy) {
+  if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f)
+    throw valhalla_exception_t { 400, 158 };
+
+  valhalla::midgard::logging::Log(
+      "gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters", " [ANALYTICS] ");
+}
+
+void check_search_radius(const float input_search_radius, float max_search_radius) {
+  if (input_search_radius > max_search_radius || input_search_radius < 0.f)
+    throw valhalla_exception_t { 400, 158 };
+
+  valhalla::midgard::logging::Log(
+      "search_radius::" + std::to_string(input_search_radius) + "meters", " [ANALYTICS] ");
+}
+
+void check_turn_penalty_factor(const float input_turn_penalty_factor) {
+  if (input_turn_penalty_factor < 0.f)
+    throw valhalla_exception_t { 400, 158 };
+}
 }
 
 namespace valhalla {
@@ -85,6 +105,16 @@ namespace valhalla {
       // Validate shape count and distance (for now, just send max_factor for distance)
       check_shape(shape, max_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
+      // Validate optional trace options
+      auto input_gps_accuracy = GetOptionalFromRapidJson<float>(request, "/trace_options/gps_accuracy");
+      auto input_search_radius = GetOptionalFromRapidJson<float>(request, "/trace_options/search_radius");
+      auto input_turn_penalty_factor = GetOptionalFromRapidJson<float>(request, "/trace_options/turn_penalty_factor");
+      if (input_gps_accuracy)
+        check_gps_accuracy(*input_gps_accuracy, max_gps_accuracy.find("trace")->second);
+      if (input_search_radius)
+        check_search_radius(*input_search_radius, max_search_radius.find("trace")->second);
+      if (input_turn_penalty_factor)
+        check_turn_penalty_factor(*input_turn_penalty_factor);
 
       // Set locations after parsing the shape
       locations_from_shape(request);

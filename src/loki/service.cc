@@ -233,6 +233,11 @@ namespace valhalla {
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
+        if (kv.first == "trace") {
+          max_gps_accuracy.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_gps_accuracy"));
+          max_search_radius.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_search_radius"));
+        }
+
         if(kv.first == "max_avoid_locations")
           continue;
         if (kv.first != "skadi" && kv.first != "trace")
