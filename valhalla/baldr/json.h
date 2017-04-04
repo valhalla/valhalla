@@ -54,7 +54,7 @@ class Jarray : public std::list<Value> {
 class OstreamVisitor : public boost::static_visitor<std::ostream&>
 {
  public:
-  OstreamVisitor(std::ostream& o):ostream_(o){}
+  OstreamVisitor(std::ostream& o):ostream_(o), fill(o.fill()){}
 
   std::ostream& operator()(const std::string& value) const {
     ostream_ << '"';
@@ -70,8 +70,18 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
       case '\r': ostream_ << "\\r"; break;
       case '\t': ostream_ << "\\t"; break;
       default:
-        if(c >= 0 && c < 32)
-          ostream_ << "\\u" << std::hex << std::uppercase << std::setfill('0') << std::setw(4) << static_cast<int>(c);
+        if(c >= 0 && c < 32) {
+          //format changes for json hex
+          ostream_.setf(std::ios::hex, std::ios::basefield);
+          ostream_.setf(std::ios::uppercase);
+          ostream_.fill('0');
+          //output hex
+          ostream_ << "\\u" << std::setw(4) << static_cast<int>(c);
+          //tear down format changes
+          ostream_.unsetf(std::ios::basefield);
+          ostream_.unsetf(std::ios::uppercase);
+          ostream_.fill(fill);
+        }
         else
           ostream_ << c;
         break;
@@ -88,6 +98,7 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
   std::ostream& operator()(const ArrayPtr& value) const { return ostream_ << *value; }
  private:
   std::ostream& ostream_;
+  char fill;
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp){
