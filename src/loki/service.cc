@@ -253,6 +253,9 @@ namespace valhalla {
         config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
       max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+      max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
+      max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
+
 
       // Register edge/node costing methods
       // TODO: move this into the loop above

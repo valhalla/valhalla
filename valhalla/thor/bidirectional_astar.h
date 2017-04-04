@@ -162,35 +162,6 @@ class BidirectionalAStar : public PathAlgorithm {
    */
   void SetReverseConnection(const sif::EdgeLabel& pred);
 
-  /**
-   * Check if edge is temporarily labeled and this path has less cost. If
-   * less cost the predecessor is updated and the sort cost is decremented
-   * by the difference in real cost (A* heuristic doesn't change).
-   * @param  idx        Index into the edge status list.
-   * @param  predindex  Index of the predecessor edge.
-   * @param  newcost    Cost of the new path.
-   * @param  tc         Transition cost onto this edge.
-   */
-  void CheckIfLowerCostPathForward(const uint32_t idx,
-                            const uint32_t predindex,
-                            const sif::Cost& newcost,
-                            const sif::Cost& tc);
-
-  /**
-   * Check if edge is temporarily labeled and this path has less cost. If
-   * less cost the predecessor is updated and the sort cost is decremented
-   * by the difference in real cost (A* heuristic doesn't change). This
-   * method applies to the reverse path portion of the bidirectional search.
-   * @param  idx        Index into the edge status list.
-   * @param  predindex  Index of the predecessor edge.
-   * @param  newcost    Cost of the new path.
-   * @param  tc         Transition cost onto this edge.
-   */
-  void CheckIfLowerCostPathReverse(const uint32_t idx,
-                           const uint32_t predindex,
-                           const sif::Cost& newcost,
-                           const sif::Cost& tc);
-
    /**
     * Form the path from the adjacency lists. Recovers the path from the
     * where the paths meet back towards the origin then reverses this path.

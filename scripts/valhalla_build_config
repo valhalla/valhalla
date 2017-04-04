@@ -80,7 +80,6 @@ config = {
       'breakage_distance': 2000,
       'interpolation_distance': 10,
       'search_radius': 50,
-      'max_search_radius': 100,
       'geometry': False,
       'route': True,
       'turn_penalty_factor': 0
@@ -184,6 +183,8 @@ config = {
     },
     'trace': {
       'max_distance': 200000.0,
+      'max_gps_accuracy': 100.0,
+      'max_search_radius': 100,
       'max_shape': 16000
     },
     'max_avoid_locations': 50    
@@ -265,7 +266,6 @@ help_text = {
       'breakage_distance': 'TODO: ',
       'interpolation_distance': 'TODO: ',
       'search_radius': 'TODO: ',
-      'max_search_radius': 'TODO: ',
       'geometry': 'TODO: ',
       'route': 'TODO: ',
       'turn_penalty_factor': 'TODO: '
@@ -369,6 +369,8 @@ help_text = {
     },
     'trace': {
       'max_distance': 'Maximum input shape distance in meters',
+      'max_gps_accuracy': 'Maximum input gps accuracy in meters',
+      'max_search_radius': 'Maximum upper bounds of the search radius in meters',
       'max_shape': 'Maximum number of input shape points'
     },
     'max_avoid_locations': 'Maximum number of avoid locations to allow in request'

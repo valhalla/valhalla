@@ -105,6 +105,7 @@ class BucketQueue
     }
   }
 
+  // TODO - this is only used in tests (is it needed?).
   float cost(const key_t& key) const
   {
     const auto it = costmap_.find(key);

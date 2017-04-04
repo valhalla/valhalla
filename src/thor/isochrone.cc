@@ -220,7 +220,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        CheckIfLowerCostPath(edgestatus.index(), predindex, newcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost <  lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost);
+        }
         continue;
       }
 
@@ -359,7 +364,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        CheckIfLowerCostPath(edgestatus.index(), predindex, newcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost < lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost);
+        }
         continue;
       }
 
@@ -692,14 +702,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        uint32_t idx = edgestatus.index();
-        float dc = edgelabels_[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels_[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels_[idx].Update(predindex, newcost, newsortcost,
-                                  walking_distance, tripid, blockid);
-          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost < lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost, walking_distance,
+                     tripid, blockid);
         }
         continue;
       }
@@ -767,21 +775,6 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
     for (auto t : tiles) {
       isotile_->SetIfLessThan(t.first, secs * to_minutes);
     }
-  }
-}
-
-// Check if edge is temporarily labeled and this path has less cost. If
-// less cost the predecessor is updated and the sort cost is decremented
-// by the difference in real cost (A* heuristic doesn't change)
-void Isochrone::CheckIfLowerCostPath(const uint32_t idx,
-                                     const uint32_t predindex,
-                                     const Cost& newcost) {
-  float dc = edgelabels_[idx].cost().cost - newcost.cost;
-  if (dc > 0) {
-    float oldsortcost = edgelabels_[idx].sortcost();
-    float newsortcost = oldsortcost - dc;
-    edgelabels_[idx].Update(predindex, newcost, newsortcost);
-    adjacencylist_->decrease(idx, newsortcost, oldsortcost);
   }
 }
 
