@@ -159,7 +159,12 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        CheckIfLowerCostPath(edgestatus.index(), predindex, newcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost <  lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost);
+        }
         continue;
       }
 

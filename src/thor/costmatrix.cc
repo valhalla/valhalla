@@ -276,11 +276,10 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      uint32_t idx = edgestatus.index();
-      if (newcost.cost < edgelabels[idx].cost().cost) {
-        float oldsortcost = edgelabels[idx].sortcost();
-        edgelabels[idx].Update(pred_idx, newcost, newcost.cost, tc, distance);
-        adj->decrease(idx, newcost.cost, oldsortcost);
+      EdgeLabel& lab = edgelabels[edgestatus.index()];
+      if (newcost.cost < lab.cost().cost) {
+        adj->decrease(edgestatus.index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, tc, distance);
       }
       continue;
     }
@@ -562,12 +561,11 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
-    if (edgestatus.set() != EdgeSet::kUnreached) {
-      uint32_t idx = edgestatus.index();
-      if (newcost.cost < edgelabels[idx].cost().cost) {
-        float oldsortcost = edgelabels[idx].sortcost();
-        edgelabels[idx].Update(pred_idx, newcost, newcost.cost, tc, distance);
-        adj->decrease(idx, newcost.cost, oldsortcost);
+    if (edgestatus.set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels[edgestatus.index()];
+      if (newcost.cost < lab.cost().cost) {
+        adj->decrease(edgestatus.index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, tc, distance);
       }
       continue;
     }

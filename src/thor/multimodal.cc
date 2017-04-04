@@ -459,14 +459,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        uint32_t idx = edgestatus.index();
-        float dc = edgelabels_[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels_[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels_[idx].Update(predindex, newcost, newsortcost,
-                                  walking_distance_, tripid, blockid);
-          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost < lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost, walking_distance_,
+                     tripid, blockid);
         }
         continue;
       }
@@ -608,14 +606,11 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
 
       // Check if lower cost path
       if (es.set() == EdgeSet::kTemporary) {
-        uint32_t idx = es.index();
-        float dc = edgelabels[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels[idx].Update(predindex, newcost, newsortcost,
-                                  walking_distance, 0, 0);
-          adjlist.decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels[es.index()];
+        if (newcost.cost < lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjlist.decrease(es.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost, walking_distance, 0, 0);
         }
         continue;
       }
