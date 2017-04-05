@@ -1,5 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
@@ -74,15 +75,15 @@ GraphTile::GraphTile()
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid): header_(nullptr) {
+GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid)
+      : header_(nullptr) {
 
   // Don't bother with invalid ids
   if (!graphid.Is_Valid())
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::string file_location = hierarchy.tile_dir() + "/" +
-                FileSuffix(graphid.Tile_Base(), hierarchy);
+  std::string file_location = tile_dir + "/" + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -120,7 +121,8 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid): he
   }
 }
 
-GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size): header_(nullptr) {
+GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size)
+    : header_(nullptr) {
   // Initialize the internal tile data structures using a pointer to the
   // tile and the tile size
   Initialize(graphid, ptr, size);
@@ -256,7 +258,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy) {
+std::string GraphTile::FileSuffix(const GraphId& graphid) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851
   you should get: 8/024/134/109/851.gph
@@ -269,12 +271,12 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   */
 
   //figure the largest id for this level
-  auto level = hierarchy.levels().find(graphid.level());
-  if(level == hierarchy.levels().end() &&
-     graphid.level() == ((hierarchy.levels().rbegin())->second.level + 1))
-    level = hierarchy.levels().begin();
+  auto level = TileHierarchy::levels().find(graphid.level());
+  if(level == TileHierarchy::levels().end() &&
+     graphid.level() == ((TileHierarchy::levels().rbegin())->second.level + 1))
+    level = TileHierarchy::levels().begin();
 
-  if(level == hierarchy.levels().end())
+  if(level == TileHierarchy::levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
 
   const uint32_t max_id = Tiles<PointLL>::MaxTileId(world_box, level->second.tiles.TileSize());
@@ -333,13 +335,13 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
 }
 
 // Get the bounding box of this graph tile.
-AABB2<PointLL> GraphTile::BoundingBox(const TileHierarchy& hierarchy) const {
+AABB2<PointLL> GraphTile::BoundingBox() const {
 
   //figure the largest id for this level
-  auto level = hierarchy.levels().find(header_->graphid().level());
-  if(level == hierarchy.levels().end() &&
-      header_->graphid().level() == ((hierarchy.levels().rbegin())->second.level+1))
-    level = hierarchy.levels().begin();
+  auto level = TileHierarchy::levels().find(header_->graphid().level());
+  if(level == TileHierarchy::levels().end() &&
+      header_->graphid().level() == ((TileHierarchy::levels().rbegin())->second.level+1))
+    level = TileHierarchy::levels().begin();
 
   auto tiles = level->second.tiles;
   return tiles.TileBounds(header_->graphid().tileid());
