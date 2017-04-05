@@ -8,11 +8,11 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/lockfree/queue.hpp>
 #include <fstream>
 #include <string>
 #include <thread>
 #include <future>
+#include <atomic>
 #include <vector>
 #include <list>
 #include <set>
@@ -23,13 +23,28 @@ namespace bpo = boost::program_options;
 
 boost::filesystem::path config_file_path;
 size_t threads = std::max(static_cast<size_t>(std::thread::hardware_concurrency()), static_cast<size_t>(1));
+size_t batch = 1;
+bool extrema = false;
 std::vector<std::string> input_files;
-std::atomic<bool> done(false);
 
-struct job_t{
-  float lng, lat;
-};
-boost::lockfree::queue<job_t> jobs(1024);
+using job_t = std::vector<valhalla::baldr::Location>;
+std::vector<job_t> jobs;
+std::atomic<size_t> job_index(0);
+std::string geojson(const job_t& job) {
+  std::string json = "{";
+  for(const auto& l : job) {
+    json.push_back('{');
+    json.append(std::to_string(l.latlng_.lng()));
+    json.push_back(',');
+    json.append(std::to_string(l.latlng_.lat()));
+    json.push_back('}');
+    if(&l != &job.back())
+      json.push_back(',');
+  }
+  json.push_back('}');
+  return json;
+}
+
 struct result_t {
   std::chrono::milliseconds time;
   bool pass;
@@ -42,12 +57,12 @@ struct result_t {
       return true;
     if(pass < other.pass)
       return true;
-    if(job.lng == other.job.lng)
-      return job.lat < other.job.lat;
-    return job.lng < other.job.lng;
+    if(job.size() < other.job.size())
+      return true;
+    return job.front().latlng_ < other.job.front().latlng_;
   }
   bool operator==(const result_t& other) const {
-    return cached == other.cached && time == other.time && pass == other.pass && job.lng == other.job.lng && job.lat == other.job.lat;
+    return cached == other.cached && time == other.time && pass == other.pass && job == other.job;
   }
 };
 using results_t = std::set<result_t>;
@@ -69,12 +84,10 @@ bool ParseArguments(int argc, char *argv[]) {
   options.add_options()
       ("help,h", "Print this help message.")
       ("version,v", "Print the version of this software.")
-      ("config,c",
-        boost::program_options::value<boost::filesystem::path>(&config_file_path),
-        "Path to the json configuration file.")
-      ("threads,t",
-        boost::program_options::value<size_t>(&threads),
-        "Concurrency to use.")
+      ("config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path), "Path to the json configuration file.")
+      ("threads,t", boost::program_options::value<size_t>(&threads), "Concurrency to use.")
+      ("batch,b", boost::program_options::value<size_t>(&batch), "Number of locations to group together per search")
+      ("extrema,e", boost::program_options::value<bool>(&extrema), "Show the input locations of the extrema for a given statistic")
       //positional arguments
       ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
@@ -119,18 +132,17 @@ bool ParseArguments(int argc, char *argv[]) {
 
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   //lambda to do the current job
-  auto search = [&config] (const job_t job) {
-    //so that we dont benefit from cache coherency we always make a new reader
-    valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-    auto location = valhalla::baldr::Location({job.lng, job.lat});
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  auto search = [&reader] (const job_t& job) {
+    //so that we dont benefit from cache coherency
+    reader.Clear();
     std::pair<result_t, result_t> result;
     bool cached = false;
-    for(auto r : {&result.first, &result.second}) {
+    for(auto* r : {&result.first, &result.second}) {
       auto start = std::chrono::high_resolution_clock::now();
       try {
         //TODO: actually save the result
-        auto result = valhalla::loki::Search({location}, reader, valhalla::loki::PassThroughEdgeFilter);
-        const auto& c = result.at(location);
+        auto result = valhalla::loki::Search(job, reader, valhalla::loki::PassThroughEdgeFilter);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job, cached};
       }
@@ -144,17 +156,10 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
   };
 
   //pull work off and do it
-  job_t job;
   results_t results;
-  while(!done){
-    while(jobs.pop(job)) {
-      auto result = search(job);
-      results.emplace(std::move(result.first));
-      results.emplace(std::move(result.second));
-    }
-  }
-  while(jobs.pop(job)) {
-    auto result = search(job);
+  size_t i;
+  while((i = job_index.fetch_add(1)) < jobs.size()) {
+    auto result = search(jobs[i]);
     results.emplace(std::move(result.first));
     results.emplace(std::move(result.second));
   }
@@ -180,29 +185,32 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  //start up the threads
-  std::list<std::thread> pool;
-  std::vector<std::promise<results_t> > pool_results(threads);
-  for(size_t i = 0; i < threads; ++i) {
-    pool.emplace_back(work, std::cref(pt), std::ref(pool_results[i]));
-  }
-
-  //let the main thread rip through the file
+  //fill up the queue with work
+  job_t job;
   for(const auto& file : input_files) {
     std::ifstream stream(file);
     std::string line;
     while(std::getline(stream, line)) {
-      auto location = valhalla::baldr::Location::FromCsv(line);
-      jobs.push(job_t{location.latlng_.lng(), location.latlng_.lat()});
+      job.emplace_back(valhalla::baldr::Location::FromCsv(line));
+      if(job.size() == batch) {
+        jobs.emplace_back(std::move(job));
+        job.clear();
+      }
       line.clear();
     }
   }
-  done = true;
+  if(!job.empty())
+    jobs.emplace_back(std::move(job));
+
+  //start up the threads
+  std::list<std::thread> pool;
+  std::vector<std::promise<results_t> > pool_results(threads);
+  for(size_t i = 0; i < threads; ++i)
+    pool.emplace_back(work, std::cref(pt), std::ref(pool_results[i]));
 
   //let the threads finish up
-  for(auto& thread : pool) {
+  for(auto& thread : pool)
     thread.join();
-  }
 
   //grab all the results
   results_t results;
@@ -276,10 +284,12 @@ int main(int argc, char** argv) {
     LOG_INFO("--------------------------------");
     if(count) {
       LOG_INFO("Total: " + std::to_string(count));
-      LOG_INFO("Fastest: " + std::to_string(first.job.lat) + "," + std::to_string(first.job.lng) + " @ " +
-        std::to_string(std::chrono::duration_cast<std::chrono::duration<int, std::milli> >(first.time).count()) + "ms");
-      LOG_INFO("Slowest: " + std::to_string(last.job.lat) + "," + std::to_string(last.job.lng) + " @ " +
-        std::to_string(std::chrono::duration_cast<std::chrono::duration<int, std::milli> >(last.time).count()) + "ms");
+      auto fast = std::chrono::duration_cast<std::chrono::duration<int, std::milli> >(first.time).count();
+      auto fast_per = static_cast<double>(fast) / first.job.size();
+      LOG_INFO("Fastest: " + std::to_string(fast) + "ms (" + std::to_string(fast_per) + "ms per)" + (extrema ? geojson(first.job) : ""));
+      auto slow = std::chrono::duration_cast<std::chrono::duration<int, std::milli> >(last.time).count();
+      auto slow_per = static_cast<double>(slow) / last.job.size();
+      LOG_INFO("Slowest: " + std::to_string(slow) + "ms (" + std::to_string(slow_per) + "ms per)" + (extrema ? geojson(last.job) : ""));
       LOG_INFO("Median: " + std::to_string(median) + "ms");
       LOG_INFO("Standard Deviation: " + std::to_string(std_deviation) + "ms");
       LOG_INFO("Faster Than 1 Standard Deviation: " + std::to_string(faster));
@@ -293,4 +303,5 @@ int main(int argc, char** argv) {
 
   return EXIT_SUCCESS;
 }
+
 

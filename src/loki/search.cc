@@ -286,7 +286,9 @@ make_binner(const PointLL& p, const GraphReader& reader) {
 // is found.
 struct ProjectPoint {
   ProjectPoint(const Location& location, GraphReader& reader):
-    b(new Box(location, reader)),
+    /*b(new Box(location, reader)),*/
+    binner(make_binner(location.latlng_, reader)),
+            location(location),
     lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)),
     lat(location.latlng_.lat()),
     lng(location.latlng_.lng()),
@@ -302,52 +304,44 @@ struct ProjectPoint {
   ProjectPoint& operator=(ProjectPoint&&) = default;
 
   // basic getters
-  const PointLL& point() const { return b->location.latlng_; }
-  const Location& location() const { return b->location; }
-  const Segment& closest_segment() const { return b-> closest_segment; }
-  const GraphTile* cur_tile() const { return b->cur_tile; }
-  unsigned short bin_index() const { return b->bin_index; }
+  const PointLL& point() const { return location.latlng_; }
   float closest_distance() const { return sqrt(sq_closest_distance); }
-  bool has_bin() const { return b->cur_tile != nullptr; }
-  bool projection_found() const { return b->closest_point.IsValid(); }
+  bool has_bin() const { return cur_tile != nullptr; }
+  bool projection_found() const { return closest_point.IsValid(); }
 
   // Get the best projection found so far.
   std::tuple<PointLL, float, size_t> best() const {
-    return std::make_tuple(b->closest_point, point().Distance(b->closest_point), closest_segment().idx);
+    return std::make_tuple(closest_point, point().Distance(closest_point), closest_segment.idx);
   }
 
   // Sort the ProjectPoint by bin, with finished (i.e. no bin) at the
   // end.
   bool operator<(const ProjectPoint& other) const {
-    if (b->cur_tile != other.b->cur_tile)
-      return b->cur_tile > other.b->cur_tile;// nullptr at the end
-    return b->bin_index < other.b->bin_index;
+    if (cur_tile != other.cur_tile)
+      return cur_tile > other.cur_tile;// nullptr at the end
+    return bin_index < other.bin_index;
   }
 
   bool has_same_bin(const ProjectPoint& other) const {
-    return b->cur_tile == other.b->cur_tile && b->bin_index == other.b->bin_index;
+    return cur_tile == other.cur_tile && bin_index == other.bin_index;
   }
-
 
   // Advance to the next bin. Must not be called if has_bin() is false.
   void next_bin(GraphReader& reader) {
     do {
-      auto bin = b->binner();
-
       //TODO: make configurable the radius at which we give up searching
       //the closest thing in this bin is further than what we have already
+      auto bin = binner();
       if(std::get<2>(bin) > SEARCH_CUTOFF || std::get<2>(bin) > closest_distance()) {
-        b->cur_tile = nullptr;
+        cur_tile = nullptr;
         break;
       }
 
       //grab the tile the lat, lon is in
-      auto tile_id = GraphId(std::get<0>(bin), b->level, 0);
-      if (b->cur_tile == nullptr || b->cur_tile->id() != tile_id) {
-          b->cur_tile = reader.GetGraphTile(tile_id);
-      }
-      b->bin_index = std::get<1>(bin);
-    } while (! b->cur_tile);
+      auto tile_id = GraphId(std::get<0>(bin), reader.GetTileHierarchy().levels().rbegin()->first, 0);
+      reader.GetGraphTile(tile_id, cur_tile);
+      bin_index = std::get<1>(bin);
+    } while (! cur_tile);
   }
 
   // Test if a segment is a candidate to the projection.  This method
@@ -380,30 +374,18 @@ struct ProjectPoint {
     const auto sq_distance = approx.DistanceSquared(point);
     if(sq_distance < sq_closest_distance) {
       // this block is not in the hot spot
-      b->closest_segment = segment;
+      closest_segment = segment;
       sq_closest_distance = sq_distance;
-      b->closest_point = point;
+      closest_point = point;
     }
   }
 
- private:
-  // To limit the size of the struct and optimize cache locality of
-  // the data used in the hot spot, we box the data not used in the
-  // hot spot.
-  struct Box {
-    Box(const Location& location, GraphReader& reader)
-      : binner(make_binner(location.latlng_, reader)),
-        location(location),
-        level(reader.GetTileHierarchy().levels().rbegin()->first) {}
-    std::function<std::tuple<int32_t, unsigned short, float>()> binner;
-    const GraphTile* cur_tile = nullptr;
-    Segment closest_segment;
-    PointLL closest_point{};
-    Location location;
-    int32_t level = 0;
-    unsigned short bin_index = 0;
-  };
-  std::unique_ptr<Box> b;
+  std::function<std::tuple<int32_t, unsigned short, float>()> binner;
+  const GraphTile* cur_tile = nullptr;
+  Segment closest_segment;
+  PointLL closest_point{};
+  Location location;
+  unsigned short bin_index = 0;
 
   // critical data
   float lon_scale;
@@ -412,14 +394,6 @@ struct ProjectPoint {
   float sq_closest_distance = std::numeric_limits<float>::max();
   DistanceApproximator approx;
 };
-
-//TODO: this is frought with peril. to properly to this we need to know
-//where in the world we are and use lower casing rules that are appropriate
-//so we can maximize the similarity measure.
-//are the names similar enough to consider them matching
-/*bool name_filter() {
-
-}*/
 
 // Test if this location is an isolated "island" without connectivity to the
 // larger routing graph. Does a breadth first search - if possible paths are
@@ -492,23 +466,20 @@ std::unordered_set<GraphId> island(const PathLocation& location,
 // the range must be on the same bin.  The bin will be read, the
 // segment passed to the ProjectPoints and the ProjectPoints will
 // advance their bins.
-template<typename ProjectPointIter>
-void handle_bin(const ProjectPointIter pp_begin,
-                const ProjectPointIter pp_end,
+void handle_bin(std::vector<ProjectPoint>::iterator pp_begin,
+                std::vector<ProjectPoint>::iterator pp_end,
                 GraphReader& reader,
                 const EdgeFilter& edge_filter) {
   //iterate over the edges in the bin
-  auto tile = pp_begin->cur_tile();
-  auto edges = tile->GetBin(pp_begin->bin_index());
+  auto tile = pp_begin->cur_tile;
+  auto edges = tile->GetBin(pp_begin->bin_index);
   for(auto e : edges) {
     //get the tile and edge
-    if(!tile || e.tileid() != tile->id().tileid()) {
-      tile = reader.GetGraphTile(e);
-      if(!tile)
-        continue;
-    }
-    const auto* edge = tile->directededge(e);
+    if(!reader.GetGraphTile(e, tile))
+      continue;
+
     //no thanks on this one or its evil twin
+    const auto* edge = tile->directededge(e);
     if(edge_filter(edge) == 0.0f && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
                                      edge_filter(edge = tile->directededge(e)) == 0.0f)) {
       continue;
@@ -546,24 +517,24 @@ PathLocation finalize(const ProjectPoint& pp, GraphReader& reader, const EdgeFil
   //midgard::logging::Log("valhalla_loki_bins_searched::" + std::to_string(bins), " [ANALYTICS] ");
 
   //this may be at a node, either because it was the closest thing or from snap tolerance
-  bool front = std::get<0>(closest_point) == pp.closest_segment().edge_info->shape().front() ||
-    pp.point().Distance(pp.closest_segment().edge_info->shape().front()) < NODE_SNAP;
-  bool back = std::get<0>(closest_point) == pp.closest_segment().edge_info->shape().back() ||
-    pp.point().Distance(pp.closest_segment().edge_info->shape().back()) < NODE_SNAP;
+  bool front = std::get<0>(closest_point) == pp.closest_segment.edge_info->shape().front() ||
+    pp.point().Distance(pp.closest_segment.edge_info->shape().front()) < NODE_SNAP;
+  bool back = std::get<0>(closest_point) == pp.closest_segment.edge_info->shape().back() ||
+    pp.point().Distance(pp.closest_segment.edge_info->shape().back()) < NODE_SNAP;
   //it was the begin node
-  if((front && pp.closest_segment().edge->forward()) || (back && !pp.closest_segment().edge->forward())) {
+  if((front && pp.closest_segment.edge->forward()) || (back && !pp.closest_segment.edge->forward())) {
     const GraphTile* other_tile;
-    auto opposing_edge = reader.GetOpposingEdge(pp.closest_segment().edge_id, other_tile);
+    auto opposing_edge = reader.GetOpposingEdge(pp.closest_segment.edge_id, other_tile);
     if(!other_tile)
       throw std::runtime_error("No suitable edges near location");
-    return correlate_node(reader, pp.location(), edge_filter, opposing_edge->endnode(), closest_point);
+    return correlate_node(reader, pp.location, edge_filter, opposing_edge->endnode(), closest_point);
   }
   //it was the end node
-  if((back && pp.closest_segment().edge->forward()) || (front && !pp.closest_segment().edge->forward()))
-    return correlate_node(reader, pp.location(), edge_filter, pp.closest_segment().edge->endnode(), closest_point);
+  if((back && pp.closest_segment.edge->forward()) || (front && !pp.closest_segment.edge->forward()))
+    return correlate_node(reader, pp.location, edge_filter, pp.closest_segment.edge->endnode(), closest_point);
 
   //it was along the edge
-  return correlate_edge(reader, pp.location(), edge_filter, closest_point, pp.closest_segment().edge, pp.closest_segment().edge_id, *pp.closest_segment().edge_info);
+  return correlate_edge(reader, pp.location, edge_filter, closest_point, pp.closest_segment.edge, pp.closest_segment.edge_id, *pp.closest_segment.edge_info);
 }
 
 // Find the best range to do.  The given vector should be sorted for
@@ -592,6 +563,7 @@ namespace loki {
 
 std::unordered_map<Location, PathLocation>
 Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
+  // Trivially finished already
   std::unordered_map<Location, PathLocation> searched;
   if(locations.empty())
     return searched;
@@ -600,25 +572,24 @@ Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFi
   std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
   std::vector<ProjectPoint> pps;
   pps.reserve(uniq_locations.size());
-  for (const auto& loc: uniq_locations) {
+  for (const auto& loc: uniq_locations)
     pps.emplace_back(loc, reader);
-  }
 
   // We keep pps sorted at each round to group the bins together
   // and test that every projection finished by just testing the
   // first one (finished projections are at the end when sorted).
-  for (std::sort(pps.begin(), pps.end()); pps.front().has_bin(); std::sort(pps.begin(), pps.end())) {
+  std::sort(pps.begin(), pps.end());
+  while(pps.front().has_bin()) {
     auto range = find_best_range(pps);
     handle_bin(range.first, range.second, reader, edge_filter);
+    std::sort(pps.begin(), pps.end());
   }
 
   // At this point we have candidates for each location so now we
   // need to go get the actual correlated location with edge_id etc.
   for (const auto& pp: pps) {
-    if (pp.projection_found()) {
-      // Correlate
-      auto inserted = searched.insert({pp.location(), finalize(pp, reader, edge_filter)});
-    }
+    if (pp.projection_found())
+      auto inserted = searched.insert({pp.location, finalize(pp, reader, edge_filter)});
   }
 
   return searched;

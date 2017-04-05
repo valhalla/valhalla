@@ -99,13 +99,9 @@ struct Location {
   boost::optional<int> heading_tolerance_;
   boost::optional<uint64_t> way_id_;
 
-  //TODO: fill these out in constructors and add getters and setters
-/*
-  //the spot where the feature is on the map
-  midgard::PointLL display_latlng_;
-  //id of the osm way that this location was on
-  std::uint64_t wayid_;
-*/
+  bool deisolate_; //should search for more edges if it has only found those on islands
+  boost::optional<unsigned int>  search_count_; //dont return more results than this
+  boost::optional<unsigned int> search_radius_; //dont return results further away than this
 
  protected:
 
