@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include "loki/search.h"
+#include "baldr/graphfsreader.h"
 #include "midgard/logging.h"
 
 #include <boost/program_options.hpp>
@@ -121,7 +122,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
   //lambda to do the current job
   auto search = [&config] (const job_t job) {
     //so that we dont benefit from cache coherency we always make a new reader
-    valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+    valhalla::baldr::GraphFsReader reader(config.get_child("mjolnir"));
     auto location = valhalla::baldr::Location({job.lng, job.lat});
     std::pair<result_t, result_t> result;
     bool cached = false;

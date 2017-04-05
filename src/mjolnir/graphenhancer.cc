@@ -35,7 +35,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -875,7 +875,7 @@ void enhance(const boost::property_tree::ptree& pt,
   std::unordered_map<std::string, std::vector<int>> country_access = GetCountryAccess(admin_db_handle);
 
   // Local Graphreader
-  GraphReader reader(hierarchy_properties);
+  GraphFsReader reader(hierarchy_properties);
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -1189,14 +1189,14 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
+  GraphFsReader reader(hierarchy_properties);
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+    if (GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
       tempqueue.push_back(tile_id);
     }
   }

@@ -1,12 +1,23 @@
 #ifndef VALHALLA_MJOLNIR_UTIL_H_
 #define VALHALLA_MJOLNIR_UTIL_H_
 
+#include <memory>
 #include <vector>
 #include <string>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/baldr/graphtilestorage.h>
 
 namespace valhalla {
 namespace mjolnir {
 
+/**
+ * Creates the tile storage handler for specified configuration.
+ * @param  pt The configuration to use.
+ * @return The storage handler instance.
+ */
+std::shared_ptr<valhalla::baldr::GraphTileStorage> CreateTileStorage(const boost::property_tree::ptree& pt);
 
 /**
  * Splits a tag into a vector of strings.

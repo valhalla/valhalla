@@ -6,11 +6,11 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-TileHierarchy::TileHierarchy(const std::string& tile_dir):tile_dir_(tile_dir) {
+TileHierarchy::TileHierarchy(const std::shared_ptr<GraphTileStorage>& tile_storage) :tile_storage_(tile_storage) {
   levels_ = {
-    {2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local", Tiles<PointLL>{{{-180, -90}, {180, 90}}, .25, kBinsDim}}},
-    {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial", Tiles<PointLL>{{{-180, -90}, {180, 90}}, 1, kBinsDim}}},
-    {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway", Tiles<PointLL>{{{-180, -90}, {180, 90}}, 4, kBinsDim}}}
+    {2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local", Tiles<PointLL>{{{-180, -90}, {180, 90}}, .25, static_cast<unsigned short>(kBinsDim)}}},
+    {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial", Tiles<PointLL>{{{-180, -90}, {180, 90}}, 1, static_cast<unsigned short>(kBinsDim)}}},
+    {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway", Tiles<PointLL>{{{-180, -90}, {180, 90}}, 4, static_cast<unsigned short>(kBinsDim)}}}
   };
 }
 
@@ -20,8 +20,8 @@ const std::map<unsigned char, TileHierarchy::TileLevel>& TileHierarchy::levels()
   return levels_;
 }
 
-const std::string& TileHierarchy::tile_dir() const {
-  return tile_dir_;
+const std::shared_ptr<GraphTileStorage>& TileHierarchy::tile_storage() const {
+  return tile_storage_;
 }
 
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const unsigned char level) const {

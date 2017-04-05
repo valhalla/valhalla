@@ -11,7 +11,7 @@
 
 #include "config.h"
 
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/pathlocation.h"
 #include "loki/search.h"
 #include "sif/costfactory.h"
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphFsReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
   CostFactory<DynamicCost> factory;

@@ -21,7 +21,7 @@
 
 #include "baldr/datetime.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "midgard/util.h"
 #include "midgard/logging.h"
 #include "midgard/distanceapproximator.h"
@@ -556,10 +556,10 @@ void build(const std::string& transit_dir,
            std::unordered_set<GraphId>::const_iterator tile_end,
            std::promise<builder_stats>& results) {
   // Local Graphreader. Get tile information so we can find bounding boxes
-  GraphReader reader_local_level(pt);
+  GraphFsReader reader_local_level(pt);
   const TileHierarchy& hierarchy_local_level = reader_local_level.GetTileHierarchy();
 
-  GraphReader reader_transit_level(pt);
+  GraphFsReader reader_transit_level(pt);
   const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
   // Iterate through the tiles in the queue and find any that include stops
@@ -658,7 +658,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back('/');
-  GraphReader reader(hierarchy_properties);
+  GraphFsReader reader(hierarchy_properties);
   const auto& hierarchy = reader.GetTileHierarchy();
   auto local_level = hierarchy.levels().rbegin()->first;
   if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
@@ -668,7 +668,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         auto local_graph_id = graph_id;
         local_graph_id.fields.level -= 1;
-        if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
+        if(GraphReader::DoesTileExist(hierarchy, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + '/' + GraphTile::FileSuffix(graph_id, hierarchy);

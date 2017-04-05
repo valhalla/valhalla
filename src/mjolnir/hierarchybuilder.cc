@@ -17,7 +17,8 @@
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphtilefsstorage.h"
+#include "baldr/graphfsreader.h"
 
 #include <boost/format.hpp>
 #include <ostream>
@@ -505,7 +506,8 @@ void RemoveUnusedLocalTiles(const TileHierarchy& tile_hierarchy) {
     if (!itr->second ) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location = tile_hierarchy.tile_dir() + "/" +
+      auto storage = std::dynamic_pointer_cast<GraphTileFsStorage>(tile_hierarchy.tile_storage());
+      std::string file_location = storage->GetTileDir() + "/" +
           GraphTile::FileSuffix(empty_tile.Tile_Base(), tile_hierarchy);
       remove(file_location.c_str());
       LOG_DEBUG("Remove file: " + file_location);
@@ -528,7 +530,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Construct GraphReader
   LOG_INFO("HierarchyBuilder");
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphFsReader reader(pt.get_child("mjolnir"));
   const auto& tile_hierarchy = reader.GetTileHierarchy();
 
   // Association of old nodes to new nodes

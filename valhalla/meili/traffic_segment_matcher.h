@@ -7,7 +7,7 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/graphid.h"
 #include "baldr/json.h"
 #include "meili/map_matcher.h"

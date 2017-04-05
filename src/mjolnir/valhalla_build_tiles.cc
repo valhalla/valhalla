@@ -9,7 +9,7 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/restrictionbuilder.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "config.h"
 
 using namespace valhalla::mjolnir;
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
   //set up the directories and purge old tiles
   pt.get_child("mjolnir").erase("tile_extract");
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  valhalla::baldr::TileHierarchy hierarchy(tile_dir);
+  valhalla::baldr::TileFsHierarchy hierarchy(tile_dir);
   for(const auto& level : hierarchy.levels()) {
     auto level_dir = tile_dir + "/" + std::to_string(level.first);
     if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {

@@ -1,5 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
+#include "baldr/graphtilestorage.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
@@ -14,10 +15,6 @@
 #include <iomanip>
 #include <cmath>
 #include <boost/algorithm/string.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/copy.hpp>
 
 namespace {
   struct dir_facet : public std::numpunct<char> {
@@ -80,43 +77,16 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid): he
   if (!graphid.Is_Valid())
     return;
 
-  // Open to the end of the file so we can immediately get size;
-  std::string file_location = hierarchy.tile_dir() + "/" +
-                FileSuffix(graphid.Tile_Base(), hierarchy);
-  std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
-  if (file.is_open()) {
-    // Read binary file into memory. TODO - protect against failure to
-    // allocate memory
-    size_t filesize = file.tellg();
-    graphtile_.reset(new std::vector<char>(filesize));
-    file.seekg(0, std::ios::beg);
-    file.read(&(*graphtile_)[0], filesize);
-    file.close();
+  std::vector<char> tile_data;
+  if (hierarchy.tile_storage()->ReadTile(graphid, hierarchy, tile_data)) {
+    graphtile_.reset(new std::vector<char>(tile_data.size()));
+    std::copy(tile_data.begin(), tile_data.end(), graphtile_->data());
 
     // Set pointers to internal data structures
-    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    Initialize(graphid, graphtile_->data(), graphtile_->size());
   }
   else {
-    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
-    if (file.is_open()) {
-      // Pre-allocate assuming 3.25:1 compression ratio (based on scanning some large NA tiles)
-      size_t filesize = file.tellg();
-      file.seekg(0, std::ios::beg);
-      graphtile_.reset(new std::vector<char>());
-      graphtile_->reserve(filesize * 3 + filesize/4);  // TODO: read the gzip footer and get the real size?
-
-      // Decompress tile into memory
-      boost::iostreams::filtering_ostream os;
-      os.push(boost::iostreams::gzip_decompressor());
-      os.push(boost::iostreams::back_inserter(*graphtile_));
-      boost::iostreams::copy(file, os);
-
-      // Set pointers to internal data structures
-      Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
-    }
-    else {
-      LOG_DEBUG("Tile " + file_location + " was not found");
-    }
+    LOG_DEBUG("Tile " + file_location + " was not found");
   }
 }
 

@@ -22,10 +22,10 @@
 #include "midgard/logging.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "midgard/encoded.h"
 
 #include "mjolnir/admin.h"
@@ -196,7 +196,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
       pt.get<std::string>("import_level") : "";
 
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   std::set<GraphId> tiles;
   const auto& tile_level = hierarchy.levels().rbegin()->second;
   curler_t curler;
@@ -603,7 +603,7 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
 
 void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, unique_transit_t& uniques,
                  std::promise<std::list<GraphId> >& promise) {
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   const auto& tiles = hierarchy.levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
   curler_t curler;
@@ -834,7 +834,7 @@ struct dist_sort_t {
 };
 
 void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::list<GraphId>& tiles, std::mutex& lock) {
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   auto grid = hierarchy.levels().rbegin()->second.tiles;
   auto tile_name = [&hierarchy, &pt](const GraphId& id){
     auto file_name = GraphTile::FileSuffix(id, hierarchy);
@@ -1570,7 +1570,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   stats.dep_count = 0;
   stats.midnight_dep_count = 0;
 
-  GraphReader reader_transit_level(pt);
+  GraphFsReader reader_transit_level(pt);
   const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
   // Iterate through the tiles in the queue and find any that include stops
@@ -1894,7 +1894,7 @@ int main(int argc, char** argv) {
   curl_global_cleanup();
 
   //figure out which transit tiles even exist
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + '/' +
                                                                    std::to_string(hierarchy.levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;

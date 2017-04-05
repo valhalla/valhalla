@@ -23,6 +23,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/signinfo.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilefshierarchy.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
@@ -912,7 +913,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
 
-  TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  TileFsHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   unsigned int threads = std::max(static_cast<unsigned int>(1),
                                   pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   const auto& tl = tile_hierarchy.levels().rbegin();

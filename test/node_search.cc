@@ -6,11 +6,11 @@
 #include <unordered_set>
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/location.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
@@ -317,7 +317,7 @@ void make_tile() {
     }
   }
 
-  vb::TileHierarchy h(test_tile_dir);
+  vb::TileFsHierarchy h(test_tile_dir);
   uint8_t level = 2;
   builder.write_tiles(h, level);
 
@@ -338,7 +338,7 @@ void test_single_node() {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::GraphFsReader reader(conf);
   // this should only find the node a 0,0
   vm::AABB2<vm::PointLL> box{{-0.0025, -0.0025}, {0.0025, 0.0025}};
 
@@ -356,7 +356,7 @@ void test_small_node_block() {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::GraphFsReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
   // the grid. note that the definition of AABB2::Contains would exclude nodes
   // which lie on the right or top boundaries.
@@ -376,7 +376,7 @@ void test_node_at_tile_boundary() {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::GraphFsReader reader(conf);
   // this should find node which is at the tile boundary
   vm::AABB2<vm::PointLL> box{{0.0, 0.250}, {0.001, 0.253}};
 
@@ -416,7 +416,7 @@ void test_opposite_in_another_tile() {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::GraphFsReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
   // the grid. note that the definition of AABB2::Contains would exclude nodes
   // which lie on the right or top boundaries.

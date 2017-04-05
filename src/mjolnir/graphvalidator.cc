@@ -22,10 +22,10 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/distanceapproximator.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/nodeinfo.h"
 
 using namespace valhalla::midgard;
@@ -278,7 +278,7 @@ void validate(const boost::property_tree::ptree& pt,
     // Our local copy of edges binned to tiles that they pass through (dont start or end in)
     tweeners_t tweeners;
     // Local Graphreader
-    GraphReader graph_reader(pt.get_child("mjolnir"));
+    GraphFsReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
     auto numLevels = hierarchy.levels().size() + 1;    // To account for transit
@@ -545,7 +545,7 @@ namespace mjolnir {
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     // Graphreader
     auto hierarchy_properties = pt.get_child("mjolnir");
-    TileHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
+    TileFsHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
     // Make sure there are at least 2 levels!
     auto numHierarchyLevels = hierarchy.levels().size();
     if (numHierarchyLevels < 2)
@@ -559,7 +559,7 @@ namespace mjolnir {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+        if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }
@@ -570,7 +570,7 @@ namespace mjolnir {
         for (uint32_t id = 0; id < tiles.TileCount(); id++) {
           // If tile exists add it to the queue
           GraphId tile_id(id, level, 0);
-          if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+          if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
             tilequeue.emplace_back(std::move(tile_id));
           }
         }

@@ -14,7 +14,8 @@
 #include <boost/optional.hpp>
 
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 
@@ -106,7 +107,7 @@ int main(int argc, char** argv) {
 
   // Get something we can use to fetch tiles
   auto hierarchy_properties = pt.get_child("mjolnir");
-  valhalla::baldr::TileHierarchy tile_hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
+  valhalla::baldr::TileFsHierarchy tile_hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
@@ -114,11 +115,11 @@ int main(int argc, char** argv) {
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
   // Iterate through tiles at the local level
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphFsReader reader(pt.get_child("mjolnir"));
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId edge_id(id, local_level, 0);
-    if (!reader.DoesTileExist(hierarchy_properties, edge_id)) {
+    if (!reader.DoesTileExist(tile_hierarchy, edge_id)) {
       continue;
     }
 

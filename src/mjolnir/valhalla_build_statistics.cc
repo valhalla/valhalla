@@ -22,10 +22,10 @@
 #include "midgard/pointll.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/nodeinfo.h"
 
 using namespace valhalla::midgard;
@@ -346,7 +346,7 @@ void build(const boost::property_tree::ptree& pt,
     // Our local class for gathering the stats
     statistics stats;
     // Local Graphreader
-    GraphReader graph_reader(pt.get_child("mjolnir"));
+    GraphFsReader graph_reader(pt.get_child("mjolnir"));
     // Get some things we need throughout
     const auto& hierarchy = graph_reader.GetTileHierarchy();
 
@@ -480,7 +480,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 
   // Graphreader
   auto hierarchy_properties = pt.get_child("mjolnir");
-  TileHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
+  TileFsHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
   // Make sure there are at least 2 levels!
   if (hierarchy.levels().size() < 2)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
@@ -493,7 +493,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+      if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
@@ -504,7 +504,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+        if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }
@@ -595,7 +595,7 @@ int main (int argc, char** argv) {
 
   //set up directory
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  valhalla::baldr::TileHierarchy hierarchy(tile_dir);
+  valhalla::baldr::TileFsHierarchy hierarchy(tile_dir);
 
   BuildStatistics(pt);
 

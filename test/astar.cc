@@ -4,9 +4,9 @@
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "baldr/location.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "sif/pedestriancost.h"
 #include "sif/costconstants.h"
 #include "thor/astar.h"
@@ -61,7 +61,7 @@ namespace {
 //      \ /
 //       g
 //
-vb::TileHierarchy h("test/fake_tiles_astar");
+vb::TileFsHierarchy h("test/fake_tiles_astar");
 vb::GraphId tile_id = h.GetGraphId({.125, .125}, 2);
 
 namespace node {
@@ -159,7 +159,7 @@ void assert_is_trivial_path(
   bpt::ptree conf;
   bpt::json_parser::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::GraphFsReader reader(conf);
   auto *tile = reader.GetGraphTile(tile_id);
   if (tile == nullptr) {
     throw std::runtime_error("Unable to load test tile! Please read the comment at the top of this file about generating the test tiles.");

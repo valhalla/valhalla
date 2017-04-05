@@ -401,6 +401,9 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Tile hierarchy for disk access location
   TileHierarchy hierarchy_;
 
+  // Tile directory path
+  std::string tile_dir_;
+
   // Header information for the tile
   GraphTileHeader header_builder_;
 

@@ -18,7 +18,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -148,7 +148,7 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
               std::promise<validate_stats>& results) {
 
   uint32_t failure_count = 0;
-  GraphReader reader_transit_level(pt);
+  GraphFsReader reader_transit_level(pt);
   const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
   // Iterate through the tiles in the queue and find any that include stops
@@ -390,7 +390,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     }
     // Also bail if nothing inside
     transit_dir->push_back('/');
-    GraphReader reader(hierarchy_properties);
+    GraphFsReader reader(hierarchy_properties);
     const auto& hierarchy = reader.GetTileHierarchy();
     auto local_level = hierarchy.levels().rbegin()->first;
     if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {

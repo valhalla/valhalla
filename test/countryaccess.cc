@@ -14,7 +14,8 @@
 #include "baldr/graphconstants.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
+#include "baldr/tilefshierarchy.h"
 
 using namespace std;
 using namespace valhalla::mjolnir;
@@ -71,10 +72,10 @@ void CountryAccess(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   //setup and purge
-  GraphReader graph_reader(conf.get_child("mjolnir"));
+  GraphFsReader graph_reader(conf.get_child("mjolnir"));
   const auto& hierarchy = graph_reader.GetTileHierarchy();
   for(const auto& level : hierarchy.levels()) {
-    auto level_dir = hierarchy.tile_dir() + "/" + std::to_string(level.first);
+    auto level_dir = std::dynamic_pointer_cast<GraphTileFsStorage>(hierarchy.tile_storage())->GetTileDir() + "/" + std::to_string(level.first);
     if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
       boost::filesystem::remove_all(level_dir);
     }
@@ -91,7 +92,7 @@ void CountryAccess(const std::string& config_file) {
 
   //load a tile and test the default access.
   GraphId id(820099,2,0);
-  GraphTile t(TileHierarchy("test/data/amsterdam_tiles"), id);
+  GraphTile t(TileFsHierarchy("test/data/amsterdam_tiles"), id);
 
   GraphTileBuilder tilebuilder(hierarchy, id, true);
 
@@ -150,9 +151,9 @@ void CountryAccess(const std::string& config_file) {
 
   //load a tile and test that the country level access is set.
   GraphId id2(820099,2,0);
-  GraphTile t2(TileHierarchy("test/data/amsterdam_tiles"), id2);
+  GraphTile t2(TileFsHierarchy("test/data/amsterdam_tiles"), id2);
 
-  GraphReader graph_reader2(conf.get_child("mjolnir"));
+  GraphFsReader graph_reader2(conf.get_child("mjolnir"));
   const auto& hierarchy2 = graph_reader2.GetTileHierarchy();
 
   GraphTileBuilder tilebuilder2(hierarchy2, id2, true);

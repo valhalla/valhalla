@@ -1,4 +1,4 @@
-#include "baldr/tilehierarchy.h"
+#include "baldr/tilefshierarchy.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
 
@@ -13,7 +13,7 @@ using namespace valhalla::midgard;
 
 namespace {
   void test_parse() {
-    TileHierarchy h("/data/valhalla");
+    TileFsHierarchy h("/data/valhalla");
 
     if(h.tile_dir() != "/data/valhalla")
       throw runtime_error("The tile directory was not correctly parsed");
@@ -45,7 +45,7 @@ namespace {
   }
 
   void test_tiles() {
-    TileHierarchy h("/data/valhalla");
+    TileFsHierarchy h("/data/valhalla");
 
     //there are 1440 cols and 720 rows, this spot lands on col 414 and row 522
     AABB2<PointLL> bbox{{-76.49, 40.51}, {-76.48, 40.52}};

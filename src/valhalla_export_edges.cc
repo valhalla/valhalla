@@ -3,7 +3,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
   valhalla::midgard::logging::Configure({{"type","std_err"},{"color","true"}});
 
   //get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphFsReader reader(pt.get_child("mjolnir"));
 
   //keep the global number of edges encountered at the point we encounter each tile
   //this allows an edge to have a sequential global id and makes storing it very small

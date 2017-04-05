@@ -19,7 +19,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+#include "baldr/graphfsreader.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
@@ -662,7 +662,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   //in one thread at a time
 
   // Get GraphReader
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphFsReader reader(pt.get_child("mjolnir"));
   const auto& tile_hierarchy = reader.GetTileHierarchy();
   if (reader.GetTileHierarchy().levels().size() < 2) {
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
