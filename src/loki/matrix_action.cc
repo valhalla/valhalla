@@ -4,6 +4,7 @@
 #include <boost/property_tree/info_parser.hpp>
 #include <unordered_map>
 
+#include "baldr/tilehierarchy.h"
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
@@ -147,7 +148,7 @@ namespace valhalla {
           rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, projection.ToRapidJson(i, request.GetAllocator()));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
-          auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, projection, 0);
+          auto colors = connectivity_map.get_colors(TileHierarchy::levels().rbegin()->first, projection, 0);
           for(auto& color : colors){
             auto itr = color_counts.find(color);
             if(itr == color_counts.cend())

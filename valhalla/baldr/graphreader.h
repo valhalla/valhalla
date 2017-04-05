@@ -184,7 +184,7 @@ class TileCacheFactory final {
    * @param pt  Property tree listing the configuration for the cahce configration
    */
   static TileCache* createTileCache(const boost::property_tree::ptree& pt);
-};f
+};
 
 /**
  * Class that manages access to GraphTiles.
