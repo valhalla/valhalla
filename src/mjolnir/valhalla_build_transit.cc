@@ -555,6 +555,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
 
       auto shape = shapes.find(shape_id);
       if(shape != shapes.cend()) {
+
         pair->set_shape_id(shape->second);
         std::string origin_dist_traveled = pair_pt.second.get<std::string>("origin_dist_traveled", "null");
         if(origin_dist_traveled != "null") {
@@ -1223,13 +1224,42 @@ Use GetTransitUse(const uint32_t rt) {
 }
 
 std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, uint32_t shapeid,
-                            const float orig_dist_traveled, const float dest_dist_traveled,
+                            float& orig_dist_traveled, const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape, const std::vector<float>& distances,
                             const std::string origin_id, const std::string dest_id) {
 
   std::list<PointLL> shape;
+
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
       orig_dist_traveled < dest_dist_traveled) {
+
+    // shape fix for bad distances.  Some distances are fluctuating for stop pairs instead of
+    // incrementing.  Also, for some route stop pairs the first distance is reset to 0.0 instead of
+    // the actual distance along the shape.  Good example of this...
+    // https://transit.land/api/v1/route_stop_patterns.json?onestop_id=r-sr8-fl5-949755-774a3e
+    // In the above route stop pattern, the pattern should actually begin at a distance of 6547.6 and not
+    // 0.0 for stop s-sr2yhnduhw-romaostiense.  In comparison, this route stop pattern is correct and
+    // it is using the same shape as the one above....
+    // http://transit.land/api/v1/route_stop_patterns.json?onestop_id=r-sr8-fl5-abef1d-774a3e
+    // Fix should be removed after the issue is dealt with in transitland
+    // begin shape fix
+    if (orig_dist_traveled == 0.0f) {
+      float dis = stop_ll.Distance(trip_shape.at(0));
+
+      if (dis > 100.0f) { // meters.
+        auto closest = stop_ll.ClosestPoint(trip_shape);
+        dis = dest_dist_traveled - endstop_ll.Distance(std::get<0>(closest));
+
+        if (dis > dest_dist_traveled || dis < 0.0f) {
+          LOG_ERROR("Invalid shape from " + origin_id + " to " + dest_id);
+          shape.push_back(stop_ll);
+          shape.push_back(endstop_ll);
+          return shape;
+        }
+        orig_dist_traveled = dis;
+      }
+    }
+    // end shape fix
 
     float distance = 0.0f, d_from_p0_to_x = 0.0f;
 
@@ -1483,7 +1513,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Add the directed edge
       DirectedEdge directededge;
       directededge.set_endnode(endnode);
-      directededge.set_length(stopll.Distance(endll));
       Use use = GetTransitUse(route_types[transitedge.routeid]);
       directededge.set_use(use);
       directededge.set_speed(5);
@@ -1520,8 +1549,21 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // TODO - if we separate transit edges based on more than just routeid
       // we will need to do something to differentiate edges (maybe use
       // lineid) so the shape doesn't get messed up.
-      auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
+      float orig_dist_traveled = transitedge.orig_dist_traveled;
+      auto shape = GetShape(stopll, endll, transitedge.shapeid, orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
+
+      if (transitedge.shapeid == 0 && shape.size() == 2) {
+        float dis = stopll.Distance(endll);
+        if (dis > 0.0f)
+          directededge.set_length(dis);
+        else LOG_ERROR("Invalid length from " + origin_id + " to " + dest_id);
+      } else {
+        float dis = transitedge.dest_dist_traveled - orig_dist_traveled;
+        if (dis > 0.0f)
+          directededge.set_length(dis);
+        else LOG_ERROR("Invalid length from " + origin_id + " to " + dest_id);
+      }
 
       uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(transitedge.routeid,
            origin_node, endnode, 0, shape, names, added);
