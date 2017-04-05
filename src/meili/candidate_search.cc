@@ -1,3 +1,4 @@
+#include "baldr/tilehierarchy.h"
 #include "meili/candidate_search.h"
 #include "meili/graph_helpers.h"
 #include "meili/geometry_helpers.h"
@@ -157,11 +158,10 @@ void IndexBin(const baldr::GraphTile& tile, const int32_t bin_index,
 
 CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader, float cell_width, float cell_height)
     : CandidateQuery(reader),
-      hierarchy_(reader.GetTileHierarchy()),
       cell_width_(cell_width),
       cell_height_(cell_height),
       grid_cache_() {
-  bin_level_ = hierarchy_.levels().rbegin()->second.level;
+  bin_level_ = baldr::TileHierarchy::levels().rbegin()->second.level;
 }
 
 
@@ -195,7 +195,7 @@ CandidateGridQuery::GetGrid(const int32_t bin_id, const Tiles<PointLL>& tiles,
 
   // Insert the bin into the cache and index the bin
   const auto inserted = grid_cache_.emplace(bin_id,
-          grid_t(tile->BoundingBox(hierarchy_), cell_width_, cell_height_));
+          grid_t(tile->BoundingBox(), cell_width_, cell_height_));
   IndexBin(*tile, bin_index, reader_, inserted.first->second);
   return &(inserted.first->second);
 }
@@ -205,8 +205,7 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
 {
   // Get the tiles object from the tile hierarchy and create the bin tiles
   // (subidivisions within the tile)
-  const auto& tl = hierarchy_.levels().rbegin();
-  Tiles<PointLL> tiles = tl->second.tiles;
+  Tiles<PointLL> tiles = baldr::TileHierarchy::levels().rbegin()->second.tiles;
   Tiles<PointLL> bins(tiles.TileBounds(), tiles.SubdivisionSize());
 
   // Get a list of bins within the range. These are "tile Ids" that must
