@@ -1,12 +1,12 @@
 #ifndef VALHALLA_BALDR_GRAPHREADER_H_
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
+#include <string>
 #include <unordered_map>
 #include <mutex>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/tilehierarchy.h>
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
@@ -184,7 +184,7 @@ class TileCacheFactory final {
    * @param pt  Property tree listing the configuration for the cahce configration
    */
   static TileCache* createTileCache(const boost::property_tree::ptree& pt);
-};
+};f
 
 /**
  * Class that manages access to GraphTiles.
@@ -194,7 +194,7 @@ class GraphReader {
  public:
   /**
    * Constructor using tiles as separate files.
-   * @param pt  Property tree listing the configuration for the tile hierarchy
+   * @param pt  Property tree listing the configuration for the tile storage.
    */
   GraphReader(const boost::property_tree::ptree& pt);
 
@@ -231,17 +231,12 @@ class GraphReader {
   const GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level);
 
   /**
-   * Get a pointer to a graph tile object given a PointLL and using the highest level in the hierarchy
+   * Get a pointer to a graph tile object given a PointLL and using the highest
+   * level in the hierarchy
    * @param pointll  the lat,lng that the tile covers
    * @return GraphTile* a pointer to the graph tile
    */
   const GraphTile* GetGraphTile(const PointLL& pointll);
-
-  /**
-   * Get the tile hierarchy used in this graph reader
-   * @return hierarchy
-   */
-  const TileHierarchy& GetTileHierarchy() const;
 
   /**
    * Clears the cache
@@ -307,6 +302,14 @@ class GraphReader {
    */
   std::unordered_set<GraphId> GetTileSet() const;
 
+  /**
+   * Returns the tile directory.
+   * @return  Returns the tile directory.
+   */
+  const std::string& tile_dir() const {
+    return tile_dir_;
+  }
+
  protected:
   // (Tar) extract of tiles - the contents are empty if not being used
   struct tile_extract_t;
@@ -314,7 +317,7 @@ class GraphReader {
   static std::shared_ptr<const GraphReader::tile_extract_t> get_extract_instance(const boost::property_tree::ptree& pt);
 
   // Information about where the tiles are kept
-  const TileHierarchy tile_hierarchy_;
+  std::string tile_dir_;
 
   std::unique_ptr<TileCache> cache_;
 };
