@@ -12,6 +12,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/signinfo.h"
 #include "baldr/graphconstants.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -401,7 +402,7 @@ TripPath TripPathBuilder::Build(
   TripPath trip_path;
 
   // Get the local tile level
-  uint32_t local_level = graphreader.GetTileHierarchy().levels().rbegin()->first;
+  uint32_t local_level = TileHierarchy::levels().rbegin()->first;
 
   // Set origin (assumed to be a break)
   odin::Location* tp_orig = trip_path.add_location();
