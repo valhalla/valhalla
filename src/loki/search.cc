@@ -286,7 +286,6 @@ make_binner(const PointLL& p, const GraphReader& reader) {
 // is found.
 struct ProjectPoint {
   ProjectPoint(const Location& location, GraphReader& reader):
-    /*b(new Box(location, reader)),*/
     binner(make_binner(location.latlng_, reader)),
     location(location),
     lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)),
