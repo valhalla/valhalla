@@ -879,9 +879,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  const auto& local_level = tile_hierarchy.levels().rbegin()->second.level;
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
@@ -905,7 +904,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
     lock.unlock();
 
     // this will be our updated list of restrictions.
@@ -1190,9 +1189,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId tile_id(id, local_level, 0);

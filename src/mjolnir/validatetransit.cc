@@ -149,7 +149,6 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
 
   uint32_t failure_count = 0;
   GraphReader reader_transit_level(pt);
-  const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
   // Iterate through the tiles in the queue and find any that include stops
   for(; tile_start != tile_end; ++tile_start) {
@@ -161,7 +160,7 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
     lock.lock();
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level()+1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder(hierarchy_transit_level, transit_tile_id, true);
+    GraphTileBuilder tilebuilder(reader_transit_level.tile_dir(), transit_tile_id, true);
     lock.unlock();
 
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
@@ -391,8 +390,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     // Also bail if nothing inside
     transit_dir->push_back('/');
     GraphReader reader(hierarchy_properties);
-    const auto& hierarchy = reader.GetTileHierarchy();
-    auto local_level = hierarchy.levels().rbegin()->first;
+    auto local_level = TileHierarchy::levels().rbegin()->first;
     if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
       boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
       for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
