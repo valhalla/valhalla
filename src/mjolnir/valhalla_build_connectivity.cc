@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "baldr/connectivity_map.h"
+#include "baldr/tilehierarchy.h"
 #include "config.h"
 
 using namespace valhalla::baldr;
@@ -113,10 +114,9 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
 
-  uint32_t transit_level = tile_hierarchy.levels().rbegin()->second.level + 1;
+  uint32_t transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {
     // Make the vector representation of it
     std::string fname = "connectivity" + std::to_string(level) + ".geojson";
@@ -141,11 +141,11 @@ int main(int argc, char** argv) {
 
     uint32_t width, height;
     if (level == transit_level) {
-      auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+      auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
       width  = tiles.ncolumns();
       height = tiles.nrows();
     } else {
-      auto tiles = tile_hierarchy.levels().find(level)->second.tiles;
+      auto tiles = TileHierarchy::levels().find(level)->second.tiles;
       width  = tiles.ncolumns();
       height = tiles.nrows();
     }
