@@ -210,8 +210,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
   return graphids;
 }
 
-void build(const boost::property_tree::ptree& pt,
-           const std::string& complex_restriction_file,
+void build(const std::string& complex_restriction_file,
            const std::unordered_multimap<uint64_t, uint64_t>& end_map,
            const boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
@@ -220,8 +219,6 @@ void build(const boost::property_tree::ptree& pt,
   GraphReader reader(hierarchy_properties);
   DataQuality stats;
 
-  // Get some things we need throughout
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
     // Get the next tile Id from the queue and get writeable and readable
@@ -244,7 +241,7 @@ void build(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile
-    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
     lock.unlock();
 
     std::unordered_multimap<GraphId, ComplexRestrictionBuilder> forward_tmp_cr;
@@ -511,9 +508,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto level = tile_hierarchy.levels().rbegin();
-  for ( ; level != tile_hierarchy.levels().rend(); ++level) {
+  auto level = TileHierarchy::levels().rbegin();
+  for ( ; level != TileHierarchy::levels().rend(); ++level) {
 
     auto tile_level = level->second;
     // Create a randomized queue of tiles to work from
@@ -542,7 +538,6 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     LOG_INFO("Adding Restrictions at level " + std::to_string(tile_level.level));
     for (size_t i = 0; i < threads.size(); ++i) {
       threads[i].reset(new std::thread(build,
-                   std::cref(hierarchy_properties),
                    std::cref(complex_restrictions_file), std::cref(end_map),
                    std::ref(hierarchy_properties), std::ref(tilequeue),
                    std::ref(lock), std::ref(std::ref(results[i]))));
