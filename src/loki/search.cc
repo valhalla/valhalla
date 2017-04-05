@@ -288,7 +288,7 @@ struct ProjectPoint {
   ProjectPoint(const Location& location, GraphReader& reader):
     /*b(new Box(location, reader)),*/
     binner(make_binner(location.latlng_, reader)),
-            location(location),
+    location(location),
     lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)),
     lat(location.latlng_.lat()),
     lng(location.latlng_.lng()),
