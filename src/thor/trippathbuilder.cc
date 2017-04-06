@@ -153,28 +153,128 @@ namespace valhalla {
 namespace thor {
 
 namespace {
-TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
-  switch (road_class) {
-    case RoadClass::kMotorway:
-      return TripPath_RoadClass_kMotorway;
-    case RoadClass::kTrunk:
-      return TripPath_RoadClass_kTrunk;
-    case RoadClass::kPrimary:
-      return TripPath_RoadClass_kPrimary;
-    case RoadClass::kSecondary:
-      return TripPath_RoadClass_kSecondary;
-    case RoadClass::kTertiary:
-      return TripPath_RoadClass_kTertiary;
-    case RoadClass::kUnclassified:
-      return TripPath_RoadClass_kUnclassified;
-    case RoadClass::kResidential:
-      return TripPath_RoadClass_kResidential;
-    case RoadClass::kServiceOther:
-      return TripPath_RoadClass_kServiceOther;
-  }
+
+// Associate RoadClass values to TripPath proto
+constexpr odin::TripPath_RoadClass kTripPathRoadClass[] = {
+    odin::TripPath_RoadClass_kMotorway,
+    odin::TripPath_RoadClass_kTrunk,
+    odin::TripPath_RoadClass_kPrimary,
+    odin::TripPath_RoadClass_kSecondary,
+    odin::TripPath_RoadClass_kTertiary,
+    odin::TripPath_RoadClass_kUnclassified,
+    odin::TripPath_RoadClass_kResidential,
+    odin::TripPath_RoadClass_kServiceOther };
+TripPath_RoadClass GetTripPathRoadClass(const RoadClass road_class) {
+  return kTripPathRoadClass[static_cast<int>(road_class)];
 }
 
-TripPath_Use GetTripPathUse(Use use) {
+// Associate Surface values to TripPath proto
+constexpr odin::TripPath_Surface kTripPathSurface[] = {
+    odin::TripPath_Surface_kPavedSmooth,
+    odin::TripPath_Surface_kPaved,
+    odin::TripPath_Surface_kPavedRough,
+    odin::TripPath_Surface_kCompacted,
+    odin::TripPath_Surface_kDirt,
+    odin::TripPath_Surface_kGravel,
+    odin::TripPath_Surface_kPath,
+    odin::TripPath_Surface_kImpassable };
+TripPath_Surface GetTripPathSurface(const Surface surface) {
+  return kTripPathSurface[static_cast<int>(surface)];
+}
+
+// Associate vehicle types to TripPath proto
+// TODO - why doesn't these use an enum input?
+constexpr odin::TripPath_VehicleType kTripPathVehicleType[] = {
+    odin::TripPath_VehicleType::TripPath_VehicleType_kCar,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kMotorcycle,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kAutoBus,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kTractorTrailer };
+TripPath_VehicleType GetTripPathVehicleType(const uint8_t type) {
+  return (type <= static_cast<uint8_t>(VehicleType::kTractorTrailer)) ?
+      kTripPathVehicleType[type] : kTripPathVehicleType[0];
+}
+
+// Associate pedestrian types to TripPath proto
+constexpr odin::TripPath_PedestrianType kTripPathPedestrianType[] = {
+    odin::TripPath_PedestrianType::TripPath_PedestrianType_kFoot,
+    odin::TripPath_PedestrianType::TripPath_PedestrianType_kWheelchair,
+    odin::TripPath_PedestrianType::TripPath_PedestrianType_kSegway };
+TripPath_PedestrianType GetTripPathPedestrianType(const uint8_t type) {
+  return (type <= static_cast<uint8_t>(PedestrianType::kSegway)) ?
+      kTripPathPedestrianType[type] : kTripPathPedestrianType[0];
+}
+
+// Associate bicycle types to TripPath proto
+constexpr odin::TripPath_BicycleType kTripPathBicycleType[] = {
+    odin::TripPath_BicycleType::TripPath_BicycleType_kRoad,
+    odin::TripPath_BicycleType::TripPath_BicycleType_kCross,
+    odin::TripPath_BicycleType::TripPath_BicycleType_kHybrid,
+    odin::TripPath_BicycleType::TripPath_BicycleType_kMountain };
+TripPath_BicycleType GetTripPathBicycleType(const uint8_t type) {
+  return (type <= static_cast<uint8_t>(BicycleType::kMountain)) ?
+      kTripPathBicycleType[type] : kTripPathBicycleType[0];
+}
+
+// Associate transit types to TripPath proto
+constexpr odin::TripPath_TransitType kTripPathTransitType[] = {
+    odin::TripPath_TransitType::TripPath_TransitType_kTram,
+    odin::TripPath_TransitType::TripPath_TransitType_kMetro,
+    odin::TripPath_TransitType::TripPath_TransitType_kRail,
+    odin::TripPath_TransitType::TripPath_TransitType_kBus,
+    odin::TripPath_TransitType::TripPath_TransitType_kFerry,
+    odin::TripPath_TransitType::TripPath_TransitType_kCableCar,
+    odin::TripPath_TransitType::TripPath_TransitType_kGondola,
+    odin::TripPath_TransitType::TripPath_TransitType_kFunicular };
+TripPath_TransitType GetTripPathTransitType(const TransitType transit_type) {
+  return kTripPathTransitType[static_cast<uint32_t>(transit_type)];
+}
+
+// Associate traversability values to TripPath proto
+constexpr odin::TripPath_Traversability kTripPathTraversability[] = {
+    odin::TripPath_Traversability_kNone,
+    odin::TripPath_Traversability_kForward,
+    odin::TripPath_Traversability_kBackward,
+    odin::TripPath_Traversability_kBoth };
+TripPath_Traversability GetTripPathTraversability(const Traversability traversability) {
+  return kTripPathTraversability[static_cast<uint32_t>(traversability)];
+}
+
+// Associate side of street to TripPath proto
+constexpr odin::Location_SideOfStreet kTripPathSideOfStreet[] = {
+    odin::Location_SideOfStreet_kNone,
+    odin::Location_SideOfStreet_kLeft,
+    odin::Location_SideOfStreet_kRight };
+odin::Location_SideOfStreet GetTripPathSideOfStreet(
+          const PathLocation::SideOfStreet sos) {
+  return kTripPathSideOfStreet[static_cast<uint32_t>(sos)];
+}
+
+// Associate node types to TripPath proto
+constexpr odin::TripPath_Node_Type kTripPathNodeType[] = {
+    odin::TripPath_Node_Type_kStreetIntersection,
+    odin::TripPath_Node_Type_kGate,
+    odin::TripPath_Node_Type_kBollard,
+    odin::TripPath_Node_Type_kTollBooth,
+    odin::TripPath_Node_Type_kMultiUseTransitStop,
+    odin::TripPath_Node_Type_kBikeShare,
+    odin::TripPath_Node_Type_kParking,
+    odin::TripPath_Node_Type_kMotorwayJunction,
+    odin::TripPath_Node_Type_kBorderControl };
+TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
+  return kTripPathNodeType[static_cast<uint32_t>(node_type)];
+}
+
+// Associate cycle lane values to TripPath proto
+constexpr odin::TripPath_CycleLane kTripPathCycleLane[] = {
+    odin::TripPath_CycleLane_kShared,
+    odin::TripPath_CycleLane_kDedicated,
+    odin::TripPath_CycleLane_kSeparated };
+TripPath_CycleLane GetTripPathCycleLane(const CycleLane cyclelane) {
+  return kTripPathCycleLane[static_cast<uint32_t>(cyclelane)];
+}
+
+// Associate Use to TripPath proto
+TripPath_Use GetTripPathUse(const Use use) {
   switch (use) {
     case Use::kRoad:
       return TripPath_Use_kRoadUse;
@@ -229,149 +329,48 @@ TripPath_Use GetTripPathUse(Use use) {
       return TripPath_Use_kBusConnectionUse;
     case Use::kTransitConnection:
       return TripPath_Use_kTransitConnectionUse;
+    // Should not see other values
+    default:
     case Use::kTransitionUp:
     case Use::kTransitionDown: {
       // TODO should we throw a runtime error?
+      return TripPath_Use_kRoadUse;
     }
   }
 }
 
-TripPath_Surface GetTripPathSurface(Surface surface) {
-  switch (surface) {
-    case Surface::kPavedSmooth:
-      return TripPath_Surface_kPavedSmooth;
-    case Surface::kPaved:
-      return TripPath_Surface_kPaved;
-    case Surface::kPavedRough:
-      return TripPath_Surface_kPavedRough;
-    case Surface::kCompacted:
-      return TripPath_Surface_kCompacted;
-    case Surface::kDirt:
-      return TripPath_Surface_kDirt;
-    case Surface::kGravel:
-      return TripPath_Surface_kGravel;
-    case Surface::kPath:
-      return TripPath_Surface_kPath;
-    case Surface::kImpassable:
-      return TripPath_Surface_kImpassable;
-  }
-}
+/**
+ * Add a location to the Trip path.
+ * @param  trip_path  Trip path (proto)
+ * @param  loc        Location information.
+ * @param  type       Location type (break or through)
+ * @return Returns a proto Location object.
+ */
+odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
+                            const odin::Location_Type type) {
+  odin::Location* tp_loc = trip_path.add_location();
+  odin::LatLng* ll = tp_loc->mutable_ll();
+  ll->set_lat(loc.latlng_.lat());
+  ll->set_lng(loc.latlng_.lng());
+  tp_loc->set_type(type);
+  if (!loc.name_.empty())
+    tp_loc->set_name(loc.name_);
+  if (!loc.street_.empty())
+    tp_loc->set_street(loc.street_);
+  if (!loc.city_.empty())
+    tp_loc->set_city(loc.city_);
+  if (!loc.state_.empty())
+    tp_loc->set_state(loc.state_);
+  if (!loc.zip_.empty())
+    tp_loc->set_postal_code(loc.zip_);
+  if (!loc.country_.empty())
+    tp_loc->set_country(loc.country_);
+  if (loc.heading_)
+    tp_loc->set_heading(*loc.heading_);
+  if (loc.date_time_)
+    tp_loc->set_date_time(*loc.date_time_);
 
-TripPath_VehicleType GetTripPathVehicleType(uint8_t type) {
-  switch (type) {
-    case static_cast<uint8_t>(VehicleType::kCar):
-      return TripPath_VehicleType::TripPath_VehicleType_kCar;
-    case static_cast<uint8_t>(VehicleType::kMotorcycle):
-      return TripPath_VehicleType::TripPath_VehicleType_kMotorcycle;
-    case static_cast<uint8_t>(VehicleType::kBus):
-      return TripPath_VehicleType::TripPath_VehicleType_kAutoBus;
-    case static_cast<uint8_t>(VehicleType::kTractorTrailer):
-      return TripPath_VehicleType::TripPath_VehicleType_kTractorTrailer;
-  }
-}
-
-TripPath_PedestrianType GetTripPathPedestrianType(uint8_t type) {
-  switch (type) {
-    case static_cast<uint8_t>(PedestrianType::kFoot):
-      return TripPath_PedestrianType::TripPath_PedestrianType_kFoot;
-    case static_cast<uint8_t>(PedestrianType::kWheelchair):
-      return TripPath_PedestrianType::TripPath_PedestrianType_kWheelchair;
-    case static_cast<uint8_t>(PedestrianType::kSegway):
-      return TripPath_PedestrianType::TripPath_PedestrianType_kSegway;
-  }
-}
-
-TripPath_BicycleType GetTripPathBicycleType(uint8_t type) {
-  switch (type) {
-    case static_cast<uint8_t>(BicycleType::kRoad):
-      return TripPath_BicycleType::TripPath_BicycleType_kRoad;
-    case static_cast<uint8_t>(BicycleType::kCross):
-      return TripPath_BicycleType::TripPath_BicycleType_kCross;
-    case static_cast<uint8_t>(BicycleType::kHybrid):
-      return TripPath_BicycleType::TripPath_BicycleType_kHybrid;
-    case static_cast<uint8_t>(BicycleType::kMountain):
-      return TripPath_BicycleType::TripPath_BicycleType_kMountain;
-  }
-}
-
-TripPath_TransitType GetTripPathTransitType(TransitType transit_type) {
-  switch (transit_type) {
-    case TransitType::kTram:        // Tram, streetcar, lightrail
-      return TripPath_TransitType::TripPath_TransitType_kTram;
-    case TransitType::kMetro:      // Subway, metro
-      return TripPath_TransitType::TripPath_TransitType_kMetro;
-    case TransitType::kRail:        // Rail
-      return TripPath_TransitType::TripPath_TransitType_kRail;
-    case TransitType::kBus:         // Bus
-      return TripPath_TransitType::TripPath_TransitType_kBus;
-    case TransitType::kFerry:       // Ferry
-      return TripPath_TransitType::TripPath_TransitType_kFerry;
-    case TransitType::kCableCar:    // Cable car
-      return TripPath_TransitType::TripPath_TransitType_kCableCar;
-    case TransitType::kGondola:     // Gondola (suspended cable car)
-      return TripPath_TransitType::TripPath_TransitType_kGondola;
-    case TransitType::kFunicular:   // Funicular (steep incline)
-      return TripPath_TransitType::TripPath_TransitType_kFunicular;
-  }
-}
-
-TripPath_Traversability GetTripPathTraversability(Traversability traversability) {
-  switch (traversability) {
-    case Traversability::kNone:
-      return TripPath_Traversability_kNone;
-    case Traversability::kForward:
-      return TripPath_Traversability_kForward;
-    case Traversability::kBackward:
-      return TripPath_Traversability_kBackward;
-    case Traversability::kBoth:
-      return TripPath_Traversability_kBoth;
-  }
-}
-
-odin::Location_SideOfStreet GetTripPathSideOfStreet(
-    PathLocation::SideOfStreet sos) {
-  switch (sos) {
-    case PathLocation::SideOfStreet::NONE:
-      return odin::Location_SideOfStreet_kNone;
-    case PathLocation::SideOfStreet::LEFT:
-      return odin::Location_SideOfStreet_kLeft;
-    case PathLocation::SideOfStreet::RIGHT:
-      return odin::Location_SideOfStreet_kRight;
-  }
-}
-
-TripPath_Node_Type GetTripPathNodeType(NodeType node_type) {
-  switch (node_type) {
-    case NodeType::kStreetIntersection:
-      return TripPath_Node_Type_kStreetIntersection;
-    case NodeType::kGate:
-      return TripPath_Node_Type_kGate;
-    case NodeType::kBollard:
-      return TripPath_Node_Type_kBollard;
-    case NodeType::kTollBooth:
-      return TripPath_Node_Type_kTollBooth;
-    case NodeType::kMultiUseTransitStop:
-      return TripPath_Node_Type_kMultiUseTransitStop;
-    case NodeType::kBikeShare:
-      return TripPath_Node_Type_kBikeShare;
-    case NodeType::kParking:
-      return TripPath_Node_Type_kParking;
-    case NodeType::kMotorWayJunction:
-      return TripPath_Node_Type_kMotorwayJunction;
-    case NodeType::kBorderControl:
-      return TripPath_Node_Type_kBorderControl;
-  }
-}
-
-TripPath_CycleLane GetTripPathCycleLane(CycleLane cyclelane) {
-  switch (cyclelane) {
-    case CycleLane::kShared:
-      return TripPath_CycleLane_kShared;
-    case CycleLane::kDedicated:
-      return TripPath_CycleLane_kDedicated;
-    case CycleLane::kSeparated:
-      return TripPath_CycleLane_kSeparated;
-  }
+  return tp_loc;
 }
 
 }
@@ -404,72 +403,16 @@ TripPath TripPathBuilder::Build(
   // Get the local tile level
   uint32_t local_level = TileHierarchy::levels().rbegin()->first;
 
-  // Set origin (assumed to be a break)
-  odin::Location* tp_orig = trip_path.add_location();
-  odin::LatLng* orig_ll = tp_orig->mutable_ll();
-  orig_ll->set_lat(origin.latlng_.lat());
-  orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_type(odin::Location_Type_kBreak);
-  if (!origin.name_.empty())
-    tp_orig->set_name(origin.name_);
-  if (!origin.street_.empty())
-    tp_orig->set_street(origin.street_);
-  if (!origin.city_.empty())
-    tp_orig->set_city(origin.city_);
-  if (!origin.state_.empty())
-    tp_orig->set_state(origin.state_);
-  if (!origin.zip_.empty())
-    tp_orig->set_postal_code(origin.zip_);
-  if (!origin.country_.empty())
-    tp_orig->set_country(origin.country_);
-  if (origin.heading_)
-    tp_orig->set_heading(*origin.heading_);
-
-  // Add list of through locations
+  // Set origin, any through locations, and destination. Origin and
+  // destination are assumed to be breaks.
+  odin::Location* tp_orig = AddLocation(trip_path, origin,
+                               odin::Location_Type_kBreak);
   for (const auto& through : through_loc) {
-    odin::Location* tp_through = trip_path.add_location();
-    odin::LatLng* through_ll = tp_through->mutable_ll();
-    through_ll->set_lat(through.latlng_.lat());
-    through_ll->set_lng(through.latlng_.lng());
-    tp_through->set_type(odin::Location_Type_kThrough);
-    if (!through.name_.empty())
-      tp_through->set_name(through.name_);
-    if (!through.street_.empty())
-      tp_through->set_street(through.street_);
-    if (!through.city_.empty())
-      tp_through->set_city(through.city_);
-    if (!through.state_.empty())
-      tp_through->set_state(through.state_);
-    if (!through.zip_.empty())
-      tp_through->set_postal_code(through.zip_);
-    if (!through.country_.empty())
-      tp_through->set_country(through.country_);
-    if (through.heading_)
-      tp_through->set_heading(*through.heading_);
-    if (through.date_time_)
-      tp_through->set_date_time(*through.date_time_);
+    odin::Location* tp_through = AddLocation(trip_path, through,
+                                    odin::Location_Type_kThrough);
   }
-
-  // Set destination (assumed to be a break)
-  odin::Location* tp_dest = trip_path.add_location();
-  odin::LatLng* dest_ll = tp_dest->mutable_ll();
-  dest_ll->set_lat(dest.latlng_.lat());
-  dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_type(odin::Location_Type_kBreak);
-  if (!dest.name_.empty())
-    tp_dest->set_name(dest.name_);
-  if (!dest.street_.empty())
-    tp_dest->set_street(dest.street_);
-  if (!dest.city_.empty())
-    tp_dest->set_city(dest.city_);
-  if (!dest.state_.empty())
-    tp_dest->set_state(dest.state_);
-  if (!dest.zip_.empty())
-    tp_dest->set_postal_code(dest.zip_);
-  if (!dest.country_.empty())
-    tp_dest->set_country(dest.country_);
-  if (dest.heading_)
-    tp_dest->set_heading(*dest.heading_);
+  odin::Location* tp_dest = AddLocation(trip_path, dest,
+                                 odin::Location_Type_kBreak);
 
   uint32_t origin_sec_from_mid = 0;
   if (origin.date_time_)
