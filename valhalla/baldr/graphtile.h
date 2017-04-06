@@ -16,9 +16,9 @@
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
-#include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/aabb2.h>
 
 #include <boost/shared_array.hpp>
 #include <memory>
@@ -43,13 +43,17 @@ class GraphTile {
   /**
    * Constructor given a GraphId. Reads the graph tile from file
    * into memory.
-   * @param  hierarchy  Data describing the tiling and hierarchy system.
+   * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid);
+  GraphTile(const std::string& tile_dir, const GraphId& graphid);
 
   /**
-   * Constructor given the graph Id ... used for mmap
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   * @param  size     Size in bytes of the tile data.
    */
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
 
@@ -61,10 +65,9 @@ class GraphTile {
   /**
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
-   * @param  hierarchy The tile hierarchy structure to get info about how many tiles can exist at this level
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy);
+  static std::string FileSuffix(const GraphId& graphid);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -76,10 +79,9 @@ class GraphTile {
 
   /**
    * Get the bounding box of this graph tile.
-   * @param  hierarchy the tile hierarchy this tile is under.
    * @return Returns the bounding box of the tile.
    */
-  midgard::AABB2<PointLL> BoundingBox(const TileHierarchy& hierarchy) const;
+  midgard::AABB2<PointLL> BoundingBox() const;
 
   /**
    * Gets the id of the graph tile
@@ -435,6 +437,14 @@ class GraphTile {
   void Initialize(const GraphId& graphid, char* tile_ptr,
                   const size_t tile_size);
 
+  /**
+   * For transit tiles, save off the pair<tileid,lineid> lookup via
+   * onestop_ids.  This will be used for including or excluding transit lines
+   * for transit routes.  Save 2 maps because operators contain all of their
+   * route's tile_line pairs and it is used to include or exclude the operator
+   * as a whole. Also associates stops.
+   * @param  graphid  Tile Id.
+   */
   void AssociateOneStopIds(const GraphId& graphid);
 };
 

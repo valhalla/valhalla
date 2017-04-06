@@ -20,6 +20,7 @@
 
 #include "baldr/datetime.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/util.h"
 #include "midgard/logging.h"
 
@@ -47,10 +48,9 @@ Transit read_pbf(const std::string& file_name) {
 }
 
 // Get PBF transit data given a GraphId / tile
-Transit read_pbf(const GraphId& id, const TileHierarchy& hierarchy,
-                 const std::string& transit_dir,
+Transit read_pbf(const GraphId& id,  const std::string& transit_dir,
                  std::string& file_name) {
-  std::string fname = GraphTile::FileSuffix(id, hierarchy);
+  std::string fname = GraphTile::FileSuffix(id);
   fname = fname.substr(0, fname.size() - 3) + "pbf";
   file_name = transit_dir + '/' + fname;
   Transit transit;
@@ -135,8 +135,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
 }
 
 
-void GetNextDeparture(const TileHierarchy hierarchy,
-                      const std::string transit_dir,
+void GetNextDeparture(const std::string transit_dir,
                       GraphId& orig_graphid, const GraphId& destid,
                       const uint32_t tripid,std::string& origin_time,
                       const Transit transit) {
@@ -199,7 +198,7 @@ void GetNextDeparture(const TileHierarchy hierarchy,
 }
 
 
-void LogSchedule(const TileHierarchy hierarchy, const std::string transit_dir,
+void LogSchedule(const std::string transit_dir,
                  const GraphId& originid, const GraphId& destid,
                  const uint32_t tripid, const std::string time, Transit transit,
                  std::string& file) {
@@ -306,7 +305,7 @@ void LogSchedule(const TileHierarchy hierarchy, const std::string transit_dir,
         }
 
         while (orig_graphid.Is_Valid() && !origin_time.empty())
-          GetNextDeparture(hierarchy, transit_dir, orig_graphid, destid, tripid, origin_time, spp);
+          GetNextDeparture(transit_dir, orig_graphid, destid, tripid, origin_time, spp);
 
       }
     }
@@ -394,15 +393,14 @@ int main(int argc, char *argv[]) {
 
   // Get the tile
   PointLL stopll(lng, lat);
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
-  auto local_level = hierarchy.levels().rbegin()->second.level;
-  auto tiles = hierarchy.levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
   uint32_t tileid = tiles.TileId(stopll);
 
   // Read transit tile
   GraphId tile(tileid, local_level, 0);
   std::string file_name;
-  Transit transit = read_pbf(tile, hierarchy, *transit_dir, file_name);
+  Transit transit = read_pbf(tile, *transit_dir, file_name);
 
   // Get the graph Id of the stop
   GraphId originid = GetGraphId(transit, origin);
@@ -422,7 +420,7 @@ int main(int argc, char *argv[]) {
       // Get the graph Id of the stop
       destid = GetGraphId(transit, dest);
     }
-    LogSchedule(hierarchy, *transit_dir, originid, destid, tripid, time, transit, file_name);
+    LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name);
   }
 
 }

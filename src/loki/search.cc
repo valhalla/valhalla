@@ -1,6 +1,7 @@
 #include "loki/search.h"
 #include "midgard/linesegment2.h"
 #include "midgard/distanceapproximator.h"
+#include "baldr/tilehierarchy.h"
 
 #include <unordered_set>
 #include <list>
@@ -33,7 +34,7 @@ constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
 
 std::function<std::tuple<int32_t, unsigned short, float>()>
 make_binner(const PointLL& p, const GraphReader& reader) {
-  const auto& tiles = reader.GetTileHierarchy().levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   return tiles.ClosestFirst(p);
 }
 
@@ -103,7 +104,7 @@ struct projector_t {
       }
 
       //grab the tile the lat, lon is in
-      auto tile_id = GraphId(std::get<0>(bin), reader.GetTileHierarchy().levels().rbegin()->first, 0);
+      auto tile_id = GraphId(std::get<0>(bin), TileHierarchy::levels().rbegin()->first, 0);
       reader.GetGraphTile(tile_id, cur_tile);
       bin_index = std::get<1>(bin);
     } while (! cur_tile);

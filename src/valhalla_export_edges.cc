@@ -4,6 +4,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 
@@ -183,9 +184,9 @@ int main(int argc, char *argv[]) {
   //keep the global number of edges encountered at the point we encounter each tile
   //this allows an edge to have a sequential global id and makes storing it very small
   LOG_INFO("Enumerating edges...");
-  std::unordered_map<GraphId, uint64_t> tile_set(kMaxGraphTileId * reader.GetTileHierarchy().levels().size());
+  std::unordered_map<GraphId, uint64_t> tile_set(kMaxGraphTileId * TileHierarchy::levels().size());
   uint64_t edge_count = 0;
-  for(const auto& level : reader.GetTileHierarchy().levels()) {
+  for(const auto& level : TileHierarchy::levels()) {
     for(uint32_t i = 0; i < level.second.tiles.TileCount(); ++i) {
       GraphId tile_id{i, level.first, 0};
       if(reader.DoesTileExist(tile_id)) {

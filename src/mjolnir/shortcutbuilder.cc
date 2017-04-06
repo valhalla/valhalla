@@ -529,7 +529,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
 
 // Form shortcuts for tiles in this level.
 uint32_t FormShortcuts(GraphReader& reader,
-            const TileHierarchy::TileLevel& level,
+            const TileLevel& level,
             const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
@@ -548,7 +548,7 @@ uint32_t FormShortcuts(GraphReader& reader,
 
     // Create GraphTileBuilder for the new tile
     GraphId new_tile(tileid, tile_level, 0);
-    GraphTileBuilder tilebuilder(reader.GetTileHierarchy(), new_tile, false);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), new_tile, false);
 
     // Create a dummy admin at index 0.  Used if admins are not used/created.
     tilebuilder.AddAdmin("None", "None", "", "");
@@ -663,10 +663,6 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  if (reader.GetTileHierarchy().levels().size() < 2) {
-    throw std::runtime_error("Bad tile hierarchy - need 2 levels");
-  }
 
   // Crack open some elevation data if its there
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
@@ -675,9 +671,9 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
     sample.reset(new skadi::sample(*elevation));
   }
 
-  auto level = tile_hierarchy.levels().rbegin();
+  auto level = TileHierarchy::levels().rbegin();
   level++;
-  for ( ; level != tile_hierarchy.levels().rend(); ++level) {
+  for ( ; level != TileHierarchy::levels().rend(); ++level) {
     // Create shortcuts on this level
     auto tile_level = level->second;
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level.level));

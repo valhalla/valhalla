@@ -168,7 +168,7 @@
       "phrases": {
         "0": "Leicht nach <RELATIVE_DIRECTION> abbiegen.",
         "1": "Leicht nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Leight nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
+        "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben."
       },
       "relative_directions": ["links", "rechts"],
@@ -184,7 +184,7 @@
       "phrases": {
         "0": "Leicht nach <RELATIVE_DIRECTION> abbiegen.",
         "1": "Leicht nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Leight nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
+        "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben."
       },
       "relative_directions": ["links", "rechts"],

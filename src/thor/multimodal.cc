@@ -513,7 +513,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
 
   // Set up lambda to get sort costs (use the local edgelabels, not the class
   // member!)
-  const auto edgecost = [edgelabels](const uint32_t label) {
+  const auto edgecost = [&edgelabels](const uint32_t label) {
     return edgelabels[label].sortcost();
   };
 

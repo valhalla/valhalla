@@ -3,6 +3,7 @@
 #include "midgard/logging.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/tilehierarchy.h"
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
@@ -19,10 +20,10 @@ namespace mjolnir {
 // levels. If the deserialize flag is set then all objects are serialized
 // from memory into builders that can be added to and then stored using
 // StoreTileData.
-GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
+GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                    const GraphId& graphid, bool deserialize)
-    : GraphTile(hierarchy, graphid),
-      hierarchy_(hierarchy) {
+    : tile_dir_(tile_dir),
+      GraphTile(tile_dir, graphid) {
 
   // Copy tile header to a builder (if tile exists). Always set the tileid
   if (header_) {
@@ -210,8 +211,8 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
-      + GraphTile::FileSuffix(header_builder_.graphid(), hierarchy_);
+  boost::filesystem::path filename = tile_dir_ + '/'
+      + GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -340,8 +341,8 @@ void GraphTileBuilder::Update(
     const std::vector<DirectedEdge>& directededges) {
 
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
-      + GraphTile::FileSuffix(header_->graphid(), hierarchy_);
+  boost::filesystem::path filename = tile_dir_ + '/'
+      + GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -767,16 +768,16 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 //return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
-std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners) {
+std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const GraphTile* tile, tweeners_t& tweeners) {
   std::array<std::vector<GraphId>, kBinCount> bins;
   //we store these at the highest level
-  auto max_level = hierarchy.levels().rbegin()->first;
+  auto max_level = TileHierarchy::levels().rbegin()->first;
   //skip transit or other special levels and empty tiles
   if(tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0)
     return bins;
   //is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
-  auto tiles = hierarchy.levels().rbegin()->second.tiles;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   //each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
@@ -825,7 +826,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Til
   return bins;
 }
 
-void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+void GraphTileBuilder::AddBins(const std::string& tile_dir,
+                const GraphTile* tile,
+                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
   //read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];
   uint32_t shift = 0;
@@ -852,7 +855,7 @@ void GraphTileBuilder::AddBins(const TileHierarchy& hierarchy, const GraphTile* 
   header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(header.graphid(), hierarchy);
+  boost::filesystem::path filename = tile_dir + '/' + GraphTile::FileSuffix(header.graphid());
   if(!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -958,8 +961,8 @@ void GraphTileBuilder::UpdateTrafficSegments() {
           traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
-      + GraphTile::FileSuffix(header_builder_.graphid(), hierarchy_);
+  boost::filesystem::path filename = tile_dir_ + '/'
+      + GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))

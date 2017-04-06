@@ -199,7 +199,7 @@ std::vector<uint8_t>& TrafficAlgorithm::GetRealTimeSpeeds(const uint32_t tileid,
   if (rts == real_time_speeds_.end()) {
     // Try to load the speeds file
     std::ifstream rtsfile;
-    std::string traffic_dir = graphreader.GetTileHierarchy().tile_dir() + "/traffic/";
+    std::string traffic_dir = graphreader.tile_dir() + "/traffic/";
     std::string fname = traffic_dir + std::to_string(tileid) + ".spd";
     rtsfile.open(fname, std::ios::binary | std::ios::in | std::ios::ate);
     if (rtsfile.is_open()) {
