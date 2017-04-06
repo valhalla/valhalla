@@ -257,19 +257,16 @@ PathLocation correlate_edge(GraphReader& reader, const Location& location, const
 }
 
 // Model a segment (2 consecutive points in an edge in a bin).
-struct Segment {
-  Segment() = default;
-  Segment(const GraphTile* tile, const GraphId& edge_id, const DirectedEdge* edge):
-    edge_id(edge_id),
-    tile(tile),
-    edge(edge),
-    edge_info(std::make_shared<const EdgeInfo>(tile->edgeinfo(edge->edgeinfo_offset()))) {
-  }
+struct candidate_t {
+  float sq_distance;
+  PointLL point;
+  size_t idx;
+
   GraphId edge_id;
-  const GraphTile* tile = nullptr;
-  const DirectedEdge* edge = nullptr;
+  const DirectedEdge* edge;
   std::shared_ptr<const EdgeInfo> edge_info;
-  size_t idx = 0;
+
+  const GraphTile* tile;
 };
 
 std::function<std::tuple<int32_t, unsigned short, float>()>
@@ -284,10 +281,10 @@ make_binner(const PointLL& p, const GraphReader& reader) {
 // When the bin is finished, next_bin() switch to the next possible
 // interesting bin.  if has_bin() is false, then the best projection
 // is found.
-struct ProjectPoint {
-  ProjectPoint(const Location& location, GraphReader& reader):
+struct projector_t {
+  projector_t(const Location& location, GraphReader& reader):
     binner(make_binner(location.latlng_, reader)),
-    location(location),
+    location(location), closest_segment{std::numeric_limits<float>::max()},
     lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)),
     lat(location.latlng_.lat()),
     lng(location.latlng_.lng()),
@@ -296,32 +293,31 @@ struct ProjectPoint {
   }
 
   // non default constructible and move only type
-  ProjectPoint() = delete;
-  ProjectPoint(const ProjectPoint&) = delete;
-  ProjectPoint& operator=(const ProjectPoint&) = delete;
-  ProjectPoint(ProjectPoint&&) = default;
-  ProjectPoint& operator=(ProjectPoint&&) = default;
+  projector_t() = delete;
+  projector_t(const projector_t&) = delete;
+  projector_t& operator=(const projector_t&) = delete;
+  projector_t(projector_t&&) = default;
+  projector_t& operator=(projector_t&&) = default;
 
   // basic getters
   const PointLL& point() const { return location.latlng_; }
-  float closest_distance() const { return sqrt(sq_closest_distance); }
   bool has_bin() const { return cur_tile != nullptr; }
-  bool projection_found() const { return closest_point.IsValid(); }
+  bool projection_found() const { return closest_segment.point.IsValid(); }
 
   // Get the best projection found so far.
   std::tuple<PointLL, float, size_t> best() const {
-    return std::make_tuple(closest_point, point().Distance(closest_point), closest_segment.idx);
+    return std::make_tuple(closest_segment.point, point().Distance(closest_segment.point), closest_segment.idx);
   }
 
-  // Sort the ProjectPoint by bin, with finished (i.e. no bin) at the
-  // end.
-  bool operator<(const ProjectPoint& other) const {
+  // Sort the candidate_t by bin so that the ones we still need to do are at the front
+  // this way we can keep searching until the first one is finished
+  bool operator<(const projector_t& other) const {
     if (cur_tile != other.cur_tile)
       return cur_tile > other.cur_tile;// nullptr at the end
     return bin_index < other.bin_index;
   }
 
-  bool has_same_bin(const ProjectPoint& other) const {
+  bool has_same_bin(const projector_t& other) const {
     return cur_tile == other.cur_tile && bin_index == other.bin_index;
   }
 
@@ -331,7 +327,7 @@ struct ProjectPoint {
       //TODO: make configurable the radius at which we give up searching
       //the closest thing in this bin is further than what we have already
       auto bin = binner();
-      if(std::get<2>(bin) > SEARCH_CUTOFF || std::get<2>(bin) > closest_distance()) {
+      if(std::get<2>(bin) > SEARCH_CUTOFF || std::get<2>(bin) > sqrt(closest_segment.sq_distance)) {
         cur_tile = nullptr;
         break;
       }
@@ -346,7 +342,7 @@ struct ProjectPoint {
   // Test if a segment is a candidate to the projection.  This method
   // is performance critical.  Copy, function call, cache locality and
   // useless computation must be handled with care.
-  void test(const PointLL& u, const PointLL& v, const Segment& segment) {
+  PointLL project(const PointLL& u, const PointLL& v) {
     //project a onto b where b is the origin vector representing this segment
     //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
     auto bx = v.first - u.first;
@@ -358,39 +354,26 @@ struct ProjectPoint {
     auto sq = bx2*bx2 + by*by;
     auto scale = sq > 0 ? ((lng - u.lng())*lon_scale*bx2 + (lat - u.lat())*by) / sq : 0.f;
 
-    PointLL point;
     //projects along the ray before u
-    if(scale <= 0.f) {
-      point = u;
-    }//projects along the ray after v
-    else if(scale >= 1.f) {
-      point = v;
-    }//projects along the ray between u and v
-    else {
-      point = { u.first+bx*scale, u.second+by*scale };
-    }
-    //check if this point is better
-    const auto sq_distance = approx.DistanceSquared(point);
-    if(sq_distance < sq_closest_distance) {
-      // this block is not in the hot spot
-      closest_segment = segment;
-      sq_closest_distance = sq_distance;
-      closest_point = point;
-    }
+    if(scale <= 0.f)
+      return u;
+    //projects along the ray after v
+    else if(scale >= 1.f)
+      return v;
+    //projects along the ray between u and v
+    return { u.first+bx*scale, u.second+by*scale };
   }
 
   std::function<std::tuple<int32_t, unsigned short, float>()> binner;
   const GraphTile* cur_tile = nullptr;
-  Segment closest_segment;
-  PointLL closest_point{};
   Location location;
   unsigned short bin_index = 0;
+  candidate_t closest_segment;
 
   // critical data
   float lon_scale;
   float lat;
   float lng;
-  float sq_closest_distance = std::numeric_limits<float>::max();
   DistanceApproximator approx;
 };
 
@@ -461,12 +444,12 @@ std::unordered_set<GraphId> island(const PathLocation& location,
   return (todo.size() == 0) ? done : std::unordered_set<GraphId>{};
 }
 
-// Handle a bin for a range of ProjectPoint.  Every ProjectPoint in
+// Handle a bin for a range of candidate_t.  Every candidate_t in
 // the range must be on the same bin.  The bin will be read, the
-// segment passed to the ProjectPoints and the ProjectPoints will
+// segment passed to the candidate_ts and the candidate_ts will
 // advance their bins.
-void handle_bin(std::vector<ProjectPoint>::iterator pp_begin,
-                std::vector<ProjectPoint>::iterator pp_end,
+void handle_bin(std::vector<projector_t>::iterator pp_begin,
+                std::vector<projector_t>::iterator pp_end,
                 GraphReader& reader,
                 const EdgeFilter& edge_filter) {
   //iterate over the edges in the bin
@@ -479,27 +462,35 @@ void handle_bin(std::vector<ProjectPoint>::iterator pp_begin,
 
     //no thanks on this one or its evil twin
     const auto* edge = tile->directededge(e);
-    if(edge_filter(edge) == 0.0f && (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
-                                     edge_filter(edge = tile->directededge(e)) == 0.0f)) {
+    if(edge_filter(edge) == 0.0f &&
+        (!(e = reader.GetOpposingEdgeId(e, tile)).Is_Valid() ||
+         edge_filter(edge = tile->directededge(e)) == 0.0f)) {
       continue;
     }
 
-    Segment segment(tile, e, edge);
-    auto shape = segment.edge_info->lazy_shape();
+    //get some shape of the edge
+    auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge->edgeinfo_offset()));
+    auto shape = edge_info->lazy_shape();
     PointLL v;
-    if (! shape.empty()) {
+    if (!shape.empty())
       v = shape.pop();
-    }
-    for(; ! shape.empty(); ++segment.idx) {
+    
+    //iterate along this edges segments projecting each of the points
+    for(size_t i = 0; !shape.empty(); ++i) {
       const auto u = v;
       v = shape.pop();
       for (auto it = pp_begin; it != pp_end; ++it) {
-        it->test(u, v, segment);
+        auto point = it->project(u, v);
+        const auto sq_distance = it->approx.DistanceSquared(point);
+        // this block is not in the hot spot
+        if(sq_distance < it->closest_segment.sq_distance) {
+          it->closest_segment = candidate_t{sq_distance, std::move(point), 0, e, edge, edge_info, tile};
+        }
       }
     }
   }
 
-  // bin is finished, advance the ProjectPoints to their respective
+  // bin is finished, advance the candidate_ts to their respective
   // next bin.
   for (auto it = pp_begin; it != pp_end; ++it) {
     it->next_bin(reader);
@@ -507,8 +498,8 @@ void handle_bin(std::vector<ProjectPoint>::iterator pp_begin,
 }
 
 // Create the PathLocation corresponding to the best projection of the
-// given ProjectPoint.
-PathLocation finalize(const ProjectPoint& pp, GraphReader& reader, const EdgeFilter& edge_filter) {
+// given candidate_t.
+PathLocation finalize(const projector_t& pp, GraphReader& reader, const EdgeFilter& edge_filter) {
   auto closest_point = pp.best();
 
   //keep track of bins we looked in but only the ones that had something
@@ -539,13 +530,13 @@ PathLocation finalize(const ProjectPoint& pp, GraphReader& reader, const EdgeFil
 // Find the best range to do.  The given vector should be sorted for
 // interesting grouping.  Returns the greatest range of non empty
 // equal bins.
-std::pair<std::vector<ProjectPoint>::iterator, std::vector<ProjectPoint>::iterator>
-find_best_range(std::vector<ProjectPoint>& pps) {
+std::pair<std::vector<projector_t>::iterator, std::vector<projector_t>::iterator>
+find_best_range(std::vector<projector_t>& pps) {
   auto best = std::make_pair(pps.begin(), pps.begin());
   auto cur = best;
   while (cur.second != pps.end()) {
     cur.first = cur.second;
-    cur.second = std::find_if_not(cur.first, pps.end(), [&](const ProjectPoint& pp) {
+    cur.second = std::find_if_not(cur.first, pps.end(), [&cur](const projector_t& pp) {
       return cur.first->has_same_bin(pp);
     });
     if (cur.first->has_bin() && cur.second - cur.first > best.second - best.first) {
@@ -569,13 +560,13 @@ Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFi
 
   // Get the unique set of input locations
   std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
-  std::vector<ProjectPoint> pps;
+  std::vector<projector_t> pps;
   pps.reserve(uniq_locations.size());
   for (const auto& loc: uniq_locations)
     pps.emplace_back(loc, reader);
 
   // We keep pps sorted at each round to group the bins together
-  // and test that every projection finished by just testing the
+  // and project that every projection finished by just testing the
   // first one (finished projections are at the end when sorted).
   std::sort(pps.begin(), pps.end());
   while(pps.front().has_bin()) {
