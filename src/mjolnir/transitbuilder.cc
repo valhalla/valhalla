@@ -22,6 +22,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/util.h"
 #include "midgard/logging.h"
 #include "midgard/distanceapproximator.h"
@@ -85,9 +86,7 @@ GraphId GetGraphId(const GraphId& nodeid,
 }
 
 void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
-                const TileHierarchy& hierarchy_local,
                 GraphTileBuilder& tilebuilder_transit,
-                const TileHierarchy& hierarchy_transit,
                 const GraphTile* tile,
                 GraphReader& reader_transit_level,
                 std::mutex& lock,
@@ -347,9 +346,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
 // Fallback to find connection edges from the transit stop to an OSM edge.
 void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
-                      const TileHierarchy& tilehierarchy, std::mutex& lock,
-                      std::vector<std::string>& names, uint64_t& wayid,
-                      GraphId& startnode, GraphId& endnode,
+                      std::mutex& lock, std::vector<std::string>& names,
+                      uint64_t& wayid, GraphId& startnode, GraphId& endnode,
                       std::vector<PointLL>& closest_shape,
                       std::tuple<PointLL,float,int>& closest)
 {
@@ -361,7 +359,7 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
   float rm = kMetersPerKm;//one km
   float mr2 = rm * rm;
 
-  const auto& tiles = tilehierarchy.levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   const float kTransitLatDeg  = kMetersPerKm / kMetersPerDegreeLat; //one km radius
 
   // Get a list of tiles required for a node search within this radius
@@ -370,10 +368,10 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
                       Point2(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
+  const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
   for (auto t : tilelist) {
     // Check all the nodes within the tile. Skip if tile has no nodes
     lock.lock();
-    const auto& local_level = tilehierarchy.levels().rbegin()->second.level;
     const GraphTile* newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0)
@@ -424,7 +422,6 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       const std::string& stop_name,
                       const GraphTile* tile,
                       GraphReader& reader_local_level,
-                      const TileHierarchy& tilehierarchy,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
 
@@ -473,13 +470,12 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
-
-    FindOSMConnection(stop_ll, reader_local_level, tilehierarchy,
-                      lock, names, wayid, startnode, endnode, closest_shape, closest);
+    FindOSMConnection(stop_ll, reader_local_level, lock, names, wayid,
+                      startnode, endnode, closest_shape, closest);
 
     // Check for invalid tile Ids...are we still no good?
     if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
-      const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
+      const AABB2<PointLL>& aabb = tile->BoundingBox();
 
       LOG_ERROR("No closest edge found for this stop: " + stop_name + " way Id = " +
                 std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
@@ -555,12 +551,9 @@ void build(const std::string& transit_dir,
            std::unordered_set<GraphId>::const_iterator tile_start,
            std::unordered_set<GraphId>::const_iterator tile_end,
            std::promise<builder_stats>& results) {
-  // Local Graphreader. Get tile information so we can find bounding boxes
+  // GraphReader for local level and for transit level.
   GraphReader reader_local_level(pt);
-  const TileHierarchy& hierarchy_local_level = reader_local_level.GetTileHierarchy();
-
   GraphReader reader_transit_level(pt);
-  const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
   // Iterate through the tiles in the queue and find any that include stops
   for(; tile_start != tile_end; ++tile_start) {
@@ -577,11 +570,13 @@ void build(const std::string& transit_dir,
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
     const GraphTile* local_tile = reader_local_level.GetGraphTile(tile_id);
-    GraphTileBuilder tilebuilder_local(hierarchy_local_level, tile_id, true);
+    GraphTileBuilder tilebuilder_local(reader_local_level.tile_dir(),
+                        tile_id, true);
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level()+1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder_transit(hierarchy_transit_level, transit_tile_id, true);
+    GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(),
+                        transit_tile_id, true);
 
     lock.unlock();
 
@@ -605,8 +600,7 @@ void build(const std::string& transit_dir,
       // Form connections to the stop
       // TODO - deal with station hierarchy (only connect egress locations)
       AddOSMConnection(transit_stop_node, transit_stop, stop_name, local_tile,
-                       reader_local_level, hierarchy_local_level, lock,
-                       connection_edges);
+                       reader_local_level, lock, connection_edges);
 
       /** TODO - parent/child relationships
       if (stop.type == 0 && stop.parent.Is_Valid()) {
@@ -622,9 +616,8 @@ void build(const std::string& transit_dir,
     std::sort(connection_edges.begin(), connection_edges.end());
 
     // Connect the transit graph to the route graph
-    ConnectToGraph(tilebuilder_local, hierarchy_local_level, tilebuilder_transit,
-                   hierarchy_transit_level, local_tile, reader_transit_level,
-                   lock, tiles, connection_edges);
+    ConnectToGraph(tilebuilder_local, tilebuilder_transit, local_tile,
+                   reader_transit_level, lock, tiles, connection_edges);
 
     // Write the new file
     lock.lock();
@@ -659,8 +652,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back('/');
   GraphReader reader(hierarchy_properties);
-  const auto& hierarchy = reader.GetTileHierarchy();
-  auto local_level = hierarchy.levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().rbegin()->first;
   if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
     boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
     for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -671,7 +663,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
         if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
-          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + '/' + GraphTile::FileSuffix(graph_id, hierarchy);
+          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + '/' + GraphTile::FileSuffix(graph_id);
           boost::filesystem::path filename = destination_path;
           // Make sure the directory exists on the system and copy to the tile_dir
           if (!boost::filesystem::exists(filename.parent_path()))

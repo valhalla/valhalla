@@ -43,13 +43,13 @@ struct graph_callback : public OSMPBF::Callback {
   virtual ~graph_callback() {}
 
   graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata) :
-    shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), tile_hierarchy_(pt.get<std::string>("tile_dir")),
+    shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId),
     osmdata_(osmdata), lua_(get_lua(pt)){
 
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
-    for (auto& level : tile_hierarchy_.levels()) {
+    for (auto& level : TileHierarchy::levels()) {
       if (level.second.name == "highway") {
         highway_cutoff_rc_ = level.second.importance;
       }
@@ -1073,9 +1073,6 @@ struct graph_callback : public OSMPBF::Callback {
     loops_.clear();
     loops_.shrink_to_fit();
   }
-
-  // List of the tile levels to be created
-  TileHierarchy tile_hierarchy_;
 
   //Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

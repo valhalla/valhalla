@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/directededge.h"
 #include "baldr/merge.h"
@@ -81,8 +82,7 @@ struct test_graph_reader : public vb::GraphReader {
 };
 
 void TestCollapseEdgeSimple() {
-  vb::TileHierarchy hier("");
-  vb::GraphId base_id = hier.GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
+  vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
   // simplest graph with a collapsible node:
   //
@@ -137,8 +137,7 @@ void TestCollapseEdgeSimple() {
 }
 
 void TestCollapseEdgeJunction() {
-  vb::TileHierarchy hier("");
-  vb::GraphId base_id = hier.GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
+  vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
   // simplest graph with a non-collapsible node:
   //
@@ -200,8 +199,7 @@ void TestCollapseEdgeJunction() {
 }
 
 void TestCollapseEdgeChain() {
-  vb::TileHierarchy hier("");
-  vb::GraphId base_id = hier.GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
+  vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
   // graph with 3 collapsible edges, all chained together. (e.g: think of the
   // middle segment as a bridge).

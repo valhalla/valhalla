@@ -10,6 +10,8 @@
 #include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
+#include "baldr/tilehierarchy.h"
+
 using namespace valhalla::baldr;
 
 namespace {
@@ -204,7 +206,7 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_hierarchy_(pt.get<std::string>("tile_dir")),
+    : tile_dir_(pt.get<std::string>("tile_dir")),
       tile_extract_(get_extract_instance(pt)),
       cache_(TileCacheFactory::createTileCache(pt)) {
   // Reserve cache (based on whether using individual tile files or shared,
@@ -220,20 +222,20 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   //otherwise check memory or disk
   if(cache_->Contains(graphid))
     return true;
-  std::string file_location = tile_hierarchy_.tile_dir() + "/" +
-    GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy_);
+  std::string file_location = tile_dir_ + "/" +
+            GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0;
 }
+
 bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
   //if you are using an extract only check that
   auto extract = get_extract_instance(pt);
   if(!extract->tiles.empty())
     return extract->tiles.find(graphid) != extract->tiles.cend();
   //otherwise check the disk
-  TileHierarchy tile_hierarchy(pt.get<std::string>("tile_dir"));
-  std::string file_location = tile_hierarchy.tile_dir() + "/" +
-    GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy);
+  std::string file_location = pt.get<std::string>("tile_dir") + "/" +
+            GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0;
 }
@@ -273,7 +275,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   }// Try getting it from flat file
   else {
     // This reads the tile from disk
-    GraphTile tile(tile_hierarchy_, base);
+    GraphTile tile(tile_dir_, base);
     if (!tile.header())
       return nullptr;
 
@@ -291,16 +293,12 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid, const GraphTi
 }
 
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
-  GraphId id = tile_hierarchy_.GetGraphId(pointll, level);
-  return (id.Is_Valid()) ? GetGraphTile(tile_hierarchy_.GetGraphId(pointll, level)) : nullptr;
+  GraphId id = TileHierarchy::GetGraphId(pointll, level);
+  return (id.Is_Valid()) ? GetGraphTile(TileHierarchy::GetGraphId(pointll, level)) : nullptr;
 }
 
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
-  return GetGraphTile(pointll, tile_hierarchy_.levels().rbegin()->second.level);
-}
-
-const TileHierarchy& GraphReader::GetTileHierarchy() const {
-  return tile_hierarchy_;
+  return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
 }
 
 // Clears the cache
@@ -431,7 +429,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   };
 
   // No shortcuts on the local level or transit level.
-  if (id.level() >= tile_hierarchy_.levels().rbegin()->second.level) {
+  if (id.level() >= TileHierarchy::levels().rbegin()->second.level) {
     return { };
   }
 
@@ -498,9 +496,9 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   }//or individually on disk
   else {
     //for each level
-    for(uint8_t level = 0; level < tile_hierarchy_.levels().rbegin()->first + 1; ++level) {
+    for(uint8_t level = 0; level < TileHierarchy::levels().rbegin()->first + 1; ++level) {
       //crack open this level of tiles directory
-      boost::filesystem::path root_dir(tile_hierarchy_.tile_dir() + '/' + std::to_string(level) + '/');
+      boost::filesystem::path root_dir(tile_dir_ + '/' + std::to_string(level) + '/');
       if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
         //iterate over all the files in there
         for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {

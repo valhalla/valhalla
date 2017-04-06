@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 
-#include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/pathlocation.h>
 
 #include <vector>
@@ -58,7 +57,6 @@ namespace valhalla {
       uint32_t transit_level;
       //this is a map(tile_level, map(tile_id, tile_color))
       std::unordered_map<uint32_t, std::unordered_map<uint32_t, size_t> > colors;
-      TileHierarchy tile_hierarchy;
     };
   }
 }

@@ -1,5 +1,6 @@
 #include "loki/node_search.h"
-#include "valhalla/midgard/tiles.h"
+#include "midgard/tiles.h"
+#include "baldr/tilehierarchy.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
@@ -363,9 +364,8 @@ std::vector<baldr::GraphId>
 nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   std::vector<vb::GraphId> nodes;
 
-  auto hierarchy = reader.GetTileHierarchy();
-  auto tiles = hierarchy.levels().rbegin()->second.tiles;
-  const uint8_t bin_level = hierarchy.levels().rbegin()->second.level;
+  auto tiles = vb::TileHierarchy::levels().rbegin()->second.tiles;
+  const uint8_t bin_level = vb::TileHierarchy::levels().rbegin()->second.level;
 
   // if the bbox only touches the edge of the tile or bin, then we need to
   // include neighbouring bins as well, in case both the edge and its opposite

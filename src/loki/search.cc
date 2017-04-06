@@ -1,6 +1,7 @@
 #include "loki/search.h"
 #include "midgard/linesegment2.h"
 #include "midgard/distanceapproximator.h"
+#include "baldr/tilehierarchy.h"
 
 #include <unordered_set>
 #include <list>
@@ -273,8 +274,8 @@ struct Segment {
 };
 
 std::function<std::tuple<int32_t, unsigned short, float>()>
-make_binner(const PointLL& p, const GraphReader& reader) {
-  const auto& tiles = reader.GetTileHierarchy().levels().rbegin()->second.tiles;
+make_binner(const PointLL& p) {
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   return tiles.ClosestFirst(p);
 }
 
@@ -392,9 +393,9 @@ struct ProjectPoint {
   // hot spot.
   struct Box {
     Box(const Location& location, GraphReader& reader)
-      : binner(make_binner(location.latlng_, reader)),
+      : binner(make_binner(location.latlng_)),
         location(location),
-        level(reader.GetTileHierarchy().levels().rbegin()->first) {}
+        level(TileHierarchy::levels().rbegin()->first) {}
     std::function<std::tuple<int32_t, unsigned short, float>()> binner;
     const GraphTile* cur_tile = nullptr;
     Segment closest_segment;

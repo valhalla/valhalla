@@ -17,21 +17,20 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
 };
 
 void file_suffix() {
-  TileHierarchy h("/data/valhalla");
 
-  if(GraphTile::FileSuffix(GraphId(2, 2, 0), h) != "2/000/000/002.gph")
+  if(GraphTile::FileSuffix(GraphId(2, 2, 0)) != "2/000/000/002.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
-  if(GraphTile::FileSuffix(GraphId(4, 2, 0), h) != "2/000/000/004.gph")
+  if(GraphTile::FileSuffix(GraphId(4, 2, 0)) != "2/000/000/004.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
-  if(GraphTile::FileSuffix(GraphId(1197468, 2, 0), h) != "2/001/197/468.gph")
+  if(GraphTile::FileSuffix(GraphId(1197468, 2, 0)) != "2/001/197/468.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
-  if(GraphTile::FileSuffix(GraphId(64799, 1, 0), h) != "1/064/799.gph")
+  if(GraphTile::FileSuffix(GraphId(64799, 1, 0)) != "1/064/799.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
-  if(GraphTile::FileSuffix(GraphId(49, 0, 0), h) != "0/000/049.gph")
+  if(GraphTile::FileSuffix(GraphId(49, 0, 0)) != "0/000/049.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 }
 
