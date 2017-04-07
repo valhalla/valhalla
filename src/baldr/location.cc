@@ -13,8 +13,7 @@ namespace valhalla {
 namespace baldr {
 
 Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
-    : latlng_(latlng),
-      stoptype_(stoptype) {
+  : latlng_(latlng), stoptype_(stoptype), isolated_(50), radius_(0) {
 }
 
 boost::property_tree::ptree Location::ToPtree() const {
@@ -48,11 +47,8 @@ boost::property_tree::ptree Location::ToPtree() const {
   if(way_id_)
     location.put("way_id", *way_id_);
 
-  location.put("deisolate", deisolate_);
-  if(search_count_)
-    location.put("search_count", search_count_);
-  if(search_radius_)
-    location.put("search_radius", search_radius_);
+  location.put("isolated", isolated_);
+  location.put("radius", radius_);
 
   return location;
 }
@@ -86,11 +82,8 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
   if(way_id_)
     location.AddMember("way_id", *way_id_, a);
 
-  location.AddMember("deisolate", deisolate_, a);
-  if(search_count_)
-    location.AddMember("search_count", *search_count_, a);
-  if(search_radius_)
-    location.AddMember("search_radius", *search_radius_, a);
+  location.AddMember("isolated_limit", isolated_, a);
+  location.AddMember("radius", radius_, a);
   return location;
 }
 
@@ -117,9 +110,8 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   location.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
   location.way_id_ = pt.get_optional<long double>("way_id");
 
-  location.deisolate_ = pt.get<bool>("deisolate", true);
-  location.search_count_ = pt.get_optional<unsigned int>("search_count");
-  location.search_radius_ = pt.get_optional<unsigned int>("search_radius");
+  location.isolated_ = pt.get<unsigned int>("isolated", 50);
+  location.radius_ = pt.get<unsigned int>("radius", 0);
 
   return location;
 }
@@ -155,9 +147,8 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
-  location.deisolate_ = GetFromRapidJson<bool>(d, "/deisolate", true);
-  location.search_count_ = GetOptionalFromRapidJson<unsigned int>(d, "/search_count");
-  location.search_radius_ = GetOptionalFromRapidJson<unsigned int>(d, "/search_radius");
+  location.isolated_ = GetFromRapidJson<unsigned int>(d, "/isolated", 50);
+  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", 0);
 
   return location;
 }
@@ -208,8 +199,7 @@ bool Location::operator==(const Location& o) const {
          state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
          date_time_ == o.date_time_ && heading_ == o.heading_ &&
          heading_tolerance_ == o.heading_tolerance_ && way_id_ == o.way_id_
-         && deisolate_ == o.deisolate_ && search_count_ == o.search_count_ &&
-         search_radius_ == o.search_radius_;
+         && isolated_ == o.isolated_ && radius_ == o.radius_;
 }
 
 }

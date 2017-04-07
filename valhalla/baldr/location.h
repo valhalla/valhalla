@@ -99,9 +99,11 @@ struct Location {
   boost::optional<int> heading_tolerance_;
   boost::optional<uint64_t> way_id_;
 
-  bool deisolate_; //should search for more edges if it has only found those on islands
-  boost::optional<unsigned int>  search_count_; //dont return more results than this
-  boost::optional<unsigned int> search_radius_; //dont return results further away than this
+  //if a given candidate edge reaches less than this number of nodes its considered isolated
+  //we'll search for more candidates until we find at least one that isnt considered isolated
+  unsigned int isolated_;
+  //dont return results further away than this (meters) unless there is nothing this close
+  unsigned int radius_;
 
  protected:
 

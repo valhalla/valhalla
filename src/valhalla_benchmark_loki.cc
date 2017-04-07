@@ -25,6 +25,8 @@ boost::filesystem::path config_file_path;
 size_t threads = std::max(static_cast<size_t>(std::thread::hardware_concurrency()), static_cast<size_t>(1));
 size_t batch = 1;
 bool extrema = false;
+size_t isolated = 0;
+size_t radius = 0;
 std::vector<std::string> input_files;
 
 using job_t = std::vector<valhalla::baldr::Location>;
@@ -88,6 +90,8 @@ bool ParseArguments(int argc, char *argv[]) {
       ("threads,t", boost::program_options::value<size_t>(&threads), "Concurrency to use.")
       ("batch,b", boost::program_options::value<size_t>(&batch), "Number of locations to group together per search")
       ("extrema,e", boost::program_options::value<bool>(&extrema), "Show the input locations of the extrema for a given statistic")
+      ("isolation_limit,i", boost::program_options::value<size_t>(&isolated), "How many nodes a location candidate must reach before considering it as connected")
+      ("radius,r", boost::program_options::value<size_t>(&radius), "How many meters to search away from the input location")
       //positional arguments
       ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
@@ -191,7 +195,10 @@ int main(int argc, char** argv) {
     std::ifstream stream(file);
     std::string line;
     while(std::getline(stream, line)) {
-      job.emplace_back(valhalla::baldr::Location::FromCsv(line));
+      auto loc = valhalla::baldr::Location::FromCsv(line);
+      loc.isolated_ = isolated;
+      loc.radius_ = radius;
+      job.emplace_back(std::move(loc));
       if(job.size() == batch) {
         jobs.emplace_back(std::move(job));
         job.clear();
