@@ -379,7 +379,7 @@ void build(const boost::property_tree::ptree& pt,
       float roadlength = 0.0f;
       uint32_t nodecount = tile->header()->nodecount();
       GraphId node = tile_id;
-      for (uint64_t i = 0; i < nodecount; i++, node++) {
+      for (uint64_t i = 0; i < nodecount; i++, ++node) {
         // The node we will modify
         const NodeInfo* nodeinfo = tile->node(node);
         std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();

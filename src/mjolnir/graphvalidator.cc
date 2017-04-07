@@ -330,7 +330,7 @@ void validate(const boost::property_tree::ptree& pt,
       float roadlength = 0.0f;
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node = tile_id;
-      for (uint32_t i = 0; i < nodecount; i++, node++) {
+      for (uint32_t i = 0; i < nodecount; i++, ++node) {
         // The node we will modify
         NodeInfo nodeinfo = tilebuilder.node(i);
         auto ni = tile->node(i);
@@ -339,7 +339,7 @@ void validate(const boost::property_tree::ptree& pt,
         // Go through directed edges and validate/update data
         uint32_t idx = ni->edge_index();
         GraphId edgeid(node.tileid(), node.level(), idx);
-        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, edgeid++) {
+        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, ++edgeid) {
           auto de = tile->directededge(idx);
 
           // Validate signs

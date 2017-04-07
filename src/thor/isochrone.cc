@@ -181,7 +181,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
         continue;
@@ -308,7 +308,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip edges not allowed by the access mode. This allows early rejection
       // without the opposing edge. Also skip edges shortcut edges.
       if (!(directededge->reverseaccess() & access_mode_) ||
@@ -536,7 +536,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
         continue;

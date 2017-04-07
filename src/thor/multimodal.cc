@@ -293,7 +293,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip shortcuts
       if (directededge->is_shortcut()) {
         continue;
@@ -575,7 +575,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     // Expand edges from the node
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo es = edgestatus.Get(edgeid);

@@ -47,7 +47,7 @@ struct edges {
 
     const_iterator &operator++() {
       ++ptr;
-      id++;
+      ++id;
       return *this;
     }
 

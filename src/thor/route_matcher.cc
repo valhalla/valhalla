@@ -99,7 +99,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
   const NodeInfo* node_info = tile->node(node);
   GraphId edge_id(node.tileid(), node.level(), node_info->edge_index());
   const DirectedEdge* de = tile->directededge(node_info->edge_index());
-  for (uint32_t i = 0; i < node_info->edge_count(); i++, de++, edge_id++) {
+  for (uint32_t i = 0; i < node_info->edge_count(); i++, de++, ++edge_id) {
     // Skip shortcuts and transit connection edges
     // TODO - later might allow transit connections for multi-modal
     if (de->is_shortcut() || de->use() == Use::kTransitConnection) {

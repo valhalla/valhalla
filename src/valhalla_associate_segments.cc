@@ -416,7 +416,7 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
     const NodeInfo* nodeinfo = tile->node(node);
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip non-regular edges
       if (directededge->trans_up() || directededge->trans_down() ||
           directededge->is_shortcut() || directededge->roundabout() ||

@@ -591,7 +591,7 @@ void build(const std::string& transit_dir,
     GraphId transit_stop_node(tile_id.tileid(), tile_id.level(), 0);
     std::vector<OSMConnectionEdge> connection_edges;
     std::unordered_multimap<GraphId, GraphId> children;
-    for (uint32_t i = 0; i < transit_tile->header()->nodecount(); i++, transit_stop_node++) {
+    for (uint32_t i = 0; i < transit_tile->header()->nodecount(); i++, ++transit_stop_node) {
       const NodeInfo* transit_stop = transit_tile->node(i);
 
       auto ts = transit_tile->GetTransitStop(transit_stop->stop_index());

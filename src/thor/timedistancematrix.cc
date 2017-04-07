@@ -135,7 +135,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
         continue;
@@ -293,7 +293,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
         continue;
