@@ -114,7 +114,6 @@ s-9q5b47urt8-silverspurrdatdrybankdr,s-9q5b5khg7x-pvdrnorth~east,r-9q5b-225
 s-9qbb58fx9b-4thst~idast,s-9qbb47mdf4-broadwayblvd~bolinasave,r-9qbb5-23
 s-9q8zsdvmx6-tiburonblvd~greenwoodbeachrd,s-9q8zt0cjbf-tiburonblvd~gilmartindr,r-9q8zs-219
 s-dpxr3epn90-dundasstwest6thline,s-dpxnz6y27g-dundas407carpool,r-dpxr-5
-s-dpxr63qn8c-sheridancollege<00939,s-dpxr65mdkp-trafalgarrd~glenashtondr,r-dpx-46
 s-dr4e39ps4m-jeffersonstation,s-dr47c87kb5-malvern,r-dr47-paoli~thorndaleline
 s-dr47c87kb5-malvern,s-dr45ebqwgf-thorndale,r-dr47-paoli~thorndaleline
 s-dr4e302479-universitycity,s-dr4e31ykkn-30thstreetstation,r-dr47-media~elwynline
