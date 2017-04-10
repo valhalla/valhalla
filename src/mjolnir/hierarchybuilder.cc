@@ -208,7 +208,7 @@ void FormTilesInNewLevel(GraphReader& reader) {
     // Iterate through directed edges of the base node to get remaining
     // directed edges (based on classification/importance cutoff)
     GraphId base_edge_id(base_node.tileid(), base_node.level(), baseni.edge_index());
-    for (uint32_t i = 0; i < baseni.edge_count(); i++, base_edge_id++) {
+    for (uint32_t i = 0; i < baseni.edge_count(); i++, ++base_edge_id) {
       // Check if the directed edge should exist on this level
       const DirectedEdge* directededge = tile->directededge(base_edge_id);
       if (!include_edge(directededge, base_node, current_level)) {
@@ -371,10 +371,10 @@ void CreateNodeAssociations(GraphReader& reader) {
     GraphId basenode(basetileid, bl, 0);
     GraphId edgeid(basetileid, bl, 0);
     const NodeInfo* nodeinfo = tile->node(basenode);
-    for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, basenode++) {
+    for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, ++basenode) {
       // Iterate through the edges to see which levels this node exists.
       levels[0] = levels[1] = levels[2] = false;
-      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, edgeid++) {
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, ++edgeid) {
         // Update the flag for the level of this edge (skip transit
         // connection edges)
         const DirectedEdge* directededge = tile->directededge(edgeid);

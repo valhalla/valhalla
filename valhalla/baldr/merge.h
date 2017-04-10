@@ -86,7 +86,7 @@ void merge(TileSet &tiles, GraphReader &reader,
     const auto *tile = reader.GetGraphTile(tile_id);
     uint32_t node_count = tile->header()->nodecount();
     GraphId node_id(tile_id.tileid(), tile_id.level(), 0);
-    for (uint32_t i = 0; i < node_count; ++i, node_id++) {
+    for (uint32_t i = 0; i < node_count; ++i, ++node_id) {
       e.explore(node_id);
     }
   }
@@ -96,7 +96,7 @@ void merge(TileSet &tiles, GraphReader &reader,
     const auto *tile = reader.GetGraphTile(tile_id);
     const auto num_edges = tile->header()->directededgecount();
     GraphId edge_id(tile_id.tileid(), tile_id.level(), 0);
-    for (uint32_t i = 0; i < num_edges; ++i, edge_id++) {
+    for (uint32_t i = 0; i < num_edges; ++i, ++edge_id) {
       if (!tracker.get(edge_id)) {
         auto p = detail::make_single_edge_path(reader, edge_id);
         func(p);

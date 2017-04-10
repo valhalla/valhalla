@@ -209,7 +209,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);

@@ -152,7 +152,7 @@ GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
                  nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
     if (directededge->trans_down() || directededge->trans_up() ||
         directededge->use() == Use::kTransitConnection) {
       continue;
@@ -211,7 +211,7 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   // and this enters a tile where shortcuts have already been created.
   std::vector<GraphId> edges;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
+  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, ++edgeid) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
     if (!directededge->trans_down() && !directededge->is_shortcut() &&
          directededge->use() != Use::kTransitConnection &&
@@ -388,7 +388,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
-  for (uint32_t i = 0; i < edge_count; i++, edge_id++) {
+  for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transition edges and transit connections.
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->trans_up() || directededge->trans_down() ||
@@ -555,7 +555,7 @@ uint32_t FormShortcuts(GraphReader& reader,
 
     // Iterate through the nodes in the tile
     GraphId node_id(tileid, tile_level, 0);
-    for (uint32_t n = 0; n < tile->header()->nodecount(); n++, node_id++) {
+    for (uint32_t n = 0; n < tile->header()->nodecount(); n++, ++node_id) {
       // Get the node info, copy node index and count from old tile
       NodeInfo nodeinfo = *(tile->node(node_id));
       uint32_t old_edge_index = nodeinfo.edge_index();
@@ -578,7 +578,7 @@ uint32_t FormShortcuts(GraphReader& reader,
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
-      for (uint32_t i = 0; i < old_edge_count; i++, edgeid++) {
+      for (uint32_t i = 0; i < old_edge_count; i++, ++edgeid) {
         // Copy the directed edge information and update end node,
         // edge data offset, and opp_index
         const DirectedEdge* directededge = tile->directededge(edgeid);

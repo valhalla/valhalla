@@ -78,6 +78,14 @@ inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> 
   return boost::none;
 }
 
+template<typename T, typename V>
+inline T GetFromRapidJson(V&& v, const char* source, const T& t){
+  auto value = GetOptionalFromRapidJson<T>(v, source);
+  if(value)
+    return *value;
+  return t;
+}
+
 }
 
 #endif /* VALHALLA_BALDR_RAPIDJSON_UTILS_H_ */

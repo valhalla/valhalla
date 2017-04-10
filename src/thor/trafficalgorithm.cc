@@ -109,7 +109,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Disable upward transitions for traffic...for now only support traffic
       // for short routes since no shortcuts have traffic yet
       if (directededge->trans_up()) {

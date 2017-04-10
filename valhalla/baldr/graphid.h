@@ -120,8 +120,18 @@ union GraphId {
   /**
    * Post increments the id.
    */
-  void operator ++(int) {
+  GraphId operator ++(int) {
+    GraphId t = *this;
     fields.id++;
+    return t;
+  }
+
+  /**
+   * Pre increments the id.
+   */
+  GraphId& operator ++() {
+    ++fields.id;
+    return *this;
   }
 
   /**

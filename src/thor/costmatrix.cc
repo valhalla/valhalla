@@ -221,7 +221,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges
     if (directededge->trans_up() || directededge->trans_down()) {
       // Do not take transition edges if this is called from a transition.
@@ -490,7 +490,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges.
     if (directededge->trans_up() || directededge->trans_down()) {
       // Do not take transition edges if this is called from a transition.
