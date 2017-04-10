@@ -478,7 +478,7 @@ void handle_bin(std::vector<projector_t>::iterator pp_begin,
         const auto sq_distance = it->approx.DistanceSquared(point);
         // this block is not in the hot spot
         if(sq_distance < it->candidate.sq_distance) {
-          it->candidate = candidate_t{sq_distance, std::move(point), 0, e, edge, edge_info, tile};
+          it->candidate = candidate_t{sq_distance, std::move(point), i, e, edge, edge_info, tile};
         }
       }
     }
