@@ -206,6 +206,13 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     text_offset_map_.emplace(str, offset);
     text_list_offset_ += str.length() + 1;
   }
+
+  // Lane connectivity
+  lane_connectivity_offset_ = lane_connectivity_size_;
+  n = lane_connectivity_size_ / sizeof(LaneConnectivity);
+  lane_connectivity_builder_.reserve(n);
+  std::copy(lane_connectivity_, lane_connectivity_ + n,
+    std::back_inserter(lane_connectivity_builder_));
 }
 
 // Output the tile to file. Stores as binary data.
@@ -279,8 +286,10 @@ void GraphTileBuilder::StoreTileData() {
     for (const auto& text : textlistbuilder_)
       in_mem << text << '\0';
 
-    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6%" )
-      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_).str());
+    // Write lane connections
+    std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
+    in_mem.write(reinterpret_cast<const char*>(&lane_connectivity_builder_[0]),
+               lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
     // Configure the header
     header_builder_.set_nodecount(nodes_builder_.size());
@@ -320,9 +329,20 @@ void GraphTileBuilder::StoreTileData() {
     // traffic segment Id offset to same value
     size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
     header_builder_.set_traffic_id_count(0);
-    header_builder_.set_traffic_segmentid_offset(end_offset);
-    header_builder_.set_traffic_chunk_offset(end_offset);
-    header_builder_.set_end_offset(end_offset);
+    header_builder_.set_traffic_segmentid_offset(header_builder_.textlist_offset() + text_list_offset_);
+    header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset());
+
+    header_builder_.set_lane_connectivity_offset(header_builder_.traffic_chunk_offset());
+
+    header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
+      (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
+
+    header_builder_.set_end_offset(static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader));
+
+    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6% lane connections = %7%" )
+      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_ % lane_connectivity_builder_.size()).str());
+    LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% routes = %4%" )
+      % admins_builder_.size() % departure_builder_.size() % stop_builder_.size() % route_builder_.size()).str());
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
@@ -406,6 +426,10 @@ void GraphTileBuilder::Update(
     // Save existing text
     in_mem.write(textlist_, textlist_size_);
 
+    // Save lane connectivity
+    in_mem.write(reinterpret_cast<const char*>(&lane_connectivity_[0]),
+        lane_connectivity_size_);
+
     // Write the updated header. At this point there are no traffic segments
     size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
     header_->set_traffic_segmentid_offset(end_offset);
@@ -479,6 +503,13 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
       signs_builder_.emplace_back(idx, sign.type(), offset);
     }
   }
+}
+
+// Add lane connectivity
+void GraphTileBuilder::AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc)
+{
+  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(), lc.begin(), lc.end());
+  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lc.size();
 }
 
 bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
@@ -853,6 +884,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
   header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
+  header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = tile_dir + '/' + GraphTile::FileSuffix(header.graphid());
@@ -992,10 +1024,9 @@ void GraphTileBuilder::UpdateTrafficSegments() {
                traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
     // Write rest of the stuff after traffic chunks
-    // TODO - enable this after anything is added after traffic
-//    const auto* begin = reinterpret_cast<const char*>(header_ + header_->NEXT_ITEM_OFFSET());
-//    const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
-//    file.write(begin, end - begin);
+   begin = reinterpret_cast<const char*>(header_ + header_->lane_connectivity_offset());
+   const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
+   file.write(begin, end - begin);
 
     // Close the file
     file.close();

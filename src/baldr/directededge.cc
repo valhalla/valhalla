@@ -116,6 +116,11 @@ void DirectedEdge::set_curvature(const uint32_t factor) {
   }
 }
 
+// Sets the lane connectivity flag.
+void DirectedEdge::set_laneconnectivity(const bool lc) {
+  lane_conn_ = lc;
+}
+
 // -------------------------- Routing attributes --------------------------- //
 
 // Set the flag indicating driving is on the right hand side of the road

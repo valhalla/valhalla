@@ -828,19 +828,22 @@ struct graph_callback : public OSMPBF::Callback {
     bool isRoad = false;
     bool isRoute = false;
     bool isBicycle = false;
+    bool isConnectivity = false;
     uint32_t bike_network_mask = 0;
 
     std::string network, ref, name, except;
+    std::string from_lanes, from, to_lanes, to;
     uint32_t modes = (kAutoAccess |  kTaxiAccess | kBusAccess | kBicycleAccess |
                       kTruckAccess | kEmergencyAccess);
 
     for (const auto& tag : results) {
-
       if (tag.first == "type") {
         if (tag.second == "restriction")
           isRestriction = true;
         else if (tag.second == "route")
           isRoute = true;
+        else if (tag.second == "connectivity")
+          isConnectivity = true;
       }
       else if (tag.first == "route") {
         if (tag.second == "road")
@@ -922,8 +925,21 @@ struct graph_callback : public OSMPBF::Callback {
       else if  (tag.first == "day_off") {
         restriction.set_day_off((DOW) std::stoi(tag.second));
       }
-      else if (tag.first == "bike_network_mask")
+      else if (tag.first == "bike_network_mask") {
         bike_network_mask = std::stoi(tag.second);
+      }
+      else if (tag.first == "to:lanes") {
+        to_lanes = tag.second;
+      }
+      else if (tag.first == "from:lanes") {
+        from_lanes = tag.second;
+      }
+      else if (tag.first == "to") {
+        to = tag.second;
+      }
+      else if (tag.first == "from") {
+        from = tag.second;
+      }
     }
 
     if (isBicycle && isRoute && !network.empty())
@@ -980,6 +996,25 @@ struct graph_callback : public OSMPBF::Callback {
           else
             osmdata_.way_ref[member.member_id] = reference + "|" + direction;
         }
+      }
+    }
+    else if (isConnectivity &&
+        (!to_lanes.empty() || !to.empty()) &&
+        (!from_lanes.empty() || !from.empty())) {
+      uint64_t from_way_id = 0;
+      uint64_t to_way_id = 0;
+      for (const auto& member : members) {
+        // from and to must be of type 1(way).
+        if (member.role == "from" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+          from_way_id = member.member_id;
+        else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+          to_way_id = member.member_id;
+        }
+
+      if (from_way_id && to_way_id) {
+        osmdata_.lane_connectivity_map.insert(OSMLaneConnectivityMultiMap::value_type(to_way_id,
+          OSMLaneConnectivity{to_way_id, from_way_id,
+            std::max(to, to_lanes), std::max(from, from_lanes)}));
       }
     }
     else if (isRestriction && hasRestriction) {
@@ -1166,6 +1201,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS), callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
+  LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) + " lane connections");
   callback.reset(nullptr, nullptr, nullptr, nullptr);
 
   //we need to sort the complex restrictions so that we can easily find them.

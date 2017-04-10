@@ -722,6 +722,22 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             directededge.set_exitsign(true);
           }
 
+          // Add lane connectivity
+          try {
+            auto ei = osmdata.lane_connectivity_map.equal_range(w.way_id());
+            if (ei.first != ei.second) {
+              std::vector<LaneConnectivity> v;
+              for (; ei.first != ei.second; ++ei.first) {
+                const auto& lc = ei.first->second;
+                v.emplace_back(idx, lc.from_way_id, lc.to_lanes, lc.from_lanes);
+              }
+              graphtile.AddLaneConnectivity(v);
+              directededge.set_laneconnectivity(true);
+            }
+          } catch (std::exception& e) {
+            LOG_WARN("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) + " : " + e.what());
+          }
+
           //set the number of lanes.
           if (w.forward_tagged_lanes() && w.backward_tagged_lanes()) {
             if (forward)

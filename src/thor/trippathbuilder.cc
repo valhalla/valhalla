@@ -1262,6 +1262,15 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   if (controller.attributes.at(kEdgeLaneCount))
     trip_edge->set_lane_count(directededge->lanecount());
 
+  if (directededge->laneconnectivity() && controller.attributes.at(kEdgeLaneConnectivity)) {
+    for (const auto& l : graphtile->GetLaneConnectivity(idx)) {
+      TripPath_LaneConnectivity* path_lane = trip_edge->add_lane_connectivity();
+      path_lane->set_from_way_id(l.from());
+      path_lane->set_to_lanes(l.to_lanes());
+      path_lane->set_from_lanes(l.from_lanes());
+    }
+  }
+
   if (directededge->cyclelane() != CycleLane::kNone && controller.attributes.at(kEdgeCycleLane))
     trip_edge->set_cycle_lane(GetTripPathCycleLane(directededge->cyclelane()));
 

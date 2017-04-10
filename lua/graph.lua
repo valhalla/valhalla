@@ -1396,6 +1396,10 @@ function ways_proc (kv, nokeys)
 end
 
 function rels_proc (kv, nokeys)
+  if (kv["type"] == "connectivity") then
+    return 0, kv
+  end
+
   if (kv["type"] == "route" or kv["type"] == "restriction") then
 
      local restrict = restriction[kv["restriction"]]

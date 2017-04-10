@@ -28,6 +28,13 @@ struct OSMBike {
   size_t ref_index;
 };
 
+struct OSMLaneConnectivity {
+  uint64_t to_way_id;
+  uint64_t from_way_id;
+  std::string to_lanes;
+  std::string from_lanes;
+};
+
 using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
 
 using ViaSet = std::unordered_set<uint64_t>;
@@ -42,6 +49,8 @@ using OSMStringMap = std::unordered_map<uint64_t, std::string>;
 
 using OSMShapeMap = std::unordered_map<uint64_t, PointLL>;
 using OSMWayMap = std::unordered_map<uint64_t, std::list<uint64_t>>;
+
+using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 
 enum class OSMType : uint8_t {
     kNode,
@@ -105,6 +114,9 @@ struct OSMData {
 
   // Map used in admins to store the ways.
   OSMWayMap way_map;
+
+  // Lane connectivity, index by the to way Id
+  OSMLaneConnectivityMultiMap lane_connectivity_map;
 
   // Vector of admins.
   std::vector<OSMAdmin> admins_;

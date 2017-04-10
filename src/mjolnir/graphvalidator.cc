@@ -349,6 +349,14 @@ void validate(const boost::property_tree::ptree& pt,
             }
           }
 
+          // Validate lane connectivity
+          if (de->laneconnectivity()) {
+            if (tile->GetLaneConnectivity(idx).size() == 0) {
+              LOG_ERROR("Directed edge marked as having lane connectivity but none found ; tile level = " +
+                  std::to_string(tile_id.level()));
+            }
+          }
+
           // Validate access restrictions. TODO - should check modes as well
           uint32_t ar_modes = de->access_restriction();
           if (ar_modes) {

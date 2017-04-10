@@ -71,7 +71,8 @@ GraphTile::GraphTile()
       textlist_size_(0),
       traffic_segments_(nullptr),
       traffic_chunks_(nullptr),
-      traffic_chunk_size_(0) {
+      traffic_chunk_size_(0),
+      lane_connectivity_size_(0) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -208,7 +209,11 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
   // Start of traffic chunks and their size
   // TODO - update chunk definition...
   traffic_chunks_ = reinterpret_cast<TrafficChunk*>(tile_ptr + header_->traffic_chunk_offset());
-  traffic_chunk_size_ = header_->end_offset() - header_->traffic_chunk_offset();
+  traffic_chunk_size_ = header_->lane_connectivity_offset() - header_->traffic_chunk_offset();
+
+  // Start of lane connections and their size
+  lane_connectivity_ = reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
+  lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();
 
   // ANY NEW EXPANSION DATA GOES HERE
 
@@ -550,6 +555,46 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
   if (signs.size() == 0)
     LOG_ERROR("No signs found for idx = " + std::to_string(idx));
   return signs;
+}
+
+// Get lane connections ending on this edge.
+std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) const {
+  uint32_t count = lane_connectivity_size_ / sizeof(LaneConnectivity);
+  std::vector<LaneConnectivity> lcs;
+  if (count == 0) {
+    LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
+    return lcs;
+  }
+
+  // Lane connections are sorted by edge index.
+  // Binary search to find a sign with matching edge index.
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  int32_t found = count;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    const auto& lc = lane_connectivity_[mid];
+    //matching edge index
+    if (idx == lc.to()) {
+      found = mid;
+      high = mid - 1;
+    }//need a smaller index
+    else if (idx < lc.to()) {
+      high = mid - 1;
+    }//need a bigger index
+    else {
+      low = mid + 1;
+    }
+  }
+
+  // Add Lane connections
+  for(; found < count && lane_connectivity_[found].to() == idx; ++found) {
+    lcs.emplace_back(lane_connectivity_[found]);
+  }
+  if (lcs.size() == 0)
+    LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
+  return lcs;
 }
 
 // Get the next departure given the directed line Id and the current

@@ -78,6 +78,22 @@ class DirectedEdge {
    */
   void set_exitsign(const bool exit);
 
+
+  /**
+   * Does this directed edge have the lane connectivity?
+   * @return  Returns true if the directed edge has the lane connectivity,
+   *          false if not.
+   */
+  bool laneconnectivity() const {
+    return lane_conn_;
+  }
+
+  /**
+   * Sets the lane connectivity flag.
+   * @param  lc  True if this directed edge has lane connectivity.
+   */
+  void set_laneconnectivity(const bool lc);
+
   /**
    * Gets the length of the edge in meters.
    * @return  Returns the length in meters.
@@ -1028,7 +1044,8 @@ class DirectedEdge {
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
-  uint64_t spare_          : 11;
+  uint64_t lane_conn_      : 1;  // 1 if has lane connectivity, 0 otherwise
+  uint64_t spare_          : 10;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.

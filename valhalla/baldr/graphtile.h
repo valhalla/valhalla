@@ -6,6 +6,7 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -336,6 +337,12 @@ class GraphTile {
    */
   std::vector<TrafficSegment> GetTrafficSegments(const uint32_t idx) const;
 
+  /**
+   * Get lane connections ending on this edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a list of lane connections ending on this edge.
+   */
+  std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
  protected:
 
@@ -411,6 +418,12 @@ class GraphTile {
 
   // Traffic segment association. Count is the same as the directed edge count.
   TrafficAssociation* traffic_segments_;
+
+  // Lane connectivity data.
+  LaneConnectivity* lane_connectivity_;
+
+  // Number of bytes in lane connectivity data.
+  std::size_t lane_connectivity_size_;
 
   // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
   // segment Id (GraphId) and weight (combined int a single uint64_t).

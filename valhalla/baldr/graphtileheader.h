@@ -13,7 +13,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 15;
+constexpr size_t kEmptySlots = 14;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -414,6 +414,18 @@ class GraphTileHeader {
   void set_traffic_chunk_offset(const uint32_t offset);
 
   /**
+   * Sets the offset to the lane connectivity data.
+   * @param offset Offset in bytes to the start of the lane connectivity data.
+   */
+  void set_lane_connectivity_offset(const uint32_t offset);
+
+  /**
+   * Gets the offset to the lane connectivity data.
+   * @return  Returns the number of bytes to offset to the the lane connectivity data.
+   */
+  uint32_t lane_connectivity_offset() const;
+
+  /**
    * Get the offset to the end of the tile
    * @return the number of bytes in the tile, unless the last slot is used
    */
@@ -480,6 +492,9 @@ class GraphTileHeader {
   // Offset to the beginning of traffic segment "chunks". Chunks occur when an
   // edge maps to more than one traffic segment.
   uint32_t traffic_chunk_offset_;
+
+  // Offset to beginning of the lane connectivity data
+  uint32_t lane_connectivity_offset_;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,

@@ -505,6 +505,12 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         LOG_ERROR("Shortcut edge with exit signs");
       }
 
+      // TODO: for now just drop lane connectivity for shortcuts
+      // they can be retrieved later by re-tracing path (via trace_attribute)
+      if (newedge.laneconnectivity()) {
+        newedge.set_laneconnectivity(false);
+      }
+
       // Compute the weighted edge density
       newedge.set_density(average_density / (static_cast<float>(length)));
 
@@ -606,6 +612,18 @@ uint32_t FormShortcuts(GraphReader& reader,
                   AccessRestriction(tilebuilder.directededges().size(),
                      res.type(), res.modes(), res.value()));
             }
+          }
+
+          // Copy lane connectivity
+          if (directededge->laneconnectivity()) {
+            auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
+            if (laneconnectivity.size() == 0) {
+              LOG_ERROR("Base edge should have lane connectivity, but none found");
+            }
+            for (auto& lc : laneconnectivity) {
+              lc.set_to(tilebuilder.directededges().size());
+            }
+            tilebuilder.AddLaneConnectivity(laneconnectivity);
           }
 
           // Get edge info, shape, and names from the old tile and add

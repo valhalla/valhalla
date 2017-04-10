@@ -67,6 +67,17 @@ namespace {
           edge_map->emplace("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
         if (edge.has_lane_count())
           edge_map->emplace("lane_count", static_cast<uint64_t>(edge.lane_count()));
+        if (edge.lane_connectivity_size()) {
+          auto lane_connectivity = json::array({});
+          for (const auto& l : edge.lane_connectivity()) {
+            auto element = json::map({});
+            element->emplace("from", l.from_way_id());
+            element->emplace("to_lanes", l.to_lanes());
+            element->emplace("from_lanes", l.from_lanes());
+            lane_connectivity->push_back(element);
+          }
+          edge_map->emplace("lane_connectivity", lane_connectivity);
+        }
         if (edge.has_max_downward_grade())
           edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
         if (edge.has_max_upward_grade())
