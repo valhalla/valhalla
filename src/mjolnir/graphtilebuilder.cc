@@ -213,6 +213,15 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
     std::back_inserter(lane_connectivity_builder_));
+
+  // Edge elevation
+  if (header_->has_edge_elevation()) {
+    // Edge elevation count is the same as the directed edge count
+    n = header_->directededgecount();
+    edge_elevation_builder_.reserve(n);
+    std::copy(edge_elevation_, edge_elevation_ + n,
+        std::back_inserter(edge_elevation_builder_));
+  }
 }
 
 // Output the tile to file. Stores as binary data.
@@ -291,6 +300,10 @@ void GraphTileBuilder::StoreTileData() {
     in_mem.write(reinterpret_cast<const char*>(&lane_connectivity_builder_[0]),
                lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
+    // Write the edge elevation data
+    in_mem.write(reinterpret_cast<const char*>(&edge_elevation_builder_[0]),
+                   edge_elevation_builder_.size() * sizeof(EdgeElevation));
+
     // Configure the header
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
@@ -332,10 +345,17 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_traffic_segmentid_offset(header_builder_.textlist_offset() + text_list_offset_);
     header_builder_.set_traffic_chunk_offset(header_builder_.traffic_segmentid_offset());
 
+    // Set the lane connectivity offset
     header_builder_.set_lane_connectivity_offset(header_builder_.traffic_chunk_offset());
 
-    header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
+    // Set the edge elevation offset and flag for whether edge elevation exists
+    header_builder_.set_edge_elevation_offset(header_builder_.lane_connectivity_offset() +
       (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
+    header_builder_.set_has_edge_elevation(edge_elevation_builder_.size() > 0);
+
+    // Set the end offset
+    header_builder_.set_end_offset(header_builder_.edge_elevation_offset() +
+      (edge_elevation_builder_.size() * sizeof(EdgeElevation)));
 
     header_builder_.set_end_offset(static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader));
 
@@ -429,6 +449,13 @@ void GraphTileBuilder::Update(
     // Save lane connectivity
     in_mem.write(reinterpret_cast<const char*>(&lane_connectivity_[0]),
         lane_connectivity_size_);
+
+    // Save edge elevation
+    // TODO - is the count still the same? No new directed edges can be added!
+    if (header_->has_edge_elevation()) {
+      in_mem.write(reinterpret_cast<const char*>(&edge_elevation_[0]),
+                 directededges.size());
+    }
 
     // Write the updated header. At this point there are no traffic segments
     size_t end_offset = static_cast<size_t>(in_mem.tellp()) + sizeof(GraphTileHeader);
@@ -885,6 +912,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
   header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
+  header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = tile_dir + '/' + GraphTile::FileSuffix(header.graphid());
@@ -1023,14 +1051,20 @@ void GraphTileBuilder::UpdateTrafficSegments() {
     file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
                traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
-    // Write rest of the stuff after traffic chunks
-   begin = reinterpret_cast<const char*>(header_ + header_->lane_connectivity_offset());
-   const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
-   file.write(begin, end - begin);
+    // Write rest of the stuff after traffic chunks (includes lane connectivity
+    // and edge elevation...so far).
+    begin = reinterpret_cast<const char*>(header_ + header_->lane_connectivity_offset());
+    const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
+    file.write(begin, end - begin);
 
     // Close the file
     file.close();
   }
+}
+
+// Gets the current list of directed edge (builders).
+std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
+  return edge_elevation_builder_;
 }
 
 }

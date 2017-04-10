@@ -370,6 +370,12 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void UpdateTrafficSegments();
 
+  /**
+    * Gets the current list of edge elevation (builders).
+    * @return  Returns the edge elevation builders.
+    */
+   std::vector<EdgeElevation>& edge_elevations();
+
  protected:
 
   struct EdgeTupleHasher {
@@ -476,9 +482,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Traffic chunks
   std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
 
-  // List of signs. This is a fixed size structure so it can be
-  // indexed directly.
+  // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
+
+  // List of edge elevation records. Index with directed edge Id.
+  std::vector<EdgeElevation> edge_elevation_builder_;
+
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
 };
