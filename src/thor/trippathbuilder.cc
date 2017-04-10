@@ -1251,13 +1251,17 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   if (controller.attributes.at(kEdgeWeightedGrade))
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
 
-  // Set maximum upward grade if requested
-  if (controller.attributes.at(kEdgeMaxUpwardGrade))
-    trip_edge->set_max_upward_grade(directededge->max_up_slope());
-
-  // Set maximum downward grade if requested
-  if (controller.attributes.at(kEdgeMaxDownwardGrade))
-    trip_edge->set_max_downward_grade(directededge->max_down_slope());
+  // Set maximum upward and downward grade if requested
+  if (controller.attributes.at(kEdgeMaxUpwardGrade) ||
+      controller.attributes.at(kEdgeMaxDownwardGrade)) {
+    const EdgeElevation* elev = graphtile->edge_elevation(edge);
+    if (elev != nullptr) {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(elev->max_up_slope());
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(elev->max_down_slope());
+    }
+  }
 
   if (controller.attributes.at(kEdgeLaneCount))
     trip_edge->set_lane_count(directededge->lanecount());

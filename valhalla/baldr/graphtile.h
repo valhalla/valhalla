@@ -6,6 +6,7 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/edge_elevation.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/trafficassociation.h>
@@ -344,6 +345,21 @@ class GraphTile {
    */
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
+  /**
+   * Get a pointer to a edge elevation data for the specified edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the edge elevation data for the edge.
+   *          Returns nullptr if no elevation data exists.
+   */
+  const EdgeElevation* edge_elevation(const GraphId& edge) const {
+    if (header_->has_edge_elevation() &&
+        edge.id() < header_->directededgecount()) {
+      return &edge_elevation_[edge.id()];
+    } else {
+      return nullptr;
+    }
+  }
+
  protected:
 
   // Graph tile memory, this must be shared so that we can put it into cache
@@ -419,18 +435,21 @@ class GraphTile {
   // Traffic segment association. Count is the same as the directed edge count.
   TrafficAssociation* traffic_segments_;
 
-  // Lane connectivity data.
-  LaneConnectivity* lane_connectivity_;
-
-  // Number of bytes in lane connectivity data.
-  std::size_t lane_connectivity_size_;
-
   // Traffic chunks. Chunks are an array of uint64_t which combines a traffic
   // segment Id (GraphId) and weight (combined int a single uint64_t).
   TrafficChunk* traffic_chunks_;
 
   // Number of bytes in the traffic chunk list
   std::size_t traffic_chunk_size_;
+
+  // Lane connectivity data.
+  LaneConnectivity* lane_connectivity_;
+
+  // Number of bytes in lane connectivity data.
+  std::size_t lane_connectivity_size_;
+
+  // Edge elevation data
+  EdgeElevation* edge_elevation_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, tile_index_pair> stop_one_stops;

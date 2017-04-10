@@ -213,7 +213,15 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of lane connections and their size
   lane_connectivity_ = reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
-  lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();
+  lane_connectivity_size_ = header_->edge_elevation_offset() - header_->lane_connectivity_offset();
+
+  // Start of edge elevation data. If the tile has edge elevation data (query
+  // the header) then the count is the same as the directed edge count.
+  edge_elevation_ = reinterpret_cast<EdgeElevation*>(tile_ptr + header_->edge_elevation_offset());
+
+  // For reference - how to use the end offset to set size of an object (that
+  // is not fixed size and count).
+  // example_size_ = header_->end_offset() - header_->example_offset();
 
   // ANY NEW EXPANSION DATA GOES HERE
 
