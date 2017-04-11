@@ -266,6 +266,7 @@ TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
 
 // Associate cycle lane values to TripPath proto
 constexpr odin::TripPath_CycleLane kTripPathCycleLane[] = {
+    odin::TripPath_CycleLane_kNoCycleLane,
     odin::TripPath_CycleLane_kShared,
     odin::TripPath_CycleLane_kDedicated,
     odin::TripPath_CycleLane_kSeparated };
