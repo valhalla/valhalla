@@ -19,19 +19,53 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
 void file_suffix() {
 
   if(GraphTile::FileSuffix(GraphId(2, 2, 0)) != "2/000/000/002.gph")
-    throw std::runtime_error("Unexpected graphtile suffix");
+    throw std::logic_error("Unexpected graphtile suffix");
 
   if(GraphTile::FileSuffix(GraphId(4, 2, 0)) != "2/000/000/004.gph")
-    throw std::runtime_error("Unexpected graphtile suffix");
+    throw std::logic_error("Unexpected graphtile suffix");
 
   if(GraphTile::FileSuffix(GraphId(1197468, 2, 0)) != "2/001/197/468.gph")
-    throw std::runtime_error("Unexpected graphtile suffix");
+    throw std::logic_error("Unexpected graphtile suffix");
 
   if(GraphTile::FileSuffix(GraphId(64799, 1, 0)) != "1/064/799.gph")
-    throw std::runtime_error("Unexpected graphtile suffix");
+    throw std::logic_error("Unexpected graphtile suffix");
 
   if(GraphTile::FileSuffix(GraphId(49, 0, 0)) != "0/000/049.gph")
-    throw std::runtime_error("Unexpected graphtile suffix");
+    throw std::logic_error("Unexpected graphtile suffix");
+}
+
+void id_from_string() {
+
+  if(GraphTile::GetTileId("foo/bar/baz/qux/corge/1/000/002.gph") != GraphId(2,1,0))
+      throw std::logic_error("Unexpected graphtile id");
+
+  if(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002.gph") != GraphId(2,1,0))
+    throw std::logic_error("Unexpected graphtile id");
+
+  try {
+    GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph");
+    throw std::logic_error("Should fail to get graphtile id");
+  } catch(const std::runtime_error&) { }
+
+  try {
+    GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/0/004/050.gph");
+    throw std::logic_error("Should fail to get graphtile id");
+  } catch(const std::runtime_error&) { }
+
+  try {
+    GraphTile::GetTileId("foo/bar/0/004/0-1.gph");
+    throw std::logic_error("Should fail to get graphtile id");
+  } catch(const std::runtime_error&) { }
+
+  try {
+    GraphTile::GetTileId("foo/bar/0/004//001.gph");
+    throw std::logic_error("Should fail to get graphtile id");
+  } catch(const std::runtime_error&) { }
+
+  try {
+    GraphTile::GetTileId("foo/bar/1/000/004/001.gph");
+    throw std::logic_error("Should fail to get graphtile id");
+  } catch(const std::runtime_error&) { }
 }
 
 void bin() {
@@ -72,6 +106,8 @@ int main() {
   test::suite suite("graphtile");
 
   suite.test(TEST_CASE(file_suffix));
+
+  suite.test(TEST_CASE(id_from_string));
 
   suite.test(TEST_CASE(bin));
 
