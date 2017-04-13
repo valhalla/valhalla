@@ -267,21 +267,30 @@ namespace {
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
-    // Add match points, if requested
-    if (controller.category_attribute_enabled(kMatchedCategory)) {
+    // Add matched points, if requested
+    if (controller.category_attribute_enabled(kMatchedCategory)
+        && !match_results.empty()) {
       auto match_points_array = json::array({});
-      for (int i = 1; i < match_results.size() ; i++) {
+      for (const auto& match_result : match_results) {
         auto match_points_map = json::map({});
+
+        // Process matched point
         if (controller.attributes.at(kMatchedPoint)) {
-          match_points_map->emplace("lon", json::fp_t{match_results[i].lnglat.first,6});
-          match_points_map->emplace("lat", json::fp_t{match_results[i].lnglat.second,6});
+          match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first,6});
+          match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
         }
+
+        // Process matched point edge index
+        if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
+          match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
+
+        // Process matched point distance along edge
         if (controller.attributes.at(kMatchedDistanceAlongEdge))
-          match_points_map->emplace("distance_along_edge", json::fp_t{match_results[i].distance_along,3});
+          match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
+
+        // Process matched point distance from trace point
         if (controller.attributes.at(kMatchedDistanceFromTracePoint))
-          match_points_map->emplace("distance_from_trace_point", json::fp_t{match_results[i].distance_from,3});
-        if (controller.attributes.at(kMatchedDistanceFromTracePoint) && match_results[i].HasEdgeIndex())
-          match_points_map->emplace("edge_index", static_cast<uint64_t>(match_results[i].edge_index));
+          match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
 
         match_points_array->push_back(match_points_map);
       }
