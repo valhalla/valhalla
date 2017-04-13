@@ -204,7 +204,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
 
-      // Add edge elevation. TODO - should we acatually associate elevation
+      // Add edge elevation. TODO - should we associate elevation
       // information to transit connection edges?
       if (has_elevation) {
         tilebuilder_local.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
