@@ -72,7 +72,9 @@ GraphTile::GraphTile()
       traffic_segments_(nullptr),
       traffic_chunks_(nullptr),
       traffic_chunk_size_(0),
-      lane_connectivity_size_(0) {
+      lane_connectivity_(nullptr),
+      lane_connectivity_size_(0),
+      edge_elevation_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.

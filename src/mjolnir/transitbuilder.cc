@@ -102,6 +102,11 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
+  // Make sure we have associated edge elevations
+  std::vector<EdgeElevation> current_elevations(std::move(tilebuilder_local.edge_elevations()));
+  bool has_elevation = tilebuilder_local.header()->has_edge_elevation();
+  tilebuilder_local.edge_elevations().clear();
+
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
   uint32_t signidx = 0;
@@ -126,6 +131,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     size_t edge_index = tilebuilder_local.directededges().size();
     for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
       tilebuilder_local.directededges().emplace_back(std::move(currentedges[idx]));
+      if (has_elevation) {
+        tilebuilder_local.edge_elevations().emplace_back(std::move(current_elevations[idx]));
+      }
 
       // Update any signs that use this idx - increment their index by the
       // number of added edges
@@ -158,7 +166,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
     // Add directed edges for any connections from the OSM node
     // to a transit stop
-    // level 2
     const GraphTile* end_tile = nullptr;
     while (added_edges < connection_edges.size() &&
            connection_edges[added_edges].osm_node.id() == nodeid) {
@@ -196,6 +203,12 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
+
+      // Add edge elevation. TODO - should we acatually associate elevation
+      // information to transit connection edges?
+      if (has_elevation) {
+        tilebuilder_local.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
+      }
 
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 

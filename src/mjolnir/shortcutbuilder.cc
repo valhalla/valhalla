@@ -490,12 +490,17 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       if (sample) {
         auto grades = GetGrade(sample, shape, length, forward);
         newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
-        newedge.set_max_up_slope(std::get<1>(grades));
-        newedge.set_max_down_slope(std::get<2>(grades));
+
+        // TODO - mean elevation
+        float mean_elev = 0.0f;
+        float max_up_slope = std::get<1>(grades);
+        float max_down_slope = std::get<2>(grades);
+        tilebuilder.edge_elevations().emplace_back(mean_elev, max_up_slope,
+                                                    max_down_slope);
       } else {
-        newedge.set_weighted_grade(6);  // 6 is flat
-        newedge.set_max_up_slope(0.0f);
-        newedge.set_max_down_slope(0.0f);
+        // Set the default weighted grade for the edge. No edge elevation
+        // is added.
+        newedge.set_weighted_grade(6);
       }
       newedge.set_curvature(0); //TODO:
       newedge.set_endnode(end_node);
@@ -645,6 +650,16 @@ uint32_t FormShortcuts(GraphReader& reader,
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
+
+        // Add existing edge elevation (if the tile has elevation information)
+        if (tile->header()->has_edge_elevation()) {
+          const EdgeElevation* elev = tile->edge_elevation(edgeid);
+          if (elev == nullptr) {
+            tilebuilder.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
+          } else {
+            tilebuilder.edge_elevations().emplace_back(std::move(*elev));
+          }
+        }
       }
 
       // Set the edge count for the new node

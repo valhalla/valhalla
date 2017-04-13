@@ -62,15 +62,15 @@ class GraphTileBuilder : public baldr::GraphTile {
   void StoreTileData();
 
   /**
-   * Update a graph tile with new header, nodes, and directed edges. Used
-   * in GraphValidator to update directed edge information.
-   * @param hdr Updated header
+   * Update a graph tile with new nodes and directed edges. Assumes no new
+   * nodes or edges are added. Attributes within existing nodes and edges
+   * are updated. This is used in GraphValidator to update directed edge
+   * information.
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(
-            const std::vector<NodeInfo>& nodes,
-            const std::vector<DirectedEdge>& directededges);
+  void Update(const std::vector<NodeInfo>& nodes,
+              const std::vector<DirectedEdge>& directededges);
 
   /**
    * Get the current list of node builders.
