@@ -83,23 +83,23 @@ namespace {
     }
     return merged;
   }
-
-
+  
+/*
   //TODO: remove this when debugging phase is finally over
   void print(const valhalla::meili::interpolation_t& i) {
-    printf("%llu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
+    printf("%lu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
   }
   void print(const merged_traffic_segment_t& m) {
-    printf("%llu:\t%llu->%llu\t%d->%d\t%.2f->%.2f\n",
+    printf("%lu:\t%llu->%llu\t%d->%d\t%.2f->%.2f\n",
       m.segment.segment_id_.value, m.begin_edge.value, m.end_edge.value,
       m.segment.starts_segment_, m.segment.ends_segment_,
       m.segment.begin_percent_, m.segment.end_percent_);
   }
   void print(const valhalla::meili::traffic_segment_t& t) {
-    printf("%llu\t%.2f kph\t%d\t%.2f->%.2f\t%lu->%lu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
+    printf("%lu\t%.2f kph\t%d\t%.2f->%.2f\t%lu->%lu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
       t.length, t.start_time, t.end_time, t.begin_shape_index, t.end_shape_index);
   }
-
+*/
 }
 
 namespace valhalla {
