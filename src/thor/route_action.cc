@@ -11,7 +11,7 @@ using namespace prime_server;
 #include "proto/trippath.pb.h"
 
 #include "thor/service.h"
-#include "thor/trip_path_controller.h"
+#include "thor/attributes_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -151,7 +151,7 @@ namespace valhalla {
         }
 
         // Create controller for default route attributes
-        TripPathController controller;
+        AttributesController controller;
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path,
@@ -217,7 +217,7 @@ namespace valhalla {
         }
 
         // Create controller for default route attributes
-        TripPathController controller;
+        AttributesController controller;
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path,

@@ -6,8 +6,7 @@
 #include <cmath>
 
 #include "thor/trippathbuilder.h"
-#include "thor/trip_path_controller.h"
-
+#include "thor/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/signinfo.h"
@@ -119,7 +118,7 @@ uint32_t GetAdminIndex(
   return admin_index;
 }
 
-void AssignAdmins(const TripPathController& controller,
+void AssignAdmins(const AttributesController& controller,
                   TripPath& trip_path,
                   const std::vector<AdminInfo>& admin_info_list) {
   if (controller.category_attribute_enabled(kAdminCategory)) {
@@ -396,7 +395,7 @@ TripPathBuilder::~TripPathBuilder() {
 // TODO - probably need the location information passed in - to
 // add to the TripPath
 TripPath TripPathBuilder::Build(
-    const TripPathController& controller, GraphReader& graphreader,
+    const AttributesController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
     const std::list<PathLocation>& through_loc,
@@ -1018,7 +1017,7 @@ TripPath TripPathBuilder::Build(
 }
 
 // Add a trip edge to the trip node and set its attributes
-TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller,
+TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controller,
                                             const GraphId& edge,
                                             const uint32_t trip_id,
                                             const uint32_t block_id,
@@ -1408,7 +1407,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   return trip_edge;
 }
 
-void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controller,
+void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& controller,
                                               uint32_t local_edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,

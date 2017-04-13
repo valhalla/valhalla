@@ -1,7 +1,8 @@
+
 #include "test.h"
 
 #include "config.h"
-#include "thor/trip_path_controller.h"
+#include "thor/attributes_controller.h"
 
 using namespace std;
 using namespace valhalla::thor;
@@ -9,8 +10,8 @@ using namespace valhalla::thor;
 namespace {
 
 void TryCtor() {
-  TripPathController controller;
-  if (controller.attributes != TripPathController::kRouteAttributes)
+  AttributesController controller;
+  if (controller.attributes != AttributesController::kRouteAttributes)
     throw runtime_error("Incorrect Constructor using default route attributes");
 }
 
@@ -20,7 +21,7 @@ void TestCtor() {
 
 void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes,
                 size_t expected_size) {
-  TripPathController controller(new_attributes);
+  AttributesController controller(new_attributes);
   if (controller.attributes != new_attributes)
     throw runtime_error("Incorrect Constructor using argument attributes");
   if (controller.attributes.size() != expected_size)
@@ -39,7 +40,7 @@ void TestArgCtor() {
 }
 
 void TryEnableAll() {
-  TripPathController controller;
+  AttributesController controller;
   controller.enable_all();
   for (auto& pair : controller.attributes) {
     // If any pair value is false then throw error
@@ -53,7 +54,7 @@ void TestEnableAll() {
 }
 
 void TryDisableAll() {
-  TripPathController controller;
+  AttributesController controller;
   controller.disable_all();
   for (auto& pair : controller.attributes) {
     // If any pair value is true then throw error
@@ -66,7 +67,7 @@ void TestDisableAll() {
   TryDisableAll();
 }
 
-void TryCategoryAttributeEnabled(const TripPathController& controller,
+void TryCategoryAttributeEnabled(const AttributesController& controller,
                                  const std::string& category,
                                  bool expected_response) {
   // If category_attribute_enabled does not equal expected response then throw error
@@ -78,7 +79,7 @@ void TryCategoryAttributeEnabled(const TripPathController& controller,
 }
 
 void TestNodeAttributeEnabled() {
-  TripPathController controller;
+  AttributesController controller;
 
   // Test default
   TryCategoryAttributeEnabled(controller, kNodeCategory, true);
@@ -105,7 +106,7 @@ void TestNodeAttributeEnabled() {
 }
 
 void TestAdminAttributeEnabled() {
-  TripPathController controller;
+  AttributesController controller;
 
   // Test default
   TryCategoryAttributeEnabled(controller, kAdminCategory, true);

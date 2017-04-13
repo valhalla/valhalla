@@ -30,7 +30,7 @@
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/trippathbuilder.h"
-#include "thor/trip_path_controller.h"
+#include "thor/attributes_controller.h"
 #include "thor/route_matcher.h"
 
 using namespace valhalla::midgard;
@@ -113,7 +113,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
 
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
-  TripPathController controller;
+  AttributesController controller;
   TripPath trip_path = TripPathBuilder::Build(controller, reader, mode_costing,
                                               pathedges, origin, dest,
                                               std::list<PathLocation>{});

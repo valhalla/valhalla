@@ -1,7 +1,10 @@
 #include <prime_server/prime_server.hpp>
 using namespace prime_server;
 
+#include <algorithm>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "midgard/logging.h"
 #include "baldr/geojson.h"
@@ -12,8 +15,9 @@ using namespace prime_server;
 #include "thor/service.h"
 #include "thor/route_matcher.h"
 #include "thor/map_matcher.h"
+#include "thor/match_result.h"
 #include "thor/trippathbuilder.h"
-#include "thor/trip_path_controller.h"
+#include "thor/attributes_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -21,6 +25,19 @@ using namespace valhalla::sif;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
+namespace {
+struct MapMatch
+{
+  // Coordinate of the match point
+  midgard::PointLL lnglat;
+  // Which edge this match point stays
+  baldr::GraphId edgeid;
+  // Percentage distance along the edge
+  float distance_along;
+  int edge_index = -1;
+};
+
+}
 
 namespace valhalla {
 namespace thor {
@@ -45,7 +62,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   odin::TripPath trip_path;
-  TripPathController controller;
+  std::vector<thor::MatchResult> match_results;
+  std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
+  AttributesController controller;
 
   worker_t::result_t result { true };
   // Forward the original request
@@ -71,7 +90,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          trip_path = map_match(controller);
+          trip_match = map_match(controller);
+          trip_path = std::move(trip_match.first);
+          match_results = std::move(trip_match.second);
         } catch (const valhalla_exception_t& e) {
           throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
@@ -84,7 +105,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_path = map_match(controller);
+            trip_match = map_match(controller);
+            trip_path = std::move(trip_match.first);
+            match_results = std::move(trip_match.second);
           } catch (const valhalla_exception_t& e) {
             throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
@@ -120,7 +143,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-odin::TripPath thor_worker_t::route_match(const TripPathController& controller) {
+odin::TripPath thor_worker_t::route_match(const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
   if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, correlated, path_infos)) {
@@ -138,8 +161,11 @@ odin::TripPath thor_worker_t::route_match(const TripPathController& controller) 
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
+std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_match(
+    const AttributesController& controller) {
   odin::TripPath trip_path;
+  std::vector<thor::MatchResult> match_results;
+
   // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
   std::shared_ptr<meili::MapMatcher> matcher;
@@ -168,6 +194,29 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
   std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
                                                           results, mode_costing,
                                                           mode);
+
+  // Associate match points to edges, if enabled
+  if (controller.category_attribute_enabled(kMatchedCategory)) {
+    int edge_index = 0;
+    auto edge = path_edges.cbegin();
+    for (const auto& match_result : results) {
+      if (!match_result.HasState()) {
+        // Invalid state - add to match results without edge index
+        match_results.emplace_back(match_result);
+        continue;
+      }
+
+      while (edge != path_edges.cend()) {
+        if (match_result.edgeid == edge->edgeid) {
+          match_results.emplace_back(match_result, edge_index);
+          break;
+        } else {
+          ++edge;
+          ++edge_index;
+        }
+      }
+    }
+  }
 
   // Set origin and destination from map matching results
   auto first_result_with_state = std::find_if(
@@ -243,7 +292,7 @@ odin::TripPath thor_worker_t::map_match(const TripPathController& controller) {
   } else {
     throw baldr::valhalla_exception_t { 400, 442 };
   }
-  return trip_path;
+  return {trip_path, match_results};
 }
 
 }

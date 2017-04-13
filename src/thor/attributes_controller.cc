@@ -1,11 +1,12 @@
-#include <thor/trip_path_controller.h>
+#include <thor/attributes_controller.h>
+
 #include <string>
 
 
 namespace valhalla {
 namespace thor {
 
-const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes = {
+const std::unordered_map<std::string, bool> AttributesController::kRouteAttributes = {
   // Edge keys
   { kEdgeNames, true },
   { kEdgeLength, true },
@@ -88,27 +89,31 @@ const std::unordered_map<std::string, bool> TripPathController::kRouteAttributes
   { kAdminCountryText, true },
   { kAdminStateCode, true },
   { kAdminStateText, true },
-  { kShape, true }
+  { kShape, true },
+  { kMatchedPoint, true },
+  { kMatchedEdgeIndex, true },
+  { kMatchedDistanceAlongEdge, true }
+
 };
 
-TripPathController::TripPathController(
+AttributesController::AttributesController(
     const std::unordered_map<std::string, bool>& new_attributes) {
   attributes = new_attributes;
 }
 
-void TripPathController::enable_all() {
+void AttributesController::enable_all() {
   for (auto& pair : attributes) {
     pair.second = true;
   }
 }
 
-void TripPathController::disable_all() {
+void AttributesController::disable_all() {
   for (auto& pair : attributes) {
     pair.second = false;
   }
 }
 
-bool TripPathController::category_attribute_enabled(
+bool AttributesController::category_attribute_enabled(
     const std::string& category) const {
   for (const auto& pair : attributes) {
     // if the key starts with the specified category and it is enabled
