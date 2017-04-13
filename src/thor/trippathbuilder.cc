@@ -1262,13 +1262,16 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
 
   // Set maximum upward and downward grade if requested
   if (controller.attributes.at(kEdgeMaxUpwardGrade) ||
-      controller.attributes.at(kEdgeMaxDownwardGrade)) {
+      controller.attributes.at(kEdgeMaxDownwardGrade) ||
+      controller.attributes.at(kEdgeMeanElevation)) {
     const EdgeElevation* elev = graphtile->edge_elevation(edge);
     if (elev != nullptr) {
       if (controller.attributes.at(kEdgeMaxUpwardGrade))
         trip_edge->set_max_upward_grade(elev->max_up_slope());
       if (controller.attributes.at(kEdgeMaxDownwardGrade))
         trip_edge->set_max_downward_grade(elev->max_down_slope());
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(elev->mean_elevation());
     }
   }
 
