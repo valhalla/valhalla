@@ -1,6 +1,7 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
 #include "baldr/tilehierarchy.h"
+#include "baldr/reutil.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
@@ -31,15 +32,6 @@ namespace {
         return "\03";
     }
   };
-  template <class numeric_t>
-  size_t digits(numeric_t number) {
-    size_t digits = (number < 0 ? 1 : 0);
-    while (static_cast<long long int>(number)) {
-        number /= 10;
-        digits++;
-    }
-    return digits;
-  }
   const std::locale dir_locale(std::locale("C"), new dir_facet());
   const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 }
@@ -72,6 +64,7 @@ GraphTile::GraphTile()
       traffic_segments_(nullptr),
       traffic_chunks_(nullptr),
       traffic_chunk_size_(0),
+      lane_connectivity_(nullptr),
       lane_connectivity_size_(0) {
 }
 
@@ -284,11 +277,9 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
   if(level == TileHierarchy::levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
 
-  const uint32_t max_id = Tiles<PointLL>::MaxTileId(world_box, level->second.tiles.TileSize());
-
   //figure out how many digits
-  //TODO: dont convert it to a string to get the length there are faster ways..
-  size_t max_length = digits<uint32_t>(max_id);
+  auto max_id = level->second.tiles.ncolumns() * level->second.tiles.nrows() - 1;
+  size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
   const size_t remainder = max_length % 3;
   if(remainder)
     max_length += 3 - remainder;
@@ -311,31 +302,79 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  //from the front and back strip off anything that isnt a number or a slash, lose the junk
-  auto name = fname;
-  boost::algorithm::trim_if(name, [](char c){ return c == '/' || !std::isdigit(c); });
-
-  //split on slash
-  std::vector<std::string> tokens;
-  boost::split(tokens, name, boost::is_any_of("/"));
-
-  //need at least level and id
-  if(tokens.size() < 2)
+  const std::unordered_set<std::string::value_type> allowed{ '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  //we require slashes
+  auto pos = fname.find_last_of('/');
+  if(pos == fname.npos)
     throw std::runtime_error("Invalid tile path");
 
-  // Compute the Id
-  uint32_t id = 0;
-  uint32_t multiplier = std::pow(1000, tokens.size() - 2);
-  bool first = true;
-  for(const auto& token : tokens) {
-    if(first) {
-      first = false;
-      continue;
+  //swallow numbers until you reach the end or a dot
+  for(;pos < fname.size(); ++pos)
+    if(allowed.find(fname[pos]) == allowed.cend())
+      break;
+
+  //if you didnt reach the end and it wasnt a dot then this isnt valid
+  if(pos != fname.size() && fname[pos] != '.')
+    throw std::runtime_error("Invalid tile path");
+
+  //run backwards while you find an allowed char but stop if not 3 digits between slashes
+  std::vector<int> digits;
+  auto last = pos;
+  for(--pos; pos >= 0; --pos) {
+    //invalid char showed up
+    if(allowed.find(fname[pos]) == allowed.cend())
+      throw std::runtime_error("Invalid tile path");
+    //if its a slash thats another digit
+    if(fname[pos] == '/') {
+      //this is not 3 or 1 digits so its wrong
+      auto dist = last - pos;
+      if(dist != 4 && dist != 2)
+        throw std::runtime_error("Invalid tile path");
+      //we'll keep this
+      auto i = atoi(fname.substr(pos + 1, last - (pos + 1)).c_str());
+      digits.push_back(i);
+      //and we'll stop if it was the level (always a single digit see GraphId)
+      if(dist == 2)
+        break;
+      //next
+      last = pos;
     }
-    id += std::atoi(token.c_str()) * multiplier;
-    multiplier /= 1000;
   }
-  uint32_t level = std::atoi(tokens.front().c_str());
+
+  //if the first thing isnt a valid level bail
+  if(TileHierarchy::levels().find(digits.back()) == TileHierarchy::levels().cend() && digits.back() != TileHierarchy::GetTransitLevel().level)
+    throw std::runtime_error("Invalid tile path");
+
+  //get the level info
+  uint32_t level = digits.back();
+  digits.pop_back();
+  const auto& tile_level = level == TileHierarchy::GetTransitLevel().level ?
+    TileHierarchy::GetTransitLevel() : TileHierarchy::levels().find(level)->second;
+
+  //get the number of sub directories that we should have
+  auto max_id = tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1;
+  size_t parts = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  if(parts % 3 != 0)
+    parts += 3 - (parts % 3);
+  parts /= 3;
+
+  //bail if its the wrong number of sub dirs
+  if(digits.size() != parts)
+    throw std::runtime_error("Invalid tile path");
+
+  //parse the id of the tile
+  int multiplier = 1;
+  uint32_t id = 0;
+  for(auto digit : digits) {
+    id += digit * multiplier;
+    multiplier *= 1000;
+  }
+
+  //if after parsing them the number is out of bounds bail
+  if(id > max_id)
+    throw std::runtime_error("Invalid tile path");
+
+  //you've passed the test enjoy your id
   return {id, level, 0};
 }
 
