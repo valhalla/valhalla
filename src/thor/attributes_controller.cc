@@ -92,7 +92,8 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kShape, true },
   { kMatchedPoint, true },
   { kMatchedEdgeIndex, true },
-  { kMatchedDistanceAlongEdge, true }
+  { kMatchedDistanceAlongEdge, true },
+  { kMatchedDistanceFromTracePoint, true }
 
 };
 

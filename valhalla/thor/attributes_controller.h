@@ -93,6 +93,7 @@ const std::string kShape = "shape";
 const std::string kMatchedPoint = "matched.point";
 const std::string kMatchedEdgeIndex = "matched.edge_index";
 const std::string kMatchedDistanceAlongEdge = "matched.distance_along_edge";
+const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_point";
 
 // Categories
 const std::string kNodeCategory = "node.";

@@ -267,9 +267,26 @@ namespace {
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
-    // Add match results, if requested
-    // Check controller and vector size
-    // TODO
+    // Add match points, if requested
+    if (controller.category_attribute_enabled(kMatchedCategory)) {
+      auto match_points_array = json::array({});
+      for (int i = 1; i < match_results.size() ; i++) {
+        auto match_points_map = json::map({});
+        if (controller.attributes.at(kMatchedPoint)) {
+          match_points_map->emplace("lon", json::fp_t{match_results[i].lnglat.first,6});
+          match_points_map->emplace("lat", json::fp_t{match_results[i].lnglat.second,6});
+        }
+        if (controller.attributes.at(kMatchedDistanceAlongEdge))
+          match_points_map->emplace("distance_along_edge", json::fp_t{match_results[i].distance_along,3});
+        if (controller.attributes.at(kMatchedDistanceFromTracePoint))
+          match_points_map->emplace("distance_from_trace_point", json::fp_t{match_results[i].distance_from,3});
+        if (controller.attributes.at(kMatchedDistanceFromTracePoint) && match_results[i].HasEdgeIndex())
+          match_points_map->emplace("edge_index", static_cast<uint64_t>(match_results[i].edge_index));
+
+        match_points_array->push_back(match_points_map);
+      }
+      json->emplace("matched_points", match_points_array);
+    }
 
     // Add osm_changeset
     if (trip_path.has_osm_changeset())
