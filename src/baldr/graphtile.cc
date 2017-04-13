@@ -1,7 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
 #include "baldr/tilehierarchy.h"
-#include "baldr/reutil.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
