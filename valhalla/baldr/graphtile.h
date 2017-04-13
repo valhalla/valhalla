@@ -89,40 +89,76 @@ class GraphTile {
    * Gets the id of the graph tile
    * @return  Returns the graph id of the tile (pointing to the first node)
    */
-  GraphId id() const;
+  GraphId id() const {
+    return header_->graphid();
+  }
 
   /**
    * Gets a pointer to the graph tile header.
    * @return  Returns the header for the graph tile.
    */
-  const GraphTileHeader* header() const;
+  const GraphTileHeader* header() const {
+    return header_;
+  }
 
   /**
    * Get a pointer to a node.
    * @return  Returns a pointer to the node.
    */
-  const NodeInfo* node(const GraphId& node) const;
+  const NodeInfo* node(const GraphId& node) const {
+    if (node.id() < header_->nodecount())
+      return &nodes_[node.id()];
+    throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                               std::to_string(node.tileid()) + "," +
+                               std::to_string(node.level()) + "," +
+                               std::to_string(node.id()) + " nodecount= " +
+                               std::to_string(header_->nodecount()));
+  }
 
   /**
    * Get a pointer to a node.
    * @param  idx  Index of the node within the current tile.
    * @return  Returns a pointer to the node.
    */
-  const NodeInfo* node(const size_t idx) const;
+  const NodeInfo* node(const size_t idx) const {
+    if (idx < header_->nodecount())
+      return &nodes_[idx];
+    throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(idx)  + " nodecount= " +
+                             std::to_string(header_->nodecount()));
+  }
 
   /**
    * Get a pointer to a edge.
    * @param  edge  GraphId of the directed edge.
    * @return  Returns a pointer to the edge.
    */
-  const DirectedEdge* directededge(const GraphId& edge) const;
+  const DirectedEdge* directededge(const GraphId& edge) const {
+    if (edge.id() < header_->directededgecount())
+      return &directededges_[edge.id()];
+    throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(edge.id())  + " directededgecount= " +
+                             std::to_string(header_->directededgecount()));
+  }
 
   /**
    * Get a pointer to a edge.
    * @param  idx  Index of the directed edge within the current tile.
    * @return  Returns a pointer to the edge.
    */
-  const DirectedEdge* directededge(const size_t idx) const;
+  const DirectedEdge* directededge(const size_t idx) const {
+    if (idx < header_->directededgecount())
+      return &directededges_[idx];
+    throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(idx)  + " directededgecount= " +
+                             std::to_string(header_->directededgecount()));
+  }
 
   /**
    * Get an iterable set of directed edges from a node in this tile
@@ -144,7 +180,11 @@ class GraphTile {
    * @param  edge  Directed edge.
    * @return Returns the GraphId of hte opposing directed edge.
    */
-  GraphId GetOpposingEdgeId(const DirectedEdge* edge) const;
+  GraphId GetOpposingEdgeId(const DirectedEdge* edge) const {
+    GraphId endnode = edge->endnode();
+    return { endnode.tileid(), endnode.level(),
+             node(endnode.id())->edge_index() + edge->opp_index() };
+  }
 
   /**
    * Get a pointer to edge info.
