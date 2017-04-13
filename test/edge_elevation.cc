@@ -1,0 +1,95 @@
+#include "test.h"
+
+#include "baldr/edge_elevation.h"
+
+using namespace std;
+using namespace valhalla::baldr;
+
+// Expected size is 48 bytes. Since there are still "spare" bits
+// we want to alert if somehow any change grows this structure size
+constexpr size_t kEdgeElevationExpectedSize = 4;
+
+namespace {
+
+  void test_sizeof() {
+    if (sizeof(EdgeElevation) != kEdgeElevationExpectedSize)
+      throw std::runtime_error("EdgeElevation size should be " +
+                std::to_string(kEdgeElevationExpectedSize) + " bytes" +
+                " but is " + std::to_string(sizeof(EdgeElevation)));
+  }
+
+  void TestMaxSlope() {
+    // Test building a directed edge and reading back values
+    EdgeElevation edge_elev;
+    edge_elev.set_max_up_slope(5.0f);
+    if (edge_elev.max_up_slope() != 5) {
+      throw runtime_error("EdgeElevation max_up_slope test 1 failed");
+    }
+    edge_elev.set_max_up_slope(15.0f);
+    if (edge_elev.max_up_slope() != 15) {
+      throw runtime_error("EdgeElevation max_up_slope test 2 failed");
+    }
+    edge_elev.set_max_up_slope(-5.0f);
+    if (edge_elev.max_up_slope() != 0) {
+      throw runtime_error("EdgeElevation max_up_slope test 3 failed");
+    }
+    edge_elev.set_max_up_slope(25.0f);
+    if (edge_elev.max_up_slope() != 28) {
+      throw runtime_error("EdgeElevation max_up_slope test 4 failed");
+    }
+    edge_elev.set_max_up_slope(71.5f);
+    if (edge_elev.max_up_slope() != 72) {
+      throw runtime_error("EdgeElevation max_up_slope test 5 failed");
+    }
+    edge_elev.set_max_up_slope(88.0f);
+    if (edge_elev.max_up_slope() != 76) {
+      throw runtime_error("EdgeElevation max_up_slope test 6 failed");
+    }
+    edge_elev.set_max_up_slope(15.7f);
+    if (edge_elev.max_up_slope() != 16) {
+      throw runtime_error("EdgeElevation max_up_slope test 7 failed");
+    }
+
+    edge_elev.set_max_down_slope(-5.5f);
+    if (edge_elev.max_down_slope() != -6) {
+      throw runtime_error("EdgeElevation max_down_slope test 1 failed");
+    }
+    edge_elev.set_max_down_slope(-15.0f);
+    if (edge_elev.max_down_slope() != -15) {
+      throw runtime_error("EdgeElevation max_down_slope test 2 failed");
+    }
+    edge_elev.set_max_down_slope(5.0f);
+    if (edge_elev.max_down_slope() != 0) {
+      throw runtime_error("edge_elev max_down_slope test 3 failed");
+    }
+    edge_elev.set_max_down_slope(-25.0f);
+    if (edge_elev.max_down_slope() != -28) {
+      throw runtime_error("EdgeElevation max_down_slope test 4 failed");
+    }
+    edge_elev.set_max_down_slope(-71.5f);
+    if (edge_elev.max_down_slope() != -72) {
+      throw runtime_error("EdgeElevation max_down_slope test 5 failed");
+    }
+    edge_elev.set_max_down_slope(-88.0f);
+    if (edge_elev.max_down_slope() != -76) {
+      throw runtime_error("EdgeElevation max_down_slope test 6 failed");
+    }
+    edge_elev.set_max_down_slope(-15.7f);
+    if (edge_elev.max_down_slope() != -16) {
+      throw runtime_error("EdgeElevation max_down_slope test 7 failed");
+    }
+  }
+
+}
+
+int main(void)
+{
+  test::suite suite("edge_elevation");
+
+  suite.test(TEST_CASE(test_sizeof));
+
+  // Test max slope
+  suite.test(TEST_CASE(TestMaxSlope));
+
+  return suite.tear_down();
+}
