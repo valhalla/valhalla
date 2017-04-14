@@ -1,4 +1,5 @@
 #include "test.h"
+#include <cmath>
 
 #include "baldr/edge_elevation.h"
 
@@ -20,7 +21,7 @@ namespace {
 
   void TestMaxSlope() {
     // Test building a directed edge and reading back values
-    EdgeElevation edge_elev;
+    EdgeElevation edge_elev(0.0f, 0.0f, 0.0f);
     edge_elev.set_max_up_slope(5.0f);
     if (edge_elev.max_up_slope() != 5) {
       throw runtime_error("EdgeElevation max_up_slope test 1 failed");
@@ -80,6 +81,30 @@ namespace {
     }
   }
 
+  void TestMeanElevation() {
+    // Test building a directed edge and reading back values
+    EdgeElevation edge_elev(0.0f, 0.0f, 0.0f);
+    edge_elev.set_mean_elevation(kMinElevation - 100.0f);
+    if (edge_elev.mean_elevation() != kMinElevation) {
+      throw runtime_error("EdgeElevation mean_elevation test 1 failed");
+    }
+
+    edge_elev.set_mean_elevation(kMaxElevation + 100.0f);
+    if (edge_elev.mean_elevation() != kMaxElevation) {
+      throw runtime_error("EdgeElevation mean_elevation test 2 failed");
+    }
+
+    edge_elev.set_mean_elevation(0.0f);
+    if (std::abs(edge_elev.mean_elevation()) > kElevationBinSize) {
+      throw runtime_error("EdgeElevation mean_elevation test 3 failed");
+    }
+
+    edge_elev.set_mean_elevation(100.0f);
+    if (std::abs(edge_elev.mean_elevation() - 100.0f) > kElevationBinSize) {
+      throw runtime_error("EdgeElevation mean_elevation test 4 failed");
+    }
+  }
+
 }
 
 int main(void)
@@ -90,6 +115,9 @@ int main(void)
 
   // Test max slope
   suite.test(TEST_CASE(TestMaxSlope));
+
+  // Test mean elevation
+  suite.test(TEST_CASE(TestMeanElevation));
 
   return suite.tear_down();
 }

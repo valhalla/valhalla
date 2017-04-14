@@ -6,10 +6,10 @@ namespace baldr {
 
 // Use elevation bins of 8 meters to store mean elevation. Clamp to a range
 // from -500 meters to 7683 meters.
-constexpr uint32_t kMaxStoredElevation = 1023;
-constexpr float kElevationBinSize = 8.0f;
+constexpr uint32_t kMaxStoredElevation = 4095;  // 12 bits
+constexpr float kElevationBinSize = 2.0f;
 constexpr float kMinElevation = -500.0f;
-constexpr float kMaxElevation = 7683.0f;
+constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
 
 /**
  * Structure to store elevation information for a directed edge.
@@ -72,10 +72,10 @@ class EdgeElevation {
   void set_max_down_slope(const float slope);
 
  protected:
-  uint32_t mean_elevation_  : 10; // Mean elevation with 8 meter precision
   uint32_t max_up_slope_    : 5;  // Maximum upward slope
   uint32_t max_down_slope_  : 5;  // Maximum downward slope
-  uint32_t spare_           : 12;
+  uint32_t mean_elevation_  : 12; // Mean elevation with 2 meter precision
+  uint32_t spare_           : 10;
 };
 
 }

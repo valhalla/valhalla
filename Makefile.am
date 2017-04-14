@@ -551,6 +551,7 @@ check_PROGRAMS = \
 	test/datetime \
 	test/directededge \
 	test/double_bucket_queue \
+	test/edge_elevation \
 	test/edgecollapser \
 	test/laneconnectivity \
 	test/graphid \
