@@ -23,7 +23,6 @@ namespace valhalla {
 namespace thor {
 
 constexpr uint64_t kInitialEdgeLabelCountBD = 1000000;
-constexpr float kAdditionalExpansion = 600.0;
 
 // Default constructor
 BidirectionalAStar::BidirectionalAStar(): PathAlgorithm() {
@@ -330,10 +329,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
-  // Allow destination-only segments (with a penalty). This is needed
-  // to avoid route failures in case of destination-only donuts.
-  // costing_->DisableDestinationOnly();
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.edges.front().projected, destination.edges.front().projected);
 
@@ -370,9 +365,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         // Check if the edge on the forward search connects to a
-        // reached edge on the reverse search tree.
+        // settled edge on the reverse search tree.
         pred = edgelabels_forward_[forward_pred_idx];
-        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetForwardConnection(pred);
         }
 
@@ -424,9 +419,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       reverse_pred_idx = adjacencylist_reverse_->pop();
       if (reverse_pred_idx != kInvalidLabel) {
         // Check if the edge on the reverse search connects to a
-        // reached edge on the forward search tree.
+        // settled edge on the forward search tree.
         pred2 = edgelabels_reverse_[reverse_pred_idx];
-        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetReverseConnection(pred2);
         }
 
@@ -487,7 +482,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
     // the max edge cost but that has performance limitations,
     // so for now we use this bit of a hack...stay tuned.
     if (best_connection_.cost < std::numeric_limits<float>::max()) {
-      if (pred.cost().cost + pred2.cost().cost > best_connection_.cost + kAdditionalExpansion) {
+      if (edgelabels_forward_.size() + edgelabels_reverse_.size() > threshold_) {
         return FormPath(graphreader);
       }
     }
@@ -508,7 +503,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   return {};    // If we are here the route failed
 }
 
-// The edge on the forward search connects to a reached edge on the reverse
+// The edge on the forward search connects to a settled edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
@@ -536,7 +531,7 @@ void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
   }
 }
 
-// The edge on the reverse search connects to a reached edge on the forward
+// The edge on the reverse search connects to a settled edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 void BidirectionalAStar::SetReverseConnection(const sif::EdgeLabel& pred) {

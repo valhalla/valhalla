@@ -253,6 +253,11 @@ class DynamicCost {
   virtual void DisableDestinationOnly();
 
   /**
+   * Enables entrance into destination only areas with a transition penalty.
+   */
+  virtual void EnableDestinationOnly();
+
+  /**
    * Set to allow use of transit connections.
    * @param  allow  Flag indicating whether transit connections are allowed.
    */

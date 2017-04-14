@@ -164,9 +164,14 @@ void DynamicCost::SetAllowTransitConnections(const bool allow) {
   allow_transit_connections_ = allow;
 }
 
-// Set to allow use of transit connections.
+// Set to disable use of destination-only segments.
 void DynamicCost::DisableDestinationOnly() {
   disable_destination_only_ = true;
+}
+
+// Set to allow use of destination-only segments.
+void DynamicCost::EnableDestinationOnly() {
+  disable_destination_only_ = false;
 }
 
 // Returns the maximum transfer distance between stops that you are willing
