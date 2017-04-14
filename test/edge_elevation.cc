@@ -20,7 +20,7 @@ namespace {
   }
 
   void TestMaxSlope() {
-    // Test building a directed edge and reading back values
+    // Test setting max slope and reading back values
     EdgeElevation edge_elev(0.0f, 0.0f, 0.0f);
     edge_elev.set_max_up_slope(5.0f);
     if (edge_elev.max_up_slope() != 5) {
@@ -82,7 +82,7 @@ namespace {
   }
 
   void TestMeanElevation() {
-    // Test building a directed edge and reading back values
+    // Test setting mean elevation and reading back values
     EdgeElevation edge_elev(0.0f, 0.0f, 0.0f);
     edge_elev.set_mean_elevation(kMinElevation - 100.0f);
     if (edge_elev.mean_elevation() != kMinElevation) {

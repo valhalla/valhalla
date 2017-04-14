@@ -406,7 +406,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
   std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t,
-                        float, float, float, float> > geo_attribute_cache;
+                        float, float, float, float, float> > geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -626,8 +626,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
             // Grade estimation and max slopes
             // TODO - add mean elevation
-            std::tuple<double,double,double> forward_grades(0.0, 0.0, 0.0);
-            std::tuple<double,double,double> reverse_grades(0.0, 0.0, 0.0);
+            std::tuple<double,double,double, double> forward_grades(0.0, 0.0, 0.0, 0.0);
+            std::tuple<double,double,double, double> reverse_grades(0.0, 0.0, 0.0, 0.0);
             if (sample  && !w.tunnel() && !w.ferry()) {
               // Evenly sample the shape. If it is really short or a bridge
               // just do both ends
@@ -646,10 +646,15 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               // for weighted grades is between -10 and +15 which is then
               // mapped to a value between 0 to 15 for use in costing.
               auto heights = sample->get_all(resampled);
+              auto grades = valhalla::skadi::weighted_grade(heights, interval);
               if (length < kMinimumInterval) {
-                // Keep the default grades - but set the mean elevation (TODO)
+                // Keep the default grades - but set the mean elevation
+                forward_grades = std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
+                reverse_grades = std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
               } else {
-                forward_grades = valhalla::skadi::weighted_grade(heights, interval);
+                // Set the forward grades. Reverse the path and compute the
+                // weighted grade in reverse direction.
+                forward_grades = grades;
                 std::reverse(heights.begin(), heights.end());
                 reverse_grades = valhalla::skadi::weighted_grade(heights, interval);
               }
@@ -665,7 +670,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade,
                               reverse_grade, curvature,
                               std::get<1>(forward_grades), std::get<2>(forward_grades),
-                              std::get<1>(reverse_grades), std::get<2>(reverse_grades))});
+                              std::get<1>(reverse_grades), std::get<2>(reverse_grades),
+                              std::get<3>(forward_grades))});
 
             found = inserted.first;
           }//now we have the edge info offset
@@ -726,12 +732,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Edge elevation
           if (sample) {
-           float mean_elev = 0.0f;
-           float max_up_slope = forward ? std::get<4>(found->second) :
+            float max_up_slope = forward ? std::get<4>(found->second) :
                     std::get<6>(found->second);
-           float max_down_slope = forward ? std::get<5>(found->second) :
+            float max_down_slope = forward ? std::get<5>(found->second) :
                     std::get<7>(found->second);
-           graphtile.edge_elevations().emplace_back(mean_elev,
+            graphtile.edge_elevations().emplace_back(std::get<8>(found->second),
                     max_up_slope, max_down_slope);
           }
 

@@ -46,15 +46,10 @@ struct EdgePairs {
 /**
  * Sample elevation along the shape to get weighted grade and max grades
  */
-std::tuple<double, double, double> GetGrade(
+std::tuple<double, double, double, double> GetGrade(
                 const std::unique_ptr<const valhalla::skadi::sample>& sample,
                 const std::list<PointLL>& shape, const float length,
                 const bool forward) {
-  // For very short lengths just return 0 grades
-  if (length < kMinimumInterval) {
-    return std::make_tuple(0.0, 0.0, 0.0);
-  }
-
   // Evenly sample the shape. If edge is really short, just do both ends
   std::list<PointLL> resampled;
   auto interval = POSTING_INTERVAL;
@@ -71,8 +66,14 @@ std::tuple<double, double, double> GetGrade(
     std::reverse(heights.begin(), heights.end());
   }
 
-  // Compute the grade valid range is between -10 and +15
-  return valhalla::skadi::weighted_grade(heights, interval);
+  // Get the weighted grade, max slopes, and mean elevation.
+  auto grades = valhalla::skadi::weighted_grade(heights, interval);
+  if (length < kMinimumInterval) {
+    // For very short lengths just return 0 grades but a valid mean elevation
+    return std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
+  } else {
+    return grades;
+  }
 }
 
 /**
@@ -491,12 +492,9 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         auto grades = GetGrade(sample, shape, length, forward);
         newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
 
-        // TODO - mean elevation
-        float mean_elev = 0.0f;
-        float max_up_slope = std::get<1>(grades);
-        float max_down_slope = std::get<2>(grades);
-        tilebuilder.edge_elevations().emplace_back(mean_elev, max_up_slope,
-                                                    max_down_slope);
+        // Store mean_elevation, max_up_slope, and max_down_slope
+        tilebuilder.edge_elevations().emplace_back(std::get<3>(grades),
+                  std::get<1>(grades), std::get<2>(grades));
       } else {
         // Set the default weighted grade for the edge. No edge elevation
         // is added.
