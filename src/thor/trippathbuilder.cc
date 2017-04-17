@@ -382,6 +382,31 @@ odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
   return tp_loc;
 }
 
+/**
+ * Set begin and end heading if requested.
+ * @param  trip_edge  Trip path edge to add headings.
+ * @param  controller Controller specifying attributes to add to trip edge.
+ * @param  edge       Directed edge.
+ * @param  trip_shape Trip shape.
+ */
+void SetHeadings(TripPath_Edge* trip_edge, const TripPathController& controller,
+                 const DirectedEdge* edge, const std::vector<PointLL>& trip_shape) {
+  if (controller.attributes.at(kEdgeBeginHeading) ||
+      controller.attributes.at(kEdgeEndHeading)) {
+    // Copy portion of trip shape added for this edge.
+    std::vector<PointLL> shape;
+    std::copy(trip_shape.begin() + trip_edge->begin_shape_index(),
+              trip_shape.end(), std::back_inserter(shape));
+    float offset = GetOffsetForHeading(edge->classification(), edge->use());
+    if (controller.attributes.at(kEdgeBeginHeading)) {
+      trip_edge->set_begin_heading(std::round(PointLL::HeadingAlongPolyline(shape, offset)));
+    }
+    if (controller.attributes.at(kEdgeEndHeading)) {
+      trip_edge->set_end_heading(std::round(PointLL::HeadingAtEndOfPolyline(shape, offset)));
+    }
+  }
+}
+
 }
 
 // Default constructor
@@ -529,6 +554,10 @@ TripPath TripPathBuilder::Build(
     // Set end shape index if requested
     if (controller.attributes.at(kEdgeEndShapeIndex))
       trip_edge->set_end_shape_index(shape.size()-1);
+
+    // Set begin and end heading if requested. Uses shape so
+    // must be done after the edge's shape has been added.
+    SetHeadings(trip_edge, controller, edge, shape);
 
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime))
@@ -854,6 +883,10 @@ TripPath TripPathBuilder::Build(
     if (controller.attributes.at(kEdgeEndShapeIndex))
       trip_edge->set_end_shape_index(trip_shape.size() - 1);
 
+    // Set begin and end heading if requested. Uses trip_shape so
+    // must be done after the edge's shape has been added.
+    SetHeadings(trip_edge, controller, directededge, trip_shape);
+
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
     //
@@ -1126,26 +1159,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
         trip_edge->set_traversability(
             TripPath_Traversability::TripPath_Traversability_kNone);
     }
-
-    // Set begin heading if requested
-    if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(
-          std::round(
-              PointLL::HeadingAlongPolyline(
-                  edgeinfo.shape(),
-                  GetOffsetForHeading(directededge->classification(),
-                                      directededge->use()))));
-    }
-
-    // Set end heading if requested
-    if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(
-          std::round(
-              PointLL::HeadingAtEndOfPolyline(
-                  edgeinfo.shape(),
-                  GetOffsetForHeading(directededge->classification(),
-                                      directededge->use()))));
-    }
   } else {
     // Set traversability for reverse directededge if requested
     if (controller.attributes.at(kEdgeTraversability)) {
@@ -1164,30 +1177,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
       else
         trip_edge->set_traversability(
             TripPath_Traversability::TripPath_Traversability_kNone);
-    }
-
-    // Set begin heading if requested
-    if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAtEndOfPolyline(
-                      edgeinfo.shape(),
-                      GetOffsetForHeading(directededge->classification(),
-                                          directededge->use())) + 180.0f),
-                  360)));
-    }
-
-    // Set end heading if requested
-    if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAlongPolyline(
-                      edgeinfo.shape(),
-                      GetOffsetForHeading(directededge->classification(),
-                                          directededge->use())) + 180.0f),
-                  360)));
     }
   }
 
