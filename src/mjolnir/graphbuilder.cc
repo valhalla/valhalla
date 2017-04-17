@@ -11,6 +11,7 @@
 #include <set>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -983,7 +984,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   // Crack open some elevation data if its there
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
-  if(elevation)
+  if(elevation && boost::filesystem::exists(*elevation))
     sample.reset(new skadi::sample(*elevation));
 
   // Build tiles at the local level. Form connected graph from nodes and edges.

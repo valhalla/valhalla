@@ -11,6 +11,7 @@
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/format.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
@@ -698,7 +699,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // Crack open some elevation data if its there
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
-  if (elevation) {
+  if (elevation && boost::filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));
   }
 
