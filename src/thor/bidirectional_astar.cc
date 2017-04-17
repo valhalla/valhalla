@@ -329,10 +329,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
-  // Disable destination only transitions (based on costing) since this
-  // algorithm is bidirectional.
-  costing_->DisableDestinationOnly();
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.edges.front().projected, destination.edges.front().projected);
 
@@ -369,11 +365,42 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         // Check if the edge on the forward search connects to a
-        // reached edge on the reverse search tree.
+        // settled edge on the reverse search tree.
         pred = edgelabels_forward_[forward_pred_idx];
-        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetForwardConnection(pred);
         }
+
+        // Settle this edge.
+        edgestatus_forward_->Update(pred.edgeid(), EdgeSet::kPermanent);
+
+        // Prune path if predecessor is not a through edge
+        if (pred.not_thru() && pred.not_thru_pruning()) {
+          continue;
+        }
+
+        // Get the end node of the prior directed edge. Do not expand on this
+        // hierarchy level if the maximum number of upward transitions has
+        // been exceeded.
+        GraphId node = pred.endnode();
+        if (hierarchy_limits_forward_[node.level()].StopExpanding()) {
+          continue;
+        }
+
+        // Get the tile and the node info. Skip if tile is null (can happen
+        // with regional data sets) or if no access at the node.
+        if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
+          continue;
+        }
+        const NodeInfo* nodeinfo = tile->node(node);
+        if (!costing_->Allowed(nodeinfo)) {
+          continue;
+        }
+
+        // Expand from the end node in forward direction.
+        ExpandForward(graphreader, tile, node, nodeinfo, pred,
+                      forward_pred_idx, false);
+
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (best_connection_.cost < std::numeric_limits<float>::max()) {
@@ -387,15 +414,55 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
       }
     }
+
     if (expand_reverse) {
       reverse_pred_idx = adjacencylist_reverse_->pop();
       if (reverse_pred_idx != kInvalidLabel) {
         // Check if the edge on the reverse search connects to a
-        // reached edge on the forward search tree.
+        // settled edge on the forward search tree.
         pred2 = edgelabels_reverse_[reverse_pred_idx];
-        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetReverseConnection(pred2);
         }
+
+        // Settle this edge
+        edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
+
+        // Prune path if predecessor is not a through edge
+        if (pred2.not_thru() && pred2.not_thru_pruning()) {
+          continue;
+        }
+
+        // Get the end node of the prior directed edge. Do not expand on this
+        // hierarchy level if the maximum number of upward transitions has
+        // been exceeded.
+        GraphId node = pred2.endnode();
+        if (hierarchy_limits_reverse_[node.level()].StopExpanding()) {
+          continue;
+        }
+
+        // Get the tile and the node info. Skip if tile is null (can happen
+        // with regional data sets) or if no access at the node.
+        if ((tile2 = graphreader.GetGraphTile(node)) == nullptr) {
+          continue;
+        }
+        const NodeInfo* nodeinfo = tile2->node(node);
+        if (!costing_->Allowed(nodeinfo)) {
+          continue;
+        }
+
+        // Get the opposing predecessor directed edge. Need to make sure we get
+        // the correct one if a transition occurred
+        const DirectedEdge* opp_pred_edge =
+        (pred2.opp_edgeid().Tile_Base() == tile2->id().Tile_Base()) ?
+        tile2->directededge(pred2.opp_edgeid().id()) :
+        graphreader.GetGraphTile(pred2.opp_edgeid().
+                                 Tile_Base())->directededge(pred2.opp_edgeid());
+
+        // Expand from the end node in reverse direction.
+        ExpandReverse(graphreader, tile2, node, nodeinfo,pred2, reverse_pred_idx,
+                      opp_pred_edge, false);
+
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (best_connection_.cost < std::numeric_limits<float>::max()) {
@@ -426,85 +493,17 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       // on the next pass
       expand_forward = true;
       expand_reverse = false;
-
-      // Settle this edge.
-      edgestatus_forward_->Update(pred.edgeid(), EdgeSet::kPermanent);
-
-      // Prune path if predecessor is not a through edge
-      if (pred.not_thru() && pred.not_thru_pruning()) {
-        continue;
-      }
-
-      // Get the end node of the prior directed edge. Do not expand on this
-      // hierarchy level if the maximum number of upward transitions has
-      // been exceeded.
-      GraphId node = pred.endnode();
-      if (hierarchy_limits_forward_[node.level()].StopExpanding()) {
-        continue;
-      }
-
-      // Get the tile and the node info. Skip if tile is null (can happen
-      // with regional data sets) or if no access at the node.
-      if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
-        continue;
-      }
-      const NodeInfo* nodeinfo = tile->node(node);
-      if (!costing_->Allowed(nodeinfo)) {
-        continue;
-      }
-
-      // Expand from the end node in forward direction.
-      ExpandForward(graphreader, tile, node, nodeinfo, pred,
-                    forward_pred_idx, false);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list
       // on the next pass
       expand_forward = false;
       expand_reverse = true;
-
-      // Settle this edge
-      edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
-
-      // Prune path if predecessor is not a through edge
-      if (pred2.not_thru() && pred2.not_thru_pruning()) {
-        continue;
-      }
-
-      // Get the end node of the prior directed edge. Do not expand on this
-      // hierarchy level if the maximum number of upward transitions has
-      // been exceeded.
-      GraphId node = pred2.endnode();
-      if (hierarchy_limits_reverse_[node.level()].StopExpanding()) {
-        continue;
-      }
-
-      // Get the tile and the node info. Skip if tile is null (can happen
-      // with regional data sets) or if no access at the node.
-      if ((tile2 = graphreader.GetGraphTile(node)) == nullptr) {
-        continue;
-      }
-      const NodeInfo* nodeinfo = tile2->node(node);
-      if (!costing_->Allowed(nodeinfo)) {
-        continue;
-      }
-
-      // Get the opposing predecessor directed edge. Need to make sure we get
-      // the correct one if a transition occurred
-      const DirectedEdge* opp_pred_edge =
-          (pred2.opp_edgeid().Tile_Base() == tile2->id().Tile_Base()) ?
-              tile2->directededge(pred2.opp_edgeid().id()) :
-              graphreader.GetGraphTile(pred2.opp_edgeid().
-                     Tile_Base())->directededge(pred2.opp_edgeid());
-
-      // Expand from the end node in reverse direction.
-      ExpandReverse(graphreader, tile2, node, nodeinfo,pred2, reverse_pred_idx,
-                    opp_pred_edge, false);
     }
   }
   return {};    // If we are here the route failed
 }
 
-// The edge on the forward search connects to a reached edge on the reverse
+// The edge on the forward search connects to a settled edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
@@ -532,7 +531,7 @@ void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
   }
 }
 
-// The edge on the reverse search connects to a reached edge on the forward
+// The edge on the reverse search connects to a settled edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 void BidirectionalAStar::SetReverseConnection(const sif::EdgeLabel& pred) {
@@ -615,7 +614,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
   if (nodeinfo != nullptr && origin.date_time_ &&
       *origin.date_time_ == "current") {
     origin.date_time_= DateTime::iso_date_time(
-    		DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+               DateTime::get_tz_db().from_index(nodeinfo->timezone()));
   }
 }
 

@@ -94,6 +94,7 @@ namespace valhalla {
         float relax_factor = using_astar ? 16.0f : 8.0f;
         float expansion_within_factor = using_astar ? 4.0f : 2.0f;
         cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
+        cost->EnableDestinationOnly();
         path = path_algorithm->GetBestPath(origin, destination,
                                   reader, mode_costing, mode);
       }

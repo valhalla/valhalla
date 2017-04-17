@@ -98,6 +98,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
       float relax_factor = (using_astar) ? 16.0f : 8.0f;
       float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
       cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
+      cost->EnableDestinationOnly();
       pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
       data.incPasses();
     }

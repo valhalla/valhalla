@@ -95,13 +95,6 @@ class TruckCost : public DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
-   * Disables entrance into destination only areas. This should only be used
-   * for bidirectional path algorithms (and generally only for driving),
-   * otherwise a destination only penalty should be used.
-   */
-  virtual void DisableDestinationOnly();
-
-  /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
@@ -302,6 +295,9 @@ TruckCost::TruckCost(const boost::property_tree::ptree& pt)
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.025f);
   }
+
+  // Default to disable destination-only segments
+  DisableDestinationOnly();
 }
 
 // Destructor
@@ -317,12 +313,6 @@ bool TruckCost::AllowTransitions() const {
 // limits).
 bool TruckCost::AllowMultiPass() const {
   return true;
-}
-
-// Set to disable destination only transitions.
-void TruckCost::DisableDestinationOnly() {
-  disable_destination_only_ = true;
-  destination_only_penalty_ = 0;
 }
 
 // Get the access mode used by this costing method.
@@ -496,7 +486,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
+  if (!disable_destination_only_ && !pred.destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -558,7 +548,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (!pred->destonly() && edge->destonly()) {
+  if (!disable_destination_only_ && !pred->destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {

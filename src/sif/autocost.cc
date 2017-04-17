@@ -16,7 +16,7 @@ namespace sif {
 // Default options/values
 namespace {
 constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
-constexpr float kDefaultDestinationOnlyPenalty  = 600.0f; // Seconds
+constexpr float kDefaultDestinationOnlyPenalty  = 3600.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 5.0f;   // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
@@ -74,13 +74,6 @@ class AutoCost : public DynamicCost {
    * @return  Returns true if the costing model allows multiple passes.
    */
   virtual bool AllowMultiPass() const;
-
-  /**
-   * Disables entrance into destination only areas. This should only be used
-   * for bidirectional path algorithms (and generally only for driving),
-   * otherwise a destination only penalty should be used.
-   */
-  virtual void DisableDestinationOnly();
 
   /**
    * Get the access mode used by this costing method.
@@ -302,6 +295,9 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.025f);
   }
+
+  // Default to disable destination-only segments
+  DisableDestinationOnly();
 }
 
 // Destructor
@@ -312,12 +308,6 @@ AutoCost::~AutoCost() {
 // limits).
 bool AutoCost::AllowMultiPass() const {
   return true;
-}
-
-// Set to disable destination only transitions.
-void AutoCost::DisableDestinationOnly() {
-  disable_destination_only_ = true;
-  destination_only_penalty_ = 0;
 }
 
 // Get the access mode used by this costing method.
@@ -408,7 +398,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
+  if (!disable_destination_only_ && !pred.destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -470,7 +460,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (!pred->destonly() && edge->destonly()) {
+  if (!disable_destination_only_ && !pred->destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {

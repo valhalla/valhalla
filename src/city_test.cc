@@ -268,6 +268,7 @@ int main(int argc, char *argv[]) {
         if (cost->AllowMultiPass()) {
           pathalgorithm.Clear();
           cost->RelaxHierarchyLimits(16.0f, 4.0f);
+          cost->EnableDestinationOnly();
           pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
           np++;
           if (pathedges.size() == 0) {
