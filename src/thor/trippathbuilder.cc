@@ -249,23 +249,32 @@ odin::Location_SideOfStreet GetTripPathSideOfStreet(
   return kTripPathSideOfStreet[static_cast<uint32_t>(sos)];
 }
 
-// Associate node types to TripPath proto
-constexpr odin::TripPath_Node_Type kTripPathNodeType[] = {
-    odin::TripPath_Node_Type_kStreetIntersection,
-    odin::TripPath_Node_Type_kGate,
-    odin::TripPath_Node_Type_kBollard,
-    odin::TripPath_Node_Type_kTollBooth,
-    odin::TripPath_Node_Type_kMultiUseTransitStop,
-    odin::TripPath_Node_Type_kBikeShare,
-    odin::TripPath_Node_Type_kParking,
-    odin::TripPath_Node_Type_kMotorwayJunction,
-    odin::TripPath_Node_Type_kBorderControl };
 TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
-  return kTripPathNodeType[static_cast<uint32_t>(node_type)];
+  switch (node_type) {
+    case NodeType::kStreetIntersection:
+      return TripPath_Node_Type_kStreetIntersection;
+    case NodeType::kGate:
+      return TripPath_Node_Type_kGate;
+    case NodeType::kBollard:
+      return TripPath_Node_Type_kBollard;
+    case NodeType::kTollBooth:
+      return TripPath_Node_Type_kTollBooth;
+    case NodeType::kMultiUseTransitStop:
+      return TripPath_Node_Type_kMultiUseTransitStop;
+    case NodeType::kBikeShare:
+      return TripPath_Node_Type_kBikeShare;
+    case NodeType::kParking:
+      return TripPath_Node_Type_kParking;
+    case NodeType::kMotorWayJunction:
+      return TripPath_Node_Type_kMotorwayJunction;
+    case NodeType::kBorderControl:
+      return TripPath_Node_Type_kBorderControl;
+  }
 }
 
 // Associate cycle lane values to TripPath proto
 constexpr odin::TripPath_CycleLane kTripPathCycleLane[] = {
+    odin::TripPath_CycleLane_kNoCycleLane,
     odin::TripPath_CycleLane_kShared,
     odin::TripPath_CycleLane_kDedicated,
     odin::TripPath_CycleLane_kSeparated };
@@ -1251,13 +1260,20 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   if (controller.attributes.at(kEdgeWeightedGrade))
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
 
-  // Set maximum upward grade if requested
-  if (controller.attributes.at(kEdgeMaxUpwardGrade))
-    trip_edge->set_max_upward_grade(directededge->max_up_slope());
-
-  // Set maximum downward grade if requested
-  if (controller.attributes.at(kEdgeMaxDownwardGrade))
-    trip_edge->set_max_downward_grade(directededge->max_down_slope());
+  // Set maximum upward and downward grade if requested
+  if (controller.attributes.at(kEdgeMaxUpwardGrade) ||
+      controller.attributes.at(kEdgeMaxDownwardGrade) ||
+      controller.attributes.at(kEdgeMeanElevation)) {
+    const EdgeElevation* elev = graphtile->edge_elevation(edge);
+    if (elev != nullptr) {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(elev->max_up_slope());
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(elev->max_down_slope());
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(elev->mean_elevation());
+    }
+  }
 
   if (controller.attributes.at(kEdgeLaneCount))
     trip_edge->set_lane_count(directededge->lanecount());

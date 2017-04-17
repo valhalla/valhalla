@@ -84,6 +84,8 @@ namespace {
           edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
         if (edge.has_weighted_grade())
           edge_map->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
+        if (edge.has_mean_elevation())
+           edge_map->emplace("mean_elevation", static_cast<int64_t>(edge.mean_elevation()));
         if (edge.has_way_id())
           edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
         if (edge.has_id())

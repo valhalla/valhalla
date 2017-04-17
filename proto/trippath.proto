@@ -195,6 +195,7 @@ message TripPath {
     optional float truck_speed = 37;         // km/h
     optional bool truck_route = 38;
     repeated LaneConnectivity lane_connectivity = 39;
+    optional int32 mean_elevation = 40;
   }
 
   message IntersectingEdge {

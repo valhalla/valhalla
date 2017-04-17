@@ -20,13 +20,24 @@ namespace valhalla {
       return 1.0 + grade / (grade > 0 ? 7.0 : 17.0);
     }
 
-    std::tuple<double,double,double> weighted_grade(const std::vector<double>& heights, const double interval_distance, const std::function<double (double&)>& grade_weighting){
+    std::tuple<double,double,double, double> weighted_grade(const std::vector<double>& heights,
+                        const double interval_distance,
+                        const std::function<double (double&)>& grade_weighting){
       //grab the scaled grade for each section
       double grade = 0.0;
       double total_grade = 0;
       double total_weight = 0;
       double max_up_grade = 0.0;
       double max_down_grade = 0.0;
+
+      // Accumulate elevation - to compute mean_elevation
+      uint32_t n = 0;
+      double total_elev = 0.0;
+      if (heights.front() != NO_DATA_VALUE) {
+        total_elev += heights.front();
+        n++;
+      }
+
       //multiply grades by 100 to move from 0-1 into 0-100 for grade percentage
       auto scale = 100.0 / interval_distance;
       for(auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
@@ -35,6 +46,13 @@ namespace valhalla {
           grade = 0.0;
         } else {
           grade = (*h - *std::prev(h)) * scale;
+        }
+
+        // Add the elevation so we can compute mean (assumes uniform
+        // sampling along the path)
+        if (*h != NO_DATA_VALUE) {
+          total_elev += *h;
+          n++;
         }
 
         // Update max grades. TODO - do we need to filter or smooth these?
@@ -49,8 +67,10 @@ namespace valhalla {
         total_weight += weight;
       }
 
-      //get the average weighted grade by homogenizing total weight
-      return std::make_tuple(total_grade * (1.0 / total_weight), max_up_grade, max_down_grade);
+      // Get the average weighted grade by homogenizing total weight. Return
+      // max grades (up and down) and mean elevation.
+      return std::make_tuple(total_grade * (1.0 / total_weight), max_up_grade,
+                             max_down_grade, (total_elev / n));
     }
 
   }
