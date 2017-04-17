@@ -67,7 +67,7 @@ s-drt2zjgpug-southstation<southstation,s-drmrturyt6-stoughton,r-drm-providence~s
 s-dr5refyj9c-fultonst<229s,s-dr5rkw75e6-atlanticav~barclaysctr<235s,r-dr5r-3
 s-dr5rkw7nep-atlanticterminal,s-dr5x83nk2e-jamaica,r-dr5x-westhempstead
 s-dr5x83nk2e-jamaica,s-dr5xeqg1v4-newhydepark,r-dr7-portjefferson
-s-dr5xeqse79-newhydeparkrd~4thave,s-dr5xffvm16-uniontpke~1111marcusbldg,r-dr5x-n25
+s-dr5xeqss60-newhydeparkrdopp4thave,s-dr5xffyq8e-uniontpke~1111marcusbldg,r-dr5x-n25
 s-dr5rv6qmk7-queensboroplaza<r09n,s-dr5rvvyxvq-astoriablvd<r03n,r-dr5r-w
 s-dr5rvvyzms-hoytav~31st,s-dr5rytm119-23av~82st,r-dr72-m60~sbs
 s-dr7esehc3k-southeast,s-dr7tyh1skt-wassaic,r-dr7-harlem

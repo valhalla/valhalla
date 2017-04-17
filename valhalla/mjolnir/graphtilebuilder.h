@@ -62,15 +62,15 @@ class GraphTileBuilder : public baldr::GraphTile {
   void StoreTileData();
 
   /**
-   * Update a graph tile with new header, nodes, and directed edges. Used
-   * in GraphValidator to update directed edge information.
-   * @param hdr Updated header
+   * Update a graph tile with new nodes and directed edges. Assumes no new
+   * nodes or edges are added. Attributes within existing nodes and edges
+   * are updated. This is used in GraphValidator to update directed edge
+   * information.
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(
-            const std::vector<NodeInfo>& nodes,
-            const std::vector<DirectedEdge>& directededges);
+  void Update(const std::vector<NodeInfo>& nodes,
+              const std::vector<DirectedEdge>& directededges);
 
   /**
    * Get the current list of node builders.
@@ -370,6 +370,12 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void UpdateTrafficSegments();
 
+  /**
+    * Gets the current list of edge elevation (builders).
+    * @return  Returns the edge elevation builders.
+    */
+   std::vector<EdgeElevation>& edge_elevations();
+
  protected:
 
   struct EdgeTupleHasher {
@@ -476,9 +482,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Traffic chunks
   std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
 
-  // List of signs. This is a fixed size structure so it can be
-  // indexed directly.
+  // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
+
+  // List of edge elevation records. Index with directed edge Id.
+  std::vector<EdgeElevation> edge_elevation_builder_;
+
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
 };
