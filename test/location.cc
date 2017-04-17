@@ -187,7 +187,7 @@ void test_from_json() {
       throw std::runtime_error("Json location parsing failed: Test postal code date_time");
 
     // Test country, way_id, and date_time.
-    loc = FromJson(make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code, country, way_id, date_time), m);
+    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code, country, way_id, date_time), m);
     if ((loc.country_ != country))
       throw std::runtime_error("Json location parsing failed: Test country, way_id, and date_time country" );
     if (*loc.way_id_ != way_id)
