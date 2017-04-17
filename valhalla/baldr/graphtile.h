@@ -389,9 +389,16 @@ class GraphTile {
    * Get a pointer to a edge elevation data for the specified edge.
    * @param  edge  GraphId of the directed edge.
    * @return  Returns a pointer to the edge elevation data for the edge.
-   *          Returns a pointer to kNoElevationData if no elevation data exists.
+   *          Returns nullptr if no elevation data exists.
    */
-  const EdgeElevation* edge_elevation(const GraphId& edge) const;
+  const EdgeElevation* edge_elevation(const GraphId& edge) const  {
+    if (header_->has_edge_elevation() &&
+        edge.id() < header_->directededgecount()) {
+      return &edge_elevation_[edge.id()];
+    } else {
+      return nullptr;
+    }
+  }
 
  protected:
 

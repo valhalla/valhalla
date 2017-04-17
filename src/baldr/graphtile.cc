@@ -38,8 +38,6 @@ namespace {
 namespace valhalla {
 namespace baldr {
 
-static EdgeElevation kNoElevationData(32768.0f, 0.0f, 0.0f);
-
 // Default constructor
 GraphTile::GraphTile()
     : header_(nullptr),
@@ -881,22 +879,6 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
                          std::to_string(idx)  + " traffic Id count= " +
                          std::to_string(header_->traffic_id_count()));
 }
-
-/**
- * Get a pointer to a edge elevation data for the specified edge.
- * @param  edge  GraphId of the directed edge.
- * @return  Returns a pointer to the edge elevation data for the edge.
- *          Returns nullptr if no elevation data exists.
- */
-const EdgeElevation* GraphTile::edge_elevation(const GraphId& edge) const {
-  if (header_->has_edge_elevation() &&
-      edge.id() < header_->directededgecount()) {
-    return &edge_elevation_[edge.id()];
-  } else {
-    return &kNoElevationData;
-  }
-}
-
 
 }
 }
