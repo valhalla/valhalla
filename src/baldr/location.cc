@@ -12,8 +12,8 @@
 namespace valhalla {
 namespace baldr {
 
-Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
-  : latlng_(latlng), stoptype_(stoptype), isolated_(50), radius_(0) {
+Location::Location(const midgard::PointLL& latlng, const StopType& stoptype, unsigned int isolated, unsigned int radius)
+  : latlng_(latlng), stoptype_(stoptype), isolated_(isolated), radius_(radius) {
 }
 
 boost::property_tree::ptree Location::ToPtree() const {
@@ -116,7 +116,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   return location;
 }
 
-Location Location::FromRapidJson(const rapidjson::Value& d){
+Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int isolated, unsigned int radius){
   auto lat = GetOptionalFromRapidJson<float>(d, "/lat");
   if (! lat) throw std::runtime_error{"lat is missing"};
 
@@ -147,30 +147,10 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
-  location.isolated_ = GetFromRapidJson<unsigned int>(d, "/isolated", 50);
-  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", 0);
+  location.isolated_ = GetFromRapidJson<unsigned int>(d, "/isolated", isolated);
+  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", radius);
 
   return location;
-}
-
-Location Location::FromJson(const std::string& json, const ParseMethod& method){
-  switch(method){
-  case ParseMethod::PTREE: {
-    std::stringstream stream;
-    stream << json;
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_json(stream, pt);
-    return FromPtree(pt);
-    }
-  case ParseMethod::RAPIDJSON: {
-    rapidjson::Document d;
-    d.Parse(json.c_str());
-    if (d.HasParseError())
-      throw std::runtime_error("Parse Error");
-    return FromRapidJson(d);
-    }
-  default: throw std::runtime_error("Bad parse method");
-  }
 }
 
 Location Location::FromCsv(const std::string& csv) {

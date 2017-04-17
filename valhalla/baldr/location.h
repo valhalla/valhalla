@@ -36,7 +36,7 @@ struct Location {
    * Constructor.
    * @param  latlng  the polar coordinates of the location
    */
-  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK);
+  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK, unsigned int isolated = 0, unsigned int radius = 0);
 
   /**
    * Serializes this object to ptree
@@ -57,7 +57,7 @@ struct Location {
    * conversion.
    * @param  d a rapidjson representation of the location
    */
-  static Location FromRapidJson(const rapidjson::Value& d);
+  static Location FromRapidJson(const rapidjson::Value& d, unsigned int isolated = 0, unsigned int radius = 0);
 
   /**
    * conversion.

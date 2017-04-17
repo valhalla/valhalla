@@ -90,7 +90,7 @@ bool ParseArguments(int argc, char *argv[]) {
       ("threads,t", boost::program_options::value<size_t>(&threads), "Concurrency to use.")
       ("batch,b", boost::program_options::value<size_t>(&batch), "Number of locations to group together per search")
       ("extrema,e", boost::program_options::value<bool>(&extrema), "Show the input locations of the extrema for a given statistic")
-      ("isolation_limit,i", boost::program_options::value<size_t>(&isolated), "How many nodes a location candidate must reach before considering it as connected")
+      ("isolated,i", boost::program_options::value<size_t>(&isolated), "How many edges need to be reachable before considering it as unisolated")
       ("radius,r", boost::program_options::value<size_t>(&radius), "How many meters to search away from the input location")
       //positional arguments
       ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
