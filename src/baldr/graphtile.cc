@@ -257,27 +257,24 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
 
 std::string GraphTile::FileSuffix(const GraphId& graphid) {
   /*
-  if you have a graphid where level == 8 and tileid == 24134109851
-  you should get: 8/024/134/109/851.gph
-  since the number of levels is likely to be very small this limits
-  the total number of objects in any one directory to 1000, which is an
-  empirically derived good choice for mechanical harddrives
-  this should be fine for s3 (even though it breaks the rule of most
-  unique part of filename first) because there will be just so few
+  if you have a graphid where level == 8 and tileid == 24134109851 you should get: 8/024/134/109/851.gph
+  since the number of levels is likely to be very small this limits the total number of objects in any one directory to 1000
+  which is an empirically derived good choice for mechanical hard drives this should be fine for s3 as well
+  (even though it breaks the rule of most unique part of filename first) because there will be just so few
   objects in general in practice
   */
 
   //figure the largest id for this level
-  auto level = TileHierarchy::levels().find(graphid.level());
-  if(level == TileHierarchy::levels().end() &&
-     graphid.level() == ((TileHierarchy::levels().rbegin())->second.level + 1))
-    level = TileHierarchy::levels().begin();
-
-  if(level == TileHierarchy::levels().end())
+  //if the first thing isnt a valid level bail
+  if(TileHierarchy::levels().find(graphid.level()) == TileHierarchy::levels().cend() && graphid.level() != TileHierarchy::GetTransitLevel().level)
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
 
+  //get the level info
+  const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level ?
+    TileHierarchy::GetTransitLevel() : TileHierarchy::levels().find(graphid.level())->second;
+
   //figure out how many digits
-  auto max_id = level->second.tiles.ncolumns() * level->second.tiles.nrows() - 1;
+  auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
   size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
   const size_t remainder = max_length % 3;
   if(remainder)

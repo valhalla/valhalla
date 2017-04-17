@@ -17,7 +17,7 @@ std::map<uint8_t, TileLevel> TileHierarchy::levels_  = {
 };
 
 //Should we make a class lower than service other for transit?
-TileLevel TileHierarchy::transit_level_ = {2, stringToRoadClass.find("ServiceOther")->second, "transit",
+TileLevel TileHierarchy::transit_level_ = {3, stringToRoadClass.find("ServiceOther")->second, "transit",
   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}}, .25, static_cast<unsigned short>(kBinsDim)}};
 
 // Returns the GraphId of the requested tile based on a lat,lng and a level.
