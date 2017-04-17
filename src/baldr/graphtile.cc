@@ -38,6 +38,8 @@ namespace {
 namespace valhalla {
 namespace baldr {
 
+static EdgeElevation kNoElevationData(32768.0f, 0.0f, 0.0f);
+
 // Default constructor
 GraphTile::GraphTile()
     : header_(nullptr),
@@ -64,7 +66,8 @@ GraphTile::GraphTile()
       traffic_chunks_(nullptr),
       traffic_chunk_size_(0),
       lane_connectivity_(nullptr),
-      lane_connectivity_size_(0) {
+      lane_connectivity_size_(0),
+      edge_elevation_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -205,7 +208,15 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of lane connections and their size
   lane_connectivity_ = reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
-  lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();
+  lane_connectivity_size_ = header_->edge_elevation_offset() - header_->lane_connectivity_offset();
+
+  // Start of edge elevation data. If the tile has edge elevation data (query
+  // the header) then the count is the same as the directed edge count.
+  edge_elevation_ = reinterpret_cast<EdgeElevation*>(tile_ptr + header_->edge_elevation_offset());
+
+  // For reference - how to use the end offset to set size of an object (that
+  // is not fixed size and count).
+  // example_size_ = header_->end_offset() - header_->example_offset();
 
   // ANY NEW EXPANSION DATA GOES HERE
 
@@ -390,56 +401,6 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
   return tiles.TileBounds(header_->graphid().tileid());
 }
 
-GraphId GraphTile::id() const {
-  return header_->graphid();
-}
-
-const GraphTileHeader* GraphTile::header() const {
-  return header_;
-}
-
-const NodeInfo* GraphTile::node(const GraphId& node) const {
-  if (node.id() < header_->nodecount())
-    return &nodes_[node.id()];
-  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                             std::to_string(node.tileid()) + "," +
-                             std::to_string(node.level()) + "," +
-                             std::to_string(node.id()) + " nodecount= " +
-                             std::to_string(header_->nodecount()));
-}
-
-const NodeInfo* GraphTile::node(const size_t idx) const {
-  if (idx < header_->nodecount())
-    return &nodes_[idx];
-  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(idx)  + " nodecount= " +
-                           std::to_string(header_->nodecount()));
-}
-
-// Get the directed edge given a GraphId
-const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
-  if (edge.id() < header_->directededgecount())
-    return &directededges_[edge.id()];
-  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(edge.id())  + " directededgecount= " +
-                           std::to_string(header_->directededgecount()));
-}
-
-// Get the directed edge at the specified index.
-const DirectedEdge* GraphTile::directededge(const size_t idx) const {
-  if (idx < header_->directededgecount())
-    return &directededges_[idx];
-  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(idx)  + " directededgecount= " +
-                           std::to_string(header_->directededgecount()));
-}
-
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
   if (node.id() < header_->nodecount()) {
     const auto& nodeinfo = nodes_[node.id()];
@@ -464,14 +425,6 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
                            std::to_string(header_->graphid().level()) + "," +
                            std::to_string(idx)  + " nodecount= " +
                            std::to_string(header_->nodecount()));
-}
-
-// Convenience method to get opposing edge Id given a directed edge.
-// The end node of the directed edge must be in this tile.
-GraphId GraphTile::GetOpposingEdgeId(const DirectedEdge* edge) const {
-  GraphId endnode = edge->endnode();
-  return { endnode.tileid(), endnode.level(),
-           node(endnode.id())->edge_index() + edge->opp_index() };
 }
 
 // Get a pointer to edge info.
@@ -544,7 +497,6 @@ const Admin* GraphTile::admin(const size_t idx) const {
 
 // Convenience method to get the text/name for a given offset to the textlist
 std::string GraphTile::GetName(const uint32_t textlist_offset) const {
-
   if (textlist_offset < textlist_size_) {
     return textlist_ + textlist_offset;
   } else {
@@ -930,6 +882,21 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
                          std::to_string(header_->graphid().level()) + "," +
                          std::to_string(idx)  + " traffic Id count= " +
                          std::to_string(header_->traffic_id_count()));
+}
+
+/**
+ * Get a pointer to a edge elevation data for the specified edge.
+ * @param  edge  GraphId of the directed edge.
+ * @return  Returns a pointer to the edge elevation data for the edge.
+ *          Returns nullptr if no elevation data exists.
+ */
+const EdgeElevation* GraphTile::edge_elevation(const GraphId& edge) const {
+  if (header_->has_edge_elevation() &&
+      edge.id() < header_->directededgecount()) {
+    return &edge_elevation_[edge.id()];
+  } else {
+    return &kNoElevationData;
+  }
 }
 
 
