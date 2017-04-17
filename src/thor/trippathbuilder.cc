@@ -1272,6 +1272,13 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
         trip_edge->set_max_downward_grade(elev->max_down_slope());
       if (controller.attributes.at(kEdgeMeanElevation))
         trip_edge->set_mean_elevation(elev->mean_elevation());
+    } else {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(kNoElevationData);
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(kNoElevationData);
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(kNoElevationData);
     }
   }
 
