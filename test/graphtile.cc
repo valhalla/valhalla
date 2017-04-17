@@ -32,14 +32,23 @@ void file_suffix() {
 
   if(GraphTile::FileSuffix(GraphId(49, 0, 0)) != "0/000/049.gph")
     throw std::logic_error("Unexpected graphtile suffix");
+
+  if(GraphTile::FileSuffix(GraphId(1000000, 3, 1)) != "3/001/000/000.gph")
+    throw std::logic_error("Unexpected graphtile suffix");
 }
 
 void id_from_string() {
 
   if(GraphTile::GetTileId("foo/bar/baz/qux/corge/1/000/002.gph") != GraphId(2,1,0))
-      throw std::logic_error("Unexpected graphtile id");
+    throw std::logic_error("Unexpected graphtile id");
 
   if(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002.gph") != GraphId(2,1,0))
+    throw std::logic_error("Unexpected graphtile id");
+
+  if(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/2/001/000/002.gph") != GraphId(1000002,2,0))
+    throw std::logic_error("Unexpected graphtile id");
+
+  if(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002.gph") != GraphId(1000002,3,0))
     throw std::logic_error("Unexpected graphtile id");
 
   try {
