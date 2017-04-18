@@ -60,7 +60,7 @@ struct candidate_t {
 struct projector_t {
   projector_t(const Location& location, GraphReader& reader):
     binner(make_binner(location.latlng_, reader)),
-    location(location),
+    location(location), sq_radius(location.radius_ * location.radius_),
     lon_scale(cosf(location.latlng_.lat() * kRadPerDeg)),
     lat(location.latlng_.lat()),
     lng(location.latlng_.lng()),
@@ -99,22 +99,18 @@ struct projector_t {
   // Advance to the next bin. Must not be called if has_bin() is false.
   void next_bin(GraphReader& reader) {
     do {
-      //TODO: clean up the candidate list by removing ones that fall outside the radius
-      //alternatively maybe we dont add ones that fall outside unless there is nothing
-      //this would mean changes the other code to replace instead of insert depending
-
       //TODO: make configurable the radius at which we give up searching
       //the closest thing in this bin is further than what we have already
-      auto bin = binner();
-      if(std::get<2>(bin) > SEARCH_CUTOFF || (unisolated.size() && std::get<2>(bin) > sqrt(unisolated.back().sq_distance))) {
+      int32_t tile_index; float distance;
+      std::tie(tile_index, bin_index, distance) = binner();
+      if(distance > SEARCH_CUTOFF || (unisolated.size() && distance > sqrt(unisolated.back().sq_distance))) {
         cur_tile = nullptr;
         break;
       }
 
       //grab the tile the lat, lon is in
-      auto tile_id = GraphId(std::get<0>(bin), TileHierarchy::levels().rbegin()->first, 0);
+      auto tile_id = GraphId(tile_index, TileHierarchy::levels().rbegin()->first, 0);
       reader.GetGraphTile(tile_id, cur_tile);
-      bin_index = std::get<1>(bin);
     } while (!cur_tile);
   }
 
@@ -152,6 +148,7 @@ struct projector_t {
   const GraphTile* cur_tile = nullptr;
   Location location;
   unsigned short bin_index = 0;
+  float sq_radius;
   std::vector<candidate_t> isolated;
   std::vector<candidate_t> unisolated;
 
@@ -577,29 +574,20 @@ struct bin_handler_t {
       //keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-        //its unisolated
-        if(isolation > p_itr->location.isolated_ &&
-          (p_itr->unisolated.empty() || c_itr->sq_distance < p_itr->unisolated.back().sq_distance)) {
+        //which batch of findings
+        auto* batch = isolation > p_itr->location.isolated_ ? &p_itr->unisolated : &p_itr->isolated;
+
+        //if its empty or has a single entry outside the radius and this is better
+        if(batch->empty() || (c_itr->sq_distance < batch->back().sq_distance && batch->back().sq_distance > p_itr->sq_radius)) {
           c_itr->edge = edge;
           c_itr->edge_id = e;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
-          p_itr->unisolated = { std::move(*c_itr) };
-        }//its isolated
-        else if(p_itr->isolated.empty() || c_itr->sq_distance < p_itr->isolated.back().sq_distance) {
-          c_itr->edge = edge;
-          c_itr->edge_id = e;
-          c_itr->edge_info = edge_info;
-          c_itr->tile = tile;
-          p_itr->isolated = { std::move(*c_itr) };
+          *batch = { std::move(*c_itr) };
         }
 
-        /*auto& candidate = closest[it - begin];
-        auto& current = it->candidate;
-        auto insertion = candidate.isolated ?
-          current.begin() + (!current.empty() && current.front().isolated && candidate.sq_distance > current.front().sq_distance) :
-          current.end() - (!current.empty() && !current.back().isolated && candidate.sq_distance > current.back().sq_distance);
-        current.insert(insertion, std::move(candidate));*/
+        //TODO:
+        //else if its better than the last entry append to it
       }
     }
 
