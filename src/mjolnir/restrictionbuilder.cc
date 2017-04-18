@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/dataquality.h"

@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 

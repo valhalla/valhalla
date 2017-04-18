@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "baldr/sign.h"
 
 namespace valhalla {

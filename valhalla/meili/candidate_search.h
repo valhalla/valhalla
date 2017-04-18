@@ -1,3 +1,4 @@
+#include <cstdint>
 // -*- mode: c++ -*-
 #ifndef MMP_CANDIDATE_SEARCH_H_
 #define MMP_CANDIDATE_SEARCH_H_

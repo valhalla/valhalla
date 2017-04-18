@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 

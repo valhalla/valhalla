@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 

@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "baldr/connectivity_map.h"
 #include "baldr/json.h"
 #include "baldr/graphtile.h"

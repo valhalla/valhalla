@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include "skadi/sample.h"
 
 #include <cstddef>

@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "thor/optimizer.h"
 #include "midgard/logging.h"
 

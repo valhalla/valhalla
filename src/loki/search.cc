@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "loki/search.h"
 #include "midgard/linesegment2.h"
 #include "midgard/distanceapproximator.h"

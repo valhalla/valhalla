@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/countryaccess.h"
 
 namespace valhalla {

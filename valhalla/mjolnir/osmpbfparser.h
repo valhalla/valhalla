@@ -1,3 +1,4 @@
+#include <cstdint>
 /*
  Copyright (c) 2012, Canal TP
  All rights reserved.

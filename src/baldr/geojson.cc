@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include "baldr/geojson.h"
 #include "midgard/point2.h"
 #include "midgard/pointll.h"

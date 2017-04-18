@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/uniquenames.h"
 
 #include "midgard/logging.h"

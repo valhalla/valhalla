@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "sif/bicyclecost.h"
 #include "sif/costconstants.h"
 

@@ -1,3 +1,4 @@
+#include <cmath>
 #include "valhalla/midgard/linesegment2.h"
 #include <cmath>
 

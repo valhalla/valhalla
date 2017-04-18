@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 
 #include <prime_server/prime_server.hpp>

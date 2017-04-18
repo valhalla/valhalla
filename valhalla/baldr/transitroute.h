@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_BALDR_TRANSITROUTE_H_
 #define VALHALLA_BALDR_TRANSITROUTE_H_
 

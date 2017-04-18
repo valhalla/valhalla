@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_MIDGARD_POINTLL_H_
 #define VALHALLA_MIDGARD_POINTLL_H_
 

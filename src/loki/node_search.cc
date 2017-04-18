@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include "loki/node_search.h"
 #include "midgard/tiles.h"
 #include "baldr/tilehierarchy.h"

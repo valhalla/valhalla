@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <algorithm>
 #include <boost/property_tree/json_parser.hpp>
 

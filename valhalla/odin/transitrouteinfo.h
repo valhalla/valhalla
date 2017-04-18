@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
 #define VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
 

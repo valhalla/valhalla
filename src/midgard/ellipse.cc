@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "valhalla/midgard/ellipse.h"
 
 namespace valhalla {

@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "valhalla/midgard/polyline2.h"
 
 #include <vector>

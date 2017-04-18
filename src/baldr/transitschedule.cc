@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "baldr/transitschedule.h"
 
 #include "midgard/logging.h"

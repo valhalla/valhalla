@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <string.h>
 #include <algorithm>
 #include "baldr/complexrestriction.h"

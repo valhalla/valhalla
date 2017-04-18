@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include <string>
 #include <cstdint>
 #include <ostream>

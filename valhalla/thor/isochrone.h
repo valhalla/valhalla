@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_THOR_ISOCHRONE_H_
 #define VALHALLA_THOR_ISOCHRONE_H_
 

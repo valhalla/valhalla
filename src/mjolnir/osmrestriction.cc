@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/osmrestriction.h"
 #include "midgard/logging.h"
 

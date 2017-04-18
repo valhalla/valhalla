@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/graphtilebuilder.h"
 
 #include "midgard/logging.h"

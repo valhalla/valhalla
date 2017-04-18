@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "sif/pedestriancost.h"
 #include "sif/costconstants.h"
 

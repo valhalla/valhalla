@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
 

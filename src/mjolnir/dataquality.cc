@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/dataquality.h"
 #include <fstream>
 #include <vector>

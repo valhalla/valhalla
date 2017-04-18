@@ -1,3 +1,4 @@
+#include <cmath>
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"

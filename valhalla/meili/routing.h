@@ -1,3 +1,4 @@
+#include <cstdint>
 // -*- mode: c++ -*-
 #ifndef MMP_ROUTING_H_
 #define MMP_ROUTING_H_

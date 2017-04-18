@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "sif/transitcost.h"
 
 #include "baldr/accessrestriction.h"

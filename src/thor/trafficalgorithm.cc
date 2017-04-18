@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream> // TODO remove if not needed
 #include <map>
 #include <algorithm>

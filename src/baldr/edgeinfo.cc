@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "baldr/edgeinfo.h"
 
 #include "midgard/encoded.h"

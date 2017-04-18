@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_MIDGARD_ELLIPSE_H_
 #define VALHALLA_MIDGARD_ELLIPSE_H_
 

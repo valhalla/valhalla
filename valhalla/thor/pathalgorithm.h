@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_THOR_PATHALGORITHM_H_
 #define VALHALLA_THOR_PATHALGORITHM_H_
 

@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_THOR_OPTIMIZER_H_
 #define VALHALLA_THOR_OPTIMIZER_H_
 

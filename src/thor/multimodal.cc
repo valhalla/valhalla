@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <map>
 #include <algorithm>
 #include "baldr/datetime.h"

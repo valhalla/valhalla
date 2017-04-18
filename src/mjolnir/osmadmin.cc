@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "mjolnir/osmadmin.h"
 #include "mjolnir/util.h"
 

@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "sif/truckcost.h"
 
 #include <iostream>

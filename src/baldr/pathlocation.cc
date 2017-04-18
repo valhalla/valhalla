@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "baldr/pathlocation.h"
 #include "midgard/util.h"
 

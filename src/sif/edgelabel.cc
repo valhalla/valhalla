@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <string.h>
 #include "sif/edgelabel.h"
 

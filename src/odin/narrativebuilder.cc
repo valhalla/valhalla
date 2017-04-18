@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <sstream>
 #include <iomanip>
 #include <cmath>

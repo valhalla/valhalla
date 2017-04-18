@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_MIDGARD_AABB2_H_
 #define VALHALLA_MIDGARD_AABB2_H_
 
