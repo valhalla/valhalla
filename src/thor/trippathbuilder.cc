@@ -387,22 +387,21 @@ odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
  * @param  trip_edge  Trip path edge to add headings.
  * @param  controller Controller specifying attributes to add to trip edge.
  * @param  edge       Directed edge.
- * @param  trip_shape Trip shape.
+ * @param  shape      Trip shape.
  */
 void SetHeadings(TripPath_Edge* trip_edge, const TripPathController& controller,
-                 const DirectedEdge* edge, const std::vector<PointLL>& trip_shape,
+                 const DirectedEdge* edge, const std::vector<PointLL>& shape,
                  const uint32_t begin_index) {
   if (controller.attributes.at(kEdgeBeginHeading) ||
       controller.attributes.at(kEdgeEndHeading)) {
-    // Copy portion of trip shape added for this edge.
-    std::vector<PointLL> shape;
-    std::copy(trip_shape.begin() + begin_index, trip_shape.end(), std::back_inserter(shape));
     float offset = GetOffsetForHeading(edge->classification(), edge->use());
     if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(std::round(PointLL::HeadingAlongPolyline(shape, offset)));
+      trip_edge->set_begin_heading(std::round(PointLL::HeadingAlongPolyline(shape,
+                          offset, begin_index, shape.size() - 1)));
     }
     if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(std::round(PointLL::HeadingAtEndOfPolyline(shape, offset)));
+      trip_edge->set_end_heading(std::round(PointLL::HeadingAtEndOfPolyline(shape,
+                          offset, begin_index, shape.size() - 1)));
     }
   }
 }
