@@ -79,7 +79,7 @@ class thor_worker_t {
       const baldr::PathLocation& destination);
   valhalla::odin::TripPath route_match(const AttributesController& controller);
   std::pair<valhalla::odin::TripPath, std::vector<thor::MatchResult>> map_match(
-      const AttributesController& controller);
+      bool is_attrib, const AttributesController& controller);
 
   std::list<valhalla::odin::TripPath> path_arrive_by(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,

@@ -90,11 +90,11 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          trip_match = map_match(controller);
+          trip_match = map_match(false, controller);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
+        } catch(const valhalla_exception_t& e) {
+          throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -105,11 +105,11 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(controller);
+            trip_match = map_match(false, controller);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch (const valhalla_exception_t& e) {
-            throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
+          } catch(const valhalla_exception_t& e) {
+            throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
           }
         }
         break;
@@ -162,6 +162,7 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_match(
+    bool is_attrib,
     const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<thor::MatchResult> match_results;
@@ -191,7 +192,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   }
 
   // Form the path edges based on the matched points
-  std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
+  std::vector<PathInfo> path_edges = MapMatcher::FormPath(is_attrib, matcher.get(),
                                                           results, mode_costing,
                                                           mode);
 

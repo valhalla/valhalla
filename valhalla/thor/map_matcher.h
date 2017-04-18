@@ -25,6 +25,7 @@ class MapMatcher {
  public:
 
   static std::vector<PathInfo> FormPath(
+      bool is_attrib,
       meili::MapMatcher* matcher,
       const std::vector<meili::MatchResult>& results,
       const std::shared_ptr<sif::DynamicCost>* mode_costing,

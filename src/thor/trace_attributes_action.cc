@@ -401,7 +401,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          trip_match = map_match(controller);
+          trip_match = map_match(true, controller);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
         } catch (const valhalla_exception_t& e) {
@@ -416,7 +416,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(controller);
+            trip_match = map_match(true, controller);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
           } catch (const valhalla_exception_t& e) {
