@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
