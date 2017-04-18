@@ -218,6 +218,30 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     }
   }
 
+#ifdef LOGGING_LEVEL_TRACE
+  ////////////////////////////////////////////////////////////////////////////
+  // This trace block is used to visualize the trace and matched points
+  // Print geojson header
+  printf("\n{\"type\":\"FeatureCollection\",\"features\":[\n");
+
+  // Print trace points
+  int index = 0;
+  for (const auto& trace_point : shape) {
+    printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"#abd9e9\",\"marker-size\":\"small\",\"trace_point_index\":%d}},\n", trace_point.first, trace_point.second, index++);
+  }
+
+  // Print matched points
+  // TODO: disconnected color: #d7191c
+  index = 0;
+  for (const auto& match_result : match_results) {
+    printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"%s\",\"marker-size\":\"small\",\"matched_point_index\":%d,\"edge_index\":%u,\"distance_along_edge\":%.3f,\"distance_from_trace_point\":%.3f}}%s\n", match_result.lnglat.lng(), match_result.lnglat.lat(), (match_result.HasState() ? "#2c7bb6" : "#fdae61"), index++, match_result.edge_index, match_result.distance_along, match_result.distance_from, ((index != match_results.size()-1) ? "," : ""));
+  }
+
+  // Print geojson footer
+  printf("]}\n");
+  ////////////////////////////////////////////////////////////////////////////
+#endif
+
   // Set origin and destination from map matching results
   auto first_result_with_state = std::find_if(
       results.begin(), results.end(),
