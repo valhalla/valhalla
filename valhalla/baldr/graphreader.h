@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHREADER_H_
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <mutex>

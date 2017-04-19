@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 #ifndef MMP_UNIVERSAL_COST_H__
 #define MMP_UNIVERSAL_COST_H__
+#include <cstdint>
 
 #include <boost/property_tree/ptree.hpp>
 

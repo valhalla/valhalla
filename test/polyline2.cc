@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "midgard/polyline2.h"
 
 #include "test.h"

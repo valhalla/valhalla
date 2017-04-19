@@ -1,3 +1,4 @@
+#include <cmath>
 #include "midgard/distanceapproximator.h"
 
 #include "meili/graph_helpers.h"

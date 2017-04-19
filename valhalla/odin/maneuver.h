@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_MANEUVER_H_
 #define VALHALLA_ODIN_MANEUVER_H_
 
+#include <cstdint>
 #include <string>
 #include <list>
 #include <unordered_map>

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_SIGNS_H_
 #define VALHALLA_ODIN_SIGNS_H_
 
+#include <cstdint>
 #include <vector>
 
 #include <valhalla/baldr/verbal_text_formatter.h>

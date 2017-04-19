@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 #ifndef MMP_ROUTING_H_
 #define MMP_ROUTING_H_
+#include <cstdint>
 
 #include <vector>
 #include <unordered_map>

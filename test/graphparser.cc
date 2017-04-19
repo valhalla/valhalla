@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"

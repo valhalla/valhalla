@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_EDGEINFO_H_
 #define VALHALLA_BALDR_EDGEINFO_H_
 
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <ostream>

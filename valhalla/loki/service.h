@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_LOKI_SERVICE_H__
 #define __VALHALLA_LOKI_SERVICE_H__
 
+#include <cstdint>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>

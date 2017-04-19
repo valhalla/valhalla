@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_TRIPPATHBUILDER_H_
 #define VALHALLA_THOR_TRIPPATHBUILDER_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
 

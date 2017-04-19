@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>

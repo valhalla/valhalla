@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_NARRATIVEBUILDER_H_
 #define VALHALLA_ODIN_NARRATIVEBUILDER_H_
 
+#include <cstdint>
 #include <vector>
 
 #include <valhalla/baldr/verbal_text_formatter.h>
