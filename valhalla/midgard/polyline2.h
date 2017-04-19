@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_MIDGARD_POLYLINE2_H_
 #define VALHALLA_MIDGARD_POLYLINE2_H_
 

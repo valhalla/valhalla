@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <string>
 
 #include "sif/costconstants.h"

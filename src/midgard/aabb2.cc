@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <cmath>
 #include "midgard/aabb2.h"
 #include "midgard/linesegment2.h"
 #include "midgard/util.h"

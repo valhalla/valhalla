@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_SIF_COST_CONSTANTS_H_
 #define VALHALLA_SIF_COST_CONSTANTS_H_
 

@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/admin.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"

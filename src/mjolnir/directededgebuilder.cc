@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/directededgebuilder.h"
 #include "midgard/logging.h"
 

@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/merge.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphreader.h"

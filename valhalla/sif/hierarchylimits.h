@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_SIF_HIERARCHYLIMITS_H_
 #define VALHALLA_SIF_HIERARCHYLIMITS_H_
 

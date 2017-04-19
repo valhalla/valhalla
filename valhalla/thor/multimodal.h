@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_THOR_MULTIMODAL_H_
 #define VALHALLA_THOR_MULTIMODAL_H_
 

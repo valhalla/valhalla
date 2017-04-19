@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"

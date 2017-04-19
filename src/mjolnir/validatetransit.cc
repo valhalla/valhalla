@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/validatetransit.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/dataquality.h"

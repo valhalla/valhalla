@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <string.h>
 #include "baldr/transitroute.h"
 

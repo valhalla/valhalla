@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/transittransfer.h"
 
 #include "midgard/logging.h"

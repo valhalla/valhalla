@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/shared_tiles.h"
 
 #include <string>

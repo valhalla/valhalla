@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/idtable.h"
 #include <stdexcept>
 

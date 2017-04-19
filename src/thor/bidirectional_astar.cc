@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <map>
 #include <algorithm>
 #include "thor/bidirectional_astar.h"

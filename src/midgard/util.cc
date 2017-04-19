@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <cmath>
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/point2.h"

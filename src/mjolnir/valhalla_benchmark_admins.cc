@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <memory>
 #include <future>
 #include <thread>

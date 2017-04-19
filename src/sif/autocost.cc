@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "sif/autocost.h"
 #include "sif/costconstants.h"
 

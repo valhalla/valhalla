@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 

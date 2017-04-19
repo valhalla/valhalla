@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/graphreader.h"
 
 #include <string>

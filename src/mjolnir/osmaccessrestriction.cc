@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/osmaccessrestriction.h"
 
 using namespace valhalla::baldr;

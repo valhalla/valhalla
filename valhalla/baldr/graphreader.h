@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_BALDR_GRAPHREADER_H_
 #define VALHALLA_BALDR_GRAPHREADER_H_
 

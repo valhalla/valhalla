@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/double_bucket_queue.h"
 #include <algorithm>
 

@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <string.h>
 #include "baldr/graphtileheader.h"
 #include "baldr/nodeinfo.h"

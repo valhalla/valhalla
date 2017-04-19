@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/admin.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/util.h"

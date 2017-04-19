@@ -1,4 +1,3 @@
-#include <cstdint>
 
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"

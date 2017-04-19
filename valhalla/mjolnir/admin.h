@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 

@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "loki/service.h"
 #include "loki/search.h"
 

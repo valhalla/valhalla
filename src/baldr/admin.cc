@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/admin.h"
 
 namespace valhalla {

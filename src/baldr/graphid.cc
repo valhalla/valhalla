@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <limits>
 
 #include "baldr/graphid.h"

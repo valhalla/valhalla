@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/transitdeparture.h"
 #include <valhalla/midgard/logging.h>
 

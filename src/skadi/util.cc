@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "skadi/util.h"
 
 namespace {

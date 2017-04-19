@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
 #include <boost/functional/hash.hpp>

@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_BALDR_EDGEELEVATION_H_
 #define VALHALLA_BALDR_EDGEELEVATION_H_
 

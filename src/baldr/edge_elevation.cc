@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <cmath>
 #include <valhalla/midgard/logging.h>
 #include "baldr/edge_elevation.h"

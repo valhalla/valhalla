@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <cmath>
 #include "midgard/logging.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"

@@ -1,4 +1,3 @@
-#include <cstdint>
 
 #include "thor/pathalgorithm.h"
 

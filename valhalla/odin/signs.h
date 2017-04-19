@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_ODIN_SIGNS_H_
 #define VALHALLA_ODIN_SIGNS_H_
 

@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <cmath>
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHING_H_
 #define MMP_MAP_MATCHING_H_

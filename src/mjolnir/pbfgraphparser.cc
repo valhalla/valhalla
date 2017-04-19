@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 #include "mjolnir/osmpbfparser.h"

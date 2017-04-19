@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_SIF_EDGELABEL_H_
 #define VALHALLA_SIF_EDGELABEL_H_
 

@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "sif/dynamiccost.h"
 #include "baldr/double_bucket_queue.h" // For kInvalidLabel
 

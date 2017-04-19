@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <vector>
 #include <algorithm>
 #include "thor/timedistancematrix.h"

@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "midgard/logging.h"
 #include "baldr/pathlocation.h"
 

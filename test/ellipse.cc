@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "midgard/point2.h"
 #include "midgard/ellipse.h"
 

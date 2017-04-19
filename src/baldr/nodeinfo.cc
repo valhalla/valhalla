@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "baldr/nodeinfo.h"
 #include <boost/functional/hash.hpp>
 #include <cmath>

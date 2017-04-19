@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "mjolnir/osmnode.h"
 
 #include <algorithm>

@@ -1,4 +1,3 @@
-#include <cstdint>
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 

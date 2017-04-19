@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <cmath>
 #include <vector>
 #include <algorithm>
 #include "thor/costmatrix.h"
