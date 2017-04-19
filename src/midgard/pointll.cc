@@ -3,6 +3,7 @@
 #include "midgard/util.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/vector2.h"
+#include "midgard/logging.h"
 
 #include <limits>
 #include <cmath>
@@ -183,75 +184,85 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
                          closest_segment);
 }
 
-// Calculate the heading from the start of a polyline of lat,lng points to a
-// point at the specified distance from the start.
+// Calculate the heading from the start index within a polyline of lat,lng
+// points to a point at the specified distance from the start.
 float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                                    const float dist) {
-  int n = (int) pts.size();
-  if (n < 2) {
-    // TODO error!?
+                                    const float dist, const uint32_t idx0,
+                                    const uint32_t idx1) {
+  // Check that at least 2 points exist
+  int n = static_cast<int>(idx1) - static_cast<int>(idx0);
+  if (n < 1) {
+    LOG_ERROR("PointLL::HeadingAlongPolyline has < 2 vertices");
     return 0.0f;
   }
-  if (n == 2) {
-    return pts[0].Heading(pts[1]);
-  }
 
-  int i = 0;
-  double d = 0.0;
-  double seglength = 0.0;
-  while (d < dist && i < n - 1) {
-    seglength = pts[i].Distance(pts[i + 1]);
-    if (d + seglength > dist) {
-      // Set the extrapolated point along the line.
-      float pct = (float) ((dist - d) / seglength);
-      PointLL ll(pts[i].lng() + ((pts[i + 1].lng() - pts[i].lng()) * pct),
-                 pts[i].lat() + ((pts[i + 1].lat() - pts[i].lat()) * pct));
-      return pts[0].Heading(ll);
-    } else {
-      d += seglength;
-      i++;
+  // If more than 2 points, walk edges of the polyline until the length
+  // is exceeded.
+  if (n > 1) {
+    double d = 0.0;
+    double seglength = 0.0;
+    auto pt0 = pts.begin() + idx0;
+    auto pt1 = pt0 + 1;
+    while (d < dist && pt1 <= pts.begin() + idx1) {
+      seglength = pt0->Distance(*pt1);
+      if (d + seglength > dist) {
+        // Set the extrapolated point along the line.
+        float pct = static_cast<float>((dist - d) / seglength);
+        PointLL ll(pt0->lng() + ((pt1->lng() - pt0->lng()) * pct),
+                   pt0->lat() + ((pt1->lat() - pt0->lat()) * pct));
+        return pts[idx0].Heading(ll);
+      } else {
+        d += seglength;
+        pt0++;
+        pt1++;
+      }
     }
   }
 
-  // Length of polyline is less than the specified distance.
-  // Return heading from first to last point.
-  return pts[0].Heading(pts[n-1]);
+  // Only 2 points or the length of polyline is less than the specified
+  // distance. Return heading from first to last point.
+  return pts[idx0].Heading(pts[idx1]);
 }
 
 // Calculate the heading from a point at a specified distance from the end
 // of a polyline of lat,lng points to the end point of the polyline.
 float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                                      const float dist) {
-  int n = (int) pts.size();
-  if (n < 2) {
-    // TODO error!?
+                                      const float dist, const uint32_t idx0,
+                                      const uint32_t idx1) {
+  // Check that at least 2 points exist
+  int n = static_cast<int>(idx1) - static_cast<int>(idx0);
+  if (n < 1) {
+    LOG_ERROR("PointLL::HeadingAtEndOfPolyline has < 2 vertices");
     return 0.0f;
   }
-  if (n == 2) {
-    return pts[0].Heading(pts[1]);
-  }
 
-  float heading = 0.0f;
-  int i = n - 2;
-  double d = 0.0;
-  double seglength;
-  while (d < dist && i >= 0) {
-    seglength = pts[i].Distance(pts[i + 1]);
-    if (d + seglength > dist) {
-      // Set the extrapolated point along the line.
-      float pct = (float) ((dist - d) / seglength);
-      PointLL ll(pts[i + 1].lng() + ((pts[i].lng() - pts[i + 1].lng()) * pct),
-                 pts[i + 1].lat() + ((pts[i].lat() - pts[i + 1].lat()) * pct));
-      return ll.Heading(pts[n - 1]);
-    } else {
-      d += seglength;
-      i--;
+  // If more than 2 points, walk edges of the polyline until the length
+  // is exceeded.
+  if (n > 1) {
+    int i = n - 2;
+    double d = 0.0;
+    double seglength;
+    auto pt1 = pts.begin() + idx1;
+    auto pt0 = pt1 - 1;
+    while (d < dist && pt0 >= pts.begin() + idx0) {
+      seglength = pt0->Distance(*pt1);
+      if (d + seglength > dist) {
+        // Set the extrapolated point along the line.
+        float pct = static_cast<float>((dist - d) / seglength);
+        PointLL ll(pt1->lng() + ((pt0->lng() - pt1->lng()) * pct),
+                   pt1->lat() + ((pt0->lat() - pt1->lat()) * pct));
+        return ll.Heading(pts[idx1]);
+      } else {
+        d += seglength;
+        pt1--;
+        pt0--;
+      }
     }
   }
 
-  // Length of polyline is less than the specified distance.
-  // Return heading from first to last point.
-  return pts[0].Heading(pts[n-1]);
+  // Only 2 points or the length of polyline is less than the specified
+  // distance. Return heading from first to last point.
+  return pts[idx0].Heading(pts[idx1]);
 }
 
 // Test whether this point is to the left of a segment from p1 to p2. Uses a
