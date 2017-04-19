@@ -483,7 +483,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
+  if (allow_destination_only_ && !pred.destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -545,7 +545,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (!pred->destonly() && edge->destonly()) {
+  if (allow_destination_only_ && !pred->destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {

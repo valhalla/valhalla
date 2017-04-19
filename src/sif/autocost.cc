@@ -395,7 +395,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
+  if (allow_destination_only_ && !pred.destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -457,7 +457,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (!pred->destonly() && edge->destonly()) {
+  if (allow_destination_only_ && !pred->destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -873,7 +873,8 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
-       IsUserAvoidEdge(edgeid)) {
+       IsUserAvoidEdge(edgeid) ||
+       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   return true;
@@ -894,7 +895,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable ||
-        IsUserAvoidEdge(opp_edgeid)) {
+        IsUserAvoidEdge(opp_edgeid) ||
+        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
   return true;
