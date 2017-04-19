@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_MJOLNIR_OSMNODE_H
 #define VALHALLA_MJOLNIR_OSMNODE_H
 

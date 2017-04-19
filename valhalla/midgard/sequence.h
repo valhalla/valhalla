@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
 #define VALHALLA_MJOLNIR_SEQUENCE_H_
 

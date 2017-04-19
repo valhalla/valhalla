@@ -1,8 +1,9 @@
+#include <cstdint>
+#include <cmath>
 #include "skadi/sample.h"
 
 #include <cstddef>
 #include <cmath>
-#include <cstdint>
 #include <stdexcept>
 #include <limits>
 #include <list>

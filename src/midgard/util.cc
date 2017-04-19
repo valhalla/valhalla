@@ -1,10 +1,11 @@
+#include <cstdint>
+#include <cmath>
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/point2.h"
 #include "valhalla/midgard/distanceapproximator.h"
 
 #include <cstdint>
-#include <cmath>
 #include <stdlib.h>
 #include <sstream>
 #include <fstream>

@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #ifndef VALHALLA_MIDGARD_TILES_H_
 #define VALHALLA_MIDGARD_TILES_H_
 

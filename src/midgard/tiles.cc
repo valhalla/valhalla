@@ -1,9 +1,10 @@
+#include <cstdint>
+#include <cmath>
 #include "midgard/tiles.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "midgard/distanceapproximator.h"
 #include <cmath>
-#include <cstdint>
 #include <set>
 
 namespace {
