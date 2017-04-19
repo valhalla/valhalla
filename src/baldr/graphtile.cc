@@ -31,15 +31,6 @@ namespace {
         return "\03";
     }
   };
-  template <class numeric_t>
-  size_t digits(numeric_t number) {
-    size_t digits = (number < 0 ? 1 : 0);
-    while (static_cast<long long int>(number)) {
-        number /= 10;
-        digits++;
-    }
-    return digits;
-  }
   const std::locale dir_locale(std::locale("C"), new dir_facet());
   const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 }
@@ -72,7 +63,9 @@ GraphTile::GraphTile()
       traffic_segments_(nullptr),
       traffic_chunks_(nullptr),
       traffic_chunk_size_(0),
-      lane_connectivity_size_(0) {
+      lane_connectivity_(nullptr),
+      lane_connectivity_size_(0),
+      edge_elevation_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -213,7 +206,15 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr,
 
   // Start of lane connections and their size
   lane_connectivity_ = reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
-  lane_connectivity_size_ = header_->end_offset() - header_->lane_connectivity_offset();
+  lane_connectivity_size_ = header_->edge_elevation_offset() - header_->lane_connectivity_offset();
+
+  // Start of edge elevation data. If the tile has edge elevation data (query
+  // the header) then the count is the same as the directed edge count.
+  edge_elevation_ = reinterpret_cast<EdgeElevation*>(tile_ptr + header_->edge_elevation_offset());
+
+  // For reference - how to use the end offset to set size of an object (that
+  // is not fixed size and count).
+  // example_size_ = header_->end_offset() - header_->example_offset();
 
   // ANY NEW EXPANSION DATA GOES HERE
 
@@ -265,30 +266,25 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
 
 std::string GraphTile::FileSuffix(const GraphId& graphid) {
   /*
-  if you have a graphid where level == 8 and tileid == 24134109851
-  you should get: 8/024/134/109/851.gph
-  since the number of levels is likely to be very small this limits
-  the total number of objects in any one directory to 1000, which is an
-  empirically derived good choice for mechanical harddrives
-  this should be fine for s3 (even though it breaks the rule of most
-  unique part of filename first) because there will be just so few
+  if you have a graphid where level == 8 and tileid == 24134109851 you should get: 8/024/134/109/851.gph
+  since the number of levels is likely to be very small this limits the total number of objects in any one directory to 1000
+  which is an empirically derived good choice for mechanical hard drives this should be fine for s3 as well
+  (even though it breaks the rule of most unique part of filename first) because there will be just so few
   objects in general in practice
   */
 
   //figure the largest id for this level
-  auto level = TileHierarchy::levels().find(graphid.level());
-  if(level == TileHierarchy::levels().end() &&
-     graphid.level() == ((TileHierarchy::levels().rbegin())->second.level + 1))
-    level = TileHierarchy::levels().begin();
-
-  if(level == TileHierarchy::levels().end())
+  auto found = TileHierarchy::levels().find(graphid.level());
+  if(found == TileHierarchy::levels().cend() && graphid.level() != TileHierarchy::GetTransitLevel().level)
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
 
-  const uint32_t max_id = Tiles<PointLL>::MaxTileId(world_box, level->second.tiles.TileSize());
+  //get the level info
+  const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level ?
+    TileHierarchy::GetTransitLevel() : found->second;
 
   //figure out how many digits
-  //TODO: dont convert it to a string to get the length there are faster ways..
-  size_t max_length = digits<uint32_t>(max_id);
+  auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+  size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
   const size_t remainder = max_length % 3;
   if(remainder)
     max_length += 3 - remainder;
@@ -311,31 +307,80 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  //from the front and back strip off anything that isnt a number or a slash, lose the junk
-  auto name = fname;
-  boost::algorithm::trim_if(name, [](char c){ return c == '/' || !std::isdigit(c); });
-
-  //split on slash
-  std::vector<std::string> tokens;
-  boost::split(tokens, name, boost::is_any_of("/"));
-
-  //need at least level and id
-  if(tokens.size() < 2)
+  const std::unordered_set<std::string::value_type> allowed{ '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  //we require slashes
+  auto pos = fname.find_last_of('/');
+  if(pos == fname.npos)
     throw std::runtime_error("Invalid tile path");
 
-  // Compute the Id
-  uint32_t id = 0;
-  uint32_t multiplier = std::pow(1000, tokens.size() - 2);
-  bool first = true;
-  for(const auto& token : tokens) {
-    if(first) {
-      first = false;
-      continue;
+  //swallow numbers until you reach the end or a dot
+  for(;pos < fname.size(); ++pos)
+    if(allowed.find(fname[pos]) == allowed.cend())
+      break;
+
+  //if you didnt reach the end and it wasnt a dot then this isnt valid
+  if(pos != fname.size() && fname[pos] != '.')
+    throw std::runtime_error("Invalid tile path");
+
+  //run backwards while you find an allowed char but stop if not 3 digits between slashes
+  std::vector<int> digits;
+  auto last = pos;
+  for(--pos; pos >= 0; --pos) {
+    //invalid char showed up
+    if(allowed.find(fname[pos]) == allowed.cend())
+      throw std::runtime_error("Invalid tile path");
+    //if its a slash thats another digit
+    if(fname[pos] == '/') {
+      //this is not 3 or 1 digits so its wrong
+      auto dist = last - pos;
+      if(dist != 4 && dist != 2)
+        throw std::runtime_error("Invalid tile path");
+      //we'll keep this
+      auto i = atoi(fname.substr(pos + 1, last - (pos + 1)).c_str());
+      digits.push_back(i);
+      //and we'll stop if it was the level (always a single digit see GraphId)
+      if(dist == 2)
+        break;
+      //next
+      last = pos;
     }
-    id += std::atoi(token.c_str()) * multiplier;
-    multiplier /= 1000;
   }
-  uint32_t level = std::atoi(tokens.front().c_str());
+
+  //if the first thing isnt a valid level bail
+  auto found = TileHierarchy::levels().find(digits.back());
+  if(found == TileHierarchy::levels().cend() && digits.back() != TileHierarchy::GetTransitLevel().level)
+    throw std::runtime_error("Invalid tile path");
+
+  //get the level info
+  uint32_t level = digits.back();
+  digits.pop_back();
+  const auto& tile_level = level == TileHierarchy::GetTransitLevel().level ?
+    TileHierarchy::GetTransitLevel() : found->second;
+
+  //get the number of sub directories that we should have
+  auto max_id = tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1;
+  size_t parts = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  if(parts % 3 != 0)
+    parts += 3 - (parts % 3);
+  parts /= 3;
+
+  //bail if its the wrong number of sub dirs
+  if(digits.size() != parts)
+    throw std::runtime_error("Invalid tile path");
+
+  //parse the id of the tile
+  int multiplier = 1;
+  uint32_t id = 0;
+  for(auto digit : digits) {
+    id += digit * multiplier;
+    multiplier *= 1000;
+  }
+
+  //if after parsing them the number is out of bounds bail
+  if(id > max_id)
+    throw std::runtime_error("Invalid tile path");
+
+  //you've passed the test enjoy your id
   return {id, level, 0};
 }
 
@@ -350,56 +395,6 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
 
   auto tiles = level->second.tiles;
   return tiles.TileBounds(header_->graphid().tileid());
-}
-
-GraphId GraphTile::id() const {
-  return header_->graphid();
-}
-
-const GraphTileHeader* GraphTile::header() const {
-  return header_;
-}
-
-const NodeInfo* GraphTile::node(const GraphId& node) const {
-  if (node.id() < header_->nodecount())
-    return &nodes_[node.id()];
-  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                             std::to_string(node.tileid()) + "," +
-                             std::to_string(node.level()) + "," +
-                             std::to_string(node.id()) + " nodecount= " +
-                             std::to_string(header_->nodecount()));
-}
-
-const NodeInfo* GraphTile::node(const size_t idx) const {
-  if (idx < header_->nodecount())
-    return &nodes_[idx];
-  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(idx)  + " nodecount= " +
-                           std::to_string(header_->nodecount()));
-}
-
-// Get the directed edge given a GraphId
-const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
-  if (edge.id() < header_->directededgecount())
-    return &directededges_[edge.id()];
-  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(edge.id())  + " directededgecount= " +
-                           std::to_string(header_->directededgecount()));
-}
-
-// Get the directed edge at the specified index.
-const DirectedEdge* GraphTile::directededge(const size_t idx) const {
-  if (idx < header_->directededgecount())
-    return &directededges_[idx];
-  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," +
-                           std::to_string(idx)  + " directededgecount= " +
-                           std::to_string(header_->directededgecount()));
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
@@ -426,14 +421,6 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
                            std::to_string(header_->graphid().level()) + "," +
                            std::to_string(idx)  + " nodecount= " +
                            std::to_string(header_->nodecount()));
-}
-
-// Convenience method to get opposing edge Id given a directed edge.
-// The end node of the directed edge must be in this tile.
-GraphId GraphTile::GetOpposingEdgeId(const DirectedEdge* edge) const {
-  GraphId endnode = edge->endnode();
-  return { endnode.tileid(), endnode.level(),
-           node(endnode.id())->edge_index() + edge->opp_index() };
 }
 
 // Get a pointer to edge info.
@@ -506,7 +493,6 @@ const Admin* GraphTile::admin(const size_t idx) const {
 
 // Convenience method to get the text/name for a given offset to the textlist
 std::string GraphTile::GetName(const uint32_t textlist_offset) const {
-
   if (textlist_offset < textlist_size_) {
     return textlist_ + textlist_offset;
   } else {
@@ -893,7 +879,6 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
                          std::to_string(idx)  + " traffic Id count= " +
                          std::to_string(header_->traffic_id_count()));
 }
-
 
 }
 }

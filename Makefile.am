@@ -87,6 +87,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/double_bucket_queue.h \
+	valhalla/baldr/edge_elevation.h \
 	valhalla/baldr/edgeinfo.h \
 	valhalla/baldr/errorcode_util.h \
 	valhalla/baldr/geojson.h \
@@ -218,6 +219,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
 	src/baldr/double_bucket_queue.cc \
+	src/baldr/edge_elevation.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
@@ -550,6 +552,7 @@ check_PROGRAMS = \
 	test/datetime \
 	test/directededge \
 	test/double_bucket_queue \
+	test/edge_elevation \
 	test/edgecollapser \
 	test/laneconnectivity \
 	test/graphid \
@@ -655,6 +658,9 @@ test_datetime_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_directededge_SOURCES = test/directededge.cc test/test.cc
 test_directededge_CPPFLAGS = $(DEPS_CFLAGS)
 test_directededge_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_edge_elevation_SOURCES = test/edge_elevation.cc test/test.cc
+test_edge_elevation_CPPFLAGS = $(DEPS_CFLAGS)
+test_edge_elevation_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_double_bucket_queue_SOURCES = test/double_bucket_queue.cc test/test.cc
 test_double_bucket_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_double_bucket_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

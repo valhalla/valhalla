@@ -52,6 +52,7 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kEdgeWeightedGrade, true },
   { kEdgeMaxUpwardGrade, true },
   { kEdgeMaxDownwardGrade, true },
+  { kEdgeMeanElevation, true },
   { kEdgeLaneCount, true },
   { kEdgeLaneConnectivity, true },
   { kEdgeCycleLane, true },

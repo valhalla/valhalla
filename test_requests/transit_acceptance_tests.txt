@@ -67,7 +67,7 @@ s-drt2zjgpug-southstation<southstation,s-drmrturyt6-stoughton,r-drm-providence~s
 s-dr5refyj9c-fultonst<229s,s-dr5rkw75e6-atlanticav~barclaysctr<235s,r-dr5r-3
 s-dr5rkw7nep-atlanticterminal,s-dr5x83nk2e-jamaica,r-dr5x-westhempstead
 s-dr5x83nk2e-jamaica,s-dr5xeqg1v4-newhydepark,r-dr7-portjefferson
-s-dr5xeqse79-newhydeparkrd~4thave,s-dr5xffvm16-uniontpke~1111marcusbldg,r-dr5x-n25
+s-dr5xeqss60-newhydeparkrdopp4thave,s-dr5xffyq8e-uniontpke~1111marcusbldg,r-dr5x-n25
 s-dr5rv6qmk7-queensboroplaza<r09n,s-dr5rvvyxvq-astoriablvd<r03n,r-dr5r-w
 s-dr5rvvyzms-hoytav~31st,s-dr5rytm119-23av~82st,r-dr72-m60~sbs
 s-dr7esehc3k-southeast,s-dr7tyh1skt-wassaic,r-dr7-harlem
@@ -76,7 +76,7 @@ s-dr76qf2kx6-croton~harmon,s-dr7mm8240g-poughkeepsie,r-dr7-hudson
 s-dr5ru4rt2d-pennstation,s-dr7843469r-greatneck,r-dr5x-portwashington
 s-dr5ru4rt2d-pennstation,s-dr5ze3r49u-babylon,r-dr5x-babylon
 s-9q5bsm9z1y-harborgatewaytransitcenter,s-9q5ch2w91j-harbortransitway~harborfwystation,r-9q5b-910~950
-s-9q5ch2wddj-harbortransitwayatharborfreewaystation,s-9q5ctprjq2-1ststathillst,r-9q5c-4
+s-9q5ch2wd66-harbortransitwayharborfreewaystation,s-9q5ctprjzt-1ststhillst,r-9q5c-4
 s-9q5ctr3dr8-spring~1st~cityhall,s-9qh1cfdhvh-elmontestation~upperlevel,r-9q5b-910~950
 s-9q5c4njy1c-manchester~bellanca,s-9q5chqnx0h-manchester~harbortransitwaystation,r-9q5c-115
 s-9q5chqnmhp-harbortransitway~manchester,s-9q5ch2w95t-harbortransitway~harborfwystation,r-9q5b-550
