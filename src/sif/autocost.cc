@@ -76,13 +76,6 @@ class AutoCost : public DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
-   * Disables entrance into destination only areas. This should only be used
-   * for bidirectional path algorithms (and generally only for driving),
-   * otherwise a destination only penalty should be used.
-   */
-  virtual void DisableDestinationOnly();
-
-  /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
@@ -314,12 +307,6 @@ bool AutoCost::AllowMultiPass() const {
   return true;
 }
 
-// Set to disable destination only transitions.
-void AutoCost::DisableDestinationOnly() {
-  disable_destination_only_ = true;
-  destination_only_penalty_ = 0;
-}
-
 // Get the access mode used by this costing method.
 uint32_t AutoCost::access_mode() const {
   return kAutoAccess;
@@ -341,7 +328,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
        IsUserAvoidEdge(edgeid) ||
-      (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   return true;
@@ -363,7 +350,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable ||
         IsUserAvoidEdge(opp_edgeid) ||
-       (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
   return true;
@@ -408,7 +395,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (!pred.destonly() && edge->destonly()) {
+  if (allow_destination_only_ && !pred.destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -470,7 +457,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (!pred->destonly() && edge->destonly()) {
+  if (allow_destination_only_ && !pred->destonly() && edge->destonly()) {
     penalty += destination_only_penalty_;
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
@@ -716,7 +703,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
        IsUserAvoidEdge(edgeid) ||
-      (disable_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   return true;
@@ -738,7 +725,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable ||
         IsUserAvoidEdge(opp_edgeid) ||
-       (disable_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
   return true;
@@ -886,7 +873,8 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable ||
-       IsUserAvoidEdge(edgeid)) {
+       IsUserAvoidEdge(edgeid) ||
+       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   return true;
@@ -907,7 +895,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable ||
-        IsUserAvoidEdge(opp_edgeid)) {
+        IsUserAvoidEdge(opp_edgeid) ||
+        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
   return true;
