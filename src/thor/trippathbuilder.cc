@@ -874,7 +874,7 @@ TripPath TripPathBuilder::Build(
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
-      trip_edge->set_begin_shape_index(0);
+      trip_edge->set_begin_shape_index(begin_index);
     }
 
     // Set end shape index if requested
