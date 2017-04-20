@@ -135,9 +135,18 @@ InterpolateMeasurements(const MapMatching& mapmatching,
     const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(), measurement, match_measurement_distance);
 
     //if it was able to do the interpolation
-    if (interp.edgeid.Is_Valid())
+    if (interp.edgeid.Is_Valid()) {
+      //dont allow subsequent points to get interpolated before this point
+      //we do this by editing the route to start where this point was interpolated
+      auto itr = std::find_if(route.begin(), route.end(), [&interp](const EdgeSegment& e){ return e.edgeid == interp.edgeid; });
+      itr = std::find_if(itr, route.end(), [&interp](const EdgeSegment& e){ return e.edgeid == interp.edgeid && e.target > interp.edge_distance; });
+      if(itr != route.end()) {
+        itr->source = interp.edge_distance;
+        route.erase(route.begin(), itr);
+      }
+      //keep the interpolated match result
       results.emplace_back(MatchResult{interp.projected, std::sqrt(interp.sq_distance), interp.edgeid, interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
-    //couldnt interpolate this point
+    }//couldnt interpolate this point
     else
       results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
   }
