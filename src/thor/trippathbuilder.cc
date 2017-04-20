@@ -388,7 +388,7 @@ odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
  * @param  edge       Directed edge.
  * @param  shape      Trip shape.
  */
-void SetHeadings(TripPath_Edge* trip_edge, const TripPathController& controller,
+void SetHeadings(TripPath_Edge* trip_edge, const AttributesController& controller,
                  const DirectedEdge* edge, const std::vector<PointLL>& shape,
                  const uint32_t begin_index) {
   if (controller.attributes.at(kEdgeBeginHeading) ||
