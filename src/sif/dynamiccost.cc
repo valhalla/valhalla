@@ -58,7 +58,7 @@ namespace sif {
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
                          const TravelMode mode)
     : allow_transit_connections_(false),
-      disable_destination_only_(false),
+      allow_destination_only_(true),
       travel_mode_(mode) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
@@ -164,9 +164,9 @@ void DynamicCost::SetAllowTransitConnections(const bool allow) {
   allow_transit_connections_ = allow;
 }
 
-// Set to allow use of transit connections.
-void DynamicCost::DisableDestinationOnly() {
-  disable_destination_only_ = true;
+// Sets the flag indicating whether destination only edges are allowed.
+void DynamicCost::set_allow_destination_only(const bool allow) {
+  allow_destination_only_ = allow;
 }
 
 // Returns the maximum transfer distance between stops that you are willing
