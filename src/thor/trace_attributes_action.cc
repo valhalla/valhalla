@@ -4,6 +4,7 @@ using namespace prime_server;
 
 #include <algorithm>
 #include <utility>
+#include <string>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
@@ -289,6 +290,21 @@ namespace {
           match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
         }
 
+        // Process matched type
+        if (controller.attributes.at(kMatchedType)) {
+          switch (match_result.type) {
+            case thor::MatchResult::Type::kMatched:
+              match_points_map->emplace("type", std::string("matched"));
+              break;
+            case thor::MatchResult::Type::kInterpolated:
+              match_points_map->emplace("type", std::string("interpolated"));
+              break;
+            default:
+              match_points_map->emplace("type", std::string("unmatched"));
+              break;
+          }
+        }
+
         // Process matched point edge index
         if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
           match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
@@ -410,7 +426,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          trip_match = map_match(true, controller);
+          trip_match = map_match(controller, true);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
         } catch (const valhalla_exception_t& e) {
@@ -425,7 +441,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(true, controller);
+            trip_match = map_match(controller, true);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
           } catch (const valhalla_exception_t& e) {

@@ -15,10 +15,11 @@ namespace thor {
 // Form the path from the map-matching results. This path gets sent to
 // TripPathBuilder.
 std::vector<PathInfo> MapMatcher::FormPath(
-    bool is_attrib,
     meili::MapMatcher* matcher, const std::vector<meili::MatchResult>& results,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
-    const sif::TravelMode mode) {
+    const sif::TravelMode mode,
+    std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
+    bool trace_attributes_action) {
   // Set the mode and costing
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   // Iterate through the matched path. Form PathInfo - populate elapsed time
@@ -32,8 +33,9 @@ std::vector<PathInfo> MapMatcher::FormPath(
 
   auto edge_segments = ConstructRoute(matcher->mapmatching(), results.begin(),
                                       results.end());
-  auto disconnect = false;
+
   for (const auto& edge_segment : edge_segments) {
+
     // Skip edges that are the same as the prior edge
     if (edge_segment.edgeid == prior_edge) {
       continue;
@@ -45,14 +47,10 @@ std::vector<PathInfo> MapMatcher::FormPath(
     directededge = tile->directededge(edge_id);
 
     // Check if connected to prior edge
-    // if trace_route and discontinuities exist, then log lat/lon and edge_index
-    if (!is_attrib) {
-      if (prior_edge.Is_Valid() && !matcher->graphreader().AreEdgesConnected(prior_edge, edge_id)) {
-        PointLL ll = nodeinfo->latlng();
-        disconnect = true;
-        LOG_INFO("Map matcher -> Edges are disconnected at LL = "+ std::to_string(ll.lat()) + "," + std::to_string(ll.lng()) + ", edge_index = " + std::to_string(nodeinfo->edge_index()) + ", edge_id = " + std::to_string(edge_id));
-      }
+    if (prior_edge.Is_Valid() && !matcher->graphreader().AreEdgesConnected(prior_edge, edge_id)) {
+      disconnected_edges.emplace_back(prior_edge, edge_id);
     }
+
     // TODO: slight difference in time between route and trace_route
     if (nodeinfo) {
       // Get transition cost
@@ -83,10 +81,11 @@ std::vector<PathInfo> MapMatcher::FormPath(
 
     // Add to the PathInfo
     path.emplace_back(mode, elapsed_time, edge_id, 0);
+
   }
 
-  // trace_route and disconnected path
-  if (!is_attrib && disconnect)
+  // Throw exception if not trace attributes action and disconnected path
+  if (!trace_attributes_action && !disconnected_edges.empty())
       throw valhalla_exception_t{400, 442};
 
   return path;
