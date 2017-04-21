@@ -317,34 +317,23 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid) {
   return GetOpposingEdgeId(edgeid, NO_TILE);
 }
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
+  // If you cant get the tile you get an invalid id
   tile = GetGraphTile(edgeid);
   if(!tile)
     return {};
-  const auto* directededge = tile->directededge(edgeid);
-
   // For now return an invalid Id if this is a transit edge
-  if (directededge->IsTransitLine()) {
+  const auto* directededge = tile->directededge(edgeid);
+  if (directededge->IsTransitLine())
     return {};
-  }
 
-  // Get the opposing edge, if edge leaves the tile get the end node's tile
+  // If edge leaves the tile get the end node's tile
   GraphId id = directededge->endnode();
+  if (!GetGraphTile(id, tile))
+    return {};
 
-  if (directededge->leaves_tile()) {
-    // Get tile at the end node
-    tile = GetGraphTile(id);
-  }
-
-  if (tile != nullptr) {
-    id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
-    return id;
-  } else {
-    LOG_ERROR("Invalid tile for opposing edge: tile ID= " + std::to_string(id.tileid()) + " level= " + std::to_string(id.level()));
-    if (directededge->trans_up() || directededge->trans_down()) {
-      LOG_ERROR("transition edge being checked?");
-    }
-  }
-  return {};
+  // Get the opposing edge
+  id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
+  return id;
 }
 
 // Convenience method to get an opposing directed edge.
