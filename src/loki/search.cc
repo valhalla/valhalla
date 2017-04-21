@@ -270,8 +270,10 @@ PathLocation correlate_node(GraphReader& reader, const Location& location, const
     const auto* end_edge = start_edge + node->edge_count();
     for(const auto* edge = start_edge; edge < end_edge; ++edge) {
       //if this is an edge leaving this level then we should go do that level awhile
-      if(follow_transitions && (edge->trans_down() || edge->trans_up()))
+      if(follow_transitions && (edge->trans_down() || edge->trans_up())) {
         crawl(edge->endnode(), false);
+        continue;
+      }
 
       //get some info about this edge and the opposing
       GraphId id = tile->id();
@@ -577,17 +579,33 @@ struct bin_handler_t {
         //which batch of findings
         auto* batch = isolation > p_itr->location.isolated_ ? &p_itr->unisolated : &p_itr->isolated;
 
-        //if its empty or has a single entry outside the radius and this is better
-        if(batch->empty() || (c_itr->sq_distance < batch->back().sq_distance && batch->back().sq_distance > p_itr->sq_radius)) {
-          c_itr->edge = edge;
-          c_itr->edge_id = e;
-          c_itr->edge_info = edge_info;
-          c_itr->tile = tile;
-          *batch = { std::move(*c_itr) };
+        //if its empty append
+        if(batch->empty()) {
+          c_itr->edge = edge; c_itr->edge_id = e; c_itr->edge_info = edge_info; c_itr->tile = tile;
+          batch->emplace_back(std::move(*c_itr));
+          continue;
         }
 
-        //TODO:
-        //else if its better than the last entry append to it
+        //get some info about possibilities
+        bool in_radius = c_itr->sq_distance < p_itr->sq_radius;
+        bool better = c_itr->sq_distance < batch->back().sq_distance;
+        bool last_in_radius = batch->back().sq_distance < p_itr->sq_radius;
+
+        //it has to either be better or in the radius to move on
+        if(in_radius || better) {
+          c_itr->edge = edge; c_itr->edge_id = e; c_itr->edge_info = edge_info; c_itr->tile = tile;
+          //the last one wasnt in the radius so replace it with this one because its better or is in the radius
+          if(!last_in_radius)
+            batch->back() = std::move(*c_itr);
+          //last one is in the radius but this one is better so put it on the end
+          else if(better)
+            batch->emplace_back(std::move(*c_itr));
+          //last one is in the radius and this one is not as good so put it on before it
+          else {
+            batch->emplace_back(std::move(*c_itr));
+            std::swap(*(batch->end() - 1), *(batch->end() - 2));
+          }
+        }
       }
     }
 
