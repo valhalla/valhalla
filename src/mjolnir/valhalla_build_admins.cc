@@ -138,7 +138,7 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
 #if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
   GeometryFactory::unique_ptr gf = GeometryFactory::create();
 #else
-  std::unique_ptr<GeometryFactory> gf;
+  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
 #endif
 
   LineMerger merger;
@@ -406,7 +406,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 #if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
   GeometryFactory::unique_ptr gf = GeometryFactory::create();
 #else
-  std::unique_ptr<GeometryFactory> gf;
+  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
 #endif
 
   try {
