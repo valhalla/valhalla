@@ -247,11 +247,10 @@ class DynamicCost {
   virtual uint32_t UnitSize() const;
 
   /**
-   * Disables entrance into destination only areas. This should only be used
-   * for bidirectional path algorithms (and generally only for driving),
-   * otherwise a destination only penalty should be used.
+   * Sets the flag indicating whether destination only edges are allowed.
+   * Bidirectional path algorithms can (usually) disable access.
    */
-  virtual void DisableDestinationOnly();
+  virtual void set_allow_destination_only(const bool allow);
 
   /**
    * Set to allow use of transit connections.
@@ -358,8 +357,10 @@ class DynamicCost {
   // Flag indicating whether transit connections are allowed.
   bool allow_transit_connections_;
 
-  // Disable entrance onto destination only edges
-  bool disable_destination_only_;
+  // Allow entrance onto destination only edges. Bidirectional A* can (usually)
+  // disable access onto destination only edges for driving routes. Pedestrian
+  // and bicycle generally allow access (with small penalties).
+  bool allow_destination_only_;
 
   // Travel mode
   TravelMode travel_mode_;

@@ -12,7 +12,7 @@ using namespace prime_server;
 #include "proto/trippath.pb.h"
 
 #include "thor/service.h"
-#include "thor/trip_path_controller.h"
+#include "thor/attributes_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -82,19 +82,25 @@ namespace valhalla {
 
   std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
       baldr::PathLocation& destination) {
-    // Find the path.
+    // Find the path. If bidirectional A* disable use of destination only
+    // edges on the first pass. If there is a failure, we allow them on the
+    // second pass.
+    valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+    if (path_algorithm == &bidir_astar) {
+      cost->set_allow_destination_only(false);
+    }
     auto path = path_algorithm->GetBestPath(origin, destination, reader,
                                              mode_costing, mode);
     // If path is not found try again with relaxed limits (if allowed)
     if (path.empty()) {
-      valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
       if (cost->AllowMultiPass()) {
-        // 2nd pass. Less aggressive hierarchy transitioning
+        // 2nd pass. Less aggressive hierarchy transitioning.
         path_algorithm->Clear();
         bool using_astar = (path_algorithm == &astar);
         float relax_factor = using_astar ? 16.0f : 8.0f;
         float expansion_within_factor = using_astar ? 4.0f : 2.0f;
         cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
+        cost->set_allow_destination_only(true);
         path = path_algorithm->GetBestPath(origin, destination,
                                   reader, mode_costing, mode);
       }
@@ -152,7 +158,7 @@ namespace valhalla {
         }
 
         // Create controller for default route attributes
-        TripPathController controller;
+        AttributesController controller;
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path,
@@ -218,7 +224,7 @@ namespace valhalla {
         }
 
         // Create controller for default route attributes
-        TripPathController controller;
+        AttributesController controller;
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path,
