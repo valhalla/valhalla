@@ -46,8 +46,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
                        segment_iterator_t begin,
                        segment_iterator_t end,
                        const Measurement& measurement,
-                       float match_measurement_distance,
-                       bool reverse)
+                       float match_measurement_distance)
 {
   const baldr::GraphTile* tile(nullptr);
   midgard::DistanceApproximator approximator(measurement.lnglat());
@@ -83,7 +82,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
 
     // Distance from the projected point to the segment begin, or
     // segment begin if we walk reversely
-    const auto distance_to_segment_ends = std::abs(directededge->length() * (reverse? (segment->target - offset) : (offset - segment->source)));
+    const auto distance_to_segment_ends = std::abs(directededge->length() * (offset - segment->source));
 
     // The absolute route distance from projected point to the
     // beginning segment
@@ -113,74 +112,43 @@ InterpolateMeasurements(const MapMatching& mapmatching,
                         const MapMatching::state_iterator& next_state,
                         const std::vector<Measurement>& interpolated_measurements)
 {
-  if (interpolated_measurements.empty()) {
+  //nothing to do here
+  if (interpolated_measurements.empty())
     return {};
-  }
 
+  //can't interpolate these because they don't happen between two valid states or
+  //we weren't able to get a downstream route
   std::vector<MatchResult> results;
-
-  if (!state.IsValid()) {
-    for (const auto& measurement: interpolated_measurements) {
+  std::vector<EdgeSegment> route;
+  if (!state.IsValid() || !next_state.IsValid() ||
+    MergeRoute(route, *state, *next_state).empty()) {
+    for (const auto& measurement: interpolated_measurements)
       results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
-    }
     return results;
   }
 
-  std::vector<EdgeSegment> upstream_route;
-  if (previous_state.IsValid()) {
-    MergeRoute(upstream_route, *previous_state, *state);
-  }
-
-  std::vector<EdgeSegment> downstream_route;
-  if (next_state.IsValid()) {
-    MergeRoute(downstream_route, *state, *next_state);
-  }
-
-  if (upstream_route.empty() && downstream_route.empty()) {
-    for (const auto& measurement: interpolated_measurements) {
-      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
-    }
-    return results;
-  }
-
+  //for each point that needs interpolated
   for (const auto& measurement: interpolated_measurements) {
     const auto& match_measurement = mapmatching.measurement(state->time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
+    //interpolate this point along the route
+    const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(), measurement, match_measurement_distance);
 
-    const auto& up_interp = InterpolateMeasurement(
-        mapmatching,
-        upstream_route.rbegin(),
-        upstream_route.rend(),
-        measurement,
-        match_measurement_distance,
-        true);
-
-    const auto& down_interp = InterpolateMeasurement(
-        mapmatching,
-        downstream_route.begin(),
-        downstream_route.end(),
-        measurement,
-        match_measurement_distance,
-        false);
-
-    if (up_interp.edgeid.Is_Valid() && down_interp.edgeid.Is_Valid()) {
-      const auto down_cost = down_interp.sortcost(mapmatching, match_measurement_distance),
-                   up_cost = up_interp.sortcost(mapmatching, match_measurement_distance);
-      if (down_cost < up_cost) {
-        results.emplace_back(MatchResult{down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
-      } else {
-        results.emplace_back(MatchResult{up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
+    //if it was able to do the interpolation
+    if (interp.edgeid.Is_Valid()) {
+      //dont allow subsequent points to get interpolated before this point
+      //we do this by editing the route to start where this point was interpolated
+      auto itr = std::find_if(route.begin(), route.end(), [&interp](const EdgeSegment& e){ return e.edgeid == interp.edgeid; });
+      itr = std::find_if(itr, route.end(), [&interp](const EdgeSegment& e){ return e.edgeid == interp.edgeid && e.target > interp.edge_distance; });
+      if(itr != route.end()) {
+        itr->source = interp.edge_distance;
+        route.erase(route.begin(), itr);
       }
-
-    } else if (up_interp.edgeid.Is_Valid()) {
-      results.emplace_back(MatchResult{up_interp.projected, std::sqrt(up_interp.sq_distance), up_interp.edgeid, up_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
-
-    } else if (down_interp.edgeid.Is_Valid()) {
-      results.emplace_back(MatchResult{down_interp.projected, std::sqrt(down_interp.sq_distance), down_interp.edgeid, down_interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
-
-    } else {
+      //keep the interpolated match result
+      results.emplace_back(MatchResult{interp.projected, std::sqrt(interp.sq_distance), interp.edgeid, interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
+    }//couldnt interpolate this point
+    else
       results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
-    }
   }
 
   return results;
