@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_TRIP_PATH_CONTROLLER_H_
-#define VALHALLA_THOR_TRIP_PATH_CONTROLLER_H_
+#ifndef VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_
+#define VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_
 
 #include <string>
 #include <unordered_map>
@@ -91,16 +91,22 @@ const std::string kAdminCountryText = "admin.country_text";
 const std::string kAdminStateCode = "admin.state_code";
 const std::string kAdminStateText = "admin.state_text";
 const std::string kShape = "shape";
+const std::string kMatchedPoint = "matched.point";
+const std::string kMatchedType = "matched.type";
+const std::string kMatchedEdgeIndex = "matched.edge_index";
+const std::string kMatchedDistanceAlongEdge = "matched.distance_along_edge";
+const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_point";
 
 // Categories
 const std::string kNodeCategory = "node.";
 const std::string kAdminCategory = "admin.";
+const std::string kMatchedCategory = "matched.";
 
 
 /**
  * Trip path controller for attributes
  */
-struct TripPathController {
+struct AttributesController {
 
   /*
    * Attributes that are required by the route action to make guidance instructions.
@@ -110,9 +116,9 @@ struct TripPathController {
   /*
    * Constructor that will use the route attributes by default.
    */
-  TripPathController(
+  AttributesController(
       const std::unordered_map<std::string, bool>& new_attributes =
-          TripPathController::kRouteAttributes);
+          AttributesController::kRouteAttributes);
 
   /**
    * Enable all of the attributes.
@@ -135,4 +141,4 @@ struct TripPathController {
 }
 }
 
-#endif  // VALHALLA_THOR_TRIP_PATH_CONTROLLER_H_
+#endif  // VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_

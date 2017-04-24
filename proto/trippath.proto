@@ -150,9 +150,9 @@ message TripPath {
   }
 
   message LaneConnectivity {
-    required uint64 from_way_id = 1;
-    required string from_lanes = 2;
-    required string to_lanes = 3;
+    optional uint64 from_way_id = 1;
+    optional string from_lanes = 2;
+    optional string to_lanes = 3;
   }
 
   message Edge {
