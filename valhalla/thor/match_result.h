@@ -35,9 +35,10 @@ struct MatchResult : meili::MatchResult {
     else
       type = Type::kUnmatched;
 
-    // Default values for edge index and disconnected route boundary
+    // Default values for edge index and begin/end route discontinuity
     edge_index = kInvalidEdgeIndex;
-    disconnected_route_boundary = false;
+    begin_route_discontinuity = false;
+    end_route_discontinuity = false;
   }
 
   // The result type of the point based on edge id and state
@@ -46,8 +47,11 @@ struct MatchResult : meili::MatchResult {
   // Index of the edge
   uint32_t edge_index = kInvalidEdgeIndex;
 
-  // True if disconnected path at this point, otherwise false
-  bool disconnected_route_boundary;
+  // True if begin location of route discontinuity, otherwise false
+  bool begin_route_discontinuity;
+
+  // True if end location of route discontinuity, otherwise false
+  bool end_route_discontinuity;
 
   bool HasEdgeIndex() const { return edge_index != kInvalidEdgeIndex; }
 };

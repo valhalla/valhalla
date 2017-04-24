@@ -248,7 +248,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
         while (curr_match_result != match_results.end()) {
           if (curr_match_result->edgeid != disconnected_edge_pair.first.value) {
             // Set previous match result as disconnected path and break
-            prev_match_result->disconnected_route_boundary = true;
+            prev_match_result->begin_route_discontinuity = true;
             break;
           }
           // Increment previous and current match results to continue looking
@@ -260,7 +260,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
         while (curr_match_result != match_results.end()) {
           if (curr_match_result->edgeid == disconnected_edge_pair.second.value) {
             // Set current match result as disconnected and break
-            curr_match_result->disconnected_route_boundary = true;
+            curr_match_result->end_route_discontinuity = true;
             break;
           }
           // Increment previous and current match results to continue looking
@@ -288,10 +288,13 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     std::string marker_size;
     std::string matched_point_type;
     for (const auto& match_result : match_results) {
-      if (match_result.disconnected_route_boundary) {
+      if (match_result.begin_route_discontinuity || match_result.end_route_discontinuity) {
         marker_color = "#d7191c"; // red
         marker_size = "large";
-        matched_point_type = "matched";
+        if (match_result.type == thor::MatchResult::Type::kMatched)
+          matched_point_type = "matched";
+        else
+          matched_point_type = "interpolated";
       } else if (match_result.type == thor::MatchResult::Type::kMatched) {
         marker_color = "#2c7bb6"; // dark blue
         marker_size = "medium";
