@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
     std::string line;
     while(std::getline(stream, line)) {
       auto loc = valhalla::baldr::Location::FromCsv(line);
-      loc.isolated_ = isolated;
+      loc.minimum_reachability_ = isolated;
       loc.radius_ = radius;
       job.emplace_back(std::move(loc));
       if(job.size() == batch) {

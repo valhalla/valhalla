@@ -37,6 +37,7 @@ namespace {
             },
             {"percent_along", json::fp_t{edge.dist, 5} },
             {"score", json::fp_t{edge.score, 1}},
+            {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
             {"edge_info", edge_info.json()},

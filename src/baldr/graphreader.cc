@@ -10,7 +10,6 @@
 #include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
-#include "baldr/tilehierarchy.h"
 
 using namespace valhalla::baldr;
 
@@ -284,21 +283,6 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     auto inserted = cache_->Put(base, tile, size);
     return inserted;
   }
-}
-
-const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
-  if(!tile || tile->id() != graphid.Tile_Base())
-    tile = GetGraphTile(graphid);
-  return tile;
-}
-
-const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
-  GraphId id = TileHierarchy::GetGraphId(pointll, level);
-  return (id.Is_Valid()) ? GetGraphTile(TileHierarchy::GetGraphId(pointll, level)) : nullptr;
-}
-
-const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
-  return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
 }
 
 // Clears the cache
