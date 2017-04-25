@@ -325,7 +325,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   //run backwards while you find an allowed char but stop if not 3 digits between slashes
   std::vector<int> digits;
   auto last = pos;
-  for(--pos; pos >= 0; --pos) {
+  for(--pos; pos < last; --pos) {
     auto& c = fname.at(pos);
     //invalid char showed up
     if(allowed.find(c) == allowed.cend())
