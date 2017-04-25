@@ -310,6 +310,14 @@ namespace {
         if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
           match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
 
+        // Process matched point begin route discontinuity
+        if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) && match_result.begin_route_discontinuity)
+          match_points_map->emplace("begin_route_discontinuity", static_cast<bool>(match_result.begin_route_discontinuity));
+
+        // Process matched point end route discontinuity
+        if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.end_route_discontinuity)
+          match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
+
         // Process matched point distance along edge
         if (controller.attributes.at(kMatchedDistanceAlongEdge))
           match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
