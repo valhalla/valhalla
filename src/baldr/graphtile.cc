@@ -326,11 +326,12 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   std::vector<int> digits;
   auto last = pos;
   for(--pos; pos >= 0; --pos) {
+    auto& c = fname.at(pos);
     //invalid char showed up
-    if(allowed.find(fname[pos]) == allowed.cend())
+    if(allowed.find(c) == allowed.cend())
       throw std::runtime_error("Invalid tile path");
     //if its a slash thats another digit
-    if(fname[pos] == '/') {
+    if(c == '/') {
       //this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if(dist != 4 && dist != 2)
