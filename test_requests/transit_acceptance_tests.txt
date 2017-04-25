@@ -138,10 +138,9 @@ s-c2g5f3j1xd-northbound1900blockbaron,s-c2g5g1zrfe-eastboundhwy33watroxby,r-c2g5
 s-c0z88r9p42-eastboundvillageatberwickrdn,s-c0zb15f0w9-southbound6690blockmaryellen,r-c0z8-91
 s-c0zb1hjthy-eastbounddoveratdickinson,s-c0xzg7h493-northboundtrans~canadaathorseshoebay~departurebayfe,r-c0xzf-20
 s-c0zb155weq-woodgrovecentreexchangebayd,s-c0z88r0r2h-southboundmemorialatfernrdw,r-c0z8-91
-s-c38dmx475w-westboundtyneratuniversityheights,s-c38dt69g6w-unbcexchangebaya,r-c38dq-16
-s-c38dt69g6w-unbcexchangebaya,s-c38dtyjcr7-nicholsonexchangebayb,r-c38dw-15
-s-c38dtyj9ru-nicholsonexchangebaya,s-c38eju7snc-eastboundaustinroadatmadill,r-c38d-89
-s-c38dt69g6w-unbcexchangebaya,s-c38dtyjcr7-nicholsonexchangebayb,r-c38dw-15
+s-c38dmx475w-westboundtyneratuniversityheights,s-c38dt69g29-unbcexchange<105017,r-c38dq-16
+s-c38dt69g29-unbcexchange<105017,s-c38dtyn1w5-nicholsonexchange<105004,r-c38dw-15
+s-c38dtyn1w5-nicholsonexchange<105026,s-c38eju7snc-eastboundaustinroadatmadill,r-c38d-89
 s-c2b6yq03w7-southboundhighlandswaysatread,s-c2b6yp19qq-westboundgaribaldiwayattantalus,r-c2b6v-2
 s-c0zcry1j4m-eastboundcowrieattrail,s-c2b1nr0ht2-westboundlangdaleferryterminalatsunshinecoast,r-c2b1-90
 s-c0zcry1j4m-eastboundcowrieattrail,s-c2b1nr0ht2-westboundlangdaleferryterminalatsunshinecoast,r-c2b1-90
