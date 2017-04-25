@@ -208,7 +208,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
-	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \

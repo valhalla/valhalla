@@ -145,8 +145,18 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
+// Set the bounding box (min,max lat,lon) for the shape
+void SetBoundingBox(TripPath& trip_path, std::vector<PointLL>& shape) {
+  AABB2<PointLL> bbox(shape);
+  LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  min_ll->set_lat(bbox.miny());
+  min_ll->set_lng(bbox.minx());
+  LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  max_ll->set_lat(bbox.maxy());
+  max_ll->set_lng(bbox.maxx());
 }
 
+}
 
 namespace valhalla {
 namespace thor {
@@ -613,15 +623,7 @@ TripPath TripPathBuilder::Build(
     }
 
     // Set the bounding box of the shape
-    AABB2<PointLL> bbox(shape);
-    odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-    // Set bounding box min lat/lon
-    min_ll->set_lat(bbox.miny());
-    min_ll->set_lng(bbox.minx());
-    odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-    // Set bounding box max lat/lon
-    max_ll->set_lat(bbox.maxy());
-    max_ll->set_lng(bbox.maxx());
+    SetBoundingBox(trip_path, shape);
 
     // Set shape if requested
     if (controller.attributes.at(kShape))
@@ -1026,15 +1028,7 @@ TripPath TripPathBuilder::Build(
   AssignAdmins(controller, trip_path, admin_info_list);
 
   // Set the bounding box of the shape
-  AABB2<PointLL> bbox(trip_shape);
-  odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-  // Set bounding box min lat/lon
-  min_ll->set_lat(bbox.miny());
-  min_ll->set_lng(bbox.minx());
-  odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-  // Set bounding box max lat/lon if requested
-  max_ll->set_lat(bbox.maxy());
-  max_ll->set_lng(bbox.maxx());
+  SetBoundingBox(trip_path, trip_shape);
 
   // Set shape if requested
   if (controller.attributes.at(kShape))
