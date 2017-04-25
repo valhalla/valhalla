@@ -1,0 +1,417 @@
+#!/usr/bin/env python
+
+import argparse
+import json
+import pprint
+
+#global default configuration
+config = {
+  'mjolnir': {
+    'max_cache_size': 1000000000,
+    'tile_dir': '/data/valhalla',
+    'tile_extract': '/data/valhalla/tiles.tar',
+    'admin': '/data/valhalla/admin.sqlite',
+    'timezone': '/data/valhalla/tz_world.sqlite',
+    'transit_dir': '/data/valhalla/transit',
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'file_name': 'path_to_some_file.log'
+    }
+  },
+  'additional_data': {
+    'elevation': '/data/valhalla/elevation/'
+  },
+  'loki': {
+    'actions':['locate','route','one_to_many','many_to_one','many_to_many','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes'],
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'file_name': 'path_to_some_file.log',
+      'long_request': 100.0
+    },
+    'service': {
+      'proxy': 'ipc:///tmp/loki'
+    }
+  },
+  'skadi': {
+    'actions':['height'],
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'file_name': 'path_to_some_file.log',
+      'long_request': 5.0
+    },
+    'service': {
+      'proxy': 'ipc:///tmp/skadi'
+    }
+  },
+  'thor': {
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'file_name': 'path_to_some_file.log',
+      'long_request': 110.0
+    },
+    'source_to_target_algorithm': 'select_optimal',
+    'service': {
+      'proxy': 'ipc:///tmp/thor'
+    }
+  },
+  'odin': {
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'file_name': 'path_to_some_file.log'
+    },
+    'service': {
+      'proxy': 'ipc:///tmp/odin'
+    }
+  },
+  'meili': {
+    'mode': 'multimodal',
+    'customizable': ['mode', 'search_radius'],
+    'verbose': False,
+    'default': {
+      'sigma_z': 4.07,
+      'gps_accuracy': 5.0,
+      'beta': 3,
+      'max_route_distance_factor': 3,
+      'breakage_distance': 2000,
+      'interpolation_distance': 10,
+      'search_radius': 50,
+      'max_search_radius': 100,
+      'geometry': False,
+      'route': True,
+      'turn_penalty_factor': 0
+    },
+    'auto': {
+      'turn_penalty_factor': 200,
+      'search_radius': 50
+    },
+    'pedestrian': {
+      'turn_penalty_factor': 100,
+      'search_radius': 25
+    },
+    'bicycle': {
+      'turn_penalty_factor': 140
+    },
+    'multimodal': {
+      'turn_penalty_factor': 70
+    },
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'file_name': 'path_to_some_file.log'
+    },
+    'service': {
+      'proxy': 'ipc:///tmp/meili'
+    },
+    'grid': {
+      'size': 500,
+      'cache_size': 100240
+    }
+  },
+  'tyr': {
+    'logging': {
+      'type': 'std_out',
+      'color': True,
+      'long_request': 100.0,
+      'file_name': 'path_to_some_file.log'
+    },
+    'service': {
+      'proxy': 'ipc:///tmp/tyr'
+    }
+  },
+  'httpd': {
+    'service': {
+      'listen': 'tcp://*:8002',
+      'loopback': 'ipc:///tmp/loopback',
+      'interrupt': 'ipc:///tmp/interrupt'
+    }
+  },
+  'service_limits': {
+    'auto': {
+      'max_distance': 5000000.0,
+      'max_locations': 20
+    },
+    'auto_shorter': {
+      'max_distance': 5000000.0,
+      'max_locations': 20
+    },
+    'bus': {
+      'max_distance': 5000000.0,
+      'max_locations': 50
+    },
+    'hov': {
+      'max_distance': 5000000.0,
+      'max_locations': 20
+    },
+    'pedestrian': {
+      'max_distance': 250000.0,
+      'max_locations': 50,
+      'min_transit_walking_distance': 1,
+      'max_transit_walking_distance': 10000
+    },
+    'bicycle': {
+      'max_distance': 500000.0,
+      'max_locations': 50
+    },
+    'multimodal': {
+      'max_distance': 500000.0,
+      'max_locations': 50
+    },
+    'transit': {
+      'max_distance': 500000.0,
+      'max_locations': 50
+    },
+    'truck': {
+      'max_distance': 5000000.0,
+      'max_locations': 20
+    },
+    'sources_to_targets': {
+      'max_distance': 200000.0,
+      'max_locations': 50
+    },
+    'skadi': {
+      'max_shape': 750000,
+      'min_resample': 10.0
+    },
+    'isochrone': {
+      'max_contours': 4,
+      'max_time': 120,
+      'max_locations': 1
+    },
+    'trace': {
+      'max_distance': 162500.0,
+      'max_shape': 8000
+    }
+  }
+}
+
+help_text = {
+  'mjolnir': {
+    'max_cache_size': 'Number of bytes per thread used to store tile data in memory',
+    'tile_dir': 'Location to read/write tiles to/from',
+    'tile_extract': 'Location to read tiles from tar',
+    'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
+    'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
+    'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger'
+    }
+  },
+  'additional_data': {
+    'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
+  },
+  'loki': {
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, one_to_many, many_to_one, many_to_many, sources_to_targets, optimized_route, isochrone, trace_route, trace_attributes',
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger',
+      'long_request': 'Value used in processing to determine whether it took too long'
+    },
+    'service': {
+      'proxy': 'IPC linux domain socket file location'
+    }
+  },
+  'skadi': {
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: height',
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger',
+      'long_request': 'Value used in processing to determine whether it took too long'
+    },
+    'service': {
+      'proxy': 'IPC linux domain socket file location'
+    }
+  },
+  'thor': {
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger',
+      'long_request': 'Value used in processing to determine whether it took too long'
+    },
+    'source_to_target_algorithm': 'TODO: which matrix algorithm should be used',
+    'service': {
+      'proxy': 'IPC linux domain socket file location'
+    }
+  },
+  'odin': {
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger'
+    },
+    'service': {
+      'proxy': 'IPC linux domain socket file location'
+    }
+  },
+  'meili': {
+    'mode': 'TODO: ',
+    'customizable': 'TODO: ',
+    'verbose': 'TODO: ',
+    'default': {
+      'sigma_z': 'TODO: ',
+      'gps_accuracy': 'TODO: ',
+      'beta': 'TODO: ',
+      'max_route_distance_factor': 'TODO: ',
+      'breakage_distance': 'TODO: ',
+      'interpolation_distance': 'TODO: ',
+      'search_radius': 'TODO: ',
+      'max_search_radius': 'TODO: ',
+      'geometry': 'TODO: ',
+      'route': 'TODO: ',
+      'turn_penalty_factor': 'TODO: '
+    },
+    'auto': {
+      'turn_penalty_factor': 'TODO: ',
+      'search_radius': 'TODO: '
+    },
+    'pedestrian': {
+      'turn_penalty_factor': 'TODO: ',
+      'search_radius': 'TODO: '
+    },
+    'bicycle': {
+      'turn_penalty_factor': 'TODO: '
+    },
+    'multimodal': {
+      'turn_penalty_factor': 'TODO: '
+    },
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger'
+    },
+    'service': {
+      'proxy': 'IPC linux domain socket file location'
+    },
+    'grid': {
+      'size': 'TODO: Resolution of the grid used in finding match candidates',
+      'cache_size': 'TODO: number of grids to keep in cache'
+    }
+  },
+  'tyr': {
+    'logging': {
+      'type': 'Type of logger either std_out or file',
+      'color': 'User colored log level in std_out logger',
+      'file_name': 'Output log file for the file logger',
+      'long_request': 'Value used in processing to determine whether it took too long'
+    },
+    'service': {
+      'proxy': 'IPC linux domain socket file location'
+    }
+  },
+  'httpd': {
+    'service': {
+      'listen': 'The protocol, host location and port your service will bind to',
+      'loopback': 'IPC linux domain socket file location used to communicate results back to the client',
+      'interrupt': 'IPC linux domain socket file location used to cancel work in progress'
+    }
+  },
+  'service_limits': {
+    'auto': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'auto_shorter': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'bus': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'hov': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'pedestrian': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
+      'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
+    },
+    'bicycle': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'multimodal': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'transit': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'truck': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'sources_to_targets': {
+      'max_distance': 'Maximum b-line distance between 2 most distant locations in meters',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'skadi': {
+      'max_shape': 'Maximum number of input shapes',
+      'min_resample': 'Smalled resampling distance to allow in meters'
+    },
+    'isochrone': {
+      'max_contours': 'Maximum number of input contours to allow',
+      'max_time': 'Maximum time value for any one contour',
+      'max_locations': 'Maximum number of input locations'
+    },
+    'trace': {
+      'max_distance': 'Maximum input shape distance in meters',
+      'max_shape': 'Maximum number of input shape points'
+    }
+  }
+}
+
+#used to convert comma separated list of strings into a list
+def comma_separated_list(arg):
+  return arg.split(',')
+
+#returns a list of leaves of the tree, `\0` separated, stops at non dicts
+#while doing so it also adds arguments to the parser
+def add_leaf_args(path, tree, leaves, parser):
+  #if we are at a dict go deeper
+  if isinstance(tree, dict):
+    for k, v in tree.iteritems():
+      add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves, parser)
+  #we've reached a leaf
+  else:
+    keys = path.split('\0')
+    h = help_text
+    for k in keys:
+      h = h[k]
+    t = comma_separated_list if type(tree) == type([]) else type(tree)
+    arg = '--' + path.replace('_', '-').replace('\0', '-')
+    parser.add_argument(arg, type=t, help=h, default=tree)
+    leaves.append(path)
+
+#entry point to program
+if __name__ == '__main__':
+
+  #set up program options
+  leaves = []
+  parser = argparse.ArgumentParser(description='Generate valhalla configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  add_leaf_args('', config, leaves, parser)
+  args = parser.parse_args()
+
+  #override the defaults given what was passed
+  for leaf in leaves:
+    keys = leaf.split('\0')
+    v = config
+    for k in keys[:-1]:
+      v = v[k]
+    v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
+
+
+  #show the config
+  print json.dumps(config, sort_keys=True, indent=2, separators=(',', ': '))  
