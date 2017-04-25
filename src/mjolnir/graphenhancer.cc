@@ -733,9 +733,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
                     turn_type == Turn::Type::kSlightLeft);
   if (allramps) {
     if (is_sharp) {
-      stop_impact + 2;
+      stop_impact += 2;
     } else if (is_slight) {
-      stop_impact / 2;
+      stop_impact /= 2;
     } else {
       stop_impact -= 1;
     }
@@ -750,7 +750,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
     if (is_sharp) {
-      stop_impact + 3;
+      stop_impact += 3;
     } else if (is_slight) {
       stop_impact += 1;
     } else {
