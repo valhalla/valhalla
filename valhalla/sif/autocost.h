@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_AUTOCOST_H_
 #define VALHALLA_SIF_AUTOCOST_H_
 
+#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 

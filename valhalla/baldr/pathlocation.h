@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_PATHLOCATION_H_
 #define VALHALLA_BALDR_PATHLOCATION_H_
 
+#include <cstdint>
 #include <vector>
 #include <utility>
 #include <valhalla/baldr/location.h>

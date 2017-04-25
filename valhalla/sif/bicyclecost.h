@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_BICYCLECOST_H_
 #define VALHALLA_SIF_BICYCLECOST_H_
 
+#include <cstdint>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {

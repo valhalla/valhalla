@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_IDTABLE_H
 #define VALHALLA_MJOLNIR_IDTABLE_H
 
+#include <cstdint>
 #include <vector>
 #include <algorithm>
 

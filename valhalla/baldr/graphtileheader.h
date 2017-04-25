@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
+#include <cstdint>
 #include <cstdlib>
 #include <string>
 

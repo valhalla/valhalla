@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_UNIQUENAMES_H
 #define VALHALLA_MJOLNIR_UNIQUENAMES_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <algorithm>

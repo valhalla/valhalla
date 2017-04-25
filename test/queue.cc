@@ -1,3 +1,4 @@
+#include <cstdint>
 // -*- mode: c++ -*-
 #include <cstdlib>
 #include <limits>

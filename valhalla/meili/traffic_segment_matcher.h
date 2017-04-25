@@ -1,6 +1,7 @@
 #ifndef MMP_TRAFFIC_SEGMENT_MATCHER_H_
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <list>

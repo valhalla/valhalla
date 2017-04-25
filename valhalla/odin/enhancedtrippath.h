@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
+#include <cstdint>
 #include <unordered_map>
 #include <string>
 

@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
+#include <cstdint>
 #include <vector>
 #include <utility>
 

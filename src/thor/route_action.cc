@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <prime_server/prime_server.hpp>
 
 using namespace prime_server;
