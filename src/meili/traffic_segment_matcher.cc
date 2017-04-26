@@ -50,8 +50,8 @@ namespace {
 
   //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
   bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
-    //TODO:
-    return false;
+    return edge->trans_up() || edge->trans_down() || edge->roundabout() ||
+      edge->internal() || edge->use() == vb::Use::kTurnChannel;
   }
 
   struct merged_traffic_segment_t {
