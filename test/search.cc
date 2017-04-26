@@ -15,6 +15,7 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::loki;
 
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/directededgebuilder.h"
@@ -139,7 +140,6 @@ void make_tile() {
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
   const std::vector<PathLocation::PathEdge>& expected_edges, bool exact = false){
-  using namespace valhalla::loki;
   //make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
@@ -168,7 +168,22 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     throw std::logic_error("Got more edges than expected");
 }
 
-void TestEdgeSearch() {
+void search(const valhalla::baldr::Location& location, size_t result_count, int reachability) {
+  //make the config file
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", tile_dir);
+
+  valhalla::baldr::GraphReader reader(conf);
+  const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
+
+  if(p.edges.size() != result_count)
+    throw std::logic_error("Wrong number of edges");
+  for(const auto& e : p.edges)
+    if(e.minimum_reachability != reachability)
+      throw std::logic_error("Wrong reachability");
+}
+
+void test_edge_search() {
   auto t = a.first.tileid();
   auto l = a.first.level();
   using S = PathLocation::SideOfStreet;
@@ -225,7 +240,31 @@ void TestEdgeSearch() {
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
   search({test}, false, answer, { PE{{t, l, 0}, ratio, answer, 0, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, answer, 0, S::RIGHT} });
 
-  //TODO: add more tests that are not actually on the geometry
+  //TODO: add more tests
+}
+
+void test_reachability_radius() {
+  PointLL ob(b.second.first - .001f, b.second.second - .01f);
+  unsigned int longest = ob.Distance(d.second);
+  unsigned int shortest = ob.Distance(a.second);
+
+  //zero everything should be a single closest result
+  search({ob, Location::StopType::BREAK, 0, 0}, 2, -1);
+
+  //set radius high to get them all
+  search({b.second,Location::StopType::BREAK, 0, longest + 10}, 10, -1);
+
+  //set radius mid to get just some
+  search({b.second,Location::StopType::BREAK, 0, shortest - 10}, 4, -1);
+
+  //set reachability high to see it gets all nodes reachable
+  search({ob, Location::StopType::BREAK, 0, 5}, 1, 4);
+
+  //set reachability right on to see we arent off by one
+  search({ob, Location::StopType::BREAK, 0, 4}, 1, 4);
+
+  //set reachability lower to see we give up early
+  search({ob, Location::StopType::BREAK, 0, 3}, 1, 3);
 }
 
 }
@@ -235,7 +274,9 @@ int main() {
 
   suite.test(TEST_CASE(make_tile));
 
-  suite.test(TEST_CASE(TestEdgeSearch));
+  suite.test(TEST_CASE(test_edge_search));
+
+  suite.test(TEST_CASE(test_reachability_radius));
 
   return suite.tear_down();
 }

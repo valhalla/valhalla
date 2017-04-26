@@ -266,6 +266,7 @@ struct bin_handler_t {
   const NodeFilter& node_filter;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
+  std::unordered_set<uint64_t> correlated_edges;
 
   //key is the edge id, size_t is the index into cardinalities which
   //stores the number of edges that can be reached by this edge
@@ -328,10 +329,10 @@ struct bin_handler_t {
         if(edge_filter(edge) != 0.0f) {
           PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), distance, PathLocation::NONE, get_reach(id)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
-          if(!heading_filter(edge, info, location, candidate.point, distance, index))
-            correlated.edges.push_back(std::move(path_edge));
-          else
+          if(heading_filter(edge, info, location, candidate.point, distance, index))
             heading_filtered.emplace_back(std::move(path_edge));
+          else if(correlated_edges.insert(path_edge.id).second)
+            correlated.edges.push_back(std::move(path_edge));
         }
 
         //do we want the evil twin
@@ -343,21 +344,22 @@ struct bin_handler_t {
         if(edge_filter(other_edge) != 0.0f) {
           PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), distance, PathLocation::NONE, get_reach(id)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
-          if(!heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, distance, index))
-            correlated.edges.push_back(std::move(path_edge));
-          else
+          if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, distance, index))
             heading_filtered.emplace_back(std::move(path_edge));
+          else if(correlated_edges.insert(path_edge.id).second)
+            correlated.edges.push_back(std::move(path_edge));
         }
       }
-
-      //if we have nothing because of heading we'll just ignore it
-      if(correlated.edges.size() == 0 && heading_filtered.size())
-        for(auto& path_edge : heading_filtered)
-          correlated.edges.push_back(std::move(path_edge));
     };
 
     //start where we are and crawl from there
     crawl(found_node, true);
+
+    //if we have nothing because of heading we'll just ignore it
+    if(correlated.edges.size() == 0 && heading_filtered.size())
+      for(auto& path_edge : heading_filtered)
+        if(correlated_edges.insert(path_edge.id).second)
+          correlated.edges.push_back(std::move(path_edge));
 
     //if it was a through location with a heading its pretty confusing.
     //does the user want to come into and exit the location at the preferred
@@ -390,7 +392,7 @@ struct bin_handler_t {
       std::list<PathLocation::PathEdge> heading_filtered;
       if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, distance, candidate.index))
         heading_filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge_id));
-      else
+      else if(correlated_edges.insert(candidate.edge_id).second)
         correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge_id)});
       //correlate its evil twin
       const GraphTile* other_tile;
@@ -399,14 +401,15 @@ struct bin_handler_t {
       if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
         if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, distance, candidate.index))
           heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(opposing_edge_id));
-        else
+        else if(correlated_edges.insert(opposing_edge_id).second)
           correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(opposing_edge_id)});
       }
 
       //if we have nothing because of heading we'll just ignore it
       if(correlated.edges.size() == 0 && heading_filtered.size())
         for(auto& path_edge : heading_filtered)
-          correlated.edges.push_back(std::move(path_edge));
+          if(correlated_edges.insert(path_edge.id).second)
+            correlated.edges.push_back(std::move(path_edge));
     }
   }
 
@@ -522,7 +525,7 @@ struct bin_handler_t {
       //closest to the input point p, call it n. we can then define an half plane h intersecting n
       //so that its orthogonal to the ray from p to n. using h, we only need to test segments
       //of the shape which are on the same side of h that p is. to make this fast we would need a
-      //mathematically trivial half plane test
+      //a trivial half plane test as maybe a single dot product and comparison?
 
       //iterate along this edges segments projecting each of the points
       for(size_t i = 0; !shape.empty(); ++i) {
@@ -620,9 +623,13 @@ struct bin_handler_t {
     //need to go get the actual correlated location with edge_id etc.
     std::unordered_map<Location, PathLocation> searched;
     for (auto& pp: pps) {
-      //concatenate
+      //concatenate and sort
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
+      std::sort(pp.reachable.begin(), pp.reachable.end());
+      //keep a look up around so we dont add duplicates with worse scores
+      correlated_edges.reserve(pp.reachable.size());
+      correlated_edges.clear();
       //go through getting all the results for this one
       PathLocation correlated(pp.location);
       for (const auto& candidate : pp.reachable) {
@@ -650,9 +657,6 @@ struct bin_handler_t {
         searched.insert({pp.location, correlated});
       //else
       //  throw std::runtime_error("No suitable edges near location");
-      //sort by id and then score
-      //remove duplicate ids
-      //sort by score
     }
     //give back all the results
     return searched;
