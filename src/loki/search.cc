@@ -218,31 +218,30 @@ struct projector_t {
   // Test if a segment is a candidate to the projection.  This method
   // is performance critical.  Copy, function call, cache locality and
   // useless computation must be handled with care.
-  void project(const PointLL& u, const PointLL& v, PointLL& p) {
+  PointLL project(const PointLL& u, const PointLL& v) {
+    //we're done if this is a zero length edge
+    if(u == v)
+      return u;
+
     //project a onto b where b is the origin vector representing this segment
     //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
     auto bx = v.first - u.first;
     auto by = v.second - u.second;
 
-    // Scale longitude when finding the projection. Avoid divided-by-zero
-    // which gives a NaN scale, otherwise comparisons below will fail
+    // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;
-    auto sq = bx2*bx2 + by*by;
-    auto scale = sq > 0 ? ((lng - u.lng())*lon_scale*bx2 + (lat - u.lat())*by) / sq : 0.f;
+    auto sq = bx2 * bx2 + by * by;
+    auto scale = (lng - u.lng()) * lon_scale * bx2 + (lat - u.lat()) * by; //only need the numerator at first
 
     //projects along the ray before u
-    if(scale <= 0.f) {
-      p.first = u.first;
-      p.second = u.second;
-    }//projects along the ray after v
-    else if(scale >= 1.f){
-      p.first = v.first;
-      p.second = v.second;
-    }//projects along the ray between u and v
-    else {
-      p.first = u.first + bx * scale;
-      p.second = u.second + by * scale;
-    }
+    if(scale <= 0.f)
+      return u;
+    //projects along the ray after v
+    else if(scale >= sq)
+      return v;
+    //projects along the ray between u and v
+    scale /= sq;
+    return {u.first + bx * scale, u.second + by * scale};
   }
 
   std::function<std::tuple<int32_t, unsigned short, float>()> binner;
@@ -517,6 +516,14 @@ struct bin_handler_t {
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr)
         c_itr->sq_distance = std::numeric_limits<float>::max();
 
+      //TODO: can we speed this up? the majority of edges will be short and far away enough
+      //such that the closest point on the edge will be one of the edges end points, we can get
+      //these coordinates them from the nodes in the graph. we can then find whichever end is
+      //closest to the input point p, call it n. we can then define an half plane h intersecting n
+      //so that its orthogonal to the ray from p to n. using h, we only need to test segments
+      //of the shape which are on the same side of h that p is. to make this fast we would need a
+      //mathematically trivial half plane test
+
       //iterate along this edges segments projecting each of the points
       for(size_t i = 0; !shape.empty(); ++i) {
         auto u = v;
@@ -525,8 +532,7 @@ struct bin_handler_t {
         c_itr = bin_candidates.begin();
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           //how close is the input to this segment
-          PointLL point;
-          p_itr->project(u, v, point);
+          auto point = p_itr->project(u, v);
           auto sq_distance = p_itr->approx.DistanceSquared(point);
           //do we want to keep it
           if(sq_distance < c_itr->sq_distance) {
@@ -614,10 +620,9 @@ struct bin_handler_t {
     //need to go get the actual correlated location with edge_id etc.
     std::unordered_map<Location, PathLocation> searched;
     for (auto& pp: pps) {
-      //concatenate and then sort
+      //concatenate
       pp.reachable.reserve(pp.reachable.size() + pp.unreachable.size());
       std::move(pp.unreachable.begin(), pp.unreachable.end(), std::back_inserter(pp.reachable));
-      std::sort(pp.reachable.begin(), pp.reachable.end());
       //go through getting all the results for this one
       PathLocation correlated(pp.location);
       for (const auto& candidate : pp.reachable) {
@@ -645,6 +650,9 @@ struct bin_handler_t {
         searched.insert({pp.location, correlated});
       //else
       //  throw std::runtime_error("No suitable edges near location");
+      //sort by id and then score
+      //remove duplicate ids
+      //sort by score
     }
     //give back all the results
     return searched;
