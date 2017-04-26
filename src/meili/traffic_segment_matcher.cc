@@ -48,10 +48,17 @@ namespace {
     return false;
   }
 
+  //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
+  bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
+    //TODO:
+    return false;
+  }
+
   struct merged_traffic_segment_t {
     valhalla::baldr::TrafficSegment segment;
     valhalla::baldr::GraphId begin_edge;
     valhalla::baldr::GraphId end_edge;
+    bool internal;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
   };
@@ -65,6 +72,7 @@ namespace {
         continue;
       //get segments for this edge
       edge = marker.edge;
+      const auto* directed_edge = tile->directededge(edge);
       auto segments = tile->GetTrafficSegments(edge);
       //if there were no segments we'll start an invalid one to serve
       //as a placeholder for the section of the path that has no ots's
@@ -77,9 +85,10 @@ namespace {
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
+          merged.back().internal = merged.back().internal && is_internal(directed_edge);
         }//new one
         else
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge)});
       }
     }
     return merged;
@@ -297,7 +306,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
 
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
-      traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length});
+      traffic_segments.emplace_back(
+        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal});
 
       //print(traffic_segments.back());
 
@@ -361,6 +371,7 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
       {"length", static_cast<int64_t>(seg.length)},
       {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
       {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
+      {"internal", static_cast<bool>(seg.internal)},
     });
     //some of the segments are just sections of the path with no ots's
     if(seg.segment_id.Is_Valid())
