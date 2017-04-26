@@ -59,7 +59,6 @@ namespace {
     std::vector<merged_traffic_segment_t> merged;
     const valhalla::baldr::GraphTile* tile = nullptr;
     valhalla::baldr::GraphId edge;
-    bool continuable = false;
     for(const auto& marker : markers) {
       //skip if its a repeat or we cant get the tile
       if(marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
@@ -67,10 +66,14 @@ namespace {
       //get segments for this edge
       edge = marker.edge;
       auto segments = tile->GetTrafficSegments(edge);
+      //if there were no segments we'll start an invalid one to serve
+      //as a placeholder for the section of the path that has no ots's
+      if(segments.empty())
+        segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
-        if(continuable && merged.back()->segment_id_ == segment.segment_id_){
+        if(!merged.empty() && merged.back()->segment_id_ == segment.segment_id_){
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
@@ -78,8 +81,6 @@ namespace {
         else
           merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
       }
-      //if we just handled some segments we could continue them
-      continuable = !segments.empty();
     }
     return merged;
   }
@@ -354,16 +355,17 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
 std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t>& traffic_segments) {
   auto segments = baldr::json::array({});
   for (const auto& seg : traffic_segments) {
-    segments->emplace_back(baldr::json::map
-      ({
-        {"segment_id", seg.segment_id.value},
-        {"start_time", baldr::json::fp_t{seg.start_time, 3}},
-        {"end_time", baldr::json::fp_t{seg.end_time, 3}},
-        {"length", static_cast<int64_t>(seg.length)},
-        {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
-        {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
-      })
-    );
+    auto segment = baldr::json::map({
+      {"start_time", baldr::json::fp_t{seg.start_time, 3}},
+      {"end_time", baldr::json::fp_t{seg.end_time, 3}},
+      {"length", static_cast<int64_t>(seg.length)},
+      {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
+      {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
+    });
+    //some of the segments are just sections of the path with no ots's
+    if(seg.segment_id.Is_Valid())
+      segment->emplace("segment_id", seg.segment_id.value);
+    segments->emplace_back(segment);
   }
   std::stringstream ss;
   ss << *baldr::json::map({{"segments",segments}});

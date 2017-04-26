@@ -94,12 +94,19 @@ namespace {
       boost::property_tree::read_json(json_ss, answer);
 
       const auto& a_segs = test_case.second;
-      const auto& b_segs = matcher.segments;
+      auto& b_segs = matcher.segments;
+
+      //TODO: for portions of routes with no ots coverage add matching fake segments
+      //for now we just remove the fake ones from the result
+      auto seg_itr = std::remove_if(b_segs.begin(), b_segs.end(),
+        [](const meili::traffic_segment_t& ots){ return !ots.segment_id.Is_Valid(); });
+      b_segs.erase(seg_itr, b_segs.end());
+
       if(a_segs.size() != b_segs.size())
         throw std::logic_error("wrong number of segments matched");
-      for(size_t i = 0; i < test_case.second.size(); ++i) {
-        const auto& a = test_case.second[i];
-        const auto& b = matcher.segments[i];
+      for(size_t i = 0; i < a_segs.size(); ++i) {
+        const auto& a = a_segs[i];
+        const auto& b = b_segs[i];
         if(a.begin_shape_index != b.begin_shape_index)
           throw std::logic_error("begin_shape_index mismatch");
         if(a.end_shape_index != b.end_shape_index)
