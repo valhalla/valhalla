@@ -4,9 +4,12 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <unordered_map>
+#include <utility>
 
 #include "thor/trippathbuilder.h"
 #include "thor/attributes_controller.h"
+#include "thor/match_result.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/signinfo.h"
@@ -68,7 +71,7 @@ void TrimShape(std::vector<PointLL>& shape, const float start,
   while (current != shape.end() - 1) {
     along += (current + 1)->Distance(*current);
     //just crossed it
-    if (along > start) {
+    if ((along > start) && start_vertex.IsValid()) {
       along = start;
       *current = start_vertex;
       shape.erase(shape.begin(), current);
@@ -82,7 +85,7 @@ void TrimShape(std::vector<PointLL>& shape, const float start,
   while (current != shape.end() - 1) {
     along += (current + 1)->Distance(*current);
     //just crossed it
-    if (along > end) {
+    if ((along > end) && end_vertex.IsValid()) {
       *(++current) = end_vertex;
       shape.erase(++current, shape.end());
       break;
@@ -423,7 +426,8 @@ TripPath TripPathBuilder::Build(
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
     const std::list<PathLocation>& through_loc,
-    const std::function<void ()>* interrupt_callback) {
+    const std::function<void ()>* interrupt_callback,
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>* route_discontinuities) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -644,10 +648,11 @@ TripPath TripPathBuilder::Build(
   bool assumed_schedule = false;
   sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
+  size_t edge_index = 0;
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
       TripPath_TransitStopInfo_Type_kStop;
-  for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr) {
+  for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
@@ -848,9 +853,49 @@ TripPath TripPathBuilder::Build(
     auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
     uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
 
-    // We need to clip the shape if i its at the beginning or end and
-    // is not full length
-    if (is_first_edge || is_last_edge) {
+    // Process the shape for edges where a route discontinuity occurs
+    if (route_discontinuities && !route_discontinuities->empty()
+        && route_discontinuities->count(edge_index) > 0) {
+      // Get edge shape
+      auto edge_shape = edgeinfo.shape();
+
+      // Reverse edge shape if directed edge is not forward
+      if (!directededge->forward()) {
+        std::reverse(edge_shape.begin(), edge_shape.end());
+      }
+
+      // Grab the edge begin and end info
+      auto& edge_begin_info = route_discontinuities->at(edge_index).first;
+      auto& edge_end_info = route_discontinuities->at(edge_index).second;
+
+      // Handle partial shape for first edge
+      if (is_first_edge && !edge_begin_info.exists) {
+        edge_begin_info.exists = true;
+        edge_begin_info.distance_along = start_pct;
+        edge_begin_info.vertex = start_vrt;
+      }
+
+      // Handle partial shape for last edge
+      if (is_last_edge && !edge_end_info.exists) {
+        edge_end_info.exists = true;
+        edge_end_info.distance_along = end_pct;
+        edge_end_info.vertex = end_vrt;
+      }
+
+      // Trim the shape
+      float edge_length = static_cast<float>(directededge->length());
+      TrimShape(edge_shape, edge_begin_info.distance_along * edge_length,
+          edge_begin_info.vertex, edge_end_info.distance_along * edge_length,
+          edge_end_info.vertex);
+
+      // Add edge shape to trip
+      trip_shape.insert(trip_shape.end(),
+          (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
+          edge_shape.end());
+
+    } else if (is_first_edge || is_last_edge) {
+      // We need to clip the shape if i its at the beginning or end and
+      // is not full length
       float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
       if (directededge->forward() == is_last_edge) {
         AddPartialShape<std::vector<PointLL>::const_iterator>(
