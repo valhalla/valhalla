@@ -252,19 +252,19 @@ void test_reachability_radius() {
   search({ob, Location::StopType::BREAK, 0, 0}, 2, -1);
 
   //set radius high to get them all
-  search({b.second,Location::StopType::BREAK, 0, longest + 10}, 10, -1);
+  search({b.second,Location::StopType::BREAK, 0, longest + 100}, 10, -1);
 
   //set radius mid to get just some
-  search({b.second,Location::StopType::BREAK, 0, shortest - 10}, 4, -1);
+  search({b.second,Location::StopType::BREAK, 0, shortest - 100}, 4, -1);
 
   //set reachability high to see it gets all nodes reachable
-  search({ob, Location::StopType::BREAK, 0, 5}, 1, 4);
+  search({ob, Location::StopType::BREAK, 5, 0}, 2, 4);
 
   //set reachability right on to see we arent off by one
-  search({ob, Location::StopType::BREAK, 0, 4}, 1, 4);
+  search({ob, Location::StopType::BREAK, 4, 0}, 2, 4);
 
   //set reachability lower to see we give up early
-  search({ob, Location::StopType::BREAK, 0, 3}, 1, 3);
+  search({ob, Location::StopType::BREAK, 3, 0}, 2, 3);
 }
 
 }

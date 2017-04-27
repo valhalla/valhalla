@@ -12,7 +12,7 @@
 namespace valhalla {
 namespace baldr {
 
-Location::Location(const midgard::PointLL& latlng, const StopType& stoptype, unsigned int minimum_reachability, unsigned int radius)
+Location::Location(const midgard::PointLL& latlng, const StopType& stoptype, unsigned int minimum_reachability, unsigned long radius)
   : latlng_(latlng), stoptype_(stoptype), minimum_reachability_(minimum_reachability), radius_(radius) {
 }
 
@@ -111,7 +111,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   location.way_id_ = pt.get_optional<long double>("way_id");
 
   location.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
-  location.radius_ = pt.get<unsigned int>("radius", 0);
+  location.radius_ = pt.get<unsigned long>("radius", 0);
 
   return location;
 }
@@ -148,7 +148,7 @@ Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int isolate
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
   location.minimum_reachability_ = GetFromRapidJson<unsigned int>(d, "/minimum_reachability", isolated);
-  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", radius);
+  location.radius_ = GetFromRapidJson<unsigned long>(d, "/radius", radius);
 
   return location;
 }

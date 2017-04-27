@@ -200,11 +200,12 @@ struct projector_t {
   // Advance to the next bin. Must not be called if has_bin() is false.
   void next_bin(GraphReader& reader) {
     do {
-      //TODO: make configurable the radius at which we give up searching
-      //the closest thing in this bin is further than what we have already
+      //give up if the next bin is outside the overall cut off OR
+      //we have something AND cant find more in the search radius AND
+      //cant find anything better in general than what we have
       int32_t tile_index; float distance;
       std::tie(tile_index, bin_index, distance) = binner();
-      if(distance > SEARCH_CUTOFF || (reachable.size() && distance > sqrt(reachable.back().sq_distance))) {
+      if(distance > SEARCH_CUTOFF || (reachable.size() && distance > location.radius_ && distance > sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
       }
@@ -248,7 +249,7 @@ struct projector_t {
   const GraphTile* cur_tile = nullptr;
   Location location;
   unsigned short bin_index = 0;
-  float sq_radius;
+  double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
 
@@ -292,8 +293,8 @@ struct bin_handler_t {
   }
 
   //returns -1 when we dont know it
-  int get_reach(GraphId id) {
-    auto itr = reach_indices.find(id);
+  int get_reach(const DirectedEdge* edge) {
+    auto itr = reach_indices.find(edge->endnode());
     if(itr == reach_indices.cend())
       return -1; //TODO: if we didnt find it should we run the reachability check
     return reaches[itr->second];
@@ -327,7 +328,7 @@ struct bin_handler_t {
 
         //do we want this edge
         if(edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), distance, PathLocation::NONE, get_reach(id)};
+          PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), distance, PathLocation::NONE, get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if(heading_filter(edge, info, location, candidate.point, distance, index))
             heading_filtered.emplace_back(std::move(path_edge));
@@ -342,7 +343,7 @@ struct bin_handler_t {
           continue;
         const auto* other_edge = other_tile->directededge(other_id);
         if(edge_filter(other_edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), distance, PathLocation::NONE, get_reach(id)};
+          PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), distance, PathLocation::NONE, get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
           if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, distance, index))
             heading_filtered.emplace_back(std::move(path_edge));
@@ -391,18 +392,18 @@ struct bin_handler_t {
       //correlate the edge we found
       std::list<PathLocation::PathEdge> heading_filtered;
       if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, distance, candidate.index))
-        heading_filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge_id));
+        heading_filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge));
       else if(correlated_edges.insert(candidate.edge_id).second)
-        correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge_id)});
+        correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge)});
       //correlate its evil twin
       const GraphTile* other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
       const DirectedEdge* other_edge;
       if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
         if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, distance, candidate.index))
-          heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(opposing_edge_id));
+          heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(other_edge));
         else if(correlated_edges.insert(opposing_edge_id).second)
-          correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(opposing_edge_id)});
+          correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(other_edge)});
       }
 
       //if we have nothing because of heading we'll just ignore it
@@ -438,8 +439,9 @@ struct bin_handler_t {
           return;
         }
 
-        //recurse
-        ++reaches.back();
+        //recurse, but dont increment if its a transition edge so we dont double count nodes
+        if(!e->trans_up() && !e->trans_down())
+          ++reaches.back();
         size_t previous = reach_index;
         depth_first(tile, n, reach_index);
 
@@ -471,15 +473,17 @@ struct bin_handler_t {
     if(!check)
       return max_reach_limit;
 
-    //if you cant get the node then its not reachable since you cant leave the edge
+    //if you cant get through the end node then its not reachable since you cant leave the edge
     const auto* node = reader.GetEndNode(edge, tile);
-    if(!node)
+    if(!node || node_filter(node))
       return 0;
 
     //store an index into cardinalities so we can tell when search paths merge
     //if the index changes then we know its been merged with another path
+    //any node can reach itself so each of them starts at a reach of 1
     size_t reach_index = reaches.size();
-    reaches.push_back(0);
+    reach_indices[edge->endnode()] = reach_index;
+    reaches.push_back(1);
     depth_first(tile, node, reach_index);
     return reaches.back();
   }

@@ -36,7 +36,7 @@ struct Location {
    * Constructor.
    * @param  latlng  the polar coordinates of the location
    */
-  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK, unsigned int minimum_reachability = 0, unsigned int radius = 0);
+  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK, unsigned int minimum_reachability = 0, unsigned long radius = 0);
 
   /**
    * Serializes this object to ptree
@@ -104,7 +104,7 @@ struct Location {
   //and we'll search for more candidates until we find at least one that isnt considered a disconnected island
   unsigned int minimum_reachability_;
   //dont return results further away than this (meters) unless there is nothing this close
-  unsigned int radius_;
+  unsigned long radius_;
 
  protected:
 
