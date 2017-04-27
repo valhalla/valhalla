@@ -820,6 +820,11 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       nodeinfo = endtile->node(directededge->endnode());
       Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
 
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      cost.cost += edge.score;
+
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
@@ -886,6 +891,11 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // edge.  Use the directed edge for costing, as this is the forward
       // direction along the destination edge.
       Cost cost = costing->EdgeCost(directededge) * edge.dist;
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      cost.cost += edge.score;
 
       // Add EdgeLabel to the adjacency list. Set the predecessor edge index
       // to invalid to indicate the origin of the path. Make sure the opposing
