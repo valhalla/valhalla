@@ -301,7 +301,7 @@ struct bin_handler_t {
   }
 
   void correlate_node(const Location& location, const GraphId& found_node, const candidate_t& candidate, PathLocation& correlated){
-    auto distance = location.latlng_.Distance(candidate.point);
+    auto score = location.latlng_.Distance(candidate.point);
     std::list<PathLocation::PathEdge> heading_filtered;
 
     //we need this because we might need to go to different levels
@@ -328,9 +328,9 @@ struct bin_handler_t {
 
         //do we want this edge
         if(edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), distance, PathLocation::NONE, get_reach(edge)};
+          PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), score, PathLocation::NONE, get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
-          if(heading_filter(edge, info, location, candidate.point, distance, index))
+          if(heading_filter(edge, info, location, candidate.point, score, index))
             heading_filtered.emplace_back(std::move(path_edge));
           else if(correlated_edges.insert(path_edge.id).second)
             correlated.edges.push_back(std::move(path_edge));
@@ -343,9 +343,9 @@ struct bin_handler_t {
           continue;
         const auto* other_edge = other_tile->directededge(other_id);
         if(edge_filter(other_edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), distance, PathLocation::NONE, get_reach(other_edge)};
+          PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), score, PathLocation::NONE, get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
-          if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, distance, index))
+          if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, score, index))
             heading_filtered.emplace_back(std::move(path_edge));
           else if(correlated_edges.insert(path_edge.id).second)
             correlated.edges.push_back(std::move(path_edge));
@@ -376,7 +376,7 @@ struct bin_handler_t {
 
   void correlate_edge(const Location& location, const candidate_t& candidate, PathLocation& correlated) {
     //now that we have an edge we can pass back all the info about it
-    auto distance = location.latlng_.Distance(candidate.point);
+    auto score = location.latlng_.Distance(candidate.point);
     if(candidate.edge != nullptr){
       //we need the ratio in the direction of the edge we are correlated to
       double partial_length = 0;
@@ -388,22 +388,22 @@ struct bin_handler_t {
       if(!candidate.edge->forward())
         length_ratio = 1.f - length_ratio;
       //side of street
-      auto side = candidate.get_side(location.latlng_, distance);
+      auto side = candidate.get_side(location.latlng_, score);
       //correlate the edge we found
       std::list<PathLocation::PathEdge> heading_filtered;
-      if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, distance, candidate.index))
-        heading_filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge));
+      if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, score, candidate.index))
+        heading_filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge));
       else if(correlated_edges.insert(candidate.edge_id).second)
-        correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, distance, side, get_reach(candidate.edge)});
+        correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge)});
       //correlate its evil twin
       const GraphTile* other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
       const DirectedEdge* other_edge;
       if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
-        if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, distance, candidate.index))
-          heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(other_edge));
+        if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, score, candidate.index))
+          heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge));
         else if(correlated_edges.insert(opposing_edge_id).second)
-          correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, distance, flip_side(side), get_reach(other_edge)});
+          correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge)});
       }
 
       //if we have nothing because of heading we'll just ignore it
