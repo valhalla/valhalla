@@ -311,7 +311,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   //we require slashes
   auto pos = fname.find_last_of('/');
   if(pos == fname.npos)
-    throw std::runtime_error("Invalid tile path");
+    throw std::runtime_error("Invalid tile path: " + fname);
 
   //swallow numbers until you reach the end or a dot
   for(;pos < fname.size(); ++pos)
@@ -320,7 +320,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
 
   //if you didnt reach the end and it wasnt a dot then this isnt valid
   if(pos != fname.size() && fname[pos] != '.')
-    throw std::runtime_error("Invalid tile path");
+    throw std::runtime_error("Invalid tile path: " + fname);
 
   //run backwards while you find an allowed char but stop if not 3 digits between slashes
   std::vector<int> digits;
@@ -329,13 +329,13 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
     auto& c = fname.at(pos);
     //invalid char showed up
     if(allowed.find(c) == allowed.cend())
-      throw std::runtime_error("Invalid tile path");
+      throw std::runtime_error("Invalid tile path: " + fname);
     //if its a slash thats another digit
     if(c == '/') {
       //this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if(dist != 4 && dist != 2)
-        throw std::runtime_error("Invalid tile path");
+        throw std::runtime_error("Invalid tile path: " + fname);
       //we'll keep this
       auto i = atoi(fname.substr(pos + 1, last - (pos + 1)).c_str());
       digits.push_back(i);
@@ -350,7 +350,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   //if the first thing isnt a valid level bail
   auto found = TileHierarchy::levels().find(digits.back());
   if(found == TileHierarchy::levels().cend() && digits.back() != TileHierarchy::GetTransitLevel().level)
-    throw std::runtime_error("Invalid tile path");
+    throw std::runtime_error("Invalid tile path: " + fname);
 
   //get the level info
   uint32_t level = digits.back();
@@ -367,7 +367,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
 
   //bail if its the wrong number of sub dirs
   if(digits.size() != parts)
-    throw std::runtime_error("Invalid tile path");
+    throw std::runtime_error("Invalid tile path: " + fname);
 
   //parse the id of the tile
   int multiplier = 1;
@@ -379,7 +379,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
 
   //if after parsing them the number is out of bounds bail
   if(id > max_id)
-    throw std::runtime_error("Invalid tile path");
+    throw std::runtime_error("Invalid tile path: " + fname);
 
   //you've passed the test enjoy your id
   return {id, level, 0};
