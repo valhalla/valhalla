@@ -123,9 +123,9 @@ namespace {
     locale = std::locale("ru_RU.UTF-8");
     try_get_formatted_date("20140101","",locale);
     try_get_formatted_date("Blah","",locale);
-    try_get_formatted_date("2014-01-01T07:01+01:00","01/01/2014",locale);
-    try_get_formatted_date("2015-07-05T15:00+01:00","05/07/2015",locale);
-    try_get_formatted_date("2015-12-13T15:00+01:00","13/12/2015",locale);
+    try_get_formatted_date("2014-01-01T07:01+01:00","01.01.2014",locale);
+    try_get_formatted_date("2015-07-05T15:00+01:00","05.07.2015",locale);
+    try_get_formatted_date("2015-12-13T15:00+01:00","13.12.2015",locale);
 
   }
 
