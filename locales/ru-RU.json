@@ -102,8 +102,8 @@
       "phrases": {
         "0": "Вы прибыли по месту назначения.",
         "1": "Вы прибыли к <DESTINATION>.",
-        "2": "Местоназначение будет <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> будет <RELATIVE_DIRECTION>."
+        "2": "Местоназначение <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> находится <RELATIVE_DIRECTION>."
       },
       "relative_directions": ["слева", "справа"],
       "example_phrases": {
