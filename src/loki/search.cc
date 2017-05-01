@@ -431,11 +431,11 @@ struct bin_handler_t {
           if(reach_index == inserted.first->second)
             continue;
 
-          //this is connected to a previous island so combine them
-          reaches.back() += reaches[reach_index] - 1;
-          reaches[reach_index] = reaches.back();
           //signal the recursion to stop
           reach_index = inserted.first->second;
+          //merge this paths reach with the previously found one
+          reaches.back() += reaches[reach_index] - 1;
+          reaches[reach_index] = reaches.back();
           return;
         }
 
@@ -464,10 +464,11 @@ struct bin_handler_t {
     if(found != reach_indices.cend())
       return reaches[found->second];
 
-    //see if we even need to do it
+    //we only want to waste time checking if this could become the best reachable option for a given location
     bool check = false;
-    for (auto it = begin; it != end && !check; ++it)
-      check = check || it->reachable.empty();
+    auto c_itr = bin_candidates.begin();
+    for (auto p_itr = begin; p_itr != end; ++p_itr, ++c_itr)
+      check = check || p_itr->reachable.empty() || c_itr->sq_distance < p_itr->reachable.back().sq_distance;
 
     //assume its reachable
     if(!check)
@@ -507,16 +508,6 @@ struct bin_handler_t {
         continue;
       }
 
-      //check for island or dont
-      auto reachability = check_reachability(begin, end, tile, edge);
-
-      //get some shape of the edge
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge->edgeinfo_offset()));
-      auto shape = edge_info->lazy_shape();
-      PointLL v;
-      if (!shape.empty())
-        v = shape.pop();
-
       //reset these so we know the best point along the edge
       auto c_itr = bin_candidates.begin();
       decltype(begin) p_itr;
@@ -530,6 +521,13 @@ struct bin_handler_t {
       //so that its orthogonal to the ray from p to n. using h, we only need to test segments
       //of the shape which are on the same side of h that p is. to make this fast we would need a
       //a trivial half plane test as maybe a single dot product and comparison?
+
+      //get some shape of the edge
+      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge->edgeinfo_offset()));
+      auto shape = edge_info->lazy_shape();
+      PointLL v;
+      if (!shape.empty())
+        v = shape.pop();
 
       //iterate along this edges segments projecting each of the points
       for(size_t i = 0; !shape.empty(); ++i) {
@@ -549,6 +547,9 @@ struct bin_handler_t {
           }
         }
       }
+
+      //if we already have a better reachable candidate we can just assume this one is reachable
+      auto reachability = check_reachability(begin, end, tile, edge);
 
       //keep the best point along this edge if it makes sense
       c_itr = bin_candidates.begin();
