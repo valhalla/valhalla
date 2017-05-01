@@ -422,7 +422,7 @@ struct bin_handler_t {
     for(uint32_t i = 0; reaches.back() < max_reach_limit && i < node->edge_count(); ++i, ++e) {
       //if we can take the edge and we can get the node and we can pass through the node
       const NodeInfo* n = nullptr;
-      if(edge_filter(e) != 0.f && (n = reader.GetEndNode(e, tile)) && !node_filter(n)) {
+      if((e->IsTransition() || edge_filter(e) != 0.f) && (n = reader.GetEndNode(e, tile)) && !node_filter(n)) {
         //try to mark the node
         auto inserted = reach_indices.emplace(e->endnode(), reach_index);
         //we saw this one already
