@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -15,6 +16,7 @@
 
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 
@@ -105,10 +107,9 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
   // Get something we can use to fetch tiles
-  auto hierarchy_properties = pt.get_child("mjolnir");
-  valhalla::baldr::TileHierarchy tile_hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  auto tile_properties = pt.get_child("mjolnir");
+  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
@@ -118,12 +119,12 @@ int main(int argc, char** argv) {
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId edge_id(id, local_level, 0);
-    if (!reader.DoesTileExist(hierarchy_properties, edge_id)) {
+    if (!reader.DoesTileExist(tile_properties, edge_id)) {
       continue;
     }
 
     const GraphTile* tile = reader.GetGraphTile(edge_id);
-    for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, edge_id++) {
+    for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->trans_up() || edge->trans_down() || edge->IsTransitLine() ||
           edge->use() == Use::kTransitConnection) {

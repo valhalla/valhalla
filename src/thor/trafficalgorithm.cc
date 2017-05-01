@@ -109,7 +109,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Disable upward transitions for traffic...for now only support traffic
       // for short routes since no shortcuts have traffic yet
       if (directededge->trans_up()) {
@@ -159,7 +159,12 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        CheckIfLowerCostPath(edgestatus.index(), predindex, newcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost <  lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost);
+        }
         continue;
       }
 
@@ -194,7 +199,7 @@ std::vector<uint8_t>& TrafficAlgorithm::GetRealTimeSpeeds(const uint32_t tileid,
   if (rts == real_time_speeds_.end()) {
     // Try to load the speeds file
     std::ifstream rtsfile;
-    std::string traffic_dir = graphreader.GetTileHierarchy().tile_dir() + "/traffic/";
+    std::string traffic_dir = graphreader.tile_dir() + "/traffic/";
     std::string fname = traffic_dir + std::to_string(tileid) + ".spd";
     rtsfile.open(fname, std::ios::binary | std::ios::in | std::ios::ate);
     if (rtsfile.is_open()) {

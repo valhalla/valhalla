@@ -1,3 +1,4 @@
+#include <cstdint>
 
 #include "thor/pathalgorithm.h"
 
@@ -166,7 +167,7 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
                  nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++,
-            directededge++, edgeid++) {
+            directededge++, ++edgeid) {
     if (directededge->trans_up() ||
         directededge->use() != shortcutedge->use() ||
         directededge->classification() != shortcutedge->classification() ||
@@ -209,7 +210,7 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
                        nodeinfo->edge_index());
       connectededge = tile->directededge(nodeinfo->edge_index());
       for (uint32_t j = 0; j < nodeinfo->edge_count(); j++,
-                connectededge++, connedgeid++) {
+                connectededge++, ++connedgeid) {
         // Skip opposing directed edge, any transition edges. Skip any
         // non-matching directed edges (use, importance) or non-driveable.
         if (j == opp_index || connectededge->trans_up() ||

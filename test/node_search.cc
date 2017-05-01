@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "loki/node_search.h"
 
@@ -28,7 +29,7 @@ namespace {
 const std::string test_tile_dir = "test/node_search_tiles";
 
 struct graph_writer {
-  graph_writer(const vb::TileHierarchy &hierarchy, uint8_t level);
+  graph_writer(uint8_t level);
 
   vj::GraphTileBuilder &builder(vb::GraphId tile_id);
 
@@ -39,20 +40,19 @@ struct graph_writer {
   void write_tiles();
 
 private:
-  const vb::TileHierarchy &m_hierarchy;
   const uint8_t m_level;
   std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder> > m_builders;
 };
 
-graph_writer::graph_writer(const vb::TileHierarchy &hierarchy, uint8_t level)
-  : m_hierarchy(hierarchy), m_level(level) {}
+graph_writer::graph_writer(uint8_t level)
+  : m_level(level) {}
 
 vj::GraphTileBuilder &graph_writer::builder(vb::GraphId tile_id) {
   auto itr = m_builders.find(tile_id);
 
   if (itr == m_builders.end()) {
     bool inserted = false;
-    auto builder = std::make_shared<vj::GraphTileBuilder>(m_hierarchy, tile_id, false);
+    auto builder = std::make_shared<vj::GraphTileBuilder>(test_tile_dir, tile_id, false);
 
     // Create a dummy admin record at index 0. Used if admin records
     // are not used/created or if none is
@@ -84,9 +84,9 @@ void graph_writer::write_tiles() {
 
     // write the bin data
     GraphTileBuilder::tweeners_t tweeners;
-    GraphTile reloaded(m_hierarchy, tile_id);
-    auto bins = GraphTileBuilder::BinEdges(m_hierarchy, &reloaded, tweeners);
-    GraphTileBuilder::AddBins(m_hierarchy, &reloaded, bins);
+    GraphTile reloaded(test_tile_dir, tile_id);
+    auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
+    GraphTileBuilder::AddBins(test_tile_dir, &reloaded, bins);
 
     // merge tweeners into global
     for (const auto &entry : tweeners) {
@@ -106,8 +106,8 @@ void graph_writer::write_tiles() {
 
   for (const auto &entry : all_tweeners) {
     // re-open tiles to add tweeners back in.
-    vb::GraphTile tile(m_hierarchy, entry.first);
-    vj::GraphTileBuilder::AddBins(m_hierarchy, &tile, entry.second);
+    vb::GraphTile tile(test_tile_dir, entry.first);
+    vj::GraphTileBuilder::AddBins(test_tile_dir, &tile, entry.second);
   }
 }
 
@@ -157,16 +157,16 @@ const sort_by_tile sort_pair_by_tile::sort_tile = {};
 struct graph_builder {
   std::vector<vm::PointLL> nodes;
   std::vector<std::pair<size_t, size_t> > edges;
-  void write_tiles(const vb::TileHierarchy &hierarchy, uint8_t level) const;
+  void write_tiles(uint8_t level) const;
 };
 
-void graph_builder::write_tiles(const TileHierarchy &hierarchy, uint8_t level) const {
+void graph_builder::write_tiles(uint8_t level) const {
   using namespace valhalla::mjolnir;
 
   const size_t num_nodes = nodes.size();
   const size_t num_edges = edges.size();
 
-  graph_writer writer(hierarchy, level);
+  graph_writer writer(level);
   edge_count_tracker edge_counts;
 
   // count the number of edges originating at a node
@@ -180,7 +180,7 @@ void graph_builder::write_tiles(const TileHierarchy &hierarchy, uint8_t level) c
   node_ids.reserve(num_nodes);
   for (size_t i = 0; i < num_nodes; ++i) {
     auto coord = nodes[i];
-    auto tile_id = hierarchy.GetGraphId(coord, level);
+    auto tile_id = TileHierarchy::GetGraphId(coord, level);
     uint32_t n = edges_from_node[i];
 
     NodeInfo node_builder;
@@ -317,9 +317,8 @@ void make_tile() {
     }
   }
 
-  vb::TileHierarchy h(test_tile_dir);
   uint8_t level = 2;
-  builder.write_tiles(h, level);
+  builder.write_tiles(level);
 
   // run the validator to create opposing edges and check connectivity
   std::stringstream json;

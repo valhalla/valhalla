@@ -11,6 +11,7 @@
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/format.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
@@ -46,15 +47,10 @@ struct EdgePairs {
 /**
  * Sample elevation along the shape to get weighted grade and max grades
  */
-std::tuple<double, double, double> GetGrade(
+std::tuple<double, double, double, double> GetGrade(
                 const std::unique_ptr<const valhalla::skadi::sample>& sample,
                 const std::list<PointLL>& shape, const float length,
                 const bool forward) {
-  // For very short lengths just return 0 grades
-  if (length < kMinimumInterval) {
-    return std::make_tuple(0.0, 0.0, 0.0);
-  }
-
   // Evenly sample the shape. If edge is really short, just do both ends
   std::list<PointLL> resampled;
   auto interval = POSTING_INTERVAL;
@@ -71,8 +67,14 @@ std::tuple<double, double, double> GetGrade(
     std::reverse(heights.begin(), heights.end());
   }
 
-  // Compute the grade valid range is between -10 and +15
-  return valhalla::skadi::weighted_grade(heights, interval);
+  // Get the weighted grade, max slopes, and mean elevation.
+  auto grades = valhalla::skadi::weighted_grade(heights, interval);
+  if (length < kMinimumInterval) {
+    // For very short lengths just return 0 grades but a valid mean elevation
+    return std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
+  } else {
+    return grades;
+  }
 }
 
 /**
@@ -152,7 +154,7 @@ GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
                  nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
     if (directededge->trans_down() || directededge->trans_up() ||
         directededge->use() == Use::kTransitConnection) {
       continue;
@@ -211,7 +213,7 @@ bool CanContract(GraphReader& reader, const GraphTile* tile,
   // and this enters a tile where shortcuts have already been created.
   std::vector<GraphId> edges;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
+  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, ++edgeid) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
     if (!directededge->trans_down() && !directededge->is_shortcut() &&
          directededge->use() != Use::kTransitConnection &&
@@ -388,7 +390,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
-  for (uint32_t i = 0; i < edge_count; i++, edge_id++) {
+  for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transition edges and transit connections.
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->trans_up() || directededge->trans_down() ||
@@ -490,12 +492,14 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       if (sample) {
         auto grades = GetGrade(sample, shape, length, forward);
         newedge.set_weighted_grade(static_cast<uint32_t>(std::get<0>(grades) * .6 + 6.5));
-        newedge.set_max_up_slope(std::get<1>(grades));
-        newedge.set_max_down_slope(std::get<2>(grades));
+
+        // Store mean_elevation, max_up_slope, and max_down_slope
+        tilebuilder.edge_elevations().emplace_back(std::get<3>(grades),
+                  std::get<1>(grades), std::get<2>(grades));
       } else {
-        newedge.set_weighted_grade(6);  // 6 is flat
-        newedge.set_max_up_slope(0.0f);
-        newedge.set_max_down_slope(0.0f);
+        // Set the default weighted grade for the edge. No edge elevation
+        // is added.
+        newedge.set_weighted_grade(6);
       }
       newedge.set_curvature(0); //TODO:
       newedge.set_endnode(end_node);
@@ -503,6 +507,12 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       // Sanity check - should never see a shortcut with signs
       if (newedge.exitsign()) {
         LOG_ERROR("Shortcut edge with exit signs");
+      }
+
+      // TODO: for now just drop lane connectivity for shortcuts
+      // they can be retrieved later by re-tracing path (via trace_attribute)
+      if (newedge.laneconnectivity()) {
+        newedge.set_laneconnectivity(false);
       }
 
       // Compute the weighted edge density
@@ -529,7 +539,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
 
 // Form shortcuts for tiles in this level.
 uint32_t FormShortcuts(GraphReader& reader,
-            const TileHierarchy::TileLevel& level,
+            const TileLevel& level,
             const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
@@ -548,14 +558,14 @@ uint32_t FormShortcuts(GraphReader& reader,
 
     // Create GraphTileBuilder for the new tile
     GraphId new_tile(tileid, tile_level, 0);
-    GraphTileBuilder tilebuilder(reader.GetTileHierarchy(), new_tile, false);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), new_tile, false);
 
     // Create a dummy admin at index 0.  Used if admins are not used/created.
     tilebuilder.AddAdmin("None", "None", "", "");
 
     // Iterate through the nodes in the tile
     GraphId node_id(tileid, tile_level, 0);
-    for (uint32_t n = 0; n < tile->header()->nodecount(); n++, node_id++) {
+    for (uint32_t n = 0; n < tile->header()->nodecount(); n++, ++node_id) {
       // Get the node info, copy node index and count from old tile
       NodeInfo nodeinfo = *(tile->node(node_id));
       uint32_t old_edge_index = nodeinfo.edge_index();
@@ -578,7 +588,7 @@ uint32_t FormShortcuts(GraphReader& reader,
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
-      for (uint32_t i = 0; i < old_edge_count; i++, edgeid++) {
+      for (uint32_t i = 0; i < old_edge_count; i++, ++edgeid) {
         // Copy the directed edge information and update end node,
         // edge data offset, and opp_index
         const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -608,6 +618,18 @@ uint32_t FormShortcuts(GraphReader& reader,
             }
           }
 
+          // Copy lane connectivity
+          if (directededge->laneconnectivity()) {
+            auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
+            if (laneconnectivity.size() == 0) {
+              LOG_ERROR("Base edge should have lane connectivity, but none found");
+            }
+            for (auto& lc : laneconnectivity) {
+              lc.set_to(tilebuilder.directededges().size());
+            }
+            tilebuilder.AddLaneConnectivity(laneconnectivity);
+          }
+
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use prior edgeinfo offset as the key to make sure
           // edges that have the same end nodes are differentiated (this
@@ -627,6 +649,16 @@ uint32_t FormShortcuts(GraphReader& reader,
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
+
+        // Add existing edge elevation (if the tile has elevation information)
+        if (tile->header()->has_edge_elevation()) {
+          const EdgeElevation* elev = tile->edge_elevation(edgeid);
+          if (elev == nullptr) {
+            tilebuilder.edge_elevations().emplace_back(0.0f, 0.0f, 0.0f);
+          } else {
+            tilebuilder.edge_elevations().emplace_back(std::move(*elev));
+          }
+        }
       }
 
       // Set the edge count for the new node
@@ -663,21 +695,17 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  if (reader.GetTileHierarchy().levels().size() < 2) {
-    throw std::runtime_error("Bad tile hierarchy - need 2 levels");
-  }
 
   // Crack open some elevation data if its there
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
-  if (elevation) {
+  if (elevation && boost::filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));
   }
 
-  auto level = tile_hierarchy.levels().rbegin();
+  auto level = TileHierarchy::levels().rbegin();
   level++;
-  for ( ; level != tile_hierarchy.levels().rend(); ++level) {
+  for ( ; level != TileHierarchy::levels().rend(); ++level) {
     // Create shortcuts on this level
     auto tile_level = level->second;
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level.level));

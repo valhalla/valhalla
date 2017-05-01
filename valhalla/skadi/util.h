@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_UTIL_H__
 #define __VALHALLA_UTIL_H__
 
+#include <cstdint>
 #include <vector>
 #include <functional>
 
@@ -28,8 +29,9 @@ namespace valhalla {
      * @return   the approximate grade on a scale from -100 to +100,
      *           maximum upward slope (or 0 if all downward),
      *           maximum downward slope (or 0 if all upward)
+     *           mean elevation in meters
      */
-    std::tuple<double, double, double> weighted_grade(const std::vector<double>& heights,
+    std::tuple<double, double, double, double> weighted_grade(const std::vector<double>& heights,
                const double interval_distance,
                const std::function<double (double&)>& grade_weighting = energy_weighting);
 

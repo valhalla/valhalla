@@ -479,7 +479,7 @@ find_shortest_path(baldr::GraphReader& reader,
       // Expand current node
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       auto other_edge = tile->directededge(nodeinfo->edge_index());
-      for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
+      for (size_t i = 0; i < nodeinfo->edge_count(); i++, ++other_edge, ++other_edgeid) {
         // Skip it if its a shortcut or transit connection
         if (other_edge->is_shortcut() || other_edge->use() == baldr::Use::kTransitConnection) continue;
 

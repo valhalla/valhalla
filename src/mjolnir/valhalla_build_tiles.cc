@@ -93,8 +93,7 @@ int main(int argc, char** argv) {
   //set up the directories and purge old tiles
   pt.get_child("mjolnir").erase("tile_extract");
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  valhalla::baldr::TileHierarchy hierarchy(tile_dir);
-  for(const auto& level : hierarchy.levels()) {
+  for(const auto& level : valhalla::baldr::TileHierarchy::levels()) {
     auto level_dir = tile_dir + "/" + std::to_string(level.first);
     if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
@@ -103,7 +102,8 @@ int main(int argc, char** argv) {
   }
 
   //check for transit level.
-  auto level_dir = tile_dir + "/" + std::to_string(hierarchy.levels().rbegin()->second.level+1);
+  auto level_dir = tile_dir + "/" +
+      std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level+1);
   if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
     LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
     boost::filesystem::remove_all(level_dir);

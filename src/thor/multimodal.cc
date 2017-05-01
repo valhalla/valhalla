@@ -293,7 +293,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip shortcuts
       if (directededge->is_shortcut()) {
         continue;
@@ -459,14 +459,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        uint32_t idx = edgestatus.index();
-        float dc = edgelabels_[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels_[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels_[idx].Update(predindex, newcost, newsortcost,
-                                  walking_distance_, tripid, blockid);
-          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost < lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost, walking_distance_,
+                     tripid, blockid);
         }
         continue;
       }
@@ -515,7 +513,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
 
   // Set up lambda to get sort costs (use the local edgelabels, not the class
   // member!)
-  const auto edgecost = [edgelabels](const uint32_t label) {
+  const auto edgecost = [&edgelabels](const uint32_t label) {
     return edgelabels[label].sortcost();
   };
 
@@ -577,7 +575,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     // Expand edges from the node
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo es = edgestatus.Get(edgeid);
@@ -608,14 +606,11 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
 
       // Check if lower cost path
       if (es.set() == EdgeSet::kTemporary) {
-        uint32_t idx = es.index();
-        float dc = edgelabels[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels[idx].Update(predindex, newcost, newsortcost,
-                                  walking_distance, 0, 0);
-          adjlist.decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels[es.index()];
+        if (newcost.cost < lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjlist.decrease(es.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost, walking_distance, 0, 0);
         }
         continue;
       }

@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <exception>
 #include "midgard/logging.h"
+#include "midgard/util.h"
+
 #include "baldr/errorcode_util.h"
 
 #include "thor/route_matcher.h"
@@ -22,6 +24,12 @@ namespace thor {
  */
 
 namespace {
+
+using end_edge_t = std::pair<PathLocation::PathEdge, float>;
+using end_node_t = std::unordered_map<GraphId, end_edge_t>;
+
+// Total distance match delta
+constexpr float kTotalDistanceEpsilon = 5.0f;
 
 // Minimum tolerance for edge length
 constexpr float kMinLengthTolerance = 10.0f;
@@ -44,10 +52,9 @@ float length_comparison(const float length, const bool exact_match) {
 
 // Get a map of end edges and the start node of each edge. This is used
 // to terminate the edge walking method.
-std::unordered_map<GraphId, PathLocation::PathEdge> GetEndEdges(
-        GraphReader& reader,
+end_node_t GetEndEdges(GraphReader& reader,
         const std::vector<PathLocation>& correlated) {
-  std::unordered_map<GraphId, PathLocation::PathEdge> end_nodes;
+  end_node_t end_nodes;
   for (const auto& edge : correlated.back().edges) {
     // If destination is at a node - skip any outbound edge
     if (edge.begin_node() || !edge.id.Is_Valid()) {
@@ -61,14 +68,19 @@ std::unordered_map<GraphId, PathLocation::PathEdge> GetEndEdges(
       // If this edge ends at a node add its end node
       auto* tile = reader.GetGraphTile(edge.id);
       auto* directededge = tile->directededge(edge.id);
-      end_nodes.insert({directededge->endnode(), edge});
+      end_nodes.insert({directededge->endnode(), std::make_pair(edge, 0.0f)});
     } else {
       // Get the start node of this edge
-      auto* opp_edge = reader.GetOpposingEdge(edge.id);
-      if (opp_edge == nullptr) {
-        throw std::runtime_error("Couldn't get the opposing edge");
+      GraphId opp_edge_id = reader.GetOpposingEdgeId(edge.id);
+      auto* tile = reader.GetGraphTile(opp_edge_id);
+      if (tile == nullptr) {
+        throw std::runtime_error("Couldn't get the opposing edge tile");
       }
-      end_nodes.insert({opp_edge->endnode(), edge});
+      auto* opp_edge = tile->directededge(opp_edge_id);
+
+      // Compute partial distance along end edge
+      float dist = opp_edge->length() * edge.dist;
+      end_nodes.insert({opp_edge->endnode(), std::make_pair(edge, dist)});
     }
   }
   if (end_nodes.size() == 0) {
@@ -83,23 +95,33 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
                       const std::vector<midgard::PointLL>& shape,
                       const std::vector<float>& distances,
                       size_t& correlated_index, const GraphTile* tile,
-                      const GraphId& node,
-                      std::unordered_map<GraphId, PathLocation::PathEdge>& end_nodes,
+                      const GraphId& node, end_node_t& end_nodes,
                       EdgeLabel& prev_edge_label, float& elapsed_time,
                       std::vector<PathInfo>& path_infos,
-                      const bool from_transition, GraphId& end_node) {
-
-  // If node equals stop node then when are done expanding
+                      const bool from_transition, GraphId& end_node,
+                      const float total_distance) {
+  // Done expanding when node equals stop node and the accumulated distance plus
+  // the partial last edge distance is approximately equal to the total distance
   auto n = end_nodes.find(node);
   if (n != end_nodes.end()) {
-    end_node = node;
-    return true;
+    // Accumulate distance through correlated index
+    float acc_distance = 0.0f;
+    for (uint32_t idx = 0; idx <= correlated_index; idx++) {
+      acc_distance += distances[idx];
+    }
+
+    // Verify distance is approximately equal to the total distance
+    if (midgard::equal<float>((acc_distance + n->second.second), total_distance,
+        kTotalDistanceEpsilon)) {
+      end_node = node;
+      return true;
+    }
   }
 
   const NodeInfo* node_info = tile->node(node);
   GraphId edge_id(node.tileid(), node.level(), node_info->edge_index());
   const DirectedEdge* de = tile->directededge(node_info->edge_index());
-  for (uint32_t i = 0; i < node_info->edge_count(); i++, de++, edge_id++) {
+  for (uint32_t i = 0; i < node_info->edge_count(); i++, de++, ++edge_id) {
     // Skip shortcuts and transit connection edges
     // TODO - later might allow transit connections for multi-modal
     if (de->is_shortcut() || de->use() == Use::kTransitConnection) {
@@ -126,7 +148,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         if (expand_from_node(mode_costing, mode, reader, shape, distances,
                              correlated_index, end_node_tile, de->endnode(),
                              end_nodes, prev_edge_label, elapsed_time,
-                             path_infos, true, end_node)) {
+                             path_infos, true, end_node, total_distance)) {
           return true;
         } else {
           continue;
@@ -173,7 +195,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         if (expand_from_node(mode_costing, mode, reader, shape, distances,
                              index, end_node_tile, de->endnode(),
                              end_nodes, prev_edge_label, elapsed_time,
-                             path_infos, false, end_node)) {
+                             path_infos, false, end_node, total_distance)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos
@@ -197,13 +219,14 @@ bool RouteMatcher::FormPath(
     const std::vector<midgard::PointLL>& shape,
     const std::vector<PathLocation>& correlated,
     std::vector<PathInfo>& path_infos) {
-  float elapsed_time = 0.0f;
-
   // Form distances between shape points
+  float total_distance = 0.0f;
   std::vector<float> distances;
   distances.push_back(0.0f);
   for (size_t i = 1; i < shape.size(); i++) {
-    distances.push_back(shape[i].Distance(shape[i-1]));
+    float d = shape[i].Distance(shape[i-1]);
+    distances.push_back(d);
+    total_distance += d;
   }
 
   // Process and validate end edges (can be more than 1). Create a map of
@@ -211,6 +234,7 @@ bool RouteMatcher::FormPath(
   auto end_nodes = GetEndEdges(reader, correlated);
 
   // Iterate through start edges
+  float elapsed_time = 0.0f;
   for (const auto& edge : correlated.front().edges) {
     // If origin is at a node - skip any inbound edge
     if (edge.end_node()) {
@@ -264,7 +288,7 @@ bool RouteMatcher::FormPath(
         if (expand_from_node(mode_costing, mode, reader, shape, distances, index,
                              end_node_tile, de->endnode(), end_nodes,
                              prev_edge_label, elapsed_time, path_infos,
-                             false, end_node)) {
+                             false, end_node, total_distance)) {
           // If node equals stop node then when are done expanding - get
           // the matching end edge
           auto n = end_nodes.find(end_node);
@@ -272,18 +296,20 @@ bool RouteMatcher::FormPath(
             return false;
           }
 
-          // If the end edge distance = 1.0 then we are done
-          if (n->second.dist == 1.0f) {
+          // If the end edge is at a node then we are done (no partial time
+          // along a destination edge)
+          auto end_edge = n->second.first;
+          if (end_edge.end_node()) {
             return true;
           }
 
           // Get the end edge and add transition time and partial time along
           // the destination edge.
-          const GraphTile* end_edge_tile = reader.GetGraphTile(n->second.id);
+          const GraphTile* end_edge_tile = reader.GetGraphTile(end_edge.id);
           if (end_edge_tile == nullptr) {
             throw std::runtime_error("End edge tile is null");
           }
-          const DirectedEdge* end_de = end_edge_tile->directededge(n->second.id);
+          const DirectedEdge* end_de = end_edge_tile->directededge(end_edge.id);
 
           // Update the elapsed time based on transition cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
@@ -291,10 +317,10 @@ bool RouteMatcher::FormPath(
 
           // Update the elapsed time based on edge cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
-                                  n->second.dist;
+                          end_edge.dist;
 
           // Add end edge
-          path_infos.emplace_back(mode, elapsed_time, n->second.id, 0);
+          path_infos.emplace_back(mode, elapsed_time, end_edge.id, 0);
 
           return true;
         } else {
@@ -308,10 +334,10 @@ bool RouteMatcher::FormPath(
     // Did not find the end of the origin edge. Check for special case where
     // end is along the same edge.
     for (auto end : end_nodes) {
-      if (end.second.id == edge.id) {
+      if (end.second.first.id == edge.id) {
         // Update the elapsed time based on edge cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs *
-                               (end.second.dist - edge.dist);
+                               (end.second.first.dist - edge.dist);
 
         // Add end edge
         path_infos.emplace_back(mode, elapsed_time, edge.id, 0);

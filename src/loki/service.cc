@@ -162,19 +162,21 @@ namespace valhalla {
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
-      std::string method_options = "/costing_options/" + *costing;
-      auto* method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
       auto& allocator = request.GetAllocator();
-      if(!method_options_ptr)
-        request.AddMember(rapidjson::Value(method_options, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
-      method_options_ptr = rapidjson::Pointer{method_options}.Get(request);
+      if(!method_options_ptr) {
+        auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        if(!costing_options) {
+          request.AddMember(rapidjson::Value("costing_options", allocator), rapidjson::Value(rapidjson::kObjectType), allocator);
+          costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        }
+        costing_options->AddMember(rapidjson::Value(*costing, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
+        method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
+      }
 
       try{
         cost_ptr_t c;
-        if (method_options_ptr)
-          c = factory.Create(*costing, *method_options_ptr);
-        else 
-          c = factory.Create(*costing, rapidjson::Value{});
+        c = factory.Create(*costing, *method_options_ptr);
         edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }
@@ -251,6 +253,9 @@ namespace valhalla {
         config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
       max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+      max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
+      max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
+
 
       // Register edge/node costing methods
       // TODO: move this into the loop above

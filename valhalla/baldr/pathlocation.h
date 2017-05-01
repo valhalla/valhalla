@@ -1,13 +1,14 @@
 #ifndef VALHALLA_BALDR_PATHLOCATION_H_
 #define VALHALLA_BALDR_PATHLOCATION_H_
 
+#include <cstdint>
 #include <vector>
 #include <utility>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphid.h>
 
 #include <boost/property_tree/ptree.hpp>
-#include <rapidjson/document.h>
+#include <baldr/rapidjson_utils.h>
 
 namespace valhalla{
 namespace baldr{

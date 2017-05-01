@@ -209,7 +209,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
@@ -277,7 +277,12 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        CheckIfLowerCostPath(edgestatus.index(), predindex, newcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost <  lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost);
+        }
         continue;
       }
 
@@ -312,21 +317,6 @@ void AStarPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
   uint32_t idx = edgelabels_.size();
   adjacencylist_->add(idx, sortcost);
   edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
-}
-
-// Check if edge is temporarily labeled and this path has less cost. If
-// less cost the predecessor is updated and the sort cost is decremented
-// by the difference in real cost (A* heuristic doesn't change)
-void AStarPathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
-                                         const uint32_t predindex,
-                                         const Cost& newcost) {
-  float dc = edgelabels_[idx].cost().cost - newcost.cost;
-  if (dc > 0) {
-    float oldsortcost = edgelabels_[idx].sortcost();
-    float newsortcost = oldsortcost - dc;
-    edgelabels_[idx].Update(predindex, newcost, newsortcost);
-    adjacencylist_->decrease(idx, newsortcost, oldsortcost);
-  }
 }
 
 // Add an edge at the origin to the adjacency list

@@ -135,7 +135,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
         continue;
@@ -173,14 +173,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        uint32_t idx = edgestatus.status.index;
-        float dc = edgelabels_[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels_[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels_[idx].Update(predindex, newcost, newsortcost,
-                                  distance, 0, 0);
-          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost <  lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost,
+                     distance, 0, 0);
         }
         continue;
       }
@@ -295,7 +293,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, directededge++, edgeid++) {
+                i++, directededge++, ++edgeid) {
       // Skip shortcut edges
       if (directededge->is_shortcut()) {
         continue;
@@ -341,14 +339,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        uint32_t idx = edgestatus.status.index;
-        float dc = edgelabels_[idx].cost().cost - newcost.cost;
-        if (dc > 0) {
-          float oldsortcost = edgelabels_[idx].sortcost();
-          float newsortcost = oldsortcost - dc;
-          edgelabels_[idx].Update(predindex, newcost, newsortcost,
-                                  distance, 0, 0);
-          adjacencylist_->decrease(idx, newsortcost, oldsortcost);
+        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        if (newcost.cost <  lab.cost().cost) {
+          float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          lab.Update(predindex, newcost, newsortcost,
+                     distance, 0, 0);
         }
         continue;
       }

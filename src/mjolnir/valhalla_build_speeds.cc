@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -18,6 +19,7 @@
 #include "midgard/logging.h"
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 
@@ -228,9 +230,8 @@ int main(int argc, char** argv) {
   LOG_INFO("Done reading ways to edges file");
 
   // Get Valhalla tiles
-  valhalla::baldr::TileHierarchy tile_hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   // Create a map of tiles with speed table for the specified entry
   std::unordered_map<uint32_t, std::vector<uint8_t>> tile_speeds;

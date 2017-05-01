@@ -20,7 +20,7 @@ Build Status
 Overview
 --------
 
-The are several key features that we hope can differentiate the Valhalla project from other routing and network analysis engines. They are:
+There are several key features that we hope can differentiate the Valhalla project from other routing and network analysis engines. They are:
 
 - Open source software, on open source data with a very liberal license. Should allow for transparency in development, encourage contribution and community input, and foster use in other projects.
 - Tiled hierarchical data structure. Should allow users to have a small memory footprint on memory constrained devices, enable offline routing, provide a means for regional extracts and partial updates.

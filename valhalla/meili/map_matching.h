@@ -1,6 +1,8 @@
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHING_H_
 #define MMP_MAP_MATCHING_H_
+#include <cmath>
+#include <cstdint>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/baldr/pathlocation.h>

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_ROUTE_MATCHER_H_
 #define VALHALLA_THOR_ROUTE_MATCHER_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <unordered_map>

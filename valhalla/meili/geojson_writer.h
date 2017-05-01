@@ -4,9 +4,7 @@
 
 #include <vector>
 
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/error/en.h>
+#include <baldr/rapidjson_utils.h>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>

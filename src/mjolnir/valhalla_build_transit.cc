@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -196,9 +198,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
       pt.get<std::string>("import_level") : "";
 
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   std::set<GraphId> tiles;
-  const auto& tile_level = hierarchy.levels().rbegin()->second;
+  const auto& tile_level = TileHierarchy::levels().rbegin()->second;
   curler_t curler;
   auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
@@ -265,7 +266,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     //we have anything we want it
     if(stops_total > 0/* || routes_total > 0|| pairs_total > 0*/) {
       prioritized.push(weighted_tile_t{tile, stops_total + 10/* + routes_total * 1000 + pairs_total*/}); //TODO: factor in stop pairs as well
-      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " should have " + std::to_string(stops_total) +  " stops "/* +
+      LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stops_total) +  " stops "/* +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
     }
   }
@@ -465,8 +466,13 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     std::string frequency_time;
 
     if (frequency_start_time != "null" && frequency_end_time != "null" && frequency_headway_seconds != "null") {
-      if (origin_time < frequency_start_time)
-        LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+
+      // this should never happen and if it does then it is a bad frequency.  just continue
+      if (origin_time < frequency_start_time) {
+        tile.mutable_stop_pairs()->RemoveLast();
+        continue;
+        //LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      }
       pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
       pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
       frequency_time = frequency_start_time + frequency_end_time;
@@ -598,8 +604,7 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
 
 void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, unique_transit_t& uniques,
                  std::promise<std::list<GraphId> >& promise) {
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
-  const auto& tiles = hierarchy.levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
   curler_t curler;
   auto now = time(nullptr);
@@ -633,7 +638,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
         pt.get<std::string>("import_level") : "";
 
     Transit tile;
-    auto file_name = GraphTile::FileSuffix(current, hierarchy);
+    auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
 
@@ -829,10 +834,9 @@ struct dist_sort_t {
 };
 
 void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::list<GraphId>& tiles, std::mutex& lock) {
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
-  auto grid = hierarchy.levels().rbegin()->second.tiles;
-  auto tile_name = [&hierarchy, &pt](const GraphId& id){
-    auto file_name = GraphTile::FileSuffix(id, hierarchy);
+  auto grid = TileHierarchy::levels().rbegin()->second.tiles;
+  auto tile_name = [&pt](const GraphId& id){
+    auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     return pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
   };
@@ -1334,7 +1338,6 @@ GraphId GetGraphId(const GraphId& nodeid,
 }
 
 void AddToGraph(GraphTileBuilder& tilebuilder_transit,
-                const TileHierarchy& hierarchy_transit,
                 const GraphId& tileid,
                 const std::string& tile,
                 const std::string& transit_dir,
@@ -1464,7 +1467,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       } else {
         // Get Transit PBF data for this tile
         // Get transit pbf tile
-        std::string file_name = GraphTile::FileSuffix(GraphId(end_stop_graphid.tileid(), end_stop_graphid.level(),0), hierarchy_transit);
+        std::string file_name = GraphTile::FileSuffix(GraphId(end_stop_graphid.tileid(), end_stop_graphid.level(),0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
         const std::string file = transit_dir + '/' + file_name;
@@ -1566,7 +1569,6 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   stats.midnight_dep_count = 0;
 
   GraphReader reader_transit_level(pt);
-  const TileHierarchy& hierarchy_transit_level = reader_transit_level.GetTileHierarchy();
 
   // Iterate through the tiles in the queue and find any that include stops
   for(; tile_start != tile_end; ++tile_start) {
@@ -1577,7 +1579,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 
     // Get transit pbf tile
     const std::string transit_dir = pt.get<std::string>("transit_dir");
-    std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), hierarchy_transit_level);
+    std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
     const std::string file = transit_dir + '/' + file_name;
@@ -1595,7 +1597,8 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level()+1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder_transit(hierarchy_transit_level, transit_tile_id, false);
+    GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(),
+                      transit_tile_id, false);
 
     auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
     uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
@@ -1739,7 +1742,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder_transit);
 
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(tilebuilder_transit, hierarchy_transit_level, tile_id, file, transit_dir,
+    AddToGraph(tilebuilder_transit, tile_id, file, transit_dir,
                lock, all_tiles, stop_edge_map, stop_access, shapes, distances,
                route_types, onestoptests, stats.no_dir_edge_count);
 
@@ -1889,9 +1892,8 @@ int main(int argc, char** argv) {
   curl_global_cleanup();
 
   //figure out which transit tiles even exist
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
   boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + '/' +
-                                                                   std::to_string(hierarchy.levels().rbegin()->first));
+                                                                   std::to_string(TileHierarchy::levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for(; transit_file_itr != end_file_itr; ++transit_file_itr)

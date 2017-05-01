@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_ISOCHRONE_H_
 #define VALHALLA_THOR_ISOCHRONE_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -134,18 +135,6 @@ class Isochrone {
   void UpdateIsoTile(const sif::EdgeLabel& pred,
                      baldr::GraphReader& graphreader,
                      const midgard::PointLL& ll);
-
-  /**
-   * Check if edge is temporarily labeled and this path has less cost. If
-   * less cost the predecessor is updated and the sort cost is decremented
-   * by the difference in real cost (A* heuristic doesn't change).
-   * @param  idx        Index into the edge status list.
-   * @param  predindex  Index of the predecessor edge.
-   * @param  newcost    Cost of the new path.
-   */
-  void CheckIfLowerCostPath(const uint32_t idx,
-                            const uint32_t predindex,
-                            const sif::Cost& newcost);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.

@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <memory>
 #include <future>
 #include <thread>
@@ -186,9 +187,8 @@ std::cout << "In Benchmark" << std::endl;
   // Graphreader
   auto hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   // Iterate through the tiles and perform enhancements
   std::unordered_map<uint32_t,multi_polygon_type> polys;

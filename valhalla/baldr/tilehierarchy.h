@@ -15,87 +15,76 @@
 namespace valhalla {
 namespace baldr {
 
-
-//TODO: hack and slash this. this should just be the levels and operations we commonly do
-//with them like getting the transit level or getting the highest or lowest non transit level
-//this can be static and accessed through a singleton or just static functions on the struct
-//tile_dir doesnt belong here anyway
+/**
+ * TileLevel: Define a level in the hierarchy of the tiles. Includes:
+ *          Hierarchy level.
+ *          Minimum (largest value) road class in this level.
+ *          Name for the level.
+ *          Lat,lon tiling (in particular, tile size) of this level
+ */
+struct TileLevel {
+  uint8_t level;
+  RoadClass importance;
+  std::string name;
+  midgard::Tiles<midgard::PointLL> tiles;
+};
 
 /**
- * class used to get information about a given hierarchy of tiles
+ * Set of static methods used to get information the hierarchy of tiles. The
+ * tile hierarchy levels are static.
  */
 class TileHierarchy {
  public:
   /**
-   * Constructor
+   * Get the set of levels in this hierarchy.
+   * @return set of TileLevel objects.
    */
-  TileHierarchy(const std::string& tile_dir);
+  static const std::map<uint8_t, TileLevel>& levels() {
+    return levels_;
+  }
 
   /**
-   * Encapsulates a few types together to define a level in the hierarchy
+   * Get the transit level in this hierarchy.
+   * @return the transit TileLevel object.
    */
-  struct TileLevel{
-    bool operator<(const TileLevel& other) const;
-    uint8_t level;
-    RoadClass importance;
-    std::string name;
-    midgard::Tiles<midgard::PointLL> tiles;
-  };
+  static const TileLevel& GetTransitLevel() {
+    return transit_level_;
+  }
 
   /**
-   * Get the set of levels in this hierarchy
-   *
-   * @return set of TileLevel objects
+   * Returns the GraphId of the requested tile based on a lat,lng and a level.
+   * If the level is not supported an invalid id will be returned.
+   * @param pointll  Lat,lng location within the tile.
+   * @param level    Level of the requested tile.
    */
-  const std::map<uint8_t, TileLevel>& levels() const;
+  static GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level);
 
   /**
-   * Get the root tile directory where the tiles are stored
-   *
-   * @return string directory
-   */
-  const std::string& tile_dir() const;
-
-  /**
-   * Returns the graphid of the requested tile based on a lat,lng and a level
-   * if the level is not supported an invalid id will be returned
-   *
-   * @param pointll a lat,lng location within the tile
-   * @param level   the level of the requested tile
-   */
-  GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level) const;
-
-  /**
-   * Returns all the graphids of the tiles which intersect the given bounding
+   * Returns all the GraphIds of the tiles which intersect the given bounding
    * box at that level.
-   *
-   * @param bbox  the bounding box of tiles to find.
-   * @param level the level of the tiles to return.
+   * @param bbox  Bounding box of tiles to find.
+   * @param level Level of the tiles to return.
    */
-  std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL> &bbox, uint8_t level) const;
+  static std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox,
+                                          const uint8_t level);
 
   /**
-   * Returns all the graphids of the tiles which intersect the given bounding
+   * Returns all the GraphIds of the tiles which intersect the given bounding
    * box at any level.
-   *
-   * @param bbox  the bounding box of tiles to find.
+   * @param bbox  Bounding box of tiles to find.
    */
-  std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL> &bbox) const;
+  static std::vector<GraphId> GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox);
 
   /**
    * Gets the hierarchy level given the road class.
    * @param  road_class  Road classification.
    * @return Returns the level.
    */
-  uint8_t get_level(const RoadClass roadclass) const;
+  static uint8_t get_level(const RoadClass roadclass);
 
  private:
-  explicit TileHierarchy();
-
-  // a place to keep each level of the hierarchy
-  std::map<uint8_t, TileLevel> levels_;
-  // the tiles are stored
-  std::string tile_dir_;
+  static std::map<uint8_t, TileLevel> levels_;
+  static TileLevel transit_level_;
 };
 
 }

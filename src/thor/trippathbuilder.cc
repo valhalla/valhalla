@@ -6,12 +6,12 @@
 #include <cmath>
 
 #include "thor/trippathbuilder.h"
-#include "thor/trip_path_controller.h"
-
+#include "thor/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/signinfo.h"
 #include "baldr/graphconstants.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -118,7 +118,7 @@ uint32_t GetAdminIndex(
   return admin_index;
 }
 
-void AssignAdmins(const TripPathController& controller,
+void AssignAdmins(const AttributesController& controller,
                   TripPath& trip_path,
                   const std::vector<AdminInfo>& admin_info_list) {
   if (controller.category_attribute_enabled(kAdminCategory)) {
@@ -145,35 +145,154 @@ void AssignAdmins(const TripPathController& controller,
   }
 }
 
+// Set the bounding box (min,max lat,lon) for the shape
+void SetBoundingBox(TripPath& trip_path, std::vector<PointLL>& shape) {
+  AABB2<PointLL> bbox(shape);
+  LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  min_ll->set_lat(bbox.miny());
+  min_ll->set_lng(bbox.minx());
+  LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  max_ll->set_lat(bbox.maxy());
+  max_ll->set_lng(bbox.maxx());
 }
 
+}
 
 namespace valhalla {
 namespace thor {
 
 namespace {
-TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
-  switch (road_class) {
-    case RoadClass::kMotorway:
-      return TripPath_RoadClass_kMotorway;
-    case RoadClass::kTrunk:
-      return TripPath_RoadClass_kTrunk;
-    case RoadClass::kPrimary:
-      return TripPath_RoadClass_kPrimary;
-    case RoadClass::kSecondary:
-      return TripPath_RoadClass_kSecondary;
-    case RoadClass::kTertiary:
-      return TripPath_RoadClass_kTertiary;
-    case RoadClass::kUnclassified:
-      return TripPath_RoadClass_kUnclassified;
-    case RoadClass::kResidential:
-      return TripPath_RoadClass_kResidential;
-    case RoadClass::kServiceOther:
-      return TripPath_RoadClass_kServiceOther;
+
+// Associate RoadClass values to TripPath proto
+constexpr odin::TripPath_RoadClass kTripPathRoadClass[] = {
+    odin::TripPath_RoadClass_kMotorway,
+    odin::TripPath_RoadClass_kTrunk,
+    odin::TripPath_RoadClass_kPrimary,
+    odin::TripPath_RoadClass_kSecondary,
+    odin::TripPath_RoadClass_kTertiary,
+    odin::TripPath_RoadClass_kUnclassified,
+    odin::TripPath_RoadClass_kResidential,
+    odin::TripPath_RoadClass_kServiceOther };
+TripPath_RoadClass GetTripPathRoadClass(const RoadClass road_class) {
+  return kTripPathRoadClass[static_cast<int>(road_class)];
+}
+
+// Associate Surface values to TripPath proto
+constexpr odin::TripPath_Surface kTripPathSurface[] = {
+    odin::TripPath_Surface_kPavedSmooth,
+    odin::TripPath_Surface_kPaved,
+    odin::TripPath_Surface_kPavedRough,
+    odin::TripPath_Surface_kCompacted,
+    odin::TripPath_Surface_kDirt,
+    odin::TripPath_Surface_kGravel,
+    odin::TripPath_Surface_kPath,
+    odin::TripPath_Surface_kImpassable };
+TripPath_Surface GetTripPathSurface(const Surface surface) {
+  return kTripPathSurface[static_cast<int>(surface)];
+}
+
+// Associate vehicle types to TripPath proto
+// TODO - why doesn't these use an enum input?
+constexpr odin::TripPath_VehicleType kTripPathVehicleType[] = {
+    odin::TripPath_VehicleType::TripPath_VehicleType_kCar,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kMotorcycle,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kAutoBus,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kTractorTrailer };
+TripPath_VehicleType GetTripPathVehicleType(const uint8_t type) {
+  return (type <= static_cast<uint8_t>(VehicleType::kTractorTrailer)) ?
+      kTripPathVehicleType[type] : kTripPathVehicleType[0];
+}
+
+// Associate pedestrian types to TripPath proto
+constexpr odin::TripPath_PedestrianType kTripPathPedestrianType[] = {
+    odin::TripPath_PedestrianType::TripPath_PedestrianType_kFoot,
+    odin::TripPath_PedestrianType::TripPath_PedestrianType_kWheelchair,
+    odin::TripPath_PedestrianType::TripPath_PedestrianType_kSegway };
+TripPath_PedestrianType GetTripPathPedestrianType(const uint8_t type) {
+  return (type <= static_cast<uint8_t>(PedestrianType::kSegway)) ?
+      kTripPathPedestrianType[type] : kTripPathPedestrianType[0];
+}
+
+// Associate bicycle types to TripPath proto
+constexpr odin::TripPath_BicycleType kTripPathBicycleType[] = {
+    odin::TripPath_BicycleType::TripPath_BicycleType_kRoad,
+    odin::TripPath_BicycleType::TripPath_BicycleType_kCross,
+    odin::TripPath_BicycleType::TripPath_BicycleType_kHybrid,
+    odin::TripPath_BicycleType::TripPath_BicycleType_kMountain };
+TripPath_BicycleType GetTripPathBicycleType(const uint8_t type) {
+  return (type <= static_cast<uint8_t>(BicycleType::kMountain)) ?
+      kTripPathBicycleType[type] : kTripPathBicycleType[0];
+}
+
+// Associate transit types to TripPath proto
+constexpr odin::TripPath_TransitType kTripPathTransitType[] = {
+    odin::TripPath_TransitType::TripPath_TransitType_kTram,
+    odin::TripPath_TransitType::TripPath_TransitType_kMetro,
+    odin::TripPath_TransitType::TripPath_TransitType_kRail,
+    odin::TripPath_TransitType::TripPath_TransitType_kBus,
+    odin::TripPath_TransitType::TripPath_TransitType_kFerry,
+    odin::TripPath_TransitType::TripPath_TransitType_kCableCar,
+    odin::TripPath_TransitType::TripPath_TransitType_kGondola,
+    odin::TripPath_TransitType::TripPath_TransitType_kFunicular };
+TripPath_TransitType GetTripPathTransitType(const TransitType transit_type) {
+  return kTripPathTransitType[static_cast<uint32_t>(transit_type)];
+}
+
+// Associate traversability values to TripPath proto
+constexpr odin::TripPath_Traversability kTripPathTraversability[] = {
+    odin::TripPath_Traversability_kNone,
+    odin::TripPath_Traversability_kForward,
+    odin::TripPath_Traversability_kBackward,
+    odin::TripPath_Traversability_kBoth };
+TripPath_Traversability GetTripPathTraversability(const Traversability traversability) {
+  return kTripPathTraversability[static_cast<uint32_t>(traversability)];
+}
+
+// Associate side of street to TripPath proto
+constexpr odin::Location_SideOfStreet kTripPathSideOfStreet[] = {
+    odin::Location_SideOfStreet_kNone,
+    odin::Location_SideOfStreet_kLeft,
+    odin::Location_SideOfStreet_kRight };
+odin::Location_SideOfStreet GetTripPathSideOfStreet(
+          const PathLocation::SideOfStreet sos) {
+  return kTripPathSideOfStreet[static_cast<uint32_t>(sos)];
+}
+
+TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
+  switch (node_type) {
+    case NodeType::kStreetIntersection:
+      return TripPath_Node_Type_kStreetIntersection;
+    case NodeType::kGate:
+      return TripPath_Node_Type_kGate;
+    case NodeType::kBollard:
+      return TripPath_Node_Type_kBollard;
+    case NodeType::kTollBooth:
+      return TripPath_Node_Type_kTollBooth;
+    case NodeType::kMultiUseTransitStop:
+      return TripPath_Node_Type_kMultiUseTransitStop;
+    case NodeType::kBikeShare:
+      return TripPath_Node_Type_kBikeShare;
+    case NodeType::kParking:
+      return TripPath_Node_Type_kParking;
+    case NodeType::kMotorWayJunction:
+      return TripPath_Node_Type_kMotorwayJunction;
+    case NodeType::kBorderControl:
+      return TripPath_Node_Type_kBorderControl;
   }
 }
 
-TripPath_Use GetTripPathUse(Use use) {
+// Associate cycle lane values to TripPath proto
+constexpr odin::TripPath_CycleLane kTripPathCycleLane[] = {
+    odin::TripPath_CycleLane_kNoCycleLane,
+    odin::TripPath_CycleLane_kShared,
+    odin::TripPath_CycleLane_kDedicated,
+    odin::TripPath_CycleLane_kSeparated };
+TripPath_CycleLane GetTripPathCycleLane(const CycleLane cyclelane) {
+  return kTripPathCycleLane[static_cast<uint32_t>(cyclelane)];
+}
+
+// Associate Use to TripPath proto
+TripPath_Use GetTripPathUse(const Use use) {
   switch (use) {
     case Use::kRoad:
       return TripPath_Use_kRoadUse;
@@ -228,148 +347,71 @@ TripPath_Use GetTripPathUse(Use use) {
       return TripPath_Use_kBusConnectionUse;
     case Use::kTransitConnection:
       return TripPath_Use_kTransitConnectionUse;
+    // Should not see other values
+    default:
     case Use::kTransitionUp:
     case Use::kTransitionDown: {
       // TODO should we throw a runtime error?
+      return TripPath_Use_kRoadUse;
     }
   }
 }
 
-TripPath_Surface GetTripPathSurface(Surface surface) {
-  switch (surface) {
-    case Surface::kPavedSmooth:
-      return TripPath_Surface_kPavedSmooth;
-    case Surface::kPaved:
-      return TripPath_Surface_kPaved;
-    case Surface::kPavedRough:
-      return TripPath_Surface_kPavedRough;
-    case Surface::kCompacted:
-      return TripPath_Surface_kCompacted;
-    case Surface::kDirt:
-      return TripPath_Surface_kDirt;
-    case Surface::kGravel:
-      return TripPath_Surface_kGravel;
-    case Surface::kPath:
-      return TripPath_Surface_kPath;
-    case Surface::kImpassable:
-      return TripPath_Surface_kImpassable;
-  }
+/**
+ * Add a location to the Trip path.
+ * @param  trip_path  Trip path (proto)
+ * @param  loc        Location information.
+ * @param  type       Location type (break or through)
+ * @return Returns a proto Location object.
+ */
+odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
+                            const odin::Location_Type type) {
+  odin::Location* tp_loc = trip_path.add_location();
+  odin::LatLng* ll = tp_loc->mutable_ll();
+  ll->set_lat(loc.latlng_.lat());
+  ll->set_lng(loc.latlng_.lng());
+  tp_loc->set_type(type);
+  if (!loc.name_.empty())
+    tp_loc->set_name(loc.name_);
+  if (!loc.street_.empty())
+    tp_loc->set_street(loc.street_);
+  if (!loc.city_.empty())
+    tp_loc->set_city(loc.city_);
+  if (!loc.state_.empty())
+    tp_loc->set_state(loc.state_);
+  if (!loc.zip_.empty())
+    tp_loc->set_postal_code(loc.zip_);
+  if (!loc.country_.empty())
+    tp_loc->set_country(loc.country_);
+  if (loc.heading_)
+    tp_loc->set_heading(*loc.heading_);
+  if (loc.date_time_)
+    tp_loc->set_date_time(*loc.date_time_);
+
+  return tp_loc;
 }
 
-TripPath_VehicleType GetTripPathVehicleType(uint8_t type) {
-  switch (type) {
-    case static_cast<uint8_t>(VehicleType::kCar):
-      return TripPath_VehicleType::TripPath_VehicleType_kCar;
-    case static_cast<uint8_t>(VehicleType::kMotorcycle):
-      return TripPath_VehicleType::TripPath_VehicleType_kMotorcycle;
-    case static_cast<uint8_t>(VehicleType::kBus):
-      return TripPath_VehicleType::TripPath_VehicleType_kAutoBus;
-    case static_cast<uint8_t>(VehicleType::kTractorTrailer):
-      return TripPath_VehicleType::TripPath_VehicleType_kTractorTrailer;
-  }
-}
-
-TripPath_PedestrianType GetTripPathPedestrianType(uint8_t type) {
-  switch (type) {
-    case static_cast<uint8_t>(PedestrianType::kFoot):
-      return TripPath_PedestrianType::TripPath_PedestrianType_kFoot;
-    case static_cast<uint8_t>(PedestrianType::kWheelchair):
-      return TripPath_PedestrianType::TripPath_PedestrianType_kWheelchair;
-    case static_cast<uint8_t>(PedestrianType::kSegway):
-      return TripPath_PedestrianType::TripPath_PedestrianType_kSegway;
-  }
-}
-
-TripPath_BicycleType GetTripPathBicycleType(uint8_t type) {
-  switch (type) {
-    case static_cast<uint8_t>(BicycleType::kRoad):
-      return TripPath_BicycleType::TripPath_BicycleType_kRoad;
-    case static_cast<uint8_t>(BicycleType::kCross):
-      return TripPath_BicycleType::TripPath_BicycleType_kCross;
-    case static_cast<uint8_t>(BicycleType::kHybrid):
-      return TripPath_BicycleType::TripPath_BicycleType_kHybrid;
-    case static_cast<uint8_t>(BicycleType::kMountain):
-      return TripPath_BicycleType::TripPath_BicycleType_kMountain;
-  }
-}
-
-TripPath_TransitType GetTripPathTransitType(TransitType transit_type) {
-  switch (transit_type) {
-    case TransitType::kTram:        // Tram, streetcar, lightrail
-      return TripPath_TransitType::TripPath_TransitType_kTram;
-    case TransitType::kMetro:      // Subway, metro
-      return TripPath_TransitType::TripPath_TransitType_kMetro;
-    case TransitType::kRail:        // Rail
-      return TripPath_TransitType::TripPath_TransitType_kRail;
-    case TransitType::kBus:         // Bus
-      return TripPath_TransitType::TripPath_TransitType_kBus;
-    case TransitType::kFerry:       // Ferry
-      return TripPath_TransitType::TripPath_TransitType_kFerry;
-    case TransitType::kCableCar:    // Cable car
-      return TripPath_TransitType::TripPath_TransitType_kCableCar;
-    case TransitType::kGondola:     // Gondola (suspended cable car)
-      return TripPath_TransitType::TripPath_TransitType_kGondola;
-    case TransitType::kFunicular:   // Funicular (steep incline)
-      return TripPath_TransitType::TripPath_TransitType_kFunicular;
-  }
-}
-
-TripPath_Traversability GetTripPathTraversability(Traversability traversability) {
-  switch (traversability) {
-    case Traversability::kNone:
-      return TripPath_Traversability_kNone;
-    case Traversability::kForward:
-      return TripPath_Traversability_kForward;
-    case Traversability::kBackward:
-      return TripPath_Traversability_kBackward;
-    case Traversability::kBoth:
-      return TripPath_Traversability_kBoth;
-  }
-}
-
-odin::Location_SideOfStreet GetTripPathSideOfStreet(
-    PathLocation::SideOfStreet sos) {
-  switch (sos) {
-    case PathLocation::SideOfStreet::NONE:
-      return odin::Location_SideOfStreet_kNone;
-    case PathLocation::SideOfStreet::LEFT:
-      return odin::Location_SideOfStreet_kLeft;
-    case PathLocation::SideOfStreet::RIGHT:
-      return odin::Location_SideOfStreet_kRight;
-  }
-}
-
-TripPath_Node_Type GetTripPathNodeType(NodeType node_type) {
-  switch (node_type) {
-    case NodeType::kStreetIntersection:
-      return TripPath_Node_Type_kStreetIntersection;
-    case NodeType::kGate:
-      return TripPath_Node_Type_kGate;
-    case NodeType::kBollard:
-      return TripPath_Node_Type_kBollard;
-    case NodeType::kTollBooth:
-      return TripPath_Node_Type_kTollBooth;
-    case NodeType::kMultiUseTransitStop:
-      return TripPath_Node_Type_kMultiUseTransitStop;
-    case NodeType::kBikeShare:
-      return TripPath_Node_Type_kBikeShare;
-    case NodeType::kParking:
-      return TripPath_Node_Type_kParking;
-    case NodeType::kMotorWayJunction:
-      return TripPath_Node_Type_kMotorwayJunction;
-    case NodeType::kBorderControl:
-      return TripPath_Node_Type_kBorderControl;
-  }
-}
-
-TripPath_CycleLane GetTripPathCycleLane(CycleLane cyclelane) {
-  switch (cyclelane) {
-    case CycleLane::kShared:
-      return TripPath_CycleLane_kShared;
-    case CycleLane::kDedicated:
-      return TripPath_CycleLane_kDedicated;
-    case CycleLane::kSeparated:
-      return TripPath_CycleLane_kSeparated;
+/**
+ * Set begin and end heading if requested.
+ * @param  trip_edge  Trip path edge to add headings.
+ * @param  controller Controller specifying attributes to add to trip edge.
+ * @param  edge       Directed edge.
+ * @param  shape      Trip shape.
+ */
+void SetHeadings(TripPath_Edge* trip_edge, const AttributesController& controller,
+                 const DirectedEdge* edge, const std::vector<PointLL>& shape,
+                 const uint32_t begin_index) {
+  if (controller.attributes.at(kEdgeBeginHeading) ||
+      controller.attributes.at(kEdgeEndHeading)) {
+    float offset = GetOffsetForHeading(edge->classification(), edge->use());
+    if (controller.attributes.at(kEdgeBeginHeading)) {
+      trip_edge->set_begin_heading(std::round(PointLL::HeadingAlongPolyline(shape,
+                          offset, begin_index, shape.size() - 1)));
+    }
+    if (controller.attributes.at(kEdgeEndHeading)) {
+      trip_edge->set_end_heading(std::round(PointLL::HeadingAtEndOfPolyline(shape,
+                          offset, begin_index, shape.size() - 1)));
+    }
   }
 }
 
@@ -387,7 +429,7 @@ TripPathBuilder::~TripPathBuilder() {
 // TODO - probably need the location information passed in - to
 // add to the TripPath
 TripPath TripPathBuilder::Build(
-    const TripPathController& controller, GraphReader& graphreader,
+    const AttributesController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
     const std::list<PathLocation>& through_loc,
@@ -401,74 +443,18 @@ TripPath TripPathBuilder::Build(
   TripPath trip_path;
 
   // Get the local tile level
-  uint32_t local_level = graphreader.GetTileHierarchy().levels().rbegin()->first;
+  uint32_t local_level = TileHierarchy::levels().rbegin()->first;
 
-  // Set origin (assumed to be a break)
-  odin::Location* tp_orig = trip_path.add_location();
-  odin::LatLng* orig_ll = tp_orig->mutable_ll();
-  orig_ll->set_lat(origin.latlng_.lat());
-  orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_type(odin::Location_Type_kBreak);
-  if (!origin.name_.empty())
-    tp_orig->set_name(origin.name_);
-  if (!origin.street_.empty())
-    tp_orig->set_street(origin.street_);
-  if (!origin.city_.empty())
-    tp_orig->set_city(origin.city_);
-  if (!origin.state_.empty())
-    tp_orig->set_state(origin.state_);
-  if (!origin.zip_.empty())
-    tp_orig->set_postal_code(origin.zip_);
-  if (!origin.country_.empty())
-    tp_orig->set_country(origin.country_);
-  if (origin.heading_)
-    tp_orig->set_heading(*origin.heading_);
-
-  // Add list of through locations
+  // Set origin, any through locations, and destination. Origin and
+  // destination are assumed to be breaks.
+  odin::Location* tp_orig = AddLocation(trip_path, origin,
+                               odin::Location_Type_kBreak);
   for (const auto& through : through_loc) {
-    odin::Location* tp_through = trip_path.add_location();
-    odin::LatLng* through_ll = tp_through->mutable_ll();
-    through_ll->set_lat(through.latlng_.lat());
-    through_ll->set_lng(through.latlng_.lng());
-    tp_through->set_type(odin::Location_Type_kThrough);
-    if (!through.name_.empty())
-      tp_through->set_name(through.name_);
-    if (!through.street_.empty())
-      tp_through->set_street(through.street_);
-    if (!through.city_.empty())
-      tp_through->set_city(through.city_);
-    if (!through.state_.empty())
-      tp_through->set_state(through.state_);
-    if (!through.zip_.empty())
-      tp_through->set_postal_code(through.zip_);
-    if (!through.country_.empty())
-      tp_through->set_country(through.country_);
-    if (through.heading_)
-      tp_through->set_heading(*through.heading_);
-    if (through.date_time_)
-      tp_through->set_date_time(*through.date_time_);
+    odin::Location* tp_through = AddLocation(trip_path, through,
+                                    odin::Location_Type_kThrough);
   }
-
-  // Set destination (assumed to be a break)
-  odin::Location* tp_dest = trip_path.add_location();
-  odin::LatLng* dest_ll = tp_dest->mutable_ll();
-  dest_ll->set_lat(dest.latlng_.lat());
-  dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_type(odin::Location_Type_kBreak);
-  if (!dest.name_.empty())
-    tp_dest->set_name(dest.name_);
-  if (!dest.street_.empty())
-    tp_dest->set_street(dest.street_);
-  if (!dest.city_.empty())
-    tp_dest->set_city(dest.city_);
-  if (!dest.state_.empty())
-    tp_dest->set_state(dest.state_);
-  if (!dest.zip_.empty())
-    tp_dest->set_postal_code(dest.zip_);
-  if (!dest.country_.empty())
-    tp_dest->set_country(dest.country_);
-  if (dest.heading_)
-    tp_dest->set_heading(*dest.heading_);
+  odin::Location* tp_dest = AddLocation(trip_path, dest,
+                                 odin::Location_Type_kBreak);
 
   uint32_t origin_sec_from_mid = 0;
   if (origin.date_time_)
@@ -577,6 +563,10 @@ TripPath TripPathBuilder::Build(
     if (controller.attributes.at(kEdgeEndShapeIndex))
       trip_edge->set_end_shape_index(shape.size()-1);
 
+    // Set begin and end heading if requested. Uses shape so
+    // must be done after the edge's shape has been added.
+    SetHeadings(trip_edge, controller, edge, shape, 0);
+
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime))
       node->set_elapsed_time(path.front().elapsed_time);
@@ -633,15 +623,7 @@ TripPath TripPathBuilder::Build(
     }
 
     // Set the bounding box of the shape
-    AABB2<PointLL> bbox(shape);
-    odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-    // Set bounding box min lat/lon
-    min_ll->set_lat(bbox.miny());
-    min_ll->set_lng(bbox.minx());
-    odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-    // Set bounding box max lat/lon
-    max_ll->set_lat(bbox.maxy());
-    max_ll->set_lng(bbox.maxx());
+    SetBoundingBox(trip_path, shape);
 
     // Set shape if requested
     if (controller.attributes.at(kShape))
@@ -866,17 +848,10 @@ TripPath TripPathBuilder::Build(
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
     auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
-    if (is_first_edge) {
-      // Set begin shape index if requested
-      if (controller.attributes.at(kEdgeBeginShapeIndex))
-        trip_edge->set_begin_shape_index(0);
-    } else {
-      // Set begin shape index if requested
-      if (controller.attributes.at(kEdgeBeginShapeIndex))
-        trip_edge->set_begin_shape_index(trip_shape.size() - 1);
-    }
+    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
 
-    // We need to clip the shape if its at the beginning or end and isnt a full length
+    // We need to clip the shape if i its at the beginning or end and
+    // is not full length
     if (is_first_edge || is_last_edge) {
       float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
       if (directededge->forward() == is_last_edge) {
@@ -888,8 +863,8 @@ TripPath TripPathBuilder::Build(
             trip_shape, edgeinfo.shape().rbegin(), edgeinfo.shape().rend(),
             length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       }
-    }    // Just get the shape in there in the right direction
-    else {
+    } else {
+      // Just get the shape in there in the right direction
       if (directededge->forward())
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1,
                           edgeinfo.shape().end());
@@ -897,9 +872,19 @@ TripPath TripPathBuilder::Build(
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1,
                           edgeinfo.shape().rend());
     }
+
+    // Set begin shape index if requested
+    if (controller.attributes.at(kEdgeBeginShapeIndex)) {
+      trip_edge->set_begin_shape_index(begin_index);
+    }
+
     // Set end shape index if requested
     if (controller.attributes.at(kEdgeEndShapeIndex))
       trip_edge->set_end_shape_index(trip_shape.size() - 1);
+
+    // Set begin and end heading if requested. Uses trip_shape so
+    // must be done after the edge's shape has been added.
+    SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
@@ -1043,15 +1028,7 @@ TripPath TripPathBuilder::Build(
   AssignAdmins(controller, trip_path, admin_info_list);
 
   // Set the bounding box of the shape
-  AABB2<PointLL> bbox(trip_shape);
-  odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-  // Set bounding box min lat/lon
-  min_ll->set_lat(bbox.miny());
-  min_ll->set_lng(bbox.minx());
-  odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-  // Set bounding box max lat/lon if requested
-  max_ll->set_lat(bbox.maxy());
-  max_ll->set_lng(bbox.maxx());
+  SetBoundingBox(trip_path, trip_shape);
 
   // Set shape if requested
   if (controller.attributes.at(kShape))
@@ -1065,7 +1042,7 @@ TripPath TripPathBuilder::Build(
 }
 
 // Add a trip edge to the trip node and set its attributes
-TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller,
+TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controller,
                                             const GraphId& edge,
                                             const uint32_t trip_id,
                                             const uint32_t block_id,
@@ -1173,26 +1150,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
         trip_edge->set_traversability(
             TripPath_Traversability::TripPath_Traversability_kNone);
     }
-
-    // Set begin heading if requested
-    if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(
-          std::round(
-              PointLL::HeadingAlongPolyline(
-                  edgeinfo.shape(),
-                  GetOffsetForHeading(directededge->classification(),
-                                      directededge->use()))));
-    }
-
-    // Set end heading if requested
-    if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(
-          std::round(
-              PointLL::HeadingAtEndOfPolyline(
-                  edgeinfo.shape(),
-                  GetOffsetForHeading(directededge->classification(),
-                                      directededge->use()))));
-    }
   } else {
     // Set traversability for reverse directededge if requested
     if (controller.attributes.at(kEdgeTraversability)) {
@@ -1211,30 +1168,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
       else
         trip_edge->set_traversability(
             TripPath_Traversability::TripPath_Traversability_kNone);
-    }
-
-    // Set begin heading if requested
-    if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAtEndOfPolyline(
-                      edgeinfo.shape(),
-                      GetOffsetForHeading(directededge->classification(),
-                                          directededge->use())) + 180.0f),
-                  360)));
-    }
-
-    // Set end heading if requested
-    if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAlongPolyline(
-                      edgeinfo.shape(),
-                      GetOffsetForHeading(directededge->classification(),
-                                          directededge->use())) + 180.0f),
-                  360)));
     }
   }
 
@@ -1307,16 +1240,39 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   if (controller.attributes.at(kEdgeWeightedGrade))
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
 
-  // Set maximum upward grade if requested
-  if (controller.attributes.at(kEdgeMaxUpwardGrade))
-    trip_edge->set_max_upward_grade(directededge->max_up_slope());
-
-  // Set maximum downward grade if requested
-  if (controller.attributes.at(kEdgeMaxDownwardGrade))
-    trip_edge->set_max_downward_grade(directededge->max_down_slope());
+  // Set maximum upward and downward grade if requested
+  if (controller.attributes.at(kEdgeMaxUpwardGrade) ||
+      controller.attributes.at(kEdgeMaxDownwardGrade) ||
+      controller.attributes.at(kEdgeMeanElevation)) {
+    const EdgeElevation* elev = graphtile->edge_elevation(edge);
+    if (elev != nullptr) {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(elev->max_up_slope());
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(elev->max_down_slope());
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(elev->mean_elevation());
+    } else {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(kNoElevationData);
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(kNoElevationData);
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(kNoElevationData);
+    }
+  }
 
   if (controller.attributes.at(kEdgeLaneCount))
     trip_edge->set_lane_count(directededge->lanecount());
+
+  if (directededge->laneconnectivity() && controller.attributes.at(kEdgeLaneConnectivity)) {
+    for (const auto& l : graphtile->GetLaneConnectivity(idx)) {
+      TripPath_LaneConnectivity* path_lane = trip_edge->add_lane_connectivity();
+      path_lane->set_from_way_id(l.from());
+      path_lane->set_to_lanes(l.to_lanes());
+      path_lane->set_from_lanes(l.from_lanes());
+    }
+  }
 
   if (directededge->cyclelane() != CycleLane::kNone && controller.attributes.at(kEdgeCycleLane))
     trip_edge->set_cycle_lane(GetTripPathCycleLane(directededge->cyclelane()));
@@ -1446,7 +1402,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   return trip_edge;
 }
 
-void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controller,
+void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& controller,
                                               uint32_t local_edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,

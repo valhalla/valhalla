@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 #define VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -114,19 +115,15 @@ class BidirectionalAStar : public PathAlgorithm {
    * Expand from the node along the forward search path.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
-           const baldr::GraphTile* tile,
-           const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
-           const sif::EdgeLabel& pred, const uint32_t pred_idx,
-           const bool from_transition);
+           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const uint32_t pred_idx, const bool from_transition);
 
   /**
    * Expand from the node along the reverse search path.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-           const baldr::GraphTile* tile,
-           const baldr::GraphId& node, const baldr::NodeInfo* nodeinfo,
-           const sif::EdgeLabel& pred, const uint32_t pred_idx,
-           const baldr::DirectedEdge* opp_pred_edge,
+           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const uint32_t pred_idx, const baldr::DirectedEdge* opp_pred_edge,
            const bool from_transition);
 
   /**
@@ -161,35 +158,6 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  pred  Edge label of the predecessor.
    */
   void SetReverseConnection(const sif::EdgeLabel& pred);
-
-  /**
-   * Check if edge is temporarily labeled and this path has less cost. If
-   * less cost the predecessor is updated and the sort cost is decremented
-   * by the difference in real cost (A* heuristic doesn't change).
-   * @param  idx        Index into the edge status list.
-   * @param  predindex  Index of the predecessor edge.
-   * @param  newcost    Cost of the new path.
-   * @param  tc         Transition cost onto this edge.
-   */
-  void CheckIfLowerCostPathForward(const uint32_t idx,
-                            const uint32_t predindex,
-                            const sif::Cost& newcost,
-                            const sif::Cost& tc);
-
-  /**
-   * Check if edge is temporarily labeled and this path has less cost. If
-   * less cost the predecessor is updated and the sort cost is decremented
-   * by the difference in real cost (A* heuristic doesn't change). This
-   * method applies to the reverse path portion of the bidirectional search.
-   * @param  idx        Index into the edge status list.
-   * @param  predindex  Index of the predecessor edge.
-   * @param  newcost    Cost of the new path.
-   * @param  tc         Transition cost onto this edge.
-   */
-  void CheckIfLowerCostPathReverse(const uint32_t idx,
-                           const uint32_t predindex,
-                           const sif::Cost& newcost,
-                           const sif::Cost& tc);
 
    /**
     * Form the path from the adjacency lists. Recovers the path from the

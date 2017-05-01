@@ -116,6 +116,11 @@ void DirectedEdge::set_curvature(const uint32_t factor) {
   }
 }
 
+// Sets the lane connectivity flag.
+void DirectedEdge::set_laneconnectivity(const bool lc) {
+  lane_conn_ = lc;
+}
+
 // -------------------------- Routing attributes --------------------------- //
 
 // Set the flag indicating driving is on the right hand side of the road
@@ -352,46 +357,6 @@ void DirectedEdge::set_end_restriction(const uint32_t modes) {
 // Set the part of complex restriction flag.
 void DirectedEdge::set_part_of_complex_restriction(const bool part_of) {
   part_of_complex_restriction_ = part_of;
-}
-
-// Gets the maximum upward slope. Uses 1 degree precision for slopes to
-// 16 degrees, and 4 degree precision afterwards (up to a max of 76 degrees).
-int DirectedEdge::max_up_slope() const {
-  return ((max_up_slope_ & 0x10) == 0) ? max_up_slope_ :
-          16 + ((max_up_slope_ & 0xf) * 4);
-}
-
-// Sets the maximum upward slope.
-void DirectedEdge::set_max_up_slope(const float slope) {
-  if (slope < 0.0f) {
-    max_up_slope_ = 0;
-  } else if (slope < 16.0f) {
-    max_up_slope_ = static_cast<int>(std::ceil(slope));
-  } else if (slope < 76.0f) {
-    max_up_slope_ = 0x10 | static_cast<int>(std::ceil((slope - 16.0f) * 0.25f));
-  } else {
-    max_up_slope_ = 0x1f;
-  }
-}
-
-// Gets the maximum downward slope. Uses 1 degree precision for slopes to
-// -8 degrees, and 4 degree precision afterwards (up to a max of -76 degs).
-int DirectedEdge::max_down_slope() const {
-  return ((max_down_slope_ & 0x10) == 0) ? -static_cast<int>(max_down_slope_) :
-          -static_cast<int>(16 + ((max_down_slope_ & 0xf) * 4));
-}
-
-// Sets the maximum downward slope.
-void DirectedEdge::set_max_down_slope(const float slope) {
-  if (slope > 0.0f) {
-    max_down_slope_ = 0;
-  } else if (slope > -16.0f) {
-    max_down_slope_ = static_cast<int>(std::ceil(-slope));
-  } else if (slope > -76.0f) {
-    max_down_slope_ = 0x10 | static_cast<int>(std::ceil((-slope - 16.0f) * 0.25f));
-  } else {
-    max_down_slope_ = 0x1f;
-  }
 }
 
 // Set the density along the edges.

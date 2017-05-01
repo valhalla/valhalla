@@ -1,11 +1,14 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
+#include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/edge_elevation.h>
+#include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -16,9 +19,9 @@
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
-#include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/aabb2.h>
 
 #include <boost/shared_array.hpp>
 #include <memory>
@@ -43,13 +46,17 @@ class GraphTile {
   /**
    * Constructor given a GraphId. Reads the graph tile from file
    * into memory.
-   * @param  hierarchy  Data describing the tiling and hierarchy system.
+   * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid);
+  GraphTile(const std::string& tile_dir, const GraphId& graphid);
 
   /**
-   * Constructor given the graph Id ... used for mmap
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   * @param  size     Size in bytes of the tile data.
    */
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
 
@@ -61,10 +68,9 @@ class GraphTile {
   /**
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
-   * @param  hierarchy The tile hierarchy structure to get info about how many tiles can exist at this level
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy);
+  static std::string FileSuffix(const GraphId& graphid);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -76,49 +82,84 @@ class GraphTile {
 
   /**
    * Get the bounding box of this graph tile.
-   * @param  hierarchy the tile hierarchy this tile is under.
    * @return Returns the bounding box of the tile.
    */
-  midgard::AABB2<PointLL> BoundingBox(const TileHierarchy& hierarchy) const;
+  midgard::AABB2<PointLL> BoundingBox() const;
 
   /**
    * Gets the id of the graph tile
    * @return  Returns the graph id of the tile (pointing to the first node)
    */
-  GraphId id() const;
+  GraphId id() const {
+    return header_->graphid();
+  }
 
   /**
    * Gets a pointer to the graph tile header.
    * @return  Returns the header for the graph tile.
    */
-  const GraphTileHeader* header() const;
+  const GraphTileHeader* header() const {
+    return header_;
+  }
 
   /**
    * Get a pointer to a node.
    * @return  Returns a pointer to the node.
    */
-  const NodeInfo* node(const GraphId& node) const;
+  const NodeInfo* node(const GraphId& node) const {
+    if (node.id() < header_->nodecount())
+      return &nodes_[node.id()];
+    throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                               std::to_string(node.tileid()) + "," +
+                               std::to_string(node.level()) + "," +
+                               std::to_string(node.id()) + " nodecount= " +
+                               std::to_string(header_->nodecount()));
+  }
 
   /**
    * Get a pointer to a node.
    * @param  idx  Index of the node within the current tile.
    * @return  Returns a pointer to the node.
    */
-  const NodeInfo* node(const size_t idx) const;
+  const NodeInfo* node(const size_t idx) const {
+    if (idx < header_->nodecount())
+      return &nodes_[idx];
+    throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(idx)  + " nodecount= " +
+                             std::to_string(header_->nodecount()));
+  }
 
   /**
    * Get a pointer to a edge.
    * @param  edge  GraphId of the directed edge.
    * @return  Returns a pointer to the edge.
    */
-  const DirectedEdge* directededge(const GraphId& edge) const;
+  const DirectedEdge* directededge(const GraphId& edge) const {
+    if (edge.id() < header_->directededgecount())
+      return &directededges_[edge.id()];
+    throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(edge.id())  + " directededgecount= " +
+                             std::to_string(header_->directededgecount()));
+  }
 
   /**
    * Get a pointer to a edge.
    * @param  idx  Index of the directed edge within the current tile.
    * @return  Returns a pointer to the edge.
    */
-  const DirectedEdge* directededge(const size_t idx) const;
+  const DirectedEdge* directededge(const size_t idx) const {
+    if (idx < header_->directededgecount())
+      return &directededges_[idx];
+    throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(idx)  + " directededgecount= " +
+                             std::to_string(header_->directededgecount()));
+  }
 
   /**
    * Get an iterable set of directed edges from a node in this tile
@@ -140,7 +181,11 @@ class GraphTile {
    * @param  edge  Directed edge.
    * @return Returns the GraphId of hte opposing directed edge.
    */
-  GraphId GetOpposingEdgeId(const DirectedEdge* edge) const;
+  GraphId GetOpposingEdgeId(const DirectedEdge* edge) const {
+    GraphId endnode = edge->endnode();
+    return { endnode.tileid(), endnode.level(),
+             node(endnode.id())->edge_index() + edge->opp_index() };
+  }
 
   /**
    * Get a pointer to edge info.
@@ -334,6 +379,27 @@ class GraphTile {
    */
   std::vector<TrafficSegment> GetTrafficSegments(const uint32_t idx) const;
 
+  /**
+   * Get lane connections ending on this edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a list of lane connections ending on this edge.
+   */
+  std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
+
+  /**
+   * Get a pointer to a edge elevation data for the specified edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the edge elevation data for the edge.
+   *          Returns nullptr if no elevation data exists.
+   */
+  const EdgeElevation* edge_elevation(const GraphId& edge) const  {
+    if (header_->has_edge_elevation() &&
+        edge.id() < header_->directededgecount()) {
+      return &edge_elevation_[edge.id()];
+    } else {
+      return nullptr;
+    }
+  }
 
  protected:
 
@@ -417,6 +483,15 @@ class GraphTile {
   // Number of bytes in the traffic chunk list
   std::size_t traffic_chunk_size_;
 
+  // Lane connectivity data.
+  LaneConnectivity* lane_connectivity_;
+
+  // Number of bytes in lane connectivity data.
+  std::size_t lane_connectivity_size_;
+
+  // Edge elevation data
+  EdgeElevation* edge_elevation_;
+
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, tile_index_pair> stop_one_stops;
 
@@ -435,6 +510,14 @@ class GraphTile {
   void Initialize(const GraphId& graphid, char* tile_ptr,
                   const size_t tile_size);
 
+  /**
+   * For transit tiles, save off the pair<tileid,lineid> lookup via
+   * onestop_ids.  This will be used for including or excluding transit lines
+   * for transit routes.  Save 2 maps because operators contain all of their
+   * route's tile_line pairs and it is used to include or exclude the operator
+   * as a whole. Also associates stops.
+   * @param  graphid  Tile Id.
+   */
   void AssociateOneStopIds(const GraphId& graphid);
 };
 

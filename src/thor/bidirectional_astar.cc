@@ -30,6 +30,7 @@ BidirectionalAStar::BidirectionalAStar(): PathAlgorithm() {
   mode_ = TravelMode::kDrive;
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
+  cost_diff_ = 0.0f;
   adjacencylist_forward_ = nullptr;
   adjacencylist_reverse_ = nullptr;
   edgestatus_forward_ = nullptr;
@@ -106,41 +107,45 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 
 // Expand from a node in the forward direction
 void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
-       const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-       const EdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
+       const GraphId& node, const EdgeLabel& pred, const uint32_t pred_idx,
+       const bool from_transition) {
+  // Get the tile and the node info. Skip if tile is null (can happen
+  // with regional data sets) or if no access at the node.
+  const GraphTile* tile = graphreader.GetGraphTile(node);
+  if (tile == nullptr) {
+    return;
+  }
+  const NodeInfo* nodeinfo = tile->node(node);
+  if (!costing_->Allowed(nodeinfo)) {
+    return;
+  }
+
   // Expand from end node in forward direction.
   uint32_t shortcuts = 0;
-  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
-    // Handle transition edges
-    if (directededge->trans_up() || directededge->trans_down()) {
-      // Do not take transition edges if this is called from a transition.
-      // Also skip transition edges onto a level no longer being expanded.
-      if (from_transition || (directededge->trans_down() &&
-          hierarchy_limits_forward_[directededge->endnode().level()].StopExpanding())) {
-        continue;
-      }
-
-      // Increment upwards transition count
-      if (directededge->trans_up()) {
+  GraphId edgeid = { node.tileid(), node.level(), nodeinfo->edge_index() };
+  const DirectedEdge* directededge = tile->directededge(edgeid);
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid) {
+    // Handle transition edges - expand from the end node of the transition
+    // (unless this is called from a transition).
+    if (directededge->trans_up()) {
+      if (!from_transition) {
         hierarchy_limits_forward_[node.level()].up_transition_count++;
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
       }
-
-      // Expand from end node of the transition edge.
-      GraphId node = directededge->endnode();
-      const GraphTile* endtile = graphreader.GetGraphTile(node);
-      if (endtile != nullptr) {
-        ExpandForward(graphreader, endtile, node, endtile->node(node),
-                      pred, pred_idx, true);
+      continue;
+    }
+    if (directededge->trans_down()) {
+      if (!from_transition &&
+          !hierarchy_limits_forward_[directededge->endnode().level()].StopExpanding()) {
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
       }
       continue;
     }
 
-    // Skip if no access is allowed to this edge (based on costing method)
-    // or if this is a superseded edge that match the shortcut mask.
-    if (!costing_->Allowed(directededge, pred, tile, edgeid) ||
-        (shortcuts & directededge->superseded())) {
+    // Quick check to skip if no access for this mode or if edge is
+    // superseded by a shortcut edge that was taken.
+    if (!(directededge->forwardaccess() & access_mode_) ||
+         (shortcuts & directededge->superseded())) {
       continue;
     }
 
@@ -148,6 +153,14 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // path already found to this directed edge).
     EdgeStatusInfo edgestatus = edgestatus_forward_->Get(edgeid);
     if (edgestatus.set() == EdgeSet::kPermanent) {
+      continue;
+    }
+
+    // Skip this edge if no access is allowed (based on costing method)
+    // or if a complex restriction prevents transition onto this edge.
+    if (!costing_->Allowed(directededge, pred, tile, edgeid) ||
+         costing_->Restricted(directededge, pred, edgelabels_forward_, tile,
+                                     edgeid, true)) {
       continue;
     }
 
@@ -166,13 +179,12 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      CheckIfLowerCostPathForward(edgestatus.index(), pred_idx, newcost, tc);
-      continue;
-    }
-
-    // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels_forward_, tile,
-                             edgeid, true)) {
+      EdgeLabel& lab = edgelabels_forward_[edgestatus.index()];
+      if (newcost.cost <  lab.cost().cost) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjacencylist_forward_->decrease(edgestatus.index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, tc);
+      }
       continue;
     }
 
@@ -202,40 +214,44 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
 // Expand from a node in reverse direction.
 void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
-         const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-         const EdgeLabel& pred, const uint32_t pred_idx,
+         const GraphId& node, const EdgeLabel& pred, const uint32_t pred_idx,
          const DirectedEdge* opp_pred_edge, const bool from_transition) {
+  // Get the tile and the node info. Skip if tile is null (can happen
+  // with regional data sets) or if no access at the node.
+  const GraphTile* tile = graphreader.GetGraphTile(node);
+  if (tile == nullptr) {
+    return;
+  }
+  const NodeInfo* nodeinfo = tile->node(node);
+  if (!costing_->Allowed(nodeinfo)) {
+    return;
+  }
+
   // Expand from end node in reverse direction.
   uint32_t shortcuts = 0;
-  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
-    // Handle transition edges.
-    if (directededge->trans_up() || directededge->trans_down()) {
-      // Do not take transition edges if this is called from a transition.
-      // Also skip transition edges onto a level no longer being expanded.
-      if (from_transition || (directededge->trans_down() &&
-          hierarchy_limits_reverse_[directededge->endnode().level()].StopExpanding())) {
-        continue;
-      }
-
-      // Increment upwards transition count
-      if (directededge->trans_up()) {
+  GraphId edgeid = { node.tileid(), node.level(), nodeinfo->edge_index() };
+  const DirectedEdge* directededge = tile->directededge(edgeid);
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid) {
+    // Handle transition edges - expand from the end not of the transition
+    // unless this is called from a transition.
+    if (directededge->trans_up()) {
+      if (!from_transition) {
         hierarchy_limits_reverse_[node.level()].up_transition_count++;
+        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx,
+                      opp_pred_edge, true);
       }
-
-      // Expand from end node of the transition edge.
-      GraphId node = directededge->endnode();
-      const GraphTile* endtile = graphreader.GetGraphTile(node);
-      if (endtile != nullptr) {
-        ExpandReverse(graphreader, endtile, node, endtile->node(node),
-                      pred, pred_idx, opp_pred_edge, true);
+      continue;
+    } else if (directededge->trans_down()) {
+      if (!from_transition &&
+          !hierarchy_limits_reverse_[directededge->endnode().level()].StopExpanding()) {
+        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx,
+                      opp_pred_edge, true);
       }
       continue;
     }
 
-    // Skip edges not allowed by the access mode. Do this here to avoid having
-    // to get opposing edge. Also skip edges superseded by a shortcut.
+    // Quick check to skip if no access for this mode or if edge is
+    // superseded by a shortcut edge that was taken.
     if (!(directededge->reverseaccess() & access_mode_) ||
          (shortcuts & directededge->superseded())) {
       continue;
@@ -248,24 +264,20 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    // Get opposing edge Id and end node tile
+    // Get end node tile, opposing edge Id, and opposing diredted edge.
     const GraphTile* t2 = directededge->leaves_tile() ?
         graphreader.GetGraphTile(directededge->endnode()) : tile;
     if (t2 == nullptr) {
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-
-    // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge,
-                              t2, oppedge)) {
-      continue;
-    }
 
-    // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels_reverse_, tile,
-                             edgeid, false)) {
+    // Skip this edge if no access is allowed (based on costing method)
+    // or if a complex restriction prevents transition onto this edge.
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge) ||
+         costing_->Restricted(directededge, pred, edgelabels_reverse_, tile,
+                                     edgeid, false)) {
       continue;
     }
 
@@ -287,8 +299,12 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (edgestatus.set() != EdgeSet::kUnreached) {
-      CheckIfLowerCostPathReverse(edgestatus.index(), pred_idx,
-                               newcost, tc);
+      EdgeLabel& lab = edgelabels_reverse_[edgestatus.index()];
+      if (newcost.cost < lab.cost().cost ) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjacencylist_reverse_->decrease(edgestatus.index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, tc);
+      }
       continue;
     }
 
@@ -319,10 +335,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
-
-  // Disable destination only transitions (based on costing) since this
-  // algorithm is bidirectional.
-  costing_->DisableDestinationOnly();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.edges.front().projected, destination.edges.front().projected);
@@ -360,9 +372,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         // Check if the edge on the forward search connects to a
-        // reached edge on the reverse search tree.
+        // settled edge on the reverse search tree.
         pred = edgelabels_forward_[forward_pred_idx];
-        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetForwardConnection(pred);
         }
       } else {
@@ -382,9 +394,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       reverse_pred_idx = adjacencylist_reverse_->pop();
       if (reverse_pred_idx != kInvalidLabel) {
         // Check if the edge on the reverse search connects to a
-        // reached edge on the forward search tree.
+        // settled edge on the forward search tree.
         pred2 = edgelabels_reverse_[reverse_pred_idx];
-        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetReverseConnection(pred2);
         }
       } else {
@@ -421,31 +433,15 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       // Settle this edge.
       edgestatus_forward_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
-      // Prune path if predecessor is not a through edge
-      if (pred.not_thru() && pred.not_thru_pruning()) {
-        continue;
-      }
-
-      // Get the end node of the prior directed edge. Do not expand on this
-      // hierarchy level if the maximum number of upward transitions has
-      // been exceeded.
-      GraphId node = pred.endnode();
-      if (hierarchy_limits_forward_[node.level()].StopExpanding()) {
-        continue;
-      }
-
-      // Get the tile and the node info. Skip if tile is null (can happen
-      // with regional data sets) or if no access at the node.
-      if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
-        continue;
-      }
-      const NodeInfo* nodeinfo = tile->node(node);
-      if (!costing_->Allowed(nodeinfo)) {
+      // Prune path if predecessor is not a through edge or if the maximum
+      // number of upward transitions has been exceeded on this hierarchy level.
+      if ((pred.not_thru() && pred.not_thru_pruning()) ||
+          hierarchy_limits_forward_[pred.endnode().level()].StopExpanding()) {
         continue;
       }
 
       // Expand from the end node in forward direction.
-      ExpandForward(graphreader, tile, node, nodeinfo, pred,
+      ExpandForward(graphreader, pred.endnode(), pred,
                     forward_pred_idx, false);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list
@@ -457,75 +453,22 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
 
       // Prune path if predecessor is not a through edge
-      if (pred2.not_thru() && pred2.not_thru_pruning()) {
-        continue;
-      }
-
-      // Get the end node of the prior directed edge. Do not expand on this
-      // hierarchy level if the maximum number of upward transitions has
-      // been exceeded.
-      GraphId node = pred2.endnode();
-      if (hierarchy_limits_reverse_[node.level()].StopExpanding()) {
-        continue;
-      }
-
-      // Get the tile and the node info. Skip if tile is null (can happen
-      // with regional data sets) or if no access at the node.
-      if ((tile2 = graphreader.GetGraphTile(node)) == nullptr) {
-        continue;
-      }
-      const NodeInfo* nodeinfo = tile2->node(node);
-      if (!costing_->Allowed(nodeinfo)) {
+      if ((pred2.not_thru() && pred2.not_thru_pruning()) ||
+          hierarchy_limits_reverse_[pred2.endnode().level()].StopExpanding()) {
         continue;
       }
 
       // Get the opposing predecessor directed edge. Need to make sure we get
       // the correct one if a transition occurred
       const DirectedEdge* opp_pred_edge =
-          (pred2.opp_edgeid().Tile_Base() == tile2->id().Tile_Base()) ?
-              tile2->directededge(pred2.opp_edgeid().id()) :
-              graphreader.GetGraphTile(pred2.opp_edgeid().
-                     Tile_Base())->directededge(pred2.opp_edgeid());
+        graphreader.GetGraphTile(pred2.opp_edgeid())->directededge(pred2.opp_edgeid());
 
       // Expand from the end node in reverse direction.
-      ExpandReverse(graphreader, tile2, node, nodeinfo,pred2, reverse_pred_idx,
+      ExpandReverse(graphreader, pred2.endnode(), pred2, reverse_pred_idx,
                     opp_pred_edge, false);
     }
   }
   return {};    // If we are here the route failed
-}
-
-// Check if edge is temporarily labeled and this path has less cost. If
-// less cost the predecessor is updated and the sort cost is decremented
-// by the difference in real cost (A* heuristic doesn't change)
-void BidirectionalAStar::CheckIfLowerCostPathForward(const uint32_t idx,
-                                         const uint32_t predindex,
-                                         const Cost& newcost,
-                                         const Cost& tc) {
-  float dc = edgelabels_forward_[idx].cost().cost - newcost.cost;
-  if (dc > 0) {
-    float oldsortcost = edgelabels_forward_[idx].sortcost();
-    float newsortcost = oldsortcost - dc;
-    edgelabels_forward_[idx].Update(predindex, newcost, newsortcost, tc);
-    adjacencylist_forward_->decrease(idx, newsortcost, oldsortcost);
-  }
-}
-
-// Check if edge is temporarily labeled and this path has less cost. If
-// less cost the predecessor is updated and the sort cost is decremented
-// by the difference in real cost (A* heuristic doesn't change). This is
-// done for the reverse search.
-void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
-                                         const uint32_t predindex,
-                                         const Cost& newcost,
-                                         const Cost& tc) {
-  float dc = edgelabels_reverse_[idx].cost().cost - newcost.cost;
-  if (dc > 0) {
-    float oldsortcost = edgelabels_reverse_[idx].sortcost();
-    float newsortcost = oldsortcost - dc;
-    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost, tc);
-    adjacencylist_reverse_->decrease(idx, newsortcost, oldsortcost);
-  }
 }
 
 // The edge on the forward search connects to a reached edge on the reverse

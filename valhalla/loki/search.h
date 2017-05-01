@@ -1,6 +1,7 @@
 #ifndef VALHALLA_LOKI_SEARCH_H_
 #define VALHALLA_LOKI_SEARCH_H_
 
+#include <cstdint>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>

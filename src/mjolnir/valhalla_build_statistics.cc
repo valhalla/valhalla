@@ -1,3 +1,4 @@
+#include <cstdint>
 
 #include "statistics.h"
 
@@ -347,8 +348,6 @@ void build(const boost::property_tree::ptree& pt,
     statistics stats;
     // Local Graphreader
     GraphReader graph_reader(pt.get_child("mjolnir"));
-    // Get some things we need throughout
-    const auto& hierarchy = graph_reader.GetTileHierarchy();
 
     // Check for more tiles
     while (true) {
@@ -364,10 +363,10 @@ void build(const boost::property_tree::ptree& pt,
 
       // Point tiles to the set we need for current level
       auto level = tile_id.level();
-      if (hierarchy.levels().rbegin()->second.level+1 == level)
-        level = hierarchy.levels().rbegin()->second.level;
+      if (TileHierarchy::levels().rbegin()->second.level+1 == level)
+        level = TileHierarchy::levels().rbegin()->second.level;
 
-      const auto& tiles = hierarchy.levels().find(level)->second.tiles;
+      const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
       level = tile_id.level();
       auto tileid = tile_id.tileid();
 
@@ -381,7 +380,7 @@ void build(const boost::property_tree::ptree& pt,
       float roadlength = 0.0f;
       uint32_t nodecount = tile->header()->nodecount();
       GraphId node = tile_id;
-      for (uint64_t i = 0; i < nodecount; i++, node++) {
+      for (uint64_t i = 0; i < nodecount; i++, ++node) {
         // The node we will modify
         const NodeInfo* nodeinfo = tile->node(node);
         std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
@@ -478,33 +477,29 @@ void build(const boost::property_tree::ptree& pt,
 
 void BuildStatistics(const boost::property_tree::ptree& pt) {
 
-  // Graphreader
-  auto hierarchy_properties = pt.get_child("mjolnir");
-  TileHierarchy hierarchy(hierarchy_properties.get<std::string>("tile_dir"));
-  // Make sure there are at least 2 levels!
-  if (hierarchy.levels().size() < 2)
-    throw std::runtime_error("Bad tile hierarchy - need 2 levels");
+  // Graph tile properties
+  auto tile_properties = pt.get_child("mjolnir");
 
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
-  for (auto tier : hierarchy.levels()) {
+  for (auto tier : TileHierarchy::levels()) {
     auto level = tier.second.level;
     auto tiles = tier.second.tiles;
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+      if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
 
     //transit level
-    if (level == hierarchy.levels().rbegin()->second.level) {
+    if (level == TileHierarchy::levels().rbegin()->second.level) {
       level += 1;
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+        if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }
@@ -592,10 +587,6 @@ int main (int argc, char** argv) {
     auto loggin_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
     valhalla::midgard::logging::Configure(loggin_config);
   }
-
-  //set up directory
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  valhalla::baldr::TileHierarchy hierarchy(tile_dir);
 
   BuildStatistics(pt);
 

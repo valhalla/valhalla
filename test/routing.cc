@@ -1,3 +1,4 @@
+#include <cstdint>
 // -*- mode: c++ -*-
 #include "test.h"
 #include "meili/routing.h"

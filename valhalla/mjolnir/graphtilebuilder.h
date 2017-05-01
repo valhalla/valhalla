@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 #define VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 
+#include <cstdint>
 #include <boost/functional/hash.hpp>
 #include <fstream>
 #include <iostream>
@@ -23,7 +24,6 @@
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
-#include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
@@ -46,12 +46,12 @@ class GraphTileBuilder : public baldr::GraphTile {
    * levels. If the deserialize flag is set then all objects are serialized
    * from memory into builders that can be added to and then stored using
    * StoreTileData.
-   * @param  basedir  Base directory path
-   * @param  graphid  GraphId used to determine the tileid and level
+   * @param  tile_dir     Base directory path
+   * @param  graphid      GraphId used to determine the tileid and level
    * @param  deserialize  If true the existing objects in the tile are
    *                      converted into builders so they can be added to.
    */
-  GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
+  GraphTileBuilder(const std::string& tile_dir,
                    const GraphId& graphid,
                    const bool deserialize);
 
@@ -63,15 +63,15 @@ class GraphTileBuilder : public baldr::GraphTile {
   void StoreTileData();
 
   /**
-   * Update a graph tile with new header, nodes, and directed edges. Used
-   * in GraphValidator to update directed edge information.
-   * @param hdr Updated header
+   * Update a graph tile with new nodes and directed edges. Assumes no new
+   * nodes or edges are added. Attributes within existing nodes and edges
+   * are updated. This is used in GraphValidator to update directed edge
+   * information.
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(
-            const std::vector<NodeInfo>& nodes,
-            const std::vector<DirectedEdge>& directededges);
+  void Update(const std::vector<NodeInfo>& nodes,
+              const std::vector<DirectedEdge>& directededges);
 
   /**
    * Get the current list of node builders.
@@ -129,6 +129,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddSigns(const uint32_t idx,
                 const std::vector<baldr::SignInfo>& signs);
 
+  /**
+   * Add lane connectivity information.
+   * @param  idx  Directed edge index.
+   * @param  lc  Lane connectivity information.
+   */
+  void AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc);
   /**
    * Update all of the complex restrictions.
    * @param  complex_restriction_builder  list of complex restrictions.
@@ -323,16 +329,18 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
   using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const TileHierarchy& hierarchy, const GraphTile* tile, tweeners_t& tweeners);
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile, tweeners_t& tweeners);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
    * and the bins themselves, everything else is copied directly without ever looking at it
-   * @param hierarchy  to figure out where to save the tile
+   * @param tile_dir   Base tile directory
    * @param tile       the tile that needs the bins added
    * @param more_bins  the extra bin data to append to the tile
    */
-  static void AddBins(const TileHierarchy& hierarchy, const GraphTile* tile, const std::array<std::vector<GraphId>, kBinCount>& more_bins);
+  static void AddBins(const std::string& tile_dir,
+                      const GraphTile* tile,
+                      const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
    * Initialize traffic segment association. Sizes the traffic segment
@@ -362,6 +370,12 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Updates a tile with traffic segment and chunk data.
    */
   void UpdateTrafficSegments();
+
+  /**
+    * Gets the current list of edge elevation (builders).
+    * @return  Returns the edge elevation builders.
+    */
+   std::vector<EdgeElevation>& edge_elevations();
 
  protected:
 
@@ -398,8 +412,8 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Write all textlist items to specified stream
   void SerializeTextListToOstream(std::ostream& out) const;
 
-  // Tile hierarchy for disk access location
-  TileHierarchy hierarchy_;
+  // Base tile directory
+  std::string tile_dir_;
 
   // Header information for the tile
   GraphTileHeader header_builder_;
@@ -468,6 +482,15 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Traffic chunks
   std::vector<baldr::TrafficChunk> traffic_chunk_builder_;
+
+  // List of lane connectivity records.
+  std::vector<LaneConnectivity> lane_connectivity_builder_;
+
+  // List of edge elevation records. Index with directed edge Id.
+  std::vector<EdgeElevation> edge_elevation_builder_;
+
+  // lane connectivity list offset
+  uint32_t lane_connectivity_offset_ = 0;
 };
 
 }

@@ -7,7 +7,7 @@
 #include <valhalla/midgard/pointll.h>
 
 #include <boost/property_tree/ptree.hpp>
-#include <rapidjson/document.h>
+#include <baldr/rapidjson_utils.h>
 
 namespace valhalla{
 namespace baldr{
@@ -99,13 +99,11 @@ struct Location {
   boost::optional<int> heading_tolerance_;
   boost::optional<uint64_t> way_id_;
 
-  //TODO: fill these out in constructors and add getters and setters
-/*
-  //the spot where the feature is on the map
-  midgard::PointLL display_latlng_;
-  //id of the osm way that this location was on
-  std::uint64_t wayid_;
-*/
+  //if a given candidate edge reaches less than this number of nodes its considered isolated
+  //we'll search for more candidates until we find at least one that isnt considered isolated
+  unsigned int isolated_;
+  //dont return results further away than this (meters) unless there is nothing this close
+  unsigned int radius_;
 
  protected:
 

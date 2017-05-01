@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GEOJSON_H_
 #define VALHALLA_BALDR_GEOJSON_H_
 
+#include <cstdint>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/gridded_data.h>
 

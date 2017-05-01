@@ -90,8 +90,10 @@ void TestIsValid() {
 }
 
 void TryOpPostIncrement(GraphId& gid, const unsigned int expected) {
-  gid++;
+  auto old = gid++;
   if (expected != gid.id())
+    throw runtime_error("Get_id test failed");
+  if (expected - 1 != old.id())
     throw runtime_error("Get_id test failed");
 }
 

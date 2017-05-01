@@ -5,6 +5,7 @@
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
 
 #include "meili/candidate_search.h"
 #include "meili/map_matcher.h"
@@ -16,10 +17,9 @@
 namespace {
 
 inline float
-local_tile_size(const valhalla::baldr::GraphReader& graphreader)
+local_tile_size()
 {
-  const auto& tile_hierarchy = graphreader.GetTileHierarchy();
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  const auto& tiles = valhalla::baldr::TileHierarchy::levels().rbegin()->second.tiles;
   return tiles.TileSize();
 }
 
@@ -33,8 +33,8 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
     : config_(root.get_child("meili")),
       graphreader_(root.get_child("mjolnir")),
       candidatequery_(graphreader_,
-                      local_tile_size(graphreader_)/root.get<size_t>("meili.grid.size"),
-                      local_tile_size(graphreader_)/root.get<size_t>("meili.grid.size")),
+                      local_tile_size()/root.get<size_t>("meili.grid.size"),
+                      local_tile_size()/root.get<size_t>("meili.grid.size")),
       max_grid_cache_size_(root.get<float>("meili.grid.cache_size"))
       { 
   cost_factory_.Register("auto", sif::CreateAutoCost);

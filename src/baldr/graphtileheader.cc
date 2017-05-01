@@ -187,6 +187,16 @@ void GraphTileHeader::set_traffic_chunk_offset(const uint32_t offset) {
   traffic_chunk_offset_ = offset;
 }
 
+// Sets the offset to the lane connectivity data.
+void GraphTileHeader::set_lane_connectivity_offset(const uint32_t offset) {
+  lane_connectivity_offset_ = offset;
+}
+
+// Sets the offset to the edge elevation data.
+void GraphTileHeader::set_edge_elevation_offset(const uint32_t offset) {
+  edge_elevation_offset_ = offset;
+}
+
 // Gets the offset to the end of the tile.
 uint32_t GraphTileHeader::end_offset() const {
   return empty_slots_[0];

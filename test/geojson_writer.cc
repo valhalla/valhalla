@@ -1,6 +1,4 @@
 // -*- mode: c++ -*-
-#include <rapidjson/stringbuffer.h>
-
 #include "test.h"
 #include "meili/geojson_writer.h"
 

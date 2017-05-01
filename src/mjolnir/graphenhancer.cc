@@ -723,9 +723,22 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // or if several are high class
 
   // Reduce stop impact from a turn channel or when only links
-  // (ramps and turn channels) are involved.
+  // (ramps and turn channels) are involved. Exception - sharp turns.
+  Turn::Type turn_type = Turn::GetType(turn_degree);
+  bool is_sharp = (turn_type == Turn::Type::kSharpLeft ||
+                   turn_type == Turn::Type::kSharpRight ||
+                   turn_type == Turn::Type::kReverse);
+  bool is_slight = (turn_type == Turn::Type::kStraight ||
+                    turn_type == Turn::Type::kSlightRight ||
+                    turn_type == Turn::Type::kSlightLeft);
   if (allramps) {
-    stop_impact /= 2;
+    if (is_sharp) {
+      stop_impact += 2;
+    } else if (is_slight) {
+      stop_impact /= 2;
+    } else {
+      stop_impact -= 1;
+    }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
              bestrc < RoadClass::kUnclassified) {
     // Ramp may be crossing a road (not a path or service road)
@@ -736,12 +749,23 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
-    stop_impact += 2;
-  } else if (edges[from].use() == Use::kTurnChannel) {
-    if (edges[to].use() == Use::kRamp) {
+    if (is_sharp) {
+      stop_impact += 3;
+    } else if (is_slight) {
       stop_impact += 1;
     } else {
+      stop_impact += 2;
+    }
+  } else if (edges[from].use() == Use::kTurnChannel) {
+    // Penalize sharp turns
+    if (is_sharp) {
+      stop_impact += 2;
+    } else if (edges[to].use() == Use::kRamp) {
+      stop_impact += 1;
+    } else if (is_slight) {
       stop_impact /= 2;
+    } else {
+      stop_impact -= 1;
     }
   }
 
@@ -879,9 +903,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  const auto& local_level = tile_hierarchy.levels().rbegin()->second.level;
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
@@ -905,7 +928,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
     lock.unlock();
 
     // this will be our updated list of restrictions.
@@ -1190,9 +1213,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId tile_id(id, local_level, 0);

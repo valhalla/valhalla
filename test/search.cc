@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "loki/search.h"
 
@@ -36,8 +37,8 @@ namespace {
 //  5 | / 6
 //    |/
 //    c
-TileHierarchy h("test/search_tiles");
-GraphId tile_id = h.GetGraphId({.125,.125}, 2);
+std::string tile_dir = "test/search_tiles";
+GraphId tile_id = TileHierarchy::GetGraphId({.125,.125}, 2);
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
 std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
@@ -48,12 +49,12 @@ void make_tile() {
   using namespace valhalla::baldr;
 
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (boost::filesystem::is_directory(h.tile_dir())) {
-    boost::filesystem::remove_all(h.tile_dir());
+  if (boost::filesystem::is_directory(tile_dir)) {
+    boost::filesystem::remove_all(tile_dir);
   }
 
   //basic tile information
-  GraphTileBuilder tile(h, tile_id, false);
+  GraphTileBuilder tile(tile_dir, tile_id, false);
   uint32_t edge_index = 0;
 
   auto add_node = [&edge_index] (const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
@@ -132,9 +133,9 @@ void make_tile() {
 
   //write the bin data
   GraphTileBuilder::tweeners_t tweeners;
-  GraphTile reloaded(h, tile_id);
-  auto bins = GraphTileBuilder::BinEdges(h, &reloaded, tweeners);
-  GraphTileBuilder::AddBins(h, &reloaded, bins);
+  GraphTile reloaded(tile_dir, tile_id);
+  auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
+  GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
 }
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
@@ -142,7 +143,7 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
   using namespace valhalla::loki;
   //make the config file
   boost::property_tree::ptree conf;
-  conf.put("tile_dir", h.tile_dir());
+  conf.put("tile_dir", tile_dir);
 
   valhalla::baldr::GraphReader reader(conf);
   const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);

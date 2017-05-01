@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_PEDESTRIANCOST_H_
 #define VALHALLA_SIF_PEDESTRIANCOST_H_
 
+#include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/sif/dynamiccost.h>

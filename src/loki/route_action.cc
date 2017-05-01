@@ -4,6 +4,7 @@
 #include <boost/property_tree/info_parser.hpp>
 
 #include "baldr/datetime.h"
+#include "baldr/tilehierarchy.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
@@ -23,7 +24,7 @@ namespace {
 
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, float max_distance){
     //see if any locations pairs are unreachable or too far apart
-    auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
+    auto lowest_level = TileHierarchy::levels().rbegin();
     for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
       //check if distance between latlngs exceed max distance limit for each mode of travel
       auto path_distance = std::prev(location)->latlng_.Distance(location->latlng_);
@@ -117,7 +118,7 @@ namespace valhalla {
           rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, correlated.ToRapidJson(i,allocator));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
-          auto colors = connectivity_map.get_colors(reader.GetTileHierarchy().levels().rbegin()->first, correlated, 0);
+          auto colors = connectivity_map.get_colors(TileHierarchy::levels().rbegin()->first, correlated, 0);
           for(auto color : colors){
             auto itr = color_counts.find(color);
             if(itr == color_counts.cend())

@@ -13,8 +13,7 @@ namespace valhalla {
 namespace baldr {
 
 Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
-    : latlng_(latlng),
-      stoptype_(stoptype) {
+  : latlng_(latlng), stoptype_(stoptype), isolated_(50), radius_(0) {
 }
 
 boost::property_tree::ptree Location::ToPtree() const {
@@ -23,7 +22,9 @@ boost::property_tree::ptree Location::ToPtree() const {
   location.put("lon", latlng_.lng());
   if (stoptype_ == StopType::THROUGH)
     location.put("type", "through");
-  else location.put("type", "break");
+  else
+    location.put("type", "break");
+
   if(!name_.empty())
     location.put("name", name_);
   if(!street_.empty())
@@ -46,6 +47,9 @@ boost::property_tree::ptree Location::ToPtree() const {
   if(way_id_)
     location.put("way_id", *way_id_);
 
+  location.put("isolated", isolated_);
+  location.put("radius", radius_);
+
   return location;
 }
 
@@ -56,7 +60,8 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
   location.AddMember("lon", latlng_.lng(), a);
   if (stoptype_ == StopType::THROUGH)
     location.AddMember("type", "through", a);
-  else location.AddMember("type", "break", a);
+  else
+    location.AddMember("type", "break", a);
 
   if(!name_.empty())
     location.AddMember("name", name_, a);
@@ -76,6 +81,9 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
     location.AddMember("heading", *heading_, a);
   if(way_id_)
     location.AddMember("way_id", *way_id_, a);
+
+  location.AddMember("isolated_limit", isolated_, a);
+  location.AddMember("radius", radius_, a);
   return location;
 }
 
@@ -86,39 +94,24 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
     throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
   float lon = midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
-  Location location(
-      { lon, lat },
-      (pt.get<std::string>("type", "break") == "through" ?
-        StopType::THROUGH : StopType::BREAK));
+  Location location({ lon, lat },
+    (pt.get<std::string>("type", "break") == "through" ?
+      StopType::THROUGH : StopType::BREAK));
+
+  location.name_ = pt.get<std::string>("name", "");
+  location.street_ = pt.get<std::string>("street", "");
+  location.city_ = pt.get<std::string>("city", "");
+  location.state_ = pt.get<std::string>("state", "");
+  location.zip_ = pt.get<std::string>("postal_code", "");
+  location.country_ = pt.get<std::string>("country", "");
 
   location.date_time_ = pt.get_optional<std::string>("date_time");
   location.heading_ = pt.get_optional<float>("heading");
   location.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
   location.way_id_ = pt.get_optional<long double>("way_id");
 
-  auto name = pt.get_optional<std::string>("name");
-  if (name)
-    location.name_ = *name;
-
-  auto street = pt.get_optional<std::string>("street");
-  if (street)
-    location.street_ = *street;
-
-  auto city = pt.get_optional<std::string>("city");
-  if (city)
-    location.city_ = *city;
-
-  auto state = pt.get_optional<std::string>("state");
-  if (state)
-    location.state_ = *state;
-
-  auto postal_code = pt.get_optional<std::string>("postal_code");
-  if (postal_code)
-    location.zip_ = *postal_code;
-
-  auto country = pt.get_optional<std::string>("country");
-  if (country)
-    location.country_ = *country;
+  location.isolated_ = pt.get<unsigned int>("isolated", 50);
+  location.radius_ = pt.get<unsigned int>("radius", 0);
 
   return location;
 }
@@ -143,27 +136,19 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
 
   Location location{{*lon,*lat}, stop_type};
 
+  location.name_ = GetFromRapidJson<std::string>(d, "/name", "");
+  location.street_ = GetFromRapidJson<std::string>(d, "/street", "");
+  location.city_ = GetFromRapidJson<std::string>(d, "/city", "");
+  location.state_ = GetFromRapidJson<std::string>(d, "/state", "");
+  location.zip_ = GetFromRapidJson<std::string>(d, "/postal_code", "");
+  location.country_ = GetFromRapidJson<std::string>(d, "/country", "");
+
   location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
-  if (auto name = GetOptionalFromRapidJson<std::string>(d, "/name"))
-    location.name_ = *name;
-
-  if (auto street = GetOptionalFromRapidJson<std::string>(d, "/street"))
-    location.street_ = *street;
-
-  if (auto city = GetOptionalFromRapidJson<std::string>(d, "/city"))
-    location.city_ = *city;
-
-  if (auto state = GetOptionalFromRapidJson<std::string>(d, "/state"))
-    location.state_ = *state;
-
-  if (auto zip = GetOptionalFromRapidJson<std::string>(d, "/postal_code"))
-    location.zip_ = *zip;
-
-  if (auto country = GetOptionalFromRapidJson<std::string>(d, "/country"))
-    location.country_ = *country;
+  location.isolated_ = GetFromRapidJson<unsigned int>(d, "/isolated", 50);
+  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", 0);
 
   return location;
 }
@@ -201,10 +186,9 @@ Location Location::FromCsv(const std::string& csv) {
   float lon = midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
 
   //make the lng, lat and check for info about the stop type
-  Location l(
-      { lon, lat },
-      (parts.size() > 2 && parts[2] == "through" ?
-          StopType::THROUGH : StopType::BREAK));
+  Location l({ lon, lat },
+    (parts.size() > 2 && parts[2] == "through" ?
+      StopType::THROUGH : StopType::BREAK));
 
   return l;
 }
@@ -214,7 +198,8 @@ bool Location::operator==(const Location& o) const {
          name_ == o.name_ && street_ == o.street_ && city_ == o.city_ &&
          state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
          date_time_ == o.date_time_ && heading_ == o.heading_ &&
-         heading_tolerance_ == o.heading_tolerance_ && way_id_ == o.way_id_;
+         heading_tolerance_ == o.heading_tolerance_ && way_id_ == o.way_id_
+         && isolated_ == o.isolated_ && radius_ == o.radius_;
 }
 
 }

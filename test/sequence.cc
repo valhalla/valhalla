@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "midgard/sequence.h"
 

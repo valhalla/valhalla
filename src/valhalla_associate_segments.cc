@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include "midgard/logging.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
@@ -416,7 +418,7 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
     const NodeInfo* nodeinfo = tile->node(node);
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip non-regular edges
       if (directededge->trans_up() || directededge->trans_down() ||
           directededge->is_shortcut() || directededge->roundabout() ||
@@ -814,10 +816,6 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   return true;
 }
 
-vb::GraphId parse_file_name(const std::string &file_name) {
-  return vb::GraphTile::GetTileId(file_name);
-}
-
 void edge_association::add_tile(const std::string &file_name) {
   //read the osmlr tile
   pbf::Tile tile;
@@ -829,8 +827,9 @@ void edge_association::add_tile(const std::string &file_name) {
   }
 
   //get a tile builder ready for this tile
-  auto base_id = parse_file_name(file_name);
-  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.GetTileHierarchy(), base_id, false));
+  auto base_id = vb::GraphTile::GetTileId(file_name);
+  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(),
+                       base_id, false));
   m_tile_builder->InitializeTrafficSegments();
   m_tile = m_reader.GetGraphTile(base_id);
 
@@ -894,8 +893,8 @@ void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr
 void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId, leftovers_t>& leftovers,
                                std::mutex& lock) {
 
-  //something so we can open up a tile builder
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  // Get the tile dir
+  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
 
   while(true) {
     // Get leftovers from a tile
@@ -910,7 +909,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
       break;
 
     // Write leftovers
-    vj::GraphTileBuilder tile_builder(hierarchy, associations.front().first.Tile_Base(), false);
+    vj::GraphTileBuilder tile_builder(tile_dir, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     for(const auto& association : associations)
       tile_builder.AddTrafficSegment(association.first, association.second);
@@ -920,7 +919,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
 
 void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>& chunks,
                                std::mutex& lock) {
-  TileHierarchy hierarchy(pt.get<std::string>("mjolnir.tile_dir"));
+  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   while(true) {
     // Get chunks
     lock.lock();
@@ -934,7 +933,7 @@ void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>&
       break;
 
     // Write chunks
-    vj::GraphTileBuilder tile_builder(hierarchy, associated_chunks.front().first.Tile_Base(), false);
+    vj::GraphTileBuilder tile_builder(tile_dir, associated_chunks.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     for(const auto& chunk : associated_chunks) {
       tile_builder.AddTrafficSegments(chunk.first, chunk.second);

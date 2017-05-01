@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "thor/astar.h"
 
@@ -61,8 +62,8 @@ namespace {
 //      \ /
 //       g
 //
-vb::TileHierarchy h("test/fake_tiles_astar");
-vb::GraphId tile_id = h.GetGraphId({.125, .125}, 2);
+std::string test_dir = "test/fake_tiles_astar";
+vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
 namespace node {
 std::pair<vb::GraphId, vm::PointLL> a({tile_id.tileid(), tile_id.level(), 0}, {0.01, 0.10});

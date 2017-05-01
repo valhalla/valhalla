@@ -1,12 +1,22 @@
 #ifndef VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 #define VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 
+#include <stdexcept>
+#include <type_traits>
+
+#include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
+
+//rapidjson loves to assert and crash programs, its more useful to throw and catch
+#define RAPIDJSON_ASSERT(x) if (!(x)) throw std::logic_error(RAPIDJSON_STRINGIFY(x))
+
+#include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/pointer.h>
-#include <type_traits>
+#include <rapidjson/error/en.h>
+#include <rapidjson/prettywriter.h>
 
 namespace rapidjson{
 
@@ -66,6 +76,14 @@ inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> 
     return static_cast<T>(ptr->GetDouble());
   //give up
   return boost::none;
+}
+
+template<typename T, typename V>
+inline T GetFromRapidJson(V&& v, const char* source, const T& t){
+  auto value = GetOptionalFromRapidJson<T>(v, source);
+  if(value)
+    return *value;
+  return t;
 }
 
 }

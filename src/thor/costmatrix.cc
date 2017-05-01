@@ -1,3 +1,4 @@
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include "thor/costmatrix.h"
@@ -221,7 +222,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges
     if (directededge->trans_up() || directededge->trans_down()) {
       // Do not take transition edges if this is called from a transition.
@@ -276,11 +277,10 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      uint32_t idx = edgestatus.index();
-      if (newcost.cost < edgelabels[idx].cost().cost) {
-        float oldsortcost = edgelabels[idx].sortcost();
-        edgelabels[idx].Update(pred_idx, newcost, newcost.cost, tc, distance);
-        adj->decrease(idx, newcost.cost, oldsortcost);
+      EdgeLabel& lab = edgelabels[edgestatus.index()];
+      if (newcost.cost < lab.cost().cost) {
+        adj->decrease(edgestatus.index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, tc, distance);
       }
       continue;
     }
@@ -491,7 +491,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, edgeid++) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges.
     if (directededge->trans_up() || directededge->trans_down()) {
       // Do not take transition edges if this is called from a transition.
@@ -562,12 +562,11 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
-    if (edgestatus.set() != EdgeSet::kUnreached) {
-      uint32_t idx = edgestatus.index();
-      if (newcost.cost < edgelabels[idx].cost().cost) {
-        float oldsortcost = edgelabels[idx].sortcost();
-        edgelabels[idx].Update(pred_idx, newcost, newcost.cost, tc, distance);
-        adj->decrease(idx, newcost.cost, oldsortcost);
+    if (edgestatus.set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels[edgestatus.index()];
+      if (newcost.cost < lab.cost().cost) {
+        adj->decrease(edgestatus.index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, tc, distance);
       }
       continue;
     }

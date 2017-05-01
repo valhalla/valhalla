@@ -5,6 +5,8 @@
 #include "midgard/pointll.h"
 #include "meili/traffic_segment_matcher.h"
 
+#include <cstdio>
+
 namespace {
 
   void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
@@ -46,10 +48,17 @@ namespace {
     return false;
   }
 
+  //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
+  bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
+    return edge->trans_up() || edge->trans_down() || edge->roundabout() ||
+      edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
+  }
+
   struct merged_traffic_segment_t {
     valhalla::baldr::TrafficSegment segment;
     valhalla::baldr::GraphId begin_edge;
     valhalla::baldr::GraphId end_edge;
+    bool internal;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
   };
@@ -57,31 +66,50 @@ namespace {
     std::vector<merged_traffic_segment_t> merged;
     const valhalla::baldr::GraphTile* tile = nullptr;
     valhalla::baldr::GraphId edge;
-    bool continuable = false;
     for(const auto& marker : markers) {
       //skip if its a repeat or we cant get the tile
       if(marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
         continue;
       //get segments for this edge
       edge = marker.edge;
+      const auto* directed_edge = tile->directededge(edge);
       auto segments = tile->GetTrafficSegments(edge);
+      //if there were no segments we'll start an invalid one to serve
+      //as a placeholder for the section of the path that has no ots's
+      if(segments.empty())
+        segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
-        if(continuable && merged.back()->segment_id_ == segment.segment_id_){
+        if(!merged.empty() && merged.back()->segment_id_ == segment.segment_id_){
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
+          merged.back().internal = merged.back().internal && is_internal(directed_edge);
         }//new one
         else
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge)});
       }
-      //if we just handled some segments we could continue them
-      continuable = !segments.empty();
     }
     return merged;
   }
-
+  
+/*
+  //TODO: remove this when debugging phase is finally over
+  void print(const valhalla::meili::interpolation_t& i) {
+    printf("%lu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
+  }
+  void print(const merged_traffic_segment_t& m) {
+    printf("%lu:\t%llu->%llu\t%d->%d\t%.2f->%.2f\n",
+      m.segment.segment_id_.value, m.begin_edge.value, m.end_edge.value,
+      m.segment.starts_segment_, m.segment.ends_segment_,
+      m.segment.begin_percent_, m.segment.end_percent_);
+  }
+  void print(const valhalla::meili::traffic_segment_t& t) {
+    printf("%lu\t%.2f kph\t%d\t%.2f->%.2f\t%lu->%lu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
+      t.length, t.start_time, t.end_time, t.begin_shape_index, t.end_shape_index);
+  }
+*/
 }
 
 namespace valhalla {
@@ -137,6 +165,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
   //find each set of continuous edges
   std::list<std::vector<interpolation_t> > interpolations;
+  size_t idx = 0;
   for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
     while(end_edge != edges.cend()) {
@@ -147,27 +176,27 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
 
     //go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
-    size_t i = 0, last_index = 0;
+    size_t last_idx = idx;
     for(auto segment = begin_edge; segment != end_edge; ++segment) {
       float edge_length = matcher->graphreader().GetGraphTile(segment->edgeid)->directededge(segment->edgeid)->length();
       float total_length = segment == begin_edge ? -edges.front().source * edge_length : interpolated.back().total_distance;
       //get the distance and match result for the begin node of the edge
-      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_index, -1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, total_length, 0.f, last_idx, -1});
       //add distances for all the match points that happened on this edge
-      for(; i < matches.size(); ++i) {
+      for(; idx < matches.size(); ++idx) {
         //skip unroutable ones, we dont know what edge they were on
-        if(!matches[i].edgeid.Is_Valid())
+        if(!matches[idx].edgeid.Is_Valid())
           continue;
         //if its a valid one that doesnt match we move on
-        else if(matches[i].edgeid != segment->edgeid)
+        else if(matches[idx].edgeid != segment->edgeid)
           break;
         //it was the right thing we were looking for
-        interpolated.emplace_back(interpolation_t{segment->edgeid, matches[i].distance_along * edge_length + total_length,
-          matches[i].distance_along, i, matches[i].epoch_time});
-        last_index = i;
+        interpolated.emplace_back(interpolation_t{segment->edgeid, matches[idx].distance_along * edge_length + total_length,
+          matches[idx].distance_along, idx, matches[idx].epoch_time});
+        last_idx = idx;
       }
       //add the end node of the edge
-      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, last_index, -1});
+      interpolated.emplace_back(interpolation_t{segment->edgeid, edge_length + total_length, 1.f, last_idx, -1});
     }
 
     //finally backfill the time information for those points that dont have it
@@ -219,8 +248,17 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
   std::vector<traffic_segment_t> traffic_segments;
   for(const auto& markers : interpolations) {
 
+    /*printf("\nInterpolations:\n");
+    for(const auto& marker : markers)
+      print(marker);*/
+
     //get all the segments for this matched path merging them into single entries
     auto merged_segments = merge_segments(markers, reader);
+
+    /*printf("\nMerged Segments:\n");
+    for(const auto& segment : merged_segments)
+      print(segment);
+    printf("\nReported Segments:\n");*/
 
     //go over the segments and move the interpolation markers accordingly
     auto left = markers.cbegin(), right = markers.cbegin();
@@ -268,7 +306,10 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
 
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
-      traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length});
+      traffic_segments.emplace_back(
+        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal});
+
+      //print(traffic_segments.back());
 
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
@@ -324,16 +365,18 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
 std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t>& traffic_segments) {
   auto segments = baldr::json::array({});
   for (const auto& seg : traffic_segments) {
-    segments->emplace_back(baldr::json::map
-      ({
-        {"segment_id", seg.segment_id.value},
-        {"start_time", baldr::json::fp_t{seg.start_time, 3}},
-        {"end_time", baldr::json::fp_t{seg.end_time, 3}},
-        {"length", static_cast<int64_t>(seg.length)},
-        {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
-        {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
-      })
-    );
+    auto segment = baldr::json::map({
+      {"start_time", baldr::json::fp_t{seg.start_time, 3}},
+      {"end_time", baldr::json::fp_t{seg.end_time, 3}},
+      {"length", static_cast<int64_t>(seg.length)},
+      {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
+      {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
+      {"internal", static_cast<bool>(seg.internal)},
+    });
+    //some of the segments are just sections of the path with no ots's
+    if(seg.segment_id.Is_Valid())
+      segment->emplace("segment_id", seg.segment_id.value);
+    segments->emplace_back(segment);
   }
   std::stringstream ss;
   ss << *baldr::json::map({{"segments",segments}});
