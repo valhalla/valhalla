@@ -187,7 +187,9 @@ config = {
       'max_search_radius': 100,
       'max_shape': 16000
     },
-    'max_avoid_locations': 50    
+    'max_avoid_locations': 50,
+    'max_reachability': 100,
+    'max_radius': 200
   }
 }
 
@@ -373,7 +375,9 @@ help_text = {
       'max_search_radius': 'Maximum upper bounds of the search radius in meters',
       'max_shape': 'Maximum number of input shape points'
     },
-    'max_avoid_locations': 'Maximum number of avoid locations to allow in request'
+    'max_avoid_locations': 'Maximum number of avoid locations to allow in request',
+    'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
+    'max_radius': 'Maximum radius in meters allowed on any one location'
   }
 }
 

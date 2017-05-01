@@ -65,6 +65,8 @@ namespace valhalla {
       std::unordered_map<std::string, size_t> max_locations;
       std::unordered_map<std::string, float> max_distance;
       size_t max_avoid_locations;
+      unsigned int max_reachability;
+      unsigned int max_radius;
       float long_request;
       // Minimum and maximum walking distances (to validate input).
       size_t min_transit_walking_dis;

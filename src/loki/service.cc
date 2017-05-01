@@ -139,6 +139,10 @@ namespace valhalla {
         for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
           catch (...) { throw valhalla_exception_t{400, location_parse_error_code}; }
+          if(parsed.back().minimum_reachability_ > max_reachability)
+            parsed.back().minimum_reachability_ = max_reachability;
+          if(parsed.back().radius_ > max_radius)
+            parsed.back().radius_ = max_radius;
         }
         if (!healthcheck)
           valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
@@ -233,7 +237,7 @@ namespace valhalla {
 
       //Build max_locations and max_distance maps
       for (const auto& kv : config.get_child("service_limits")) {
-        if(kv.first == "max_avoid_locations")
+        if(kv.first == "max_avoid_locations" || kv.first == "max_reachability" || kv.first == "max_radius")
           continue;
         if (kv.first != "skadi" && kv.first != "trace")
           max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
@@ -253,6 +257,8 @@ namespace valhalla {
         config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
       max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+      max_reachability = config.get<unsigned int>("service_limits.max_reachability");
+      max_radius = config.get<unsigned int>("service_limits.max_radius");
       max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
       max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
 
