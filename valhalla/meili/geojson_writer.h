@@ -4,11 +4,9 @@
 
 #include <vector>
 
-#include <baldr/rapidjson_utils.h>
-
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/graphid.h>
-
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/match_route.h>
 #include <valhalla/meili/match_result.h>
