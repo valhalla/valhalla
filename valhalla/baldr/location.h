@@ -4,10 +4,10 @@
 #include <string>
 #include <cstdint>
 
-#include <valhalla/midgard/pointll.h>
-
 #include <boost/property_tree/ptree.hpp>
-#include <baldr/rapidjson_utils.h>
+
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 namespace valhalla{
 namespace baldr{
