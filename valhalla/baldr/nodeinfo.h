@@ -206,7 +206,9 @@ class NodeInfo {
    * @return  Returns true if this node is a transit node.
    */
   bool is_transit() const {
-    return type() == NodeType::kMultiUseTransitStop;
+    return (type() == NodeType::kMultiUseTransitPlatform ||
+        type() == NodeType::kTransitEgress ||
+        type() == NodeType::kTransitStation);
   }
 
   /**
