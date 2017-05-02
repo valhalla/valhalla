@@ -223,7 +223,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     bool has_transit = pred.has_transit();
     GraphId prior_stop = pred.prior_stopid();
     uint32_t operator_id = pred.transit_operator();
-    if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
 
       // Get the transfer penalty when changing stations
       if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
@@ -416,9 +416,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // Prevent going from one transit connection directly to another
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
-          if (nodeinfo->type() == NodeType::kMultiUseTransitStop &&
-              pred.use()   == Use::kTransitConnection &&
-              directededge->use()  == Use::kTransitConnection)
+          if (nodeinfo->type() == NodeType::kTransitEgress &&
+              pred.use()   == Use::kEgressConnection &&
+              directededge->use()  == Use::kEgressConnection)
                 continue;
         }
       }
@@ -568,7 +568,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     }
 
     // Return true if we reach a transit stop
-    if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
       return true;
     }
 
