@@ -167,7 +167,7 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // all should be multiusetransit stop, but check just to be sure.
-      if (nodeinfo.type() == NodeType::kMultiUseTransitStop) {
+      if (nodeinfo.type() == NodeType::kMultiUseTransitPlatform) {
 
         const TransitStop* transit_stop = transit_tile->GetTransitStop(
             nodeinfo.stop_index());
