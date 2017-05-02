@@ -2,15 +2,19 @@ package valhalla.mjolnir;
 
 message Transit {
 
-  message Stop {
-  	optional float lon = 1;
-    optional float lat = 2;    
-    optional uint64 graphid = 3;
-    optional string name = 4;
-    optional string onestop_id = 5;
-    optional uint64 osm_way_id = 6;
-    optional uint32 timezone = 8;
-    optional bool wheelchair_boarding = 9;
+  message Node {
+    optional float lon = 1;
+    optional float lat = 2;
+    optional uint32 type = 3;
+    optional uint64 graphid = 4;
+    optional uint64 prev_type_graphid = 5;
+    optional string name = 6;
+    optional string onestop_id = 7;
+    optional uint64 osm_way_id = 8;
+    optional uint32 timezone = 9;
+    optional bool wheelchair_boarding = 10;
+    optional bool generated = 11;
+    optional uint32 traversability = 12;
   }
 
   message StopPair {
@@ -69,7 +73,7 @@ message Transit {
     optional bytes encoded_shape = 2;
   }
  
-  repeated Stop stops = 1;
+  repeated Node nodes = 1;
   repeated StopPair stop_pairs = 2;
   repeated Route routes = 3; 
   repeated Shape shapes = 4; 
