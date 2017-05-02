@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_STREETNAMES_H_
 #define VALHALLA_BALDR_STREETNAMES_H_
 
+#include <cstdint>
 #include <list>
 #include <vector>
 #include <memory>

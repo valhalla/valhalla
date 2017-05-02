@@ -87,6 +87,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/double_bucket_queue.h \
+	valhalla/baldr/edge_elevation.h \
 	valhalla/baldr/edgeinfo.h \
 	valhalla/baldr/errorcode_util.h \
 	valhalla/baldr/geojson.h \
@@ -185,13 +186,14 @@ nobase_include_HEADERS = \
 	valhalla/thor/isochrone.h \
 	valhalla/thor/optimizer.h \
 	valhalla/thor/map_matcher.h \
+	valhalla/thor/match_result.h \
 	valhalla/thor/multimodal.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
 	valhalla/thor/route_matcher.h \
 	valhalla/thor/service.h \
 	valhalla/thor/trippathbuilder.h \
-	valhalla/thor/trip_path_controller.h \
+	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/service.h
@@ -206,7 +208,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
-	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \
@@ -217,6 +218,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
 	src/baldr/double_bucket_queue.cc \
+	src/baldr/edge_elevation.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
@@ -311,7 +313,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/thor/trippathbuilder.cc \
-	src/thor/trip_path_controller.cc \
+	src/thor/attributes_controller.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
 	src/tyr/service.cc
@@ -549,6 +551,7 @@ check_PROGRAMS = \
 	test/datetime \
 	test/directededge \
 	test/double_bucket_queue \
+	test/edge_elevation \
 	test/edgecollapser \
 	test/laneconnectivity \
 	test/graphid \
@@ -593,7 +596,7 @@ check_PROGRAMS = \
 	test/edgestatus \
 	test/optimizer \
 	test/thor_service \
-	test/trip_path_controller \
+	test/attributes_controller \
 	test/astar \
 	test/serializers \
 	test/traffic_matcher
@@ -654,6 +657,9 @@ test_datetime_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_directededge_SOURCES = test/directededge.cc test/test.cc
 test_directededge_CPPFLAGS = $(DEPS_CFLAGS)
 test_directededge_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_edge_elevation_SOURCES = test/edge_elevation.cc test/test.cc
+test_edge_elevation_CPPFLAGS = $(DEPS_CFLAGS)
+test_edge_elevation_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_double_bucket_queue_SOURCES = test/double_bucket_queue.cc test/test.cc
 test_double_bucket_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_double_bucket_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -789,9 +795,9 @@ test_optimizer_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_thor_service_SOURCES = test/thor_service.cc test/test.cc
 test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_thor_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_trip_path_controller_SOURCES = test/trip_path_controller.cc test/test.cc
-test_trip_path_controller_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_trip_path_controller_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_attributes_controller_SOURCES = test/attributes_controller.cc test/test.cc
+test_attributes_controller_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_attributes_controller_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_astar_SOURCES = test/astar.cc test/test.cc
 test_astar_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_astar_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

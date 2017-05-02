@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
+#include <cstdint>
 #include <vector>
 #include <list>
 #include <string>

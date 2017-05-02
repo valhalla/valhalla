@@ -4,11 +4,9 @@
 
 #include <vector>
 
-#include <baldr/rapidjson_utils.h>
-
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/graphid.h>
-
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/match_route.h>
 #include <valhalla/meili/match_result.h>
@@ -306,55 +304,6 @@ GeoJSONRouteWriter<buffer_t>::GeoJSONRouteWriter(bool verbose)
 
 
 template <typename buffer_t>
-void WriteRoute(rapidjson::Writer<buffer_t>& writer,
-                MapMatcher& matcher,
-                const std::vector<EdgeSegment>& route)
-{
-  // A state indicating if array is open (i.e. called
-  // writer.StartArray() already but not writer.EndArray() yet)
-  bool open = false;
-
-  for (auto segment = route.cbegin(), prev_segment = route.cend();
-       segment != route.cend(); segment++) {
-    // Dummy segments should have been filtered out, however we still
-    // do a check here
-    if (!segment->edgeid.Is_Valid()) {
-      continue;
-    }
-
-    const auto& shape = segment->Shape(matcher.graphreader());
-    if (!shape.empty()) {
-      const auto adjoined = prev_segment != route.cend() && prev_segment->Adjoined(matcher.graphreader(), *segment);
-      // If current segment and previous segment adjoin, skip the
-      // first coordinate since it's been written already
-      if (adjoined) {
-        for (auto vertex = std::next(shape.begin()); vertex != shape.end(); vertex++) {
-          serialize_coordinate(writer, *vertex);
-        }
-      } else {
-        // If current segment and previous segment don't adjoin, close
-        // current array and start a new array
-        if (open) {
-          writer.EndArray();
-          open = false;
-        }
-        writer.StartArray();
-        open = true;
-        for (auto vertex = shape.begin(); vertex != shape.end(); vertex++) {
-          serialize_coordinate(writer, *vertex);
-        }
-      }
-    }
-    prev_segment = segment;
-  }
-  if (open) {
-    writer.EndArray();
-    open = false;
-  }
-}
-
-
-template <typename buffer_t>
 void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& writer,
                                                  MapMatcher& mapmatcher,
                                                  const std::vector<MatchResult>& results) const
@@ -365,11 +314,16 @@ void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& wr
   writer.String("MultiLineString");
 
   writer.String("coordinates");
+  const auto& segments = ConstructRoute(mapmatcher.mapmatching(), results.cbegin(), results.cend());
+  const auto& shapes = ConstructRouteShapes(mapmatcher.graphreader(), segments.begin(), segments.end());
   writer.StartArray();
-  const auto& segments = ConstructRoute(mapmatcher.mapmatching(),
-                                        results.cbegin(),
-                                        results.cend());
-  WriteRoute(writer, mapmatcher, segments);
+  for (const auto& shape: shapes) {
+    writer.StartArray();
+    for (const auto& vertex: shape) {
+      serialize_coordinate(writer, vertex);
+    }
+    writer.EndArray();
+  }
   writer.EndArray();
 
   writer.EndObject();
@@ -378,7 +332,7 @@ void GeoJSONRouteWriter<buffer_t>::WriteGeometry(rapidjson::Writer<buffer_t>& wr
 
 template <typename buffer_t>
 void GeoJSONRouteWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& writer,
-                                                   MapMatcher& matcher,
+                                                   MapMatcher& mapmatcher,
                                                    const std::vector<MatchResult>& results) const
 {
   writer.StartObject();
@@ -393,7 +347,7 @@ void GeoJSONRouteWriter<buffer_t>::WriteProperties(rapidjson::Writer<buffer_t>& 
   }
   writer.EndArray();
   if (verbose_) {
-    serialize_verbose(writer, matcher, results);
+    serialize_verbose(writer, mapmatcher, results);
   }
   writer.EndObject();
 }

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
+#include <cstdint>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/turn.h>
@@ -663,32 +664,6 @@ class DirectedEdge {
   void set_part_of_complex_restriction(const bool part_of);
 
   /**
-   * Gets the maximum upward slope. Uses 1 degree precision for slopes to 16
-   * degrees and 4 degree precision afterwards (up to a max of 76 degrees).
-   * @return  Returns the maximum upward slope (0 to 76 degrees).
-   */
-  int max_up_slope() const;
-
-  /**
-   * Sets the maximum upward slope. If slope is negative, 0 is set.
-   * @param  slope  Maximum upward slope (degrees).
-   */
-  void set_max_up_slope(const float slope);
-
-  /**
-   * Gets the maximum downward slope. Uses 1 degree precision for slopes to
-   * -16 degrees, and 4 degree precision afterwards (up to a max of -76 degs).
-   * @return  Returns the maximum downward slope (0 to -76 degrees).
-   */
-  int max_down_slope() const;
-
-  /**
-   * Sets the maximum downward slope. If slope is positive, 0 is set.
-   * @param  slope  Maximum downward slope (degrees).
-   */
-  void set_max_down_slope(const float slope);
-
-  /**
    * Get the density along the edges.
    * @return  Returns relative density along the edge.
    */
@@ -1039,8 +1014,7 @@ class DirectedEdge {
   uint64_t reverseaccess_  : 12; // Access (bit mask) in reverse direction
   uint64_t classification_ : 3;  // Classification/importance of the road/path
   uint64_t surface_        : 3;  // representation of smoothness
-  uint64_t max_up_slope_   : 5;  // Maximum upward slope
-  uint64_t max_down_slope_ : 5;  // Maximum downward slope
+  uint64_t spare2_         : 10;
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed

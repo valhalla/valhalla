@@ -686,12 +686,13 @@ function filter_tags_generic(kv)
   --figure out what basic type of road it is
   local forward = highway[kv["highway"]]
   local ferry = kv["route"] == "ferry"
+  local rail = kv["route"] == "shuttle_train"
   local access = access[kv["access"]]
 
   kv["emergency_forward"] = "false"
   kv["emergency_backward"] = "false"
 
-  if (ferry == true or kv["highway"]) then 
+  if (ferry == true or rail == true or kv["highway"]) then
     
     if (kv["access"] == "emergency" or kv["emergency"] == "yes" or kv["service"] == "emergency_access") then
       kv["emergency_forward"] = "true"
@@ -747,7 +748,11 @@ function filter_tags_generic(kv)
     --if its a ferry and these tags dont show up we want to set them to true 
     local default_val = tostring(ferry)
 
-    if ferry == false or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then 
+    if ferry == false and rail == true then
+      default_val = tostring(rail)
+    end
+
+    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -965,7 +970,7 @@ function filter_tags_generic(kv)
 
   if kv["highway"] == nil and ferry then
     road_class = 2 --TODO:  can we weight based on ferry types?
-  elseif kv["highway"] == nil and kv["railway"] then
+  elseif kv["highway"] == nil and (kv["railway"] or kv["route"] == "shuttle_train") then
     road_class = 2 --TODO:  can we weight based on rail types?    
   elseif road_class == nil then --service and other = 7
     road_class = 7
@@ -1042,7 +1047,7 @@ function filter_tags_generic(kv)
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)
-  kv["rail"] = tostring(kv["auto_forward"] == "true" and kv["railway"] == "rail")
+  kv["rail"] = tostring(kv["auto_forward"] == "true" and (kv["railway"] == "rail" or kv["route"] == "shuttle_train"))
   kv["name"] = kv["name"]
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]

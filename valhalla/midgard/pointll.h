@@ -108,13 +108,41 @@ class PointLL : public Point2 {
   std::tuple<PointLL, float, int> ClosestPoint(const std::vector<PointLL>& pts) const;
 
   /**
+   * Calculate the heading from the start index within a polyline of lat,lng
+   * points to a point at the specified distance from the start.
+   * @param  pts   Polyline - list of lat,lng points.
+   * @param  dist  Distance in meters from start to find heading to.
+   * @param  idx0  Start index within the polyline.
+   * @param  idx1  End index within the polyline
+   */
+  static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
+                                    const float dist, const uint32_t idx0,
+                                    const uint32_t idx1);
+
+
+  /**
    * Calculate the heading from the start of a polyline of lat,lng points to a
    * point at the specified distance from the start.
    * @param  pts   Polyline - list of lat,lng points.
    * @param  dist  Distance in meters from start to find heading to.
    */
   static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                                    const float dist);
+                                    const float dist) {
+    return HeadingAlongPolyline(pts, dist, 0, pts.size() - 1);
+  }
+
+  /**
+   * Calculate the heading from a point at a specified distance from the end
+   * of a polyline of lat,lng points to the end point of the polyline.
+   * @param  pts   Polyline - list of lat,lng points.
+   * @param  dist  Distance in meters from end. A point that distance is
+   *               used to find the heading to the end point.
+   * @param  idx0  Start index within the polyline.
+   * @param  idx1  End index within the polyline
+   */
+  static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
+                                      const float dist, const uint32_t idx0,
+                                      const uint32_t idx1);
 
   /**
    * Calculate the heading from a point at a specified distance from the end
@@ -124,7 +152,9 @@ class PointLL : public Point2 {
    *               used to find the heading to the end point.
    */
   static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                                      const float dist);
+                                      const float dist) {
+    return HeadingAtEndOfPolyline(pts, dist, 0, pts.size() - 1);
+  }
 
   /**
    * Test whether this point is to the left of a segment from p1 to p2.

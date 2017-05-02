@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_LOKI_SERVICE_H__
 #define __VALHALLA_LOKI_SERVICE_H__
 
+#include <cstdint>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
@@ -14,7 +15,7 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/sif/costfactory.h>
-#include <baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 namespace valhalla {
   namespace loki {

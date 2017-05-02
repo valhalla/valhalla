@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 #ifndef MMP_GEOMETRY_HELPERS_H_
 #define MMP_GEOMETRY_HELPERS_H_
+#include <cmath>
 
 #include <vector>
 #include <algorithm>

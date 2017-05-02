@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 #define VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>

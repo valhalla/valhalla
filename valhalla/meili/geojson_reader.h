@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <baldr/rapidjson_utils.h>
-
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/measurement.h>
 
 

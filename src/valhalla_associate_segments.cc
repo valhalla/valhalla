@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include "midgard/logging.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
@@ -814,10 +816,6 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   return true;
 }
 
-vb::GraphId parse_file_name(const std::string &file_name) {
-  return vb::GraphTile::GetTileId(file_name);
-}
-
 void edge_association::add_tile(const std::string &file_name) {
   //read the osmlr tile
   pbf::Tile tile;
@@ -829,7 +827,7 @@ void edge_association::add_tile(const std::string &file_name) {
   }
 
   //get a tile builder ready for this tile
-  auto base_id = parse_file_name(file_name);
+  auto base_id = vb::GraphTile::GetTileId(file_name);
   m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(),
                        base_id, false));
   m_tile_builder->InitializeTrafficSegments();

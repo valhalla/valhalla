@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_POLYLINE2_H_
 #define VALHALLA_MIDGARD_POLYLINE2_H_
 
+#include <cstdint>
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>

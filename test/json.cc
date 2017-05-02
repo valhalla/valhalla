@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "baldr/json.h"
 #include <set>

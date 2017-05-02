@@ -723,9 +723,22 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // or if several are high class
 
   // Reduce stop impact from a turn channel or when only links
-  // (ramps and turn channels) are involved.
+  // (ramps and turn channels) are involved. Exception - sharp turns.
+  Turn::Type turn_type = Turn::GetType(turn_degree);
+  bool is_sharp = (turn_type == Turn::Type::kSharpLeft ||
+                   turn_type == Turn::Type::kSharpRight ||
+                   turn_type == Turn::Type::kReverse);
+  bool is_slight = (turn_type == Turn::Type::kStraight ||
+                    turn_type == Turn::Type::kSlightRight ||
+                    turn_type == Turn::Type::kSlightLeft);
   if (allramps) {
-    stop_impact /= 2;
+    if (is_sharp) {
+      stop_impact += 2;
+    } else if (is_slight) {
+      stop_impact /= 2;
+    } else {
+      stop_impact -= 1;
+    }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
              bestrc < RoadClass::kUnclassified) {
     // Ramp may be crossing a road (not a path or service road)
@@ -736,12 +749,23 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
     // Increase stop impact on merge
-    stop_impact += 2;
-  } else if (edges[from].use() == Use::kTurnChannel) {
-    if (edges[to].use() == Use::kRamp) {
+    if (is_sharp) {
+      stop_impact += 3;
+    } else if (is_slight) {
       stop_impact += 1;
     } else {
+      stop_impact += 2;
+    }
+  } else if (edges[from].use() == Use::kTurnChannel) {
+    // Penalize sharp turns
+    if (is_sharp) {
+      stop_impact += 2;
+    } else if (edges[to].use() == Use::kRamp) {
+      stop_impact += 1;
+    } else if (is_slight) {
       stop_impact /= 2;
+    } else {
+      stop_impact -= 1;
     }
   }
 

@@ -1,3 +1,4 @@
+#include <cmath>
 #include "test.h"
 #include "midgard/util.h"
 #include "midgard/encoded.h"

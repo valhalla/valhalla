@@ -1,6 +1,7 @@
 #ifndef MMP_TRAFFIC_SEGMENT_MATCHER_H_
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <list>
@@ -33,6 +34,7 @@ struct traffic_segment_t {
   double end_time;             // End time along this segment, if < 0 then no end match
   size_t end_shape_index;      // Ends at this index of original input
   int length;                  // Length in meters along this segment, if < 0 then no match
+  bool internal;               // Is the set of edges making up this segment internal edge types
 };
 
 /**

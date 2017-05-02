@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHENHANCER_H
 #define VALHALLA_MJOLNIR_GRAPHENHANCER_H
 
+#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {

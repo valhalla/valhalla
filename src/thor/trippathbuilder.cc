@@ -6,8 +6,7 @@
 #include <cmath>
 
 #include "thor/trippathbuilder.h"
-#include "thor/trip_path_controller.h"
-
+#include "thor/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/signinfo.h"
@@ -119,7 +118,7 @@ uint32_t GetAdminIndex(
   return admin_index;
 }
 
-void AssignAdmins(const TripPathController& controller,
+void AssignAdmins(const AttributesController& controller,
                   TripPath& trip_path,
                   const std::vector<AdminInfo>& admin_info_list) {
   if (controller.category_attribute_enabled(kAdminCategory)) {
@@ -146,8 +145,18 @@ void AssignAdmins(const TripPathController& controller,
   }
 }
 
+// Set the bounding box (min,max lat,lon) for the shape
+void SetBoundingBox(TripPath& trip_path, std::vector<PointLL>& shape) {
+  AABB2<PointLL> bbox(shape);
+  LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
+  min_ll->set_lat(bbox.miny());
+  min_ll->set_lng(bbox.minx());
+  LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
+  max_ll->set_lat(bbox.maxy());
+  max_ll->set_lng(bbox.maxx());
 }
 
+}
 
 namespace valhalla {
 namespace thor {
@@ -386,6 +395,30 @@ odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
   return tp_loc;
 }
 
+/**
+ * Set begin and end heading if requested.
+ * @param  trip_edge  Trip path edge to add headings.
+ * @param  controller Controller specifying attributes to add to trip edge.
+ * @param  edge       Directed edge.
+ * @param  shape      Trip shape.
+ */
+void SetHeadings(TripPath_Edge* trip_edge, const AttributesController& controller,
+                 const DirectedEdge* edge, const std::vector<PointLL>& shape,
+                 const uint32_t begin_index) {
+  if (controller.attributes.at(kEdgeBeginHeading) ||
+      controller.attributes.at(kEdgeEndHeading)) {
+    float offset = GetOffsetForHeading(edge->classification(), edge->use());
+    if (controller.attributes.at(kEdgeBeginHeading)) {
+      trip_edge->set_begin_heading(std::round(PointLL::HeadingAlongPolyline(shape,
+                          offset, begin_index, shape.size() - 1)));
+    }
+    if (controller.attributes.at(kEdgeEndHeading)) {
+      trip_edge->set_end_heading(std::round(PointLL::HeadingAtEndOfPolyline(shape,
+                          offset, begin_index, shape.size() - 1)));
+    }
+  }
+}
+
 }
 
 // Default constructor
@@ -400,7 +433,7 @@ TripPathBuilder::~TripPathBuilder() {
 // TODO - probably need the location information passed in - to
 // add to the TripPath
 TripPath TripPathBuilder::Build(
-    const TripPathController& controller, GraphReader& graphreader,
+    const AttributesController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
     const std::list<PathLocation>& through_loc,
@@ -534,6 +567,10 @@ TripPath TripPathBuilder::Build(
     if (controller.attributes.at(kEdgeEndShapeIndex))
       trip_edge->set_end_shape_index(shape.size()-1);
 
+    // Set begin and end heading if requested. Uses shape so
+    // must be done after the edge's shape has been added.
+    SetHeadings(trip_edge, controller, edge, shape, 0);
+
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime))
       node->set_elapsed_time(path.front().elapsed_time);
@@ -590,15 +627,7 @@ TripPath TripPathBuilder::Build(
     }
 
     // Set the bounding box of the shape
-    AABB2<PointLL> bbox(shape);
-    odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-    // Set bounding box min lat/lon
-    min_ll->set_lat(bbox.miny());
-    min_ll->set_lng(bbox.minx());
-    odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-    // Set bounding box max lat/lon
-    max_ll->set_lat(bbox.maxy());
-    max_ll->set_lng(bbox.maxx());
+    SetBoundingBox(trip_path, shape);
 
     // Set shape if requested
     if (controller.attributes.at(kShape))
@@ -823,17 +852,10 @@ TripPath TripPathBuilder::Build(
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
     auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
-    if (is_first_edge) {
-      // Set begin shape index if requested
-      if (controller.attributes.at(kEdgeBeginShapeIndex))
-        trip_edge->set_begin_shape_index(0);
-    } else {
-      // Set begin shape index if requested
-      if (controller.attributes.at(kEdgeBeginShapeIndex))
-        trip_edge->set_begin_shape_index(trip_shape.size() - 1);
-    }
+    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
 
-    // We need to clip the shape if its at the beginning or end and isnt a full length
+    // We need to clip the shape if i its at the beginning or end and
+    // is not full length
     if (is_first_edge || is_last_edge) {
       float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
       if (directededge->forward() == is_last_edge) {
@@ -845,8 +867,8 @@ TripPath TripPathBuilder::Build(
             trip_shape, edgeinfo.shape().rbegin(), edgeinfo.shape().rend(),
             length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       }
-    }    // Just get the shape in there in the right direction
-    else {
+    } else {
+      // Just get the shape in there in the right direction
       if (directededge->forward())
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1,
                           edgeinfo.shape().end());
@@ -854,9 +876,19 @@ TripPath TripPathBuilder::Build(
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1,
                           edgeinfo.shape().rend());
     }
+
+    // Set begin shape index if requested
+    if (controller.attributes.at(kEdgeBeginShapeIndex)) {
+      trip_edge->set_begin_shape_index(begin_index);
+    }
+
     // Set end shape index if requested
     if (controller.attributes.at(kEdgeEndShapeIndex))
       trip_edge->set_end_shape_index(trip_shape.size() - 1);
+
+    // Set begin and end heading if requested. Uses trip_shape so
+    // must be done after the edge's shape has been added.
+    SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
@@ -1000,15 +1032,7 @@ TripPath TripPathBuilder::Build(
   AssignAdmins(controller, trip_path, admin_info_list);
 
   // Set the bounding box of the shape
-  AABB2<PointLL> bbox(trip_shape);
-  odin::LatLng* min_ll = trip_path.mutable_bbox()->mutable_min_ll();
-  // Set bounding box min lat/lon
-  min_ll->set_lat(bbox.miny());
-  min_ll->set_lng(bbox.minx());
-  odin::LatLng* max_ll = trip_path.mutable_bbox()->mutable_max_ll();
-  // Set bounding box max lat/lon if requested
-  max_ll->set_lat(bbox.maxy());
-  max_ll->set_lng(bbox.maxx());
+  SetBoundingBox(trip_path, trip_shape);
 
   // Set shape if requested
   if (controller.attributes.at(kShape))
@@ -1022,7 +1046,7 @@ TripPath TripPathBuilder::Build(
 }
 
 // Add a trip edge to the trip node and set its attributes
-TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller,
+TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controller,
                                             const GraphId& edge,
                                             const uint32_t trip_id,
                                             const uint32_t block_id,
@@ -1130,26 +1154,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
         trip_edge->set_traversability(
             TripPath_Traversability::TripPath_Traversability_kNone);
     }
-
-    // Set begin heading if requested
-    if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(
-          std::round(
-              PointLL::HeadingAlongPolyline(
-                  edgeinfo.shape(),
-                  GetOffsetForHeading(directededge->classification(),
-                                      directededge->use()))));
-    }
-
-    // Set end heading if requested
-    if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(
-          std::round(
-              PointLL::HeadingAtEndOfPolyline(
-                  edgeinfo.shape(),
-                  GetOffsetForHeading(directededge->classification(),
-                                      directededge->use()))));
-    }
   } else {
     // Set traversability for reverse directededge if requested
     if (controller.attributes.at(kEdgeTraversability)) {
@@ -1168,30 +1172,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
       else
         trip_edge->set_traversability(
             TripPath_Traversability::TripPath_Traversability_kNone);
-    }
-
-    // Set begin heading if requested
-    if (controller.attributes.at(kEdgeBeginHeading)) {
-      trip_edge->set_begin_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAtEndOfPolyline(
-                      edgeinfo.shape(),
-                      GetOffsetForHeading(directededge->classification(),
-                                          directededge->use())) + 180.0f),
-                  360)));
-    }
-
-    // Set end heading if requested
-    if (controller.attributes.at(kEdgeEndHeading)) {
-      trip_edge->set_end_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAlongPolyline(
-                      edgeinfo.shape(),
-                      GetOffsetForHeading(directededge->classification(),
-                                          directededge->use())) + 180.0f),
-                  360)));
     }
   }
 
@@ -1264,13 +1244,27 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   if (controller.attributes.at(kEdgeWeightedGrade))
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
 
-  // Set maximum upward grade if requested
-  if (controller.attributes.at(kEdgeMaxUpwardGrade))
-    trip_edge->set_max_upward_grade(directededge->max_up_slope());
-
-  // Set maximum downward grade if requested
-  if (controller.attributes.at(kEdgeMaxDownwardGrade))
-    trip_edge->set_max_downward_grade(directededge->max_down_slope());
+  // Set maximum upward and downward grade if requested
+  if (controller.attributes.at(kEdgeMaxUpwardGrade) ||
+      controller.attributes.at(kEdgeMaxDownwardGrade) ||
+      controller.attributes.at(kEdgeMeanElevation)) {
+    const EdgeElevation* elev = graphtile->edge_elevation(edge);
+    if (elev != nullptr) {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(elev->max_up_slope());
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(elev->max_down_slope());
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(elev->mean_elevation());
+    } else {
+      if (controller.attributes.at(kEdgeMaxUpwardGrade))
+        trip_edge->set_max_upward_grade(kNoElevationData);
+      if (controller.attributes.at(kEdgeMaxDownwardGrade))
+        trip_edge->set_max_downward_grade(kNoElevationData);
+      if (controller.attributes.at(kEdgeMeanElevation))
+        trip_edge->set_mean_elevation(kNoElevationData);
+    }
+  }
 
   if (controller.attributes.at(kEdgeLaneCount))
     trip_edge->set_lane_count(directededge->lanecount());
@@ -1412,7 +1406,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const TripPathController& controller
   return trip_edge;
 }
 
-void TripPathBuilder::AddTripIntersectingEdge(const TripPathController& controller,
+void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& controller,
                                               uint32_t local_edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,

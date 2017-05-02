@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <sstream>

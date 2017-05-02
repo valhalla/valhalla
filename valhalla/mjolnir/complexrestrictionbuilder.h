@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 #define VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 
+#include <cstdint>
 #include <vector>
 #include <list>
 #include <string>

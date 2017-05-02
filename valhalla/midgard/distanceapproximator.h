@@ -14,13 +14,19 @@ namespace midgard{
  * Provides distance approximation in latitude, longitude space. Approximates
  * distance in meters between two points. This method is more efficient
  * than using spherical distance calculations. It computes an approximate
- * distance using the pythagorean theorem with the meters of latitude change
+ * distance using the Pythagorean theorem with the meters of latitude change
  * (exact) and the meters of longitude change at the "test point". Longitude
  * is inexact since meters per degree of longitude changes with latitude.
  * This approximation has very little error (less than 1%) if the positions
  * are close to one another (within several hundred meters). Error
  * increases at high (near polar) latitudes. This method will not work if the
  * points cross 180 degrees longitude.
+ *
+ * The main use of this method is to perform distance comparisons relative to
+ * a single location (e.g. in the A* heuristic with path finding algorithms).
+ * This method uses an approximation of meters per degree of longitude which
+ * varies with latitude. The distance from A to B may not match the distance
+ * from B to A if the latitudes of the 2 points differ.
  */
 class DistanceApproximator
 {
@@ -33,7 +39,11 @@ class DistanceApproximator
    * precalculates the meters per degree of longitude.
    * @param   ll    Latitude, longitude of the test point (degrees)
    */
-  DistanceApproximator(const PointLL& ll);
+  DistanceApproximator(const PointLL& ll)
+      :  centerlat_(ll.lat()),
+         centerlng_(ll.lng()),
+         m_per_lng_degree_(MetersPerLngDegree(centerlat_)) {
+  }
 
   /**
    * Sets the test point.  This method is used when a distance is to be
@@ -41,7 +51,11 @@ class DistanceApproximator
    * precalculates the meters per degree of longitude.
    * @param   ll    Latitude, longitude of the test point (degrees)
    */
-  void SetTestPoint(const PointLL& ll);
+  void SetTestPoint(const PointLL& ll) {
+    centerlat_ = ll.lat();
+    centerlng_ = ll.lng();
+    m_per_lng_degree_  = MetersPerLngDegree(centerlat_);
+  }
 
   /**
    * Approximates the arc distance between the supplied position and the
@@ -54,9 +68,8 @@ class DistanceApproximator
    *          searching (avoids sqrt).
    */
   float DistanceSquared(const PointLL& ll) const {
-    float latm = (ll.lat() - centerlat_) * kMetersPerDegreeLat;
-    float lngm = (ll.lng() - centerlng_) * m_per_lng_degree_;
-    return (latm * latm + lngm * lngm);
+    return sqr((ll.lat() - centerlat_) * kMetersPerDegreeLat) +
+           sqr((ll.lng() - centerlng_) * m_per_lng_degree_);
   }
 
   /**
@@ -67,7 +80,12 @@ class DistanceApproximator
    * @param   ll2  Second point (lat,lng)
    * @return  Returns the approximate distance squared (in meters)
    */
-  static float DistanceSquared(const PointLL& ll1, const PointLL& ll2);
+  static float DistanceSquared(const PointLL& ll1, const PointLL& ll2) {
+    float latm = (ll1.lat() - ll2.lat()) * kMetersPerDegreeLat;
+    float lngm = (ll1.lng() - ll2.lng()) *
+                  MetersPerLngDegree((ll1.lat() + ll2.lat()) * 0.5f);
+    return (latm * latm + lngm * lngm);
+  }
 
   /**
    * Gets the number of meters per degree of longitude for a specified
@@ -77,12 +95,18 @@ class DistanceApproximator
    * @param   lat   Latitude in degrees
    * @return  Returns the number of meters per degree of longitude
    */
-  static float MetersPerLngDegree(const float lat);
+  static float MetersPerLngDegree(const float lat) {
+    return cosf(lat * kRadPerDeg) * kMetersPerDegreeLat;
+  }
 
 private:
    float centerlat_;
    float centerlng_;
    float m_per_lng_degree_;
+
+   float sqr(const float v) const {
+     return v * v;
+   }
 };
 
 }

@@ -44,6 +44,14 @@ class TileHierarchy {
   }
 
   /**
+   * Get the transit level in this hierarchy.
+   * @return the transit TileLevel object.
+   */
+  static const TileLevel& GetTransitLevel() {
+    return transit_level_;
+  }
+
+  /**
    * Returns the GraphId of the requested tile based on a lat,lng and a level.
    * If the level is not supported an invalid id will be returned.
    * @param pointll  Lat,lng location within the tile.
@@ -76,6 +84,7 @@ class TileHierarchy {
 
  private:
   static std::map<uint8_t, TileLevel> levels_;
+  static TileLevel transit_level_;
 };
 
 }
