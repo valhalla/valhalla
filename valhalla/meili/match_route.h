@@ -50,6 +50,13 @@ ConstructRoute(const MapMatching& mapmaching,
                match_iterator_t begin,
                match_iterator_t end);
 
+
+template <typename segment_iterator_t>
+std::vector<std::vector<midgard::PointLL>>
+ConstructRouteShapes(baldr::GraphReader& graphreader,
+                     segment_iterator_t begin,
+                     segment_iterator_t end);
+
 }
 }
 #endif // MMP_MATCH_ROUTE_H_
