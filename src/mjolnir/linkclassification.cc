@@ -166,16 +166,15 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root, sequence<Edge>& edg
     leaves.pop();
 
     // Track information required for turn channel tests.
-    bool internal_fork = false;
+    bool has_fork = false;
     bool has_exit = current_node->has_exit;
     bool ends_have_non_link = current_node->non_link_count > 0;
-    bool ends_have_one_link = current_node->link_count == 1;
 
     // Go upward in the tree until a branch is found or the root is reached
     while (current_node->parent != nullptr) {
       LinkTreeNode* parent = current_node->parent;
       if (parent->link_count > 2) {
-        internal_fork = true;
+        has_fork = true;
       }
       if (parent->has_exit) {
         has_exit = true;
@@ -203,9 +202,11 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root, sequence<Edge>& edg
       current_node = parent;
     }
 
-    // Check the non-link count and link count at this end
+    // Check the non-link count and lwhether there are > 2 links at this node
+    if (current_node->link_count > 2) {
+      has_fork = true;
+    }
     ends_have_non_link = ends_have_non_link && current_node->non_link_count > 0;
-    ends_have_one_link = ends_have_one_link && current_node->link_count == 1;
 
     // Get the classification - max value of the exit classification and leaf
     // classification. Make sure the classification is valid.
@@ -217,11 +218,11 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root, sequence<Edge>& edg
 
     // Test if this link is a turn channel. Classification cannot be trunk or
     // motorway. No nodes can be marked as having an exit sign. None of the
-    // intermediate nodes along the path can have more than 2 links (fork).
-    // The end nodes must have a non-link edge and only 1 link edge.
+    // nodes along the path can have more than 2 links (fork). The end nodes
+    // must have a non-link edge.
     bool turn_channel = false;
-    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !internal_fork &&
-        !has_exit && ends_have_non_link && ends_have_one_link) {
+    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
+                  !has_exit && ends_have_non_link) {
       turn_channel = IsTurnChannel(ways, edges, way_nodes, link_edge_indexes);
     }
 
