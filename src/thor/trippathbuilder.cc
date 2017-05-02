@@ -259,8 +259,12 @@ TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
       return TripPath_Node_Type_kBollard;
     case NodeType::kTollBooth:
       return TripPath_Node_Type_kTollBooth;
-    case NodeType::kMultiUseTransitStop:
-      return TripPath_Node_Type_kMultiUseTransitStop;
+    case NodeType::kTransitEgress:
+      return TripPath_Node_Type_kTransitEgress;
+    case NodeType::kTransitStation:
+      return TripPath_Node_Type_kTransitStation;
+    case NodeType::kMultiUseTransitPlatform:
+      return TripPath_Node_Type_kMultiUseTransitPlatform;
     case NodeType::kBikeShare:
       return TripPath_Node_Type_kBikeShare;
     case NodeType::kParking:
@@ -332,10 +336,10 @@ TripPath_Use GetTripPathUse(const Use use) {
       return TripPath_Use_kRailUse;
     case Use::kBus:
       return TripPath_Use_kBusUse;
-    case Use::kRailConnection:
-      return TripPath_Use_kRailConnectionUse;
-    case Use::kBusConnection:
-      return TripPath_Use_kBusConnectionUse;
+    case Use::kEgressConnection: // need to handle the new uses in odin
+      return TripPath_Use_kEgressConnectionUse;
+    case Use::kPlatformConnection:// need to handle the new uses in odin
+      return TripPath_Use_kPlatformConnectionUse;
     case Use::kTransitConnection:
       return TripPath_Use_kTransitConnectionUse;
     // Should not see other values
@@ -694,7 +698,7 @@ TripPath TripPathBuilder::Build(
         if (controller.attributes.at(kNodeTransitStopInfoType))
           transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStation;
-      } else if (directededge->use() == Use::kTransitConnection) {
+      } else if (directededge->use() == Use::kPlatformConnection) {
         // Set node transit info type if requested
         if (controller.attributes.at(kNodeTransitStopInfoType))
           transit_stop_info->set_type(prev_transit_node_type);
