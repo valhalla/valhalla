@@ -91,7 +91,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                 GraphReader& reader_transit_level,
                 std::mutex& lock,
                 const std::unordered_set<GraphId>& tiles,
-                const std::vector<OSMConnectionEdge>& connection_edges) {
+                const std::vector<OSMConnectionEdge>& connection_edges,
+                const std::unordered_map<GraphId, Traversability> egress_traversability) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // Move existing nodes and directed edge builder vectors and clear the lists
@@ -157,7 +158,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     }
 
     // Add directed edges for any connections from the OSM node
-    // to a transit stop
+    // to an egress
     // level 2
     const GraphTile* end_tile = nullptr;
     while (added_edges < connection_edges.size() &&
@@ -177,7 +178,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       }
       //use the access from the transit end node
       const auto& tc_access = end_tile->node(endnode)->access();
-
       DirectedEdge directededge;
       directededge.set_endnode(endnode);
       directededge.set_length(conn.length);
@@ -185,8 +185,18 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder_local.directededges().size() - edge_index);
-      directededge.set_forwardaccess(tc_access);
-      directededge.set_reverseaccess(tc_access);
+
+      auto e_traversability = egress_traversability.find(conn.stop_node);
+      if (e_traversability != egress_traversability.end()) {
+        if (e_traversability->second == Traversability::kBoth) {
+          directededge.set_forwardaccess(tc_access);
+          directededge.set_reverseaccess(tc_access);
+        } else if (e_traversability->second == Traversability::kForward) {
+          directededge.set_forwardaccess(tc_access);
+        } else if (e_traversability->second == Traversability::kBackward) {
+          directededge.set_reverseaccess(tc_access);
+        }
+      }
       directededge.set_named(conn.names.size() > 0);
 
       // Add edge info to the tile and set the offset in the directed edge
@@ -260,7 +270,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       tilebuilder_transit.directededges().emplace_back(std::move(currentedges[idx]));
     }
 
-    // Add directed edges for any connections from the transit stop
+    // Add directed edges for any connections from an egress
     // to the osm node
     // level 3
     bool admin_set = false;
@@ -281,8 +291,22 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
         directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - edge_index);
-        directededge.set_forwardaccess(tc_access);
-        directededge.set_reverseaccess(tc_access);
+
+        auto e_traversability = egress_traversability.find(conn.stop_node);
+        if (e_traversability != egress_traversability.end()) {
+          if (e_traversability->second == Traversability::kBoth) {
+            directededge.set_forwardaccess(tc_access);
+            directededge.set_reverseaccess(tc_access);
+          // exit only.  if backward is true then set forward access as we are going from
+          // the egress to the osm node.
+          } else if (e_traversability->second == Traversability::kBackward) {
+            directededge.set_forwardaccess(tc_access);
+          // enter only.  if forward is true then set backward access as we are going from
+          // the egress to the osm node.
+          } else if (e_traversability->second == Traversability::kForward) {
+            directededge.set_reverseaccess(tc_access);
+          }
+        }
         directededge.set_named(conn.names.size() > 0);
 
         // Add edge info to the tile and set the offset in the directed edge
@@ -590,22 +614,20 @@ void build(const std::string& transit_dir,
     // TODO - what if we split the edge and insert a node?
     GraphId transit_stop_node(tile_id.tileid(), tile_id.level(), 0);
     std::vector<OSMConnectionEdge> connection_edges;
-    std::unordered_multimap<GraphId, GraphId> children;
+    std::unordered_map<GraphId, Traversability> egress_traversability;
     for (uint32_t i = 0; i < transit_tile->header()->nodecount(); i++, ++transit_stop_node) {
       const NodeInfo* transit_stop = transit_tile->node(i);
 
-      auto ts = transit_tile->GetTransitStop(transit_stop->stop_index());
-      std::string stop_name = transit_tile->GetName(ts->name_offset());
+      if (transit_stop->type() == NodeType::kTransitEgress) {
+        auto ts = transit_tile->GetTransitStop(transit_stop->stop_index());
+        std::string stop_name = transit_tile->GetName(ts->name_offset());
+        egress_traversability[transit_stop_node] = ts->traversability();
 
-      // Form connections to the stop
-      // TODO - deal with station hierarchy (only connect egress locations)
-      AddOSMConnection(transit_stop_node, transit_stop, stop_name, local_tile,
-                       reader_local_level, lock, connection_edges);
-
-      /** TODO - parent/child relationships
-      if (stop.type == 0 && stop.parent.Is_Valid()) {
-        children.emplace(stop.parent, transit_stop_node);
-      }       **/
+        // Form connections to the stop
+        // TODO - deal with station hierarchy (only connect egress locations)
+        AddOSMConnection(transit_stop_node, transit_stop, stop_name, local_tile,
+                         reader_local_level, lock, connection_edges);
+      }
     }
 
     // this happens when you are running against small extracts...no work to be done.
@@ -617,7 +639,7 @@ void build(const std::string& transit_dir,
 
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, tilebuilder_transit, local_tile,
-                   reader_transit_level, lock, tiles, connection_edges);
+                   reader_transit_level, lock, tiles, connection_edges, egress_traversability);
 
     // Write the new file
     lock.lock();
@@ -687,8 +709,6 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // and populate tiles
 
   // A place to hold worker threads and their results
-  // (Change threads to 1 if running DEBUG to get more info)
-  //std::vector<std::shared_ptr<std::thread> > threads(1);
   std::vector<std::shared_ptr<std::thread> > threads(
      std::max(static_cast<uint32_t>(1),
        pt.get<uint32_t>("mjolnir.concurrency",
