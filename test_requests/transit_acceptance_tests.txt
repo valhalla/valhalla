@@ -147,7 +147,7 @@ s-c0zcry1j4m-eastboundcowrieattrail,s-c2b1nr0ht2-westboundlangdaleferryterminala
 s-c287bkbq7f-royaloakexchangebayg,s-c28789yxwp-southbounddouglasathillside,r-c28h-72
 s-c2878bb9f2-southbounddouglasatdiscovery,s-c2872w68v6-westboundsuperioratmenzies,r-c2878-31
 s-c285x2mc3w-eastboundesquimaltatgrafton,s-c2878s80vf-eastboundboleskineatdouglas,r-c287-26
-s-c2bt6enmvd-southboundemeraldatpinetree,s-c2bt44uuv5-gondolaexchange<102714,r-c2bt1-1
+s-c2bt6enmvd-southboundemeraldatpinetree,s-c2bt3chy5r-westboundalpineatrainbow,r-c2bt1-1
 s-c2bsbhuudk-northboundlegacyatmadeley,s-c2bsbyv36s-westboundaltalakeathwy99,r-c2bt1-1
 s-c2bt126052-eastboundwhistlerataspen,s-c2bt44uuv5-gondolaexchange<102714,r-c2bt1-1
 s-c29r8yfexm-downtownexchangebayb,s-c28z8v3qr6-carvolthexchangebay13,r-c29p-66
