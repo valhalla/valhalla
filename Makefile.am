@@ -813,8 +813,8 @@ check_PROGRAMS += \
 	test/signinfo \
 	test/countryaccess \
 	test/graphtilebuilder \
-        test/search \
-        test/node_search
+	test/search \
+	test/node_search
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
