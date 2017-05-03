@@ -220,7 +220,7 @@ struct projector_t {
   // is performance critical.  Copy, function call, cache locality and
   // useless computation must be handled with care.
   PointLL project(const PointLL& u, const PointLL& v) {
-    //we're done if this is a zero length edge
+    //we're done if this is a zero length segment
     if(u == v)
       return u;
 
@@ -269,10 +269,21 @@ struct bin_handler_t {
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
 
-  //key is the edge id, size_t is the index into cardinalities which
-  //stores the number of edges that can be reached by this edge
+  //key is the edge id, size_t is the index into the reachability number
+  //which stores the number of nodes you can reach from a given node in the
+  //in the forward direction. TODO: direction is important because it answers
+  //the question, can i get out of here? importantly it currently doesnt answer
+  //the question of whether you can get into a place for that we need the
+  //reverse direction reachability
   std::vector<unsigned int> reaches;
   std::unordered_map<uint64_t, size_t> reach_indices;
+
+  //TODO: keep track of a reachability object per node
+  struct reachability_t {
+    size_t round;
+    unsigned int forward_reach;
+    unsigned int backward_reach;
+  };
 
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations, valhalla::baldr::GraphReader& reader,
     const EdgeFilter& edge_filter, const NodeFilter& node_filter):
@@ -440,7 +451,7 @@ struct bin_handler_t {
         }
 
         //recurse, but dont increment if its a transition edge so we dont double count nodes
-        if(!e->trans_up() && !e->trans_down())
+        if(!e->IsTransition())
           ++reaches.back();
         size_t previous = reach_index;
         depth_first(tile, n, reach_index);
