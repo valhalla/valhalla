@@ -39,7 +39,7 @@ class GraphBuilder {
   static std::vector<baldr::SignInfo> CreateExitSignInfoList(const OSMNode& node,
                                                       const OSMWay& way,
                                                       const OSMData& osmdata,
-                                                      bool fork);
+                                                      bool fork, bool forward);
 };
 
 }
