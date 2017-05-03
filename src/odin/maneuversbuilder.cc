@@ -588,7 +588,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineSameNameStraightManeuver(
   curr_man->set_basic_time(curr_man->basic_time() + next_man->basic_time());
 
   // Update end heading
-  curr_man->set_end_heading(next_man->end_node_index());
+  curr_man->set_end_heading(next_man->end_heading());
 
   // Update end node index
   curr_man->set_end_node_index(next_man->end_node_index());
