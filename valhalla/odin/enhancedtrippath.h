@@ -80,8 +80,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
   bool IsRailFerryUse() const;
   bool IsRailUse() const;
   bool IsBusUse() const;
-  bool IsEgressConnectionUse() const;
-  bool IsPlatformConnectionUse() const;
+  bool IsRailConnectionUse() const;
+  bool IsBusConnectionUse() const;
   bool IsTransitConnectionUse() const;
 
   bool IsUnnamedWalkway() const;
@@ -203,9 +203,7 @@ class EnhancedTripPath_Node : public TripPath_Node {
   bool IsGate() const;
   bool IsBollard() const;
   bool IsTollBooth() const;
-  bool IsTransitEgress() const;
-  bool IsTransitStation() const;
-  bool IsMultiUseTransitPlatform() const;
+  bool IsMultiUseTransitStop() const;
   bool IsBikeShare() const;
   bool IsParking() const;
   bool IsMotorwayJunction() const;
@@ -304,4 +302,3 @@ inline std::string to_string(TripPath_Traversability t) {
 }
 
 #endif  // VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
-

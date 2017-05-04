@@ -875,7 +875,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Transit connection
-  if (prev_edge->IsPlatformConnectionUse()) {
+  if (prev_edge->IsTransitConnectionUse()) {
     maneuver.set_transit_connection(true);
     // If current edge is transit then mark maneuver as transit connection start
     if (curr_edge
