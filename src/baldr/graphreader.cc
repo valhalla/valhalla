@@ -494,12 +494,7 @@ std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* t
   const GraphTile* t2 = (edge->leaves_tile()) ? GetGraphTile(end_node) : tile;
   if (t2 != nullptr) {
     auto edge_idx = t2->node(end_node)->edge_index() + edge->opp_index();
-
-    // TODO - this check is needed for older data where invalid opposing edge
-    // offsets could (rarely) be assigned.
-    if (edge_idx < t2->header()->directededgecount()) {
-      start_node = t2->directededge(edge_idx)->endnode();
-    }
+    start_node = t2->directededge(edge_idx)->endnode();
   }
   return std::make_pair(start_node, end_node);
 }
