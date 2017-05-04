@@ -417,9 +417,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
           if (nodeinfo->type() == NodeType::kTransitEgress &&
+              pred.use()   == Use::kTransitConnection &&
+              directededge->use()  == Use::kTransitConnection)
+                continue;
+          else if (nodeinfo->type() == NodeType::kTransitStation &&
               pred.use()   == Use::kEgressConnection &&
               directededge->use()  == Use::kEgressConnection)
                 continue;
+          else if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform &&
+              pred.use()   == Use::kPlatformConnection &&
+              directededge->use()  == Use::kPlatformConnection)
+                continue;
+
         }
       }
 
@@ -442,13 +451,13 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
       // Do not allow transit connection edges if transit is disabled. Also,
       // prohibit entering the same station as the prior.
-      if (directededge->use() == Use::kTransitConnection &&
+      if (directededge->use() == Use::kPlatformConnection &&
          (disable_transit || directededge->endnode() == pred.prior_stopid())) {
         continue;
       }
 
       // Test if exceeding maximum transfer walking distance
-      if (directededge->use() == Use::kTransitConnection &&
+      if (directededge->use() == Use::kPlatformConnection &&
           pred.prior_stopid().Is_Valid() &&
           walking_distance_ > max_transfer_distance) {
         continue;
