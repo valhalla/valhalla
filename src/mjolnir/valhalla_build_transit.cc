@@ -1507,7 +1507,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       LOG_ERROR("Platform key not equal!");
     }
 
-    LOG_DEBUG("Transit Platform: " + node.name() + " index= " +
+    LOG_DEBUG("Transit Platform: " + platform.name() + " index= " +
               std::to_string(platform_index));
 
     // Get the Valhalla graphId of the origin node (transit stop)
