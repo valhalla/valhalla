@@ -64,8 +64,8 @@ message TripPath {
     // Transit specific uses. Must be last in the list
     kRailUse = 50;              // Rail line
     kBusUse = 51;               // Bus line
-    kEgressConnectionUse = 52;    // Connection to a rail stop
-    kPlatformConnectionUse = 53;     // Connection to a bus stop
+    kRailConnectionUse = 52;    // Connection to a rail stop
+    kBusConnectionUse = 53;     // Connection to a bus stop
     kTransitConnectionUse = 54; // Connection to multi-use transit stop
   }
 
@@ -211,7 +211,6 @@ message TripPath {
     enum Type {
       kStop = 0;
       kStation = 1;
-      kOther = 2;
     }
 
     optional Type type = 1;                  // The type of stop (station or simple stop)
@@ -226,18 +225,16 @@ message TripPath {
 
   message Node {
     enum Type {
-      kStreetIntersection = 0;    	// Regular intersection of 2 roads
-      kGate = 1;                  	// Gate or rising bollard
-      kBollard = 2;               	// Bollard (fixed obstruction)
-      kTollBooth = 3;             	// Toll booth / fare collection
+      kStreetIntersection = 0;    // Regular intersection of 2 roads
+      kGate = 1;                  // Gate or rising bollard
+      kBollard = 2;               // Bollard (fixed obstruction)
+      kTollBooth = 3;             // Toll booth / fare collection
       // TODO - for now there is no differentiation between bus and rail stops...
-      kTransitEgress = 4;           // Transit egress
-      kTransitStation = 5;          // Transit station
-      kMultiUseTransitPlatform = 6; // Multi-use transit platform (rail and bus)
-      kBikeShare = 7;             	// Bike share location
-      kParking = 8;               	// Parking location
-      kMotorwayJunction = 9;      	// Highway = motorway_junction
-      kBorderControl = 10;        	// Border control
+      kMultiUseTransitStop = 6;   // Multi-use transit stop (rail and bus)
+      kBikeShare = 7;             // Bike share location
+      kParking = 8;               // Parking location
+      kMotorwayJunction = 9;      // Highway = motorway_junction
+      kBorderControl = 10;        // Border control
     }
     
     optional Edge edge = 1;
