@@ -210,12 +210,12 @@ bool EnhancedTripPath_Edge::IsBusUse() const {
   return (use() == TripPath_Use_kBusUse);
 }
 
-bool EnhancedTripPath_Edge::IsEgressConnectionUse() const {
-  return (use() == TripPath_Use_kEgressConnectionUse);
+bool EnhancedTripPath_Edge::IsRailConnectionUse() const {
+  return (use() == TripPath_Use_kRailConnectionUse);
 }
 
-bool EnhancedTripPath_Edge::IsPlatformConnectionUse() const {
-  return (use() == TripPath_Use_kPlatformConnectionUse);
+bool EnhancedTripPath_Edge::IsBusConnectionUse() const {
+  return (use() == TripPath_Use_kBusConnectionUse);
 }
 
 bool EnhancedTripPath_Edge::IsTransitConnectionUse() const {
@@ -972,16 +972,8 @@ bool EnhancedTripPath_Node::IsTollBooth() const {
   return (type() == TripPath_Node_Type_kTollBooth);
 }
 
-bool EnhancedTripPath_Node::IsTransitEgress() const {
-  return (type() == TripPath_Node_Type_kTransitEgress);
-}
-
-bool EnhancedTripPath_Node::IsTransitStation() const {
-  return (type() == TripPath_Node_Type_kTransitStation);
-}
-
-bool EnhancedTripPath_Node::IsMultiUseTransitPlatform() const {
-  return (type() == TripPath_Node_Type_kMultiUseTransitPlatform);
+bool EnhancedTripPath_Node::IsMultiUseTransitStop() const {
+  return (type() == TripPath_Node_Type_kMultiUseTransitStop);
 }
 
 bool EnhancedTripPath_Node::IsBikeShare() const {
@@ -1070,4 +1062,3 @@ std::string EnhancedTripPath_Admin::ToString() const {
 
 }
 }
-
