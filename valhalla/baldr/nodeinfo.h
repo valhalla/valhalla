@@ -208,8 +208,7 @@ class NodeInfo {
    */
   bool is_transit() const {
     return (type() == NodeType::kMultiUseTransitPlatform ||
-        type() == NodeType::kTransitEgress ||
-        type() == NodeType::kTransitStation);
+        type() == NodeType::kTransitEgress);
   }
 
   /**
