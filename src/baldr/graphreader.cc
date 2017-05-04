@@ -486,6 +486,18 @@ uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
   return (tile != nullptr) ? tile->node(id)->density() : 0;
 }
 
+// Get the end nodes of a directed edge.
+std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* tile,
+                     const DirectedEdge* edge) {
+  GraphId end_node = edge->endnode();
+  GraphId start_node;
+  const GraphTile* t2 = (edge->leaves_tile()) ? GetGraphTile(end_node) : tile;
+  if (t2 != nullptr) {
+    auto edge_idx = t2->node(end_node)->edge_index() + edge->opp_index();
+    start_node = t2->directededge(edge_idx)->endnode();
+  }
+  return std::make_pair(start_node, end_node);
+}
 
 std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   //either mmap'd tiles

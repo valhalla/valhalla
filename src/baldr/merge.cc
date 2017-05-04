@@ -230,21 +230,6 @@ void edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &rev
   } while (maybe_next);
 }
 
-// utility function to make a path out of a single edge. this is called once all
-// the collapsible paths have been found and single edges are all that's left.
-path make_single_edge_path(GraphReader &reader, GraphId edge_id) {
-  auto *edge = reader.GetGraphTile(edge_id)->directededge(edge_id);
-  auto node_id = edge->endnode();
-  auto opp_edge_idx = edge->opp_index();
-  auto edge_idx = reader.GetGraphTile(node_id)->node(node_id)->edge_index() + opp_edge_idx;
-  GraphId opp_edge_id(node_id.tileid(), node_id.level(), edge_idx);
-  auto *opp_edge = reader.GetGraphTile(opp_edge_id)->directededge(opp_edge_id);
-  auto start_node_id = opp_edge->endnode();
-
-  path p(segment(start_node_id, edge_id, node_id));
-  return p;
-}
-
 } // namespace detail
 
 segment::segment(GraphId start, GraphId edge, GraphId end)
