@@ -58,7 +58,8 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
 
       if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
           !(de->trans_up() || de->trans_down() || de->IsTransitLine() ||
-              de->is_shortcut() || de->use() == Use::kTransitConnection)) {
+              de->is_shortcut() || de->use() == Use::kTransitConnection ||
+              de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
         // get the edge info offset
         auto current_offset = endnodetile->edgeinfo(de->edgeinfo_offset());
         if (end_wayid == current_offset.wayid()) {
@@ -140,7 +141,8 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
               // only look at non transition edges.
               if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
                   !(de->trans_up() || de->trans_down() || de->IsTransitLine() ||
-                      de->is_shortcut() || de->use() == Use::kTransitConnection)) {
+                    de->is_shortcut() || de->use() == Use::kTransitConnection ||
+                    de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
                 auto current_offset = temp_endnodetile->edgeinfo(de->edgeinfo_offset());
 
                 if (end_wayid == current_offset.wayid()) {
@@ -263,7 +265,8 @@ void build(const std::string& complex_restriction_file,
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         if (directededge.trans_up() || directededge.trans_down() || directededge.IsTransitLine() ||
-            directededge.is_shortcut() || directededge.use() == Use::kTransitConnection)
+            directededge.is_shortcut() || directededge.use() == Use::kTransitConnection ||
+            directededge.use() == Use::kEgressConnection || directededge.use() == Use::kPlatformConnection)
           continue;
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         //    |      |       |
