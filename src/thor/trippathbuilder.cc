@@ -269,11 +269,9 @@ TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
     case NodeType::kTollBooth:
       return TripPath_Node_Type_kTollBooth;
     case NodeType::kTransitEgress:
-      return TripPath_Node_Type_kTransitEgress;
     case NodeType::kTransitStation:
-      return TripPath_Node_Type_kTransitStation;
     case NodeType::kMultiUseTransitPlatform:
-      return TripPath_Node_Type_kMultiUseTransitPlatform;
+      return TripPath_Node_Type_kMultiUseTransitStop;
     case NodeType::kBikeShare:
       return TripPath_Node_Type_kBikeShare;
     case NodeType::kParking:
@@ -346,9 +344,7 @@ TripPath_Use GetTripPathUse(const Use use) {
     case Use::kBus:
       return TripPath_Use_kBusUse;
     case Use::kEgressConnection: // need to handle the new uses in odin
-      return TripPath_Use_kEgressConnectionUse;
     case Use::kPlatformConnection:// need to handle the new uses in odin
-      return TripPath_Use_kPlatformConnectionUse;
     case Use::kTransitConnection:
       return TripPath_Use_kTransitConnectionUse;
     // Should not see other values
@@ -653,6 +649,10 @@ TripPath TripPathBuilder::Build(
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
       TripPath_TransitStopInfo_Type_kStop;
+  std::vector<PointLL> tc_shape;
+  uint32_t tc_length = 0;
+  std::vector<std::string> tc_names;
+
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
@@ -660,12 +660,51 @@ TripPath TripPathBuilder::Build(
     const DirectedEdge* directededge = graphtile->directededge(edge);
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
-
     // Skip transition edges - these are optional in the path. So we need
     // to make sure we get the node info from the correct tile
     if (directededge->trans_up() || directededge->trans_down()) {
       continue;
     }
+
+    // SH hack
+    if ((edge_itr+1) != path.end()) {
+
+      const GraphId& next_edge = (edge_itr+1)->edgeid;
+      const GraphTile* next_graphtile = graphreader.GetGraphTile(next_edge);
+      const DirectedEdge* next_de = next_graphtile->directededge(next_edge);
+
+      if ((edge_itr+2) != path.end()) {
+        uint32_t index = 0;
+        if ((directededge->use() == Use::kTransitConnection && next_de->use() == Use::kEgressConnection) ||
+            (directededge->use() == Use::kPlatformConnection && next_de->use() == Use::kEgressConnection)){
+          tc_shape.clear();
+          tc_length = 0;
+          while (index<=2) {
+            const GraphId& e = ((edge_itr+index)->edgeid);
+            const GraphTile* tile = graphreader.GetGraphTile(e);
+            const DirectedEdge* de = tile->directededge(e);
+
+            auto einfo = tile->edgeinfo(de->edgeinfo_offset());
+            tc_shape.insert(std::end(tc_shape), std::begin(einfo.shape()), std::end(einfo.shape()));
+            tc_length += de->length();
+            tc_names = einfo.GetNames();
+            index++;
+          }
+        }
+      }
+
+      if (directededge->use() == Use::kEgressConnection && next_de->use() == Use::kPlatformConnection) {
+        continue;
+      } else if (directededge->use() == Use::kPlatformConnection && (next_de->use() == Use::kBus || next_de->use() == Use::kRail)) {
+        continue;
+      }
+      else if (directededge->use() == Use::kEgressConnection && next_de->use() == Use::kTransitConnection) {
+        continue;
+      } else if (directededge->use() == Use::kTransitConnection && next_de->use() < Use::kRail) {
+        continue;
+      }
+    }
+    // end SH hack
 
     // Add a node to the trip path and set its attributes.
     TripPath_Node* trip_node = trip_path.add_node();
@@ -705,8 +744,9 @@ TripPath TripPathBuilder::Build(
     if (controller.attributes.at(kNodeTimeZone)) {
       const auto& tz_db = DateTime::get_tz_db();
       auto tz = DateTime::get_tz_db().from_index(node->timezone());
-      if(tz)
+      if(tz) {
         trip_node->set_time_zone(tz->to_posix_string());
+      }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -847,34 +887,54 @@ TripPath TripPathBuilder::Build(
     TripPath_Edge* trip_edge = AddTripEdge(controller, edge, trip_id, block_id,
                                            mode, travel_type, directededge,
                                            trip_node, graphtile, current_time,
-                                           length_pct);
+                                           tc_length,length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
     auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
-    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
 
+    // SH hack
+    std::vector<PointLL> e_shape = edgeinfo.shape();
+    if (directededge->use() == Use::kTransitConnection ||
+        directededge->use() == Use::kPlatformConnection)
+      e_shape = tc_shape;
+
+    if (directededge->use() == Use::kPlatformConnection) {
+      for (const auto& name : tc_names)
+        trip_edge->add_name(name);
+    }
+    // end SH hack
+
+    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
     // We need to clip the shape if i its at the beginning or end and
     // is not full length
     if (is_first_edge || is_last_edge) {
-      float length = std::max(static_cast<float>(directededge->length()) * length_pct, 1.0f);
+
+      // SH hack
+      uint32_t l = directededge->length();
+      if (directededge->use() == Use::kTransitConnection ||
+          directededge->use() == Use::kPlatformConnection)
+        l = tc_length;
+      //end SH hack
+
+      float length = std::max(static_cast<float>(l) * length_pct, 1.0f);
       if (directededge->forward() == is_last_edge) {
         AddPartialShape<std::vector<PointLL>::const_iterator>(
-            trip_shape, edgeinfo.shape().begin(), edgeinfo.shape().end(),
+            trip_shape, e_shape.begin(), e_shape.end(),
             length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       } else {
         AddPartialShape<std::vector<PointLL>::const_reverse_iterator>(
-            trip_shape, edgeinfo.shape().rbegin(), edgeinfo.shape().rend(),
+            trip_shape, e_shape.rbegin(), e_shape.rend(),
             length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       }
     } else {
       // Just get the shape in there in the right direction
       if (directededge->forward())
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1,
-                          edgeinfo.shape().end());
+        trip_shape.insert(trip_shape.end(), e_shape.begin() + 1,
+                          e_shape.end());
       else
-        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1,
-                          edgeinfo.shape().rend());
+        trip_shape.insert(trip_shape.end(), e_shape.rbegin() + 1,
+                          e_shape.rend());
     }
 
     // Set begin shape index if requested
@@ -1056,6 +1116,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
                                             const uint32_t current_time,
+                                            const uint32_t tc_length,
                                             const float length_percentage) {
 
   // Index of the directed edge within the tile
@@ -1116,11 +1177,18 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
         GetTripPathRoadClass(directededge->classification()));
   }
 
+  // SH hack
+  uint32_t length = directededge->length();
+  if (directededge->use() == Use::kTransitConnection ||
+      directededge->use() == Use::kPlatformConnection)
+    length = tc_length;
+
   // Set length if requested. Convert to km
   if (controller.attributes.at(kEdgeLength)) {
-    float km = std::max((directededge->length() * 0.001f * length_percentage), 0.001f);
+    float km = std::max((length * 0.001f * length_percentage), 0.001f);
     trip_edge->set_length(km);
   }
+  // end SH hack
 
   // Set speed if requested
   if (controller.attributes.at(kEdgeSpeed))
