@@ -51,7 +51,7 @@ genfiles/admin_lua_proc.h: lua/admin.lua
 genfiles/locales.h: locales/*.json
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@/locales && ./make_locales.sh *.json > @abs_builddir@/genfiles/locales.h
 
-PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto proto/route.proto
+PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto proto/route.proto proto/navigator.proto
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
@@ -165,6 +165,7 @@ nobase_include_HEADERS = \
 	valhalla/proto/trippath.pb.h \
 	valhalla/proto/tripdirections.pb.h \
 	valhalla/proto/route.pb.h \
+	valhalla/proto/navigator.pb.h \
 	valhalla/proto/directions_options.pb.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
@@ -285,6 +286,7 @@ libvalhalla_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
 	src/proto/route.pb.cc \
+	src/proto/navigator.pb.cc \
 	src/proto/directions_options.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
