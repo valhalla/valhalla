@@ -167,6 +167,8 @@ test/loki_service
 test/skadi_service
 test/thor_service
 test/traffic_matcher
+test/attributes_controller
+test/edge_elevation
 test_requests/duane_routes.txt
 run_route_scripts/results/20*
 EdgeInfoBuilder_TestWriteRead.gph

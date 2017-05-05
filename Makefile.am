@@ -590,8 +590,6 @@ check_PROGRAMS = \
 	test/sample \
 	test/skadi_service \
 	test/loki_service \
-	test/search \
-	test/node_search \
 	test/maneuversbuilder \
 	test/narrativebuilder \
 	test/navigator \
@@ -766,12 +764,6 @@ test_skadi_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhall
 test_loki_service_SOURCES = test/loki_service.cc test/test.cc
 test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_loki_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_search_SOURCES = test/search.cc test/test.cc
-test_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_node_search_SOURCES = test/node_search.cc test/test.cc
-test_node_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_node_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_maneuversbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -830,7 +822,9 @@ check_PROGRAMS += \
 	test/refs \
 	test/signinfo \
 	test/countryaccess \
-	test/graphtilebuilder
+	test/graphtilebuilder \
+	test/search \
+	test/node_search
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -864,6 +858,12 @@ test_countryaccess_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhall
 test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
 test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_graphtilebuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_search_SOURCES = test/search.cc test/test.cc
+test_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_node_search_SOURCES = test/node_search.cc test/test.cc
+test_node_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_node_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 TESTS = $(check_PROGRAMS)

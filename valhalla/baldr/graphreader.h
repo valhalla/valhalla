@@ -298,6 +298,18 @@ class GraphReader {
   uint32_t GetEdgeDensity(const GraphId& edgeid);
 
   /**
+   * Get the end nodes of a directed edge.
+   * @param  tile  Tile of the directed edge (tile of the start node).
+   * @param  edge  Directed edge.
+   * @return Returns a pair of GraphIds: the first is the start node
+   *         and the second is the end node. An invalid start node
+   *         can occur in regional extracts (where the end node tile
+   *         is not available).
+   */
+  std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphTile* tile,
+                       const DirectedEdge* edge);
+
+  /**
    * Gets back a set of available tiles
    * @return  returns the list of available tiles
    */

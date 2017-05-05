@@ -305,5 +305,55 @@ ConstructRoute<std::vector<MatchResult>::const_iterator>(
     std::vector<MatchResult>::const_iterator,
     std::vector<MatchResult>::const_iterator);
 
+
+template <typename segment_iterator_t>
+std::vector<std::vector<midgard::PointLL>>
+ConstructRouteShapes(baldr::GraphReader& graphreader,
+                     segment_iterator_t begin,
+                     segment_iterator_t end)
+{
+  if (begin == end) {
+    return {};
+  }
+
+  std::vector<std::vector<midgard::PointLL>> shapes;
+
+  for (auto segment = begin, prev_segment = end; segment != end; segment++) {
+    const auto& shape = segment->Shape(graphreader);
+    if (shape.empty()) {
+      continue;
+    }
+
+    auto shape_begin = shape.begin();
+    if (prev_segment != end && prev_segment->Adjoined(graphreader, *segment)) {
+      // The beginning vertex has been written. Hence skip
+      std::advance(shape_begin, 1);
+    } else {
+      // Disconnected. Hence a new start
+      shapes.emplace_back();
+    }
+
+    for (auto vertex = shape_begin; vertex != shape.end(); vertex++) {
+      shapes.back().push_back(*vertex);
+    }
+
+    prev_segment = segment;
+  }
+
+  return shapes;
+}
+
+
+template std::vector<std::vector<midgard::PointLL>>
+ConstructRouteShapes<std::vector<EdgeSegment>::const_iterator>(
+    baldr::GraphReader&,
+    std::vector<EdgeSegment>::const_iterator,
+    std::vector<EdgeSegment>::const_iterator);
+
+template std::vector<std::vector<midgard::PointLL>>
+ConstructRouteShapes<std::vector<EdgeSegment>::iterator>(
+    baldr::GraphReader&,
+    std::vector<EdgeSegment>::iterator,
+    std::vector<EdgeSegment>::iterator);
 }
 }
