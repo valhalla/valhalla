@@ -68,34 +68,36 @@ void Isochrone::Clear() {
   edgestatus_.reset();
 }
 
-// Construct the isotile. Use a grid size based on travel mode.
-// Convert time in minutes to a max distance in meters based on an
-// estimate of max average speed for the travel mode.
+// Construct the isotile. Use a fixed grid size. Convert time in minutes to
+// a max distance in meters based on an estimate of max average speed for
+// the travel mode.
 void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
                                  std::vector<baldr::PathLocation>& origin_locations) {
-  float grid_size, max_distance;
+  float max_distance;
   auto max_seconds = max_minutes * 60;
   if (multimodal) {
-    grid_size = 200.0f;
-    max_distance = max_seconds * 70.0f * 0.44704f; // TODO
+    max_distance = max_seconds * 70.0f * kMPHtoMetersPerSec;
   } else if (mode_ == TravelMode::kPedestrian) {
-    grid_size = 200.0f;
-    max_distance = max_seconds * 5.0f * 0.44704f;
+    max_distance = max_seconds * 5.0f * kMPHtoMetersPerSec;
   } else if (mode_ == TravelMode::kBicycle) {
-    grid_size = 200.0f;
-    max_distance = max_seconds * 20.0f * 0.44704f;
+    max_distance = max_seconds * 20.0f * kMPHtoMetersPerSec;
   } else {
     // A driving mode
-    grid_size = 400.0f;
-    max_distance = max_seconds * 70.0f * 0.44704f;
+    max_distance = max_seconds * 70.0f * kMPHtoMetersPerSec;
   }
-  shape_interval_ = grid_size * 0.25f;
 
-  // Form grid for isotiles. Convert grid size to degrees.
-  grid_size /= kMetersPerDegreeLat;
-  float lat = origin_locations[0].latlng_.lat();
+  // Set a fixed grid size (in degrees) - about 220m in latitude
+  float grid_size = 0.002f;
+
+  // Set the shape interval in meters
+  shape_interval_ = grid_size * kMetersPerDegreeLat * 0.25f;
+
+  // Form grid for isotiles.
+  PointLL center_ll = origin_locations[0].latlng_;
   float dlat = max_distance / kMetersPerDegreeLat;
-  float dlon = max_distance / DistanceApproximator::MetersPerLngDegree(lat);
+  float dlon = max_distance / DistanceApproximator::MetersPerLngDegree(center_ll.lat());
+
+  // Adjust bounds to surround all locations
   AABB2<PointLL> bounds(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   for (const auto& loc : origin_locations) {
     PointLL center = loc.latlng_;
@@ -103,7 +105,25 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
                         PointLL(center.lng() + dlon, center.lat() + dlat));
     bounds.Expand(bbox);
   }
-  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_minutes + 5));
+
+  // Create isotile (gridded data)
+  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_minutes));
+
+  // Find the center of the grid that the location lies within. Shift the
+  // tilebounds so the location lies in the center of a tile.
+  PointLL grid_center = isotile_->Center(isotile_->TileId(center_ll));
+  PointLL shift(grid_center.lng() - center_ll.lng(),
+                grid_center.lat() - center_ll.lat());
+  isotile_->ShiftTileBounds(shift);
+
+  // Test that the shift worked...
+  grid_center = isotile_->Center(isotile_->TileId(center_ll));
+  if (std::abs(center_ll.lat() - grid_center.lat()) > 0.0001f ||
+      std::abs(center_ll.lng() - grid_center.lng()) > 0.0001f) {
+    LOG_INFO("Isochrone center location is not centered within a tile. Off by: " +
+             std::to_string(center_ll.lat() - grid_center.lat()) + "," +
+             std::to_string(center_ll.lng() - grid_center.lng()));
+  }
 }
 
 // Initialize - create adjacency list, edgestatus support, and reserve
@@ -731,15 +751,18 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid());
   EdgeStatusInfo edgestatus = edgestatus_->Get(opp);
   if (edgestatus.set() == EdgeSet::kPermanent) {
-      return;
+    return;
   }
 
   // Get the DirectedEdge because we'll need its shape
   const GraphTile* tile = graphreader.GetGraphTile(pred.edgeid().Tile_Base());
   const DirectedEdge* edge = tile->directededge(pred.edgeid());
-  // Transit lines can't really be "reached" you really just pass through those cells
-  if(edge->IsTransitLine())
+
+  // Transit lines can't really be "reached" you really just pass through
+  // those cells. TODO - also for ferries?
+  if (edge->IsTransitLine()) {
     return;
+  }
 
   // Get time at the end node of the predecessor
   float secs1 = pred.cost().secs;
@@ -762,11 +785,14 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
   }
   auto resampled = resample_spherical_polyline(shape, shape_interval_);
 
+  // Mark the initial grid cell
+  float secs = secs0;
+  isotile_->SetIfLessThan(resampled.front(), secs * to_minutes);
+
   // Mark grid cells along the shape if time is less than what is
   // already populated. Get intersection of tiles along each segment
   // so this doesn't miss shape that crosses tile corners
   float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
-  float secs = secs0;
   auto itr1 = resampled.begin();
   auto itr2 = itr1 + 1;
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
