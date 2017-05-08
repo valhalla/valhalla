@@ -83,7 +83,9 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
         way.destination_street_index() != 0 ||
         way.destination_ref_to_index() != 0 ||
         way.destination_street_to_index() != 0 ||
-        way.destination_index() != 0) {
+        way.destination_index() != 0 ||
+        way.destination_forward_index() != 0 ||
+        way.destination_backward_index() != 0) {
      return false;
     }
   }

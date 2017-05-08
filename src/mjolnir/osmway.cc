@@ -160,6 +160,26 @@ uint32_t OSMWay::destination_index() const {
   return destination_index_;
 }
 
+// Set the index for the destination.
+void OSMWay::set_destination_forward_index(const uint32_t idx) {
+  destination_forward_index_ = idx;
+}
+
+// Get the get_destination.
+uint32_t OSMWay::destination_forward_index() const {
+  return destination_forward_index_;
+}
+
+// Set the index for the destination.
+void OSMWay::set_destination_backward_index(const uint32_t idx) {
+  destination_backward_index_ = idx;
+}
+
+// Get the get_destination.
+uint32_t OSMWay::destination_backward_index() const {
+  return destination_backward_index_;
+}
+
 // Set the index for thedestination_ref.
 void OSMWay::set_destination_ref_index(const uint32_t idx) {
   destination_ref_index_ = idx;

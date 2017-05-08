@@ -669,6 +669,14 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_destination_index(osmdata_.name_offset_map.index(tag.second));
         w.set_exit(true);
       }
+      else if (tag.first == "destination:forward" && !tag.second.empty()) {
+        w.set_destination_forward_index(osmdata_.name_offset_map.index(tag.second));
+        w.set_exit(true);
+      }
+      else if (tag.first == "destination:backward" && !tag.second.empty()) {
+        w.set_destination_backward_index(osmdata_.name_offset_map.index(tag.second));
+        w.set_exit(true);
+      }
       else if (tag.first == "destination:ref" && !tag.second.empty()) {
         w.set_destination_ref_index(osmdata_.ref_offset_map.index(tag.second));
         w.set_exit(true);

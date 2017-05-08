@@ -182,6 +182,30 @@ struct OSMWay {
   uint32_t destination_index() const;
 
   /**
+   * Sets the index for destination in forward direction.
+   * @param  idx  Index for the destination.
+   */
+  void set_destination_forward_index(const uint32_t idx);
+
+  /**
+   * Get the get_destination index.
+   * @return  Returns the index for the destination.
+   */
+  uint32_t destination_forward_index() const;
+
+  /**
+   * Sets the index for destination in backward direction.
+   * @param  idx  Index for the destination.
+   */
+  void set_destination_backward_index(const uint32_t idx);
+
+  /**
+   * Get the get_destination index.
+   * @return  Returns the index for the destination.
+   */
+  uint32_t destination_backward_index() const;
+
+  /**
    * Sets the index for destination ref.
    * @param  idx  Index for the destination ref.
    */
@@ -895,6 +919,8 @@ struct OSMWay {
 
   // Sign Destination information
   uint32_t destination_index_;
+  uint32_t destination_forward_index_;
+  uint32_t destination_backward_index_;
   uint32_t destination_ref_index_;
   uint32_t destination_ref_to_index_;
   uint32_t destination_street_index_;
