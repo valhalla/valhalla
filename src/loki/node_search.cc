@@ -1,5 +1,6 @@
 #include <cmath>
 #include "loki/node_search.h"
+#include "midgard/logging.h"
 #include "midgard/tiles.h"
 #include "baldr/tilehierarchy.h"
 
@@ -262,11 +263,15 @@ struct node_collector {
       // node is in this tile, so add it to the collection
       m_nodes.push_back(node_id, node);
 
-      assert(opp_index < node.edge_count());
-      // add the node at the other end of the opposite - which would be the
-      // start node of the original edge.
-      auto opp_id = tile_id + uint64_t(node.edge_index() + opp_index);
-      add_node(m_cache.edge(opp_id).endnode());
+      if (opp_index < node.edge_count()) {
+        //assert(opp_index < node.edge_count());
+        // add the node at the other end of the opposite - which would be the
+        // start node of the original edge.
+        auto opp_id = tile_id + uint64_t(node.edge_index() + opp_index);
+        add_node(m_cache.edge(opp_id).endnode());
+      } else {
+        LOG_ERROR("Opposing index >= node edge count!");
+      }
     }
     // the node is not in this tile, so we cannot look up its position or edge
     // offset yet. save the (node, index) pair for later.

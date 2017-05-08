@@ -1153,6 +1153,8 @@ function filter_tags_generic(kv)
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
+  kv["destination:forward"] = kv["destination:forward"]
+  kv["destination:backward"] = kv["destination:backward"]
   kv["destination:ref"] = kv["destination:ref"]
   kv["destination:ref:to"] = kv["destination:ref:to"]
   kv["destination:street"] = kv["destination:street"]
