@@ -13,6 +13,11 @@ config = {
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
+    'build_transit': {
+      'transit_land_url': 'http://transit.land',
+      'transit_land_per_page': 5000,
+      'transit_land_level': 4
+    },
     'logging': {
       'type': 'std_out',
       'color': True,
@@ -199,6 +204,11 @@ help_text = {
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
+    'build_transit': {
+      'transit_land_url': 'Transitland URL',
+      'transit_land_per_page': 'Transitland per page count',
+      'transit_land_level': 'Transitland import level'
+    },
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',
