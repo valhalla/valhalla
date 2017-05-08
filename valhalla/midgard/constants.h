@@ -21,6 +21,9 @@ constexpr float kKmPerMile          = 1.60934f;
 constexpr float kRadEarthMeters     = 6378160.187f;
 constexpr float kMetersPerDegreeLat = 110567.0f;
 
+// Speed conversion constants
+constexpr float kMPHtoMetersPerSec  = 0.44704f;
+
 // Angular measures
 constexpr float kPi        = 3.14159265f;
 constexpr float kPiOver2   = (kPi * 0.5f);
