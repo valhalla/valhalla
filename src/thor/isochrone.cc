@@ -87,8 +87,9 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
   // Range of grids in latitude space
   float dlat = max_distance / kMetersPerDegreeLat;
 
-  // Optimize for 500 cells in latitude - round off to nearest 0.001 degree
-  float grid_size = dlat / 250.0f;
+  // Optimize for 600 cells in latitude (slightly larger for multimodal).
+  // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes
+  float grid_size = (multimodal) ? dlat / 500.0f : dlat / 300.0f;
   if (grid_size < 0.001f) {
     grid_size = 0.001f;
   } else if (grid_size > 0.005f) {
@@ -125,7 +126,7 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
                 grid_center.lat() - center_ll.lat());
   isotile_->ShiftTileBounds(shift);
 
-  // Test that the shift worked...
+  // Test that the shift worked...TODO - remove later
   grid_center = isotile_->Center(isotile_->TileId(center_ll));
   if (std::abs(center_ll.lat() - grid_center.lat()) > 0.0001f ||
       std::abs(center_ll.lng() - grid_center.lng()) > 0.0001f) {
@@ -501,6 +502,11 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     EdgeLabel pred = edgelabels_[predindex];
     edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
+    // Skip edges with large penalties (e.g. ferries?)
+    if (pred.cost().cost > max_seconds * 2) {
+      continue;
+    }
+
     // Get the end node. Skip if tile not found (can happen with
     // regional data sets).
     GraphId node = pred.endnode();
@@ -514,7 +520,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     n++;
 
     // Return after the time interval has been met
-    if (pred.cost().secs > max_seconds || pred.cost().cost > max_seconds * 4) {
+    if (pred.cost().secs > max_seconds) {
       LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
       return isotile_;
     }
