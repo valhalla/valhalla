@@ -8,8 +8,10 @@ namespace valhalla {
 namespace midgard {
 
 // Time constants
-constexpr float kSecPerHour = 3600.0f;
-constexpr float kHourPerSec = 1.0f / 3600.0f;
+constexpr float kSecPerMinute     = 60.0f;
+constexpr float kMinPerSec        = 1.0f / 60.0f;
+constexpr float kSecPerHour       = 3600.0f;
+constexpr float kHourPerSec       = 1.0f / 3600.0f;
 constexpr uint32_t kSecondsPerDay = 86400;
 
 // Distance constants
