@@ -59,16 +59,8 @@ Get Valhalla from Personal Package Archive (PPA)
 If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
 
 ```bash
-# get some dependencies in other ppas
-if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
-  sudo add-apt-repository -y ppa:kevinkreiser/libsodium
-  sudo add-apt-repository -y ppa:kevinkreiser/libpgm
-  sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
-  sudo add-apt-repository -y ppa:kevinkreiser/czmq
-fi
 # grab all of the valhalla software from ppa
-sudo add-apt-repository -y ppa:kevinkreiser/prime-server
-sudo add-apt-repository -y ppa:valhalla-routing/valhalla
+sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
 sudo apt-get install -y valhalla-bin
 ```
@@ -81,13 +73,7 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
 ```bash
-if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
- sudo add-apt-repository -y ppa:kevinkreiser/libsodium
- sudo add-apt-repository -y ppa:kevinkreiser/libpgm
- sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
- sudo add-apt-repository -y ppa:kevinkreiser/czmq
-fi
-sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
 sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
 #if you plan to compile with data building support, see below for more info
