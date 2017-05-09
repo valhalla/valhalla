@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 
 #include "baldr/graphtile.h"
@@ -51,6 +52,9 @@ void id_from_string() {
   if(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002.gph") != GraphId(1000002,3,0))
     throw std::logic_error("Unexpected graphtile id");
 
+  if(GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/3/001/000/002") != GraphId(1000002,3,0))
+    throw std::logic_error("Unexpected graphtile id");
+
   try {
     GraphTile::GetTileId("foo2/8675309/bar/1baz2/qux42corge/1/000/002/.gph");
     throw std::logic_error("Should fail to get graphtile id");
@@ -73,6 +77,11 @@ void id_from_string() {
 
   try {
     GraphTile::GetTileId("foo/bar/1/000/004/001.gph");
+    throw std::logic_error("Should fail to get graphtile id");
+  } catch(const std::runtime_error&) { }
+
+  try {
+    GraphTile::GetTileId("00/002.gph");
     throw std::logic_error("Should fail to get graphtile id");
   } catch(const std::runtime_error&) { }
 }

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 #define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <unordered_map>

@@ -186,13 +186,14 @@ nobase_include_HEADERS = \
 	valhalla/thor/isochrone.h \
 	valhalla/thor/optimizer.h \
 	valhalla/thor/map_matcher.h \
+	valhalla/thor/match_result.h \
 	valhalla/thor/multimodal.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
 	valhalla/thor/route_matcher.h \
 	valhalla/thor/service.h \
 	valhalla/thor/trippathbuilder.h \
-	valhalla/thor/trip_path_controller.h \
+	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/service.h
@@ -207,7 +208,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
-	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \
@@ -313,7 +313,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/thor/trippathbuilder.cc \
-	src/thor/trip_path_controller.cc \
+	src/thor/attributes_controller.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
 	src/tyr/service.cc
@@ -584,8 +584,6 @@ check_PROGRAMS = \
 	test/sample \
 	test/skadi_service \
 	test/loki_service \
-	test/search \
-	test/node_search \
 	test/maneuversbuilder \
 	test/narrativebuilder \
 	test/enhancedtrippath \
@@ -596,7 +594,7 @@ check_PROGRAMS = \
 	test/edgestatus \
 	test/optimizer \
 	test/thor_service \
-	test/trip_path_controller \
+	test/attributes_controller \
 	test/astar \
 	test/serializers \
 	test/traffic_matcher
@@ -759,12 +757,6 @@ test_skadi_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhall
 test_loki_service_SOURCES = test/loki_service.cc test/test.cc
 test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_loki_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_search_SOURCES = test/search.cc test/test.cc
-test_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_node_search_SOURCES = test/node_search.cc test/test.cc
-test_node_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_node_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_maneuversbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -795,9 +787,9 @@ test_optimizer_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_thor_service_SOURCES = test/thor_service.cc test/test.cc
 test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_thor_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_trip_path_controller_SOURCES = test/trip_path_controller.cc test/test.cc
-test_trip_path_controller_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_trip_path_controller_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_attributes_controller_SOURCES = test/attributes_controller.cc test/test.cc
+test_attributes_controller_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_attributes_controller_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_astar_SOURCES = test/astar.cc test/test.cc
 test_astar_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_astar_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -820,7 +812,9 @@ check_PROGRAMS += \
 	test/refs \
 	test/signinfo \
 	test/countryaccess \
-	test/graphtilebuilder
+	test/graphtilebuilder \
+	test/search \
+	test/node_search
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -854,6 +848,12 @@ test_countryaccess_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhall
 test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
 test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_graphtilebuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_search_SOURCES = test/search.cc test/test.cc
+test_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_node_search_SOURCES = test/node_search.cc test/test.cc
+test_node_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_node_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 TESTS = $(check_PROGRAMS)

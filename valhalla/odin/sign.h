@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_SIGN_H_
 #define VALHALLA_ODIN_SIGN_H_
 
+#include <cstdint>
 #include <string>
 
 namespace valhalla {

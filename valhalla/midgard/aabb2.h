@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_AABB2_H_
 #define VALHALLA_MIDGARD_AABB2_H_
 
+#include <cstdint>
 #include <vector>
 #include <valhalla/midgard/linesegment2.h>
 

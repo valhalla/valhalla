@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_EDGEELEVATION_H_
 #define VALHALLA_BALDR_EDGEELEVATION_H_
 
+#include <cstdint>
 namespace valhalla {
 namespace baldr {
 
@@ -10,6 +11,7 @@ constexpr uint32_t kMaxStoredElevation = 4095;  // 12 bits
 constexpr float kElevationBinSize = 2.0f;
 constexpr float kMinElevation = -500.0f;
 constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
+constexpr float kNoElevationData = 32768.0f;
 
 /**
  * Structure to store elevation information for a directed edge.

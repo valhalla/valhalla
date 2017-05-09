@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
 #define VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
 
+#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 #include <unordered_map>

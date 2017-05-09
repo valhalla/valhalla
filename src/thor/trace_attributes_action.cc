@@ -1,12 +1,19 @@
+#include <cstdint>
 #include <prime_server/prime_server.hpp>
 
 using namespace prime_server;
 
+#include <algorithm>
+#include <utility>
+#include <string>
+#include <vector>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "baldr/json.h"
 #include "baldr/graphconstants.h"
 #include "baldr/directededge.h"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include "midgard/logging.h"
 #include "midgard/constants.h"
 #include "baldr/errorcode_util.h"
@@ -16,7 +23,8 @@ using namespace prime_server;
 #include "proto/trippath.pb.h"
 
 #include "thor/service.h"
-#include "thor/trip_path_controller.h"
+#include "thor/attributes_controller.h"
+#include "thor/match_result.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -31,10 +39,11 @@ namespace {
   const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
   const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
-  json::MapPtr serialize(const TripPathController& controller,
-                       const valhalla::odin::TripPath& trip_path,
-                       const boost::optional<std::string>& id,
-                       const DirectionsOptions& directions_options) {
+  json::MapPtr serialize(const AttributesController& controller,
+      const valhalla::odin::TripPath& trip_path,
+      const boost::optional<std::string>& id,
+      const DirectionsOptions& directions_options,
+      const std::vector<thor::MatchResult>& match_results) {
     // Length and speed default to kilometers
     double scale = 1;
     if (directions_options.has_units()
@@ -84,8 +93,15 @@ namespace {
           edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
         if (edge.has_weighted_grade())
           edge_map->emplace("weighted_grade", json::fp_t{edge.weighted_grade(), 3});
-        if (edge.has_mean_elevation())
-           edge_map->emplace("mean_elevation", static_cast<int64_t>(edge.mean_elevation()));
+        if (edge.has_mean_elevation()) {
+          // Convert to feet if a valid elevation and units are miles
+          float mean = edge.mean_elevation();
+          if (mean != kNoElevationData && directions_options.has_units()
+              && directions_options.units() == DirectionsOptions::kMiles) {
+            mean *= kFeetPerMeter;
+          }
+          edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
+        }
         if (edge.has_way_id())
           edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
         if (edge.has_id())
@@ -262,6 +278,59 @@ namespace {
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
+    // Add matched points, if requested
+    if (controller.category_attribute_enabled(kMatchedCategory)
+        && !match_results.empty()) {
+      auto match_points_array = json::array({});
+      for (const auto& match_result : match_results) {
+        auto match_points_map = json::map({});
+
+        // Process matched point
+        if (controller.attributes.at(kMatchedPoint)) {
+          match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first,6});
+          match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
+        }
+
+        // Process matched type
+        if (controller.attributes.at(kMatchedType)) {
+          switch (match_result.type) {
+            case thor::MatchResult::Type::kMatched:
+              match_points_map->emplace("type", std::string("matched"));
+              break;
+            case thor::MatchResult::Type::kInterpolated:
+              match_points_map->emplace("type", std::string("interpolated"));
+              break;
+            default:
+              match_points_map->emplace("type", std::string("unmatched"));
+              break;
+          }
+        }
+
+        // Process matched point edge index
+        if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
+          match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
+
+        // Process matched point begin route discontinuity
+        if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) && match_result.begin_route_discontinuity)
+          match_points_map->emplace("begin_route_discontinuity", static_cast<bool>(match_result.begin_route_discontinuity));
+
+        // Process matched point end route discontinuity
+        if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.end_route_discontinuity)
+          match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
+
+        // Process matched point distance along edge
+        if (controller.attributes.at(kMatchedDistanceAlongEdge))
+          match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
+
+        // Process matched point distance from trace point
+        if (controller.attributes.at(kMatchedDistanceFromTracePoint))
+          match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
+
+        match_points_array->push_back(match_points_map);
+      }
+      json->emplace("matched_points", match_points_array);
+    }
+
     // Add osm_changeset
     if (trip_path.has_osm_changeset())
       json->emplace("osm_changeset", trip_path.osm_changeset());
@@ -300,7 +369,7 @@ namespace {
 namespace valhalla {
 namespace thor {
 
-void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller) {
+void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller) {
   std::string filter_action = request.get("filters.action", "");
 
   if (filter_action.size() && filter_action == "include") {
@@ -342,7 +411,9 @@ worker_t::result_t thor_worker_t::trace_attributes(
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   odin::TripPath trip_path;
-  TripPathController controller;
+  std::vector<thor::MatchResult> match_results;
+  std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
+  AttributesController controller;
   filter_attributes(request, controller);
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
@@ -364,7 +435,9 @@ worker_t::result_t thor_worker_t::trace_attributes(
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          trip_path = map_match(controller);
+          trip_match = map_match(controller, true);
+          trip_path = std::move(trip_match.first);
+          match_results = std::move(trip_match.second);
         } catch (const valhalla_exception_t& e) {
           throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
@@ -377,7 +450,9 @@ worker_t::result_t thor_worker_t::trace_attributes(
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_path = map_match(controller);
+            trip_match = map_match(controller, true);
+            trip_path = std::move(trip_match.first);
+            match_results = std::move(trip_match.second);
           } catch (const valhalla_exception_t& e) {
             throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
@@ -396,7 +471,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
   //serialize output to Thor
   json::MapPtr json;
   if (trip_path.node().size() > 0)
-    json = serialize(controller, trip_path, id, directions_options);
+    json = serialize(controller, trip_path, id, directions_options, match_results);
   else throw valhalla_exception_t{400, 442};
 
   //jsonp callback if need be

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_UTIL_H_
 #define VALHALLA_MIDGARD_UTIL_H_
 
+#include <cstdint>
 #include <string>
 #include <stdexcept>
 #include <string>

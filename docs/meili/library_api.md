@@ -2,7 +2,7 @@
 
 *The API is still in testing and will be changed any time. Any
  suggestions are welcome to share at
- [GitHub Issues](https://github.com/valhalla/meili/issues).*
+ [GitHub Issues](https://github.com/valhalla/valhalla/issues).*
 
 *`TODO` The API listed here is not complete but ready for simple use.*
 

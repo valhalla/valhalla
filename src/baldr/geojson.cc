@@ -66,8 +66,12 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
           })},
           {"properties", map({
             {"contour", static_cast<uint64_t>(interval.first)},
-            { polygons ? "fill" : "color", hex.str()},
-            { polygons ? "fill-opacity" : "opacity", json::fp_t{.33f, 2}},
+            { "color", hex.str()}, //lines
+            { "fill", hex.str()}, //geojson.io polys
+            { "fillColor", hex.str()}, //leaflet polys
+            { "opacity", json::fp_t{.33f, 2}}, //lines
+            { "fill-opacity", json::fp_t{.33f, 2}}, //geojson.io polys
+            { "fillOpacity", json::fp_t{.33f, 2}}, //leaflet polys
           })},
         })
       );

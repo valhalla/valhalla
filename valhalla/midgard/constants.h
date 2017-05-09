@@ -13,6 +13,7 @@ constexpr float kHourPerSec = 1.0f / 3600.0f;
 constexpr uint32_t kSecondsPerDay = 86400;
 
 // Distance constants
+constexpr float kFeetPerMeter       = 3.2808399f;
 constexpr float kMetersPerKm        = 1000.0f;
 constexpr float kKmPerMeter         = 0.001f;
 constexpr float kMilePerKm          = 0.621371f;

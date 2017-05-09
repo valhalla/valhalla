@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHREADER_H_
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <mutex>
@@ -314,6 +315,18 @@ class GraphReader {
    * @return  Returns the relative edge density at the begin node of the edge.
    */
   uint32_t GetEdgeDensity(const GraphId& edgeid);
+
+  /**
+   * Get the end nodes of a directed edge.
+   * @param  tile  Tile of the directed edge (tile of the start node).
+   * @param  edge  Directed edge.
+   * @return Returns a pair of GraphIds: the first is the start node
+   *         and the second is the end node. An invalid start node
+   *         can occur in regional extracts (where the end node tile
+   *         is not available).
+   */
+  std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphTile* tile,
+                       const DirectedEdge* edge);
 
   /**
    * Gets back a set of available tiles

@@ -11,6 +11,7 @@
 #include <set>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -713,7 +714,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
           std::vector<SignInfo> exits = GraphBuilder::CreateExitSignInfoList(
-              node, w, osmdata, fork);
+              node, w, osmdata, fork, forward);
 
           // Add signs if signs exist
           // and directed edge if forward access and auto use
@@ -965,7 +966,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   // edge list needs to be modified
   DataQuality stats;
   if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, stats);
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file);
   } else {
     LOG_WARN("Not reclassifying link graph edges");
   }
@@ -983,7 +984,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   // Crack open some elevation data if its there
   boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
-  if(elevation)
+  if(elevation && boost::filesystem::exists(*elevation))
     sample.reset(new skadi::sample(*elevation));
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
@@ -1028,7 +1029,7 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
 }
 
 std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
-    const OSMNode& node, const OSMWay& way, const OSMData& osmdata, bool fork) {
+    const OSMNode& node, const OSMWay& way, const OSMData& osmdata, bool fork, bool forward) {
 
   std::vector<SignInfo> exit_list;
 
@@ -1099,10 +1100,14 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
   }
 
   // Exit sign toward locations
-  if (way.destination_index() != 0) {
+  if (way.destination_index() != 0 ||
+    (forward && way.destination_forward_index() != 0) ||
+    (!forward && way.destination_backward_index() != 0)) {
     has_toward = true;
+    uint32_t index = way.destination_index() ? way.destination_index() :
+      (forward ? way.destination_forward_index() : way.destination_backward_index());
     std::vector<std::string> toward_names = GetTagTokens(
-        osmdata.name_offset_map.name(way.destination_index()));
+        osmdata.name_offset_map.name(index));
     for (auto& toward_name : toward_names) {
       exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
     }

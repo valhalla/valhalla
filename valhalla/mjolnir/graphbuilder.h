@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHBUILDER_H
 #define VALHALLA_MJOLNIR_GRAPHBUILDER_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
@@ -38,7 +39,7 @@ class GraphBuilder {
   static std::vector<baldr::SignInfo> CreateExitSignInfoList(const OSMNode& node,
                                                       const OSMWay& way,
                                                       const OSMData& osmdata,
-                                                      bool fork);
+                                                      bool fork, bool forward);
 };
 
 }

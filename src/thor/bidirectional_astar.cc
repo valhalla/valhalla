@@ -30,6 +30,7 @@ BidirectionalAStar::BidirectionalAStar(): PathAlgorithm() {
   mode_ = TravelMode::kDrive;
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
+  cost_diff_ = 0.0f;
   adjacencylist_forward_ = nullptr;
   adjacencylist_reverse_ = nullptr;
   edgestatus_forward_ = nullptr;
@@ -335,10 +336,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
-  // Disable destination only transitions (based on costing) since this
-  // algorithm is bidirectional.
-  costing_->DisableDestinationOnly();
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.edges.front().projected, destination.edges.front().projected);
 
@@ -375,9 +372,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         // Check if the edge on the forward search connects to a
-        // reached edge on the reverse search tree.
+        // settled edge on the reverse search tree.
         pred = edgelabels_forward_[forward_pred_idx];
-        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_reverse_->Get(pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetForwardConnection(pred);
         }
       } else {
@@ -397,9 +394,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       reverse_pred_idx = adjacencylist_reverse_->pop();
       if (reverse_pred_idx != kInvalidLabel) {
         // Check if the edge on the reverse search connects to a
-        // reached edge on the forward search tree.
+        // settled edge on the forward search tree.
         pred2 = edgelabels_reverse_[reverse_pred_idx];
-        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() != EdgeSet::kUnreached) {
+        if (edgestatus_forward_->Get(pred2.opp_edgeid()).set() == EdgeSet::kPermanent) {
           SetReverseConnection(pred2);
         }
       } else {

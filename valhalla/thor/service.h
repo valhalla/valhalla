@@ -1,6 +1,10 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
+#include <cstdint>
+#include <vector>
+#include <utility>
+
 #include <boost/property_tree/ptree.hpp>
 
 #include <prime_server/prime_server.hpp>
@@ -17,9 +21,10 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/astar.h>
+#include <valhalla/thor/match_result.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/trippathbuilder.h>
-#include <valhalla/thor/trip_path_controller.h>
+#include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
 
@@ -73,8 +78,9 @@ class thor_worker_t {
   thor::PathAlgorithm* get_path_algorithm(
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
-  valhalla::odin::TripPath route_match(const TripPathController& controller);
-  valhalla::odin::TripPath map_match(const TripPathController& controller);
+  valhalla::odin::TripPath route_match(const AttributesController& controller);
+  std::pair<valhalla::odin::TripPath, std::vector<thor::MatchResult>> map_match(
+      const AttributesController& controller, bool trace_attributes_action = false);
 
   std::list<valhalla::odin::TripPath> path_arrive_by(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
@@ -88,7 +94,7 @@ class thor_worker_t {
   void parse_shape(const boost::property_tree::ptree& request);
   void parse_trace_config(const boost::property_tree::ptree& request);
   std::string parse_costing(const boost::property_tree::ptree& request);
-  void filter_attributes(const boost::property_tree::ptree& request, TripPathController& controller);
+  void filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller);
 
   prime_server::worker_t::result_t route(
       const boost::property_tree::ptree& request,

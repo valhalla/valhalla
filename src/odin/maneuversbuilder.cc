@@ -277,6 +277,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
+      bool is_first_man = (curr_man == maneuvers.begin());
+
       LOG_TRACE("+++ Combine TOP ++++++++++++++++++++++++++++++++++++++++++++");
       // Collapse the TransitConnectionStart Maneuver
       // if the transit connection stop is a simple stop (not a station)
@@ -338,19 +340,18 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Combine current internal maneuver with next maneuver
       else if (curr_man->internal_intersection() && (curr_man != next_man)) {
         LOG_TRACE("+++ Combine: current internal maneuver with next maneuver +++");
-        curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
-                                           next_man,
-                                           (curr_man == maneuvers.begin()));
+        curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man)
+          prev_man = curr_man;
         maneuvers_have_been_combined = true;
         ++next_man;
       }
       // Combine current turn channel maneuver with next maneuver
-      else if (IsTurnChannelManeuverCombinable(
-          prev_man, curr_man, next_man, (curr_man == maneuvers.begin()))) {
+      else if (IsTurnChannelManeuverCombinable(prev_man, curr_man, next_man,is_first_man)) {
         LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
-        curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
-                                              next_man,
-                                              (curr_man == maneuvers.begin()));
+        curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man)
+          prev_man = curr_man;
         maneuvers_have_been_combined = true;
         ++next_man;
       }
@@ -588,7 +589,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineSameNameStraightManeuver(
   curr_man->set_basic_time(curr_man->basic_time() + next_man->basic_time());
 
   // Update end heading
-  curr_man->set_end_heading(next_man->end_node_index());
+  curr_man->set_end_heading(next_man->end_heading());
 
   // Update end node index
   curr_man->set_end_node_index(next_man->end_node_index());

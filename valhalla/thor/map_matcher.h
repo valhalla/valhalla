@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_MAP_MATCHER_H_
 #define VALHALLA_THOR_MAP_MATCHER_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -28,7 +29,9 @@ class MapMatcher {
       meili::MapMatcher* matcher,
       const std::vector<meili::MatchResult>& results,
       const std::shared_ptr<sif::DynamicCost>* mode_costing,
-      const sif::TravelMode mode);
+      const sif::TravelMode mode,
+      std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
+      bool trace_attributes_action = false);
 
 };
 
