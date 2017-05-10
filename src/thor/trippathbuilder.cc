@@ -676,7 +676,8 @@ TripPath TripPathBuilder::Build(
       if ((edge_itr+2) != path.end()) {
         uint32_t index = 0;
         if ((directededge->use() == Use::kTransitConnection && next_de->use() == Use::kEgressConnection) ||
-            (directededge->use() == Use::kPlatformConnection && next_de->use() == Use::kEgressConnection)){
+            (directededge->use() == Use::kPlatformConnection && next_de->use() == Use::kEgressConnection) ||
+            (directededge->use() == Use::kPlatformConnection && next_de->use() == Use::kPlatformConnection)){
           tc_shape.clear();
           tc_length = 0;
           while (index<=2) {
@@ -685,7 +686,15 @@ TripPath TripPathBuilder::Build(
             const DirectedEdge* de = tile->directededge(e);
 
             auto einfo = tile->edgeinfo(de->edgeinfo_offset());
-            tc_shape.insert(std::end(tc_shape), std::begin(einfo.shape()), std::end(einfo.shape()));
+
+            if (de->forward())
+              tc_shape.insert(tc_shape.end(), einfo.shape().begin() + 1,
+                              einfo.shape().end());
+            else {
+              tc_shape.insert(tc_shape.end(), einfo.shape().rbegin() + 1,
+                              einfo.shape().rend());
+            }
+
             tc_length += de->length();
             tc_names = einfo.GetNames();
             index++;
@@ -696,6 +705,8 @@ TripPath TripPathBuilder::Build(
       if (directededge->use() == Use::kEgressConnection && next_de->use() == Use::kPlatformConnection) {
         continue;
       } else if (directededge->use() == Use::kPlatformConnection && (next_de->use() == Use::kBus || next_de->use() == Use::kRail)) {
+        continue;
+      }  else if (directededge->use() == Use::kPlatformConnection && next_de->use() == Use::kPlatformConnection) {
         continue;
       }
       else if (directededge->use() == Use::kEgressConnection && next_de->use() == Use::kTransitConnection) {
@@ -899,6 +910,7 @@ TripPath TripPathBuilder::Build(
         directededge->use() == Use::kPlatformConnection)
       e_shape = tc_shape;
 
+
     if (directededge->use() == Use::kPlatformConnection) {
       for (const auto& name : tc_names)
         trip_edge->add_name(name);
@@ -929,7 +941,8 @@ TripPath TripPathBuilder::Build(
       }
     } else {
       // Just get the shape in there in the right direction
-      if (directededge->forward())
+      if (directededge->forward() || directededge->use() == Use::kTransitConnection ||
+          directededge->use() == Use::kPlatformConnection)
         trip_shape.insert(trip_shape.end(), e_shape.begin() + 1,
                           e_shape.end());
       else
