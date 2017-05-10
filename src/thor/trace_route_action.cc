@@ -5,6 +5,8 @@ using namespace prime_server;
 #include <memory>
 #include <utility>
 #include <vector>
+#include <unordered_map>
+
 
 #include "midgard/logging.h"
 #include "baldr/geojson.h"
@@ -165,6 +167,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     const AttributesController& controller, bool trace_attributes_action) {
   odin::TripPath trip_path;
   std::vector<thor::MatchResult> match_results;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
 
   // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
@@ -249,6 +252,22 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
           if (curr_match_result->edgeid != disconnected_edge_pair.first.value) {
             // Set previous match result as disconnected path and break
             prev_match_result->begin_route_discontinuity = true;
+
+            // The begin route discontinuity is the edge end info
+            // therefore the second item in the pair
+            if (route_discontinuities.count(prev_match_result->edge_index) > 0) {
+              // Update edge_end_info values
+              auto& edge_end_info = route_discontinuities.at(prev_match_result->edge_index).second;
+              edge_end_info.exists = true;
+              edge_end_info.vertex = prev_match_result->lnglat;
+              edge_end_info.distance_along = prev_match_result->distance_along;
+            } else {
+              // Add new item
+              // Begin distance along defaulted to 0
+              route_discontinuities.insert( {prev_match_result->edge_index,
+                { {false, {}, 0.f},
+                  {true, prev_match_result->lnglat, prev_match_result->distance_along} }});
+            }
             break;
           }
           // Increment previous and current match results to continue looking
@@ -261,6 +280,22 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
           if (curr_match_result->edgeid == disconnected_edge_pair.second.value) {
             // Set current match result as disconnected and break
             curr_match_result->end_route_discontinuity = true;
+
+            // The end route discontinuity is the edge begin info
+            // therefore the first item in the pair
+            if (route_discontinuities.count(curr_match_result->edge_index) > 0) {
+              // Update edge_begin_info values
+              auto& edge_begin_info = route_discontinuities.at(curr_match_result->edge_index).first;
+              edge_begin_info.exists = true;
+              edge_begin_info.vertex = curr_match_result->lnglat;
+              edge_begin_info.distance_along = curr_match_result->distance_along;
+            } else {
+              // Add new item
+              // End distance along defaulted to 1
+              route_discontinuities.insert( {curr_match_result->edge_index,
+                { {true, curr_match_result->lnglat, curr_match_result->distance_along},
+                  {false, {}, 1.f} }});
+            }
             break;
           }
           // Increment previous and current match results to continue looking
@@ -388,7 +423,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
                                              mode_costing, path_edges, origin,
                                              destination, std::list<PathLocation>{},
-                                             interrupt_callback);
+                                             interrupt_callback, &route_discontinuities);
   } else {
     throw baldr::valhalla_exception_t { 400, 442 };
   }
