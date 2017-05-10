@@ -962,9 +962,17 @@ void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
 }
 
 /**
- * Updates a tile with traffic segment and chunk data.
+ * Updates a tile with traffic segment and chunk data. UpdateTrafficSegments
+ * is called 3 times - first to add segments within the tile, then to add any
+ * "leftover" segments for OSMLR segments that cross tiles, and then to add
+ * "chunks". Need to make sure the "shift" for offsets to data after the
+ * traffic information are only increased by the amount of "new" segments.
  */
 void GraphTileBuilder::UpdateTrafficSegments() {
+  // Get the number of new segments added with this call.
+  uint32_t new_segments = traffic_segment_builder_.size() -
+                          header_->traffic_id_count();
+
   // Update header to include the traffic segment count and update the
   // offset to chunks (based on size of traffic segments).
   // Padding should already be done so we start traffic info on an 8-byte boundary
@@ -973,7 +981,7 @@ void GraphTileBuilder::UpdateTrafficSegments() {
           traffic_segment_builder_.size() * sizeof(TrafficAssociation));
 
   // Shift offsets to anything that comes after traffic
-  uint32_t shift = traffic_segment_builder_.size() * sizeof(TrafficAssociation) +
+  uint32_t shift = new_segments * sizeof(TrafficAssociation) +
                    traffic_chunk_builder_.size() * sizeof(TrafficChunk);
   header_builder_.set_lane_connectivity_offset(header_builder_.lane_connectivity_offset() + shift);
   header_builder_.set_edge_elevation_offset(header_builder_.edge_elevation_offset() + shift);
@@ -994,9 +1002,9 @@ void GraphTileBuilder::UpdateTrafficSegments() {
     // Write a new header
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
-    // Copy the rest of the tile contents
-    const auto* begin = reinterpret_cast<const char*>(nodes_);
-    file.write(begin, header_->traffic_segmentid_offset() - sizeof(GraphTileHeader));
+    // Copy the tile contents from nodes to the beginning of traffic segments
+    file.write(reinterpret_cast<const char*>(nodes_),
+               header_->traffic_segmentid_offset() - sizeof(GraphTileHeader));
 
     // Append the traffic segment list
     file.write(reinterpret_cast<const char*>(&traffic_segment_builder_[0]),
@@ -1008,8 +1016,10 @@ void GraphTileBuilder::UpdateTrafficSegments() {
 
     // Write rest of the stuff after traffic chunks (includes lane connectivity
     // and edge elevation...so far).
-    begin = reinterpret_cast<const char*>(header_ + header_->lane_connectivity_offset());
-    const auto* end = reinterpret_cast<const char*>(header_ + header_->end_offset());
+    const auto* begin = reinterpret_cast<const char*>(header_) +
+                header_->lane_connectivity_offset();
+    const auto* end = reinterpret_cast<const char*>(header_) +
+                header_->end_offset();
     file.write(begin, end - begin);
 
     // Close the file
