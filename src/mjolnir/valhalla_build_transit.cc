@@ -422,9 +422,10 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
       node->set_timezone(timezone);
       node->set_prev_type_graphid(station_id);
       std::string onestop = node->onestop_id();
-      if (onestop.back() == '>' || onestop.back() == '<') {
+      if (onestop.back() == '<') {
         onestop.pop_back();
       }
+
       nodes.emplace(node->onestop_id(), platform_id);
       platforms.emplace(onestop, platform_id);
       if(nodes.size() == kMaxGraphId) {
@@ -533,16 +534,26 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     auto* pair = tile.add_stop_pairs();
 
     //origin
-    pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
-    auto origin = stops.find(pair->origin_onestop_id());
+    auto origin_id = pair_pt.second.get<std::string>("origin_onestop_id");
+
+    if (origin_id.find("<") == std::string::npos)
+      pair->set_origin_onestop_id(origin_id + "<" );
+    else pair->set_origin_onestop_id(origin_id);
+
+    auto origin = stops.find(origin_id);
     if(origin != stops.cend())
       pair->set_origin_graphid(origin->second);
     else
       dangles = true;
 
     //destination
-    pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
-    auto destination = stops.find(pair->destination_onestop_id());
+    auto destination_id = pair_pt.second.get<std::string>("destination_onestop_id");
+
+    if (destination_id.find("<") == std::string::npos)
+      pair->set_destination_onestop_id(destination_id + "<" );
+    else pair->set_destination_onestop_id(destination_id);
+
+    auto destination = stops.find(destination_id);
     if(destination != stops.cend())
       pair->set_destination_graphid(destination->second);
     else
@@ -1567,7 +1578,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         NodeInfo egress_node(egress_ll, RoadClass::kServiceOther, n_access,
                              NodeType::kTransitEgress, false);
         egress_node.set_stop_index(index);
-        egress_node.set_timezone(egress_node.timezone());
+        egress_node.set_timezone(egress.timezone());
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
         egress_node.set_connecting_wayid(egress.osm_way_id());
 
