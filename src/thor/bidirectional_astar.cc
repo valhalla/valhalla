@@ -264,7 +264,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    // Get end node tile, opposing edge Id, and opposing diredted edge.
+    // Get end node tile, opposing edge Id, and opposing directed edge.
     const GraphTile* t2 = directededge->leaves_tile() ?
         graphreader.GetGraphTile(directededge->endnode()) : tile;
     if (t2 == nullptr) {

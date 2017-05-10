@@ -76,6 +76,13 @@ class Tiles {
   AABB2<coord_t> TileBounds() const;
 
   /**
+   * Shift the tilebounds - a special method used to nudge the tile bounds
+   * so a specific point stays centered in the grid.
+   * @param  shift  Amount to shift the bounding box.
+   */
+  void ShiftTileBounds(const coord_t& shift);
+
+  /**
    * Get the "row" based on y.
    * @param   y   y coordinate
    * @return  Returns the tile row. Returns -1 if outside the

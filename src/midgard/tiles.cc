@@ -162,6 +162,15 @@ AABB2<coord_t> Tiles<coord_t>::TileBounds() const {
   return tilebounds_;
 }
 
+// Shift the tilebounds
+template <class coord_t>
+void Tiles<coord_t>::ShiftTileBounds(const coord_t& shift) {
+  tilebounds_ = AABB2<coord_t>(tilebounds_.minx() - shift.first,
+                               tilebounds_.miny() - shift.second,
+                               tilebounds_.maxx() - shift.first,
+                               tilebounds_.maxy() - shift.second);
+}
+
 // Get the number of rows in the tiling system.
 template <class coord_t>
 int32_t Tiles<coord_t>::nrows() const {
