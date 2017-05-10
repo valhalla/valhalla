@@ -420,14 +420,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
               pred.use()   == Use::kTransitConnection &&
               directededge->use()  == Use::kTransitConnection)
                 continue;
-          else if (nodeinfo->type() == NodeType::kTransitStation &&
-              pred.use()   == Use::kEgressConnection &&
-              directededge->use()  == Use::kEgressConnection)
-                continue;
-          else if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform &&
-              pred.use()   == Use::kPlatformConnection &&
-              directededge->use()  == Use::kPlatformConnection)
-                continue;
 
         }
       }
