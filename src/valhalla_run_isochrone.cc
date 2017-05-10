@@ -280,7 +280,8 @@ int main(int argc, char *argv[]) {
   for (size_t i = 1; i <= n_contours; i++) {
     contour_times.push_back((max_minutes * i) / n_contours);
   }
-  auto contours = isotile->GenerateContours(contour_times);
+  auto contours = isotile->GenerateContours(contour_times, false, 1.0f,
+                            kOptimalGeneralization);
   auto geojson = json::to_geojson<PointLL>(contours);
 
   auto t3 = std::chrono::high_resolution_clock::now();

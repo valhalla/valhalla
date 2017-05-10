@@ -294,6 +294,13 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
     } // Each tile col
   } // Each tile row
 
+  // If the generalization value equals kOptimalGeneralization then set
+  // the generalization factor to 1/4 of the grid size
+  float gen_factor = generalize;
+  if (generalize == kOptimalGeneralization) {
+    gen_factor = this->tilesize_ * 0.25f * kMetersPerDegreeLat;
+  }
+
   //some info about the area the image covers
   auto c = this->TileBounds().Center();
   auto h = this->tilesize_ / 2;
@@ -313,8 +320,8 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
     //clean up the lines
     for(auto& line : contour) {
       //TODO: generalizing makes self intersections which makes other libraries unhappy
-      if(generalize > 0.f)
-        Polyline2<coord_t>::Generalize(line, generalize);
+      if(gen_factor > 0.f)
+        Polyline2<coord_t>::Generalize(line, gen_factor);
       //if this ends up as an inner we'll undo this later
       if(cache[&line] > 0)
         line.reverse();

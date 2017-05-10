@@ -9,6 +9,10 @@
 namespace valhalla {
 namespace midgard {
 
+// A special generalization value indicating that the application should
+// compute an optimal generalization factor when creating contours.
+constexpr float kOptimalGeneralization = 9999999.0f;
+
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.
@@ -71,6 +75,9 @@ class GriddedData : public Tiles<coord_t> {
    * @param denoise              remove any contours whose size ratio is less than
    *                             this parameter with respect to the largest contour
    *                             with the same interval. by default only keep the largest
+   * @param generalize           Generalization factor in meters. A special value
+   *                             kOptimalGeneralization will let the method choose
+   *                             an optimal generalization factor based on grid size.
    *
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
