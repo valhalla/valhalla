@@ -23,8 +23,8 @@ message NavigationStatus {
   }
     
   optional RouteState route_state = 1;          // current route state
-  optional float lat = 2;                       // current latitude snapped to route
-  optional float lon = 3;                       // current longitude snapped to route
+  optional float lat = 2;                       // snapped latitude
+  optional float lon = 3;                       // snapped longitude
   optional uint32 leg_index = 4;                // current leg index
   optional uint32 maneuver_index = 5;           // current maneuver index to reference for names, instructions, etc based on state
   optional float remaining_maneuver_length = 6; // remaining maneuver length based on units (mi or km)

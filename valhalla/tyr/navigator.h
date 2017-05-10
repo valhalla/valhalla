@@ -6,41 +6,44 @@
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/midgard/encoded.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/route.pb.h>
+#include <valhalla/proto/navigator.pb.h>
 
 namespace valhalla {
 namespace tyr {
 
-const bool kLimitByConseuctiveCount = true;
-constexpr uint32_t kElementMaxCount = 4;
-constexpr uint32_t kVerbalAlertElementMaxCount = 1;
-constexpr uint32_t kVerbalPreElementMaxCount = 2;
-constexpr uint32_t kVerbalPostElementMaxCount = 2;
-const std::string kVerbalDelim = ", ";
-
 class Navigator {
- public:
+  public:
 
-  Navigator(const std::string& route_json_str);
+    Navigator(const std::string& route_json_str);
 
-  virtual ~Navigator() = default;
+    virtual ~Navigator() = default;
 
-  Navigator(Navigator&&) = default;
-  Navigator& operator=(Navigator&&) = default;
+    Navigator(Navigator&&) = default;
+    Navigator& operator=(Navigator&&) = default;
 
-  Navigator(const Navigator&) = default;
-  Navigator& operator=(const Navigator&) = default;
+    Navigator(const Navigator&) = default;
+    Navigator& operator=(const Navigator&) = default;
 
-  const valhalla::Route& route() const;
+    const valhalla::Route& route() const;
 
-  void OnLocationChanged(const baldr::Location& location);
+    valhalla::NavigationStatus OnLocationChanged(
+        const valhalla::FixLocation& fix_location);
 
- protected:
+  protected:
 
-  void SnapToRoute();
+    void SnapToRoute(const FixLocation& fix_location,
+        NavigationStatus& nav_status);
 
-  /////////////////////////////////////////////////////////////////////////////
-  valhalla::Route route_;
+    /////////////////////////////////////////////////////////////////////////////
+
+    // Specified route to navigate
+    valhalla::Route route_;
+
+    // Current leg shape
+    std::vector<midgard::PointLL> shape_;
 
 };
 

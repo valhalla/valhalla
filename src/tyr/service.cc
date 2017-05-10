@@ -461,7 +461,7 @@ namespace {
       // TODO: multiple legs.
       auto legs = json::array({});
       for(const auto& directions_leg : directions_legs) {
-        // GDG
+        //GDG
         std::string leg_json_str;
         google::protobuf::util::MessageToJsonString(directions_leg, &leg_json_str);
         std::cout << leg_json_str << std::endl;
