@@ -245,10 +245,10 @@ int main(int argc, char *argv[]) {
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
   auto isotile = (routetype == "multimodal") ?
-      isochrone.ComputeMultiModal(path_location, max_minutes, reader, mode_costing, mode) :
+      isochrone.ComputeMultiModal(path_location, max_minutes + 10, reader, mode_costing, mode) :
       (reverse) ?
-        isochrone.ComputeReverse(path_location, max_minutes, reader, mode_costing, mode) :
-        isochrone.Compute(path_location, max_minutes, reader, mode_costing, mode);
+        isochrone.ComputeReverse(path_location, max_minutes + 10, reader, mode_costing, mode) :
+        isochrone.Compute(path_location, max_minutes + 10, reader, mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
@@ -280,7 +280,8 @@ int main(int argc, char *argv[]) {
   for (size_t i = 1; i <= n_contours; i++) {
     contour_times.push_back((max_minutes * i) / n_contours);
   }
-  auto contours = isotile->GenerateContours(contour_times);
+  auto contours = isotile->GenerateContours(contour_times, false, 1.0f,
+                            kOptimalGeneralization);
   auto geojson = json::to_geojson<PointLL>(contours);
 
   auto t3 = std::chrono::high_resolution_clock::now();

@@ -33,7 +33,10 @@ namespace valhalla {
       }
       auto polygons = request.get<bool>("polygons", false);
       auto denoise = std::max(std::min(request.get<float>("denoise", 1.f), 1.f), 0.f);
-      auto generalize = request.get<float>("generalize", .2f);
+
+      // Get the generalization factor (in meters). If none is provided then
+      // an optimal factor is computed (based on the isotile grid size).
+      auto generalize = request.get<float>("generalize", kOptimalGeneralization);
 
       //get the raster
       //Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
