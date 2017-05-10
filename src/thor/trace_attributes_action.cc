@@ -319,11 +319,11 @@ namespace {
           match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
 
         // Process matched point distance along edge
-        if (controller.attributes.at(kMatchedDistanceAlongEdge))
+        if (controller.attributes.at(kMatchedDistanceAlongEdge) && (match_result.type != thor::MatchResult::Type::kUnmatched))
           match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
 
         // Process matched point distance from trace point
-        if (controller.attributes.at(kMatchedDistanceFromTracePoint))
+        if (controller.attributes.at(kMatchedDistanceFromTracePoint) && (match_result.type != thor::MatchResult::Type::kUnmatched))
           match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
 
         match_points_array->push_back(match_points_map);

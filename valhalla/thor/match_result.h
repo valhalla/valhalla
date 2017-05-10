@@ -56,6 +56,12 @@ struct MatchResult : meili::MatchResult {
   bool HasEdgeIndex() const { return edge_index != kInvalidEdgeIndex; }
 };
 
+struct RouteDiscontinuity {
+  bool exists;
+  midgard::PointLL vertex;
+  float distance_along;
+};
+
 }
 }
 #endif // VALHALLA_THOR_MATCH_RESULT_H_
