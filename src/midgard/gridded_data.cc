@@ -298,7 +298,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
   // the generalization factor to 1/4 of the grid size
   float gen_factor = generalize;
   if (generalize == kOptimalGeneralization) {
-    gen_factor = this->tilesize_ * 0.25f * kMetersPerDegreeLat;
+    gen_factor = this->tilesize_ * 0.125f * kMetersPerDegreeLat;
   }
 
   //some info about the area the image covers
