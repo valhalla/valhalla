@@ -4,6 +4,7 @@
 #include <valhalla/midgard/tiles.h>
 #include <vector>
 #include <map>
+#include <limits>
 #include <list>
 
 namespace valhalla {
@@ -11,7 +12,7 @@ namespace midgard {
 
 // A special generalization value indicating that the application should
 // compute an optimal generalization factor when creating contours.
-constexpr float kOptimalGeneralization = 9999999.0f;
+constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
 
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
