@@ -116,7 +116,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   return location;
 }
 
-Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int isolated, unsigned int radius){
+Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability, unsigned long default_radius){
   auto lat = GetOptionalFromRapidJson<float>(d, "/lat");
   if (! lat) throw std::runtime_error{"lat is missing"};
 
@@ -147,8 +147,8 @@ Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int isolate
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
-  location.minimum_reachability_ = GetFromRapidJson<unsigned int>(d, "/minimum_reachability", isolated);
-  location.radius_ = GetFromRapidJson<unsigned long>(d, "/radius", radius);
+  location.minimum_reachability_ = GetFromRapidJson<unsigned int>(d, "/minimum_reachability", default_reachability);
+  location.radius_ = GetFromRapidJson<unsigned long>(d, "/radius", default_radius);
 
   return location;
 }

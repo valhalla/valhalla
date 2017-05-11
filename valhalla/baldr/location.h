@@ -57,7 +57,7 @@ struct Location {
    * conversion.
    * @param  d a rapidjson representation of the location
    */
-  static Location FromRapidJson(const rapidjson::Value& d, unsigned int isolated = 0, unsigned int radius = 0);
+  static Location FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability = 0, unsigned long default_radius = 0);
 
   /**
    * conversion.

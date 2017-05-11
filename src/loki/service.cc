@@ -137,7 +137,7 @@ namespace valhalla {
       auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
       if (request_locations) {
         for(const auto& location : *request_locations) {
-          try { parsed.push_back(baldr::Location::FromRapidJson(location)); }
+          try { parsed.push_back(baldr::Location::FromRapidJson(location, default_reachability, default_radius)); }
           catch (...) { throw valhalla_exception_t{400, location_parse_error_code}; }
           if(parsed.back().minimum_reachability_ > max_reachability)
             parsed.back().minimum_reachability_ = max_reachability;
@@ -258,7 +258,9 @@ namespace valhalla {
 
       max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
       max_reachability = config.get<unsigned int>("service_limits.max_reachability");
-      max_radius = config.get<unsigned int>("service_limits.max_radius");
+      default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
+      max_radius = config.get<unsigned long>("service_limits.max_radius");
+      default_radius = config.get<unsigned long>("loki.service_defaults.radius");
       max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
       max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
 
