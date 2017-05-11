@@ -122,7 +122,8 @@ namespace {
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone" ],
                   "logging": { "long_request": 100.0 },
-                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" } }, 
+                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" }, 
+                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
       "service_limits": {
@@ -133,7 +134,9 @@ namespace {
         "optimized_route": { "max_distance": 200000.0, "max_locations": 50},
         "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1},
         "trace": { "max_distance": 65000.0, "max_gps_accuracy": 100.0, "max_shape": 16000, "max_search_radius": 100 },
-        "max_avoid_locations": 0
+        "max_avoid_locations": 0,
+        "max_reachability": 100,
+        "max_radius": 200
       },
       "costing_options": { "auto": {}, "pedestrian": {} }
     })";

@@ -5,8 +5,8 @@ namespace valhalla{
 namespace baldr{
 
   PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist,
-    const midgard::PointLL& projected, const float score, const SideOfStreet sos):
-    id(id), dist(dist), projected(projected), sos(sos), score(score) {
+    const midgard::PointLL& projected, const float score, const SideOfStreet sos, const int minimum_reachability):
+    id(id), dist(dist), projected(projected), sos(sos), score(score), minimum_reachability(minimum_reachability) {
   }
   bool PathLocation::PathEdge::begin_node() const {
     return dist == 0.f;
@@ -44,6 +44,7 @@ namespace baldr{
       e.put("dist", edge.dist);
       e.put("sos", static_cast<int>(edge.sos));
       e.put("score", edge.score);
+      e.put("minimum_reachability", edge.minimum_reachability);
 
       // Serialize projected lat,lng as double (otherwise leads to shape
       // artifacts at begin/end of routes as the float values are rounded
@@ -65,7 +66,8 @@ namespace baldr{
       e.AddMember("id", edge.id.value, allocator)
           .AddMember("dist", edge.dist, allocator)
           .AddMember("sos", static_cast<int>(edge.sos), allocator)
-          .AddMember("score", edge.score, allocator);
+          .AddMember("score", edge.score, allocator)
+          .AddMember("minimum_reachability", edge.minimum_reachability, allocator);
 
       // Serialize projected lat,lng as double (otherwise leads to shape
       // artifacts at begin/end of routes as the float values are rounded
@@ -88,7 +90,7 @@ namespace baldr{
     for(const auto& edge : path_location.get_child("edges")) {
       p.edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
         midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
-        edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")));
+        edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
     }
     return p;
   }

@@ -126,7 +126,7 @@ void extend(GraphReader& reader, const GraphTile*& tile, const edge_t& edge, std
 
 //program entry point
 int main(int argc, char *argv[]) {
-  bpo::options_description options("valhalla_run_route " VERSION "\n"
+  bpo::options_description options("valhalla_export_edges " VERSION "\n"
   "\n"
   " Usage: valhalla_export_edges [options]\n"
   "\n"

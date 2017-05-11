@@ -28,7 +28,8 @@ struct PathLocation : public Location {
    */
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
-    PathEdge(const GraphId& id, const float dist, const midgard::PointLL& projected, const float score, const SideOfStreet sos = NONE);
+    PathEdge(const GraphId& id, const float dist, const midgard::PointLL& projected, const float score,
+      const SideOfStreet sos = NONE, const int minimum_reachability = -1);
     //the directed edge it appears on
     GraphId id;
     //how far along the edge it is (as a percentage  from 0 - 1)
@@ -45,6 +46,9 @@ struct PathLocation : public Location {
     //a measure of how close the result is to the original input where the
     //lower the score the better the match, maybe there's a better word for this?
     float score;
+    //minimum number of edges reachable from this edge, this is a lower limit
+    //it could be reachable from many many more edges than are reported here
+    int minimum_reachability;
   };
 
   //list of edges this location appears on within the graph
