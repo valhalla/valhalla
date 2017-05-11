@@ -122,7 +122,8 @@ namespace {
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone" ],
                   "logging": { "long_request": 100.0 },
-                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" } }, 
+                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" }, 
+                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
       "service_limits": {
