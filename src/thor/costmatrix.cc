@@ -686,10 +686,16 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
+
       // Get cost. Get distance along the remainder of this edge.
       Cost edgecost = costing_->EdgeCost(directededge);
       Cost cost = edgecost * (1.0f - edge.dist);
       uint32_t d = std::round(directededge->length() * (1.0f - edge.dist));
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      cost.cost += edge.score;
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and
@@ -765,6 +771,11 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       Cost edgecost = costing_->EdgeCost(directededge);
       Cost cost = edgecost * edge.dist;
       uint32_t d = std::round(directededge->length() * edge.dist);
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      cost.cost += edge.score;
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and

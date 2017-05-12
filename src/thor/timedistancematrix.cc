@@ -429,6 +429,11 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     uint32_t d = static_cast<uint32_t>(directededge->length() *
                              (1.0f - edge.dist));
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.score;
+
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
@@ -470,6 +475,11 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     Cost cost = costing->EdgeCost(opp_dir_edge) * edge.dist;
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.dist);
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.score;
+
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
@@ -502,6 +512,11 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
       // Form a threshold cost (the total cost to traverse the edge)
       const GraphTile* tile = graphreader.GetGraphTile(edge.id);
       float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      c += edge.score;
       if (c > d.threshold) {
         d.threshold = c;
       }
@@ -539,6 +554,11 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
       // Form a threshold cost (the total cost to traverse the edge)
       const GraphTile* tile = graphreader.GetGraphTile(edge.id);
       float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      c += edge.score;
       if (c > d.threshold) {
         d.threshold = c;
       }

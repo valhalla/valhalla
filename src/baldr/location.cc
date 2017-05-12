@@ -12,8 +12,8 @@
 namespace valhalla {
 namespace baldr {
 
-Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
-  : latlng_(latlng), stoptype_(stoptype), isolated_(50), radius_(0) {
+Location::Location(const midgard::PointLL& latlng, const StopType& stoptype, unsigned int minimum_reachability, unsigned long radius)
+  : latlng_(latlng), stoptype_(stoptype), minimum_reachability_(minimum_reachability), radius_(radius) {
 }
 
 boost::property_tree::ptree Location::ToPtree() const {
@@ -47,7 +47,7 @@ boost::property_tree::ptree Location::ToPtree() const {
   if(way_id_)
     location.put("way_id", *way_id_);
 
-  location.put("isolated", isolated_);
+  location.put("minimum_reachability", minimum_reachability_);
   location.put("radius", radius_);
 
   return location;
@@ -82,7 +82,7 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
   if(way_id_)
     location.AddMember("way_id", *way_id_, a);
 
-  location.AddMember("isolated_limit", isolated_, a);
+  location.AddMember("minimum_reachability", minimum_reachability_, a);
   location.AddMember("radius", radius_, a);
   return location;
 }
@@ -110,13 +110,13 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   location.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
   location.way_id_ = pt.get_optional<long double>("way_id");
 
-  location.isolated_ = pt.get<unsigned int>("isolated", 50);
-  location.radius_ = pt.get<unsigned int>("radius", 0);
+  location.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+  location.radius_ = pt.get<unsigned long>("radius", 0);
 
   return location;
 }
 
-Location Location::FromRapidJson(const rapidjson::Value& d){
+Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability, unsigned long default_radius){
   auto lat = GetOptionalFromRapidJson<float>(d, "/lat");
   if (! lat) throw std::runtime_error{"lat is missing"};
 
@@ -147,30 +147,10 @@ Location Location::FromRapidJson(const rapidjson::Value& d){
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
-  location.isolated_ = GetFromRapidJson<unsigned int>(d, "/isolated", 50);
-  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", 0);
+  location.minimum_reachability_ = GetFromRapidJson<unsigned int>(d, "/minimum_reachability", default_reachability);
+  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", default_radius);
 
   return location;
-}
-
-Location Location::FromJson(const std::string& json, const ParseMethod& method){
-  switch(method){
-  case ParseMethod::PTREE: {
-    std::stringstream stream;
-    stream << json;
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_json(stream, pt);
-    return FromPtree(pt);
-    }
-  case ParseMethod::RAPIDJSON: {
-    rapidjson::Document d;
-    d.Parse(json.c_str());
-    if (d.HasParseError())
-      throw std::runtime_error("Parse Error");
-    return FromRapidJson(d);
-    }
-  default: throw std::runtime_error("Bad parse method");
-  }
 }
 
 Location Location::FromCsv(const std::string& csv) {
@@ -199,7 +179,7 @@ bool Location::operator==(const Location& o) const {
          state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
          date_time_ == o.date_time_ && heading_ == o.heading_ &&
          heading_tolerance_ == o.heading_tolerance_ && way_id_ == o.way_id_
-         && isolated_ == o.isolated_ && radius_ == o.radius_;
+         && minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_;
 }
 
 }

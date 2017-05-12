@@ -358,6 +358,11 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.score;
+
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
     // destination is in a forward direction along the edge
@@ -421,6 +426,11 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
     destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)) *
                                 (1.0f - edge.dist);
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    destinations_[edge.id].cost += edge.score;
 
     // Get the tile relative density
     density = tile->header()->density();
