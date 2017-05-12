@@ -97,15 +97,18 @@ class PointLL : public Point2 {
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * squared to that point and the index of the segment where the closest
+   * to that point and the index of the segment where the closest
    * point lies.
-   * @param  pts     List of points on the polyline.
+   * @param  pts  List of points on the polyline.
+   * @param  begin_index  Index where the processing of closest point should start.
+   *                      Default value is 0.
+   *
    * @return tuple of <Closest point along the polyline,
-   *                   distance squared (meters) of the closest point,
-   *                   Index of the segment of the polyline which contains
-   *                      the closest point >
+   *                   Distance in meters of the closest point,
+   *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<PointLL, float, int> ClosestPoint(const std::vector<PointLL>& pts) const;
+    std::tuple<PointLL, float, int> ClosestPoint(
+        const std::vector<PointLL>& pts, size_t begin_index = 0) const;
 
   /**
    * Calculate the heading from the start index within a polyline of lat,lng

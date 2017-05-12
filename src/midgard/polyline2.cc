@@ -57,7 +57,7 @@ float Polyline2<coord_t>::Length(const container_t& pts) {
 }
 
 // Finds the closest point to the supplied polyline as well as the distance
-// squared to that point and the index of the segment where the closest point lies.
+// to that point and the index of the segment where the closest point lies.
 template <class coord_t>
 std::tuple<coord_t, float, int> Polyline2<coord_t>::ClosestPoint(const coord_t& pt) const {
   return pt.ClosestPoint(pts_);

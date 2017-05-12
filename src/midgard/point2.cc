@@ -78,7 +78,7 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
     return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
   // If there is one point we are done
   if(pts.size() == 1)
-    return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
+    return std::make_tuple(pts.front(), sqrt(DistanceSquared(pts.front())), 0);
 
   // Iterate through the pts
   bool beyond_end = true;   // Need to test past the end point?
@@ -150,7 +150,7 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
       idx = static_cast<int>(pts.size() - 2);
     }
   }
-  return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
+  return std::make_tuple(std::move(closest), std::move(sqrt(mindist)), std::move(idx));
 }
 
 // Test whether this point is to the left of a segment from p1 to p2. Uses a
