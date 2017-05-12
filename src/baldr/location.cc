@@ -83,7 +83,7 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
     location.AddMember("way_id", *way_id_, a);
 
   location.AddMember("minimum_reachability", minimum_reachability_, a);
-  location.AddMember("radius", radius_, a);
+  location.AddMember("radius", static_cast<unsigned int>(radius_), a);
   return location;
 }
 
