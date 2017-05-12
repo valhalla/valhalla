@@ -10,7 +10,6 @@
 #include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
-#include "baldr/tilehierarchy.h"
 
 using namespace valhalla::baldr;
 
@@ -286,21 +285,6 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   }
 }
 
-const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
-  if(!tile || tile->id() != graphid.Tile_Base())
-    tile = GetGraphTile(graphid);
-  return tile;
-}
-
-const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
-  GraphId id = TileHierarchy::GetGraphId(pointll, level);
-  return (id.Is_Valid()) ? GetGraphTile(TileHierarchy::GetGraphId(pointll, level)) : nullptr;
-}
-
-const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
-  return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
-}
-
 // Clears the cache
 void GraphReader::Clear() {
   cache_->Clear();
@@ -317,34 +301,23 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid) {
   return GetOpposingEdgeId(edgeid, NO_TILE);
 }
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
+  // If you cant get the tile you get an invalid id
   tile = GetGraphTile(edgeid);
   if(!tile)
     return {};
-  const auto* directededge = tile->directededge(edgeid);
-
   // For now return an invalid Id if this is a transit edge
-  if (directededge->IsTransitLine()) {
+  const auto* directededge = tile->directededge(edgeid);
+  if (directededge->IsTransitLine())
     return {};
-  }
 
-  // Get the opposing edge, if edge leaves the tile get the end node's tile
+  // If edge leaves the tile get the end node's tile
   GraphId id = directededge->endnode();
+  if (!GetGraphTile(id, tile))
+    return {};
 
-  if (directededge->leaves_tile()) {
-    // Get tile at the end node
-    tile = GetGraphTile(id);
-  }
-
-  if (tile != nullptr) {
-    id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
-    return id;
-  } else {
-    LOG_ERROR("Invalid tile for opposing edge: tile ID= " + std::to_string(id.tileid()) + " level= " + std::to_string(id.level()));
-    if (directededge->trans_up() || directededge->trans_down()) {
-      LOG_ERROR("transition edge being checked?");
-    }
-  }
-  return {};
+  // Get the opposing edge
+  id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
+  return id;
 }
 
 // Convenience method to get an opposing directed edge.
@@ -486,6 +459,18 @@ uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
   return (tile != nullptr) ? tile->node(id)->density() : 0;
 }
 
+// Get the end nodes of a directed edge.
+std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* tile,
+                     const DirectedEdge* edge) {
+  GraphId end_node = edge->endnode();
+  GraphId start_node;
+  const GraphTile* t2 = (edge->leaves_tile()) ? GetGraphTile(end_node) : tile;
+  if (t2 != nullptr) {
+    auto edge_idx = t2->node(end_node)->edge_index() + edge->opp_index();
+    start_node = t2->directededge(edge_idx)->endnode();
+  }
+  return std::make_pair(start_node, end_node);
+}
 
 std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   //either mmap'd tiles

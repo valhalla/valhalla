@@ -8,6 +8,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilehierarchy.h>
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
@@ -221,7 +222,11 @@ class GraphReader {
    * @param tile the tile pointer that may already contain a graphtile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile);
+  const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
+    if(!tile || tile->id() != graphid.Tile_Base())
+      tile = GetGraphTile(graphid);
+    return tile;
+  }
 
   /**
    * Get a pointer to a graph tile object given a PointLL and a Level
@@ -229,7 +234,10 @@ class GraphReader {
    * @param level    the hierarchy level to use when getting the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level);
+  const GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level){
+    GraphId id = TileHierarchy::GetGraphId(pointll, level);
+    return id.Is_Valid() ? GetGraphTile(TileHierarchy::GetGraphId(pointll, level)) : nullptr;
+  }
 
   /**
    * Get a pointer to a graph tile object given a PointLL and using the highest
@@ -237,7 +245,9 @@ class GraphReader {
    * @param pointll  the lat,lng that the tile covers
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const PointLL& pointll);
+  const GraphTile* GetGraphTile(const PointLL& pointll){
+    return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
+  }
 
   /**
    * Clears the cache
@@ -272,6 +282,15 @@ class GraphReader {
   const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile);
 
   /**
+   * Convenience method to get an end node.
+   * @param edge  the edge whose end node you want
+   * @return returns the end node of edge or nullptr if it couldnt
+   */
+  const NodeInfo* GetEndNode(const DirectedEdge* edge, const GraphTile*& tile) {
+    return GetGraphTile(edge->endnode(), tile) ? tile->node(edge->endnode()) : nullptr;
+  }
+
+  /**
    * Convenience method to determine if 2 directed edges are connected.
    * @param   edge1  GraphId of first directed edge.
    * @param   edge2  GraphId of second directed edge.
@@ -296,6 +315,18 @@ class GraphReader {
    * @return  Returns the relative edge density at the begin node of the edge.
    */
   uint32_t GetEdgeDensity(const GraphId& edgeid);
+
+  /**
+   * Get the end nodes of a directed edge.
+   * @param  tile  Tile of the directed edge (tile of the start node).
+   * @param  edge  Directed edge.
+   * @return Returns a pair of GraphIds: the first is the start node
+   *         and the second is the end node. An invalid start node
+   *         can occur in regional extracts (where the end node tile
+   *         is not available).
+   */
+  std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphTile* tile,
+                       const DirectedEdge* edge);
 
   /**
    * Gets back a set of available tiles

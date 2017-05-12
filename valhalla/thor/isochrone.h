@@ -95,6 +95,9 @@ class Isochrone {
   uint32_t access_mode_;        // Access mode used by the costing method
   uint32_t tile_creation_date_; // Tile creation date
 
+  // Current costing mode
+  std::shared_ptr<sif::DynamicCost> costing_;
+
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
 
@@ -123,6 +126,21 @@ class Isochrone {
    */
   void ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
                         std::vector<baldr::PathLocation>& origin_locations);
+
+  /**
+   * Expand from the node along the forward search path.
+   */
+  void ExpandForward(baldr::GraphReader& graphreader,
+           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const uint32_t pred_idx, const bool from_transition);
+
+  /**
+   * Expand from the node along the forward search path.
+   */
+  void ExpandReverse(baldr::GraphReader& graphreader,
+           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const uint32_t pred_idx, const baldr::DirectedEdge* opp_pred_edge,
+           const bool from_transition);
 
   /**
    * Updates the isotile using the edge information from the predecessor edge

@@ -4,10 +4,10 @@
 #include <string>
 #include <cstdint>
 
-#include <valhalla/midgard/pointll.h>
-
 #include <boost/property_tree/ptree.hpp>
-#include <baldr/rapidjson_utils.h>
+
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 namespace valhalla{
 namespace baldr{
@@ -36,7 +36,7 @@ struct Location {
    * Constructor.
    * @param  latlng  the polar coordinates of the location
    */
-  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK);
+  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK, unsigned int minimum_reachability = 0, unsigned long radius = 0);
 
   /**
    * Serializes this object to ptree
@@ -57,7 +57,7 @@ struct Location {
    * conversion.
    * @param  d a rapidjson representation of the location
    */
-  static Location FromRapidJson(const rapidjson::Value& d);
+  static Location FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability = 0, unsigned long default_radius = 0);
 
   /**
    * conversion.
@@ -99,11 +99,12 @@ struct Location {
   boost::optional<int> heading_tolerance_;
   boost::optional<uint64_t> way_id_;
 
-  //if a given candidate edge reaches less than this number of nodes its considered isolated
-  //we'll search for more candidates until we find at least one that isnt considered isolated
-  unsigned int isolated_;
+  //try to find candidates who are reachable from this many or more nodes
+  //if a given candidate edge reaches less than this number of nodes its considered to be a disconnected island
+  //and we'll search for more candidates until we find at least one that isnt considered a disconnected island
+  unsigned int minimum_reachability_;
   //dont return results further away than this (meters) unless there is nothing this close
-  unsigned int radius_;
+  unsigned long radius_;
 
  protected:
 

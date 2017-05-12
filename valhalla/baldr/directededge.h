@@ -956,6 +956,14 @@ class DirectedEdge {
   void set_leaves_tile(const bool leaves_tile);
 
   /**
+   * Returns true if the edge is a transition edge either up or down
+   * @return true if the edge is a transition edge either up or down
+   */
+  bool IsTransition() const {
+    return use() == Use::kTransitionUp || use() == Use::kTransitionDown;
+  }
+
+  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
