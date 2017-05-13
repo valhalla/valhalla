@@ -7,7 +7,6 @@
 #include "baldr/errorcode_util.h"
 
 #include "thor/route_matcher.h"
-#include "thor/service.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

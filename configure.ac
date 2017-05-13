@@ -48,6 +48,21 @@ AX_BOOST_IOSTREAMS
 AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 AC_SUBST(RAPIDJSON_CPPFLAGS, "$RAPIDJSON_CPPFLAGS -DRAPIDJSON_HAS_STDSTRING")
 
+# if we wanted services
+AC_ARG_ENABLE([services],
+    [  --enable-services    Create services],
+    [case "${enableval}" in
+        yes) services=true ;;
+        no)  services=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-services]) ;;
+    esac],[services=true])
+AM_CONDITIONAL([SERVICES], [test x$services = xtrue])
+
+# then we require prime_server
+AM_COND_IF([SERVICES], [
+    PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server = 0.6.3 libcurl >= 7.35.0])
+])
+
 # if we wanted python bindings
 AC_ARG_ENABLE([python_bindings],
     [  --enable-python-bindings    Create python bindings],
@@ -99,9 +114,6 @@ AM_COND_IF([DATA_TOOLS], [
     PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
 
 ])
-
-# check pkg-config packaged packages.
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server = 0.6.3 libcurl >= 7.35.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE
