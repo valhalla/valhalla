@@ -247,6 +247,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+  access_mode_ = costing_->access_mode();
 
   // Initialize and create the isotile
   auto max_seconds = max_minutes * 60;
