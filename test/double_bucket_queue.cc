@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 #include "config.h"
 #include "midgard/util.h"
 #include "baldr/double_bucket_queue.h"
