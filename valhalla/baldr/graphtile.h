@@ -23,6 +23,7 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
 
+#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <memory>
 #include "signinfo.h"
