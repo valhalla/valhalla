@@ -330,16 +330,16 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   // for this mode while factors below 0.5 start to increase the weight for
   // this mode.
   bus_factor_ = (use_bus_ >= 0.5f) ?
-                 1.0f - (use_bus_ - 0.5f) :
-                 1.0f + (0.5f - use_bus_) * 5.0f;
+                 1.5f - use_bus_ :
+                 5.0f - use_bus_ * 8.0f;
 
   rail_factor_ = (use_rail_ >= 0.5f) ?
-                 1.0f - (use_rail_ - 0.5f) :
-                 1.0f + (0.5f - use_rail_) * 5.0f;
+                 1.5f - use_rail_ :
+                 5.0f - use_rail_ * 8.0f;
 
   transfer_factor_ = (use_transfers_ >= 0.5f) ?
-                     1.0f - (use_transfers_ - 0.5f) :
-                     1.0f + (0.5f - use_transfers_) * 5.0f;
+                     1.5f - use_transfers_ :
+                     5.0f - use_transfers_ * 8.0f;
 
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);

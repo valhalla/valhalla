@@ -36,7 +36,7 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.65f;   // Factor between 0 and 1
 
-constexpr float kMaxSeconds = 12.0f * 3600.0f; // 12 hours
+constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
 
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty, kMaxSeconds};
@@ -52,7 +52,7 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * 3600.0f; // 6 hours
+constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
 
 // Default turn costs
 constexpr float kTCStraight         = 0.5f;
@@ -301,19 +301,16 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   float use_ferry = kUseFerryRange(pt.get<float>("use_ferry", kDefaultUseFerry));
   if (use_ferry < 0.5f) {
     // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-    // TODO - Fix ferry_weight bug.
-    //float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
-    float w = use_ferry * 2.0f;
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - w));
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
 
-    // Double the cost at use_ferry == 0, progress to 1.0 at use_ferry = 0.5
-    ferry_weight_ = 1.0f + w;
+    // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
+    ferry_weight_ = 10f - use_ferry * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
     // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.0f - (use_ferry - 0.5f);
+    ferry_weight_  = 1.5f - use_ferry;
   }
 
   // Create speed cost table

@@ -364,17 +364,16 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   float use_ferry = pt.get<float>("use_ferry", kDefaultUseFerryFactor);
   if (use_ferry < 0.5f) {
     // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-    float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - w));
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
 
-    // Double the cost at use_ferry == 0, progress to 1.0 at use_ferry = 0.5
-    ferry_weight_ = 1.0f + w;
+    // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
+    ferry_weight_ = 10f - use_ferry * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
     // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.0f - (use_ferry - 0.5f);
+    ferry_weight_  = 1.5f - use_ferry;
   }
 
   // Set the speed factor (to avoid division in costing)
