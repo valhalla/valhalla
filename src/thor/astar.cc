@@ -362,6 +362,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    // Perhaps need to adjust score?
     cost.cost += edge.score * 10;
 
     // If this edge is a destination, subtract the partial/remainder cost
