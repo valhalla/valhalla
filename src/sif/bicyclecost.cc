@@ -462,7 +462,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
 
     // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
-    ferry_weight_ = 10f - use_ferry * 18.0f;
+    ferry_weight_ = 10.0f - use_ferry * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
