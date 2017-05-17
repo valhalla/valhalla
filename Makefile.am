@@ -597,7 +597,8 @@ check_PROGRAMS = \
 	test/attributes_controller \
 	test/astar \
 	test/serializers \
-	test/traffic_matcher
+	test/traffic_matcher \
+	test/autocost
 test_logging_SOURCES = test/logging.cc test/test.cc
 test_logging_CPPFLAGS = $(DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
 test_logging_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -799,6 +800,10 @@ test_serializers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.
 test_traffic_matcher_SOURCES = test/traffic_matcher.cc test/test.cc
 test_traffic_matcher_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_traffic_matcher_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_autocost_SOURCES = src/sif/autocost.cc test/test.cc
+test_autocost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_autocost_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+
 
 if DATA_TOOLS
 check_PROGRAMS += \

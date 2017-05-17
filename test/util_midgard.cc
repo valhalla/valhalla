@@ -1,3 +1,4 @@
+#include <random>
 #include <cmath>
 #include "test.h"
 #include "midgard/util.h"
@@ -10,6 +11,48 @@
 using namespace valhalla::midgard;
 
 namespace {
+
+void TestRangedDefaultT () {
+  //arbitrary values
+  constexpr float lower = -50;
+  constexpr float upper = 70;
+  constexpr unsigned seed = 0;
+  std::default_random_engine generator(seed);
+  std::uniform_real_distribution<float> defaultDistributor (lower, upper);
+  std::uniform_real_distribution<float> testDistributor (lower - 40, upper + 40);
+
+  for (unsigned i = 0; i < 100; ++i)
+  {
+    ranged_default_t<float> testRange {lower, defaultDistributor(generator), upper};
+    float defaultVal = testRange.def;
+    float testVal = testDistributor(generator);
+
+    float finalVal = testRange(testVal);
+
+    if (testVal < testRange.min || testVal > testRange.max) {
+      // Was outside of range so finalVal should now be snapped to default
+      if (finalVal != testRange.def) {
+        throw std::runtime_error("Final value did not snap to the range default value");
+      }
+    } else {
+      // Was inside of range so finalVal should still be the same number
+      if (finalVal != testVal) {
+        throw std::runtime_error("Final value moved invalidly");
+      }
+    }
+
+    //Test Edge cases because random distribution is unlikely to land exactly on boundaries
+    finalVal = testRange (testRange.min);
+    if (finalVal != testRange.min) {
+      throw std::runtime_error("Final value invalidly moves on lower bound");
+    }
+
+    finalVal = testRange (testRange.max);
+    if (finalVal != testRange.max) {
+      throw std::runtime_error("Final value invalidly moves on upper bound");
+    }
+  }
+}
 
 void TestGetTurnDegree() {
   // Slight Right
@@ -241,6 +284,8 @@ void TestTrimFront() {
 
 int main() {
   test::suite suite("util");
+
+  suite.test(TEST_CASE(TestRangedDefaultT));
 
   // GetTurnDegree
   suite.test(TEST_CASE(TestGetTurnDegree));
