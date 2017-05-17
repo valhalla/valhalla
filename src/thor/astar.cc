@@ -270,7 +270,8 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // (cost from the dest. location to the end of the edge).
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost -= p->second;
+        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
+        newcost.cost += p->second.cost;  // Need this to handle the edge score
       }
 
       // Check if edge is temporarily labeled and this path has less cost. If
@@ -361,7 +362,8 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score;
+    // Perhaps need to adjust score?
+    cost.cost += edge.score * 10;
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
@@ -373,7 +375,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
         // a trivial route passes along a single edge, meaning that the
         // destination point must be on this edge, and so the distance
         // remaining must be zero.
-        cost -= p->second;
+        cost.secs -= p->second.secs;
         dist = 0.0;
       }
     }
@@ -430,7 +432,7 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    destinations_[edge.id].cost += edge.score;
+    destinations_[edge.id].cost += edge.score * 10;
 
     // Get the tile relative density
     density = tile->header()->density();
