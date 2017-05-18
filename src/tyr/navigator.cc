@@ -174,6 +174,7 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   std::cout << "current_shape_index_=" << current_shape_index_ << " | remaining_index=" << remaining_index << " | maneuver_index_=" << maneuver_index_ << " | snapped_to_shape_point=" << (snapped_to_shape_point ? "true" : "false") << std::endl;
   std::cout << "remaining_leg_length=" << remaining_leg_length << " | remaining_leg_lengths_.at(remaining_index)=" << remaining_leg_lengths_.at(remaining_index) << " | partial_length=" << partial_length << " | remaining_maneuver_length=" << (remaining_leg_length - remaining_leg_lengths_.at(maneuver_end_shape_index)) << " | remaining_leg_lengths_.at(maneuver_end_shape_index)=" << remaining_leg_lengths_.at(maneuver_end_shape_index) << std::endl;
 
+  // Populate navigation status
   nav_status.set_route_state(NavigationStatus_RouteState_kTracking);
   nav_status.set_lon(closest_ll.lng());
   nav_status.set_lat(closest_ll.lat());
