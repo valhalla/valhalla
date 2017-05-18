@@ -7,7 +7,6 @@
 #include "baldr/accessrestriction.h"
 #include "midgard/logging.h"
 
-#define INLINE_TEST
 #ifdef INLINE_TEST
 #include "test/test.h"
 #include <random>
@@ -32,22 +31,6 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseRoad                 = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
-
-// Maximum amount of seconds that will be allowed to be passed in to influence paths
-// This can't be too high because sometimes a certain kind of path is required to be taken
-constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
-
-// Valid and Default ranges
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kDrivewayPenaltyRange{0, kDefaultDrivewayPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
-constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
-constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kUseRoadRange{0, kDefaultUseRoad, 1.0f};
-constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -185,6 +168,22 @@ constexpr uint32_t kSpeedPenaltyThreshold = 40;      // 40 KPH ~ 25 MPH
 
 // How much to favor bicycle networks.
 constexpr float kBicycleNetworkFactor = 1.0f;
+
+// Maximum amount of seconds that will be allowed to be passed in to influence paths
+// This can't be too high because sometimes a certain kind of path is required to be taken
+constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
+
+// Valid ranges and defaults
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kDrivewayPenaltyRange{0, kDefaultDrivewayPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kUseRoadRange{0, kDefaultUseRoad, 1.0f};
+constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 }
 
 /**
@@ -824,12 +823,17 @@ using namespace valhalla;
 using namespace sif;
 namespace {
 
-BicycleCost* make_autocost_from_json(const std::string& property, float testVal) {
+BicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({")" << property << R"(":)" << testVal << "}";
   boost::property_tree::ptree costing_ptree;
   boost::property_tree::read_json(ss, costing_ptree);
   return new BicycleCost(costing_ptree);
+}
+
+std::uniform_real_distribution<float>* make_distributor_from_range (const ranged_default_t<float>& range) {
+  float rangeLength = range.max - range.min;
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
 void testBicycleCostParams() {
@@ -839,20 +843,19 @@ void testBicycleCostParams() {
   std::shared_ptr<BicycleCost> ctorTester;
 
   // maneuver_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kManeuverPenaltyRange.min - 500,
-                                                              kManeuverPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("maneuver_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("maneuver_penalty", (*distributor)(generator)));
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
       throw std::runtime_error ("maneuver_penalty_ is not within it's range");
     }
   }
+
   // driveway_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kDrivewayPenaltyRange.min - 500,
-                                                              kDrivewayPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kDrivewayPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("driveway", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("driveway", (*distributor)(generator)));
     if (ctorTester->driveway_penalty_ < kDrivewayPenaltyRange.min ||
         ctorTester->driveway_penalty_ > kDrivewayPenaltyRange.max) {
       throw std::runtime_error ("driveway_penalty_ is not within it's range");
@@ -860,10 +863,9 @@ void testBicycleCostParams() {
   }
 
   // alley_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kAlleyPenaltyRange.min - 500,
-                                                              kAlleyPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("alley_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("alley_penalty", (*distributor)(generator)));
     if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
         ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
       throw std::runtime_error ("alley_penalty_ is not within it's range");
@@ -871,10 +873,9 @@ void testBicycleCostParams() {
   }
 
   // gate_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kGateCostRange.min - 500,
-                                                              kGateCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("gate_cost", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("gate_cost", (*distributor)(generator)));
     if (ctorTester->gate_cost_ < kGateCostRange.min ||
         ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error ("gate_cost_ is not within it's range");
@@ -882,10 +883,9 @@ void testBicycleCostParams() {
   }
 
   // gate_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kGatePenaltyRange.min - 500,
-                                                              kGatePenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kGatePenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("gate_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("gate_penalty", (*distributor)(generator)));
     if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
         ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
       throw std::runtime_error ("gate_penalty_ is not within it's range");
@@ -893,10 +893,9 @@ void testBicycleCostParams() {
   }
 
   // ferry_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kFerryCostRange.min - 500,
-                                                              kFerryCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kFerryCostRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("ferry_cost", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("ferry_cost", (*distributor)(generator)));
     if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
         ctorTester->ferry_cost_ > kFerryCostRange.max) {
       throw std::runtime_error ("ferry_cost_ is not within it's range");
@@ -904,10 +903,9 @@ void testBicycleCostParams() {
   }
 
   // country_crossing_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kCountryCrossingCostRange.min - 500,
-                                                              kCountryCrossingCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("country_crossing_cost", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
     if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
         ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
       throw std::runtime_error ("country_crossing_cost_ is not within it's range");
@@ -915,10 +913,9 @@ void testBicycleCostParams() {
   }
 
   // country_crossing_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kCountryCrossingPenaltyRange.min - 500,
-                                                              kCountryCrossingPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
         ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
       throw std::runtime_error ("country_crossing_penalty_ is not within it's range");
@@ -926,10 +923,9 @@ void testBicycleCostParams() {
   }
 
   // use_roads_
-  distributor.reset(new std::uniform_real_distribution<float>(kUseRoadRange.min - 500,
-                                                              kUseRoadRange.max + 500));
+  distributor.reset(make_distributor_from_range(kUseRoadRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("use_roads", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("use_roads", (*distributor)(generator)));
     if (ctorTester->use_roads_ < kUseRoadRange.min ||
         ctorTester->use_roads_ > kUseRoadRange.max) {
       throw std::runtime_error ("use_roads_ is not within it's range");
@@ -938,10 +934,9 @@ void testBicycleCostParams() {
 
   // speed_
   constexpr ranged_default_t<float> kRoadCyclingSpeedRange {kMinCyclingSpeed, kDefaultCyclingSpeed[0], kMaxCyclingSpeed};
-  distributor.reset(new std::uniform_real_distribution<float>(kRoadCyclingSpeedRange.min - 500,
-                                                              kRoadCyclingSpeedRange.max + 500));
+  distributor.reset(make_distributor_from_range(kRoadCyclingSpeedRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("cycling_speed", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("cycling_speed", (*distributor)(generator)));
     if (ctorTester->speed_ < kRoadCyclingSpeedRange.min ||
         ctorTester->speed_ > kRoadCyclingSpeedRange.max) {
       throw std::runtime_error ("speed_ is not within it's range");
@@ -949,10 +944,9 @@ void testBicycleCostParams() {
   }
 
   // use_ferry_
-  distributor.reset(new std::uniform_real_distribution<float>(kUseFerryRange.min - 2,
-                                                              kUseFerryRange.max + 2));
+  distributor.reset(make_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < 100; ++i) {
-    ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("use_ferry", (*distributor)(generator)));
     if (ctorTester->use_ferry_ < kUseFerryRange.min ||
         ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error ("use_ferry_ is not within it's range");

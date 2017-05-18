@@ -35,23 +35,6 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
 
-// Maximum amount of seconds that will be allowed to be passed in to influence paths
-// This can't be too high because sometimes a certain kind of path is required to be taken
-constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
-
-// Valid and Default ranges
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxSeconds};
-constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
-constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
-constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
-
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
@@ -76,6 +59,23 @@ constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
 constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCSlight,
       kTCUnfavorable, kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
       kTCFavorable, kTCSlight };
+
+// Maximum amount of seconds that will be allowed to be passed in to influence paths
+// This can't be too high because sometimes a certain kind of path is required to be taken
+constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
+
+// Valid ranges and defaults
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxSeconds};
+constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 }
 
 /**
@@ -990,6 +990,11 @@ AutoCost* make_autocost_from_json(const std::string& property, float testVal) {
   return new AutoCost(costing_ptree);
 }
 
+std::uniform_real_distribution<float>* make_distributor_from_range (const ranged_default_t<float>& range) {
+  float rangeLength = range.max - range.min;
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
+}
+
 void testAutoCostParams() {
   constexpr unsigned seed = 0;
   std::default_random_engine generator(seed);
@@ -997,8 +1002,7 @@ void testAutoCostParams() {
   std::shared_ptr<AutoCost> ctorTester;
 
   // maneuver_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kManeuverPenaltyRange.min - 500,
-                                                              kManeuverPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("maneuver_penalty", (*distributor)(generator)));
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
@@ -1006,9 +1010,9 @@ void testAutoCostParams() {
       throw std::runtime_error ("maneuver_penalty_ is not within it's range");
     }
   }
+
   // destination_only_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kDestinationOnlyPenaltyRange.min - 500,
-                                                              kDestinationOnlyPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("destination_only_penalty", (*distributor)(generator)));
     if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
@@ -1018,8 +1022,7 @@ void testAutoCostParams() {
   }
 
   // alley_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kAlleyPenaltyRange.min - 500,
-                                                              kAlleyPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("alley_penalty", (*distributor)(generator)));
     if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
@@ -1029,8 +1032,7 @@ void testAutoCostParams() {
   }
 
   // gate_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kGateCostRange.min - 500,
-                                                              kGateCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("gate_cost", (*distributor)(generator)));
     if (ctorTester->gate_cost_ < kGateCostRange.min ||
@@ -1040,8 +1042,7 @@ void testAutoCostParams() {
   }
 
   // gate_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kGatePenaltyRange.min - 500,
-                                                              kGatePenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kGatePenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("gate_penalty", (*distributor)(generator)));
     if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
@@ -1051,8 +1052,7 @@ void testAutoCostParams() {
   }
 
   // tollbooth_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kTollBoothCostRange.min - 500,
-                                                              kTollBoothCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kTollBoothCostRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("toll_booth_cost", (*distributor)(generator)));
     if (ctorTester->tollbooth_cost_ < kTollBoothCostRange.min ||
@@ -1062,8 +1062,7 @@ void testAutoCostParams() {
   }
 
   // tollbooth_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kTollBoothPenaltyRange.min - 500,
-                                                              kTollBoothPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("toll_booth_penalty", (*distributor)(generator)));
     if (ctorTester->tollbooth_penalty_ < kTollBoothPenaltyRange.min ||
@@ -1073,8 +1072,7 @@ void testAutoCostParams() {
   }
 
   // ferry_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kFerryCostRange.min - 500,
-                                                              kFerryCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kFerryCostRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("ferry_cost", (*distributor)(generator)));
     if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
@@ -1084,8 +1082,7 @@ void testAutoCostParams() {
   }
 
   // country_crossing_cost_
-  distributor.reset(new std::uniform_real_distribution<float>(kCountryCrossingCostRange.min - 500,
-                                                              kCountryCrossingCostRange.max + 500));
+  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("country_crossing_cost", (*distributor)(generator)));
     if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
@@ -1095,8 +1092,7 @@ void testAutoCostParams() {
   }
 
   // country_crossing_penalty_
-  distributor.reset(new std::uniform_real_distribution<float>(kCountryCrossingPenaltyRange.min - 500,
-                                                              kCountryCrossingPenaltyRange.max + 500));
+  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
@@ -1106,8 +1102,7 @@ void testAutoCostParams() {
   }
 
   // use_ferry_
-  distributor.reset(new std::uniform_real_distribution<float>(kUseFerryRange.min - 2,
-                                                              kUseFerryRange.max + 2));
+  distributor.reset(make_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
     if (ctorTester->use_ferry_ < kUseFerryRange.min ||
