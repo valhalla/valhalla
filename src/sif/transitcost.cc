@@ -317,19 +317,27 @@ class TransitCost : public DynamicCost {
 TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
 
-  mode_weight_ = pt.get<float>("mode_weight", kModeWeight);
+  mode_weight_ = kModeWeightRange(
+    pt.get<float>("mode_weight", kModeWeight)
+  );
 
   wheelchair_ = pt.get<bool>("wheelchair", false);
   bicycle_ = pt.get<bool>("bicycle", false);
 
   // Willingness to use buses. Make sure this is within range [0, 1].
-  use_bus_ = pt.get<float>("use_bus", kDefaultUseBusFactor);
+  use_bus_ = kUseBusFactorRange(
+    pt.get<float>("use_bus", kDefaultUseBusFactor)
+  );
 
   // Willingness to use rail. Make sure this is within range [0, 1].
-  use_rail_ = pt.get<float>("use_rail", kDefaultUseRailFactor);
+  use_rail_ = kUseRailFactorRange(
+    pt.get<float>("use_rail", kDefaultUseRailFactor)
+  );
 
   // Willingness to make transfers. Make sure this is within range [0, 1].
-  use_transfers_ = pt.get<float>("use_transfers", kDefaultUseTransfersFactor);
+  use_transfers_ = kUseTransfersFactorRange(
+    pt.get<float>("use_transfers", kDefaultUseTransfersFactor)
+  );
 
   // Set the factors. The factors above 0.5 start to reduce the weight
   // for this mode while factors below 0.5 start to increase the weight for
@@ -346,8 +354,12 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
                      1.5f - use_transfers_ :
                      5.0f - use_transfers_ * 8.0f;
 
-  transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
-  transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
+  transfer_cost_ = kTransferCostRange(
+    pt.get<float>("transfer_cost", kDefaultTransferCost)
+  );
+  transfer_penalty_ = kTransferPenaltyRange(
+    pt.get<float>("transfer_penalty", kDefaultTransferPenalty)
+  );
 
   std::string stop_action = pt.get("filters.stops.action", "");
   if (stop_action.size()) {
