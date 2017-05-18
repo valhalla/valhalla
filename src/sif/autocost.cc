@@ -9,7 +9,6 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
-#define INLINE_TEST
 #ifdef INLINE_TEST
 #include "test/test.h"
 #include <random>
@@ -34,10 +33,13 @@ constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
-constexpr float kDefaultUseFerry                = 0.65f;   // Factor between 0 and 1
+constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
 
+// Maximum amount of seconds that will be allowed to be passed in to influence paths
+// This can't be too high because sometimes a certain kind of path is required to be taken
 constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
 
+// Valid and Default ranges
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
@@ -230,6 +232,8 @@ class AutoCost : public DynamicCost {
     };
   }
 
+  // Hidden in source file so we don't need it to be protected
+  // We expose it within the source file for testing purposes
  public:
   VehicleType type_;                // Vehicle type: car (default), motorcycle, etc
   float speedfactor_[256];
@@ -246,6 +250,7 @@ class AutoCost : public DynamicCost {
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+  float use_ferry_;
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -272,45 +277,57 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     type_ = VehicleType::kCar;
   }
 
-  maneuver_penalty_ = kManeuverPenaltyRange(pt.get<float>("maneuver_penalty",
-                                                          kDefaultManeuverPenalty));
+  maneuver_penalty_ = kManeuverPenaltyRange(
+    pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
+  );
   destination_only_penalty_ = kDestinationOnlyPenaltyRange(
-                                            pt.get<float>("destination_only_penalty",
-                                            kDefaultDestinationOnlyPenalty));
-  gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
-  gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
-  tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost",
-                                        kDefaultTollBoothCost));
-  tollbooth_penalty_ = kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty",
-                                     kDefaultTollBoothPenalty));
-  alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty",
-                                      kDefaultAlleyPenalty));
+    pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty)
+  );
+  gate_cost_ = kGateCostRange(
+    pt.get<float>("gate_cost", kDefaultGateCost)
+  );
+  gate_penalty_ = kGatePenaltyRange(
+    pt.get<float>("gate_penalty", kDefaultGatePenalty)
+  );
+  tollbooth_cost_ = kTollBoothCostRange(
+    pt.get<float>("toll_booth_cost", kDefaultTollBoothCost)
+  );
+  tollbooth_penalty_ = kTollBoothPenaltyRange(
+    pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty)
+  );
+  alley_penalty_ = kAlleyPenaltyRange(
+    pt.get<float>("alley_penalty", kDefaultAlleyPenalty)
+  );
   country_crossing_cost_ = kCountryCrossingCostRange(
-                                           pt.get<float>("country_crossing_cost",
-                                           kDefaultCountryCrossingCost));
+    pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost)
+  );
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
-                                           pt.get<float>("country_crossing_penalty",
-                                           kDefaultCountryCrossingPenalty));
+    pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty)
+  );
 
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = kFerryCostRange(pt.get<float>("ferry_cost", kDefaultFerryCost));
+  ferry_cost_ = kFerryCostRange(
+    pt.get<float>("ferry_cost", kDefaultFerryCost)
+  );
 
   // Modify ferry penalty and edge weighting based on use_ferry factor
-  float use_ferry = kUseFerryRange(pt.get<float>("use_ferry", kDefaultUseFerry));
-  if (use_ferry < 0.5f) {
-    // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
+  use_ferry_ = kUseFerryRange(
+    pt.get<float>("use_ferry", kDefaultUseFerry)
+  );
+  if (use_ferry_ < 0.5f) {
+    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
 
-    // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
-    ferry_weight_ = 10.0f - use_ferry * 18.0f;
+    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
+    ferry_weight_ = 10.0f - use_ferry_ * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.5f - use_ferry;
+    ferry_weight_  = 1.5f - use_ferry_;
   }
 
   // Create speed cost table
@@ -965,10 +982,6 @@ using namespace valhalla;
 using namespace sif;
 namespace {
 
-/*
-constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, kMaxSeconds};
- */
-
 AutoCost* make_autocost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
   ss << R"({")" << property << R"(":)" << testVal << "}";
@@ -1092,17 +1105,14 @@ void testAutoCostParams() {
     }
   }
 
-  // use_ferry
-  // Use_ferry is not a member of AutoCost so we must check against ferry_weight_
-  // which is directly calculated from use_ferry_
+  // use_ferry_
   distributor.reset(new std::uniform_real_distribution<float>(kUseFerryRange.min - 2,
                                                               kUseFerryRange.max + 2));
   for (unsigned i = 0; i < 100; ++i) {
     ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
-    // ferry_weight can range from 0.5f - 10f as long as use_ferry is within bounds
-    if (ctorTester->ferry_weight_ < 0.5f ||
-        ctorTester->ferry_weight_ > 10.0f) {
-      throw std::runtime_error ("use_ferry is not within it's range");
+    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
+        ctorTester->use_ferry_ > kUseFerryRange.max) {
+      throw std::runtime_error ("use_ferry_ is not within it's range");
     }
   }
 }

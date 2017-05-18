@@ -7,6 +7,13 @@
 #include "baldr/accessrestriction.h"
 #include "midgard/logging.h"
 
+#define INLINE_TEST
+#ifdef INLINE_TEST
+#include "test/test.h"
+#include <random>
+#include <boost/property_tree/json_parser.hpp>
+#endif
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -23,6 +30,24 @@ constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+constexpr float kDefaultUseRoad                 = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
+
+// Maximum amount of seconds that will be allowed to be passed in to influence paths
+// This can't be too high because sometimes a certain kind of path is required to be taken
+constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
+
+// Valid and Default ranges
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kDrivewayPenaltyRange{0, kDefaultDrivewayPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kUseRoadRange{0, kDefaultUseRoad, 1.0f};
+constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -51,7 +76,7 @@ constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCUnfavorableSlight,
 // Equal to about 5 minutes (penalty) but fixed time of 30 seconds.
 const Cost kBicycleStepsCost = { 300.0f, 30.0f };
 
-// Default cycling speed on smooth, flat roads - based on bicycle type
+// Default cycling speed on smooth, flat roads - based on bicycle type (KPH)
 constexpr float kDefaultCyclingSpeed[] = {
     25.0f,    // Road bicycle: ~15.5 MPH
     20.0f,    // Cross bicycle: ~13 MPH
@@ -61,8 +86,8 @@ constexpr float kDefaultCyclingSpeed[] = {
 
 // Minimum and maximum average bicycling speed (to validate input).
 // Maximum is just above the fastest average speed in Tour de France time trial
-constexpr float kMinCyclingSpeed = 5.0f;
-constexpr float kMaxCyclingSpeed = 60.0f;
+constexpr float kMinCyclingSpeed = 5.0f;  // KPH
+constexpr float kMaxCyclingSpeed = 60.0f; // KPH
 
 // Speed factors based on surface types (defined for each bicycle type).
 // These values determine the percentage by which speed us reduced for
@@ -82,10 +107,6 @@ constexpr Surface kWorstAllowedSurface[] =
           Surface::kGravel,               // Cross
           Surface::kDirt,                 // Hybrid
           Surface::kPath };               // Mountain
-
-// User propensity to use roads. Range of values from 0 (avoid roads - try to
-// stay on cycleways and paths) to 1 (totally comfortable riding on roads).
-constexpr float kDefaultUseRoadsFactor = 0.5f;
 
 // Avoid driveways
 constexpr float kDrivewayFactor = 20.0f;
@@ -279,8 +300,10 @@ class BicycleCost : public DynamicCost {
    */
   virtual uint8_t travel_type() const;
 
- protected:
-
+  // Hidden in source file so we don't need it to be protected
+  // We expose it within the source file for testing purposes
+public:
+  
   float speedfactor_[100];          // Cost factors based on speed in kph
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
@@ -293,6 +316,9 @@ class BicycleCost : public DynamicCost {
   float ferry_weight_;              // Weighting to apply to ferry edges
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+  float use_roads_;                  // Preference of using roads between 0 and 1
+  float road_factor_;               // Road factor based on use_roads_
+  float use_ferry_;
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -313,18 +339,7 @@ class BicycleCost : public DynamicCost {
   // (based on the use_roads factor)
   float speedpenalty_[100];
   uint32_t speed_penalty_threshold_;
-
-  // A measure of willingness to ride with traffic. Ranges from 0-1 with
-  // 0 being not willing at all and 1 being totally comfortable. This factor
-  // determines how much cycle lanes and paths are preferred over roads (if
-  // at all). When useroads factor is low there is more penalty to higher
-  // class and higher speed roads.
-  // Experienced road riders and messengers may use a value = 1 while
-  // beginners may use a value of 0.1 to stay away from roads unless
-  // absolutely necessary.
-  float useroads_;
-  float road_factor_;
-
+  
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
   float grade_penalty[16];
@@ -383,16 +398,27 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Transition penalties (similar to auto)
-  maneuver_penalty_ = pt.get<float>("maneuver_penalty",
-                                    kDefaultManeuverPenalty);
-  driveway_penalty_ = pt.get<float>("driveway", kDefaultDrivewayPenalty);
-  gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
-  gate_penalty_ = pt.get<float>("gate_penalty", kDefaultGatePenalty);
-  alley_penalty_ = pt.get<float>("alley_penalty",  kDefaultAlleyPenalty);
-  country_crossing_cost_ = pt.get<float>("country_crossing_cost",
-                                           kDefaultCountryCrossingCost);
-  country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
-                                           kDefaultCountryCrossingPenalty);
+  maneuver_penalty_ = kManeuverPenaltyRange(
+    pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
+  );
+  driveway_penalty_ = kDrivewayPenaltyRange(
+    pt.get<float>("driveway", kDefaultDrivewayPenalty)
+  );
+  gate_cost_ = kGateCostRange(
+    pt.get<float>("gate_cost", kDefaultGateCost)
+  );
+  gate_penalty_ = kGatePenaltyRange(
+    pt.get<float>("gate_penalty", kDefaultGatePenalty)
+  );
+  alley_penalty_ = kAlleyPenaltyRange(
+    pt.get<float>("alley_penalty", kDefaultAlleyPenalty)
+  );
+  country_crossing_cost_ = kCountryCrossingCostRange(
+    pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost)
+  );
+  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
+    pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty)
+  );
 
   // Get the bicycle type - enter as string and convert to enum
   std::string bicycle_type = pt.get("bicycle_type", "Road");
@@ -410,7 +436,14 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
   uint32_t t = static_cast<uint32_t>(type_);
-  speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
+  ranged_default_t<float> kCycleSpeedRange {
+    kMinCyclingSpeed,
+    kDefaultCyclingSpeed[t],
+    kMaxCyclingSpeed
+  };
+  speed_ = kCycleSpeedRange(
+    pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t])
+  );
 
   // Set the minimal surface type usable by the bicycle type and the
   // surface speed factors.
@@ -429,52 +462,47 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     surface_speed_factor_ = kMountainSurfaceSpeedFactors;
   }
 
-  // Validate speed (make sure it is in the accepted range)
-  if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
-    LOG_WARN("Outside valid cycling speed range " + std::to_string(speed_) +
-                ": using default");
-    speed_ = kDefaultCyclingSpeed[t];
-  }
-
   // Willingness to use roads. Make sure this is within range [0, 1].
-  useroads_ = pt.get<float>("use_roads", kDefaultUseRoadsFactor);
-  if (useroads_ < 0.0f || useroads_ > 1.0f) {
-    LOG_WARN("Outside valid useroads factor range " +
-              std::to_string(useroads_) + ": using default");
-  }
+  use_roads_ = kUseRoadRange(
+    pt.get<float>("use_roads", kDefaultUseRoad)
+  );
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
-  road_factor_ = (useroads_ >= 0.5f) ?
-                 1.5f - useroads_ :
-                 5.0f - useroads_ * 8.0f;
+  road_factor_ = (use_roads_ >= 0.5f) ?
+                 1.5f - use_roads_ :
+                 5.0f - use_roads_ * 8.0f;
 
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
+  ferry_cost_ = kFerryCostRange(
+    pt.get<float>("ferry_cost", kDefaultFerryCost)
+  );
 
-  // Modify ferry penalty and edge weighting based on use_ferry factor
-  float use_ferry = pt.get<float>("use_ferry", 0.5f);
-  if (use_ferry < 0.5f) {
-    // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
+  // Modify ferry penalty and edge weighting based on use_ferry_ factor
+  use_ferry_ = kUseFerryRange(
+    pt.get<float>("use_ferry", 0.5f)
+  );
+  if (use_ferry_ < 0.5f) {
+    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
 
-    // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
-    ferry_weight_ = 10.0f - use_ferry * 18.0f;
+    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
+    ferry_weight_ = 10.0f - use_ferry_ * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.5f - use_ferry;
+    ferry_weight_  = 1.5f - use_ferry_;
   }
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
   speed_penalty_threshold_ = kSpeedPenaltyThreshold +
-      static_cast<uint32_t>(useroads_ * 30.0f);
+      static_cast<uint32_t>(use_roads_ * 30.0f);
 
   // Create speed cost table and penalty table (to avoid division in costing)
   speedfactor_[0] = kSecPerHour;
@@ -589,11 +617,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + useroads_ * 0.5f);
+    factor = (0.5f + use_roads_ * 0.5f);
   } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
-    factor = 0.75f + (useroads_ * 0.5f);
+    factor = 0.75f + (use_roads_ * 0.5f);
   } else if (edge->use() == Use::kMountainBike &&
              type_ == BicycleType::kMountain) {
     factor = 0.5f;
@@ -787,3 +815,159 @@ cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
 
 }
 }
+
+/**********************************************************************************************/
+
+#ifdef INLINE_TEST
+
+using namespace valhalla;
+using namespace sif;
+namespace {
+
+BicycleCost* make_autocost_from_json(const std::string& property, float testVal) {
+  std::stringstream ss;
+  ss << R"({")" << property << R"(":)" << testVal << "}";
+  boost::property_tree::ptree costing_ptree;
+  boost::property_tree::read_json(ss, costing_ptree);
+  return new BicycleCost(costing_ptree);
+}
+
+void testBicycleCostParams() {
+  constexpr unsigned seed = 0;
+  std::default_random_engine generator(seed);
+  std::shared_ptr<std::uniform_real_distribution<float>> distributor;
+  std::shared_ptr<BicycleCost> ctorTester;
+
+  // maneuver_penalty_
+  distributor.reset(new std::uniform_real_distribution<float>(kManeuverPenaltyRange.min - 500,
+                                                              kManeuverPenaltyRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("maneuver_penalty", (*distributor)(generator)));
+    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
+        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
+      throw std::runtime_error ("maneuver_penalty_ is not within it's range");
+    }
+  }
+  // driveway_penalty_
+  distributor.reset(new std::uniform_real_distribution<float>(kDrivewayPenaltyRange.min - 500,
+                                                              kDrivewayPenaltyRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("driveway", (*distributor)(generator)));
+    if (ctorTester->driveway_penalty_ < kDrivewayPenaltyRange.min ||
+        ctorTester->driveway_penalty_ > kDrivewayPenaltyRange.max) {
+      throw std::runtime_error ("driveway_penalty_ is not within it's range");
+    }
+  }
+
+  // alley_penalty_
+  distributor.reset(new std::uniform_real_distribution<float>(kAlleyPenaltyRange.min - 500,
+                                                              kAlleyPenaltyRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("alley_penalty", (*distributor)(generator)));
+    if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
+        ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
+      throw std::runtime_error ("alley_penalty_ is not within it's range");
+    }
+  }
+
+  // gate_cost_
+  distributor.reset(new std::uniform_real_distribution<float>(kGateCostRange.min - 500,
+                                                              kGateCostRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("gate_cost", (*distributor)(generator)));
+    if (ctorTester->gate_cost_ < kGateCostRange.min ||
+        ctorTester->gate_cost_ > kGateCostRange.max) {
+      throw std::runtime_error ("gate_cost_ is not within it's range");
+    }
+  }
+
+  // gate_penalty_
+  distributor.reset(new std::uniform_real_distribution<float>(kGatePenaltyRange.min - 500,
+                                                              kGatePenaltyRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("gate_penalty", (*distributor)(generator)));
+    if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
+        ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
+      throw std::runtime_error ("gate_penalty_ is not within it's range");
+    }
+  }
+
+  // ferry_cost_
+  distributor.reset(new std::uniform_real_distribution<float>(kFerryCostRange.min - 500,
+                                                              kFerryCostRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("ferry_cost", (*distributor)(generator)));
+    if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
+        ctorTester->ferry_cost_ > kFerryCostRange.max) {
+      throw std::runtime_error ("ferry_cost_ is not within it's range");
+    }
+  }
+
+  // country_crossing_cost_
+  distributor.reset(new std::uniform_real_distribution<float>(kCountryCrossingCostRange.min - 500,
+                                                              kCountryCrossingCostRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("country_crossing_cost", (*distributor)(generator)));
+    if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
+        ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
+      throw std::runtime_error ("country_crossing_cost_ is not within it's range");
+    }
+  }
+
+  // country_crossing_penalty_
+  distributor.reset(new std::uniform_real_distribution<float>(kCountryCrossingPenaltyRange.min - 500,
+                                                              kCountryCrossingPenaltyRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
+    if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
+        ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
+      throw std::runtime_error ("country_crossing_penalty_ is not within it's range");
+    }
+  }
+
+  // use_roads_
+  distributor.reset(new std::uniform_real_distribution<float>(kUseRoadRange.min - 500,
+                                                              kUseRoadRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("use_roads", (*distributor)(generator)));
+    if (ctorTester->use_roads_ < kUseRoadRange.min ||
+        ctorTester->use_roads_ > kUseRoadRange.max) {
+      throw std::runtime_error ("use_roads_ is not within it's range");
+    }
+  }
+
+  // speed_
+  constexpr ranged_default_t<float> kRoadCyclingSpeedRange {kMinCyclingSpeed, kDefaultCyclingSpeed[0], kMaxCyclingSpeed};
+  distributor.reset(new std::uniform_real_distribution<float>(kRoadCyclingSpeedRange.min - 500,
+                                                              kRoadCyclingSpeedRange.max + 500));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("cycling_speed", (*distributor)(generator)));
+    if (ctorTester->speed_ < kRoadCyclingSpeedRange.min ||
+        ctorTester->speed_ > kRoadCyclingSpeedRange.max) {
+      throw std::runtime_error ("speed_ is not within it's range");
+    }
+  }
+
+  // use_ferry_
+  distributor.reset(new std::uniform_real_distribution<float>(kUseFerryRange.min - 2,
+                                                              kUseFerryRange.max + 2));
+  for (unsigned i = 0; i < 100; ++i) {
+    ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
+    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
+        ctorTester->use_ferry_ > kUseFerryRange.max) {
+      throw std::runtime_error ("use_ferry_ is not within it's range");
+    }
+  }
+  
+}
+}
+
+int main() {
+  test::suite suite("costing");
+
+  suite.test(TEST_CASE(testBicycleCostParams));
+
+  return suite.tear_down();
+}
+
+#endif
