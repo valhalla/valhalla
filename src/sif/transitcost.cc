@@ -4,6 +4,12 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 
+#ifdef INLINE_TEST
+#include "test/test.h"
+#include <random>
+#include <boost/property_tree/json_parser.hpp>
+#endif
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -30,6 +36,20 @@ constexpr float kDefaultUseRailFactor = 0.6f;
 constexpr float kDefaultUseTransfersFactor = 0.3f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
+
+constexpr float kMaxWeight = 20.0; // TODO - What should max weight be?
+
+// Maximum amount of seconds that will be allowed to be passed in to influence paths
+// This can't be too high because sometimes a certain kind of path is required to be taken
+constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
+
+// Valid ranges and defaults
+constexpr ranged_default_t<float> kModeWeightRange{0, kModeWeight, kMaxWeight};
+constexpr ranged_default_t<float> kUseBusFactorRange{0, kDefaultUseBusFactor, 1.0f};
+constexpr ranged_default_t<float> kUseRailFactorRange{0, kDefaultUseRailFactor, 1.0f};
+constexpr ranged_default_t<float> kUseTransfersFactorRange{0, kDefaultUseTransfersFactor, 1.0f};
+constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxSeconds};
+constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxSeconds};
 
 }
 
@@ -230,7 +250,7 @@ class TransitCost : public DynamicCost {
   virtual bool IsExcluded(const baldr::GraphTile*& tile,
                           const baldr::NodeInfo* node);
 
- protected:
+ public:
   // Are wheelchair or bicycle required
   bool wheelchair_;
   bool bicycle_;
@@ -304,27 +324,12 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
   // Willingness to use buses. Make sure this is within range [0, 1].
   use_bus_ = pt.get<float>("use_bus", kDefaultUseBusFactor);
-  if (use_bus_ < 0.0f || use_bus_ > 1.0f) {
-    use_bus_ = kDefaultUseBusFactor;
-    LOG_WARN("Outside valid use_bus factor range " +
-              std::to_string(use_bus_) + ": using default");
-  }
 
   // Willingness to use rail. Make sure this is within range [0, 1].
   use_rail_ = pt.get<float>("use_rail", kDefaultUseRailFactor);
-  if (use_rail_ < 0.0f || use_rail_ > 1.0f) {
-    use_rail_ = kDefaultUseRailFactor;
-    LOG_WARN("Outside valid use_rail factor range " +
-              std::to_string(use_rail_) + ": using default");
-  }
 
   // Willingness to make transfers. Make sure this is within range [0, 1].
   use_transfers_ = pt.get<float>("use_transfers", kDefaultUseTransfersFactor);
-  if (use_transfers_ < 0.0f || use_transfers_ > 1.0f) {
-    use_transfers_ = kDefaultUseTransfersFactor;
-    LOG_WARN("Outside valid use_transfers factor range " +
-              std::to_string(use_transfers_) + ": using default");
-  }
 
   // Set the factors. The factors above 0.5 start to reduce the weight
   // for this mode while factors below 0.5 start to increase the weight for
@@ -630,3 +635,104 @@ cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config) {
 
 }
 }
+
+/**********************************************************************************************/
+
+#ifdef INLINE_TEST
+
+using namespace valhalla;
+using namespace sif;
+namespace {
+
+TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
+  std::stringstream ss;
+  ss << R"({")" << property << R"(":)" << testVal << "}";
+  boost::property_tree::ptree costing_ptree;
+  boost::property_tree::read_json(ss, costing_ptree);
+  return new TransitCost(costing_ptree);
+}
+
+std::uniform_real_distribution<float>* make_distributor_from_range (const ranged_default_t<float>& range) {
+  float rangeLength = range.max - range.min;
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
+}
+
+void testTransitCostParams() {
+  constexpr unsigned testIterations = 250;
+  constexpr unsigned seed = 0;
+  std::default_random_engine generator(seed);
+  std::shared_ptr<std::uniform_real_distribution<float>> distributor;
+  std::shared_ptr<TransitCost> ctorTester;
+
+  // mode_weight_
+  distributor.reset(make_distributor_from_range(kModeWeightRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_transitcost_from_json("mode_weight", (*distributor)(generator)));
+    if (ctorTester->mode_weight_ < kModeWeightRange.min ||
+        ctorTester->mode_weight_ > kModeWeightRange.max) {
+      throw std::runtime_error ("mode_weight_ is not within it's range");
+    }
+  }
+
+  // use_bus_
+  distributor.reset(make_distributor_from_range(kUseBusFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_transitcost_from_json("use_bus", (*distributor)(generator)));
+    if (ctorTester->use_bus_ < kUseBusFactorRange.min ||
+        ctorTester->use_bus_ > kUseBusFactorRange.max) {
+      throw std::runtime_error ("use_bus_ is not within it's range");
+    }
+  }
+
+  // use_rail_
+  distributor.reset(make_distributor_from_range(kUseRailFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_transitcost_from_json("use_rail", (*distributor)(generator)));
+    if (ctorTester->use_rail_ < kUseRailFactorRange.min ||
+        ctorTester->use_rail_ > kUseRailFactorRange.max) {
+      throw std::runtime_error ("use_rail_ is not within it's range");
+    }
+  }
+
+  // use_transfers_
+  distributor.reset(make_distributor_from_range(kUseTransfersFactorRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_transitcost_from_json("use_transfers", (*distributor)(generator)));
+    if (ctorTester->use_transfers_ < kUseTransfersFactorRange.min ||
+        ctorTester->use_transfers_ > kUseTransfersFactorRange.max) {
+      throw std::runtime_error ("use_transfers_ is not within it's range");
+    }
+  }
+
+  // transfer_cost_
+  distributor.reset(make_distributor_from_range(kTransferCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_transitcost_from_json("transfer_cost", (*distributor)(generator)));
+    if (ctorTester->transfer_cost_ < kTransferCostRange.min ||
+        ctorTester->transfer_cost_ > kTransferCostRange.max) {
+      throw std::runtime_error ("transfer_cost_ is not within it's range");
+    }
+  }
+
+  // transfer_penalty_
+  distributor.reset(make_distributor_from_range(kTransferPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_transitcost_from_json("transfer_penalty", (*distributor)(generator)));
+    if (ctorTester->transfer_penalty_ < kTransferPenaltyRange.min ||
+        ctorTester->transfer_penalty_ > kTransferPenaltyRange.max) {
+      throw std::runtime_error ("transfer_penalty_ is not within it's range");
+    }
+  }
+}
+}
+
+int main() {
+  test::suite suite("costing");
+
+  suite.test(TEST_CASE(testTransitCostParams));
+
+  return suite.tear_down();
+}
+
+#endif
+
