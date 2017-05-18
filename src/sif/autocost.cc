@@ -6,7 +6,6 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/accessrestriction.h"
-#include "midgard/logging.h"
 #include "midgard/util.h"
 
 #ifdef INLINE_TEST
@@ -76,6 +75,7 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+
 }
 
 /**
@@ -980,6 +980,7 @@ cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
 
 using namespace valhalla;
 using namespace sif;
+
 namespace {
 
 AutoCost* make_autocost_from_json(const std::string& property, float testVal) {

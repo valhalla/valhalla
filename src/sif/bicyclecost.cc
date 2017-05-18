@@ -5,7 +5,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "baldr/accessrestriction.h"
-#include "midgard/logging.h"
+#include "midgard/util.h"
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -821,6 +821,7 @@ cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
 
 using namespace valhalla;
 using namespace sif;
+
 namespace {
 
 BicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {

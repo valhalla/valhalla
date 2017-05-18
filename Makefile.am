@@ -601,7 +601,8 @@ check_PROGRAMS = \
 	test/autocost \
 	test/bicyclecost \
 	test/pedestriancost \
-	test/transitcost
+	test/transitcost \
+	test/truckcost
 test_logging_SOURCES = test/logging.cc test/test.cc
 test_logging_CPPFLAGS = $(DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
 test_logging_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -815,6 +816,9 @@ test_pedestriancost_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhal
 test_transitcost_SOURCES = src/sif/transitcost.cc test/test.cc
 test_transitcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_transitcost_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_truckcost_SOURCES = src/sif/truckcost.cc test/test.cc
+test_truckcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_truckcost_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 
 
 if DATA_TOOLS

@@ -3,7 +3,7 @@
 
 #include "baldr/accessrestriction.h"
 #include "midgard/constants.h"
-#include "midgard/logging.h"
+#include "midgard/util.h"
 
 #ifdef INLINE_TEST
 #include "test/test.h"

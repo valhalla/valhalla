@@ -654,6 +654,7 @@ cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config) {
 
 using namespace valhalla;
 using namespace sif;
+
 namespace {
 
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
