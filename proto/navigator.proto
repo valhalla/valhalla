@@ -4,8 +4,8 @@ message FixLocation {
   optional float lat = 1;
   optional float lon = 2;
   optional uint64 time = 3;     // UTC time in milliseconds since Jan 1, 1970
-  optional float bearing = 4;   // 0-359
-  optional float speed = 5;     // meters per second    
+  optional float speed = 4;     // meters per second
+  optional float bearing = 5;   // 0-359
   optional float altitude = 6;  // meters
   optional float accuracy = 7;  // estimated accuracy of this location in meters
   optional string provider = 8; // provider that generated this location
@@ -26,10 +26,10 @@ message NavigationStatus {
   optional float lat = 2;                       // snapped latitude
   optional float lon = 3;                       // snapped longitude
   optional uint32 leg_index = 4;                // current leg index
-  optional uint32 maneuver_index = 5;           // current maneuver index to reference for names, instructions, etc based on state
-  optional float remaining_maneuver_length = 6; // remaining maneuver length based on units (mi or km)
-  optional uint32 remaining_maneuver_time = 7;  // remaining maneuver time in seconds
-  optional float remaining_leg_length = 8;      // remaining leg length based on units (mi or km)
-  optional uint32 remaining_leg_time = 9;       // remaining leg time in seconds
+  optional float remaining_leg_length = 5;      // remaining leg length based on units (mi or km)
+  optional uint32 remaining_leg_time = 6;       // remaining leg time in seconds
+  optional uint32 maneuver_index = 7;           // current maneuver index to reference for names
+  optional float remaining_maneuver_length = 8; // remaining maneuver length based on units (mi or km)
+  optional uint32 remaining_maneuver_time = 9;  // remaining maneuver time in seconds
 }
 
