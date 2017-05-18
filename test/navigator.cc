@@ -661,7 +661,7 @@ void TestLancasterToHershey() {
           -76.299171f, 40.042519f, leg_index, 31.322f, 0,
           maneuver_index, 0.073f, 0));
 
-  // off route | segment index 0 | begin of maneuver index 0
+  // off route | segment index 1 | partial maneuver 0
   TrySnapToRoute(nav, GetFixLocation(-76.29875f, 40.04316f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kInvalid));
 
@@ -706,6 +706,116 @@ void TestLancasterToHershey() {
           -76.297806f, 40.042671f, leg_index, 31.249f, 0,
           maneuver_index, 0.046f, 0));
 
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 2;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[132] | segment index 15 | middle of maneuver index 2
+  TrySnapToRoute(nav, GetFixLocation(-76.279152f, 40.048409f, 154),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.279091f, 40.048393f, leg_index, 30.046f, 0,
+          maneuver_index, 0.8978f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 3;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[211] | segment index 23 | middle of maneuver index 3
+  TrySnapToRoute(nav, GetFixLocation(-76.267502f, 40.056950f, 283),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.267517f, 40.056873f, leg_index, 29.024f, 0,
+          maneuver_index, 0.251f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 4;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[315] | segment index 29 | middle of maneuver index 4
+  TrySnapToRoute(nav, GetFixLocation(-76.293968f, 40.068066f, 388),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.293968f, 40.068073f, leg_index, 27.341f, 0,
+          maneuver_index, 1.3148f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 5;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[850] | segment index 60 | middle of maneuver index 5
+  TrySnapToRoute(nav, GetFixLocation(-76.471893f, 40.125996f, 948),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.471878f, 40.126011f, leg_index, 16.9535f, 0,
+          maneuver_index, 7.771f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 6;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[1270] | segment index 74 | middle of maneuver index 6
+  TrySnapToRoute(nav, GetFixLocation(-76.598633f, 40.176716f, 1441),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.598648f, 40.176708f, leg_index, 8.86744f, 0,
+          maneuver_index, 0.1534f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 7;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[1288] | segment index 75 | middle of maneuver index 7
+  TrySnapToRoute(nav, GetFixLocation(-76.600441f, 40.178944f, 1459),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.600441f, 40.178944f, leg_index, 8.6843f, 0,
+          maneuver_index, 0.03765f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 8;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[1522] | segment index 86 | middle of maneuver index 8
+  TrySnapToRoute(nav, GetFixLocation(-76.618904f, 40.219437f, 1722),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.618668f, 40.219433f, leg_index, 5.6829f, 0,
+          maneuver_index, 1.9216f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 9;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[1870] | segment index 105 | middle of maneuver index 9
+  TrySnapToRoute(nav, GetFixLocation(-76.652367f, 40.270046f, 2113),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.652374f, 40.270039f, leg_index, 1.5266f, 0,
+          maneuver_index, 0.2904f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 10;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[1936] | segment index 111 | middle of maneuver index 10
+  TrySnapToRoute(nav, GetFixLocation(-76.660156f, 40.275745f, 2290),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.660187f, 40.275719f, leg_index, 0.9464f, 0,
+          maneuver_index, 0.2826f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 11;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[2003] | segment index 119 | middle of maneuver index 11
+  TrySnapToRoute(nav, GetFixLocation(-76.659927f, 40.281940f, 2386),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.659943f, 40.281963f, leg_index, 0.3119f, 0,
+          maneuver_index, 0.3119f, 0));
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 12;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[2038] | segment index 125 | destination maneuver index 12
+  TrySnapToRoute(nav, GetFixLocation(-76.654625f, 40.283924f, 2438),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.654633f, 40.283943f, leg_index, 0.0f, 0,
+          maneuver_index, 0.0f, 0));
 
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
