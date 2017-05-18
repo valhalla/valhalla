@@ -837,6 +837,7 @@ std::uniform_real_distribution<float>* make_distributor_from_range (const ranged
 }
 
 void testBicycleCostParams() {
+  constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::default_random_engine generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
@@ -844,7 +845,7 @@ void testBicycleCostParams() {
 
   // maneuver_penalty_
   distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("maneuver_penalty", (*distributor)(generator)));
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
@@ -854,7 +855,7 @@ void testBicycleCostParams() {
 
   // driveway_penalty_
   distributor.reset(make_distributor_from_range(kDrivewayPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("driveway", (*distributor)(generator)));
     if (ctorTester->driveway_penalty_ < kDrivewayPenaltyRange.min ||
         ctorTester->driveway_penalty_ > kDrivewayPenaltyRange.max) {
@@ -864,7 +865,7 @@ void testBicycleCostParams() {
 
   // alley_penalty_
   distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("alley_penalty", (*distributor)(generator)));
     if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
         ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
@@ -874,7 +875,7 @@ void testBicycleCostParams() {
 
   // gate_cost_
   distributor.reset(make_distributor_from_range(kGateCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("gate_cost", (*distributor)(generator)));
     if (ctorTester->gate_cost_ < kGateCostRange.min ||
         ctorTester->gate_cost_ > kGateCostRange.max) {
@@ -884,7 +885,7 @@ void testBicycleCostParams() {
 
   // gate_penalty_
   distributor.reset(make_distributor_from_range(kGatePenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("gate_penalty", (*distributor)(generator)));
     if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
         ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
@@ -894,7 +895,7 @@ void testBicycleCostParams() {
 
   // ferry_cost_
   distributor.reset(make_distributor_from_range(kFerryCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("ferry_cost", (*distributor)(generator)));
     if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
         ctorTester->ferry_cost_ > kFerryCostRange.max) {
@@ -904,7 +905,7 @@ void testBicycleCostParams() {
 
   // country_crossing_cost_
   distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
     if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
         ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
@@ -914,7 +915,7 @@ void testBicycleCostParams() {
 
   // country_crossing_penalty_
   distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
         ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
@@ -924,7 +925,7 @@ void testBicycleCostParams() {
 
   // use_roads_
   distributor.reset(make_distributor_from_range(kUseRoadRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("use_roads", (*distributor)(generator)));
     if (ctorTester->use_roads_ < kUseRoadRange.min ||
         ctorTester->use_roads_ > kUseRoadRange.max) {
@@ -935,7 +936,7 @@ void testBicycleCostParams() {
   // speed_
   constexpr ranged_default_t<float> kRoadCyclingSpeedRange {kMinCyclingSpeed, kDefaultCyclingSpeed[0], kMaxCyclingSpeed};
   distributor.reset(make_distributor_from_range(kRoadCyclingSpeedRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("cycling_speed", (*distributor)(generator)));
     if (ctorTester->speed_ < kRoadCyclingSpeedRange.min ||
         ctorTester->speed_ > kRoadCyclingSpeedRange.max) {
@@ -945,7 +946,7 @@ void testBicycleCostParams() {
 
   // use_ferry_
   distributor.reset(make_distributor_from_range(kUseFerryRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("use_ferry", (*distributor)(generator)));
     if (ctorTester->use_ferry_ < kUseFerryRange.min ||
         ctorTester->use_ferry_ > kUseFerryRange.max) {

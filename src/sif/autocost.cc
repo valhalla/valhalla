@@ -996,6 +996,7 @@ std::uniform_real_distribution<float>* make_distributor_from_range (const ranged
 }
 
 void testAutoCostParams() {
+  constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::default_random_engine generator(seed);
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
@@ -1003,7 +1004,7 @@ void testAutoCostParams() {
 
   // maneuver_penalty_
   distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("maneuver_penalty", (*distributor)(generator)));
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
@@ -1013,7 +1014,7 @@ void testAutoCostParams() {
 
   // destination_only_penalty_
   distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("destination_only_penalty", (*distributor)(generator)));
     if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
         ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
@@ -1023,7 +1024,7 @@ void testAutoCostParams() {
 
   // alley_penalty_
   distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("alley_penalty", (*distributor)(generator)));
     if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
         ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
@@ -1033,7 +1034,7 @@ void testAutoCostParams() {
 
   // gate_cost_
   distributor.reset(make_distributor_from_range(kGateCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("gate_cost", (*distributor)(generator)));
     if (ctorTester->gate_cost_ < kGateCostRange.min ||
         ctorTester->gate_cost_ > kGateCostRange.max) {
@@ -1043,7 +1044,7 @@ void testAutoCostParams() {
 
   // gate_penalty_
   distributor.reset(make_distributor_from_range(kGatePenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("gate_penalty", (*distributor)(generator)));
     if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
         ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
@@ -1053,7 +1054,7 @@ void testAutoCostParams() {
 
   // tollbooth_cost_
   distributor.reset(make_distributor_from_range(kTollBoothCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("toll_booth_cost", (*distributor)(generator)));
     if (ctorTester->tollbooth_cost_ < kTollBoothCostRange.min ||
         ctorTester->tollbooth_cost_ > kTollBoothCostRange.max) {
@@ -1063,7 +1064,7 @@ void testAutoCostParams() {
 
   // tollbooth_penalty_
   distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("toll_booth_penalty", (*distributor)(generator)));
     if (ctorTester->tollbooth_penalty_ < kTollBoothPenaltyRange.min ||
         ctorTester->tollbooth_penalty_ > kTollBoothPenaltyRange.max) {
@@ -1073,7 +1074,7 @@ void testAutoCostParams() {
 
   // ferry_cost_
   distributor.reset(make_distributor_from_range(kFerryCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("ferry_cost", (*distributor)(generator)));
     if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
         ctorTester->ferry_cost_ > kFerryCostRange.max) {
@@ -1083,7 +1084,7 @@ void testAutoCostParams() {
 
   // country_crossing_cost_
   distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("country_crossing_cost", (*distributor)(generator)));
     if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
         ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
@@ -1093,7 +1094,7 @@ void testAutoCostParams() {
 
   // country_crossing_penalty_
   distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
         ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
@@ -1103,7 +1104,7 @@ void testAutoCostParams() {
 
   // use_ferry_
   distributor.reset(make_distributor_from_range(kUseFerryRange));
-  for (unsigned i = 0; i < 100; ++i) {
+  for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
     if (ctorTester->use_ferry_ < kUseFerryRange.min ||
         ctorTester->use_ferry_ > kUseFerryRange.max) {
