@@ -135,7 +135,7 @@ constexpr float kGradeBasedSpeedFactor[] = {
 
 // User propensity to use "hilly" roads. Ranges from a value of 0 (avoid
 // hills) to 1 (take hills when they offer a more direct, less time, path).
-constexpr float kDefaultUseHillsFactor = 0.5f;
+constexpr float kDefaultUseHills = 0.5f;
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
 // with the usehills factor (1.0 - usehills = avoidhills factor) to create
@@ -174,16 +174,17 @@ constexpr float kBicycleNetworkFactor = 1.0f;
 constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
 
 // Valid ranges and defaults
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kDrivewayPenaltyRange{0, kDefaultDrivewayPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
-constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
-constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kUseRoadRange{0, kDefaultUseRoad, 1.0f};
-constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0.0f, kDefaultManeuverPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kDrivewayPenaltyRange{0.0f, kDefaultDrivewayPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGateCostRange{0.0f, kDefaultGateCost, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kFerryCostRange{0.0f, kDefaultFerryCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingCostRange{0.0f, kDefaultCountryCrossingCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0.0f, kDefaultCountryCrossingPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
+constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
+constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 }
 
 /**
@@ -315,9 +316,10 @@ public:
   float ferry_factor_;              // Weighting to apply to ferry edges
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
-  float use_roads_;                  // Preference of using roads between 0 and 1
+  float use_roads_;                 // Preference of using roads between 0 and 1
   float road_factor_;               // Road factor based on use_roads_
-  float use_ferry_;
+  float use_ferry_;                 // Preference of using ferries between 0 and 1
+  float use_hills_;                 // Preference of using hills between 0 and 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -512,8 +514,10 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Populate the grade penalties (based on use_hills factor).
-  float usehills   = pt.get<float>("use_hills", kDefaultUseHillsFactor);
-  float avoidhills = (1.0f - usehills);
+  use_hills_   = kUseHillsRange(
+    pt.get<float>("use_hills", kDefaultUseHills)
+  );
+  float avoidhills = (1.0f - use_hills_);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = 1.0f + avoidhills * kAvoidHillsStrength[i];
   }
@@ -955,6 +959,16 @@ void testBicycleCostParams() {
     }
   }
   
+  // use_hills_
+  distributor.reset(make_distributor_from_range(kUseHillsRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("use_hills", (*distributor)(generator)));
+    if (ctorTester->use_hills_ < kUseHillsRange.min ||
+        ctorTester->use_hills_ > kUseHillsRange.max) {
+      throw std::runtime_error ("use_hills_ is not within it's range");
+    }
+  }
+
 }
 }
 
