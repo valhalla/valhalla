@@ -102,19 +102,23 @@ bool Navigator::IsDestinationShapeIndex(size_t idx) const {
 size_t Navigator::FindManeuverIndex(size_t begin_search_index,
     size_t shape_index) const {
 
+  // Set the destination maneuver index - since destination maneuver is a special case
+  size_t destination_maneuver_index =
+      (route_.trip().legs(leg_index_).maneuvers_size() - 1);
+
   // Check for destination shape index and return destination maneuver index
   if (IsDestinationShapeIndex(shape_index))
-    return (route_.trip().legs(leg_index_).maneuvers_size() - 1);
+    return destination_maneuver_index;
 
   // Loop over maneuvers - starting at specified maneuver index and return
   // the maneuver index that contains the specified shape index
-  for (size_t i = begin_search_index; i < route_.trip().legs(leg_index_).maneuvers_size(); ++i) {
+  for (size_t i = begin_search_index; i < destination_maneuver_index; ++i) {
     auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
     if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
       return i;
   }
-  // If not found, return specified maneuver index
-  return begin_search_index;
+  // If not found, throw exception
+  throw valhalla_exception_t{400, 502};
 }
 
 void Navigator::SnapToRoute(const FixLocation& fix_location,
