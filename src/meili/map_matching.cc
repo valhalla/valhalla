@@ -3,9 +3,7 @@
 
 #include "meili/candidate_search.h"
 #include "meili/routing.h"
-#include "meili/graph_helpers.h"
 #include "meili/geometry_helpers.h"
-#include "meili/graph_helpers.h"
 #include "meili/match_result.h"
 #include "meili/map_matching.h"
 
@@ -166,10 +164,10 @@ MapMatching::TransitionCost(const State& left, const State& right) const
       const auto& prev_state = state(prev_stateid);
       if (!prev_state.routed()) {
         // When ViterbiSearch calls this method, the left state is
-        // guaranteed to be optimal, its pedecessor is therefore
+        // guaranteed to be optimal, its predecessor is therefore
         // guaranteed to be expanded (and routed). When
         // NaiveViterbiSearch calls this method, the previous column,
-        // where the pedecessor of the left state stays, are
+        // where the predecessor of the left state stays, are
         // guaranteed to be all expanded (and routed).
         throw std::logic_error("The predecessor of current state must have been routed."
                                " Check if you have misused the TransitionCost method");
