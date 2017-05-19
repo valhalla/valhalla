@@ -3858,6 +3858,19 @@ void NarrativeBuilder_itIT::FormArticulatedPrepositions(
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+std::string NarrativeBuilder_ruRU::GetPluralCategory(size_t count) {
+  size_t rem10 = count % 10, rem100 = count % 100;
+
+  // http://www.unicode.org/cldr/charts/29/supplemental/language_plural_rules.html#ru
+  if (rem10 == 1 && rem100 != 11) {
+    return kPluralCategoryOneKey;
+  } else if ((rem10 > 1 && rem10 < 5) && !(rem100 > 11 && rem100 < 15 )) {
+    return kPluralCategoryFewKey;
+  }
+  return kPluralCategoryOtherKey;
+}
+
 
 }
 }
