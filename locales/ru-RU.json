@@ -393,111 +393,111 @@
     "exit": {
       "phrases": {
         "0": "Выезжайте <RELATIVE_DIRECTION>.",
-        "1": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Двигайтесь через выход <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
-        "4": "Двигайтесь через выход <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
-        "5": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
-        "6": "Двигайтесь через выход <BRANCH_SIGN> <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
-        "7": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
-        "8": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "10": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
-        "12": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
-        "14": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
+        "1": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN>.",
+        "2": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "4": "Выезжайте <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "5": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "6": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "7": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "8": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN>.",
+        "10": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "12": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "14": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "right"],
       "example_phrases": {
         "0": ["Выезжайте влево.", "Выезжайте вправо."],
-        "1": ["Двигайтесь через выход 67 B-A вправо."],
-        "2": ["Двигайтесь через выход US 322 West вправо."],
-        "3": ["Двигайтесь через выход 67 B-A вправо на US 322 West."],
-        "4": ["Двигайтесь через выход вправо в сторорону Lewistown."],
-        "5": ["Двигайтесь через выход 67 B-A вправо в сторону Lewistown."],
-        "6": ["Двигайтесь через выход US 322 West вправо в сторону Lewistown."],
-        "7": ["Двигайтесь через выход 67 B-A вправо на US 322 West в сторону Lewistown/State College."],
-        "8": ["Двигайтесь через выход White Marsh Boulevard влево."],
-        "10": ["Двигайтесь через выход White Marsh Boulevard влево на MD 43 East."],
-        "12": ["Двигайтесь через выход White Marsh Boulevard влево в сторону White Marsh."],
-        "14": ["Двигайтесь через выход White Marsh Boulevard влево на MD 43 East в сторону White Marsh."]
+        "1": ["Выезжайте вправо через 67 B-A."],
+        "2": ["Выезжайте вправо через US 322 West."],
+        "3": ["Выезжайте вправо через 67 B-A на US 322 West."],
+        "4": ["Выезжайте вправо в сторорону Lewistown."],
+        "5": ["Выезжайте вправо через 67 B-A в сторону Lewistown."],
+        "6": ["Выезжайте вправо через US 322 West в сторону Lewistown."],
+        "7": ["Выезжайте вправо через 67 B-A на US 322 West в сторону Lewistown/State College."],
+        "8": ["Выезжайте влево через White Marsh Boulevard."],
+        "10": ["Выезжайте влево через White Marsh Boulevard на MD 43 East."],
+        "12": ["Выезжайте влево через White Marsh Boulevard в сторону White Marsh."],
+        "14": ["Выезжайте влево через White Marsh Boulevard на MD 43 East в сторону White Marsh."]
       }
     },
     "exit_verbal": {
       "phrases": {
         "0": "Выезжайте <RELATIVE_DIRECTION>.",
-        "1": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
-        "2": "Двигайтесь через выход <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
-        "3": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
-        "4": "Двигайтесь через выход <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
-        "5": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
-        "6": "Двигайтесь через выход <BRANCH_SIGN> <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
-        "7": "Двигайтесь через выход <NUMBER_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
-        "8": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION>.",
-        "10": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN>.",
-        "12": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
-        "14": "Двигайтесь через выход <NAME_SIGN> <RELATIVE_DIRECTION> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
+        "1": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN>.",
+        "2": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "4": "Выезжайте <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "5": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "6": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "7": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "8": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN>.",
+        "10": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "12": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "14": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
       },
       "relative_directions": ["left", "right"],
       "example_phrases": {
-       "0": ["Выезжайте влево.", "Выезжайте вправо."],
-        "1": ["Двигайтесь через выход 67 B-A вправо."],
-        "2": ["Двигайтесь через выход US 322 West вправо."],
-        "3": ["Двигайтесь через выход 67 B-A вправо на US 322 West."],
-        "4": ["Двигайтесь через выход вправо в сторорону Lewistown."],
-        "5": ["Двигайтесь через выход 67 B-A вправо в сторону Lewistown."],
-        "6": ["Двигайтесь через выход US 322 West вправо в сторону Lewistown."],
-        "7": ["Двигайтесь через выход 67 B-A вправо на US 322 West в сторону Lewistown/State College."],
-        "8": ["Двигайтесь через выход White Marsh Boulevard влево."],
-        "10": ["Двигайтесь через выход White Marsh Boulevard влево на MD 43 East."],
-        "12": ["Двигайтесь через выход White Marsh Boulevard влево в сторону White Marsh."],
-        "14": ["Двигайтесь через выход White Marsh Boulevard влево на MD 43 East в сторону White Marsh."]
+        "0": ["Выезжайте влево.", "Выезжайте вправо."],
+        "1": ["Выезжайте вправо через 67 B-A."],
+        "2": ["Выезжайте вправо через US 322 West."],
+        "3": ["Выезжайте вправо через 67 B-A на US 322 West."],
+        "4": ["Выезжайте вправо в сторорону Lewistown."],
+        "5": ["Выезжайте вправо через 67 B-A в сторону Lewistown."],
+        "6": ["Выезжайте вправо через US 322 West в сторону Lewistown."],
+        "7": ["Выезжайте вправо через 67 B-A на US 322 West в сторону Lewistown/State College."],
+        "8": ["Выезжайте влево через White Marsh Boulevard."],
+        "10": ["Выезжайте влево через White Marsh Boulevard на MD 43 East."],
+        "12": ["Выезжайте влево через White Marsh Boulevard в сторону White Marsh."],
+        "14": ["Выезжайте влево через White Marsh Boulevard на MD 43 East в сторону White Marsh."]
       }
     },
     "keep": {
       "phrases": {
         "0": "На развилке держитесь <RELATIVE_DIRECTION>.",
-        "1": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN>.",
-        "2": "Держитесь <RELATIVE_DIRECTION> чтобы попасть на <STREET_NAMES>.",
-        "3": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES>.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES>.",
         "4": "Держитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
-        "5": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> в сторону <TOWARD_SIGN>.",
-        "6": "Держитесь <RELATIVE_DIRECTION> чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
-        "7": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
+        "5": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> в сторону <TOWARD_SIGN>.",
+        "6": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
+        "7": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
       },
       "relative_directions": ["влево", "прямо", "вправо"],
       "empty_street_name_labels": ["аллее", "велосипедной дорожке", "горной велосипедной тропе"],
       "example_phrases": {
         "0": ["На развилке держитесь слева.", "На развилке держитесь прямо.", "На развилке держитесь справа."],
-        "1": ["Держитесь справа чтобы выехать через 62."],
-        "2": ["Держитесь справа чтобы попасть на I 895 South."],
-        "3": ["Держитесь справа чтобы выехать через 62 на I 895 South."],
+        "1": ["Держитесь справа, чтобы выехать через 62."],
+        "2": ["Держитесь справа, чтобы попасть на I 895 South."],
+        "3": ["Держитесь справа, чтобы выехать через 62 на I 895 South."],
         "4": ["Держитесь справа в сторону Annapolis."],
-        "5": ["Держитесь справа чтобы выехать через 62 в сторону Annapolis."],
-        "6": ["Держитесь справа чтобы попасть на I 895 South в сторону Annapolis."],
-        "7": ["Держитесь справа чтобы выехать через 62 на I 895 South в сторону Annapolis."]
+        "5": ["Держитесь справа, чтобы выехать через 62 в сторону Annapolis."],
+        "6": ["Держитесь справа, чтобы попасть на I 895 South в сторону Annapolis."],
+        "7": ["Держитесь справа, чтобы выехать через 62 на I 895 South в сторону Annapolis."]
       }
     },
     "keep_verbal": {
       "phrases": {
        "0": "На развилке держитесь <RELATIVE_DIRECTION>.",
-        "1": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN>.",
-        "2": "Держитесь <RELATIVE_DIRECTION> чтобы попасть на <STREET_NAMES>.",
-        "3": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES>.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES>.",
         "4": "Держитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
-        "5": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> в сторону <TOWARD_SIGN>.",
-        "6": "Держитесь <RELATIVE_DIRECTION> чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
-        "7": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
+        "5": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> в сторону <TOWARD_SIGN>.",
+        "6": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
+        "7": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
       },
       "relative_directions": ["влево", "прямо", "вправо"],
       "empty_street_name_labels": ["аллее", "велосипедной дорожке", "горной велосипедной тропе"],
       "example_phrases": {
         "0": ["На развилке держитесь слева.", "На развилке держитесь прямо.", "На развилке держитесь справа."],
-        "1": ["Держитесь справа чтобы выехать через 62."],
-        "2": ["Держитесь справа чтобы попасть на I 895 South."],
-        "3": ["Держитесь справа чтобы выехать через 62 на I 895 South."],
+        "1": ["Держитесь справа, чтобы выехать через 62."],
+        "2": ["Держитесь справа, чтобы попасть на I 895 South."],
+        "3": ["Держитесь справа, чтобы выехать через 62 на I 895 South."],
         "4": ["Держитесь справа в сторону Annapolis."],
-        "5": ["Держитесь справа чтобы выехать через 62 в сторону Annapolis."],
-        "6": ["Держитесь справа чтобы попасть на I 895 South в сторону Annapolis."],
-        "7": ["Держитесь справа чтобы выехать через 62 на I 895 South в сторону Annapolis."]
+        "5": ["Держитесь справа, чтобы выехать через 62 в сторону Annapolis."],
+        "6": ["Держитесь справа, чтобы попасть на I 895 South в сторону Annapolis."],
+        "7": ["Держитесь справа, чтобы выехать через 62 на I 895 South в сторону Annapolis."]
       }
     },
     "keep_to_stay_on": {
@@ -719,7 +719,7 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Зайдити на станцию.",
+        "0": "Зайдите на станцию.",
         "1": "Зайдите на станции <TRANSIT_STOP>.",
         "2": "Зайдите на станции <TRANSIT_STOP> <STATION_LABEL>."
       },
@@ -732,7 +732,7 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Зайдити на станцию.",
+        "0": "Зайдите на станцию.",
         "1": "Зайдите на станции <TRANSIT_STOP>.",
         "2": "Зайдите на станции <TRANSIT_STOP> <STATION_LABEL>."
       },
@@ -745,28 +745,28 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Переедьте на станцию.",
-        "1": "Переедьте на станцию <TRANSIT_STOP>.",
-        "2": "Переедьте на станцию <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Перейдите на станцию.",
+        "1": "Перейдите на станцию <TRANSIT_STOP>.",
+        "2": "Перейдите на станцию <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Переедьте на станцию ."],
-        "1": ["Переедьте на станцию  Embarcadero Station."],
-        "2": ["Переедьте на станцию e 8 St - NYU Station."]
+        "0": ["Перейдите на станцию ."],
+        "1": ["Перейдите на станцию  Embarcadero Station."],
+        "2": ["Перейдите на станцию e 8 St - NYU Station."]
       }
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Переедьте на станцию.",
-        "1": "Переедьте на станцию <TRANSIT_STOP>.",
-        "2": "Переедьте на станцию <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Перейдите на станцию.",
+        "1": "Перейдите на станцию <TRANSIT_STOP>.",
+        "2": "Перейдите на станцию <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Station",
       "example_phrases": {
-        "0": ["Переедьте на станцию ."],
-        "1": ["Переедьте на станцию  Embarcadero Station."],
-        "2": ["Переедьте на станцию e 8 St - NYU Station."]
+        "0": ["Перейдите на станцию ."],
+        "1": ["Перейдите на станцию  Embarcadero Station."],
+        "2": ["Перейдите на станцию e 8 St - NYU Station."]
       }
     },
     "transit_connection_destination": {
@@ -840,7 +840,7 @@
         "0": "Воспользуйтесь <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Воспользуйтесь <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
-      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
+      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "гондолой", "фуникулером"],
       "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Воспользйтесь New Haven. (1 остановка)", "Воспользуйтесь метро. (2 остановки)", "Воспользуйтесь автобусом. (12 остановки)"],
@@ -863,7 +863,7 @@
         "0": "Оставайтесь в <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
-      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
+      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "гондолой", "фуникулером"],
       "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Оставайтесь в New Haven. (1 остановка)", "Remain on the train. (3 остановки)"],
@@ -875,7 +875,7 @@
         "0": "Оставайтесь в <TRANSIT_NAME>.",
         "1": "Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>."
       },
-      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
+      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "гондолой", "фуникулером"],
       "example_phrases": {
         "0": ["Оставайтесь в the New Haven."],
         "1": ["Оставайтесь в F в сторону JAMAICA - 179 ST."]
@@ -886,7 +886,7 @@
         "0": "Перейдите чтобы попасть на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
         "1": "Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
-      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
+      "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "гондолой", "фуникулером"],
       "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Перейдите чтобы попасть на New Haven. (1 остановка)", "Перейдите чтобы попасть на трамвай. (4 остановки)"],
@@ -898,7 +898,7 @@
         "0": "Перейдите чтобы попасть на <TRANSIT_NAME>.",
         "1": "Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>."
       },
-       "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
+       "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "гондолой", "фуникулером"],
       "example_phrases": {
         "0": ["Перейдите чтобы попасть на New Haven."],
         "1": ["Перейдите чтобы попасть на F в сторону JAMAICA - 179 ST."]
