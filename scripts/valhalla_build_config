@@ -278,7 +278,7 @@ help_text = {
       'search_radius': 'An non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement',
       'geometry': 'TODO: ',
       'route': 'TODO: ',
-      'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next''
+      'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next'
     },
     'auto': {
       'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next',
