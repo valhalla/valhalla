@@ -90,6 +90,17 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   const NodeInfo* nodeinfo = end_tile->node(endnode.id());
   bool sametile = (startnode.tileid() == endnode.tileid());
 
+  // The following can happen for transit nodes that do not connect to osm data
+  // and have no transit lines.  This can happen when we are using a subset of
+  // transit data.
+  if (nodeinfo->edge_count() == 0) {
+      LOG_DEBUG("End node has no connections " +
+                std::to_string(endnode.tileid()) + "," +
+                std::to_string(endnode.level()) + "," +
+                std::to_string(endnode.id()));
+      return kMaxEdgesPerNode;
+  }
+
   // Set the end node iso.  Used for country crossings.
   endnodeiso = end_tile->admin(nodeinfo->admin_index())->country_iso();
 

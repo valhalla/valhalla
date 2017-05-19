@@ -642,6 +642,7 @@ TripPath TripPathBuilder::Build(
   }
 
   // Iterate through path
+  bool is_first_edge = true;
   uint32_t elapsedtime = 0;
   uint32_t block_id = 0;
   uint32_t prior_opp_local_index = -1;
@@ -896,7 +897,6 @@ TripPath TripPathBuilder::Build(
     }
 
     // Add edge to the trip node and set its attributes
-    auto is_first_edge = edge_itr == path.begin();
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
@@ -1101,6 +1101,9 @@ TripPath TripPathBuilder::Build(
 
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
+
+    // We processed a non-transition edge - set is_first edge to false
+    is_first_edge = false;
   }
 
   auto* last_tile = graphreader.GetGraphTile(startnode);

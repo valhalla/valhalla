@@ -270,7 +270,8 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // (cost from the dest. location to the end of the edge).
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost -= p->second;
+        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
+        newcost.cost += p->second.cost;  // Need this to handle the edge score
       }
 
       // Check if edge is temporarily labeled and this path has less cost. If
@@ -358,6 +359,12 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    // Perhaps need to adjust score?
+    cost.cost += edge.score * 10;
+
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
     // destination is in a forward direction along the edge
@@ -368,7 +375,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
         // a trivial route passes along a single edge, meaning that the
         // destination point must be on this edge, and so the distance
         // remaining must be zero.
-        cost -= p->second;
+        cost.secs -= p->second.secs;
         dist = 0.0;
       }
     }
@@ -421,6 +428,11 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
     destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)) *
                                 (1.0f - edge.dist);
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    destinations_[edge.id].cost += edge.score * 10;
 
     // Get the tile relative density
     density = tile->header()->density();
