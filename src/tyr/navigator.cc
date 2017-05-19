@@ -106,6 +106,10 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index,
   size_t destination_maneuver_index =
       (route_.trip().legs(leg_index_).maneuvers_size() - 1);
 
+  // Validate the begin_search_index
+  if (begin_search_index > destination_maneuver_index)
+    throw valhalla_exception_t{400, 502};
+
   // Check for destination shape index and return destination maneuver index
   if (IsDestinationShapeIndex(shape_index))
     return destination_maneuver_index;
@@ -113,6 +117,33 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index,
   // Loop over maneuvers - starting at specified maneuver index and return
   // the maneuver index that contains the specified shape index
   for (size_t i = begin_search_index; i < destination_maneuver_index; ++i) {
+    auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
+    if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
+      return i;
+  }
+  // If not found, throw exception
+  throw valhalla_exception_t{400, 502};
+}
+
+size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
+    size_t shape_index) const {
+
+  // Set the destination maneuver index - since destination maneuver is a special case
+  size_t destination_maneuver_index =
+      (route_.trip().legs(leg_index_).maneuvers_size() - 1);
+
+  // Validate the rbegin_search_index
+  if (rbegin_search_index > destination_maneuver_index)
+    throw valhalla_exception_t{400, 502};
+
+  // Check for destination shape index and rbegin search index
+  // if so, return destination maneuver index
+  if (IsDestinationShapeIndex(shape_index) && (destination_maneuver_index == rbegin_search_index))
+    return destination_maneuver_index;
+
+  // Loop over maneuvers in reverse - starting at specified maneuver index
+  // and return the maneuver index that contains the specified shape index
+  for (size_t i = rbegin_search_index; (i >= 0 && i <= destination_maneuver_index); --i) {
     auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
     if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
       return i;

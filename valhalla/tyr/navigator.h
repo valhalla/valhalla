@@ -47,6 +47,7 @@ class Navigator {
     bool IsDestinationShapeIndex(size_t idx) const;
 
     size_t FindManeuverIndex(size_t begin_search_index, size_t shape_index) const;
+    size_t RfindManeuverIndex(size_t rbegin_search_index, size_t shape_index) const;
 
     void SnapToRoute(const FixLocation& fix_location,
         NavigationStatus& nav_status);
