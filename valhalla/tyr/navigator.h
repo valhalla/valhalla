@@ -72,8 +72,8 @@ class Navigator {
     // Current shape index
     size_t current_shape_index_;
 
-    // Remaining leg length
-    std::vector<float> remaining_leg_lengths_;
+    // Remaining leg length and time
+    std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 
 };
 

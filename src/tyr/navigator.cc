@@ -75,22 +75,23 @@ void Navigator::SetShapeLengthTime() {
     shape_ = midgard::decode<std::vector<PointLL> >(
         route_.trip().legs(leg_index_).shape());
 
-    // Set the remaining leg length
+    // Set the remaining leg length and time
     float km_length = 0.0f;
     float total_remaining_leg_length = 0.0f;
-    remaining_leg_lengths_.resize(shape_.size());
-    int i = (remaining_leg_lengths_.size() - 1);
-    remaining_leg_lengths_[i--] = total_remaining_leg_length;
-    if (remaining_leg_lengths_.size() > 1) {
+    uint32_t total_remaining_leg_time = 0;
+    remaining_leg_values_.resize(shape_.size());
+    int i = (remaining_leg_values_.size() - 1);
+    remaining_leg_values_[i--] = {total_remaining_leg_length, total_remaining_leg_time};
+    if (remaining_leg_values_.size() > 1) {
       for (; i >= 0; --i) {
         km_length = (shape_[i].Distance(shape_[i+1]) * midgard::kKmPerMeter);
         total_remaining_leg_length += (HasKilometerUnits() ? km_length : (km_length * midgard::kMilePerKm));
-        remaining_leg_lengths_[i] = total_remaining_leg_length;
+        remaining_leg_values_[i] = {total_remaining_leg_length, total_remaining_leg_time};
       }
     }
   } else {
     shape_.resize(0);
-    remaining_leg_lengths_.resize(0);
+    remaining_leg_values_.resize(0);
   }
   current_shape_index_ = 0;
 }
@@ -203,11 +204,11 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   // Set the maneuver index and maneuver end shape index
   maneuver_index_ = FindManeuverIndex(maneuver_index_, current_shape_index_);
   uint32_t maneuver_end_shape_index = route_.trip().legs(leg_index_).maneuvers(maneuver_index_).end_shape_index();
-  float remaining_leg_length = (remaining_leg_lengths_.at(remaining_index) + partial_length);
+  float remaining_leg_length = (remaining_leg_values_.at(remaining_index).first + partial_length);
 
   // GDG - rm
   std::cout << "current_shape_index_=" << current_shape_index_ << " | remaining_index=" << remaining_index << " | maneuver_index_=" << maneuver_index_ << " | snapped_to_shape_point=" << (snapped_to_shape_point ? "true" : "false") << std::endl;
-  std::cout << "remaining_leg_length=" << remaining_leg_length << " | remaining_leg_lengths_.at(remaining_index)=" << remaining_leg_lengths_.at(remaining_index) << " | partial_length=" << partial_length << " | remaining_maneuver_length=" << (remaining_leg_length - remaining_leg_lengths_.at(maneuver_end_shape_index)) << " | remaining_leg_lengths_.at(maneuver_end_shape_index)=" << remaining_leg_lengths_.at(maneuver_end_shape_index) << std::endl;
+  std::cout << "remaining_leg_length=" << remaining_leg_length << " | remaining_leg_lengths_.at(remaining_index)=" << remaining_leg_values_.at(remaining_index).first << " | partial_length=" << partial_length << " | remaining_maneuver_length=" << (remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first) << " | remaining_leg_lengths_.at(maneuver_end_shape_index)=" << remaining_leg_values_.at(maneuver_end_shape_index).first << std::endl;
 
   // Populate navigation status
   nav_status.set_route_state(NavigationStatus_RouteState_kTracking);
@@ -217,7 +218,7 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   nav_status.set_remaining_leg_length(remaining_leg_length);
   nav_status.set_remaining_leg_time(0);
   nav_status.set_maneuver_index(maneuver_index_);
-  nav_status.set_remaining_maneuver_length(remaining_leg_length - remaining_leg_lengths_.at(maneuver_end_shape_index));
+  nav_status.set_remaining_maneuver_length(remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first);
   nav_status.set_remaining_maneuver_time(0);
 }
 

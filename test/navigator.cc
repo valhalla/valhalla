@@ -68,8 +68,8 @@ class NavigatorTest : public Navigator {
     return Navigator::route();
   }
 
-  const std::vector<float>& remaining_leg_lengths() const {
-    return Navigator::remaining_leg_lengths_;
+  const std::vector<std::pair<float, uint32_t>>& remaining_leg_lengths() const {
+    return Navigator::remaining_leg_values_;
   }
 
   const size_t leg_index() const {
@@ -523,7 +523,7 @@ void TryRouteLanguage(NavigatorTest& nav, std::string expected_language) {
 void TryRemainingLegLength(NavigatorTest& nav, uint32_t index,
     float expected_remaining_leg_length) {
 
-  float remaining_leg_length = nav.remaining_leg_lengths().at(index);
+  float remaining_leg_length = nav.remaining_leg_lengths().at(index).first;
 
   if (!valhalla::midgard::equal<float>(remaining_leg_length, expected_remaining_leg_length, 0.005f))
     throw std::runtime_error("Incorrect remaining leg length - found: " + std::to_string(remaining_leg_length) + " | expected: " + std::to_string(expected_remaining_leg_length));
