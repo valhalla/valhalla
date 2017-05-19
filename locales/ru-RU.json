@@ -841,7 +841,7 @@
         "1": "Воспользуйтесь <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
-      "transit_stop_count_labels": {"one": "остановка", "other": "остановки"},
+      "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Воспользйтесь New Haven. (1 остановка)", "Воспользуйтесь метро. (2 остановки)", "Воспользуйтесь автобусом. (12 остановки)"],
         "1": ["Воспользуйтесь F в сторону JAMAICA - 179 ST. (10 остановок)", "Воспользуйтесь паромом в  сторону Staten Island. (1 одна остановка)"]
@@ -864,7 +864,7 @@
         "1": "Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
-      "transit_stop_count_labels": {"one": "остановка", "other": "остановки"},
+      "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Оставайтесь в New Haven. (1 остановка)", "Remain on the train. (3 остановки)"],
         "1": ["Оставайтесь в F toward JAMAICA - 179 ST. (10 остановки)"]
@@ -887,7 +887,7 @@
         "1": "Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["трамваем", "метро", "поездом", "автобусом", "паромом", "вагоном фуникулера", "gondola", "фуникулером"],
-      "transit_stop_count_labels": {"one": "остановка", "other": "остановки"},
+      "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Перейдите чтобы попасть на New Haven. (1 остановка)", "Перейдите чтобы попасть на трамвай. (4 остановки)"],
         "1": ["Перейдите чтобы попасть на F в сторону JAMAICA - 179 ST. (10 остановок)"]
@@ -985,7 +985,7 @@
       "phrases": {
         "0": "Проедьте <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
-      "transit_stop_count_labels": {"one": "остановка", "other": "остановки"},
+      "transit_stop_count_labels": {"one": "остановка", "few":"остановки", "other": "остановок"},
       "example_phrases": {
         "0": ["Проедьте 1 остановку.", "Проедьте 3 остановки."]
       }

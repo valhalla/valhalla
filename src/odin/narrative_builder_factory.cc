@@ -35,6 +35,9 @@ std::unique_ptr<NarrativeBuilder> NarrativeBuilderFactory::Create(
   } else if (phrase_dictionary->second->GetLanguageTag() == "it-IT") {
     return midgard::make_unique<NarrativeBuilder_itIT>(
         directions_options, trip_path, *phrase_dictionary->second);
+  } else if (phrase_dictionary->second->GetLanguageTag() == "ru-RU") {
+    return midgard::make_unique<NarrativeBuilder_ruRU>(
+        directions_options, trip_path, *phrase_dictionary->second);
   }
 
   // otherwise just return pointer to NarrativeBuilder
