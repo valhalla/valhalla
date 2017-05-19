@@ -136,30 +136,13 @@ namespace midgard {
 // Sets class data members and computes the number of rows and columns
 // based on the bounding box and tile size.
 template <class coord_t>
-Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize, unsigned short subdivisions):
-  tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions){
+Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize, unsigned short subdivisions, bool wrapx):
+  tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions), wrapx_(wrapx) {
   tilebounds_ = bounds;
   tilesize_ = tilesize;
   subdivision_size_ = tilesize_ / nsubdivisions_;
   ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) / tilesize_));
   nrows_    = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) / tilesize_));
-}
-
-// Get the tile size. Tiles are square.
-template <class coord_t>
-float Tiles<coord_t>::TileSize() const {
-  return tilesize_;
-}
-
-template <class coord_t>
-float Tiles<coord_t>::SubdivisionSize() const {
-  return subdivision_size_;
-}
-
-// Get the bounding box of the tiling system.
-template <class coord_t>
-AABB2<coord_t> Tiles<coord_t>::TileBounds() const {
-  return tilebounds_;
 }
 
 // Shift the tilebounds
@@ -169,23 +152,6 @@ void Tiles<coord_t>::ShiftTileBounds(const coord_t& shift) {
                                tilebounds_.miny() - shift.second,
                                tilebounds_.maxx() - shift.first,
                                tilebounds_.maxy() - shift.second);
-}
-
-// Get the number of rows in the tiling system.
-template <class coord_t>
-int32_t Tiles<coord_t>::nrows() const {
-  return nrows_;
-}
-
-// Get the number of columns in the tiling system.
-template <class coord_t>
-int32_t Tiles<coord_t>::ncolumns() const {
-  return ncolumns_;
-}
-
-template <class coord_t>
-unsigned short Tiles<coord_t>::nsubdivisions() const {
-  return nsubdivisions_;
 }
 
 // Get the "row" based on y.
@@ -220,12 +186,6 @@ int32_t Tiles<coord_t>::Col(const float x) const {
   }
 }
 
-// Convert a coordinate into a tile Id. The point is within the tile.
-template <class coord_t>
-int32_t Tiles<coord_t>::TileId(const coord_t& c) const {
-  return TileId(c.y(), c.x());
-}
-
 // Convert x,y to a tile Id.
 template <class coord_t>
 int32_t Tiles<coord_t>::TileId(const float y, const float x) const {
@@ -236,19 +196,6 @@ int32_t Tiles<coord_t>::TileId(const float y, const float x) const {
 
   // Find the tileid by finding the latitude row and longitude column
   return (Row(y) * ncolumns_) + Col(x);
-}
-
-// Get the tile Id given the row Id and column Id.
-template <class coord_t>
-int32_t Tiles<coord_t>::TileId(const int32_t col, const int32_t row) const {
-  return (row * ncolumns_) + col;
-}
-
-// Get the tile row, col based on tile Id.
-template <class coord_t>
-std::pair<int32_t, int32_t> Tiles<coord_t>::GetRowColumn(
-                        const int32_t tileid) const {
-  return { tileid / ncolumns_, tileid % ncolumns_ };
 }
 
 // Get a maximum tileid given a bounds and a tile size.
@@ -293,14 +240,6 @@ coord_t Tiles<coord_t>::Center(const int32_t tileid) const {
   return coord_t(base.x() + tilesize_ * 0.5, base.y() + tilesize_ * 0.5);
 }
 
-// Get the tile Id given a previous tile and a row, column offset.
-template <class coord_t>
-int32_t Tiles<coord_t>::GetRelativeTileId(const int32_t initial_tile,
-                             const int32_t delta_rows,
-                             const int32_t delta_cols) const {
-  return initial_tile + (delta_rows * ncolumns_) + delta_cols;
-}
-
 // Get the tile offsets (row,column) between the previous tile Id and
 // a new tileid.  The offsets are returned through arguments (references).
 // Offsets can be positive or negative or 0.
@@ -324,7 +263,11 @@ template <class coord_t>
 int32_t Tiles<coord_t>::RightNeighbor(const int32_t tileid) const {
   int32_t row = tileid / ncolumns_;
   int32_t col = tileid - (row * ncolumns_);
-  return (col < ncolumns_ - 1) ? tileid + 1 : tileid - ncolumns_ + 1;
+  if (col < ncolumns_ - 1) {
+    return tileid + 1;
+  } else {
+    return wrapx_ ? tileid - ncolumns_ + 1 : tileid;
+  }
 }
 
 // Get the neighboring tileid to the left/west.
@@ -332,29 +275,11 @@ template <class coord_t>
 int32_t Tiles<coord_t>::LeftNeighbor(const int32_t tileid) const {
   int32_t row = tileid / ncolumns_;
   int32_t col = tileid - (row * ncolumns_);
-  return (col > 0) ? tileid - 1 : tileid + ncolumns_ - 1;
-}
-
-// Get the neighboring tileid above or north.
-template <class coord_t>
-int32_t Tiles<coord_t>::TopNeighbor(const int32_t tileid) const {
-  return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ?
-              tileid + ncolumns_ : tileid;
-}
-
-// Get the neighboring tileid below or south.
-template <class coord_t>
-int32_t Tiles<coord_t>::BottomNeighbor(const int32_t tileid) const {
-  return (tileid < ncolumns_) ? tileid : tileid - ncolumns_;
-}
-
-// Checks if 2 tiles are neighbors (N,E,S,W).
-template <class coord_t>
-bool Tiles<coord_t>::AreNeighbors(const uint32_t id1, const uint32_t id2) const {
-  return (id2 == TopNeighbor(id1) ||
-          id2 == RightNeighbor(id1) ||
-          id2 == BottomNeighbor(id1) ||
-          id2 == LeftNeighbor(id1));
+  if (col > 0) {
+    return tileid - 1;
+  } else {
+    return wrapx_ ? tileid + ncolumns_ - 1 : tileid;
+  }
 }
 
 // Get the list of tiles that lie within the specified bounding box.
@@ -363,58 +288,41 @@ bool Tiles<coord_t>::AreNeighbors(const uint32_t id1, const uint32_t id2) const 
 // neighboring tiles
 template <class coord_t>
 std::vector<int> Tiles<coord_t>::TileList(const AABB2<coord_t>& bbox) const {
-  // Get tile at the center of the bounding box. Return -1 if the center
-  // of the bounding box is not within the tiling system bounding box.
-  // TODO - relax this to check edges of the bounding box?
+  // Check if x range needs to be split
+  std::vector<AABB2<coord_t>> bboxes;
+  if (wrapx_) {
+    if (bbox.minx() < tilebounds_.minx() &&
+        bbox.maxx() > tilebounds_.minx()) {
+      // Create 2 bounding boxes
+      bboxes.emplace_back(tilebounds_.minx(), bbox.miny(),
+                          bbox.maxx(), bbox.maxy());
+      bboxes.emplace_back(bbox.minx() +  tilebounds_.Width(), bbox.miny(),
+                          tilebounds_.maxx(), bbox.maxy());
+    } else if (bbox.minx() < tilebounds_.maxx() &&
+               bbox.maxx() > tilebounds_.maxx()) {
+      // Create 2 bounding boxes
+      bboxes.emplace_back(bbox.minx(), bbox.miny(),
+                          tilebounds_.maxx(), bbox.maxy());
+      bboxes.emplace_back(tilebounds_.minx(), bbox.miny(),
+                          bbox.maxx() - tilebounds_.Width(), bbox.maxy());
+    } else {
+      bboxes.push_back(bbox.Intersection(tilebounds_));
+    }
+  } else {
+    bboxes.push_back(bbox.Intersection(tilebounds_));
+  }
+
   std::vector<int32_t> tilelist;
-  int32_t tileid = TileId(bbox.Center());
-  if (tileid == -1)
-    return tilelist;
-
-  // List of tiles to check if in view. Use a list: push new entries on the
-  // back and pop off the front. The tile search tends to spiral out from
-  // the center.
-  std::list<int32_t> checklist;
-
-  // Visited tiles
-  std::unordered_set<int32_t> visited_tiles;
-
-  // Set this tile in the checklist and it to the list of visited tiles.
-  checklist.push_back(tileid);
-  visited_tiles.insert(tileid);
-
-  // Get neighboring tiles in bounding box until NextTile returns -1
-  // or the maximum number specified is reached
-  while (!checklist.empty()) {
-    // Get the element off the front of the list and add it to the tile list.
-    tileid = checklist.front();
-    checklist.pop_front();
-    tilelist.push_back(tileid);
-
-    // Check neighbors
-    int32_t neighbor = LeftNeighbor(tileid);
-    if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        bbox.Intersects(TileBounds(neighbor))) {
-      checklist.push_back(neighbor);
-      visited_tiles.insert(neighbor);
-    }
-    neighbor = RightNeighbor(tileid);
-    if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        bbox.Intersects(TileBounds(neighbor))) {
-      checklist.push_back(neighbor);
-      visited_tiles.insert(neighbor);
-    }
-    neighbor = TopNeighbor(tileid);
-    if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        bbox.Intersects(TileBounds(neighbor))) {
-      checklist.push_back(neighbor);
-      visited_tiles.insert(neighbor);
-    }
-    neighbor = BottomNeighbor(tileid);
-    if (visited_tiles.find(neighbor) == visited_tiles.end() &&
-        bbox.Intersects(TileBounds(neighbor))) {
-      checklist.push_back(neighbor);
-      visited_tiles.insert(neighbor);
+  for (auto bb : bboxes) {
+    int32_t minrow = std::max(Row(bb.miny()), 0);
+    int32_t maxrow = std::max(Row(bb.maxy()), 0);
+    int32_t mincol = std::max(Col(bb.minx()), 0);
+    int32_t maxcol = std::max(Col(bb.maxx()), 0);
+    for (int32_t row = minrow; row <= maxrow; ++row) {
+      int32_t tileid = TileId(mincol, row);
+      for (int32_t col = mincol; col <= maxcol; ++col, ++tileid) {
+        tilelist.push_back(tileid);
+      }
     }
   }
   return tilelist;
