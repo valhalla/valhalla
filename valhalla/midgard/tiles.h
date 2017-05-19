@@ -37,43 +37,56 @@ class Tiles {
    * @param   bounds    Bounding box
    * @param   tilesize  Tile size
    */
-  Tiles(const AABB2<coord_t>& bounds, const float tilesize, const unsigned short subdivisions = 1);
+  Tiles(const AABB2<coord_t>& bounds, const float tilesize, const unsigned short subdivisions = 1,
+        bool wrapx = true);
 
   /**
    * Get the tile size.
    * @return Tile size.
    */
-  float TileSize() const;
+  float TileSize() const {
+    return tilesize_;
+  }
 
   /**
    * Get the tile subdivision size.
    * @return tile subdivision size.
    */
-  float SubdivisionSize() const;
+  float SubdivisionSize() const {
+    return subdivision_size_;
+  }
 
   /**
    * Get the number of rows in the tiling system.
    * @return  Returns the number of rows.
    */
-  int32_t nrows() const;
+  int32_t nrows() const {
+    return nrows_;
+  }
 
   /**
    * Get the number of columns in the tiling system.
    * @return  Returns the number of columns.
    */
-  int32_t ncolumns() const;
+  int32_t ncolumns() const {
+    return ncolumns_;
+  }
 
   /**
    * Get the number of subdivisions in a tile in the tiling system.
    * @return  Returns the number of subdivisions.
    */
-  unsigned short nsubdivisions() const;
+  unsigned short nsubdivisions() const {
+    return nsubdivisions_;
+  }
 
   /**
    * Get the bounding box of the tiling system.
    * @return Bounding box.
    */
-  AABB2<coord_t> TileBounds() const;
+  AABB2<coord_t> TileBounds() const {
+    return tilebounds_;
+  }
 
   /**
    * Shift the tilebounds - a special method used to nudge the tile bounds
@@ -104,7 +117,9 @@ class Tiles {
    * @return  Returns the tile Id. If the coordinate is outside tiling system
    *          extent, an error (-1) is returned.
    */
-  int32_t TileId(const coord_t& c) const;
+  int32_t TileId(const coord_t& c) const {
+    return TileId(c.y(), c.x());
+  }
 
   /**
    * Convert x,y to a tile Id.
@@ -121,14 +136,18 @@ class Tiles {
    * @param  row  Tile row.
    * @return  Returns the tile Id.
    */
-  int32_t TileId(const int32_t col, const int32_t row) const;
+  int32_t TileId(const int32_t col, const int32_t row) const {
+    return (row * ncolumns_) + col;
+  }
 
   /**
    * Get the tile row, col based on tile Id.
    * @param  tileid  Tile Id.
    * @return  Returns a pair indicating {row, col}
    */
-  std::pair<int32_t, int32_t> GetRowColumn(const int32_t tileid) const;
+  std::pair<int32_t, int32_t> GetRowColumn(const int32_t tileid) const {
+    return { tileid / ncolumns_, tileid % ncolumns_ };
+  }
 
   /**
    * Get a maximum tileid given a bounds and a tile size.
@@ -177,7 +196,9 @@ class Tiles {
    */
   int32_t GetRelativeTileId(const int32_t initial_tile,
                             const int32_t delta_rows,
-                            const int32_t delta_cols) const;
+                            const int32_t delta_cols) const {
+    return initial_tile + (delta_rows * ncolumns_) + delta_cols;
+  }
 
    /**
     * Get the tile offsets (row,column) between the previous tile Id and
@@ -217,7 +238,10 @@ class Tiles {
    * @return  Returns the tile Id of the tile to the north. Return tileid
    *          if tile Id is on the top row (no neighbor to the north).
    */
-  int32_t TopNeighbor(const int32_t tileid) const;
+  int32_t TopNeighbor(const int32_t tileid) const {
+    return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ?
+                tileid + ncolumns_ : tileid;
+  }
 
   /**
    * Get the neighboring tileid below or south.
@@ -225,7 +249,9 @@ class Tiles {
    * @return  Returns the tile Id of the tile to the south. Return tileid
    *          if tile Id is on the bottom row (no neighbor to the south).
    */
-  int32_t BottomNeighbor(const int32_t tileid) const;
+  int32_t BottomNeighbor(const int32_t tileid) const {
+    return (tileid < ncolumns_) ? tileid : tileid - ncolumns_;
+  }
 
   /**
    * Checks if 2 tiles are neighbors (N,E,S,W).
@@ -233,7 +259,12 @@ class Tiles {
    * @param  id2  Tile Id 2
    * @return  Returns true if tile id1 and id2 are neighbors, false if not.
    */
-  bool AreNeighbors(const uint32_t id1, const uint32_t id2) const;
+  bool AreNeighbors(const uint32_t id1, const uint32_t id2) const {
+    return (id2 == TopNeighbor(id1) ||
+            id2 == RightNeighbor(id1) ||
+            id2 == BottomNeighbor(id1) ||
+            id2 == LeftNeighbor(id1));
+  };
 
   /**
    * Get the list of tiles that lie within the specified bounding box.
@@ -282,6 +313,9 @@ class Tiles {
 
 
  protected:
+  // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)
+  bool wrapx_;
+
   // Bounding box of the tiling system.
   AABB2<coord_t> tilebounds_;
 
