@@ -19,35 +19,36 @@ namespace sif {
 namespace {
 constexpr uint32_t kUnitSize = 1;
 
-constexpr float kModeWeight             = 1.0f; // Favor this mode?
+constexpr float kModeFactor             = 1.0f; // Favor this mode?
 constexpr float kDefaultTransferCost    = 15.0f;
 constexpr float kDefaultTransferPenalty = 300.0f;
 
 // User propensity to use buses. Range of values from 0 (avoid buses) to
 // 1 (totally comfortable riding on buses).
-constexpr float kDefaultUseBusFactor = 0.3f;
+constexpr float kDefaultUseBus = 0.3f;
 
 // User propensity to use rail. Range of values from 0 (avoid rail) to
 // 1 (totally comfortable riding on rail).
-constexpr float kDefaultUseRailFactor = 0.6f;
+constexpr float kDefaultUseRail = 0.6f;
 
 // User propensity to use/allow transfers. Range of values from 0
 // (avoid transfers) to 1 (totally comfortable with transfers).
-constexpr float kDefaultUseTransfersFactor = 0.3f;
+constexpr float kDefaultUseTransfers = 0.3f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 
-constexpr float kMaxWeight = 20.0; // TODO - What should max weight be?
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
 
 // Maximum amount of seconds that will be allowed to be passed in to influence paths
 // This can't be too high because sometimes a certain kind of path is required to be taken
 constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
 
 // Valid ranges and defaults
-constexpr ranged_default_t<float> kModeWeightRange{0, kModeWeight, kMaxWeight};
-constexpr ranged_default_t<float> kUseBusFactorRange{0, kDefaultUseBusFactor, 1.0f};
-constexpr ranged_default_t<float> kUseRailFactorRange{0, kDefaultUseRailFactor, 1.0f};
-constexpr ranged_default_t<float> kUseTransfersFactorRange{0, kDefaultUseTransfersFactor, 1.0f};
+constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
+constexpr ranged_default_t<float> kUseBusRange{0, kDefaultUseBus, 1.0f};
+constexpr ranged_default_t<float> kUseRailRange{0, kDefaultUseRail, 1.0f};
+constexpr ranged_default_t<float> kUseTransfersRange{0, kDefaultUseTransfers, 1.0f};
 constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxSeconds};
 constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxSeconds};
 
@@ -81,10 +82,10 @@ class TransitCost : public DynamicCost {
   bool bicycle() const;
 
   /**
-   * This method overrides the weight for this mode.  The higher the value
+   * This method overrides the factor for this mode.  The higher the value
    * the more the mode is favored.
    */
-  virtual float GetModeWeight();
+  virtual float GetModeFactor();
 
   /**
    * Get the access mode used by this costing method.
@@ -255,9 +256,9 @@ class TransitCost : public DynamicCost {
   bool wheelchair_;
   bool bicycle_;
 
-  // This is the weight for this mode.  The higher the value the more the
+  // This is the factor for this mode.  The higher the value the more the
   // mode is favored.
-  float mode_weight_;
+  float mode_factor_;
 
   // A measure of willingness to ride on buses or rail. Ranges from 0-1 with
   // 0 being not willing at all and 1 being totally comfortable with taking
@@ -317,26 +318,29 @@ class TransitCost : public DynamicCost {
 TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
 
-  mode_weight_ = kModeWeightRange(
-    pt.get<float>("mode_weight", kModeWeight)
+  mode_factor_ = kModeFactorRange(
+    pt.get<float>("mode_factor", kModeFactor)
   );
 
   wheelchair_ = pt.get<bool>("wheelchair", false);
   bicycle_ = pt.get<bool>("bicycle", false);
 
-  // Willingness to use buses. Make sure this is within range [0, 1].
-  use_bus_ = kUseBusFactorRange(
-    pt.get<float>("use_bus", kDefaultUseBusFactor)
+  // Willingness to use buses. Make sure this is within range [0, 1]
+  // Otherwise it will default
+  use_bus_ = kUseBusRange(
+    pt.get<float>("use_bus", kDefaultUseBus)
   );
 
   // Willingness to use rail. Make sure this is within range [0, 1].
-  use_rail_ = kUseRailFactorRange(
-    pt.get<float>("use_rail", kDefaultUseRailFactor)
+  // Otherwise it will default
+  use_rail_ = kUseRailRange(
+    pt.get<float>("use_rail", kDefaultUseRail)
   );
 
   // Willingness to make transfers. Make sure this is within range [0, 1].
-  use_transfers_ = kUseTransfersFactorRange(
-    pt.get<float>("use_transfers", kDefaultUseTransfersFactor)
+  // Otherwise it will default
+  use_transfers_ = kUseTransfersRange(
+    pt.get<float>("use_transfers", kDefaultUseTransfers)
   );
 
   // Set the factors. The factors above 0.5 start to reduce the weight
@@ -417,10 +421,10 @@ bool TransitCost::bicycle() const {
   return bicycle_;
 }
 
-// This method overrides the weight for this mode.  The higher the value
+// This method overrides the factor for this mode.  The higher the value
 // the more the mode is favored.
-float TransitCost::GetModeWeight() {
-  return mode_weight_;
+float TransitCost::GetModeFactor() {
+  return mode_factor_;
 }
 
 // This method adds tile_index_pairs to the exclude list based on the
@@ -677,42 +681,42 @@ void testTransitCostParams() {
   std::shared_ptr<std::uniform_real_distribution<float>> distributor;
   std::shared_ptr<TransitCost> ctorTester;
 
-  // mode_weight_
-  distributor.reset(make_distributor_from_range(kModeWeightRange));
+  // mode_factor_
+  distributor.reset(make_distributor_from_range(kModeFactorRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_transitcost_from_json("mode_weight", (*distributor)(generator)));
-    if (ctorTester->mode_weight_ < kModeWeightRange.min ||
-        ctorTester->mode_weight_ > kModeWeightRange.max) {
-      throw std::runtime_error ("mode_weight_ is not within it's range");
+    ctorTester.reset(make_transitcost_from_json("mode_factor", (*distributor)(generator)));
+    if (ctorTester->mode_factor_ < kModeFactorRange.min ||
+        ctorTester->mode_factor_ > kModeFactorRange.max) {
+      throw std::runtime_error ("mode_factor_ is not within it's range");
     }
   }
 
   // use_bus_
-  distributor.reset(make_distributor_from_range(kUseBusFactorRange));
+  distributor.reset(make_distributor_from_range(kUseBusRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_bus", (*distributor)(generator)));
-    if (ctorTester->use_bus_ < kUseBusFactorRange.min ||
-        ctorTester->use_bus_ > kUseBusFactorRange.max) {
+    if (ctorTester->use_bus_ < kUseBusRange.min ||
+        ctorTester->use_bus_ > kUseBusRange.max) {
       throw std::runtime_error ("use_bus_ is not within it's range");
     }
   }
 
   // use_rail_
-  distributor.reset(make_distributor_from_range(kUseRailFactorRange));
+  distributor.reset(make_distributor_from_range(kUseRailRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_rail", (*distributor)(generator)));
-    if (ctorTester->use_rail_ < kUseRailFactorRange.min ||
-        ctorTester->use_rail_ > kUseRailFactorRange.max) {
+    if (ctorTester->use_rail_ < kUseRailRange.min ||
+        ctorTester->use_rail_ > kUseRailRange.max) {
       throw std::runtime_error ("use_rail_ is not within it's range");
     }
   }
 
   // use_transfers_
-  distributor.reset(make_distributor_from_range(kUseTransfersFactorRange));
+  distributor.reset(make_distributor_from_range(kUseTransfersRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_transfers", (*distributor)(generator)));
-    if (ctorTester->use_transfers_ < kUseTransfersFactorRange.min ||
-        ctorTester->use_transfers_ > kUseTransfersFactorRange.max) {
+    if (ctorTester->use_transfers_ < kUseTransfersRange.min ||
+        ctorTester->use_transfers_ > kUseTransfersRange.max) {
       throw std::runtime_error ("use_transfers_ is not within it's range");
     }
   }

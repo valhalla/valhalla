@@ -246,7 +246,7 @@ class AutoCost : public DynamicCost {
   float tollbooth_penalty_;         // Penalty (seconds) to go through a toll booth
   float ferry_cost_;                // Cost (seconds) to enter a ferry
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry
-  float ferry_weight_;              // Weighting to apply to ferry edges
+  float ferry_factor_;              // Weighting to apply to ferry edges
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
@@ -321,13 +321,13 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
 
     // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_weight_ = 10.0f - use_ferry_ * 18.0f;
+    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
     // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.5f - use_ferry_;
+    ferry_factor_  = 1.5f - use_ferry_;
   }
 
   // Create speed cost table
@@ -409,7 +409,7 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
   float factor = (edge->use() == Use::kFerry) ?
-        ferry_weight_ : density_factor_[edge->density()];
+        ferry_factor_ : density_factor_[edge->density()];
 
   float sec = (edge->length() * speedfactor_[edge->speed()]);
   return Cost(sec * factor, sec);
@@ -610,7 +610,7 @@ AutoShorterCost::~AutoShorterCost() {
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost AutoShorterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-  float factor = (edge->use() == Use::kFerry) ? ferry_weight_ : 1.0f;
+  float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
   return Cost(edge->length() * adjspeedfactor_[edge->speed()] * factor,
               edge->length() * speedfactor_[edge->speed()]);
 }
@@ -952,7 +952,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost HOVCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   float factor = (edge->use() == Use::kFerry) ?
-        ferry_weight_ : density_factor_[edge->density()];
+        ferry_factor_ : density_factor_[edge->density()];
 
   if ((edge->forwardaccess() & kHOVAccess) &&
       !(edge->forwardaccess() & kAutoAccess))

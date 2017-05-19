@@ -36,7 +36,7 @@ constexpr uint32_t kDefaultMaxGradeFoot = 90;
 constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
 
 // Other defaults (not dependent on type)
-constexpr float kModeWeight             = 1.5f;   // Favor this mode?
+constexpr float kModeFactor             = 1.5f;   // Favor this mode?
 constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
 constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
 constexpr float kDefaultWalkwayFactor   = 0.9f;   // Slightly favor walkways
@@ -78,10 +78,11 @@ constexpr uint32_t kCrossingCosts[] = { 0, 0, 1, 1, 2, 3, 5, 15 };
 // This can't be too high because sometimes a certain kind of path is required to be taken
 constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
 
-constexpr float kMaxFactor = 20.0f; // TODO - What should the maximum value of a factor be?
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
 
 // Valid ranges and defaults
-constexpr ranged_default_t<uint32_t> kMaxDistanceWheelchairRange{0, kMaxDistanceWheelchair, kMaxDistanceWheelchair};
+constexpr ranged_default_t<uint32_t> kMaxDistanceWheelchairRange{0, kMaxDistanceWheelchair, kMaxDistanceFoot};
 constexpr ranged_default_t<uint32_t> kMaxDistanceFootRange{0, kMaxDistanceFoot, kMaxDistanceFoot};
 
 constexpr ranged_default_t<float> kSpeedWheelchairRange{kMinPedestrianSpeed, kDefaultSpeedWheelchair, kMaxPedestrianSpeed};
@@ -90,24 +91,24 @@ constexpr ranged_default_t<float> kSpeedFootRange{kMinPedestrianSpeed, kDefaultS
 constexpr ranged_default_t<float> kStepPenaltyWheelchairRange{0, kDefaultStepPenaltyWheelchair, kMaxSeconds};
 constexpr ranged_default_t<float> kStepPenaltyFootRange{0, kDefaultStepPenaltyFoot, kMaxSeconds};  
 
-constexpr ranged_default_t<uint32_t> kMaxGradeWheelchairRange{0, kDefaultMaxGradeWheelchair, kDefaultMaxGradeWheelchair};
+constexpr ranged_default_t<uint32_t> kMaxGradeWheelchairRange{0, kDefaultMaxGradeWheelchair, kDefaultMaxGradeFoot};
 constexpr ranged_default_t<uint32_t> kMaxGradeFootRange{0, kDefaultMaxGradeFoot, kDefaultMaxGradeFoot};
 
 // Other valid ranges and defaults (not dependent on type)
-constexpr ranged_default_t<float> kModeWeightRange{0, kModeWeight, kMaxFactor};
-constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kWalkwayFactorRange{0, kDefaultWalkwayFactor, kMaxFactor};
-constexpr ranged_default_t<float> kSideWalkFactorRange{0, kDefaultSideWalkFactor, kMaxFactor};
-constexpr ranged_default_t<float> kAlleyFactorRange{0, kDefaultAlleyFactor, kMaxFactor};
-constexpr ranged_default_t<float> kDrivewayFactorRange{0, kDefaultDrivewayFactor, kMaxFactor};
+constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
+constexpr ranged_default_t<float> kManeuverPenaltyRange{kMinFactor, kDefaultManeuverPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{kMinFactor, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kWalkwayFactorRange{kMinFactor, kDefaultWalkwayFactor, kMaxFactor};
+constexpr ranged_default_t<float> kSideWalkFactorRange{kMinFactor, kDefaultSideWalkFactor, kMaxFactor};
+constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
+constexpr ranged_default_t<float> kDrivewayFactorRange{kMinFactor, kDefaultDrivewayFactor, kMaxFactor};
 constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransitStartEndMaxDistance,
-                                                                     kTransitStartEndMaxDistance};
+                                                                     100000}; // Max 100k
 constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
-                                                                      kTransitTransferMaxDistance};
+                                                                      50000}; // Max 50k
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 /**
@@ -141,10 +142,10 @@ class PedestrianCost : public DynamicCost {
   virtual uint32_t GetMaxTransferDistanceMM();
 
   /**
-   * This method overrides the weight for this mode.  The higher the value
+   * This method overrides the factor for this mode.  The higher the value
    * the more the mode is favored.
    */
-  virtual float GetModeWeight();
+  virtual float GetModeFactor();
 
   /**
    * Get the access mode used by this costing method.
@@ -287,9 +288,9 @@ class PedestrianCost : public DynamicCost {
   // Maximum pedestrian distance.
   uint32_t max_distance_;
 
-  // This is the weight for this mode.  The higher the value the more the
+  // This is the factor for this mode.  The higher the value the more the
   // mode is favored.
-  float mode_weight_;
+  float mode_factor_;
 
   // Maximum pedestrian distance in meters for multimodal routes.
   // Maximum distance at the beginning or end of a multimodal route
@@ -320,7 +321,7 @@ class PedestrianCost : public DynamicCost {
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float ferry_cost_;                // Cost (seconds) to exit a ferry
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry
-  float ferry_weight_;              // Weighting to apply to ferry edges
+  float ferry_factor_;              // Weighting to apply to ferry edges
   float use_ferry_;
 };
 
@@ -380,8 +381,8 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   }
 
 
-  mode_weight_ = kModeWeightRange(
-    pt.get<float>("mode_weight", kModeWeight)
+  mode_factor_ = kModeFactorRange(
+    pt.get<float>("mode_factor", kModeFactor)
   );
   maneuver_penalty_ = kManeuverPenaltyRange(
     pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
@@ -426,13 +427,13 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
 
     // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_weight_ = 10.0f - use_ferry_ * 18.0f;
+    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
     // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.5f - use_ferry_;
+    ferry_factor_  = 1.5f - use_ferry_;
   }
 
   // Set the speed factor (to avoid division in costing)
@@ -459,10 +460,10 @@ uint32_t PedestrianCost::GetMaxTransferDistanceMM() {
   return transit_transfer_max_distance_;
 }
 
-// This method overrides the weight for this mode.  The higher the value
+// This method overrides the factor for this mode.  The higher the value
 // the more the mode is favored.
-float PedestrianCost::GetModeWeight() {
-  return mode_weight_;
+float PedestrianCost::GetModeFactor() {
+  return mode_factor_;
 }
 
 // Get the access mode used by this costing method.
@@ -530,7 +531,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   if (edge->use() == Use::kFerry) {
     float sec = edge->length() * (kSecPerHour * 0.001f) /
             static_cast<float>(edge->speed());
-    return { sec * ferry_weight_, sec };
+    return { sec * ferry_factor_, sec };
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
@@ -771,13 +772,13 @@ void testPedestrianCostParams() {
 
 
   // Non type dependent tests
-  // mode_weight_
-    real_distributor.reset(make_distributor_from_range(kModeWeightRange));
+  // mode_factor_
+    real_distributor.reset(make_distributor_from_range(kModeFactorRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_pedestriancost_from_json("mode_weight", (*real_distributor)(generator), "foot"));
-    if (ctorTester->mode_weight_ < kModeWeightRange.min ||
-        ctorTester->mode_weight_ > kModeWeightRange.max) {
-      throw std::runtime_error ("mode_weight_ is not within it's range");
+    ctorTester.reset(make_pedestriancost_from_json("mode_factor", (*real_distributor)(generator), "foot"));
+    if (ctorTester->mode_factor_ < kModeFactorRange.min ||
+        ctorTester->mode_factor_ > kModeFactorRange.max) {
+      throw std::runtime_error ("mode_factor_ is not within it's range");
     }
   }
 

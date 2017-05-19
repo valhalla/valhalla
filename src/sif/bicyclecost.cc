@@ -312,7 +312,7 @@ public:
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float ferry_cost_;                // Cost (seconds) to exit a ferry
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry
-  float ferry_weight_;              // Weighting to apply to ferry edges
+  float ferry_factor_;              // Weighting to apply to ferry edges
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float use_roads_;                  // Preference of using roads between 0 and 1
@@ -489,13 +489,13 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
 
     // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
-    ferry_weight_ = 10.0f - use_ferry_ * 18.0f;
+    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
     // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.5f - use_ferry_;
+    ferry_factor_  = 1.5f - use_ferry_;
   }
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
@@ -595,7 +595,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
     float sec = (edge->length() * speedfactor_[edge->speed()]);
-    return { sec * ferry_weight_, sec };
+    return { sec * ferry_factor_, sec };
   }
 
   // Update speed based on surface factor. Lower speed for rougher surfaces

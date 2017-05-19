@@ -87,11 +87,11 @@ constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPen
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kLowClassPenaltyRange{0, kDefaultLowClassPenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kTruckWeightRange{0, kDefaultTruckWeight, 100.0f}; // What to make max?
-constexpr ranged_default_t<float> kTruckAxleLoadRange{0, kDefaultTruckAxleLoad, 100.0f};
+constexpr ranged_default_t<float> kTruckWeightRange{0, kDefaultTruckWeight, 250.0f};
+constexpr ranged_default_t<float> kTruckAxleLoadRange{0, kDefaultTruckAxleLoad, 40.0f};
 constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0f};
-constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 8.0f};
-constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 40.0f};
+constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 5.0f};
+constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 
 }
 
