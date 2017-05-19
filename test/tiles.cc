@@ -118,6 +118,33 @@ void TileList() {
                              std::to_string(tilelist.size()) +
                              " found in TileList");
   }
+
+  // Test crossing -180
+  AABB2<PointLL> bbox2(PointLL(-183.5f, 30.5f), PointLL(-176.5f, 34.5f));
+  tilelist = tiles.TileList(bbox2);
+  if (tilelist.size() != 40) {
+    throw std::runtime_error("Wrong number of tiles " +
+                             std::to_string(tilelist.size()) +
+                             " found in TileList crossing -180");
+  }
+
+  // Test crossing 180
+  AABB2<PointLL> bbox3(PointLL(176.5f, 30.5f), PointLL(183.5f, 34.5f));
+  tilelist = tiles.TileList(bbox3);
+  if (tilelist.size() != 40) {
+    throw std::runtime_error("Wrong number of tiles " +
+                             std::to_string(tilelist.size()) +
+                             " found in TileList crossing 180");
+  }
+
+  Tiles<PointLL> tiles2(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 0.25f);
+  AABB2<PointLL> bbox4(PointLL(-76.489998f,40.509998f), PointLL(-76.480003f,40.520000f));
+  tilelist = tiles.TileList(bbox4);
+  if (tilelist.size() != 1) {
+     throw std::runtime_error("Wrong number of tiles " +
+                              std::to_string(tilelist.size()) +
+                              " found in TileList");
+  }
 }
 
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
