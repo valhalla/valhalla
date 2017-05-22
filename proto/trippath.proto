@@ -196,6 +196,7 @@ message TripPath {
     optional bool truck_route = 38;
     repeated LaneConnectivity lane_connectivity = 39;
     optional int32 mean_elevation = 40;
+    repeated uint64 traffic_segment = 41;
   }
 
   message IntersectingEdge {

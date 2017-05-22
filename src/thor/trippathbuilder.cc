@@ -1349,6 +1349,17 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
   if (directededge->truck_route() && controller.attributes.at(kEdgeTruckRoute))
     trip_edge->set_truck_route(true);
 
+  // Traffic segments
+  if (controller.attributes.at(kEdgeTrafficSegments)) {
+    printf("Get traffic segments...\n");
+    auto segments = graphtile->GetTrafficSegments(edge);
+    printf("Done\n");
+    for (const auto& segment : segments) {
+      trip_edge->add_traffic_segment(segment.segment_id_);
+    }
+    printf("Added to trip edge\n");
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information
   if (trip_id

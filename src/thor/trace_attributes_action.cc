@@ -154,6 +154,12 @@ namespace {
             names_array->push_back(name);
           edge_map->emplace("names", names_array);
         }
+        if (edge.traffic_segment().size() > 0) {
+          auto segments_array = json::array({});
+          for(auto segment : edge.traffic_segment())
+            segments_array->emplace_back(segment);
+          edge_map->emplace("traffic_segments", segments_array);
+        }
 
         // Process edge sign
         if (edge.has_sign()) {
