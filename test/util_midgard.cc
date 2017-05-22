@@ -21,8 +21,7 @@ void TestRangedDefaultT () {
   std::uniform_real_distribution<float> defaultDistributor (lower, upper);
   std::uniform_real_distribution<float> testDistributor (lower - 40, upper + 40);
 
-  for (unsigned i = 0; i < 100; ++i)
-  {
+  for (unsigned i = 0; i < 100; ++i) {
     ranged_default_t<float> testRange {lower, defaultDistributor(generator), upper};
     float defaultVal = testRange.def;
     float testVal = testDistributor(generator);
