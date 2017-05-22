@@ -1351,13 +1351,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Traffic segments
   if (controller.attributes.at(kEdgeTrafficSegments)) {
-    printf("Get traffic segments...\n");
     auto segments = graphtile->GetTrafficSegments(edge);
-    printf("Done\n");
     for (const auto& segment : segments) {
       trip_edge->add_traffic_segment(segment.segment_id_);
     }
-    printf("Added to trip edge\n");
   }
 
   /////////////////////////////////////////////////////////////////////////////
