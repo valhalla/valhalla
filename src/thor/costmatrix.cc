@@ -82,11 +82,11 @@ void CostMatrix::Clear() {
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
 std::vector<TimeDistance> CostMatrix::SourceToTarget(
-        const std::vector<baldr::PathLocation>& source_location_list,
-        const std::vector<baldr::PathLocation>& target_location_list,
-        baldr::GraphReader& graphreader,
-        const std::shared_ptr<sif::DynamicCost>* mode_costing,
-        const sif::TravelMode mode) {
+        const std::vector<PathLocation>& source_location_list,
+        const std::vector<PathLocation>& target_location_list,
+        GraphReader& graphreader,
+        const std::shared_ptr<DynamicCost>* mode_costing,
+        const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -137,7 +137,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 
     // Break out when remaining sources and targets to expand are both 0
     if (remaining_sources_ == 0 && remaining_targets_ == 0) {
-      LOG_DEBUG("SourceToTarget iterations: n = " + std::to_string(n));
+      LOG_INFO("SourceToTarget iterations: n = " + std::to_string(n));
       break;
     }
 
@@ -216,7 +216,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
                    std::vector<HierarchyLimits>& hierarchy_limits,
                    std::vector<EdgeLabel>& edgelabels,
                    EdgeStatus& edgestate,
-                   std::shared_ptr<baldr::DoubleBucketQueue>& adj,
+                   std::shared_ptr<DoubleBucketQueue>& adj,
                    const bool from_transition) {
   // Expand from end node in forward direction.
   uint32_t shortcuts = 0;
@@ -304,7 +304,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
 
 // Iterate the forward search from the source/origin location.
 void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
-                  baldr::GraphReader& graphreader) {
+                  GraphReader& graphreader) {
   // Get the next edge from the adjacency list for this source location
   auto adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
@@ -371,77 +371,77 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     return;
   }
 
-  // Get the opposing edge. An invalid opposing edge occurs for transition
-  // edges - skip them.
+  // Get the opposing edge. Get a list of target locations whose reverse
+  // search has reached this edge.
   GraphId oppedge = pred.opp_edgeid();
-  if (oppedge.Is_Valid()) {
-    // Get a list of target locations whose reverse search
-    // has reached this edge.
-    auto targets = targets_.find(oppedge);
-    if (targets == targets_.end()) {
-      return;
+  auto targets = targets_.find(oppedge);
+  if (targets == targets_.end()) {
+    return;
+  }
+
+  // Iterate through the targets
+  for (auto target : targets->second) {
+    uint32_t idx = source * target_count_ + target;
+    if (best_connection_[idx].found) {
+      continue;
     }
 
-    // Iterate through the targets
-    for (auto target : targets->second) {
-      uint32_t idx = source * target_count_ + target;
-      if (best_connection_[idx].found) {
-        continue;
-      }
+    // Update any targets whose threshold has been reached
+    if (best_connection_[idx].threshold > 0 && n > best_connection_[idx].threshold) {
+      best_connection_[idx].found = true;
+      continue;
+    }
 
-      const auto& edgestate = target_edgestatus_[target];
+    const auto& edgestate = target_edgestatus_[target];
 
-      // If this edge has been reached then a shortest path has been found
-      // to the end node of this directed edge.
-      EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
-      if (oppedgestatus.set() != EdgeSet::kUnreached) {
-        const auto& edgelabels = target_edgelabel_[target];
-        uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
-        const EdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
+    // If this edge has been reached then a shortest path has been found
+    // to the end node of this directed edge.
+    EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
+    if (oppedgestatus.set() != EdgeSet::kUnreached) {
+      const auto& edgelabels = target_edgelabel_[target];
+      uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
+      const EdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
 
-        // Special case - common edge for source and target are both initial edges
-        if (pred.predecessor() == kInvalidLabel && predidx == kInvalidLabel) {
-          float s = std::abs(pred.cost().secs + opp_el.cost().secs -
-                             opp_el.transition_cost());
+      // Special case - common edge for source and target are both initial edges
+      if (pred.predecessor() == kInvalidLabel && predidx == kInvalidLabel) {
+        float s = std::abs(pred.cost().secs + opp_el.cost().secs -
+                           opp_el.transition_cost());
 
-          // Update best connection and set found = true.
-          // distance computation only works with the casts.
-          uint32_t d = std::abs(static_cast<int>(pred.path_distance())   +
-                                static_cast<int>(opp_el.path_distance()) -
-                                static_cast<int>(opp_el.transition_secs()));
-          best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
-          best_connection_[idx].found = true;
+        // Update best connection and set found = true.
+        // distance computation only works with the casts.
+        uint32_t d = std::abs(static_cast<int>(pred.path_distance())   +
+                              static_cast<int>(opp_el.path_distance()) -
+                              static_cast<int>(opp_el.transition_secs()));
+        best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
+        best_connection_[idx].found = true;
+
+        // Update status and update threshold if this is the last location
+        // to find for this source or target
+        UpdateStatus(source, target);
+      } else {
+        float oppcost = (predidx == kInvalidLabel) ?
+                  0 : edgelabels[predidx].cost().cost;
+        float c = pred.cost().cost + oppcost +  opp_el.transition_cost();
+
+        // Check if best connection
+        if (c < best_connection_[idx].cost.cost) {
+          float oppsec = (predidx == kInvalidLabel) ?
+                        0 : edgelabels[predidx].cost().secs;
+          uint32_t oppdist = (predidx == kInvalidLabel) ?
+                        0 : edgelabels[predidx].path_distance();
+          float s = pred.cost().secs + oppsec + opp_el.transition_secs();
+          uint32_t d = pred.path_distance() + oppdist;
+
+          // Update best connection and set a threshold
+          best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
+          if (best_connection_[idx].threshold == 0) {
+            best_connection_[idx].threshold = n + GetThreshold(mode_,
+                   source_edgelabel_[source].size() + target_edgelabel_[target].size());
+          }
 
           // Update status and update threshold if this is the last location
           // to find for this source or target
           UpdateStatus(source, target);
-        } else {
-          float oppcost = (predidx == kInvalidLabel) ?
-                    0 : edgelabels[predidx].cost().cost;
-          float c = pred.cost().cost + oppcost +  opp_el.transition_cost();
-
-          // Check if best connection
-          if (c < best_connection_[idx].cost.cost) {
-            float oppsec = (predidx == kInvalidLabel) ?
-                          0 : edgelabels[predidx].cost().secs;
-            uint32_t oppdist = (predidx == kInvalidLabel) ?
-                          0 : edgelabels[predidx].path_distance();
-            float s = pred.cost().secs + oppsec + opp_el.transition_secs();
-            uint32_t d = pred.path_distance() + oppdist;
-
-            // Update best connection and set a threshold
-            best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
-            if (best_connection_[idx].threshold == 0) {
-              best_connection_[idx].threshold = n + GetThreshold(mode_,
-                     source_edgelabel_[source].size() + target_edgelabel_[target].size());
-            } else if (n > best_connection_[idx].threshold) {
-              best_connection_[idx].found = true;
-            }
-
-            // Update status and update threshold if this is the last location
-            // to find for this source or target
-            UpdateStatus(source, target);
-          }
         }
       }
     }
@@ -486,7 +486,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
                    std::vector<HierarchyLimits>& hierarchy_limits,
                    std::vector<EdgeLabel>& edgelabels,
                    EdgeStatus& edgestate,
-                   std::shared_ptr<baldr::DoubleBucketQueue>& adj,
+                   std::shared_ptr<DoubleBucketQueue>& adj,
                    const bool from_transition) {
   uint32_t shortcuts = 0;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -572,20 +572,20 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Add edge label, add to the adjacency list and set edge status
-    // Add to the list or targets that have reached this edge
     adj->add(edgelabels.size(), newcost.cost);
     edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
     edgelabels.emplace_back(pred_idx, edgeid, oppedge,
        directededge, newcost, mode_, tc, distance,
        (pred.not_thru_pruning() || !directededge->not_thru()));
 
+    // Add to the list of targets that have reached this edge
     targets_[edgeid].push_back(index);
   }
 }
 
 // Expand the backwards search trees.
 void CostMatrix::BackwardSearch(const uint32_t index,
-                 baldr::GraphReader& graphreader) {
+                 GraphReader& graphreader) {
   // Get the next edge from the adjacency list for this target location
   auto adj = target_adjacency_[index];
   auto& edgelabels = target_edgelabel_[index];
@@ -649,8 +649,8 @@ void CostMatrix::BackwardSearch(const uint32_t index,
 
 // Sets the source/origin locations. Search expands forward from these
 // locations.
-void CostMatrix::SetSources(baldr::GraphReader& graphreader,
-                      const std::vector<baldr::PathLocation>& sources) {
+void CostMatrix::SetSources(GraphReader& graphreader,
+                      const std::vector<PathLocation>& sources) {
   // Allocate edge labels and edge status
   source_count_ = sources.size();
   source_edgelabel_.resize(source_count_);
@@ -685,7 +685,6 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
-
 
       // Get cost. Get distance along the remainder of this edge.
       Cost edgecost = costing_->EdgeCost(directededge);
@@ -722,7 +721,7 @@ void CostMatrix::SetSources(baldr::GraphReader& graphreader,
 // Set the target/destination locations. Search expands backwards from
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
-                     const std::vector<baldr::PathLocation>& targets) {
+                     const std::vector<PathLocation>& targets) {
   // Allocate target edge labels and edge status
   target_count_ = targets.size();
   target_edgelabel_.resize(targets.size());
