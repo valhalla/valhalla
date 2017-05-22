@@ -11,6 +11,9 @@
 #include <valhalla/sif/transitcost.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 namespace valhalla {
 namespace sif {
 
