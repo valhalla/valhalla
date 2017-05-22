@@ -24,8 +24,7 @@ struct ranged_default_t {
   T min, def, max;
 
   // Returns the value snapped to the default if outside of the range
-  T operator() (const T& value) const
-  {
+  T operator() (const T& value) const {
     if (value < min || value > max) {
       return def;
     }
