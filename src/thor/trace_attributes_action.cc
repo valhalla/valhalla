@@ -156,8 +156,15 @@ namespace {
         }
         if (edge.traffic_segment().size() > 0) {
           auto segments_array = json::array({});
-          for(auto segment : edge.traffic_segment())
-            segments_array->emplace_back(segment);
+          for(auto segment : edge.traffic_segment()) {
+            json::MapPtr segmap = json::map({
+                  {"segment_id", segment.segment_id()},
+                  {"begin_percent", json::fp_t{segment.begin_percent(), 3}},
+                  {"end_percent", json::fp_t{segment.end_percent(), 3}},
+                  {"starts_segment", segment.starts_segment()},
+                  {"ends_segment", segment.ends_segment()} });
+            segments_array->emplace_back(segmap);
+          }
           edge_map->emplace("traffic_segments", segments_array);
         }
 
