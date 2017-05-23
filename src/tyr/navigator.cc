@@ -204,7 +204,8 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   std::cout << std::endl << "--------------------------------------------------------------------------------------------" << std::endl;
   std::cout << "LL=" << std::get<0>(closest).lat() << "," << std::get<0>(closest).lng() << " | distance=" << std::get<1>(closest) << " | index=" << std::get<2>(closest) << std::endl;
 
-  // If off route then return invalid route state
+  // If the fix point distance from route is greater than the off route threshold
+  // then return invalid route state
   if (std::get<1>(closest) > kOffRouteThreshold) {
     nav_status.set_route_state(NavigationStatus_RouteState_kInvalid);
     return;
