@@ -85,7 +85,7 @@ void Navigator::SetShapeLengthTime() {
       float time = (maneuver.time() == 0) ? 0.000028f : maneuver.time();
       float speed = (maneuver.length()/time);
       //GDG
-      std::cout << "index=" << zzz++ << " | maneuver.length()=" << maneuver.length() << " | maneuver.time()=" << maneuver.time() << " | time=" << time << " | speed=" << speed << std::endl;
+      std::cout << "index=" << zzz++ << " | maneuver.length()=" << maneuver.length() << " | maneuver.time()=" << maneuver.time() << " | time=" << time << " | speed(units/sec)=" << speed << " | speed(units/hour)=" << (speed*3600) << std::endl;
       maneuver_speeds_.emplace_back(speed);
     }
 
