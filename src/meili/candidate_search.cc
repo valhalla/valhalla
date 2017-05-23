@@ -1,6 +1,5 @@
 #include "baldr/tilehierarchy.h"
 #include "meili/candidate_search.h"
-#include "meili/graph_helpers.h"
 #include "meili/geometry_helpers.h"
 
 namespace valhalla {
@@ -43,12 +42,12 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     const auto& edgeid = *it;
     if (!edgeid.Is_Valid()) continue;
 
-    const auto opp_edgeid = helpers::edge_opp_edgeid(reader_, edgeid, tile);
+    const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, tile);
     if (!opp_edgeid.Is_Valid()) continue;
     const auto opp_edge = tile->directededge(opp_edgeid);
 
     // Make sure it's the last one since we need the tile of this edge
-    const auto edge = helpers::edge_directededge(reader_, edgeid, tile);
+    const auto edge = reader_.directededge(edgeid, tile);
     if (!edge) continue;
 
     if (!(edgeid.level() == edge->endnode().level() && edgeid.level() == opp_edgeid.level())) {
@@ -97,7 +96,6 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       if (!edge_included) {
         std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
       }
-
       if (sq_distance <= sq_search_radius) {
         const float dist = opp_edge->forward()? offset : 1.f - offset;
         if (dist == 1.f) {
