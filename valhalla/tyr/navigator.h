@@ -72,6 +72,9 @@ class Navigator {
     // Current shape index
     size_t current_shape_index_;
 
+    // Maneuver speeds in units per second
+    std::vector<float> maneuver_speeds_;
+
     // Remaining leg length and time
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 

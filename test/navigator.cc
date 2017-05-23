@@ -68,7 +68,7 @@ class NavigatorTest : public Navigator {
     return Navigator::route();
   }
 
-  const std::vector<std::pair<float, uint32_t>>& remaining_leg_lengths() const {
+  const std::vector<std::pair<float, uint32_t>>& remaining_leg_values() const {
     return Navigator::remaining_leg_values_;
   }
 
@@ -520,13 +520,17 @@ void TryRouteLanguage(NavigatorTest& nav, std::string expected_language) {
     throw std::runtime_error("Incorrect language for route - found: " + language + " | expected: " + expected_language);
 }
 
-void TryRemainingLegLength(NavigatorTest& nav, uint32_t index,
-    float expected_remaining_leg_length) {
+void TryRemainingLegValues(NavigatorTest& nav, uint32_t index,
+    float expected_remaining_leg_length, uint32_t expected_remaining_leg_time) {
 
-  float remaining_leg_length = nav.remaining_leg_lengths().at(index).first;
+  float remaining_leg_length = nav.remaining_leg_values().at(index).first;
+  uint32_t remaining_leg_time = nav.remaining_leg_values().at(index).second;
 
   if (!valhalla::midgard::equal<float>(remaining_leg_length, expected_remaining_leg_length, 0.005f))
     throw std::runtime_error("Incorrect remaining leg length - found: " + std::to_string(remaining_leg_length) + " | expected: " + std::to_string(expected_remaining_leg_length));
+
+  if (!valhalla::midgard::equal<float>(remaining_leg_time, expected_remaining_leg_time, (expected_remaining_leg_time*0.0066f)))
+    throw std::runtime_error("Incorrect remaining leg time - found: " + std::to_string(remaining_leg_time) + " | expected: " + std::to_string(expected_remaining_leg_time));
 }
 
 FixLocation GetFixLocation(float lon, float lat, uint64_t time) {
@@ -601,7 +605,7 @@ void ValidateNavigationStatus(const NavigationStatus& nav_status,
   if (!valhalla::midgard::equal<float>(nav_status.remaining_leg_length(), expected_nav_status.remaining_leg_length(), 0.005f))
     throw std::runtime_error("Incorrect remaining_leg_length for NavigationStatus - found: " + std::to_string(nav_status.remaining_leg_length()) + " | expected: " + std::to_string(expected_nav_status.remaining_leg_length()));
 
-  if (nav_status.remaining_leg_time() != expected_nav_status.remaining_leg_time())
+  if (!valhalla::midgard::equal<float>(nav_status.remaining_leg_time(), expected_nav_status.remaining_leg_time(), (expected_nav_status.remaining_leg_time() * 0.0066f)))
     throw std::runtime_error("Incorrect remaining_leg_time for NavigationStatus - found: " + std::to_string(nav_status.remaining_leg_time()) + " | expected: " + std::to_string(expected_nav_status.remaining_leg_time()));
 
   if (nav_status.maneuver_index() != expected_nav_status.maneuver_index())
@@ -610,7 +614,7 @@ void ValidateNavigationStatus(const NavigationStatus& nav_status,
   if (!valhalla::midgard::equal<float>(nav_status.remaining_maneuver_length(), expected_nav_status.remaining_maneuver_length(), 0.005f))
     throw std::runtime_error("Incorrect remaining_maneuver_length for NavigationStatus - found: " + std::to_string(nav_status.remaining_maneuver_length()) + " | expected: " + std::to_string(expected_nav_status.remaining_maneuver_length()));
 
-  if (nav_status.remaining_maneuver_time() != expected_nav_status.remaining_maneuver_time())
+  if (!valhalla::midgard::equal<float>(nav_status.remaining_maneuver_time(), expected_nav_status.remaining_maneuver_time(), (expected_nav_status.remaining_maneuver_time() * 0.0066f)))
     throw std::runtime_error("Incorrect remaining_maneuver_time for NavigationStatus - found: " + std::to_string(nav_status.remaining_maneuver_time()) + " | expected: " + std::to_string(expected_nav_status.remaining_maneuver_time()));
 }
 
@@ -637,19 +641,19 @@ void TestLancasterToHershey() {
   TryRouteUnits(nav, "miles", false);
   TryRouteLanguage(nav, "en-US");
 
-  TryRemainingLegLength(nav, 652, 0.0f);
-  TryRemainingLegLength(nav, 633, 0.664f);
-  TryRemainingLegLength(nav, 626, 1.236f);
-  TryRemainingLegLength(nav, 572, 3.762f);
-  TryRemainingLegLength(nav, 492, 8.647f);
-  TryRemainingLegLength(nav, 485, 8.714f);
-  TryRemainingLegLength(nav, 475, 9.183f);
-  TryRemainingLegLength(nav, 169, 26.028f);
-  TryRemainingLegLength(nav, 119, 28.774f);
-  TryRemainingLegLength(nav, 89, 29.149f);
-  TryRemainingLegLength(nav, 3, 31.203f);
-  TryRemainingLegLength(nav, 2, 31.249f);
-  TryRemainingLegLength(nav, 0, 31.322f);
+  TryRemainingLegValues(nav, 652, 0.0f, 0);
+  TryRemainingLegValues(nav, 633, 0.664f, 102);
+  TryRemainingLegValues(nav, 626, 1.236f, 194);
+  TryRemainingLegValues(nav, 572, 3.762f, 455);
+  TryRemainingLegValues(nav, 492, 8.647f, 977);
+  TryRemainingLegValues(nav, 485, 8.714f, 981);
+  TryRemainingLegValues(nav, 475, 9.183f, 1012);
+  TryRemainingLegValues(nav, 169, 26.028f, 1968);
+  TryRemainingLegValues(nav, 119, 28.774f, 2132);
+  TryRemainingLegValues(nav, 89, 29.149f, 2177);
+  TryRemainingLegValues(nav, 3, 31.203f, 2390);
+  TryRemainingLegValues(nav, 2, 31.249f, 2424);
+  TryRemainingLegValues(nav, 0, 31.322f, 2438);
 
   ////////////////////////////////////////////////////////////////////////////
   uint32_t maneuver_index = 0;
@@ -658,8 +662,8 @@ void TestLancasterToHershey() {
   // trace_pt[0] | segment index 0 | begin of maneuver index 0
   TrySnapToRoute(nav, GetFixLocation(-76.299179f, 40.042572f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
-          -76.299171f, 40.042519f, leg_index, 31.322f, 0,
-          maneuver_index, 0.073f, 0));
+          -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
+          maneuver_index, 0.073f, 14));
 
   // off route | segment index 1 | partial maneuver 0
   TrySnapToRoute(nav, GetFixLocation(-76.29875f, 40.04316f, 0),
