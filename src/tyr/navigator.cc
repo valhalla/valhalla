@@ -194,9 +194,8 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
 
 void Navigator::SnapToRoute(const FixLocation& fix_location,
     NavigationStatus& nav_status) {
-  // TODO check threshold
 
-  // Find closest point and set current shape index
+  // Find the closest point on the route that corresponds to the fix location
   PointLL fix_pt = PointLL(fix_location.lon(), fix_location.lat());
   auto closest = fix_pt.ClosestPoint(shape_, current_shape_index_);
 
@@ -225,14 +224,14 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
     snapped_to_shape_point = true;
   }
 
-  // Set remaining index
+  // Set the remaining index
   size_t remaining_index = 0;
   if (snapped_to_shape_point || IsDestinationShapeIndex(current_shape_index_))
     remaining_index = current_shape_index_;
   else
     remaining_index = (current_shape_index_ + 1);
 
-  // Calculate partial length, if needed
+  // Calculate the partial length, if needed
   float partial_length = 0.0f;
   if (!snapped_to_shape_point && !IsDestinationShapeIndex(current_shape_index_)) {
     partial_length = (closest_ll.Distance(shape_.at(remaining_index)) * midgard::kKmPerMeter);
@@ -244,6 +243,8 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   // Set the maneuver index and maneuver end shape index
   maneuver_index_ = FindManeuverIndex(maneuver_index_, current_shape_index_);
   uint32_t maneuver_end_shape_index = route_.trip().legs(leg_index_).maneuvers(maneuver_index_).end_shape_index();
+
+  // Set the remaining leg length and time values
   float remaining_leg_length = (remaining_leg_values_.at(remaining_index).first
       + partial_length);
   uint32_t remaining_leg_time = (remaining_leg_values_.at(remaining_index).second
