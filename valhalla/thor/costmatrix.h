@@ -217,7 +217,7 @@ class CostMatrix {
    * on the reverse search tree.
    * @param  source  Source index.
    * @param  pred    Edge label of the predecessor.
-   * @param  n            Iteration counter.
+   * @param  n       Iteration counter.
    */
   void CheckForwardConnections(const uint32_t source,
                                const sif::EdgeLabel& pred, const uint32_t n);
