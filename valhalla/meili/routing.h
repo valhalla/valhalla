@@ -142,7 +142,6 @@ struct Status{
   uint32_t permanent : 1;
 };
 
-
 class LabelSet
 {
  public:
@@ -194,13 +193,15 @@ class LabelSet
   std::vector<Label> labels_;
 };
 
+using labelset_ptr_t = std::shared_ptr<LabelSet>;
+
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
-                   LabelSet& labelset,
+                   labelset_ptr_t labelset,
                    const midgard::DistanceApproximator& approximator,
-                   float search_radius,
+                   const float search_radius,
                    sif::cost_ptr_t costing = nullptr,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr,
                    const float turn_cost_table[181] = nullptr);

@@ -18,7 +18,7 @@ namespace meili {
 
 LabelSet::LabelSet(const float max_cost, const float bucket_size) {
   const auto edgecost = [this](const uint32_t label) {
-      return labels_[label].sortcost;
+    return labels_[label].sortcost;
   };
   max_cost_ = max_cost;
   queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost_, bucket_size, edgecost));
@@ -211,8 +211,8 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
     // means it was allowed so we give it a pass directly
     return edgeid == pred_edgelabel->edgeid()
         // Transition edges are exceptions here because
-        // costing::Allowed only conisders non-transition edges
-        || edge->trans_up() || edge->trans_down()
+        // costing::Allowed only considers non-transition edges
+        || edge->IsTransition()
         || costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
   }
 
@@ -223,7 +223,7 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
 void set_origin(baldr::GraphReader& reader,
                 const std::vector<baldr::PathLocation>& destinations,
                 uint16_t origin_idx,
-                LabelSet& labelset,
+                labelset_ptr_t labelset,
                 const sif::TravelMode travelmode,
                 sif::cost_ptr_t costing,
                 std::shared_ptr<const sif::EdgeLabel> edgelabel)
@@ -249,7 +249,7 @@ void set_origin(baldr::GraphReader& reader,
       if (!nodeinfo) continue;
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
-      labelset.put(nodeid, travelmode, edgelabel);
+      labelset->put(nodeid, travelmode, edgelabel);
     } else if (edge.end_node()) {
       const auto nodeid = edge_nodes.second;
       if (!nodeid.Is_Valid()) continue;
@@ -260,10 +260,10 @@ void set_origin(baldr::GraphReader& reader,
       if (!nodeinfo) continue;
       if (costing && !costing->Allowed(nodeinfo)) continue;
 
-      labelset.put(nodeid, travelmode, edgelabel);
+      labelset->put(nodeid, travelmode, edgelabel);
     } else {
       // Will decide whether to filter out this edge later
-      labelset.put(origin_idx, travelmode, edgelabel);
+      labelset->put(origin_idx, travelmode, edgelabel);
     }
   }
 }
@@ -357,14 +357,14 @@ inline bool
 isTransition(baldr::GraphReader& graphreader, const baldr::GraphId& edgeid, const baldr::GraphTile* tile)
 {
   const auto edge = graphreader.directededge(edgeid, tile);
-  return edge && (edge->trans_up() || edge->trans_down());
+  return edge && edge->IsTransition();
 }
 
 
-// This heuristic function estimates cost from current node
-// (incorporated in the approximator) to a cluster of destinations
-// within a circle formed by the search radius around the lnglat (the
-// location of next measurement).
+// find_shortest_path uses a heuristic function (lambda) that estimates cost
+// from current node (incorporated in the approximator) to a cluster of
+// destinations within a circle formed by the search radius around the lnglat
+// (the location of next measurement).
 
 // To not overestimate the heuristic cost:
 
@@ -379,15 +379,6 @@ isTransition(baldr::GraphReader& graphreader, const baldr::GraphId& edgeid, cons
 
 // Therefore, the heuristic cost is max(0, distance_to_lnglat - search_radius)
 
-inline float
-heuristic(const midgard::DistanceApproximator& approximator,
-          const PointLL& lnglat, float search_radius) {
-  // Avoid doing sqrtf if latlng is within search radius
-  float d2 = approximator.DistanceSquared(lnglat);
-  return (d2 < search_radius * search_radius) ? 0.0f :
-            sqrtf(d2) - search_radius;
-}
-
 /**
  * Find the shortest path(s) from an origin to set of destinations.
  */
@@ -395,13 +386,20 @@ std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
-                   LabelSet& labelset,
+                   labelset_ptr_t labelset,
                    const midgard::DistanceApproximator& approximator,
-                   float search_radius,
+                   const float search_radius,
                    sif::cost_ptr_t costing,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel,
                    const float turn_cost_table[181])
 {
+  // Lambda for heuristic
+  float search_rad2 = search_radius * search_radius;
+  const auto heuristic = [&approximator, &search_radius, &search_rad2](const PointLL& lnglat) {
+    float d2 = approximator.DistanceSquared(lnglat);
+    return (d2 < search_rad2) ? 0.0f : sqrtf(d2) - search_radius;
+  };
+
   // Destinations at nodes
   std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> node_dests;
 
@@ -421,7 +419,7 @@ find_shortest_path(baldr::GraphReader& reader,
   const baldr::GraphTile* tile = nullptr;
 
   while (true) {
-    const auto label_idx = labelset.pop();
+    const auto label_idx = labelset->pop();
     if (label_idx == baldr::kInvalidLabel) {
       // Exhausted labels without finding all destinations
       break;
@@ -430,7 +428,7 @@ find_shortest_path(baldr::GraphReader& reader,
     // NOTE this reference is possible to be invalidated when you add
     // labels to the set later (which causes the label list
     // reallocated)
-    const auto& label = labelset.label(label_idx);
+    const auto& label = labelset->label(label_idx);
 
     // So we cache the costs that will be used during expanding
     const auto label_cost = label.cost;
@@ -445,7 +443,7 @@ find_shortest_path(baldr::GraphReader& reader,
       while (pred_idx != baldr::kInvalidLabel
              && pred_edgeid.Is_Valid()
              && isTransition(reader, pred_edgeid, tile)) {
-        const auto& pred_label = labelset.label(pred_idx);
+        const auto& pred_label = labelset->label(pred_idx);
         pred_idx = pred_label.predecessor;
         pred_edgeid = pred_label.edgeid;
         pred_edgelabel = pred_label.edgelabel;
@@ -498,7 +496,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
         // Turn cost only for non transition edges
         float turn_cost = label_turn_cost;
-        if (pred_edgelabel && turn_cost_table && !other_edge->trans_up() && !other_edge->trans_down()) {
+        if (pred_edgelabel && turn_cost_table && !other_edge->IsTransition()) {
           const auto other_heading = get_outbound_edge_heading(other_tile, other_edge, *nodeinfo);
           // TODO: test it assert(0 <= other_heading && other_heading < 360);
           const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
@@ -515,7 +513,7 @@ find_shortest_path(baldr::GraphReader& reader,
               if (edge.id == other_edgeid) {
                 const float cost = label_cost + other_edge->length() * edge.dist,
                         sortcost = cost + 0.f;  // The heuristic cost from a destination to itself must be 0
-                labelset.put(dest, other_edgeid,
+                labelset->put(dest, other_edgeid,
                              0.f, edge.dist,
                              cost, turn_cost, sortcost,
                              label_idx,
@@ -533,8 +531,8 @@ find_shortest_path(baldr::GraphReader& reader,
         }
         const auto other_nodeinfo = endtile->node(other_edge->endnode());
         const float cost = label_cost + other_edge->length(),
-                sortcost = cost + heuristic(approximator, other_nodeinfo->latlng(), search_radius);
-        labelset.put(other_edge->endnode(), other_edgeid,
+                sortcost = cost + heuristic(other_nodeinfo->latlng());
+        labelset->put(other_edge->endnode(), other_edgeid,
                      0.f, 1.f,
                      cost, turn_cost, sortcost,
                      label_idx,
@@ -589,7 +587,7 @@ find_shortest_path(baldr::GraphReader& reader,
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
                 const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist),
                         sortcost = cost + 0.f; // The heuristic cost from a destination to itself must be 0
-                labelset.put(other_dest, origin_edge.id,
+                labelset->put(other_dest, origin_edge.id,
                              origin_edge.dist, other_edge.dist,
                              cost, turn_cost, sortcost,
                              label_idx,
@@ -606,8 +604,8 @@ find_shortest_path(baldr::GraphReader& reader,
           }
           const auto nodeinfo = endtile->node(directededge->endnode());
           const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist),
-                  sortcost = cost + heuristic(approximator, nodeinfo->latlng(), search_radius);
-          labelset.put(directededge->endnode(), origin_edge.id,
+                  sortcost = cost + heuristic(nodeinfo->latlng());
+          labelset->put(directededge->endnode(), origin_edge.id,
                        origin_edge.dist, 1.f,
                        cost, turn_cost, sortcost,
                        label_idx,
@@ -616,9 +614,9 @@ find_shortest_path(baldr::GraphReader& reader,
       }
     }
   }
-
-  labelset.clear_queue();
-  labelset.clear_status();
+  // TODO - do we need to clear since it is constructed prior to each call??
+  labelset->clear_queue();
+  labelset->clear_status();
 
   return results;
 }

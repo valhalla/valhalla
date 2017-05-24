@@ -34,7 +34,7 @@ State::route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
              const midgard::DistanceApproximator& approximator,
-             float search_radius,
+             const float search_radius,
              sif::cost_ptr_t costing,
              std::shared_ptr<const sif::EdgeLabel> edgelabel,
              const float turn_cost_table[181]) const
@@ -49,9 +49,8 @@ State::route(const std::vector<const State*>& states,
 
   // Route
   labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
-  // TODO pass labelset_ as shared_ptr
   const auto& results = find_shortest_path(
-      graphreader, locations, 0, *labelset_,
+      graphreader, locations, 0, labelset_,
       approximator, search_radius,
       costing, edgelabel, turn_cost_table);
 
