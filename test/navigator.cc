@@ -824,9 +824,18 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////
 
-  //  TryRouteOnLocationChanged(nav, GetFixLocation(-76.299179, 40.042572, 0),
-//      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
-//          -76.299171, 40.042519, leg_index, maneuver_index));
+  // reset the route
+  nav.set_route(route_json_str);
+
+  ////////////////////////////////////////////////////////////////////////////
+  maneuver_index = 0;
+  ////////////////////////////////////////////////////////////////////////////
+
+  // trace_pt[0] | segment index 0 | begin of maneuver index 0
+//  TryRouteOnLocationChanged(nav, GetFixLocation(-76.29931, 40.04240, 0),
+//      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+//          -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
+//          maneuver_index, 0.073f, 14));
 }
 
 }

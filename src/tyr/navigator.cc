@@ -26,6 +26,7 @@ namespace valhalla {
 namespace tyr {
 
 Navigator::Navigator(const std::string& route_json_str) {
+  route_state_ = NavigationStatus_RouteState_kInvalid;
   set_route(route_json_str);
 }
 
@@ -39,20 +40,30 @@ void Navigator::set_route(const std::string& route_json_str) {
   maneuver_index_ = 0;
   SetUnits();
   SetShapeLengthTime();
-
+  route_state_ = NavigationStatus_RouteState_kInitialized;
 }
 
 NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   NavigationStatus nav_status;
 
+  // Snap the fix location to the route
   SnapToRoute(fix_location, nav_status);
 
-  // TODO real code
-  nav_status.set_route_state(NavigationStatus_RouteState_kPreTransition);
-  nav_status.set_lat(40.042519);
-  nav_status.set_lon(-76.299171);
-  nav_status.set_leg_index(0);
-  nav_status.set_maneuver_index(0);
+  // Update the route state based on current route location
+  // If route location is pre transition and user has not been notified
+  // then set route state to kPreTransition
+  // TODO
+  // else if route location is post transition
+  // and maneuver has a post transition
+  // and user has not been notified
+  // then set route state to kPostTransition
+  // TODO
+  // else if route location is transition alert
+  // and maneuver has a transition alert
+  // and user has not been notified
+  // then set route state to kTransitionAlert
+  // TODO
+
   return nav_status;
 }
 
@@ -201,18 +212,19 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
 
   // GDG - rm
   std::cout << std::endl << "--------------------------------------------------------------------------------------------" << std::endl;
-  std::cout << "LL=" << std::get<0>(closest).lat() << "," << std::get<0>(closest).lng() << " | distance=" << std::get<1>(closest) << " | index=" << std::get<2>(closest) << std::endl;
+  std::cout << "LL=" << std::get<kClosestPoint>(closest).lat() << "," << std::get<kClosestPoint>(closest).lng() << " | distance=" << std::get<kClosestPointDistance>(closest) << " | index=" << std::get<kClosestPointSegmentIndex>(closest) << std::endl;
 
   // If the fix point distance from route is greater than the off route threshold
   // then return invalid route state
-  if (std::get<1>(closest) > kOffRouteThreshold) {
-    nav_status.set_route_state(NavigationStatus_RouteState_kInvalid);
+  if (std::get<kClosestPointDistance>(closest) > kOffRouteThreshold) {
+    route_state_ = NavigationStatus_RouteState_kInvalid;
+    nav_status.set_route_state(route_state_);
     return;
   }
 
   // If not off route then set closest point and current shape index
-  PointLL closest_ll = std::get<0>(closest);
-  current_shape_index_ = std::get<2>(closest);
+  PointLL closest_ll = std::get<kClosestPoint>(closest);
+  current_shape_index_ = std::get<kClosestPointSegmentIndex>(closest);
 
   // If approximately equal to the next shape point then snap to it and set flag
   bool snapped_to_shape_point = false;
@@ -257,7 +269,8 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   std::cout << "remaining_leg_time=" << remaining_leg_time << " | remaining_leg_values_.at(remaining_index).second=" << remaining_leg_values_.at(remaining_index).second << " | partial time=" <<  static_cast<uint32_t>(round(partial_length / maneuver_speeds_.at(maneuver_index_))) << " | remaining_maneuver_time=" << (remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second) << " | speed=" << maneuver_speeds_.at(maneuver_index_) << std::endl;
 
   // Populate navigation status
-  nav_status.set_route_state(NavigationStatus_RouteState_kTracking);
+  route_state_ = NavigationStatus_RouteState_kTracking;
+  nav_status.set_route_state(route_state_);
   nav_status.set_lon(closest_ll.lng());
   nav_status.set_lat(closest_ll.lat());
   nav_status.set_leg_index(leg_index_);

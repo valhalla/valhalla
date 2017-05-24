@@ -17,6 +17,16 @@ namespace tyr {
 // Off route threshold in meters
 constexpr uint32_t kOffRouteThreshold = 50;
 
+// Closest point tuple indexes
+constexpr size_t kClosestPoint = 0;
+constexpr size_t kClosestPointDistance = 1;
+constexpr size_t kClosestPointSegmentIndex = 2;
+
+// Used instruction tuple indexes
+constexpr size_t kTransitionAlert = 0;
+constexpr size_t kPreTransition = 1;
+constexpr size_t kPostTransition = 2;
+
 class Navigator {
   public:
 
@@ -56,6 +66,9 @@ class Navigator {
 
     // Specified route to navigate
     valhalla::Route route_;
+
+    // Current route state of navigator
+    NavigationStatus_RouteState route_state_;
 
     // Leg index
     size_t leg_index_;
