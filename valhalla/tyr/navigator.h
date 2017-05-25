@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <tuple>
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
@@ -16,6 +17,9 @@ namespace tyr {
 
 // Off route threshold in meters
 constexpr uint32_t kOffRouteThreshold = 50;
+
+// Close to origin threshold in meters
+constexpr uint32_t kCloseToOriginThreshold = 20;
 
 // Closest point tuple indexes
 constexpr size_t kClosestPoint = 0;
@@ -54,6 +58,8 @@ class Navigator {
 
     void SetShapeLengthTime();
 
+    void SetUsedInstructions();
+
     bool IsDestinationShapeIndex(size_t idx) const;
 
     size_t FindManeuverIndex(size_t begin_search_index, size_t shape_index) const;
@@ -61,6 +67,13 @@ class Navigator {
 
     void SnapToRoute(const FixLocation& fix_location,
         NavigationStatus& nav_status);
+
+    bool StartingNavigation(const NavigationStatus_RouteState& prev_route_state,
+        const NavigationStatus_RouteState& curr_route_state) const;
+
+    bool LocationCloseToOrigin(const NavigationStatus& nav_status) const;
+
+    float UnitsToMeters(float units) const;
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -90,6 +103,9 @@ class Navigator {
 
     // Remaining leg length and time
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
+
+    // List of tuples by maneuver index that keeps track of the used instructions
+    std::vector<std::tuple<bool, bool, bool>> used_instructions_;
 
 };
 

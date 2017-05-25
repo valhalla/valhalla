@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <tuple>
 
 #include <google/protobuf/util/json_util.h>
 
@@ -40,30 +41,47 @@ void Navigator::set_route(const std::string& route_json_str) {
   maneuver_index_ = 0;
   SetUnits();
   SetShapeLengthTime();
+  SetUsedInstructions();
   route_state_ = NavigationStatus_RouteState_kInitialized;
 }
 
 NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   NavigationStatus nav_status;
 
+  // Set the previous route state prior to snapping to route
+  NavigationStatus_RouteState prev_route_state = route_state_;
+
   // Snap the fix location to the route
   SnapToRoute(fix_location, nav_status);
 
-  // Update the route state based on current route location
-  // If route location is pre transition and user has not been notified
-  // then set route state to kPreTransition
-  // TODO
-  // else if route location is post transition
-  // and maneuver has a post transition
-  // and user has not been notified
-  // then set route state to kPostTransition
-  // TODO
-  // else if route location is transition alert
-  // and maneuver has a transition alert
-  // and user has not been notified
-  // then set route state to kTransitionAlert
-  // TODO
+  if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
+    // If starting navigation and close to origin
+    // and origin maneuver index and instruction has not been used
+    // then set route state to kPreTransition
+    if (StartingNavigation(prev_route_state, route_state_)
+    && LocationCloseToOrigin(nav_status) && (maneuver_index_== 0)
+    && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))) {
+      route_state_ = NavigationStatus_RouteState_kPreTransition;
+      nav_status.set_route_state(route_state_);
+      nav_status.set_instruction_maneuver_index(maneuver_index_);
+    }
 
+    // If route location is pre transition and instruction has not been used
+    // then set route state to kPreTransition
+    // TODO
+
+    // else if route location is post transition
+    // and maneuver has a post transition
+    // and instruction has not been used
+    // then set route state to kPostTransition
+    // TODO
+
+    // else if route location is transition alert
+    // and maneuver has a transition alert
+    // and instruction has not been used
+    // then set route state to kTransitionAlert
+    // TODO
+  }
   return nav_status;
 }
 
@@ -140,6 +158,13 @@ void Navigator::SetShapeLengthTime() {
     remaining_leg_values_.resize(0);
   }
   current_shape_index_ = 0;
+}
+
+void Navigator::SetUsedInstructions() {
+  used_instructions_.clear();
+  for (size_t i = 0; i < route_.trip().legs(leg_index_).maneuvers_size(); ++i) {
+    used_instructions_.emplace_back(false, false, false);
+  }
 }
 
 bool Navigator::IsDestinationShapeIndex(size_t idx) const {
@@ -281,7 +306,33 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   nav_status.set_remaining_maneuver_time(remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second);
 }
 
+bool Navigator::StartingNavigation(
+    const NavigationStatus_RouteState& prev_route_state,
+    const NavigationStatus_RouteState& curr_route_state) const {
+  return ((prev_route_state == NavigationStatus_RouteState_kInitialized)
+      && (curr_route_state == NavigationStatus_RouteState_kTracking));
+}
 
+bool Navigator::LocationCloseToOrigin(
+    const NavigationStatus& nav_status) const {
+  if ((remaining_leg_values_.size() > 0)
+      && nav_status.has_remaining_leg_length()) {
+    float meters = UnitsToMeters(
+        remaining_leg_values_.at(0).first - nav_status.remaining_leg_length());
+    return (meters <= kCloseToOriginThreshold);
+  }
+  return false;
+}
+
+float Navigator::UnitsToMeters(float units) const {
+  float km_length = 0.0f;
+  if (HasKilometerUnits())
+    km_length = units;
+  else
+    km_length = units * midgard::kKmPerMile;
+
+  return (km_length * kMetersPerKm);
+}
 
 }
 }
