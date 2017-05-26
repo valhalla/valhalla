@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <tuple>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -92,6 +93,11 @@ class NavigatorTest : public Navigator {
        NavigationStatus& nav_status) {
     return Navigator::SnapToRoute(fix_location, nav_status);
   }
+
+  std::vector<std::tuple<bool, bool, bool>>& used_instructions() {
+    return Navigator::used_instructions_;
+  }
+
 };
 
 void TryTopLevelCtor(const std::string& route_json_str,
@@ -509,7 +515,7 @@ void TryRouteUnits(NavigatorTest& nav, std::string expected_units, bool expected
     throw std::runtime_error("Incorrect units for route - found: " + units + " | expected: " + expected_units);
 
   if (units_boolean != expected_units_boolean)
-    throw std::runtime_error("Incorrect units boolean for route - found: " + (units_boolean ? std::string("true") : std::string("false")) + " | expected: " + (expected_units_boolean ? std::string("true") : std::string("false")));
+    throw std::runtime_error("Incorrect units boolean for route - found: " + std::string(units_boolean ? "true" : "false") + " | expected: " + std::string(expected_units_boolean ? "true" : "false"));
 }
 
 void TryRouteLanguage(NavigatorTest& nav, std::string expected_language) {
@@ -651,6 +657,12 @@ void TryRouteOnLocationChanged(NavigatorTest& nav, const FixLocation& fix,
     const NavigationStatus& expected_nav_status) {
   NavigationStatus nav_status = nav.OnLocationChanged(fix);
   ValidateNavigationStatus(nav_status, expected_nav_status);
+}
+
+void TryUsedInstructions(bool found_value, bool expected_value) {
+
+  if (found_value != expected_value)
+    throw std::runtime_error("Incorrect instruction used value - found: " + std::string(found_value ? "true" : "false") + " | expected: " + std::string(expected_value ? "true" : "false"));
 }
 
 void TestLancasterToHershey() {
@@ -843,8 +855,8 @@ void TestLancasterToHershey() {
           -76.654633f, 40.283943f, leg_index, 0.0f, 0,
           maneuver_index, 0.0f, 0));
 
-  ////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////
+  //==========================================================================
+  //==========================================================================
 
   // reset the route
   nav.set_route(route_json_str);
@@ -853,6 +865,11 @@ void TestLancasterToHershey() {
   maneuver_index = 0;
   ////////////////////////////////////////////////////////////////////////////
 
+  // kPreTransition instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      false);
+
   // Start maneuver at beginning of route
   // trace_pt[0] | segment index 0 | begin of maneuver index 0
   TryRouteOnLocationChanged(nav, GetFixLocation(-76.29931f, 40.04240f, 0),
@@ -860,8 +877,18 @@ void TestLancasterToHershey() {
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
           maneuver_index, 0.073f, 14, maneuver_index));
 
+  // kPreTransition instruction should be used after OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      true);
+
   // reset the route
   nav.set_route(route_json_str);
+
+  // kPreTransition instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      false);
 
   // Start maneuver near beginning of route
   // trace_pt[1] | segment index 0 | near begin of maneuver index 0
@@ -869,6 +896,11 @@ void TestLancasterToHershey() {
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299049f, 40.042530f, leg_index, 31.3163f, 2422,
           maneuver_index, 0.066578f, 13, maneuver_index));
+
+  // kPreTransition instruction should be used after OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      true);
 
   // reset the route
   nav.set_route(route_json_str);

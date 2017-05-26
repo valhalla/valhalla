@@ -59,11 +59,14 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     // and origin maneuver index and instruction has not been used
     // then set route state to kPreTransition
     if (StartingNavigation(prev_route_state, route_state_)
-    && LocationCloseToOrigin(nav_status) && (maneuver_index_== 0)
-    && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))) {
+        && LocationCloseToOrigin(nav_status) && (maneuver_index_ == 0)
+        && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))) {
+      // Set state and instruction index for start maneuver
       route_state_ = NavigationStatus_RouteState_kPreTransition;
       nav_status.set_route_state(route_state_);
       nav_status.set_instruction_maneuver_index(maneuver_index_);
+      // Mark that the pre transition was used
+      std::get<kPreTransition>(used_instructions_.at(maneuver_index_)) = true;
     }
 
     // If route location is pre transition and instruction has not been used
