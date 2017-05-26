@@ -98,6 +98,10 @@ class NavigatorTest : public Navigator {
     return Navigator::OnRouteLocationCloseToOrigin(nav_status);
   }
 
+  float UnitsToMeters(float units) const {
+    return Navigator::UnitsToMeters(units);
+  }
+
   std::vector<std::tuple<bool, bool, bool>>& used_instructions() {
     return Navigator::used_instructions_;
   }
@@ -510,6 +514,14 @@ void TryRouteManeuverCount(NavigatorTest& nav, uint32_t leg_index,
     throw std::runtime_error("Incorrect maneuver count for route - found: " + std::to_string(maneuver_count) + " | expected: " + std::to_string(expected_leg_maneuver_count));
 }
 
+void TryRouteLanguage(NavigatorTest& nav, std::string expected_language) {
+
+  std::string language = nav.route().trip().language();
+
+  if (language != expected_language)
+    throw std::runtime_error("Incorrect language for route - found: " + language + " | expected: " + expected_language);
+}
+
 void TryRouteUnits(NavigatorTest& nav, std::string expected_units, bool expected_units_boolean) {
 
   std::string units = nav.route().trip().units();
@@ -522,12 +534,17 @@ void TryRouteUnits(NavigatorTest& nav, std::string expected_units, bool expected
     throw std::runtime_error("Incorrect units boolean for route - found: " + std::string(units_boolean ? "true" : "false") + " | expected: " + std::string(expected_units_boolean ? "true" : "false"));
 }
 
-void TryRouteLanguage(NavigatorTest& nav, std::string expected_language) {
+void TryUnitsToMeters(float found_meters, float expected_meters) {
 
-  std::string language = nav.route().trip().language();
-
-  if (language != expected_language)
-    throw std::runtime_error("Incorrect language for route - found: " + language + " | expected: " + expected_language);
+  float epsilon = 0.005f;
+  if (expected_meters >= 100.0f)
+    epsilon *= 10.0f;
+  if (expected_meters >= 1000.0f)
+    epsilon *= 10.0f;
+  if (expected_meters >= 10000.0f)
+    epsilon *= 10.0f;
+  if (!valhalla::midgard::equal<float>(found_meters, expected_meters, epsilon))
+    throw std::runtime_error("Incorrect units to meters - found: " + std::to_string(found_meters) + " | expected: " + std::to_string(expected_meters));
 }
 
 void TryRemainingLegValues(NavigatorTest& nav, uint32_t index,
@@ -687,8 +704,19 @@ void TestLancasterToHershey() {
 
   TryRouteLegCount(nav, 1);
   TryRouteManeuverCount(nav, leg_index, 13);
-  TryRouteUnits(nav, "miles", false);
   TryRouteLanguage(nav, "en-US");
+  TryRouteUnits(nav, "miles", false);
+
+  // Test miles to meters
+  TryUnitsToMeters(nav.UnitsToMeters(1000.0f), 1609344.0f);
+  TryUnitsToMeters(nav.UnitsToMeters(142.3f), 229009.7f);
+  TryUnitsToMeters(nav.UnitsToMeters(37.2f), 59867.6f);
+  TryUnitsToMeters(nav.UnitsToMeters(1.0f), 1609.34f);
+  TryUnitsToMeters(nav.UnitsToMeters(0.5f), 804.672f);
+  TryUnitsToMeters(nav.UnitsToMeters(0.25f), 402.336f);
+  TryUnitsToMeters(nav.UnitsToMeters(0.062137f), 100.0f);
+  TryUnitsToMeters(nav.UnitsToMeters(0.012427f), 20.0f);
+  TryUnitsToMeters(nav.UnitsToMeters(0.003106f), 5.0f);
 
   TryRemainingLegValues(nav, 652, 0.0f, 0);       // 0
   TryRemainingLegValues(nav, 633, 0.664f, 102);   // 102
