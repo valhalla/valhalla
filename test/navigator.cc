@@ -905,12 +905,23 @@ void TestLancasterToHershey() {
   // reset the route
   nav.set_route(route_json_str);
 
+  // kPreTransition instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      false);
+
   // No start maneuver because too far from origin
   // trace_pt[2] | segment index 0 | near begin of maneuver index 0
   TryRouteOnLocationChanged(nav, GetFixLocation(-76.298897f ,40.042610f, 3),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298889f ,40.042545f, leg_index, 31.3077f, 2420,
           maneuver_index, 0.058027f, 11));
+
+  // kPreTransition instruction should be not used after OnLocationChanged
+  // since it was too far from origin
+  TryUsedInstructions(
+      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      false);
 
 }
 
