@@ -94,6 +94,10 @@ class NavigatorTest : public Navigator {
     return Navigator::SnapToRoute(fix_location, nav_status);
   }
 
+  bool OnRouteLocationCloseToOrigin(const NavigationStatus& nav_status) const {
+    return Navigator::OnRouteLocationCloseToOrigin(nav_status);
+  }
+
   std::vector<std::tuple<bool, bool, bool>>& used_instructions() {
     return Navigator::used_instructions_;
   }
@@ -646,6 +650,13 @@ void ValidateNavigationStatus(const NavigationStatus& nav_status,
     throw std::runtime_error("Incorrect instruction maneuver_index for NavigationStatus - found: " + std::to_string(nav_status.instruction_maneuver_index()) + " | expected: " + std::to_string(expected_nav_status.instruction_maneuver_index()));
 }
 
+void ValidateOnRouteLocationCloseToOrigin(bool found_value,
+    bool expected_on_route_location_close_to_origin) {
+
+  if (found_value != expected_on_route_location_close_to_origin)
+    throw std::runtime_error("Incorrect OnRouteLocationCloseToOrigin boolean - found: " + std::string(found_value ? "true" : "false") + " | expected: " + std::string(expected_on_route_location_close_to_origin ? "true" : "false"));
+}
+
 void TrySnapToRoute(NavigatorTest& nav, const FixLocation& fix_location,
     NavigationStatus expected_nav_status) {
   NavigationStatus nav_status;
@@ -654,9 +665,13 @@ void TrySnapToRoute(NavigatorTest& nav, const FixLocation& fix_location,
 }
 
 void TryRouteOnLocationChanged(NavigatorTest& nav, const FixLocation& fix,
-    const NavigationStatus& expected_nav_status) {
+    const NavigationStatus& expected_nav_status,
+    bool expected_on_route_location_close_to_origin = false) {
   NavigationStatus nav_status = nav.OnLocationChanged(fix);
   ValidateNavigationStatus(nav_status, expected_nav_status);
+  ValidateOnRouteLocationCloseToOrigin(
+      nav.OnRouteLocationCloseToOrigin(nav_status),
+      expected_on_route_location_close_to_origin);
 }
 
 void TryUsedInstructions(bool found_value, bool expected_value) {
@@ -863,6 +878,7 @@ void TestLancasterToHershey() {
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 0;
+  bool expected_on_route_location_close_to_origin = true;
   ////////////////////////////////////////////////////////////////////////////
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
@@ -875,7 +891,8 @@ void TestLancasterToHershey() {
   TryRouteOnLocationChanged(nav, GetFixLocation(-76.29931f, 40.04240f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
-          maneuver_index, 0.073f, 14, maneuver_index));
+          maneuver_index, 0.073f, 14, maneuver_index),
+          expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be used after OnLocationChanged
   TryUsedInstructions(
@@ -895,7 +912,8 @@ void TestLancasterToHershey() {
   TryRouteOnLocationChanged(nav, GetFixLocation(-76.299057f, 40.042595f, 1),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299049f, 40.042530f, leg_index, 31.3163f, 2422,
-          maneuver_index, 0.066578f, 13, maneuver_index));
+          maneuver_index, 0.066578f, 13, maneuver_index),
+          expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be used after OnLocationChanged
   TryUsedInstructions(
@@ -912,10 +930,12 @@ void TestLancasterToHershey() {
 
   // No start maneuver because too far from origin
   // trace_pt[2] | segment index 0 | near begin of maneuver index 0
+  expected_on_route_location_close_to_origin = false;
   TryRouteOnLocationChanged(nav, GetFixLocation(-76.298897f ,40.042610f, 3),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298889f ,40.042545f, leg_index, 31.3077f, 2420,
-          maneuver_index, 0.058027f, 11));
+          maneuver_index, 0.058027f, 11),
+          expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be not used after OnLocationChanged
   // since it was too far from origin

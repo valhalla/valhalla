@@ -59,7 +59,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     // and origin maneuver index and instruction has not been used
     // then set route state to kPreTransition
     if (StartingNavigation(prev_route_state, route_state_)
-        && LocationCloseToOrigin(nav_status) && (maneuver_index_ == 0)
+        && OnRouteLocationCloseToOrigin(nav_status) && (maneuver_index_ == 0)
         && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))) {
       // Set state and instruction index for start maneuver
       route_state_ = NavigationStatus_RouteState_kPreTransition;
@@ -316,13 +316,13 @@ bool Navigator::StartingNavigation(
       && (curr_route_state == NavigationStatus_RouteState_kTracking));
 }
 
-bool Navigator::LocationCloseToOrigin(
+bool Navigator::OnRouteLocationCloseToOrigin(
     const NavigationStatus& nav_status) const {
   if ((remaining_leg_values_.size() > 0)
       && nav_status.has_remaining_leg_length()) {
     float meters = UnitsToMeters(
         remaining_leg_values_.at(0).first - nav_status.remaining_leg_length());
-    return (meters <= kCloseToOriginThreshold);
+    return (meters <= kOnRouteCloseToOriginThreshold);
   }
   return false;
 }

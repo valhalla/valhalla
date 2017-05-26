@@ -19,7 +19,7 @@ namespace tyr {
 constexpr uint32_t kOffRouteThreshold = 50;
 
 // Close to origin threshold in meters
-constexpr uint32_t kCloseToOriginThreshold = 20;
+constexpr uint32_t kOnRouteCloseToOriginThreshold = 20;
 
 // Closest point tuple indexes
 constexpr size_t kClosestPoint = 0;
@@ -71,7 +71,7 @@ class Navigator {
     bool StartingNavigation(const NavigationStatus_RouteState& prev_route_state,
         const NavigationStatus_RouteState& curr_route_state) const;
 
-    bool LocationCloseToOrigin(const NavigationStatus& nav_status) const;
+    bool OnRouteLocationCloseToOrigin(const NavigationStatus& nav_status) const;
 
     float UnitsToMeters(float units) const;
 
