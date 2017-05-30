@@ -52,57 +52,57 @@ class GridTraversal
     std::tie(col, row) = StartSquare(origin, dest, tangent, cotangent);
     std::tie(dest_col, dest_row) = SquareAtPoint(dest);
 
-    // Append intersecting squares
+    // Return intersecting squares
     std::vector<std::pair<int, int>> squares;
-    while (!(col == dest_col && row == dest_row) && IsValidSquare(col, row)) {
-      squares.emplace_back(col, row);
-
-      // Calculating next intersecting square
-
-      // Intersect with the right border of the square
-      if (col < dest_col && IntersectsRow(origin, tangent, col + 1) == row) {
-        col++;
-        continue;
-      }
-      // Intersect with the left border of the square
-      if (dest_col < col && IntersectsRow(origin, tangent, col) == row) {
-        col--;
-        continue;
-      }
-      // Intersect with the top border of the square
-      if (row < dest_row && IntersectsColumn(origin, cotangent, row + 1) == col) {
-        row++;
-        continue;
-      }
-      // Intersect with the bottom border of the square
-      if (dest_row < row && IntersectsColumn(origin, cotangent, row) == col) {
-        row--;
-        continue;
-      }
-
-      // Move along a diagonal line if no intersecting squares found
-      // among four neighbors
-      if (col < dest_col) {
-        col++;
-      } else if (dest_col < col) {
-        col--;
-      }
-      if (row < dest_row) {
-        row++;
-      } else if (dest_row < row) {
-        row--;
-      }
+    if (!IsValidSquare(col, row) || !IsValidSquare(dest_col, dest_row)) {
+      return squares;
     }
 
-    // Append the last square
-    if (IsValidSquare(col, row)) {
-      squares.emplace_back(col, row);
-    }
+    int row_diff = dest_row - row;
+    int col_diff = dest_col - col;
+    int row_inc = row_diff == 0 ? 0 : row_diff / std::abs(row_diff);
+    int col_inc = col_diff == 0 ? 0 : col_diff / std::abs(col_diff);
 
+    // For every column, append all squares formed by col, row that intersect segment
+    for (int c = col; c != (dest_col + col_inc); c += col_inc) {
+      AppendIntersectingSquares(origin, tangent, c, col_inc, row, row_inc, dest_row, squares);
+    }
     return squares;
   }
 
  private:
+
+  // Append all intersecting squares for a particular column
+  void AppendIntersectingSquares(const coord_t& origin, float tangent, int col, int col_inc, int row, int row_inc, int dest_row, std::vector<std::pair<int, int>>& squares) const
+  {
+    // Only one row
+    if (row == dest_row)
+    {
+      squares.emplace_back(col, row);
+    }
+
+    // If the ray is vertical, append all rows
+    else if (std::isinf(tangent)) {
+      assert (row_inc != 0);
+      for (int r = row; r != (dest_row + row_inc); r += row_inc){
+        squares.emplace_back(col, r);
+      }
+    }
+
+    // General case: Find the rows intersected
+    else {
+      int row_min = IntersectsRow(origin, tangent, col);
+      int row_max = IntersectsRow(origin, tangent, col + col_inc);
+
+      assert (row_inc != 0);
+      for (int r = row_min; r != (row_max + row_inc); r += row_inc) {
+        if ((r <= row && r >= dest_row) || (r >= row && r <= dest_row)) {
+          squares.emplace_back(col, r);
+        }
+      }
+    }
+  }
+
   int IntersectsColumn(const coord_t& origin, float cotangent, int row) const
   {
     // The origin and the cotangent define a ray.
