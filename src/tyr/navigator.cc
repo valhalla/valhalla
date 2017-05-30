@@ -1,10 +1,11 @@
-#include <sstream>
-#include <iomanip>
 #include <cmath>
-#include <string>
+#include <iomanip>
 #include <iostream>
-#include <vector>
+#include <locale>
+#include <sstream>
+#include <string>
 #include <tuple>
+#include <vector>
 
 #include <google/protobuf/util/json_util.h>
 
@@ -335,6 +336,29 @@ float Navigator::UnitsToMeters(float units) const {
     km_length = units * midgard::kKmPerMile;
 
   return (km_length * kMetersPerKm);
+}
+
+size_t Navigator::GetWordCount(const std::string& instruction) const {
+  size_t word_count = 0;
+  std::string::const_iterator pos = instruction.begin();
+  std::string::const_iterator end = instruction.end();
+
+  while(pos != end)
+  {
+    // Skip over space, white space, and punctuation
+    while (pos != end
+        && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos)))
+      ++pos;
+
+    // Word found - increment
+    word_count += (pos != end);
+
+    // Skip over letters in word
+    while (pos != end
+        && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos))))
+      ++pos;
+  }
+  return word_count;
 }
 
 }

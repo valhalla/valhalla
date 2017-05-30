@@ -75,6 +75,8 @@ class Navigator {
 
     float UnitsToMeters(float units) const;
 
+    size_t GetWordCount(const std::string& instruction) const;
+
     /////////////////////////////////////////////////////////////////////////////
 
     // Specified route to navigate
