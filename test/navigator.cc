@@ -106,7 +106,7 @@ class NavigatorTest : public Navigator {
     return Navigator::GetWordCount(instruction);
   }
 
-  std::vector<std::tuple<bool, bool, bool>>& used_instructions() {
+  std::vector<std::tuple<bool, bool, bool, bool>>& used_instructions() {
     return Navigator::used_instructions_;
   }
 

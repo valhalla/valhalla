@@ -27,9 +27,10 @@ constexpr size_t kClosestPointDistance = 1;
 constexpr size_t kClosestPointSegmentIndex = 2;
 
 // Used instruction tuple indexes
-constexpr size_t kTransitionAlert = 0;
-constexpr size_t kPreTransition = 1;
-constexpr size_t kPostTransition = 2;
+constexpr size_t kDistantTransitionAlert = 0; // 2 or 1 miles depending on speed
+constexpr size_t kCloseTransitionAlert =1;    // half or quarter mile depending on speed
+constexpr size_t kPreTransition = 2;
+constexpr size_t kPostTransition = 3;
 
 class Navigator {
   public:
@@ -107,7 +108,7 @@ class Navigator {
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 
     // List of tuples by maneuver index that keeps track of the used instructions
-    std::vector<std::tuple<bool, bool, bool>> used_instructions_;
+    std::vector<std::tuple<bool, bool, bool, bool>> used_instructions_;
 
 };
 

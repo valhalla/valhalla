@@ -167,7 +167,7 @@ void Navigator::SetShapeLengthTime() {
 void Navigator::SetUsedInstructions() {
   used_instructions_.clear();
   for (size_t i = 0; i < route_.trip().legs(leg_index_).maneuvers_size(); ++i) {
-    used_instructions_.emplace_back(false, false, false);
+    used_instructions_.emplace_back(false, false, false, false);
   }
 }
 
