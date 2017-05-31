@@ -55,6 +55,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   // Snap the fix location to the route
   SnapToRoute(fix_location, nav_status);
 
+  // Only process a valid route state
   if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
     // If starting navigation and close to origin
     // and origin maneuver index and instruction has not been used
@@ -62,17 +63,31 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     if (StartingNavigation(prev_route_state, route_state_)
         && OnRouteLocationCloseToOrigin(nav_status) && (maneuver_index_ == 0)
         && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))) {
-      // Set state and instruction index for start maneuver
+      // Set route state
       route_state_ = NavigationStatus_RouteState_kPreTransition;
       nav_status.set_route_state(route_state_);
+
+      // Set the instruction maneuver index for the start maneuver
       nav_status.set_instruction_maneuver_index(maneuver_index_);
+
       // Mark that the pre transition was used
       std::get<kPreTransition>(used_instructions_.at(maneuver_index_)) = true;
     }
-
-    // If route location is pre transition and instruction has not been used
+    // else if instruction has not been used
+    // and route location is pre transition
     // then set route state to kPreTransition
-    // TODO
+//    else if (!(std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)))
+//        && (nav_status.remaining_maneuver_time() < GetPreTransitionThreshold(maneuver_index_ + 1))) {
+      // Set route state
+//      route_state_ = NavigationStatus_RouteState_kPreTransition;
+//      nav_status.set_route_state(route_state_);
+
+      // Set the instruction maneuver index for the next maneuver
+//      nav_status.set_instruction_maneuver_index(maneuver_index_ + 1);
+
+      // Mark that the pre transition was used
+//      std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)) = true;
+//    }
 
     // else if route location is post transition
     // and maneuver has a post transition
