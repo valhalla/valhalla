@@ -19,11 +19,11 @@ namespace valhalla {
 namespace meili {
 
 struct interpolation_t {
-  baldr::GraphId edge;   //edge id
-  float total_distance;  //distance along the path
-  float edge_distance;   //ratio of the distance along the edge
-  size_t original_index; //index into the original measurements
-  double epoch_time;     //seconds from epoch
+  baldr::GraphId edge;   // edge id
+  float total_distance;  // distance along the path
+  float edge_distance;   // ratio of the distance along the edge
+  size_t original_index; // index into the original measurements
+  double epoch_time;     // seconds from epoch
 };
 
 // Matched traffic segment.

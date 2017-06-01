@@ -79,7 +79,7 @@ namespace {
       //as a placeholder for the section of the path that has no ots's
       if(segments.empty())
         segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
-      //remember the way id for this edge
+      //the way id for this edge
       auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid();
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
@@ -314,8 +314,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       traffic_segments.emplace_back(
         traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal, segment.way_ids});
 
-      //print(traffic_segments.back());
-
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
         ++right;
@@ -385,8 +383,8 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
     auto way_ids = baldr::json::array({});
     for (auto way_id : seg.way_ids)
       way_ids->push_back(way_id);
-
     segment->emplace("way_ids", way_ids);
+
     segments->emplace_back(segment);
   }
   std::stringstream ss;
