@@ -61,11 +61,13 @@ namespace {
     bool internal;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
+    std::vector<uint64_t> way_ids;
   };
   std::vector<merged_traffic_segment_t> merge_segments(const std::vector<valhalla::meili::interpolation_t>& markers, valhalla::baldr::GraphReader& reader) {
     std::vector<merged_traffic_segment_t> merged;
     const valhalla::baldr::GraphTile* tile = nullptr;
     valhalla::baldr::GraphId edge;
+    std::vector<uint64_t> way_ids;
     for(const auto& marker : markers) {
       //skip if its a repeat or we cant get the tile
       if(marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
@@ -74,6 +76,7 @@ namespace {
       edge = marker.edge;
       const auto* directed_edge = tile->directededge(edge);
       auto segments = tile->GetTrafficSegments(edge);
+      way_ids.emplace_back(tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid());
       //if there were no segments we'll start an invalid one to serve
       //as a placeholder for the section of the path that has no ots's
       if(segments.empty())
@@ -86,9 +89,10 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
+          merged.back().way_ids = way_ids;
         }//new one
         else
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge)});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), way_ids});
       }
     }
     return merged;
@@ -371,11 +375,17 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
       {"length", static_cast<int64_t>(seg.length)},
       {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
       {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
-      {"internal", static_cast<bool>(seg.internal)},
+      {"internal", static_cast<bool>(seg.internal)}
     });
     //some of the segments are just sections of the path with no ots's
     if(seg.segment_id.Is_Valid())
       segment->emplace("segment_id", seg.segment_id.value);
+
+    auto way_ids = baldr::json::array({});
+    for (auto way_id : seg.way_ids)
+      way_ids->push_back(way_id);
+
+    segment->emplace("way_ids", way_ids);
     segments->emplace_back(segment);
   }
   std::stringstream ss;
