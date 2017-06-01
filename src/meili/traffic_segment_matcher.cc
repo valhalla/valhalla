@@ -80,7 +80,7 @@ namespace {
       if(segments.empty())
         segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
       //remember the way id for this edge
-      auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid());
+      auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid();
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
