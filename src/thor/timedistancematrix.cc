@@ -27,10 +27,32 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceMatrix::TimeDistanceMatrix(float initial_cost_threshold)
-    : settled_count_(0),
-      initial_cost_threshold_(initial_cost_threshold),
-      cost_threshold_(initial_cost_threshold) {
+TimeDistanceMatrix::TimeDistanceMatrix(
+    float auto_cost_threshold,
+    float bicycle_cost_threshold,
+    float pedestrian_cost_threshold)
+    : mode_(TravelMode::kDrive),
+      settled_count_(0),
+      auto_cost_threshold_(auto_cost_threshold),
+      bicycle_cost_threshold_(bicycle_cost_threshold),
+      pedestrian_cost_threshold_(pedestrian_cost_threshold){
+}
+
+float TimeDistanceMatrix::GetCostThreshold() {
+  float cost_threshold;
+  switch (mode_) {
+  case TravelMode::kBicycle:
+    cost_threshold = bicycle_cost_threshold_;
+    break;
+  case TravelMode::kPedestrian:
+    cost_threshold = pedestrian_cost_threshold_;
+    break;
+  case TravelMode::kDrive:
+  default:
+    cost_threshold = auto_cost_threshold_;
+  }
+
+  return cost_threshold;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -56,7 +78,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
-  cost_threshold_ = initial_cost_threshold_;
+  current_cost_threshold_ = GetCostThreshold();
 
   // Set the mode and costing
   mode_ = mode;
@@ -71,7 +93,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   const auto edgecost = [this](const uint32_t label) {
     return edgelabels_[label].sortcost();
   };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, initial_cost_threshold_,
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_,
                                              bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
@@ -115,7 +137,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     }
 
     // Terminate when we are beyond the cost threshold
-    if (pred.cost().cost > cost_threshold_) {
+    if (pred.cost().cost > current_cost_threshold_) {
       return FormTimeDistanceMatrix();
     }
 
@@ -207,7 +229,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
-  cost_threshold_ = initial_cost_threshold_;
+  current_cost_threshold_ = GetCostThreshold();
 
   // Set the mode and costing
   mode_ = mode;
@@ -221,7 +243,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   const auto edgecost = [this](const uint32_t label) {
     return edgelabels_[label].sortcost();
   };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, initial_cost_threshold_,
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_,
                                          bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
@@ -265,7 +287,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     }
 
     // Terminate when we are beyond the cost threshold
-    if (pred.cost().cost > cost_threshold_) {
+    if (pred.cost().cost > current_cost_threshold_) {
       return FormTimeDistanceMatrix();
     }
 
@@ -595,12 +617,16 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
     // TODO - it should always be, but protect against not finding it
     auto dest_edge = dest.dest_edges.find(pred.edgeid());
     if (dest_edge == dest.dest_edges.end()) {
-      LOG_ERROR("Could not find the destination edge");
+      // If the edge isn't there but the path is trivial, then that means the edge
+      // was removed towards the beginning which is not an error.
+      if (!IsTrivial (pred.edgeid(), origin, locations[dest_idx])) {
+        LOG_ERROR("Could not find the destination edge");
+      }
       continue;
     }
 
     // Skip case where destination is along the origin edge, there is no
-    // predecessor, and the destination cannot be reached via trival path.
+    // predecessor, and the destination cannot be reached via trivial path.
     if (pred.predecessor() == kInvalidLabel &&
         !IsTrivial(pred.edgeid(), origin,
                    locations[dest_idx])) {
@@ -655,7 +681,7 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
   // Update cost threshold for early termination if at least one path has
   // been found to each destination
   if (allfound) {
-    cost_threshold_ = maxcost;
+    current_cost_threshold_ = maxcost;
   }
   return settled_count_ == destinations_.size();
 }

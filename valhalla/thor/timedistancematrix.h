@@ -22,9 +22,11 @@
 namespace valhalla {
 namespace thor {
 
-constexpr float kDefaultCostThreshold = 7200.0f;  // 2 hours
-
-
+//These cost thresholds are in addition to the distance
+// thresholds for quick rejection
+constexpr float kDefaultTimeDistCostThresholdAuto = 3600.0f;   // 1 hour
+constexpr float kDefaultTimeDistCostThresholdBicycle = 7200.0f;   // 2 hours
+constexpr float kDefaultTimeDistCostThresholdPedestrian = 14400.0f;   // 4 hours
 
 // Structure to hold information about each destination.
 struct Destination {
@@ -52,10 +54,15 @@ struct Destination {
 class TimeDistanceMatrix {
  public:
   /**
-   * Constructor with cost threshold.
-   * @param initial_cost_threshold  Cost threshold for termination.
+   * Constructor with cost threshold. Use custom cost threshold is set to true.
+   * @param auto_cost_threshold        Cost threshold for termination using auto mode.
+   * @param bicycle_cost_threshold     Cost threshold for termination using bicycle mode.
+   * @param pedestrian_cost_threshold  Cost threshold for termination using pedestrian mode.
    */
-  TimeDistanceMatrix(float initial_cost_threshold = kDefaultCostThreshold);
+  TimeDistanceMatrix(
+      float auto_cost_threshold = kDefaultTimeDistCostThresholdAuto,
+      float bicycle_cost_threshold = kDefaultTimeDistCostThresholdBicycle,
+      float pedestrian_cost_threshold = kDefaultTimeDistCostThresholdPedestrian);
 
   /**
    * One to many time and distance cost matrix. Computes time and distance
@@ -132,11 +139,13 @@ class TimeDistanceMatrix {
   // computed).
   uint32_t settled_count_;
 
-  // Initial cost threshold for termination
-  float initial_cost_threshold_;
+  // Current cost threshold.
+  float current_cost_threshold_;
 
   // Cost threshold for termination
-  float cost_threshold_;
+  float auto_cost_threshold_;
+  float bicycle_cost_threshold_;
+  float pedestrian_cost_threshold_;
 
   // List of destinations
   std::vector<Destination> destinations_;
@@ -157,6 +166,14 @@ class TimeDistanceMatrix {
   AStarHeuristic astarheuristic_;
 
   sif::TravelMode mode_;
+
+  /**
+   * Get the cost threshold based on the current mode. We use a function instead
+   * of indexing into an array with the travel mode because in the future we may
+   * want the cost threshold to be affected by other things like vehicle type.
+   */
+  float GetCostThreshold ();
+
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.

@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "baldr/pathlocation.h"
 #include "midgard/util.h"
 
@@ -87,10 +89,18 @@ namespace baldr{
   PathLocation PathLocation::FromPtree(const std::vector<Location>& locations, const boost::property_tree::ptree& path_location){
     auto index = path_location.get<size_t>("location_index");
     PathLocation p(locations[index]);
+    size_t minScore = std::numeric_limits<size_t>::max();
     for(const auto& edge : path_location.get_child("edges")) {
       p.edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
         midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
         edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
+      if (p.edges.back().score < minScore) {
+        minScore = p.edges.back().score;
+      }
+    }
+
+    for (auto& edge : p.edges) {
+      edge.score -= minScore;
     }
     return p;
   }

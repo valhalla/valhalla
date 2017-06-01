@@ -141,8 +141,10 @@ namespace valhalla {
       switch (source_to_target_algorithm) {
       case SELECT_OPTIMAL:
         if (correlated_s.size() + correlated_t.size() > 100) {
+          midgard::logging::Log("Algorithm::TimeDistance", " [ANALYTICS] ");
           time_distances = timedistancematrix();
         } else {
+          midgard::logging::Log("Algorithm::Cost", " [ANALYTICS] ");
           time_distances = costmatrix();
         }
         /** TODO - test performance of TimeDistanceMatrix vs. CostMatrix for various
@@ -159,16 +161,22 @@ namespace valhalla {
         } */
         break;
       case COST_MATRIX:
+        midgard::logging::Log("Algorithm::Cost", " [ANALYTICS] ");
         time_distances = costmatrix();
         break;
-      case TIME_DISTANCE_MATRIX: {
+      case TIME_DISTANCE_MATRIX:
+        midgard::logging::Log("Algorithm::TimeDistance", " [ANALYTICS] ");
         time_distances = timedistancematrix();
         break;
-      }
       }
       json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
         time_distances, units, distance_scale);
 
+      /*
+      std::ofstream outStream ("bf_json_c_og.txt", std::ofstream::out);
+      outStream << *json;
+      outStream.close();
+      */
       //jsonp callback if need be
       std::ostringstream stream;
       auto jsonp = request.get_optional<std::string>("jsonp");
@@ -182,6 +190,7 @@ namespace valhalla {
       auto e = std::chrono::system_clock::now();
       std::chrono::duration<float, std::milli> elapsed_time = e - s;
       //log request if greater than X (ms)
+      midgard::logging::Log("elapsed time (ms): " + std::to_string(elapsed_time.count()), " [ANALYTICS] ");
       if (!healthcheck && !request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
         std::stringstream ss;
         boost::property_tree::json_parser::write_json(ss, request, false);
@@ -189,6 +198,13 @@ namespace valhalla {
         LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
         midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
       }
+      size_t count = 0;
+      for (const auto& td : time_distances) {
+        if (td.time != kMaxCost) {
+          ++count;
+        }
+      }
+      std::cout << "Amount of time-distances found: " << count << std::endl;
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       worker_t::result_t result{false};

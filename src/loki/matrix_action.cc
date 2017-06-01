@@ -39,7 +39,7 @@ namespace {
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
   void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
-
+    std::cout << "matrix_max_distance: " << matrix_max_distance << std::endl;
     //see if any locations pairs are unreachable or too far apart
     for(const auto& source : sources){
       for(const auto& target : targets) {
@@ -55,8 +55,8 @@ namespace {
 
         if (path_distance > matrix_max_distance)
           throw valhalla_exception_t{400, 154};
-        }
-     }
+      }
+    }
   }
 }
 
@@ -131,7 +131,10 @@ namespace valhalla {
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      check_distance(sources, targets, max_distance.find("sources_to_targets")->second, max_location_distance);
+      auto matrix_max_dist = max_matrix_distance.find(costing);
+      if (matrix_max_dist == max_matrix_distance.end())
+        matrix_max_dist = max_matrix_distance.find("auto");
+      check_distance(sources, targets, matrix_max_dist->second, max_location_distance);
 
       //correlate the various locations to the underlying graph
       std::vector<baldr::Location> sources_targets;

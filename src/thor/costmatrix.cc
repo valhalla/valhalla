@@ -1,6 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 #include "thor/costmatrix.h"
 #include "midgard/logging.h"
 #include "baldr/errorcode_util.h"
@@ -25,14 +26,36 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-CostMatrix::CostMatrix(float cost_threshold)
+CostMatrix::CostMatrix(
+    float auto_cost_threshold,
+    float bicycle_cost_threshold,
+    float pedestrian_cost_threshold)
     : mode_(TravelMode::kDrive),
       access_mode_(kAutoAccess),
       source_count_(0),
       remaining_sources_(0),
       target_count_(0),
       remaining_targets_(0),
-      cost_threshold_(cost_threshold) {
+      auto_cost_threshold_(auto_cost_threshold),
+      bicycle_cost_threshold_(bicycle_cost_threshold),
+      pedestrian_cost_threshold_(pedestrian_cost_threshold){
+}
+
+float CostMatrix::GetCostThreshold() {
+  float cost_threshold;
+  switch (mode_) {
+  case TravelMode::kBicycle:
+    cost_threshold = bicycle_cost_threshold_;
+    break;
+  case TravelMode::kPedestrian:
+    cost_threshold = pedestrian_cost_threshold_;
+    break;
+  case TravelMode::kDrive:
+  default:
+    cost_threshold = auto_cost_threshold_;
+  }
+
+  return cost_threshold;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -93,9 +116,13 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   access_mode_ = costing_->access_mode();
 
   // Set the source and target locations
+  auto start = std::chrono::system_clock::now();
   Clear();
   SetSources(graphreader, source_location_list);
   SetTargets(graphreader, target_location_list);
+  auto end = std::chrono::system_clock::now();
+  auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << "setup time: " << elapsed.count() << std::endl;
 
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
@@ -321,7 +348,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
 
   // Get edge label and check cost threshold
   EdgeLabel pred = edgelabels[pred_idx];
-  if (pred.cost().secs > cost_threshold_) {
+  if (pred.cost().secs > GetCostThreshold()) {
     source_status_[index].threshold = 0;
     return;
   }
@@ -602,7 +629,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
 
   // Copy predecessor, check cost threshold
   EdgeLabel pred = edgelabels[pred_idx];
-  if (pred.cost().secs > cost_threshold_) {
+  if (pred.cost().secs > GetCostThreshold()) {
     target_status_[index].threshold = 0;
     return;
   }
@@ -669,7 +696,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(new DoubleBucketQueue(0, cost_threshold_,
+    source_adjacency_[index].reset(new DoubleBucketQueue(0, GetCostThreshold(),
                                          costing_->UnitSize(), edgecost));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
@@ -740,7 +767,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(new DoubleBucketQueue(0, cost_threshold_,
+    target_adjacency_[index].reset(new DoubleBucketQueue(0, GetCostThreshold(),
                                              costing_->UnitSize(), edgecost));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 

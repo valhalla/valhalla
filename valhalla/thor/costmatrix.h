@@ -20,10 +20,15 @@
 namespace valhalla {
 namespace thor {
 
-// Use a 4 hour cost threshold. This is in addition to the distance
+namespace {
+//These cost thresholds are in addition to the distance
 // thresholds for quick rejection
-constexpr float kCostThresholdDefault = 14400.0f;   // 4 hours
+constexpr float kDefaultCostThresholdAuto = 28800.0f;   // 8 hours
+constexpr float kDefaultCostThresholdBicycle = 14400.0f;   // 4 hours
+constexpr float kDefaultCostThresholdPedestrian = 7200.0f;   // 2 hours
 constexpr float kMaxCost = 99999999.9999f;
+
+}
 
 // Time and Distance structure
 struct TimeDistance {
@@ -95,11 +100,17 @@ struct BestCandidate {
  */
 class CostMatrix {
  public:
+
   /**
-   * Constructor with cost threshold.
-   * @param initial_cost_threshold  Cost threshold for termination.
+   * Constructor with cost threshold. Use custom cost threshold is set to true.
+   * @param auto_cost_threshold        Cost threshold for termination using auto mode.
+   * @param bicycle_cost_threshold     Cost threshold for termination using bicycle mode.
+   * @param pedestrian_cost_threshold  Cost threshold for termination using pedestrian mode.
    */
-  CostMatrix(float initial_cost_threshold = kCostThresholdDefault);
+  CostMatrix(
+      float auto_cost_threshold = kDefaultCostThresholdAuto,
+      float bicycle_cost_threshold = kDefaultCostThresholdBicycle,
+      float pedestrian_cost_threshold = kDefaultCostThresholdPedestrian);
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -141,7 +152,9 @@ class CostMatrix {
   uint32_t remaining_targets_;
 
   // Cost threshold - stop searches when this is reached.
-  float cost_threshold_;
+  float auto_cost_threshold_;
+  float bicycle_cost_threshold_;
+  float pedestrian_cost_threshold_;
 
   // Status
   std::vector<LocationStatus> source_status_;
@@ -166,6 +179,13 @@ class CostMatrix {
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
+
+  /**
+   * Get the cost threshold based on the current mode. We use a function instead
+   * of indexing into an array with the travel mode because in the future we may
+   * want the cost threshold to be affected by other things like vehicle type.
+   */
+  float GetCostThreshold ();
 
   /**
    * Form the initial time distance matrix given the sources
