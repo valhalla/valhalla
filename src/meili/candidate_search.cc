@@ -1,6 +1,5 @@
 #include "baldr/tilehierarchy.h"
 #include "meili/candidate_search.h"
-#include "meili/graph_helpers.h"
 #include "meili/geometry_helpers.h"
 
 namespace valhalla {
@@ -43,17 +42,15 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     const auto& edgeid = *it;
     if (!edgeid.Is_Valid()) continue;
 
-    const auto opp_edgeid = helpers::edge_opp_edgeid(reader_, edgeid, tile);
+    // Get the edge and its opposing edge. Transition edges are not
+    // allowed so we do not need to check node levels.
+    const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, tile);
     if (!opp_edgeid.Is_Valid()) continue;
     const auto opp_edge = tile->directededge(opp_edgeid);
 
     // Make sure it's the last one since we need the tile of this edge
-    const auto edge = helpers::edge_directededge(reader_, edgeid, tile);
+    const auto edge = reader_.directededge(edgeid, tile);
     if (!edge) continue;
-
-    if (!(edgeid.level() == edge->endnode().level() && edgeid.level() == opp_edgeid.level())) {
-      throw std::logic_error("edges feed in candidate filtering should be at the same level as its endnode and opposite edge");
-    }
 
     // NOTE a pointer to edgeinfo is needed here because it returns
     // an unique ptr
@@ -97,7 +94,6 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
       if (!edge_included) {
         std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
       }
-
       if (sq_distance <= sq_search_radius) {
         const float dist = opp_edge->forward()? offset : 1.f - offset;
         if (dist == 1.f) {
@@ -137,13 +133,10 @@ void IndexBin(const baldr::GraphTile& tile, const int32_t bin_index,
                   &tile : reader.GetGraphTile(edge_id);
     if(bin_tile == nullptr) continue;
 
-    // Get the edge. Skip transition edges and transit connection edges.
-    const auto* edge = bin_tile->directededge(edge_id);
-    if(edge->trans_up() || edge->trans_down() ||
-       edge->use() == baldr::Use::kTransitConnection) continue;
-
-    // Get shape and add to grid. Use lazy_shape to avoid allocations.
-    auto shape = bin_tile->edgeinfo(edge->edgeinfo_offset()).lazy_shape();
+    // Get the edge shape and add to grid. Use lazy_shape to avoid allocations
+    // NOTE: bins do not contain transition edges and transit connection edges
+    auto shape = bin_tile->edgeinfo(
+        bin_tile->directededge(edge_id)->edgeinfo_offset()).lazy_shape();
     if (!shape.empty()) {
       PointLL v = shape.pop();
       while (!shape.empty()) {
@@ -204,7 +197,7 @@ std::unordered_set<baldr::GraphId>
 CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
 {
   // Get the tiles object from the tile hierarchy and create the bin tiles
-  // (subidivisions within the tile)
+  // (subdivisions within the tile)
   Tiles<PointLL> tiles = baldr::TileHierarchy::levels().rbegin()->second.tiles;
   Tiles<PointLL> bins(tiles.TileBounds(), tiles.SubdivisionSize());
 
@@ -217,7 +210,7 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const
   for (auto bin_id : bin_list) {
     auto grid = GetGrid(bin_id, tiles, bins);
     if (grid) {
-      const auto& set = grid->Query(range);
+      const auto set = grid->Query(range);
       result.insert(set.begin(), set.end());
     }
   }
@@ -234,8 +227,8 @@ CandidateGridQuery::Query(const midgard::PointLL& location,
     throw std::invalid_argument("Expect a valid location");
   }
 
-  const auto& range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
-  const auto& edgeids = RangeQuery(range);
+  const auto range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
+  const auto edgeids = RangeQuery(range);
   return WithinSquaredDistance(location, sq_search_radius,
                                edgeids.begin(), edgeids.end(), filter);
 }

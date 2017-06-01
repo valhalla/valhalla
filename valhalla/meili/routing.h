@@ -12,19 +12,15 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/dynamiccost.h>
-
-#include <valhalla/meili/bucket_queue.h>
-
 
 namespace valhalla{
 namespace meili {
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
-constexpr uint32_t kInvalidLabelIndex = std::numeric_limits<uint32_t>::max();
-
 
 // TODO simplify it by inheriting sif::EdgeLabel
 struct Label
@@ -126,7 +122,7 @@ struct Label
   // For ranking labels: sortcost = accumulated cost since origin + heuristic cost to the goal
   float sortcost;
 
-  // kInvalidLabelIndex if dummy
+  // baldr::kInvalidLabel if dummy
   uint32_t predecessor;
 
   // An EdgeLabel is needed here for passing to sif's filters later
@@ -146,11 +142,10 @@ struct Status{
   uint32_t permanent : 1;
 };
 
-
 class LabelSet
 {
  public:
-  LabelSet(typename BucketQueue<uint32_t, kInvalidLabelIndex>::size_type count, float size = 1.f);
+  LabelSet(const float max_cost, const float bucket_size = 1.0f);
 
   bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
            std::shared_ptr<const sif::EdgeLabel> edgelabel);
@@ -178,14 +173,11 @@ class LabelSet
 
   uint32_t pop();
 
-  bool empty() const
-  { return queue_.empty(); }
-
   const Label& label(uint32_t label_idx) const
   { return labels_[label_idx]; }
 
   void clear_queue()
-  { queue_.clear(); }
+  { queue_->clear(); }
 
   void clear_status()
   {
@@ -194,20 +186,22 @@ class LabelSet
   }
 
  private:
-  BucketQueue<uint32_t, kInvalidLabelIndex> queue_;
+  float max_cost_;
+  std::shared_ptr<baldr::DoubleBucketQueue> queue_;
   std::unordered_map<baldr::GraphId, Status> node_status_;
   std::unordered_map<uint16_t, Status> dest_status_;
   std::vector<Label> labels_;
 };
 
+using labelset_ptr_t = std::shared_ptr<LabelSet>;
 
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
-                   LabelSet& labelset,
+                   labelset_ptr_t labelset,
                    const midgard::DistanceApproximator& approximator,
-                   float search_radius,
+                   const float search_radius,
                    sif::cost_ptr_t costing = nullptr,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr,
                    const float turn_cost_table[181] = nullptr);
@@ -225,17 +219,17 @@ class RoutePathIterator:
   // Construct a tail iterator
   RoutePathIterator(const LabelSet* labelset)
       : labelset_(labelset),
-        label_idx_(kInvalidLabelIndex) {}
+        label_idx_(baldr::kInvalidLabel) {}
 
   // Construct an invalid iterator
   RoutePathIterator()
       : labelset_(nullptr),
-        label_idx_(kInvalidLabelIndex) {}
+        label_idx_(baldr::kInvalidLabel) {}
 
   // Postfix increment
   RoutePathIterator operator++(int)
   {
-    if (label_idx_ != kInvalidLabelIndex) {
+    if (label_idx_ != baldr::kInvalidLabel) {
       auto clone = *this;
       label_idx_ = labelset_->label(label_idx_).predecessor;
       return clone;
@@ -246,7 +240,7 @@ class RoutePathIterator:
   // Prefix increment
   RoutePathIterator& operator++()
   {
-    if (label_idx_ != kInvalidLabelIndex) {
+    if (label_idx_ != baldr::kInvalidLabel) {
       label_idx_ = labelset_->label(label_idx_).predecessor;
     }
     return *this;

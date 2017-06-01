@@ -6,7 +6,6 @@
 #include "baldr/graphid.h"
 
 #include "meili/geometry_helpers.h"
-#include "meili/graph_helpers.h"
 #include "meili/match_result.h"
 #include "meili/match_route.h"
 
@@ -15,7 +14,6 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::meili;
-
 
 template <typename segment_iterator_t>
 std::string
@@ -31,8 +29,10 @@ RouteToString(baldr::GraphReader& graphreader,
     if (segment->edgeid.Is_Valid()) {
       route << "[";
 
+      // Get the end nodes of the directed edge.
+      auto edge_nodes = graphreader.GetDirectedEdgeNodes(segment->edgeid, tile);
       if (segment->source == 0.f) {
-        const auto startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        const auto startnodeid = edge_nodes.first;
         if (startnodeid.Is_Valid()) {
           route << startnodeid;
         } else {
@@ -49,7 +49,7 @@ RouteToString(baldr::GraphReader& graphreader,
       }
 
       if (segment->target == 1.f) {
-        const auto endnodeid = helpers::edge_endnodeid(graphreader, segment->edgeid, tile);
+        const auto endnodeid = edge_nodes.second;
         if (endnodeid.Is_Valid()) {
           route << endnodeid;
         } else {
@@ -107,8 +107,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 
         // We should remove this block of code when this issue is
         // solved from upstream
-        const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile);
-        const auto startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+        const auto endnodeid = graphreader.edge_endnode(prev_segment->edgeid, tile);
+        const auto startnodeid = graphreader.edge_startnode(segment->edgeid, tile);
         if (endnodeid == startnodeid) {
           LOG_ERROR("This is a loop. Let it go");
           return true;
@@ -118,8 +118,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
         return false;
       }
     } else {
-      const auto endnodeid = helpers::edge_endnodeid(graphreader, prev_segment->edgeid, tile),
-               startnodeid = helpers::edge_startnodeid(graphreader, segment->edgeid, tile);
+      const auto endnodeid = graphreader.edge_endnode(prev_segment->edgeid, tile),
+               startnodeid = graphreader.edge_startnode(segment->edgeid, tile);
       if (!(prev_segment->target == 1.f && segment->source == 0.f && endnodeid == startnodeid)) {
         LOG_ERROR("Found disconnected segments at " + std::to_string(segment - segment_begin));
         LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
@@ -189,7 +189,7 @@ std::vector<midgard::PointLL>
 EdgeSegment::Shape(baldr::GraphReader& graphreader) const
 {
   const baldr::GraphTile* tile = nullptr;
-  const auto edge = helpers::edge_directededge(graphreader, edgeid, tile);
+  const auto edge = graphreader.directededge(edgeid, tile);
   if (edge && !edge->trans_up() && !edge->trans_down()) {
     const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
@@ -208,8 +208,8 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
 {
   if (edgeid != other.edgeid) {
     if (target == 1.f && other.source == 0.f) {
-      const auto endnode = helpers::edge_endnodeid(graphreader, edgeid);
-      return endnode.Is_Valid() && endnode == helpers::edge_startnodeid(graphreader, other.edgeid);
+      const auto endnode = graphreader.edge_endnode(edgeid);
+      return endnode.Is_Valid() && endnode == graphreader.edge_startnode(other.edgeid);
     } else {
       return false;
     }

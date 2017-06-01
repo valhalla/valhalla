@@ -138,7 +138,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/universal_cost.h \
 	valhalla/meili/candidate_search.h \
 	valhalla/meili/geometry_helpers.h \
-	valhalla/meili/graph_helpers.h \
 	valhalla/meili/grid_range_query.h \
 	valhalla/meili/map_matching.h \
 	valhalla/meili/priority_queue.h \
@@ -148,7 +147,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/geojson_writer.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
-	valhalla/meili/bucket_queue.h \
 	valhalla/meili/grid_traversal.h \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
