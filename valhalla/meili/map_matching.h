@@ -37,7 +37,7 @@ class State
              baldr::GraphReader& graphreader,
              float max_route_distance,
              const midgard::DistanceApproximator& approximator,
-             float search_radius,
+             const float search_radius,
              sif::cost_ptr_t costing,
              std::shared_ptr<const sif::EdgeLabel> edgelabel,
              const float turn_cost_table[181]) const;
