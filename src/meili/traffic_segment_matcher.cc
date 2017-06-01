@@ -61,6 +61,7 @@ namespace {
     bool internal;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
+    std::vector<uint64_t> way_ids;
   };
   std::vector<merged_traffic_segment_t> merge_segments(const std::vector<valhalla::meili::interpolation_t>& markers, valhalla::baldr::GraphReader& reader) {
     std::vector<merged_traffic_segment_t> merged;
@@ -78,6 +79,8 @@ namespace {
       //as a placeholder for the section of the path that has no ots's
       if(segments.empty())
         segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
+      //the way id for this edge
+      auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid();
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
@@ -86,9 +89,11 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
+          if(merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id)
+            merged.back().way_ids.push_back(way_id);
         }//new one
         else
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge)});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), {way_id}});
       }
     }
     return merged;
@@ -307,9 +312,7 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
       traffic_segments.emplace_back(
-        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal});
-
-      //print(traffic_segments.back());
+        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal, segment.way_ids});
 
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
@@ -371,11 +374,17 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
       {"length", static_cast<int64_t>(seg.length)},
       {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
       {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
-      {"internal", static_cast<bool>(seg.internal)},
+      {"internal", static_cast<bool>(seg.internal)}
     });
     //some of the segments are just sections of the path with no ots's
     if(seg.segment_id.Is_Valid())
       segment->emplace("segment_id", seg.segment_id.value);
+
+    auto way_ids = baldr::json::array({});
+    for (auto way_id : seg.way_ids)
+      way_ids->push_back(way_id);
+    segment->emplace("way_ids", way_ids);
+
     segments->emplace_back(segment);
   }
   std::stringstream ss;
