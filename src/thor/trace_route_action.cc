@@ -210,9 +210,15 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
 
       // Iterate over results to set edge_index, if found
       int edge_index = 0;
+      int last_matched_edge_index = edge_index;
       int match_index = 0;
       auto edge = path_edges.cbegin();
+      auto last_matched_edge = edge;
       for (auto& match_result : match_results) {
+        // Reset edge and edge_index to last matched for every matched result
+        edge = last_matched_edge;
+        edge_index = last_matched_edge_index;
+
         // Check for result for valid edge id
         if (match_result.edgeid.Is_Valid()) {
           // Walk edges to find matching id
@@ -221,9 +227,13 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
             if (match_result.edgeid == edge->edgeid) {
               // Set match result with matched edge index and break out of the loop
               match_result.edge_index = edge_index;
+
+              // Set the last matched edge and edge_index so we skip matched transition edges
+              last_matched_edge = edge;
+              last_matched_edge_index = edge_index;
               break;
             } else {
-              // Increment to next edge
+              // Increment to next edge and edge_index
               ++edge;
               ++edge_index;
             }
