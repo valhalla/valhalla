@@ -67,7 +67,6 @@ namespace {
     std::vector<merged_traffic_segment_t> merged;
     const valhalla::baldr::GraphTile* tile = nullptr;
     valhalla::baldr::GraphId edge;
-    std::vector<uint64_t> way_ids;
     for(const auto& marker : markers) {
       //skip if its a repeat or we cant get the tile
       if(marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
@@ -76,11 +75,12 @@ namespace {
       edge = marker.edge;
       const auto* directed_edge = tile->directededge(edge);
       auto segments = tile->GetTrafficSegments(edge);
-      way_ids.emplace_back(tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid());
       //if there were no segments we'll start an invalid one to serve
       //as a placeholder for the section of the path that has no ots's
       if(segments.empty())
         segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
+      //remember the way id for this edge
+      auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid());
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
@@ -89,10 +89,11 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
-          merged.back().way_ids = way_ids;
+          if(merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id)
+            merged.back().way_ids.push_back(way_id);
         }//new one
         else
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), way_ids});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), {way_id}});
       }
     }
     return merged;
