@@ -84,6 +84,8 @@ class Navigator {
 
     size_t GetWordCount(const std::string& instruction) const;
 
+    uint32_t GetPreTransitionThreshold(size_t instruction_index) const;
+
     /////////////////////////////////////////////////////////////////////////////
 
     // Specified route to navigate

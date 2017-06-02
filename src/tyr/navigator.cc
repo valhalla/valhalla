@@ -76,18 +76,18 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     // else if instruction has not been used
     // and route location is pre transition
     // then set route state to kPreTransition
-//    else if (!(std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)))
-//        && (nav_status.remaining_maneuver_time() < GetPreTransitionThreshold(maneuver_index_ + 1))) {
+    else if (!(std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)))
+        && (nav_status.remaining_maneuver_time() < GetPreTransitionThreshold(maneuver_index_ + 1))) {
       // Set route state
-//      route_state_ = NavigationStatus_RouteState_kPreTransition;
-//      nav_status.set_route_state(route_state_);
+      route_state_ = NavigationStatus_RouteState_kPreTransition;
+      nav_status.set_route_state(route_state_);
 
       // Set the instruction maneuver index for the next maneuver
-//      nav_status.set_instruction_maneuver_index(maneuver_index_ + 1);
+      nav_status.set_instruction_maneuver_index(maneuver_index_ + 1);
 
       // Mark that the pre transition was used
-//      std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)) = true;
-//    }
+      std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)) = true;
+    }
 
     // else if route location is post transition
     // and maneuver has a post transition
@@ -374,6 +374,24 @@ size_t Navigator::GetWordCount(const std::string& instruction) const {
       ++pos;
   }
   return word_count;
+}
+
+uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
+  const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(instruction_index);
+
+  // TODO: do we need to adjust time for destination?
+
+  float adjustment_factor = 1.0f;
+  // Set adjustment factor to reduce time if instruction is multi-cue
+  // TODO: may want to isolate adjustment to be based on next maneuver phrase
+  if (maneuver.verbal_multi_cue()){
+    adjustment_factor = 0.75f;
+  }
+
+  return (kPreTransitionBaseThreshold
+      + (static_cast<uint32_t>(round(
+          GetWordCount(maneuver.verbal_pre_transition_instruction())
+              / kWordsPerSecond * adjustment_factor))));
 }
 
 }
