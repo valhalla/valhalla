@@ -66,7 +66,7 @@ class NavigatorTest : public Navigator {
   }
 
   const Route& route() const {
-    return Navigator::route();
+    return Navigator::route_;
   }
 
   const std::vector<std::pair<float, uint32_t>>& remaining_leg_values() const {
@@ -87,6 +87,14 @@ class NavigatorTest : public Navigator {
 
   bool IsDestinationShapeIndex(size_t idx) const {
     return Navigator::IsDestinationShapeIndex(idx);
+  }
+
+  bool IsStartManeuverIndex(size_t idx) const {
+    return Navigator::IsStartManeuverIndex(idx);
+  }
+
+  bool IsDestinationManeuverIndex(size_t idx) const {
+    return Navigator::IsDestinationManeuverIndex(idx);
   }
 
   void SnapToRoute(const FixLocation& fix_location,
@@ -1033,7 +1041,7 @@ void TestLancasterToHershey() {
   //==========================================================================
 
   // reset the route
-  nav.set_route(route_json_str);
+  nav.SetRoute(route_json_str);
 
   // Test GetWordCount
   TestGetWordCount(nav);
@@ -1062,7 +1070,7 @@ void TestLancasterToHershey() {
       true);
 
   // reset the route
-  nav.set_route(route_json_str);
+  nav.SetRoute(route_json_str);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
@@ -1083,7 +1091,7 @@ void TestLancasterToHershey() {
       true);
 
   // reset the route
-  nav.set_route(route_json_str);
+  nav.SetRoute(route_json_str);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(

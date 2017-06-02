@@ -51,8 +51,7 @@ class Navigator {
     Navigator(const Navigator&) = default;
     Navigator& operator=(const Navigator&) = default;
 
-    const valhalla::Route& route() const;
-    void set_route(const std::string& route_json_str);
+    void SetRoute(const std::string& route_json_str);
 
     valhalla::NavigationStatus OnLocationChanged(
         const valhalla::FixLocation& fix_location);
@@ -68,6 +67,9 @@ class Navigator {
     void SetUsedInstructions();
 
     bool IsDestinationShapeIndex(size_t idx) const;
+
+    bool IsStartManeuverIndex(size_t idx) const;
+    bool IsDestinationManeuverIndex(size_t idx) const;
 
     size_t FindManeuverIndex(size_t begin_search_index, size_t shape_index) const;
     size_t RfindManeuverIndex(size_t rbegin_search_index, size_t shape_index) const;

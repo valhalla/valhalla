@@ -29,14 +29,10 @@ namespace tyr {
 
 Navigator::Navigator(const std::string& route_json_str) {
   route_state_ = NavigationStatus_RouteState_kInvalid;
-  set_route(route_json_str);
+  SetRoute(route_json_str);
 }
 
-const Route& Navigator::route() const {
-  return route_;
-}
-
-void Navigator::set_route(const std::string& route_json_str) {
+void Navigator::SetRoute(const std::string& route_json_str) {
   google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
   leg_index_ = 0;
   maneuver_index_ = 0;
@@ -49,6 +45,12 @@ void Navigator::set_route(const std::string& route_json_str) {
 NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   NavigationStatus nav_status;
 
+  // If route state is invalid then just return
+  if (route_state_ == NavigationStatus_RouteState_kInvalid) {
+    nav_status.set_route_state(route_state_);
+    return nav_status;
+  }
+
   // Set the previous route state prior to snapping to route
   NavigationStatus_RouteState prev_route_state = route_state_;
 
@@ -57,12 +59,13 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
 
   // Only process a valid route state
   if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
-    // If starting navigation and close to origin
-    // and origin maneuver index and instruction has not been used
+    // If start maneuver index and instruction has not been used
+    // and starting navigation and close to origin
     // then set route state to kPreTransition
-    if (StartingNavigation(prev_route_state, route_state_)
-        && OnRouteLocationCloseToOrigin(nav_status) && (maneuver_index_ == 0)
-        && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))) {
+    if (IsStartManeuverIndex(maneuver_index_)
+        && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_)))
+        && StartingNavigation(prev_route_state, route_state_)
+        && OnRouteLocationCloseToOrigin(nav_status)) {
       // Set route state
       route_state_ = NavigationStatus_RouteState_kPreTransition;
       nav_status.set_route_state(route_state_);
@@ -188,6 +191,14 @@ void Navigator::SetUsedInstructions() {
 
 bool Navigator::IsDestinationShapeIndex(size_t idx) const {
   return (idx == (shape_.size() - 1));
+}
+
+bool Navigator::IsStartManeuverIndex(size_t idx) const {
+  return (idx == 0);
+}
+
+bool Navigator::IsDestinationManeuverIndex(size_t idx) const {
+  return (idx == (route_.trip().legs(leg_index_).maneuvers_size() - 1));
 }
 
 size_t Navigator::FindManeuverIndex(size_t begin_search_index,
