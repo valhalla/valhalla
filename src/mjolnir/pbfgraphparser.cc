@@ -1098,6 +1098,10 @@ struct graph_callback : public OSMPBF::Callback {
             else if (t == "emergency")
               modes = modes & ~kEmergencyAccess;
           }
+        } else if (vias.size() == 0) {
+          restriction.set_via(0);
+          vias.push_back(from_way_id);
+          osmdata_.via_set.insert(from_way_id);
         }
 
         if (osmid == 2224988)
