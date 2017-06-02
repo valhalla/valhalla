@@ -50,7 +50,7 @@ namespace {
 
   //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
   bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
-    return edge->trans_up() || edge->trans_down() || edge->roundabout() ||
+    return edge->IsTransition() || edge->roundabout() ||
       edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
   }
 
@@ -74,9 +74,9 @@ namespace {
       //get segments for this edge
       edge = marker.edge;
       const auto* directed_edge = tile->directededge(edge);
-      auto segments = tile->GetTrafficSegments(edge);
       //if there were no segments we'll start an invalid one to serve
       //as a placeholder for the section of the path that has no ots's
+      auto segments = tile->GetTrafficSegments(edge);
       if(segments.empty())
         segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
       //the way id for this edge
@@ -84,16 +84,19 @@ namespace {
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
-        if(!merged.empty() && merged.back()->segment_id_ == segment.segment_id_){
+        if(!merged.empty() && merged.back()->segment_id_ == segment.segment_id_) {
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
-          if(merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id)
+          if(!directed_edge->IsTransition() && (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id))
             merged.back().way_ids.push_back(way_id);
         }//new one
-        else
+        else {
           merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), {way_id}});
+          if(directed_edge->IsTransition())
+            merged.back().way_ids.clear();
+        }
       }
     }
     return merged;
@@ -275,6 +278,16 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       if(left->edge_distance > segment->begin_percent_)
         left = std::prev(left);
 
+      //move the right marker right until its adjacent to the segment end
+      right = std::find_if(right, markers.cend(), [&segment](const interpolation_t& mark) {
+        return mark.edge == segment.end_edge && mark.edge_distance >= segment->end_percent_;
+      });
+
+      //skip any segments composed entirely of transition edges (should only be one edge really)
+      //they should have no valid segment id, be marked internal and also have no way ids
+      if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty())
+        continue;
+
       //interpolate the length and time at the start
       double start_time = -1;
       float start_length = -1;
@@ -285,11 +298,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         start_length = left->total_distance + (next->total_distance - left->total_distance) * ratio;
         start_time = left->epoch_time + (next->epoch_time - left->epoch_time) * ratio;
       }
-
-      //move the right marker right until its adjacent to the segment end
-      right = std::find_if(right, markers.cend(), [&segment](const interpolation_t& mark) {
-        return mark.edge == segment.end_edge && mark.edge_distance >= segment->end_percent_;
-      });
 
       //interpolate the length and time at the end
       double end_time = -1;
