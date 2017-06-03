@@ -1100,12 +1100,9 @@ struct graph_callback : public OSMPBF::Callback {
           }
         } else if (vias.size() == 0) {
           restriction.set_via(0);
-          vias.push_back(from_way_id);
-          osmdata_.via_set.insert(from_way_id);
+          vias.push_back(restriction.to());
+          osmdata_.via_set.insert(restriction.to());
         }
-
-        if (osmid == 2224988)
-        std::cout << modes << " " << vias.size() << std::endl;
 
         restriction.set_modes(modes);
 
