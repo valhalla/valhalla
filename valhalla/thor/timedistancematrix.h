@@ -26,7 +26,7 @@ namespace thor {
 // thresholds for quick rejection
 constexpr float kDefaultTimeDistCostThresholdAuto = 3600.0f;   // 1 hour
 constexpr float kDefaultTimeDistCostThresholdBicycle = 7200.0f;   // 2 hours
-constexpr float kDefaultTimeDistCostThresholdPedestrian = 14400.0f;   // 4 hours
+constexpr float kDefaultTimeDistCostThresholdPedestrian = 36000.0f;   // 4 hours
 
 // Structure to hold information about each destination.
 struct Destination {

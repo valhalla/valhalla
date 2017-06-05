@@ -20,15 +20,12 @@
 namespace valhalla {
 namespace thor {
 
-namespace {
 //These cost thresholds are in addition to the distance
 // thresholds for quick rejection
 constexpr float kDefaultCostThresholdAuto = 28800.0f;   // 8 hours
-constexpr float kDefaultCostThresholdBicycle = 14400.0f;   // 4 hours
+constexpr float kDefaultCostThresholdBicycle = 3600.0f;   // 1 hours
 constexpr float kDefaultCostThresholdPedestrian = 7200.0f;   // 2 hours
 constexpr float kMaxCost = 99999999.9999f;
-
-}
 
 // Time and Distance structure
 struct TimeDistance {
