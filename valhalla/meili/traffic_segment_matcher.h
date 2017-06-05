@@ -34,6 +34,7 @@ struct traffic_segment_t {
   double end_time;               // End time along this segment, if < 0 then no end match
   size_t end_shape_index;        // Ends at this index of original input
   int length;                    // Length in meters along this segment, if < 0 then no match
+  int queue_length;              // Length of any queue from the end of the segment
   bool internal;                 // Is the set of edges making up this segment internal edge types
   std::vector<uint64_t> way_ids; // A list of way ids from the directed edge
 };
