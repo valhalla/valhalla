@@ -839,8 +839,6 @@ struct graph_callback : public OSMPBF::Callback {
     std::string from_lanes, from, to_lanes, to;
     uint32_t modes = 0;
 
-    int x = 0;
-
     for (const auto& tag : results) {
       if (tag.first == "type") {
         if (tag.second == "restriction")
