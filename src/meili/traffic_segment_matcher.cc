@@ -319,8 +319,11 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
 
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
+      int queue_length = 0; // TODO - compute queue length (based on interpolations - where speed falls
+                            // below some threshold
       traffic_segments.emplace_back(
-        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal, segment.way_ids});
+        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index,
+                  length, queue_length, segment.internal, segment.way_ids});
 
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
@@ -382,6 +385,7 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
       {"length", static_cast<int64_t>(seg.length)},
       {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
       {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
+      {"queue_length", static_cast<int64_t>(seg.queue_length)},
       {"internal", static_cast<bool>(seg.internal)}
     });
     //some of the segments are just sections of the path with no ots's
