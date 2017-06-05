@@ -666,7 +666,7 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
 
     // Do not update cost threshold if no path to this destination
     // has been found
-    if (d.best_cost.cost == 0) {
+    if (d.best_cost.cost == kMaxCost) {
       allfound = false;
     } else {
       // Settle any destinations above their threshold and update maxcost
