@@ -875,7 +875,8 @@ struct graph_callback : public OSMPBF::Callback {
           !tag.second.empty()) {
 
         isRestriction = true;
-        isTypeRestriction = true;
+        if (tag.first != "restriction")
+          isTypeRestriction = true;
 
         if (tag.first == "restriction:motorcar")
           modes = modes | kAutoAccess;
