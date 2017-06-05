@@ -1,7 +1,6 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <chrono>
 #include "thor/costmatrix.h"
 #include "midgard/logging.h"
 #include "baldr/errorcode_util.h"
@@ -116,13 +115,9 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   access_mode_ = costing_->access_mode();
 
   // Set the source and target locations
-  auto start = std::chrono::system_clock::now();
   Clear();
   SetSources(graphreader, source_location_list);
   SetTargets(graphreader, target_location_list);
-  auto end = std::chrono::system_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "setup time: " << elapsed.count() << std::endl;
 
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining

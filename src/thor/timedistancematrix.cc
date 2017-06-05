@@ -118,7 +118,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     EdgeLabel pred = edgelabels_[predindex];
 
     // Mark the edge as permanently labeled. Do not do this for an origin
-    // edge (this will allow loops/around the block cases)
+    // edge. Otherwise loops/around the block cases will not work
     if (!pred.origin()) {
       edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
     }

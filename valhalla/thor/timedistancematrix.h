@@ -139,7 +139,6 @@ class TimeDistanceMatrix {
   // computed).
   uint32_t settled_count_;
 
-  // Current cost threshold.
   float current_cost_threshold_;
 
   // Cost threshold for termination

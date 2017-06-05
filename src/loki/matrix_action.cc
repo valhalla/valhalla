@@ -39,7 +39,6 @@ namespace {
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
   void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
-    std::cout << "matrix_max_distance: " << matrix_max_distance << std::endl;
     //see if any locations pairs are unreachable or too far apart
     for(const auto& source : sources){
       for(const auto& target : targets) {
