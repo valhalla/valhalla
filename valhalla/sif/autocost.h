@@ -2,10 +2,9 @@
 #define VALHALLA_SIF_AUTOCOST_H_
 
 #include <cstdint>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include <valhalla/sif/dynamiccost.h>
+#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace sif {
