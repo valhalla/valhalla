@@ -689,7 +689,7 @@ std::unordered_map<Location, PathLocation>
 Search(const std::vector<Location>& locations, GraphReader& reader, const EdgeFilter& edge_filter, const NodeFilter& node_filter) {
   //trivially finished already
   if(locations.empty())
-    return {};
+    return std::unordered_map<Location, PathLocation>{};
   //setup the unique list of locations
   bin_handler_t handler(locations, reader, edge_filter, node_filter);
   //search over the bins doing multiple locations per bin

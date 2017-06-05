@@ -155,6 +155,14 @@ void TestGridTraversal()
   assert_equal_squares(perfect_grid.Traverse({1.25, 1}, {1.25, 1}),
                        std::vector<std::pair<int, int>>{},
                        "Single point sit on rightmost grid line");
+
+  // Test a grid from real world example
+  meili::GridTraversal<midgard::Point2> real_grid(127.0, 36.75, 0.0005, 0.0005, 500, 500);
+
+  assert_equal_squares(real_grid.Traverse({127.176254, 36.962307}, {127.177925, 36.9602432}),
+                       std::vector<std::pair<int, int>>{{352, 424}, {353, 424}, {353, 423}, {353, 422}, {354, 422}, {354, 421}, {355, 421}, {355, 420}},
+                       "Real world example of segment intersecting grid");
+
 }
 
 
