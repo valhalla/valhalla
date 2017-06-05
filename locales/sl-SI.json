@@ -172,7 +172,7 @@
         "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       },
       "relative_directions": ["levo", "desno"],
-      "empty_street_name_labels": ["pešpoti", "kolesarski stezi", "stezi za gorsko kolo"],
+      "empty_street_name_labels": ["pešpot", "kolesarsko stezo", "stezo za gorsko kolo"],
       "example_phrases": {
         "0": ["Držite se desno."],
         "1": ["Držite se levo, da pridete na Arlen Road."],
@@ -188,7 +188,7 @@
         "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       },
       "relative_directions": ["levo", "desno"],
-      "empty_street_name_labels": ["pešpoti", "kolesarski stezi", "stezi za gorsko kolo"],
+      "empty_street_name_labels": ["pešpot", "kolesarsko stezo", "stezo za gorsko kolo"],
       "example_phrases": {
         "0": ["Držite se desno."],
         "1": ["Držite se levo, da pridete na Arlen Road."],
