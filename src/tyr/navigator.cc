@@ -54,7 +54,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   // Set the previous route state prior to snapping to route
   NavigationStatus_RouteState prev_route_state = route_state_;
 
-  // Snap the fix location to the route
+  // Snap the fix location to the route and update nav_status
   SnapToRoute(fix_location, nav_status);
 
   // Only process a valid route state
@@ -76,11 +76,14 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       // Mark that the pre transition was used
       std::get<kPreTransition>(used_instructions_.at(maneuver_index_)) = true;
     }
-    // else if instruction has not been used
+    // else if not destination maneuver
+    // and instruction has not been used
     // and route location is pre transition
     // then set route state to kPreTransition
-    else if (!(std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)))
-        && (nav_status.remaining_maneuver_time() < GetPreTransitionThreshold(maneuver_index_ + 1))) {
+    else if (!IsDestinationManeuverIndex(maneuver_index_)
+        && !(std::get<kPreTransition>(used_instructions_.at(maneuver_index_ + 1)))
+        && (GetRemainingManeuverTime(fix_location, nav_status)
+            <= GetPreTransitionThreshold(maneuver_index_ + 1))) {
       // Set route state
       route_state_ = NavigationStatus_RouteState_kPreTransition;
       nav_status.set_route_state(route_state_);
@@ -102,6 +105,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     // and maneuver has a transition alert
     // and instruction has not been used
     // then set route state to kTransitionAlert
+    // ?? mark post transition already used
     // TODO
   }
   return nav_status;
@@ -320,8 +324,8 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
 
   // GDG - rm
   std::cout << "current_shape_index_=" << current_shape_index_ << " | remaining_index=" << remaining_index << " | maneuver_index_=" << maneuver_index_ << " | snapped_to_shape_point=" << (snapped_to_shape_point ? "true" : "false") << std::endl;
-  std::cout << "remaining_leg_length=" << remaining_leg_length << " | remaining_leg_lengths_.at(remaining_index)=" << remaining_leg_values_.at(remaining_index).first << " | partial_length=" << partial_length << " | remaining_maneuver_length=" << (remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first) << " | remaining_leg_lengths_.at(maneuver_end_shape_index)=" << remaining_leg_values_.at(maneuver_end_shape_index).first << std::endl;
-  std::cout << "remaining_leg_time=" << remaining_leg_time << " | remaining_leg_values_.at(remaining_index).second=" << remaining_leg_values_.at(remaining_index).second << " | partial time=" <<  static_cast<uint32_t>(round(partial_length / maneuver_speeds_.at(maneuver_index_))) << " | remaining_maneuver_time=" << (remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second) << " | speed=" << maneuver_speeds_.at(maneuver_index_) << std::endl;
+  std::cout << "remaining_leg_length=" << remaining_leg_length << " | remaining_maneuver_length=" << (remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first) << std::endl;
+  std::cout << "remaining_leg_time=" << remaining_leg_time << " | remaining_maneuver_time=" << (remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second) << std::endl;
 
   // Populate navigation status
   route_state_ = NavigationStatus_RouteState_kTracking;
@@ -369,7 +373,7 @@ size_t Navigator::GetWordCount(const std::string& instruction) const {
   std::string::const_iterator pos = instruction.begin();
   std::string::const_iterator end = instruction.end();
 
-  while(pos != end)
+  while (pos != end)
   {
     // Skip over space, white space, and punctuation
     while (pos != end
@@ -387,6 +391,30 @@ size_t Navigator::GetWordCount(const std::string& instruction) const {
   return word_count;
 }
 
+uint32_t Navigator::GetRemainingManeuverTime(const FixLocation& fix_location,
+    const NavigationStatus& nav_status) const {
+  // GDG
+  std::cout << "*********** GetRemainingManeuverTime | ";
+  // speed in meters per second
+  float speed = 0.0f;
+  if (fix_location.has_speed()) {
+    speed = fix_location.speed();
+  }
+
+  // Use speed if user is moving to calculate remaining maneuver time
+  if (speed > kMinSpeedThreshold) {
+    //GDG
+    std::cout << "CALCULATED REMAINING TIME:" << static_cast<uint32_t>(round(
+        UnitsToMeters(nav_status.remaining_maneuver_length()) / speed)) << std::endl;
+    return static_cast<uint32_t>(round(
+        UnitsToMeters(nav_status.remaining_maneuver_length()) / speed));
+  }
+
+  //GDG
+  std::cout << "REMAINING TIME:" << nav_status.remaining_maneuver_time() << std::endl;
+  return nav_status.remaining_maneuver_time();
+}
+
 uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
   const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(instruction_index);
 
@@ -398,6 +426,13 @@ uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
   if (maneuver.verbal_multi_cue()){
     adjustment_factor = 0.75f;
   }
+
+  //GDG
+  std::cout << "&&&&&&&&&&& GetPreTransitionThreshold:"
+      << (kPreTransitionBaseThreshold
+          + (static_cast<uint32_t>(round(
+              GetWordCount(maneuver.verbal_pre_transition_instruction())
+                  / kWordsPerSecond * adjustment_factor)))) << std::endl;
 
   return (kPreTransitionBaseThreshold
       + (static_cast<uint32_t>(round(

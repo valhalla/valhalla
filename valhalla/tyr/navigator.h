@@ -27,6 +27,9 @@ constexpr uint32_t kPreTransitionBaseThreshold = 4;
 // Number of words per second - used to calculate pre transition threshold
 constexpr float kWordsPerSecond = 2.5f;
 
+// Minimum speed threshold in meters per second (~1 KPH)
+constexpr float kMinSpeedThreshold = 0.277f;
+
 // Closest point tuple indexes
 constexpr size_t kClosestPoint = 0;
 constexpr size_t kClosestPointDistance = 1;
@@ -85,6 +88,9 @@ class Navigator {
     float UnitsToMeters(float units) const;
 
     size_t GetWordCount(const std::string& instruction) const;
+
+    uint32_t GetRemainingManeuverTime(const FixLocation& fix_location,
+        const NavigationStatus& nav_status) const;
 
     uint32_t GetPreTransitionThreshold(size_t instruction_index) const;
 
