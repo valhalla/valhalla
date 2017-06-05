@@ -968,9 +968,11 @@ void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
  * traffic information are only increased by the amount of "new" segments.
  */
 void GraphTileBuilder::UpdateTrafficSegments() {
-  // Get the number of new segments added with this call.
+  // Get the number of new segments and chunks added with this call.
   uint32_t new_segments = traffic_segment_builder_.size() -
                           header_->traffic_id_count();
+  uint32_t new_chunks = traffic_chunk_builder_.size() -
+      (header_->lane_connectivity_offset() - header_->traffic_chunk_offset()) / sizeof(TrafficChunk);
 
   // Update header to include the traffic segment count and update the
   // offset to chunks (based on size of traffic segments).
@@ -980,8 +982,7 @@ void GraphTileBuilder::UpdateTrafficSegments() {
           traffic_segment_builder_.size() * sizeof(TrafficAssociation));
 
   // Shift offsets to anything that comes after traffic
-  uint32_t shift = new_segments * sizeof(TrafficAssociation) +
-                   traffic_chunk_builder_.size() * sizeof(TrafficChunk);
+  uint32_t shift = new_segments * sizeof(TrafficAssociation) + new_chunks * sizeof(TrafficChunk);
   header_builder_.set_lane_connectivity_offset(header_builder_.lane_connectivity_offset() + shift);
   header_builder_.set_edge_elevation_offset(header_builder_.edge_elevation_offset() + shift);
   header_builder_.set_end_offset(header_builder_.end_offset() + shift);

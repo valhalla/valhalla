@@ -285,21 +285,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   }
 }
 
-// Clears the cache
-void GraphReader::Clear() {
-  cache_->Clear();
-}
-
-// Returns true if the cache is over committed with respect to the limit
-bool GraphReader::OverCommitted() const {
-  return cache_->OverCommitted();
-}
-
 // Convenience method to get an opposing directed edge graph Id.
-GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid) {
-  const GraphTile* NO_TILE = nullptr;
-  return GetOpposingEdgeId(edgeid, NO_TILE);
-}
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
   // If you cant get the tile you get an invalid id
   tile = GetGraphTile(edgeid);
@@ -318,16 +304,6 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
   // Get the opposing edge
   id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
   return id;
-}
-
-// Convenience method to get an opposing directed edge.
-const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid) {
-  const GraphTile* NO_TILE = nullptr;
-  return GetOpposingEdge(edgeid, NO_TILE);
-}
-const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile) {
-  GraphId oppedgeid = GetOpposingEdgeId(edgeid, tile);
-  return oppedgeid.Is_Valid() ? tile->directededge(oppedgeid) : nullptr;
 }
 
 // Convenience method to determine if 2 directed edges are connected.
@@ -454,9 +430,13 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
 uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
   // Get the end node of the opposing directed edge
   const DirectedEdge* opp_edge = GetOpposingEdge(edgeid);
-  GraphId id = opp_edge->endnode();
-  const GraphTile* tile = GetGraphTile(id);
-  return (tile != nullptr) ? tile->node(id)->density() : 0;
+  if (opp_edge) {
+    GraphId id = opp_edge->endnode();
+    const GraphTile* tile = GetGraphTile(id);
+    return (tile != nullptr) ? tile->node(id)->density() : 0;
+  } else {
+    return 0;
+  }
 }
 
 // Get the end nodes of a directed edge.

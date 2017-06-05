@@ -641,6 +641,8 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     return edges;
   }
 
+  return { };
+
   // TODO - this should not happen if both are at nodes! Does not happen
   // with low node tolerance, but as node search tolerance is raised we get
   // fallback cases where we shouldn't
@@ -816,7 +818,13 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
 }
 
 void edge_association::add_tile(const std::string& file_name) {
-  //read the osmlr tile
+  // Return if this tile does not exist in the Valhalla tile set
+  auto base_id = vb::GraphTile::GetTileId(file_name);
+  if (!m_reader.DoesTileExist(base_id)) {
+    return;
+  }
+
+  // Read the OSMLR tile
   pbf::Tile tile;
   {
     std::ifstream in(file_name);
@@ -825,13 +833,12 @@ void edge_association::add_tile(const std::string& file_name) {
     }
   }
 
-  //get a tile builder ready for this tile
-  auto base_id = vb::GraphTile::GetTileId(file_name);
+  // Get a tile builder ready for this tile
   m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(),
                        base_id, false));
   m_tile_builder->InitializeTrafficSegments();
 
-  //do the matching of the segments in this osmlr tile
+  // Match the segments in this OSMLR tile
   std::cout.precision(16);
   uint64_t entry_id = 0;
   MatchType match_type = MatchType::kWalk;

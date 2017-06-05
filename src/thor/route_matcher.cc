@@ -7,7 +7,6 @@
 #include "baldr/errorcode_util.h"
 
 #include "thor/route_matcher.h"
-#include "thor/service.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -177,7 +176,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       }
 
       // Found a match if shape equals directed edge LL within tolerance
-      if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
+      if (shape.at(index).ApproximatelyEqual(de_end_ll) && de->length() < length_comparison(length, true)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
             de, node_info, prev_edge_label).secs;
@@ -261,7 +260,8 @@ bool RouteMatcher::FormPath(
     // Initialize indexes and shape
     size_t index = 0;
     float length = 0.0f;
-    float de_length = length_comparison(de->length() * (1 - edge.dist), true);
+    float de_remaining_length = de->length() * (1 - edge.dist);
+    float de_length = length_comparison(de_remaining_length, true);
     EdgeLabel prev_edge_label;
     // Loop over shape to form path from matching edges
     while (index < shape.size()) {
@@ -271,7 +271,7 @@ bool RouteMatcher::FormPath(
       }
 
       // Check if shape is within tolerance at the end node
-      if (shape.at(index).ApproximatelyEqual(de_end_ll)) {
+      if (shape.at(index).ApproximatelyEqual(de_end_ll) && de_remaining_length < length_comparison(length, true)) {
 
         // Update the elapsed time edge cost at begin edge
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs

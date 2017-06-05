@@ -87,6 +87,8 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
     # install dependencies (czmq is required by prime_server)
     brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config lua czmq
+    # you also need to be able to link sqlite3 (at least on some versions of macOS and only if you want datatools)
+    brew link sqlite3
 
     # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
 
@@ -105,6 +107,7 @@ sudo make install
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
 
 * `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really don't need some of the dependencies above.
+* `--enable-services=no` will disable building any of the components (library bits, executables and tests) which can be used to run valhalla as an http service. This can be useful in embedded situations where you really don't need some of the dependencies above (prime_server et al).
 * `--enable-static=yes` will enable building of static libvalhalla.la which could be useful for embedded applications
 * `--enable-python-bindings=no` will disable python bindings for valhalla. Embedded applications would probably rather turn this off.
 
