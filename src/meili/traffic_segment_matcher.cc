@@ -78,7 +78,7 @@ namespace {
       //as a placeholder for the section of the path that has no ots's
       auto segments = tile->GetTrafficSegments(edge);
       if(segments.empty())
-        segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
+        segments = { valhalla::baldr::TrafficSegment{{}, 0, 1, true, true} };
       //the way id for this edge
       auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid();
       //merge them into single entries per segment id
@@ -102,22 +102,21 @@ namespace {
     return merged;
   }
   
-/*
-  //TODO: remove this when debugging phase is finally over
+
+  /*
   void print(const valhalla::meili::interpolation_t& i) {
-    printf("%lu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
+    printf("%zu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
   }
   void print(const merged_traffic_segment_t& m) {
-    printf("%lu:\t%llu->%llu\t%d->%d\t%.2f->%.2f\n",
+    printf("%zu:\t%zu->%zu\t%d->%d\t%.2f->%.2f\n",
       m.segment.segment_id_.value, m.begin_edge.value, m.end_edge.value,
       m.segment.starts_segment_, m.segment.ends_segment_,
       m.segment.begin_percent_, m.segment.end_percent_);
   }
   void print(const valhalla::meili::traffic_segment_t& t) {
-    printf("%lu\t%.2f kph\t%d\t%.2f->%.2f\t%lu->%lu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
+    printf("%zu\t%.2f kph\t%d\t%.2f->%.2f\t%zu->%zu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
       t.length, t.start_time, t.end_time, t.begin_shape_index, t.end_shape_index);
-  }
-*/
+  }*/
 }
 
 namespace valhalla {
@@ -324,6 +323,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       traffic_segments.emplace_back(
         traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index,
                   length, queue_length, segment.internal, segment.way_ids});
+
+      //print(traffic_segments.back());
 
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
