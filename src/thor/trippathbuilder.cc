@@ -895,6 +895,14 @@ TripPath TripPathBuilder::Build(
           (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
           edge_shape.end());
 
+      // If edge_begin_info.exists and not the first edge
+      // then increment begin_index
+      // since the previous end shape index should not equal
+      // the current begin shape index because of discontinuity
+      if (edge_begin_info.exists && !is_first_edge) {
+        ++begin_index;
+      }
+
     } else if (is_first_edge || is_last_edge) {
       // We need to clip the shape if i its at the beginning or end and
       // is not full length
