@@ -25,7 +25,7 @@ namespace thor {
 //These cost thresholds are in addition to the distance
 // thresholds for quick rejection
 constexpr float kDefaultTimeDistCostThresholdAuto = 3600.0f;   // 1 hour
-constexpr float kDefaultTimeDistCostThresholdBicycle = 10800.0f;   // 2 hours
+constexpr float kDefaultTimeDistCostThresholdBicycle = 10800.0f;   // 3 hours
 constexpr float kDefaultTimeDistCostThresholdPedestrian = 28800.0f;   // 8 hours
 
 // Structure to hold information about each destination.
