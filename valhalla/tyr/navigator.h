@@ -44,7 +44,7 @@ constexpr size_t kPostTransition = 3;
 class Navigator {
   public:
 
-    Navigator(const std::string& route_json_str);
+    Navigator();
 
     virtual ~Navigator() = default;
 
@@ -54,7 +54,7 @@ class Navigator {
     Navigator(const Navigator&) = default;
     Navigator& operator=(const Navigator&) = default;
 
-    void SetRoute(const std::string& route_json_str);
+    valhalla::NavigationStatus SetRoute(const std::string& route_json_str);
 
     valhalla::NavigationStatus OnLocationChanged(
         const valhalla::FixLocation& fix_location);

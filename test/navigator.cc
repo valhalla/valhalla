@@ -61,8 +61,16 @@ const std::string kLeg1ShapeTag = "<LEG1_SHAPE_TAG>";
 // Sub class to test protected methods
 class NavigatorTest : public Navigator {
  public:
-  NavigatorTest(const std::string& trip_json_str)
-      : Navigator(trip_json_str) {
+    NavigatorTest() :
+        Navigator() {
+    }
+
+  NavigationStatus SetRoute(const std::string& route_json_str) {
+    return Navigator::SetRoute(route_json_str);
+  }
+
+  NavigationStatus OnLocationChanged(const FixLocation& fix_location) {
+    return Navigator::OnLocationChanged(fix_location);
   }
 
   const Route& route() const {
@@ -75,10 +83,6 @@ class NavigatorTest : public Navigator {
 
   const size_t leg_index() const {
     return Navigator::leg_index_;
-  }
-
-  NavigationStatus OnLocationChanged(const FixLocation& fix_location) {
-    return Navigator::OnLocationChanged(fix_location);
   }
 
   bool HasKilometerUnits() const {
@@ -124,13 +128,14 @@ class NavigatorTest : public Navigator {
 
 };
 
-void TryTopLevelCtor(const std::string& route_json_str,
+void TryTopLevelSetRoute(const std::string& route_json_str,
     const std::string& expected_language,
     const std::string& expected_units,
     const std::string& expected_status_message,
     uint32_t expected_status,
     const std::string& expected_id) {
-  NavigatorTest nt(route_json_str);
+  NavigatorTest nt;
+  nt.SetRoute(route_json_str);
 
   if (nt.route().trip().language() != expected_language)
     throw std::runtime_error("Incorrect language - found: " + nt.route().trip().language() + " | expected: " + expected_language);
@@ -149,34 +154,7 @@ void TryTopLevelCtor(const std::string& route_json_str,
 
 }
 
-void TestTopLevelCtor() {
-  // Tagged route json string
-  std::string route_json_str = "{\"trip\":{\"language\":\"" + kLanguageTag
-      + "\",\"units\":\"" + kUnitsTag
-      + "\",\"status_message\":\"" + kStatusMessageTag
-      + "\",\"status\":" + kStatusTag
-      + ",\"id\":\"" + kIdTag
-      + "\"}}";
-
-  // Expected values
-  std::string expected_language = "en-US";
-  std::string expected_units = "miles";
-  std::string expected_status_message = "Found route between points";
-  uint32_t expected_status = 0;
-  std::string expected_id = "SIMPLE_TEST";
-
-  // Replace tags with values
-  boost::replace_all(route_json_str, kLanguageTag, expected_language);
-  boost::replace_all(route_json_str, kUnitsTag, expected_units);
-  boost::replace_all(route_json_str, kStatusMessageTag, expected_status_message);
-  boost::replace_all(route_json_str, kStatusTag, std::to_string(expected_status));
-  boost::replace_all(route_json_str, kIdTag, expected_id);
-
-  TryTopLevelCtor(route_json_str, expected_language, expected_units,
-      expected_status_message, expected_status, expected_id);
-}
-
-void TryTopLevelSummaryCtor(const std::string& route_json_str,
+void TryTopLevelSummarySetRoute(const std::string& route_json_str,
     float expected_summary_length,
     uint32_t expected_summary_time,
     float expected_summary_min_lat,
@@ -184,7 +162,8 @@ void TryTopLevelSummaryCtor(const std::string& route_json_str,
     float expected_summary_max_lat,
     float expected_summary_max_lon)
 {
-  NavigatorTest nt(route_json_str);
+  NavigatorTest nt;
+  nt.SetRoute(route_json_str);
 
   if (nt.route().trip().summary().length() != expected_summary_length)
     throw std::runtime_error("Incorrect status - found: " + std::to_string(nt.route().trip().summary().length()) + " | expected: " + std::to_string(expected_summary_length));
@@ -206,57 +185,7 @@ void TryTopLevelSummaryCtor(const std::string& route_json_str,
 
 }
 
-void TestTopLevelSummaryCtor() {
-  // Tagged route json string
-  std::string route_json_str = "{\"trip\":{\"language\":\"" + kLanguageTag
-      + "\",\"units\":\"" + kUnitsTag
-      + "\",\"status_message\":\"" + kStatusMessageTag
-      + "\",\"status\":" + kStatusTag
-      + ",\"id\":\"" + kIdTag
-      + "\",\"summary\":{\"max_lon\":" + kSummaryMaxLonTag
-      + ",\"max_lat\":" + kSummaryMaxLatTag
-      + ",\"time\":" + kSummaryTimeTag
-      + ",\"length\":" + kSummaryLengthTag
-      + ",\"min_lat\":" + kSummaryMinLatTag
-      + ",\"min_lon\":" + kSummaryMinLonTag
-      + "}"
-      + "}}";
-
-  // Expected values
-  std::string expected_language = "en-US";
-  std::string expected_units = "miles";
-  std::string expected_status_message = "Found route between points";
-  uint32_t expected_status = 0;
-  std::string expected_id = "SIMPLE_TEST";
-  float expected_summary_length = 2.168;
-  uint32_t expected_summary_time = 287;
-  float expected_summary_min_lat = 40.042500;
-  float expected_summary_min_lon = -76.299324;
-  float expected_summary_max_lat = 40.063713;
-  float expected_summary_max_lon = -76.276863;
-
-  // Replace tags with values
-  boost::replace_all(route_json_str, kLanguageTag, expected_language);
-  boost::replace_all(route_json_str, kUnitsTag, expected_units);
-  boost::replace_all(route_json_str, kStatusMessageTag, expected_status_message);
-  boost::replace_all(route_json_str, kStatusTag, std::to_string(expected_status));
-  boost::replace_all(route_json_str, kIdTag, expected_id);
-  boost::replace_all(route_json_str, kSummaryLengthTag, std::to_string(expected_summary_length));
-  boost::replace_all(route_json_str, kSummaryTimeTag, std::to_string(expected_summary_time));
-  boost::replace_all(route_json_str, kSummaryMinLatTag, std::to_string(expected_summary_min_lat));
-  boost::replace_all(route_json_str, kSummaryMinLonTag, std::to_string(expected_summary_min_lon));
-  boost::replace_all(route_json_str, kSummaryMaxLatTag, std::to_string(expected_summary_max_lat));
-  boost::replace_all(route_json_str, kSummaryMaxLonTag, std::to_string(expected_summary_max_lon));
-
-  TryTopLevelCtor(route_json_str, expected_language, expected_units,
-      expected_status_message, expected_status, expected_id);
-
-  TryTopLevelSummaryCtor(route_json_str, expected_summary_length, expected_summary_time,
-      expected_summary_min_lat, expected_summary_min_lon,
-      expected_summary_max_lat, expected_summary_max_lon);
-}
-
-void TryTopLevelLocationCtor(const std::string& route_json_str,
+void TryTopLevelLocationSetRoute(const std::string& route_json_str,
     size_t expected_location_count,
     const std::string& expected_orig_street,
     float expected_orig_lat,
@@ -268,7 +197,8 @@ void TryTopLevelLocationCtor(const std::string& route_json_str,
     const std::string& expected_dest_type,
     const std::string& expected_dest_side_of_street)
 {
-  NavigatorTest nt(route_json_str);
+  NavigatorTest nt;
+  nt.SetRoute(route_json_str);
 
   int location_count = nt.route().trip().locations_size();
   if (location_count != expected_location_count)
@@ -304,101 +234,12 @@ void TryTopLevelLocationCtor(const std::string& route_json_str,
     throw std::runtime_error("Incorrect dest side_of_street - found: " + dest.side_of_street() + " | expected: " + expected_dest_side_of_street);
 }
 
-void TestTopLevelLocationCtor() {
-  // Tagged route json string
-  std::string route_json_str = "{\"trip\":{\"language\":\"" + kLanguageTag
-      + "\",\"units\":\"" + kUnitsTag
-      + "\",\"status_message\":\"" + kStatusMessageTag
-      + "\",\"status\":" + kStatusTag
-      + ",\"id\":\"" + kIdTag
-      + "\",\"summary\":{\"max_lon\":" + kSummaryMaxLonTag
-      + ",\"max_lat\":" + kSummaryMaxLatTag
-      + ",\"time\":" + kSummaryTimeTag
-      + ",\"length\":" + kSummaryLengthTag
-      + ",\"min_lat\":" + kSummaryMinLatTag
-      + ",\"min_lon\":" + kSummaryMinLonTag
-      + "}"
-      + ",\"locations\":[{\"street\":\"" + kLocationOrigStreetTag
-      + "\",\"lon\":" + kLocationOrigLonTag
-      + ",\"lat\":" + kLocationOrigLatTag
-      + ",\"type\":\"" + kLocationOrigTypeTag
-      + "\"},{\"type\":\"" + kLocationDestTypeTag
-      + "\",\"side_of_street\":\"" + kLocationDestSideOfStreetTag
-      + "\",\"lat\":" + kLocationDestLatTag
-      + ",\"lon\":" + kLocationDestLonTag
-      + ",\"street\":\"" + kLocationDestStreetTag
-      + "\"}]"
-      + "}}";
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Expected top level values
-  std::string expected_language = "en-US";
-  std::string expected_units = "miles";
-  std::string expected_status_message = "Found route between points";
-  uint32_t expected_status = 0;
-  std::string expected_id = "SIMPLE_TEST";
-
-  // Expected top level summary values
-  float expected_summary_length = 2.168;
-  uint32_t expected_summary_time = 287;
-  float expected_summary_min_lat = 40.042500;
-  float expected_summary_min_lon = -76.299324;
-  float expected_summary_max_lat = 40.063713;
-  float expected_summary_max_lon = -76.276863;
-
-  // Expected top level location values
-  size_t expected_location_count = 2;
-  std::string expected_orig_street = "East Fulton Street";
-  float expected_orig_lat = 40.042538;
-  float expected_orig_lon = -76.299332;
-  std::string expected_orig_type = "break";
-  std::string expected_dest_street = "US 30 West";
-  float expected_dest_lat = 40.063747;
-  float expected_dest_lon = -76.282028;
-  std::string expected_dest_type = "break";
-  std::string expected_dest_side_of_street = "right";
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Replace tags with values
-  boost::replace_all(route_json_str, kLanguageTag, expected_language);
-  boost::replace_all(route_json_str, kUnitsTag, expected_units);
-  boost::replace_all(route_json_str, kStatusMessageTag, expected_status_message);
-  boost::replace_all(route_json_str, kStatusTag, std::to_string(expected_status));
-  boost::replace_all(route_json_str, kIdTag, expected_id);
-  boost::replace_all(route_json_str, kSummaryLengthTag, std::to_string(expected_summary_length));
-  boost::replace_all(route_json_str, kSummaryTimeTag, std::to_string(expected_summary_time));
-  boost::replace_all(route_json_str, kSummaryMinLatTag, std::to_string(expected_summary_min_lat));
-  boost::replace_all(route_json_str, kSummaryMinLonTag, std::to_string(expected_summary_min_lon));
-  boost::replace_all(route_json_str, kSummaryMaxLatTag, std::to_string(expected_summary_max_lat));
-  boost::replace_all(route_json_str, kSummaryMaxLonTag, std::to_string(expected_summary_max_lon));
-  boost::replace_all(route_json_str, kLocationOrigStreetTag, expected_orig_street);
-  boost::replace_all(route_json_str, kLocationOrigLatTag, std::to_string(expected_orig_lat));
-  boost::replace_all(route_json_str, kLocationOrigLonTag, std::to_string(expected_orig_lon));
-  boost::replace_all(route_json_str, kLocationOrigTypeTag, expected_orig_type);
-  boost::replace_all(route_json_str, kLocationDestStreetTag, expected_dest_street);
-  boost::replace_all(route_json_str, kLocationDestLatTag, std::to_string(expected_dest_lat));
-  boost::replace_all(route_json_str, kLocationDestLonTag, std::to_string(expected_dest_lon));
-  boost::replace_all(route_json_str, kLocationDestTypeTag, expected_dest_type);
-  boost::replace_all(route_json_str, kLocationDestSideOfStreetTag, expected_dest_side_of_street);
-
-  TryTopLevelCtor(route_json_str, expected_language, expected_units,
-      expected_status_message, expected_status, expected_id);
-
-  TryTopLevelSummaryCtor(route_json_str, expected_summary_length, expected_summary_time,
-      expected_summary_min_lat, expected_summary_min_lon,
-      expected_summary_max_lat, expected_summary_max_lon);
-
-  TryTopLevelLocationCtor(route_json_str, expected_location_count,
-      expected_orig_street, expected_orig_lat, expected_orig_lon,
-      expected_orig_type, expected_dest_street, expected_dest_lat,
-      expected_dest_lon, expected_dest_type, expected_dest_side_of_street);
-}
-
-void TryTopLevelLegCtor(const std::string& route_json_str,
+void TryTopLevelLegSetRoute(const std::string& route_json_str,
     size_t expected_leg_maneuver_count,
     const std::string& expected_leg_shape)
 {
-  NavigatorTest nt(route_json_str);
+  NavigatorTest nt;
+  nt.SetRoute(route_json_str);
 
   auto& leg = nt.route().trip().legs(0);
 
@@ -410,7 +251,7 @@ void TryTopLevelLegCtor(const std::string& route_json_str,
     throw std::runtime_error("Incorrect leg shape - found: " + leg.shape() + " | expected: " + expected_leg_shape);
 }
 
-void TestTopLevelLegCtor() {
+void TestTopLevelLegSetRoute() {
   // Tagged route json string
   std::string route_json_str = "{\"trip\":{\"language\":\"" + kLanguageTag
       + "\",\"units\":\"" + kUnitsTag
@@ -497,19 +338,19 @@ void TestTopLevelLegCtor() {
   boost::replace_all(route_json_str, kLocationDestSideOfStreetTag, expected_dest_side_of_street);
   boost::replace_all(route_json_str, kLeg1ShapeTag, leg_shape);
 
-  TryTopLevelCtor(route_json_str, expected_language, expected_units,
+  TryTopLevelSetRoute(route_json_str, expected_language, expected_units,
       expected_status_message, expected_status, expected_id);
 
-  TryTopLevelSummaryCtor(route_json_str, expected_summary_length, expected_summary_time,
+  TryTopLevelSummarySetRoute(route_json_str, expected_summary_length, expected_summary_time,
       expected_summary_min_lat, expected_summary_min_lon,
       expected_summary_max_lat, expected_summary_max_lon);
 
-  TryTopLevelLocationCtor(route_json_str, expected_location_count,
+  TryTopLevelLocationSetRoute(route_json_str, expected_location_count,
       expected_orig_street, expected_orig_lat, expected_orig_lon,
       expected_orig_type, expected_dest_street, expected_dest_lat,
       expected_dest_lon, expected_dest_type, expected_dest_side_of_street);
 
-  TryTopLevelLegCtor(route_json_str, expected_leg_maneuver_count,
+  TryTopLevelLegSetRoute(route_json_str, expected_leg_maneuver_count,
       expected_leg_shape);
 }
 
@@ -840,7 +681,8 @@ void TryGetPreTransitionThreshold(const NavigatorTest& nav, uint32_t leg_index,
 
 void TestLancasterToHershey() {
   std::string route_json_str = "{\"trip\":{\"language\":\"en-US\",\"summary\":{\"max_lon\":-76.266228,\"max_lat\":40.283943,\"time\":2438,\"length\":31.322,\"min_lat\":40.042015,\"min_lon\":-76.664360},\"locations\":[{\"lon\":-76.299179,\"lat\":40.042572,\"type\":\"break\"},{\"lon\":-76.654625,\"lat\":40.283924,\"type\":\"break\"}],\"units\":\"miles\",\"legs\":[{\"shape\":\"k`_kkAfy|opC}@_SsFk`A~g@cFeDmt@{FkiAkLisBmJcxBsKcxBaHytAWaIqBm^u@wNsAo]yAyMsAqGyBsFiCeEeZs[iBiBsA{AgDyC{QsPaMiMcFaH}@yA{@{AgDoIgDyLU}@eAcFcAmJm@oIe@_JiBwXOaGm@mKu@{K{@oHcBkLgCeOiC}JoDyLaCaIuDgMeF}J}IuOaMqRcLwNgDcFiHcGoNkLke@y`@uDyCu@MeEgDuOqHsKuEuEiBcu@gX_EkB{~@a\\\\}JeEc[yM}IgDoNcFsFyBcGgDqGeEiHcG{FcGcGoHmEqHsEmJoD}JqC{KaCiLyAkLeKo|@aCsPaCuOoCuO_DePgI_^uy@ejDaGiWoTi`AkKgc@mZapAaWucAmEzAcB\\\\iBl@qLdFqXzKkFvCuEtDmDtEyCrFoCpH{A|Iu@lJEnJj@zJbBlJ`C`HhHrQtD|JxBnIbBhLt@pGd@~IDpHElJe@zJsA|JaCzKqCnIsZ~r@{KrZow@nfB}JhW{Vzi@cVbf@sZjk@s`@`q@{iArlB}c@ju@iHxLoHhMg}@`{AiWx`@_r@jjAya@~q@ePxWcGxLwCdF_r@bnAkLzUkLhWkFjLgSli@aHjVkQzt@wCdO{Fb\\\\cF~]iCjUeFxk@{@dPkAhWu@tZe@`\\\\Nz_Ad@fkAd@liAGxgCkAxkAoDhjA{F`fA{F|s@mEdn@gb@znFyHhjAaGl}@qRjhCuUjeDaRpyByBdZgNhtB{@z_@cBfc@cBdn@eEvbA{FdwA{@nScBtOgCnTaDbQs@rF_DhWcGtc@aXh_BwC`RcB|JoM`q@yHb[kFlU}Jj`@aG|TiHzVaHzTiHpSwNx`@}IxW}bAhrCqW`r@mPbe@cK`]gIlT_Oha@gD~IgNz_@mx@n{Bi\\\\z~@yRli@i`AbmC}EtNoHlUqMvb@}Jl_@qGzUkB~HeEbQgI|_@wHx`@{AlKeOpeAcBvNaH`p@iCtZqB~SgDdc@aCvXcUpnCeAvMiGju@gYjqDaCzUmEjj@mc@ffFoIpeAgNx_B_JjiAoH~|@aHpq@oDfYuJ|r@kFb[yHja@uIxa@kGfXuTrz@uJp[cQ|i@erAjpDsGtOsEjL_Yfw@_Oz_@s@zB{Ll^s@hCoSzi@gEjLiGdPwm@pdB{d@rnAaSjj@oNj`@oMb\\\\iRzi@{Lb\\\\{JfXakApbDyWls@ib@hjAed@dnAgg@huA_Tvm@qMfb@wNli@iLde@m@fCgNrp@eJ`g@}EtYoIro@aHhk@G|@_Dp\\\\oDbe@}Dre@yBb\\\\oSdkCcL~zAeOtlB_J|hA_Idx@iCzUwH~h@iCtOoNvw@aMvl@qGfXwI`]oHxWmFpQ]jA_Srp@uUhv@iL~]mZbdAwIr[u^dmAgS~q@ke@|}A__@`oAeOrf@aWvw@sKz_@_JdZgDxLgCzK{nAldEwqA|mEiRhl@{K~]_Ozi@mc@pzAenA~bEeEfN{F`R{e@x_B{EvN}Y~{@gOz`@uc@jiAe~@~yBmO~^s`@~eAeKzViQdd@cRbe@aa@tcAscBdiEkLdYyVxl@_IpR{Qre@y[by@sVbp@y{@rxB}m@l|AmTjk@sxBdrFqQdc@eKxWs`@dcA{KhXmOz_@w|@nzBei@jtAya@rcAkBdE{EzK}_@xaA}Ovb@erAjfDcKvWyH|TqQ|i@gItYcQ`q@wI|^cGfYuJ|h@aG`]_J`q@{Ftd@sFli@aBnSaC`\\\\wCrf@m@vMu@`Se@nScAz_@u@li@OlUN~]G~\\\\NbQbApg@hCby@pB|_@vRx|CjBtYlEdo@pGbeAnDli@hCvb@vHzhAtJj~AxG`fApChb@bArPrArPj[naFzj@rzInCjj@|@|TbAl_@l@l_@TlTNfc@?z`@e@tYcBz~@kAtYaBn^oDfm@iCdZiHxu@gw@jwGor@n`G_TpdB{o@~uFuTjiBsPtwAiGrd@{F~^oIbe@oD`RwIha@eJl`@_N~f@oIvYyMxa@yL~\\\\sPvc@wNn]{P|^{Pn]wX`g@yQtZ{QdYqoFjaIqMpRaoAfkBoXvb@cRvXaGlJ{hB`mCwNnTs_@hk@wqArnB{z@rnAopApnBe_@|i@a]~g@_StYaMrQusA`nB_vApoBckIrlLcyAhtB_Yj`@g]`f@md@to@gYx`@gpAxiBqaAlsAqG|Iom@p{@ioB|oC{JvNqHjKwCtE}s@tcA{j@vw@m_@|h@uYhb@evBlzCucAvvAqzArwByGbGanCdtD}IlJ_Y`]mTxVgI~HoT`SoNhLgN|J}s@pf@yGtEgIdFwCz@cBN{ELiCMqR{AyGkAmJ{AeKyB{K{AoMm@yWm@uON{P?wSNyRl@oXhBmThBeKzAiGjA_c@lKsV~HwMrFaNpGmn@tZ{UhLucAz`@}iDtlBkKrFytK`tFuqBreAitA|r@wm@fY}T|Jsj@`Q{[~Ice@jLm_IjgB}i@~Sqp@rQuy@pQuuBbp@m}Ahv@u^r[}hAbdAqq@~]w_Bp{@_n@`HyoEeFy`AtFauBj`@ggEdmA{cAtY}mA`]ePdE}kBnh@kGhBmIvCm~@zVk[lJk[nI}IhBeo@rQ_IxBmU`GyGjBeJhCkxBtm@i\\\\|J}wAl_@}JxBmJxBmJhBuJzAeJjAmJjAcVjBsf@jAw\\\\Lud@N}d@l@iu@l@e_@z@ca@Nun@jAgNNcf@?{o@z@_]^ib@pGob@xLsQpGcP`IcVbPo`CliAiLrEwNrGyf@l^_d@`g@kPlUqM|TcQ|^sZ|}@{Vzt@yQzj@oNfc@kKzUaIhMaLvNqMhLyMxLsPpRiq@haAe}A|eC}IvMyQvXaM`SsLdOog@pg@uOfNmUzUsz@zt@{n@jj@aw@vw@uDtE_JjLkF`HwC`HgE`Hye@z~@cyAr`Dq]ns@aLvXs{D`qIkKlToIxM}JhLqLbGaNbFyu@p]i\\\\bo@mJbQ_{BzdE{nAn{B_Ylh@y`@bz@gTfd@qjAgbAy\\\\iXif@ya@cLwM_ImJoIyLmE_JkFkKaI}TsK}_@}EwM{EmJqb@k~AuOkk@e^ksAgIuYcLwb@eJq\\\\mFaS\",\"summary\":{\"max_lon\":-76.266228,\"max_lat\":40.283943,\"time\":2438,\"length\":31.322,\"min_lat\":40.042015,\"min_lon\":-76.664360},\"maneuvers\":[{\"travel_mode\":\"drive\",\"begin_shape_index\":0,\"length\":0.073,\"time\":14,\"type\":1,\"end_shape_index\":2,\"instruction\":\"Drive east on East Fulton Street.\",\"verbal_pre_transition_instruction\":\"Drive east on East Fulton Street for 400 feet.\",\"travel_type\":\"car\",\"street_names\":[\"East Fulton Street\"]},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_multi_cue\":true,\"verbal_pre_transition_instruction\":\"Turn right onto North Plum Street. Then Turn left onto East Chestnut Street.\",\"verbal_transition_alert_instruction\":\"Turn right onto North Plum Street.\",\"length\":0.046,\"instruction\":\"Turn right onto North Plum Street.\",\"end_shape_index\":3,\"type\":10,\"time\":34,\"verbal_post_transition_instruction\":\"Continue for 200 feet.\",\"street_names\":[\"North Plum Street\"],\"begin_shape_index\":2},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"end_shape_index\":89,\"verbal_pre_transition_instruction\":\"Turn left onto East Chestnut Street, Pennsylvania 23 East.\",\"begin_street_names\":[\"East Chestnut Street\",\"PA 23 East\"],\"verbal_transition_alert_instruction\":\"Turn left onto East Chestnut Street.\",\"length\":2.054,\"instruction\":\"Turn left onto East Chestnut Street/PA 23 East. Continue on PA 23 East.\",\"type\":15,\"time\":213,\"verbal_post_transition_instruction\":\"Continue on Pennsylvania 23 East for 2.1 miles.\",\"street_names\":[\"PA 23 East\"],\"begin_shape_index\":3},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Turn left to take the U.S. 30 West ramp toward New Holland, Harrisburg.\",\"verbal_transition_alert_instruction\":\"Turn left to take the U.S. 30 West ramp.\",\"instruction\":\"Turn left to take the US 30 West ramp toward New Holland/Harrisburg.\",\"end_shape_index\":119,\"type\":19,\"time\":45,\"street_names\":[\"PA 23 East\"],\"begin_shape_index\":89,\"length\":0.375,\"sign\":{\"exit_toward_elements\":[{\"text\":\"New Holland\"},{\"text\":\"Harrisburg\"}],\"exit_branch_elements\":[{\"consecutive_count\":1,\"text\":\"US 30 West\"},{\"text\":\"PA 23 East\"}]}},{\"travel_type\":\"car\",\"verbal_pre_transition_instruction\":\"Merge onto U.S. 30 West.\",\"verbal_post_transition_instruction\":\"Continue for 2.7 miles.\",\"instruction\":\"Merge onto US 30 West.\",\"end_shape_index\":169,\"type\":25,\"time\":164,\"street_names\":[\"US 30 West\"],\"length\":2.746,\"begin_shape_index\":119,\"travel_mode\":\"drive\"},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Keep left to take Pennsylvania 2 83 West toward Harrisburg.\",\"verbal_transition_alert_instruction\":\"Keep left to take Pennsylvania 2 83 West.\",\"sign\":{\"exit_toward_elements\":[{\"text\":\"Harrisburg\"}],\"exit_branch_elements\":[{\"text\":\"PA 283 West\"}]},\"length\":16.845,\"instruction\":\"Keep left to take PA 283 West toward Harrisburg.\",\"end_shape_index\":475,\"type\":24,\"time\":956,\"verbal_post_transition_instruction\":\"Continue for 16.8 miles.\",\"street_names\":[\"PA 283 West\"],\"begin_shape_index\":169},{\"travel_type\":\"car\",\"verbal_pre_transition_instruction\":\"Take the Pennsylvania 7 43 exit on the right toward Hershey.\",\"verbal_transition_alert_instruction\":\"Take the Pennsylvania 7 43 exit on the right.\",\"instruction\":\"Take the PA 743 exit on the right toward Hershey.\",\"end_shape_index\":485,\"type\":20,\"time\":31,\"begin_shape_index\":475,\"length\":0.469,\"sign\":{\"exit_toward_elements\":[{\"consecutive_count\":1,\"text\":\"Hershey\"},{\"text\":\"Elizabethtown\"}],\"exit_branch_elements\":[{\"text\":\"PA 743\"}]},\"travel_mode\":\"drive\"},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Keep right to take Pennsylvania 7 43 North toward Hershey. Then Continue on Pennsylvania 7 43 North.\",\"verbal_transition_alert_instruction\":\"Keep right to take Pennsylvania 7 43 North.\",\"instruction\":\"Keep right to take PA 743 North toward Hershey.\",\"end_shape_index\":492,\"type\":23,\"time\":4,\"verbal_multi_cue\":true,\"begin_shape_index\":485,\"length\":0.067,\"sign\":{\"exit_toward_elements\":[{\"consecutive_count\":1,\"text\":\"Hershey\"}],\"exit_branch_elements\":[{\"consecutive_count\":1,\"text\":\"PA 743 North\"}]}},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Continue on Pennsylvania 7 43 North for 4.9 miles.\",\"begin_street_names\":[\"Hershey Road\",\"PA 743 North\",\"PA 341 Truck\"],\"verbal_transition_alert_instruction\":\"Continue on Pennsylvania 7 43 North.\",\"length\":4.885,\"instruction\":\"Continue on PA 743 North.\",\"end_shape_index\":572,\"type\":8,\"time\":522,\"street_names\":[\"PA 743 North\"],\"begin_shape_index\":492},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Continue on Fishburn Road for 2.5 miles.\",\"begin_street_names\":[\"Fishburn Road\",\"PA 743\"],\"verbal_transition_alert_instruction\":\"Continue on Fishburn Road.\",\"length\":2.526,\"instruction\":\"Continue on Fishburn Road.\",\"end_shape_index\":626,\"type\":8,\"time\":261,\"street_names\":[\"Fishburn Road\"],\"begin_shape_index\":572},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Bear left onto Hockersville Road.\",\"verbal_transition_alert_instruction\":\"Bear left onto Hockersville Road.\",\"length\":0.572,\"instruction\":\"Bear left onto Hockersville Road.\",\"end_shape_index\":633,\"type\":16,\"time\":92,\"verbal_post_transition_instruction\":\"Continue for 6 tenths of a mile.\",\"street_names\":[\"Hockersville Road\"],\"begin_shape_index\":626},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"verbal_pre_transition_instruction\":\"Turn right onto U.S. 4 22, West Chocolate Avenue.\",\"verbal_transition_alert_instruction\":\"Turn right onto U.S. 4 22.\",\"length\":0.664,\"instruction\":\"Turn right onto US 422/West Chocolate Avenue.\",\"end_shape_index\":652,\"type\":10,\"time\":102,\"verbal_post_transition_instruction\":\"Continue for 7 tenths of a mile.\",\"street_names\":[\"US 422\",\"West Chocolate Avenue\"],\"begin_shape_index\":633},{\"travel_type\":\"car\",\"travel_mode\":\"drive\",\"begin_shape_index\":652,\"time\":0,\"type\":4,\"end_shape_index\":652,\"instruction\":\"You have arrived at your destination.\",\"length\":0.000,\"verbal_transition_alert_instruction\":\"You will arrive at your destination.\",\"verbal_pre_transition_instruction\":\"You have arrived at your destination.\"}]}],\"status_message\":\"Found route between points\",\"status\":0}}";
-  NavigatorTest nav(route_json_str);
+  NavigatorTest nav;
+  nav.SetRoute(route_json_str);
   uint32_t leg_index = 0;
 
   TryRouteLegCount(nav, 1);
@@ -1263,17 +1105,8 @@ void TestLancasterToHershey() {
 int main() {
   test::suite suite("navigator");
 
-  // TopLevelCtor
-//  suite.test(TEST_CASE(TestTopLevelCtor));
-
-  // TopLevelSummaryCtor
-//  suite.test(TEST_CASE(TestTopLevelSummaryCtor));
-
-  // TopLevelLocationCtor
-//  suite.test(TEST_CASE(TestTopLevelLocationCtor));
-
-  // TopLevelLegCtor
-  suite.test(TEST_CASE(TestTopLevelLegCtor));
+  // TopLevelLegSetRoute
+  suite.test(TEST_CASE(TestTopLevelLegSetRoute));
 
   // TestLancasterToHershey
   suite.test(TEST_CASE(TestLancasterToHershey));

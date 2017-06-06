@@ -27,19 +27,25 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace tyr {
 
-Navigator::Navigator(const std::string& route_json_str) {
+Navigator::Navigator() {
   route_state_ = NavigationStatus_RouteState_kInvalid;
-  SetRoute(route_json_str);
 }
 
-void Navigator::SetRoute(const std::string& route_json_str) {
+NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
+  NavigationStatus nav_status;
+
+  // TODO: replace this with Alex magic
   google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
+
   leg_index_ = 0;
   maneuver_index_ = 0;
   SetUnits();
   SetShapeLengthTime();
   SetUsedInstructions();
   route_state_ = NavigationStatus_RouteState_kInitialized;
+
+  nav_status.set_route_state(route_state_);
+  return nav_status;
 }
 
 NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
