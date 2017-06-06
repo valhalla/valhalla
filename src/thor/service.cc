@@ -45,6 +45,15 @@ namespace {
         break;
       try {
         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+
+        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
+            [&](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
+              return i.score < j.score;
+            });
+
+        for(auto& e : correlated.back().edges) {
+          e.score -= minScoreEdge.score;
+        }
       }
       catch (...) {
         throw valhalla_exception_t{400, 420};

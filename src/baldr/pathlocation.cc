@@ -94,13 +94,6 @@ namespace baldr{
       p.edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
         midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
         edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
-      if (p.edges.back().score < minScore) {
-        minScore = p.edges.back().score;
-      }
-    }
-
-    for (auto& edge : p.edges) {
-      edge.score -= minScore;
     }
     return p;
   }

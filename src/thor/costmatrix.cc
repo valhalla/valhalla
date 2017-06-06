@@ -47,6 +47,7 @@ float CostMatrix::GetCostThreshold() {
     cost_threshold = bicycle_cost_threshold_;
     break;
   case TravelMode::kPedestrian:
+  case TravelMode::kPublicTransit:
     cost_threshold = pedestrian_cost_threshold_;
     break;
   case TravelMode::kDrive:

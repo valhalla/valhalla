@@ -124,16 +124,13 @@ namespace valhalla {
         return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
 
       //check that location size does not exceed max.
-      auto max = max_locations.find("sources_to_targets")->second;
+      auto max = max_matrix_locations.find(costing)->second;
       if (sources.size() > max || targets.size() > max)
         throw valhalla_exception_t{400, 150, std::to_string(max)};
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      auto matrix_max_dist = max_matrix_distance.find(costing);
-      if (matrix_max_dist == max_matrix_distance.end())
-        matrix_max_dist = max_matrix_distance.find("auto");
-      check_distance(sources, targets, matrix_max_dist->second, max_location_distance);
+      check_distance(sources, targets, max_matrix_distance.find(costing)->second, max_location_distance);
 
       //correlate the various locations to the underlying graph
       std::vector<baldr::Location> sources_targets;

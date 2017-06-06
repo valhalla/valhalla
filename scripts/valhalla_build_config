@@ -136,47 +136,59 @@ config = {
   'service_limits': {
     'auto': {
       'max_distance': 5000000.0,
+      'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_locations': 20
+	  'max_matrix_locations': 50
     },
     'auto_shorter': {
       'max_distance': 5000000.0,
-      'max_locations': 20
+      'max_locations': 20,
+      'max_matrix_distance': 400000.0,
+	  'max_matrix_locations': 50
     },
     'bus': {
       'max_distance': 5000000.0,
-      'max_locations': 50
+      'max_locations': 50,
+      'max_matrix_distance': 400000.0,
+	  'max_matrix_locations': 50
     },
     'hov': {
       'max_distance': 5000000.0,
-      'max_locations': 20
+      'max_locations': 20,
+      'max_matrix_distance': 400000.0,
+	  'max_matrix_locations': 50
     },
     'pedestrian': {
       'max_distance': 250000.0,
-      'max_matrix_distance': 200000.0,
       'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+	  'max_matrix_locations': 50,
       'min_transit_walking_distance': 1,
       'max_transit_walking_distance': 10000
     },
     'bicycle': {
       'max_distance': 500000.0,
-      'max_matrix_distance': 200000.0,
-      'max_locations': 50
+      'max_locations': 50,
+	  'max_matrix_distance': 200000.0,
+	  'max_matrix_locations': 50
     },
     'multimodal': {
       'max_distance': 500000.0,
-      'max_locations': 50
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
     },
     'transit': {
       'max_distance': 500000.0,
-      'max_locations': 50
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
     },
     'truck': {
       'max_distance': 5000000.0,
-      'max_locations': 20
-    },
-    'sources_to_targets': {
-      'max_locations': 50
+      'max_locations': 20,
+      'max_matrix_distance': 400000.0,
+      'max_matrix_locations': 50
     },
     'skadi': {
       'max_shape': 750000,
@@ -330,47 +342,59 @@ help_text = {
   'service_limits': {
     'auto': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_locations': 'Maximum number of input locations'
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'auto_shorter': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'bus': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'hov': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'pedestrian': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix',
       'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
     'bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_locations': 'Maximum number of input locations'
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'multimodal': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'transit': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'truck': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
-    },
-    'sources_to_targets': {
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'skadi': {
       'max_shape': 'Maximum number of input shapes',

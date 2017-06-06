@@ -144,6 +144,7 @@ namespace valhalla {
           switch (mode) {
             case TravelMode::kPedestrian:
             case TravelMode::kBicycle:
+            case TravelMode::kPublicTransit:
               time_distances = timedistancematrix();
               break;
             default:
