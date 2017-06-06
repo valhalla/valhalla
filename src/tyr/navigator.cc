@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include <google/protobuf/util/json_util.h>
+//#include <google/protobuf/util/json_util.h>
 
 #include "proto/route.pb.h"
 #include "proto/navigator.pb.h"
@@ -34,9 +34,7 @@ Navigator::Navigator() {
 NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   NavigationStatus nav_status;
 
-  // TODO: replace this with Alex magic
-  google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
-
+  //google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
   leg_index_ = 0;
   maneuver_index_ = 0;
   SetUnits();

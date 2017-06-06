@@ -191,6 +191,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
+	valhalla/tyr/util.h \
 	valhalla/tyr/navigator.h
 libvalhalla_la_SOURCES = \
 	src/midgard/linesegment2.cc \
@@ -297,6 +298,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/route_matcher.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
+	src/tyr/util.cc \
 	src/tyr/navigator.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
