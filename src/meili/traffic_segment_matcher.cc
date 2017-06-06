@@ -121,8 +121,8 @@ namespace {
 namespace valhalla {
 namespace meili {
 
-// Thereshold speed below which we assume a queue occurs (meters/sec)
-constexpr float kQueueSpeedThreshold = 3.0f;
+// Threshold speed below which we assume a queue occurs (meters/sec)
+constexpr float kQueueSpeedThreshold = 2.0f;  // approx 4.3 MPH
 
 TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
 }
@@ -265,7 +265,7 @@ int TrafficSegmentMatcher::compute_queue_length(std::vector<interpolation_t>::co
     }
 
     // Compute speed. If it falls below threshold return the remaining length
-    // (from the midpoint between the 2 interpolations
+    // (from the midpoint between the 2 interpolations)
     if (d / (i2->epoch_time - i1->epoch_time) < threshold) {
       return static_cast<int>(right->total_distance - (i1->total_distance + i2->total_distance) * 0.5);
     }
