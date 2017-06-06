@@ -19,22 +19,24 @@ namespace valhalla {
 namespace meili {
 
 struct interpolation_t {
-  baldr::GraphId edge;   //edge id
-  float total_distance;  //distance along the path
-  float edge_distance;   //ratio of the distance along the edge
-  size_t original_index; //index into the original measurements
-  double epoch_time;     //seconds from epoch
+  baldr::GraphId edge;   // edge id
+  float total_distance;  // distance along the path
+  float edge_distance;   // ratio of the distance along the edge
+  size_t original_index; // index into the original measurements
+  double epoch_time;     // seconds from epoch
 };
 
 // Matched traffic segment.
 struct traffic_segment_t {
-  baldr::GraphId segment_id;   // Traffic segment unique Id
-  double start_time;           // Begin time along this segment, if < 0 then no begin match
-  size_t begin_shape_index;    // Begins at this index of original input
-  double end_time;             // End time along this segment, if < 0 then no end match
-  size_t end_shape_index;      // Ends at this index of original input
-  int length;                  // Length in meters along this segment, if < 0 then no match
-  bool internal;               // Is the set of edges making up this segment internal edge types
+  baldr::GraphId segment_id;     // Traffic segment unique Id
+  double start_time;             // Begin time along this segment, if < 0 then no begin match
+  size_t begin_shape_index;      // Begins at this index of original input
+  double end_time;               // End time along this segment, if < 0 then no end match
+  size_t end_shape_index;        // Ends at this index of original input
+  int length;                    // Length in meters along this segment, if < 0 then no match
+  int queue_length;              // Length of any queue from the end of the segment
+  bool internal;                 // Is the set of edges making up this segment internal edge types
+  std::vector<uint64_t> way_ids; // A list of way ids from the directed edge
 };
 
 /**
@@ -92,6 +94,19 @@ class TrafficSegmentMatcher {
    */
   virtual std::list<std::vector<interpolation_t> > interpolate_matches(const std::vector<MatchResult>& matches,
     const std::shared_ptr<MapMatcher>& matcher) const;
+
+  /**
+   * Compute queue length. Determine where (and if) speed drops below the
+   * threshold along a segment.
+   * @param  left       Iterator to the start of the interpolated matches.
+   * @param  right      Iterator to the end of the interpolated matches.
+   * @param  threshold  Speed (m/s) threshold.
+   * @return Returns the distance (meters) from the end of the segment where
+   *          speed drops below the threshold.
+   */
+  int compute_queue_length(std::vector<interpolation_t>::const_iterator left,
+                           std::vector<interpolation_t>::const_iterator right,
+                           const float threshold) const;
 
   /**
    * Turns updated matching results with their distances into a list of segments with interpolated times

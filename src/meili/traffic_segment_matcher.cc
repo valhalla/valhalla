@@ -50,7 +50,7 @@ namespace {
 
   //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
   bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
-    return edge->trans_up() || edge->trans_down() || edge->roundabout() ||
+    return edge->IsTransition() || edge->roundabout() ||
       edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
   }
 
@@ -61,6 +61,7 @@ namespace {
     bool internal;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
+    std::vector<uint64_t> way_ids;
   };
   std::vector<merged_traffic_segment_t> merge_segments(const std::vector<valhalla::meili::interpolation_t>& markers, valhalla::baldr::GraphReader& reader) {
     std::vector<merged_traffic_segment_t> merged;
@@ -73,47 +74,55 @@ namespace {
       //get segments for this edge
       edge = marker.edge;
       const auto* directed_edge = tile->directededge(edge);
-      auto segments = tile->GetTrafficSegments(edge);
       //if there were no segments we'll start an invalid one to serve
       //as a placeholder for the section of the path that has no ots's
+      auto segments = tile->GetTrafficSegments(edge);
       if(segments.empty())
-        segments = { valhalla::baldr::TrafficSegment{{}, marker.edge_distance, marker.edge_distance, true, true} };
+        segments = { valhalla::baldr::TrafficSegment{{}, 0, 1, true, true} };
+      //the way id for this edge
+      auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid();
       //merge them into single entries per segment id
       for(const auto& segment : segments) {
         //continue one
-        if(!merged.empty() && merged.back()->segment_id_ == segment.segment_id_){
+        if(!merged.empty() && merged.back()->segment_id_ == segment.segment_id_) {
           merged.back().end_edge = edge;
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
+          if(!directed_edge->IsTransition() && (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id))
+            merged.back().way_ids.push_back(way_id);
         }//new one
-        else
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge)});
+        else {
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), {way_id}});
+          if(directed_edge->IsTransition())
+            merged.back().way_ids.clear();
+        }
       }
     }
     return merged;
   }
-  
-/*
-  //TODO: remove this when debugging phase is finally over
+
+  /*
   void print(const valhalla::meili::interpolation_t& i) {
-    printf("%lu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
+    printf("%zu\t%.2f\t%.2f\t%.2f\n", i.edge.value, i.total_distance, i.epoch_time, i.edge_distance);
   }
   void print(const merged_traffic_segment_t& m) {
-    printf("%lu:\t%llu->%llu\t%d->%d\t%.2f->%.2f\n",
+    printf("%zu:\t%zu->%zu\t%d->%d\t%.2f->%.2f\n",
       m.segment.segment_id_.value, m.begin_edge.value, m.end_edge.value,
       m.segment.starts_segment_, m.segment.ends_segment_,
       m.segment.begin_percent_, m.segment.end_percent_);
   }
   void print(const valhalla::meili::traffic_segment_t& t) {
-    printf("%lu\t%.2f kph\t%d\t%.2f->%.2f\t%lu->%lu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
+    printf("%zu\t%.2f kph\t%d\t%.2f->%.2f\t%zu->%zu\n", t.segment_id.value, t.length/(t.end_time - t.start_time)*3.6,
       t.length, t.start_time, t.end_time, t.begin_shape_index, t.end_shape_index);
-  }
-*/
+  }*/
 }
 
 namespace valhalla {
 namespace meili {
+
+// Threshold speed below which we assume a queue occurs (meters/sec)
+constexpr float kQueueSpeedThreshold = 2.0f;  // approx 4.3 MPH
 
 TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
 }
@@ -242,6 +251,28 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   return interpolations;
 }
 
+// Compute queue length. Determine where (and if) speed drops below the
+// threshold along a segment.
+int TrafficSegmentMatcher::compute_queue_length(std::vector<interpolation_t>::const_iterator left,
+                                                std::vector<interpolation_t>::const_iterator right,
+                                                const float threshold) const {
+  // Iterate through pairs of interpolations until speed drops below threshold
+  for (auto i1 = left, i2 = left + 1; i2 <= right; ++i1, ++i2) {
+    // Skip any duplicate interpolations (happens at true graph nodes)
+    float d = i2->total_distance - i1->total_distance;
+    if (d == 0) {
+      continue;
+    }
+
+    // Compute speed. If it falls below threshold return the remaining length
+    // (from the midpoint between the 2 interpolations)
+    if (d / (i2->epoch_time - i1->epoch_time) < threshold) {
+      return static_cast<int>(right->total_distance - (i1->total_distance + i2->total_distance) * 0.5);
+    }
+  }
+  return 0;
+}
+
 std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
   baldr::GraphReader& reader) const {
   //loop over each set of interpolations
@@ -270,6 +301,16 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       if(left->edge_distance > segment->begin_percent_)
         left = std::prev(left);
 
+      //move the right marker right until its adjacent to the segment end
+      right = std::find_if(right, markers.cend(), [&segment](const interpolation_t& mark) {
+        return mark.edge == segment.end_edge && mark.edge_distance >= segment->end_percent_;
+      });
+
+      //skip any segments composed entirely of transition edges (should only be one edge really)
+      //they should have no valid segment id, be marked internal and also have no way ids
+      if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty())
+        continue;
+
       //interpolate the length and time at the start
       double start_time = -1;
       float start_length = -1;
@@ -280,11 +321,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         start_length = left->total_distance + (next->total_distance - left->total_distance) * ratio;
         start_time = left->epoch_time + (next->epoch_time - left->epoch_time) * ratio;
       }
-
-      //move the right marker right until its adjacent to the segment end
-      right = std::find_if(right, markers.cend(), [&segment](const interpolation_t& mark) {
-        return mark.edge == segment.end_edge && mark.edge_distance >= segment->end_percent_;
-      });
 
       //interpolate the length and time at the end
       double end_time = -1;
@@ -304,10 +340,15 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //figure out the total length of the segment
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
+      //compute queue length (skip if this is a partial segment)
+      int queue_length = (length == -1) ? 0 :
+          compute_queue_length(left, right, kQueueSpeedThreshold);
+
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
       traffic_segments.emplace_back(
-        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index, length, segment.internal});
+        traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index,
+                  length, queue_length, segment.internal, segment.way_ids});
 
       //print(traffic_segments.back());
 
@@ -371,11 +412,18 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
       {"length", static_cast<int64_t>(seg.length)},
       {"begin_shape_index", static_cast<uint64_t>(seg.begin_shape_index)},
       {"end_shape_index", static_cast<uint64_t>(seg.end_shape_index)},
-      {"internal", static_cast<bool>(seg.internal)},
+      {"queue_length", static_cast<int64_t>(seg.queue_length)},
+      {"internal", static_cast<bool>(seg.internal)}
     });
     //some of the segments are just sections of the path with no ots's
     if(seg.segment_id.Is_Valid())
       segment->emplace("segment_id", seg.segment_id.value);
+
+    auto way_ids = baldr::json::array({});
+    for (auto way_id : seg.way_ids)
+      way_ids->push_back(way_id);
+    segment->emplace("way_ids", way_ids);
+
     segments->emplace_back(segment);
   }
   std::stringstream ss;

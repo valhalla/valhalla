@@ -15,8 +15,8 @@ template <typename coord_t>
 class GridTraversal
 {
  public:
-  GridTraversal(float minx, float miny,
-                float square_width, float square_height,
+  GridTraversal(double minx, double miny,
+                double square_width, double square_height,
                 int ncols, int nrows)
       : minx_(minx),
         miny_(miny),
@@ -29,7 +29,7 @@ class GridTraversal
 
   std::pair<int, int> SquareAtPoint(const coord_t &pt) const
   {
-    const float dx = pt.x() - minx_,
+    const double dx = pt.x() - minx_,
                 dy = pt.y() - miny_;
     return {static_cast<int>(floor(dx / square_width_)),
             static_cast<int>(floor(dy / square_height_))};
@@ -43,10 +43,10 @@ class GridTraversal
   {
     // Division by zero is undefined in C++, here we ensure it to be
     // infinity
-    const float height = dest.y() - origin.y(),
+    const double height = dest.y() - origin.y(),
                  width = dest.x() - origin.x(),
-               tangent = width == 0.f? std::numeric_limits<float>::infinity() : (height / width),
-             cotangent = height == 0.f? std::numeric_limits<float>::infinity() : (width / height);
+               tangent = width == 0.f? std::numeric_limits<double>::infinity() : (height / width),
+             cotangent = height == 0.f? std::numeric_limits<double>::infinity() : (width / height);
 
     int col, row, dest_col, dest_row;
     std::tie(col, row) = StartSquare(origin, dest, tangent, cotangent);
@@ -103,7 +103,7 @@ class GridTraversal
   }
 
  private:
-  int IntersectsColumn(const coord_t& origin, float cotangent, int row) const
+  int IntersectsColumn(const coord_t& origin, double cotangent, int row) const
   {
     // The origin and the cotangent define a ray.
 
@@ -114,14 +114,14 @@ class GridTraversal
     }
     // (intersect_x, intersect_y) is the intersecting point of the ray
     // and the bottom horizontal grid line at the specified row
-    const float intersect_y = miny_ + row * square_height_;
+    const double intersect_y = miny_ + row * square_height_;
     // Since we have (intersect_x - origin.x()) / (intersect_y - origin.y()) == cotangent
-    const float intersect_x = (intersect_y - origin.y()) * cotangent + origin.x();
+    const double intersect_x = (intersect_y - origin.y()) * cotangent + origin.x();
     // Return the intersecting column
     return floor((intersect_x - minx_) / square_width_);
   }
 
-  int IntersectsRow(const coord_t& origin, float tangent, int col) const
+  int IntersectsRow(const coord_t& origin, double tangent, int col) const
   {
     // The origin and the tangent define a ray.
 
@@ -132,16 +132,16 @@ class GridTraversal
     }
     // (intersect_x, intersect_y) is the intersecting point of the ray
     // and the left vertical grid line at the specified column
-    const float intersect_x = minx_ + col * square_width_;
+    const double intersect_x = minx_ + col * square_width_;
     // Since we have (intersect_y - origin.y()) / (intersect_x - origin.x()) == tangent
-    const float intersect_y = (intersect_x - origin.x()) * tangent + origin.y();
+    const double intersect_y = (intersect_x - origin.x()) * tangent + origin.y();
     // Return the intersecting row
     return floor((intersect_y - miny_) / square_height_);
   }
 
   std::pair<int, int>
   StartSquare(const coord_t& origin, const coord_t& dest,
-              float tangent, float cotangent) const
+              double tangent, double cotangent) const
   {
     // Return the square if origin point falls inside the grid
     int col, row;
@@ -187,8 +187,8 @@ class GridTraversal
     return {-1, -1};
   }
 
-  float minx_, miny_, maxx_, maxy_;
-  float square_width_, square_height_;
+  double minx_, miny_, maxx_, maxy_;
+  double square_width_, square_height_;
   int ncols_, nrows_;
 };
 

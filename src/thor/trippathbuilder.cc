@@ -973,6 +973,14 @@ TripPath TripPathBuilder::Build(
           (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
           edge_shape.end());
 
+      // If edge_begin_info.exists and not the first edge
+      // then increment begin_index
+      // since the previous end shape index should not equal
+      // the current begin shape index because of discontinuity
+      if (edge_begin_info.exists && !is_first_edge) {
+        ++begin_index;
+      }
+
     } else if (is_first_edge || is_last_edge) {
       // We need to clip the shape if i its at the beginning or end and
       // is not full length
@@ -1435,6 +1443,19 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   if (directededge->truck_route() && controller.attributes.at(kEdgeTruckRoute))
     trip_edge->set_truck_route(true);
+
+  // Traffic segments
+  if (controller.attributes.at(kEdgeTrafficSegments)) {
+    auto segments = graphtile->GetTrafficSegments(edge);
+    for (const auto& segment : segments) {
+      TripPath_TrafficSegment* traffic_segment = trip_edge->add_traffic_segment();
+      traffic_segment->set_segment_id(segment.segment_id_);
+      traffic_segment->set_begin_percent(segment.begin_percent_);
+      traffic_segment->set_end_percent(segment.end_percent_);
+      traffic_segment->set_starts_segment(segment.starts_segment_);
+      traffic_segment->set_ends_segment(segment.ends_segment_);
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information

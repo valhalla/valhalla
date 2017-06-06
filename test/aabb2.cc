@@ -185,6 +185,7 @@ void TestIntersectsCircle() {
 }
 
 void TestIntersect() {
+  // Test if bounding boxes intersect
   AABB2<Point2> box(-1, -1, 1, 1);
   Point2 a, b;
   if(!box.Intersect((a={0,0}), (b={1,1})) || a != Point2{0,0} || b != Point2{1,1})
@@ -210,6 +211,31 @@ void TestIntersect() {
     throw std::logic_error("Wrong intersection");
   if(box.Intersect((a={1.1,0}), (b={1,1.1})))
     throw std::logic_error("Wrong intersection");
+
+  // Test intersection of bounding boxes
+  // Case 1 - no intersection
+  AABB2<Point2> intersect1 = box.Intersection({2,2,3,3});
+  if (intersect1.minx() != 0.0f || intersect1.miny() != 0.0f ||
+      intersect1.maxx() != 0.0f || intersect1.maxy() != 0.0f)
+    throw std::logic_error("Wrong intersection 1");
+
+  // Case 2 intersection.
+  AABB2<Point2> intersect2 = box.Intersection({0,0,3,3});
+  if (intersect2.minx() != 0.0f || intersect2.miny() != 0.0f ||
+      intersect2.maxx() != 1.0f || intersect2.maxy() != 1.0f)
+    throw std::logic_error("Wrong intersection 2");
+
+  // Case 3 - other bounding box contains this box
+  AABB2<Point2> intersect3 = box.Intersection({-3,-3,3,3});
+  if (intersect3.minx() != -1.0f || intersect3.miny() != -1.0f ||
+      intersect3.maxx() !=  1.0f || intersect3.maxy() !=  1.0f)
+    throw std::logic_error("Wrong intersection 3");
+
+  // Case 4 - box contains other bounding box
+  AABB2<Point2> intersect4 = box.Intersection({-0.5f,-0.5f,0.5f,0.5f});
+  if (intersect4.minx() != -0.5f || intersect4.miny() != -0.5f ||
+      intersect4.maxx() !=  0.5f || intersect4.maxy() !=  0.5f)
+    throw std::logic_error("Wrong intersection 4");
 }
 
 }

@@ -138,7 +138,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/universal_cost.h \
 	valhalla/meili/candidate_search.h \
 	valhalla/meili/geometry_helpers.h \
-	valhalla/meili/graph_helpers.h \
 	valhalla/meili/grid_range_query.h \
 	valhalla/meili/map_matching.h \
 	valhalla/meili/priority_queue.h \
@@ -148,7 +147,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/geojson_writer.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
-	valhalla/meili/bucket_queue.h \
 	valhalla/meili/grid_traversal.h \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
@@ -607,7 +605,12 @@ check_PROGRAMS = \
 	test/attributes_controller \
 	test/astar \
 	test/serializers \
-	test/traffic_matcher
+	test/traffic_matcher \
+	test/autocost \
+	test/bicyclecost \
+	test/pedestriancost \
+	test/transitcost \
+	test/truckcost
 test_logging_SOURCES = test/logging.cc test/test.cc
 test_logging_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
 test_logging_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -809,6 +812,21 @@ test_serializers_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOO
 test_traffic_matcher_SOURCES = test/traffic_matcher.cc test/test.cc
 test_traffic_matcher_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_traffic_matcher_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_autocost_SOURCES = src/sif/autocost.cc test/test.cc
+test_autocost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_autocost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_bicyclecost_SOURCES = src/sif/bicyclecost.cc test/test.cc
+test_bicyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_bicyclecost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_pedestriancost_SOURCES = src/sif/pedestriancost.cc test/test.cc
+test_pedestriancost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_pedestriancost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_transitcost_SOURCES = src/sif/transitcost.cc test/test.cc
+test_transitcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_transitcost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_truckcost_SOURCES = src/sif/truckcost.cc test/test.cc
+test_truckcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_truckcost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 
 if DATA_TOOLS
 check_PROGRAMS += \

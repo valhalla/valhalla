@@ -20,83 +20,6 @@ namespace {
 namespace valhalla {
 namespace midgard {
 
-// Default constructor
-template <class coord_t>
-AABB2<coord_t>::AABB2()
-    : minx_(0.0f),
-      miny_(0.0f),
-      maxx_(0.0f),
-      maxy_(0.0f) {
-}
-
-// Construct an AABB given a minimum and maximum point.
-template <class coord_t>
-AABB2<coord_t>::AABB2(const coord_t& minpt, const coord_t& maxpt) {
-  minx_ = minpt.x();
-  miny_ = minpt.y();
-  maxx_ = maxpt.x();
-  maxy_ = maxpt.y();
-}
-
-// Constructor with specified bounds.
-template <class coord_t>
-AABB2<coord_t>::AABB2(const x_t minx, const y_t miny,
-                      const x_t maxx, const y_t maxy) {
-  minx_ = minx;
-  miny_ = miny;
-  maxx_ = maxx;
-  maxy_ = maxy;
-}
-
-// Construct an AABB given a list of points.
-template <class coord_t>
-AABB2<coord_t>::AABB2(const std::vector<coord_t>& pts) {
-  Create(pts);
-}
-
-// Equality operator.
-template <class coord_t>
-bool AABB2<coord_t>::operator ==(const AABB2<coord_t>& r2) const {
-  return (minx_ == r2.minx() && maxx_ == r2.maxx() &&
-          miny_ == r2.miny() && maxy_ == r2.maxy());
-}
-
-// Get the minimum x.
-template <class coord_t>
-typename AABB2<coord_t>::x_t AABB2<coord_t>::minx() const {
-  return minx_;
-}
-
-// Get the maximum x.
-template <class coord_t>
-typename AABB2<coord_t>::x_t AABB2<coord_t>::maxx() const {
-  return maxx_;
-}
-
-// Get the minimum y.
-template <class coord_t>
-typename AABB2<coord_t>::y_t AABB2<coord_t>::miny() const {
-  return miny_;
-}
-
-// Get the maximum y.
-template <class coord_t>
-typename AABB2<coord_t>::y_t AABB2<coord_t>::maxy() const {
-  return maxy_;
-}
-
-// Get the point at the minimum x,y.
-template <class coord_t>
-coord_t AABB2<coord_t>::minpt() const {
-  return coord_t(minx_, miny_);
-}
-
-// Get the point at the maximum x,y.
-template <class coord_t>
-coord_t AABB2<coord_t>::maxpt() const {
-  return coord_t(maxx_, maxy_);
-}
-
 // Creates an AABB given a list of points.
 template <class coord_t>
 void AABB2<coord_t>::Create(const std::vector<coord_t>& pts) {
@@ -120,44 +43,16 @@ void AABB2<coord_t>::Create(const std::vector<coord_t>& pts) {
   }
 }
 
-// Gets the center of the bounding box.
+// Computes the intersection of this bounding box with another.
 template <class coord_t>
-coord_t AABB2<coord_t>::Center() const {
-  return coord_t((minx_ + maxx_) * 0.5f, (miny_ + maxy_) * 0.5f);
-}
-
-// Tests if a specified point is within the bounding box.
-template <class coord_t>
-bool AABB2<coord_t>::Contains(const coord_t& pt) const {
-  return (pt.x() >= minx_ && pt.y() >= miny_ &&
-          pt.x() <  maxx_ && pt.y() <  maxy_);
-}
-
-// Checks to determine if another bounding box is completely inside
-// this bounding box.
-template <class coord_t>
-bool AABB2<coord_t>::Contains(const AABB2<coord_t>& r2) const {
-  return (Contains(r2.minpt()) && Contains(r2.maxpt()));
-}
-
-// Test if this bounding box intersects another bounding box.
-template <class coord_t>
-bool AABB2<coord_t>::Intersects(const AABB2<coord_t>& r2) const {
-  // The bounding boxes do NOT intersect if the other bounding box (r2) is
-  // entirely LEFT, BELOW, RIGHT, or ABOVE this bounding box.
-  if ((r2.minx() < minx_ && r2.maxx() < minx_) ||
-      (r2.miny() < miny_ && r2.maxy() < miny_) ||
-      (r2.minx() > maxx_ && r2.maxx() > maxx_) ||
-      (r2.miny() > maxy_ && r2.maxy() > maxy_))
-    return false;
-
-  return true;
-}
-
-// Tests whether the segment intersects the bounding box.
-template <class coord_t>
-bool AABB2<coord_t>::Intersects(const LineSegment2<coord_t>& seg) const {
-  return Intersects(seg.a(), seg.b());
+AABB2<coord_t> AABB2<coord_t>:: Intersection(const AABB2& bbox) const {
+ // If the bounding boxes do not intersect a bounding box with
+ // no area is returned (all min,max values are 0).
+ if (!Intersects(bbox)) {
+   return {0.0f, 0.0f, 0.0f, 0.0f};
+ }
+ return {std::max(minx(), bbox.minx()), std::max(miny(), bbox.miny()),
+         std::min(maxx(), bbox.maxx()), std::min(maxy(), bbox.maxy())};
 }
 
 // Tests whether the segment intersects the bounding box.
@@ -363,18 +258,6 @@ void AABB2<coord_t>::Add(const coord_t& pt, std::vector<coord_t>& vout) const {
   if (vout.size() == 0 || vout.back() != pt) {
     vout.push_back(pt);
   }
-}
-
-// Gets the width of the bounding box.
-template <class coord_t>
-typename AABB2<coord_t>::x_t AABB2<coord_t>::Width() const {
-  return maxx_ - minx_;
-}
-
-// Gets the height of the bounding box.
-template <class coord_t>
-typename AABB2<coord_t>::y_t AABB2<coord_t>::Height() const {
-  return maxy_ - miny_;
 }
 
 // Expands (if necessary) the bounding box to include the specified

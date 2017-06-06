@@ -1411,11 +1411,32 @@ function rels_proc (kv, nokeys)
 
      local restrict = restriction[kv["restriction"]]
 
+     local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
+                           restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
+                           restriction[kv["restriction:bus"]] or restriction[kv["restriction:bicycle"]] or
+                           restriction[kv["restriction:hazmat"]]
+
+     --restrictions with type win over just restriction key.  people enter both.
+     if restrict_type ~= nil then
+       restrict = restrict_type
+     end
+
      if kv["type"] == "restriction" then
 
        if restrict ~= nil then
-         kv["restriction"] = restrict
 
+         if restrict_type == nil then
+           kv["restriction"] = restrict
+         else
+           kv["restriction"] = nil
+           kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
+           kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
+           kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]
+           kv["restriction:motorcar"] = restriction[kv["restriction:motorcar"]]
+           kv["restriction:bus"] = restriction[kv["restriction:bus"]]
+           kv["restriction:bicycle"] = restriction[kv["restriction:bicycle"]]
+           kv["restriction:hazmat"] = restriction[kv["restriction:hazmat"]]
+         end
          if kv["day_on"] or kv["day_off"] then
 
            local day_on = dow[kv["day_on"]]

@@ -831,18 +831,13 @@ struct graph_callback : public OSMPBF::Callback {
 
     OSMRestriction restriction{};
     uint64_t from_way_id = 0;
-    bool isRestriction = false;
-    bool hasRestriction = false;
-    bool isRoad = false;
-    bool isRoute = false;
-    bool isBicycle = false;
-    bool isConnectivity = false;
+    bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
+    bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
     uint32_t bike_network_mask = 0;
 
     std::string network, ref, name, except;
     std::string from_lanes, from, to_lanes, to;
-    uint32_t modes = (kAutoAccess |  kTaxiAccess | kBusAccess | kBicycleAccess |
-                      kTruckAccess | kEmergencyAccess);
+    uint32_t modes = 0;
 
     for (const auto& tag : results) {
       if (tag.first == "type") {
@@ -871,7 +866,29 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "except") {
         except = tag.second;
       }
-      else if (tag.first == "restriction" && !tag.second.empty()) {
+      else if ((tag.first == "restriction" || tag.first == "restriction:motorcar" ||
+          tag.first == "restriction:taxi" || tag.first == "restriction:bus" ||
+          tag.first == "restriction:bicycle" || tag.first == "restriction:hgv" ||
+          tag.first == "restriction:hazmat" || tag.first == "restriction:emergency") &&
+          !tag.second.empty()) {
+
+        isRestriction = true;
+        if (tag.first != "restriction")
+          isTypeRestriction = true;
+
+        if (tag.first == "restriction:motorcar")
+          modes = modes | kAutoAccess;
+        else if (tag.first == "restriction:taxi")
+          modes = modes | kTaxiAccess;
+        else if (tag.first == "restriction:bus")
+          modes = modes | kBusAccess;
+        else if (tag.first == "restriction:bicycle")
+          modes = modes | kBicycleAccess;
+        else if (tag.first == "restriction:hgv" || tag.first == "restriction:hazmat")
+          modes = modes | kTruckAccess;
+        else if (tag.first == "restriction:emergency")
+          modes = modes | kEmergencyAccess;
+
         RestrictionType type = (RestrictionType) std::stoi(tag.second);
 
         switch (type) {
@@ -1058,25 +1075,34 @@ struct graph_callback : public OSMPBF::Callback {
       }
       // Add the restriction to the list.
       if (from_way_id != 0 && (restriction.via() || vias.size()) && restriction.to()) {
-
-        // remove access as the restriction does not apply to these modes.
-        std::vector<std::string> tokens  = GetTagTokens(except);
-        for (const auto& t : tokens) {
-          if (t == "motorcar")
-            modes = modes & ~kAutoAccess;
-          else if (t == "psv")
-            modes = modes & ~(kTaxiAccess | kBusAccess);
-          else if (t == "taxi")
-            modes = modes & ~kTaxiAccess;
-          else if (t == "bus")
-            modes = modes & ~kBusAccess;
-          else if (t == "bicycle")
-            modes = modes & ~kBicycleAccess;
-          else if (t == "hgv")
-            modes = modes & ~kTruckAccess;
-          else if (t == "emergency")
-            modes = modes & ~kEmergencyAccess;
+        // check for exceptions
+        if (!isTypeRestriction) {
+          modes = (kAutoAccess |  kTaxiAccess | kBusAccess | kBicycleAccess |
+                   kTruckAccess | kEmergencyAccess);
+          // remove access as the restriction does not apply to these modes.
+          std::vector<std::string> tokens  = GetTagTokens(except);
+          for (const auto& t : tokens) {
+            if (t == "motorcar")
+              modes = modes & ~kAutoAccess;
+            else if (t == "psv")
+              modes = modes & ~(kTaxiAccess | kBusAccess);
+            else if (t == "taxi")
+              modes = modes & ~kTaxiAccess;
+            else if (t == "bus")
+              modes = modes & ~kBusAccess;
+            else if (t == "bicycle")
+              modes = modes & ~kBicycleAccess;
+            else if (t == "hgv")
+              modes = modes & ~kTruckAccess;
+            else if (t == "emergency")
+              modes = modes & ~kEmergencyAccess;
+          }
+        } else if (vias.size() == 0) {
+          restriction.set_via(0);
+          vias.push_back(restriction.to());
+          osmdata_.via_set.insert(restriction.to());
         }
+
         restriction.set_modes(modes);
 
         // complex restrictions -- add to end map.

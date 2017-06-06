@@ -847,7 +847,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     //pull out all the route_stop_patterns or shapes
     std::unordered_map<std::string, size_t> shapes;
     for(const auto& route : routes) {
-      request = url((boost::format("/api/v1/route_stop_patterns?total=false&per_page=%1%&traversed_by=%2%")
+      request = url((boost::format("/api/v1/route_stop_patterns?total=false&per_page=100&traversed_by=%2%")
               % pt.get<std::string>("per_page") % url_encode(route.first)).str(), pt);
       do {
         //grab some stuff

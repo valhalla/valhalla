@@ -1,10 +1,8 @@
 #include <cmath>
 #include "midgard/distanceapproximator.h"
 
-#include "meili/graph_helpers.h"
 #include "meili/routing.h"
 #include "meili/geometry_helpers.h"
-#include "meili/graph_helpers.h"
 #include "meili/match_route.h"
 #include "meili/map_matcher.h"
 
@@ -60,7 +58,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
   Interpolation best_interp;
 
   for (auto segment = begin; segment != end; segment++) {
-    const auto directededge = helpers::edge_directededge(mapmatching.graphreader(), segment->edgeid, tile);
+    const auto directededge = mapmatching.graphreader().directededge(segment->edgeid, tile);
     if (!directededge) {
       continue;
     }
