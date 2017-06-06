@@ -78,11 +78,11 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
-  current_cost_threshold_ = GetCostThreshold();
 
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+  current_cost_threshold_ = GetCostThreshold();
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -229,11 +229,10 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
-  current_cost_threshold_ = GetCostThreshold();
-
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+  current_cost_threshold_ = GetCostThreshold();
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -454,7 +453,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score;
+    cost.cost += edge.score * 10.0f;
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
@@ -500,7 +499,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score;
+    cost.cost += edge.score * 10.0f;
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin

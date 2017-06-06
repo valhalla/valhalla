@@ -127,8 +127,8 @@ namespace {
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
       "service_limits": {
-        "auto": { "max_distance": 5000000.0, "max_locations": 20 },
-        "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
+        "auto": { "max_distance": 5000000.0, "max_matrix_distance": 500000.0, "max_locations": 20 },
+        "pedestrian": { "max_distance": 250000.0, "max_matrix_distance": 200000.0, "max_locations": 50,
         "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 }, 
         "sources_to_targets": { "max_distance": 200000.0, "max_locations": 50},
         "optimized_route": { "max_distance": 200000.0, "max_locations": 50},

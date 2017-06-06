@@ -716,7 +716,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score;
+      cost.cost += edge.score * 10.0f;
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and

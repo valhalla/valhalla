@@ -241,7 +241,7 @@ namespace valhalla {
           continue;
         if (kv.first != "skadi" && kv.first != "trace")
           max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
-        if (kv.first != "skadi" && kv.first != "isochrone")
+        if (kv.first != "skadi" && kv.first != "isochrone" && kv.first != "sources_to_targets")
           max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
         if (kv.first == "auto" || kv.first == "bicycle" || kv.first == "pedestrian")
           max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
