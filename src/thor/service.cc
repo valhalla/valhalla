@@ -47,7 +47,7 @@ namespace {
         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
 
         auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
-            [&](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
+            [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
               return i.score < j.score;
             });
 
