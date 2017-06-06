@@ -96,6 +96,19 @@ class TrafficSegmentMatcher {
     const std::shared_ptr<MapMatcher>& matcher) const;
 
   /**
+   * Compute queue length. Determine where (and if) speed drops below the
+   * threshold along a segment.
+   * @param  left       Iterator to the start of the interpolated matches.
+   * @param  right      Iterator to the end of the interpolated matches.
+   * @param  threshold  Speed (m/s) threshold.
+   * @return Returns the distance (meters) from the end of the segment where
+   *          speed drops below the threshold.
+   */
+  int compute_queue_length(std::vector<interpolation_t>::const_iterator left,
+                           std::vector<interpolation_t>::const_iterator right,
+                           const float threshold) const;
+
+  /**
    * Turns updated matching results with their distances into a list of segments with interpolated times
    * @param  the updated matched results including the nodes of all the edges on the path
    * @param  the distance along the entire path of each matched result
