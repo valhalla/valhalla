@@ -101,7 +101,6 @@ namespace {
     }
     return merged;
   }
-  
 
   /*
   void print(const valhalla::meili::interpolation_t& i) {
@@ -121,6 +120,9 @@ namespace {
 
 namespace valhalla {
 namespace meili {
+
+// Thereshold speed below which we assume a queue occurs (meters/sec)
+constexpr float kQueueSpeedThreshold = 3.0f;
 
 TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
 }
@@ -249,6 +251,28 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   return interpolations;
 }
 
+// Compute queue length. Determine where (and if) speed drops below the
+// threshold along a segment.
+int TrafficSegmentMatcher::compute_queue_length(std::vector<interpolation_t>::const_iterator left,
+                                                std::vector<interpolation_t>::const_iterator right,
+                                                const float threshold) const {
+  // Iterate through pairs of interpolations until speed drops below threshold
+  for (auto i1 = left, i2 = left + 1; i2 <= right; ++i1, ++i2) {
+    // Skip any duplicate interpolations (happens at true graph nodes)
+    float d = i2->total_distance - i1->total_distance;
+    if (d == 0) {
+      continue;
+    }
+
+    // Compute speed. If it falls below threshold return the remaining length
+    // (from the midpoint between the 2 interpolations
+    if (d / (i2->epoch_time - i1->epoch_time) < threshold) {
+      return static_cast<int>(right->total_distance - (i1->total_distance + i2->total_distance) * 0.5);
+    }
+  }
+  return 0;
+}
+
 std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
   baldr::GraphReader& reader) const {
   //loop over each set of interpolations
@@ -316,10 +340,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //figure out the total length of the segment
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
+      //compute queue length (skip if this is a partial segment)
+      int queue_length = (length == -1) ? 0 :
+          compute_queue_length(left, right, kQueueSpeedThreshold);
+
       //this is what we know so far
       //NOTE: in both cases we take the left most value for the shape index in an effort to be conservative
-      int queue_length = 0; // TODO - compute queue length (based on interpolations - where speed falls
-                            // below some threshold
       traffic_segments.emplace_back(
         traffic_segment_t{segment->segment_id_, start_time, left->original_index, end_time, prev->original_index,
                   length, queue_length, segment.internal, segment.way_ids});
