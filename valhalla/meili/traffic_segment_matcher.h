@@ -99,7 +99,7 @@ class TrafficSegmentMatcher {
    * Compute queue length. Determine where (and if) speed drops below the
    * threshold along a segment.
    * @param  left       Iterator to the start of the interpolated matches.
-   * @param  right      Iterator to the start of the interpolated matches.
+   * @param  right      Iterator to the end of the interpolated matches.
    * @param  threshold  Speed (m/s) threshold.
    * @return Returns the distance (meters) from the end of the segment where
    *          speed drops below the threshold.
