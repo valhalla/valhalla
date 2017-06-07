@@ -18,6 +18,7 @@
 #include "baldr/json.h"
 #include "baldr/location.h"
 #include "baldr/errorcode_util.h"
+#include "tyr/util.h"
 #include "tyr/navigator.h"
 
 using namespace valhalla;
@@ -34,6 +35,7 @@ Navigator::Navigator() {
 NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   NavigationStatus nav_status;
 
+  jsonRouteToProtoRoute (route_json_str, route_);
   //google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
   leg_index_ = 0;
   maneuver_index_ = 0;

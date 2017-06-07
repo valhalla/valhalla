@@ -603,6 +603,7 @@ check_PROGRAMS = \
 	test/maneuversbuilder \
 	test/narrativebuilder \
 	test/navigator \
+	test/util_tyr \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
@@ -785,6 +786,9 @@ test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 test_narrativebuilder_SOURCES = test/narrativebuilder.cc test/test.cc
 test_narrativebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_narrativebuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_util_tyr_SOURCES = test/util_tyr.cc test/test.cc
+test_util_tyr_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_util_tyr_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_navigator_SOURCES = test/navigator.cc test/test.cc
 test_navigator_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_navigator_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
