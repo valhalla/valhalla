@@ -54,10 +54,9 @@ class Navigator {
     Navigator(const Navigator&) = default;
     Navigator& operator=(const Navigator&) = default;
 
-    valhalla::NavigationStatus SetRoute(const std::string& route_json_str);
+    NavigationStatus SetRoute(const std::string& route_json_str);
 
-    valhalla::NavigationStatus OnLocationChanged(
-        const valhalla::FixLocation& fix_location);
+    NavigationStatus OnLocationChanged(const FixLocation& fix_location);
 
 
   protected:
@@ -77,8 +76,7 @@ class Navigator {
     size_t FindManeuverIndex(size_t begin_search_index, size_t shape_index) const;
     size_t RfindManeuverIndex(size_t rbegin_search_index, size_t shape_index) const;
 
-    void SnapToRoute(const FixLocation& fix_location,
-        NavigationStatus& nav_status);
+    NavigationStatus SnapToRoute(const FixLocation& fix_location);
 
     bool StartingNavigation(const NavigationStatus_RouteState& prev_route_state,
         const NavigationStatus_RouteState& curr_route_state) const;
@@ -97,18 +95,18 @@ class Navigator {
     /////////////////////////////////////////////////////////////////////////////
 
     // Specified route to navigate
-    valhalla::Route route_;
+    Route route_;
 
     // Current route state of navigator
     NavigationStatus_RouteState route_state_;
 
-    // Leg index
+    // Current leg index
     size_t leg_index_;
 
-    // Maneuver index
+    // Current maneuver index
     size_t maneuver_index_;
 
-    // Boolean units
+    // Boolean kilometer unit flag
     bool kilometer_units_;
 
     // Current leg shape
@@ -124,6 +122,10 @@ class Navigator {
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 
     // List of tuples by maneuver index that keeps track of the used instructions
+    //     kDistantTransitionAlert
+    //     kCloseTransitionAlert
+    //     kPreTransition
+    //     kPostTransition
     std::vector<std::tuple<bool, bool, bool, bool>> used_instructions_;
 
 };

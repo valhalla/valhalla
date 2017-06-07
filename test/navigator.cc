@@ -101,9 +101,8 @@ class NavigatorTest : public Navigator {
     return Navigator::IsDestinationManeuverIndex(idx);
   }
 
-  void SnapToRoute(const FixLocation& fix_location,
-       NavigationStatus& nav_status) {
-    return Navigator::SnapToRoute(fix_location, nav_status);
+  NavigationStatus SnapToRoute(const FixLocation& fix_location) {
+    return Navigator::SnapToRoute(fix_location);
   }
 
   bool OnRouteLocationCloseToOrigin(const NavigationStatus& nav_status) const {
@@ -533,8 +532,7 @@ void ValidateOnRouteLocationCloseToOrigin(bool found_value,
 
 void TrySnapToRoute(NavigatorTest& nav, const FixLocation& fix_location,
     NavigationStatus expected_nav_status) {
-  NavigationStatus nav_status;
-  nav.SnapToRoute(fix_location, nav_status);
+  NavigationStatus nav_status = nav.SnapToRoute(fix_location);
   ValidateNavigationStatus(nav_status, expected_nav_status);
 }
 

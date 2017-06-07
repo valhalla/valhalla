@@ -34,8 +34,11 @@ Navigator::Navigator() {
 NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   NavigationStatus nav_status;
 
+  // TODO: place in try catch block and return
+  //       NavigationStatus_RouteState_kInvalid if there is an issue
   // TODO: replace this with Alex magic
   google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
+
 
   leg_index_ = 0;
   maneuver_index_ = 0;
@@ -61,7 +64,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   NavigationStatus_RouteState prev_route_state = route_state_;
 
   // Snap the fix location to the route and update nav_status
-  SnapToRoute(fix_location, nav_status);
+  nav_status = SnapToRoute(fix_location);
 
   // Only process a valid route state
   if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
@@ -268,8 +271,8 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
   throw valhalla_exception_t{400, 502};
 }
 
-void Navigator::SnapToRoute(const FixLocation& fix_location,
-    NavigationStatus& nav_status) {
+NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
+  NavigationStatus nav_status;
 
   // Find the closest point on the route that corresponds to the fix location
   PointLL fix_pt = PointLL(fix_location.lon(), fix_location.lat());
@@ -284,7 +287,7 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   if (std::get<kClosestPointDistance>(closest) > kOffRouteThreshold) {
     route_state_ = NavigationStatus_RouteState_kInvalid;
     nav_status.set_route_state(route_state_);
-    return;
+    return nav_status;
   }
 
   // If not off route then set closest point and current shape index
@@ -344,6 +347,8 @@ void Navigator::SnapToRoute(const FixLocation& fix_location,
   nav_status.set_maneuver_index(maneuver_index_);
   nav_status.set_remaining_maneuver_length(remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first);
   nav_status.set_remaining_maneuver_time(remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second);
+
+  return nav_status;
 }
 
 bool Navigator::StartingNavigation(
