@@ -148,6 +148,8 @@ class CostMatrix {
   uint32_t target_count_;
   uint32_t remaining_targets_;
 
+  float current_cost_threshold_;
+
   // Cost threshold - stop searches when this is reached.
   float auto_cost_threshold_;
   float bicycle_cost_threshold_;

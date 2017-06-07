@@ -115,6 +115,8 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
 
+  current_cost_threshold_ = GetCostThreshold();
+
   // Set the source and target locations
   Clear();
   SetSources(graphreader, source_location_list);
@@ -344,7 +346,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
 
   // Get edge label and check cost threshold
   EdgeLabel pred = edgelabels[pred_idx];
-  if (pred.cost().secs > GetCostThreshold()) {
+  if (pred.cost().secs > current_cost_threshold_) {
     source_status_[index].threshold = 0;
     return;
   }
@@ -625,7 +627,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
 
   // Copy predecessor, check cost threshold
   EdgeLabel pred = edgelabels[pred_idx];
-  if (pred.cost().secs > GetCostThreshold()) {
+  if (pred.cost().secs > current_cost_threshold_) {
     target_status_[index].threshold = 0;
     return;
   }
@@ -692,7 +694,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(new DoubleBucketQueue(0, GetCostThreshold(),
+    source_adjacency_[index].reset(new DoubleBucketQueue(0, current_cost_threshold_,
                                          costing_->UnitSize(), edgecost));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
@@ -763,7 +765,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(new DoubleBucketQueue(0, GetCostThreshold(),
+    target_adjacency_[index].reset(new DoubleBucketQueue(0, current_cost_threshold_,
                                              costing_->UnitSize(), edgecost));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
