@@ -20,11 +20,11 @@
 namespace valhalla {
 namespace thor {
 
-//These cost thresholds are in addition to the distance
+// These cost thresholds are in addition to the distance
 // thresholds for quick rejection
-constexpr float kDefaultCostThresholdAuto = 7200.0f;   // 2 hours
-constexpr float kDefaultCostThresholdBicycle = 3600.0f;   // 1 hours
-constexpr float kDefaultCostThresholdPedestrian = 7200.0f;   // 2 hours
+constexpr float kCostThresholdAutoDivisor = 56.0f; // 400 km distance threshold will result in a cost threshold of ~7200 (2 hours)
+constexpr float kCostThresholdBicycleDivisor = 56.0f; // 200 km distance threshold will result in a cost threshold of ~3600 (1 hour)
+constexpr float kCostThresholdPedestrianDivisor = 28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
 constexpr float kMaxCost = 99999999.9999f;
 
 // Time and Distance structure
@@ -99,15 +99,14 @@ class CostMatrix {
  public:
 
   /**
-   * Constructor with cost threshold. Use custom cost threshold is set to true.
-   * @param auto_cost_threshold        Cost threshold for termination using auto mode.
-   * @param bicycle_cost_threshold     Cost threshold for termination using bicycle mode.
-   * @param pedestrian_cost_threshold  Cost threshold for termination using pedestrian mode.
+   * Constructor with the list of max_matrix_distances form the config file. It uses these
+   * to automatically set the internal cost threshold for each mode of travel. If a mode
+   * is missing from the config file the variable will remain unset leading to possible
+   * undefined behaviour if sources to target is then called using that missing mode of
+   * travel.
+   * @param max_matrix_distances  The list of max_matrix_distances from the config file
    */
-  CostMatrix(
-      float auto_cost_threshold = kDefaultCostThresholdAuto,
-      float bicycle_cost_threshold = kDefaultCostThresholdBicycle,
-      float pedestrian_cost_threshold = kDefaultCostThresholdPedestrian);
+  CostMatrix(const std::unordered_map<std::string, float>& max_matrix_distances);
 
   /**
    * Forms a time distance matrix from the set of source locations

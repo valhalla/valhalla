@@ -131,11 +131,11 @@ namespace valhalla {
       //do the real work
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
-        thor::CostMatrix matrix;
+        thor::CostMatrix matrix (max_matrix_distance);
         return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
       };
       auto timedistancematrix = [&]() {
-        thor::TimeDistanceMatrix matrix;
+        thor::TimeDistanceMatrix matrix(max_matrix_distance);
         return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
       };
       switch (source_to_target_algorithm) {

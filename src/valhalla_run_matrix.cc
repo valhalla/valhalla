@@ -275,6 +275,19 @@ int main(int argc, char *argv[]) {
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
+  // Get the max matrix distances for construction of the CostMatrix and TimeDistanceMatrix classes
+  std::unordered_map<std::string,float> max_matrix_distance;
+  for (const auto& kv : pt.get_child("service_limits")) {
+    if(kv.first == "max_avoid_locations" || kv.first == "max_reachability" || kv.first == "max_radius")
+      continue;
+    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+      max_matrix_distance.emplace(kv.first, pt.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+    }
+  }
+
+  if (max_matrix_distance.empty())
+    throw std::runtime_error("Missing max_matrix_distance configuration");
+
   // Compute the cost matrix
   t0 = std::chrono::high_resolution_clock::now();
 
@@ -282,7 +295,7 @@ int main(int argc, char *argv[]) {
   std::vector<TimeDistance> res;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    CostMatrix matrix;
+    CostMatrix matrix (max_matrix_distance);
     if (matrixtype == "one_to_many") {
      res = matrix.SourceToTarget({path_locations.front()}, path_locations,
                                   reader, mode_costing, mode);
@@ -303,7 +316,7 @@ int main(int argc, char *argv[]) {
   // Run with TimeDistanceMatrix
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    TimeDistanceMatrix tdm(28800);
+    TimeDistanceMatrix tdm(max_matrix_distance);
     if (matrixtype == "one_to_many") {
       res = tdm.OneToMany(path_locations[0], path_locations, reader, mode_costing, mode);
     } else if (matrixtype == "many_to_many") {

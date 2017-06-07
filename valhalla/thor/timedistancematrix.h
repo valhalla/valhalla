@@ -22,11 +22,11 @@
 namespace valhalla {
 namespace thor {
 
-//These cost thresholds are in addition to the distance
+// These cost thresholds are in addition to the distance
 // thresholds for quick rejection
-constexpr float kDefaultTimeDistCostThresholdAuto = 3600.0f;   // 1 hour
-constexpr float kDefaultTimeDistCostThresholdBicycle = 10800.0f;   // 3 hours
-constexpr float kDefaultTimeDistCostThresholdPedestrian = 28800.0f;   // 8 hours
+constexpr float kTimeDistCostThresholdAutoDivisor = 112.0f; // 400 km distance threshold will result in a cost threshold of ~2600 (1 hour)
+constexpr float kTimeDistCostThresholdBicycleDivisor = 19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
+constexpr float kTimeDistCostThresholdPedestrianDivisor = 7.0f; // 200 km distance threshold will result in a cost threshold of ~28800 (8 hours)
 
 // Structure to hold information about each destination.
 struct Destination {
@@ -53,16 +53,15 @@ struct Destination {
 // Class to compute time + distance matrices among locations.
 class TimeDistanceMatrix {
  public:
+
   /**
-   * Constructor with cost threshold. Use custom cost threshold is set to true.
-   * @param auto_cost_threshold        Cost threshold for termination using auto mode.
-   * @param bicycle_cost_threshold     Cost threshold for termination using bicycle mode.
-   * @param pedestrian_cost_threshold  Cost threshold for termination using pedestrian mode.
+   * Constructor with the list of max_matrix_distances form the config file. It uses these
+   * to automatically set the internal cost threshold for each mode of travel. If a mode
+   * is missing from the config file the variable will remain unset leading to possible
+   * undefined behaviour if queries are made using that missing mode of travel.
+   * @param max_matrix_distances  The list of max_matrix_distances from the config file
    */
-  TimeDistanceMatrix(
-      float auto_cost_threshold = kDefaultTimeDistCostThresholdAuto,
-      float bicycle_cost_threshold = kDefaultTimeDistCostThresholdBicycle,
-      float pedestrian_cost_threshold = kDefaultTimeDistCostThresholdPedestrian);
+  TimeDistanceMatrix(const std::unordered_map<std::string, float>& max_matrix_distances);
 
   /**
    * One to many time and distance cost matrix. Computes time and distance

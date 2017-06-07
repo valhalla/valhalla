@@ -94,6 +94,17 @@ namespace valhalla {
       // select_optimal if not present)
       auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm",
                                                           "select_optimal");
+      for (const auto& kv : config.get_child("service_limits")) {
+        if(kv.first == "max_avoid_locations" || kv.first == "max_reachability" || kv.first == "max_radius")
+          continue;
+        if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+          max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+        }
+      }
+
+      if (max_matrix_distance.empty())
+        throw std::runtime_error("Missing max_matrix_distance configuration");
+
       if (conf_algorithm == "timedistancematrix") {
         source_to_target_algorithm = TIME_DISTANCE_MATRIX;
       } else if (conf_algorithm == "costmatrix") {

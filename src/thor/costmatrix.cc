@@ -25,19 +25,29 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-CostMatrix::CostMatrix(
-    float auto_cost_threshold,
-    float bicycle_cost_threshold,
-    float pedestrian_cost_threshold)
+CostMatrix::CostMatrix(const std::unordered_map<std::string, float>& max_matrix_distances)
     : mode_(TravelMode::kDrive),
       access_mode_(kAutoAccess),
       source_count_(0),
       remaining_sources_(0),
       target_count_(0),
       remaining_targets_(0),
-      auto_cost_threshold_(auto_cost_threshold),
-      bicycle_cost_threshold_(bicycle_cost_threshold),
-      pedestrian_cost_threshold_(pedestrian_cost_threshold){
+      current_cost_threshold_(0) {
+
+  auto auto_dist = max_matrix_distances.find("auto");
+  if(auto_dist != max_matrix_distances.end()) {
+    auto_cost_threshold_ = auto_dist->second / kCostThresholdAutoDivisor;
+  }
+
+  auto bicycle_dist = max_matrix_distances.find("bicycle");
+  if(bicycle_dist != max_matrix_distances.end()) {
+    bicycle_cost_threshold_ = bicycle_dist->second / kCostThresholdBicycleDivisor;
+  }
+
+  auto pedestrian_dist = max_matrix_distances.find("pedestrian");
+  if(pedestrian_dist != max_matrix_distances.end()) {
+    pedestrian_cost_threshold_ = pedestrian_dist->second / kCostThresholdPedestrianDivisor;
+  }
 }
 
 float CostMatrix::GetCostThreshold() {
