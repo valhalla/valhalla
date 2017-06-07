@@ -720,29 +720,34 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[0] | segment index 0 | begin of maneuver index 0
-  TrySnapToRoute(nav, GetFixLocation(-76.299179f, 40.042572f, 0),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.299179f, 40.042572f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
           maneuver_index, 0.073f, 14));
 
   // off route | segment index 1 | partial maneuver 0
-  TrySnapToRoute(nav, GetFixLocation(-76.29875f, 40.04316f, 0),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.29875f, 40.04316f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kInvalid));
 
   // trace_pt[6] | segment index 1 | partial maneuver 0
-  TrySnapToRoute(nav, GetFixLocation(-76.298363f, 40.042652f, 0),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.298363f, 40.042652f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298355f, 40.042606f, leg_index, 31.278385f, 2415,
           maneuver_index, 0.029385f, 6));
 
   // trace_pt[9] | segment index 1 | near end of maneuver index 0
-  TrySnapToRoute(nav, GetFixLocation(-76.297966f, 40.042698f, 12),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297966f, 40.042698f, 12),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297958f, 40.042652f, leg_index, 31.257146f, 2411,
           maneuver_index, 0.008146f, 2));
 
   // trace_pt[10] | segment index 1 | near end of maneuver index 0
-  TrySnapToRoute(nav, GetFixLocation(-76.297844f, 40.042709f, 13),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297844f, 40.042709f, 13),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297836f, 40.042667f, leg_index, 31.250611f, 2409,
           maneuver_index, 0.001611f, 0));
@@ -752,19 +757,22 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // snap to shape_index[2] | segment index 1/2 | begin maneuver index 1
-  TrySnapToRoute(nav, GetFixLocation(-76.297820f, 40.042671f, 14),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297820f, 40.042671f, 14),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297806f, 40.042671f, leg_index, 31.249f, 2409,
           maneuver_index, 0.046f, 34));
 
   // near shape_index[2] | segment index 1/2 | begin maneuver index 1
-  TrySnapToRoute(nav, GetFixLocation(-76.297810f, 40.042671f, 14),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297810f, 40.042671f, 14),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297806f, 40.042671f, leg_index, 31.249f, 2409,
           maneuver_index, 0.046f, 34));
 
   // shape_index[2] | segment index 1/2 | begin maneuver index 1
-  TrySnapToRoute(nav, GetFixLocation(-76.297806f, 40.042671f, 14),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297806f, 40.042671f, 14),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297806f, 40.042671f, leg_index, 31.249f, 2409,
           maneuver_index, 0.046f, 34));
@@ -774,7 +782,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[132] | segment index 15 | middle of maneuver index 2
-  TrySnapToRoute(nav, GetFixLocation(-76.279152f, 40.048409f, 154),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.279152f, 40.048409f, 154),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.279091f, 40.048393f, leg_index, 30.046f, 2255,
           maneuver_index, 0.8978f, 91));
@@ -784,7 +793,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[211] | segment index 23 | middle of maneuver index 3
-  TrySnapToRoute(nav, GetFixLocation(-76.267502f, 40.056950f, 283),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.267502f, 40.056950f, 283),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.267517f, 40.056873f, leg_index, 29.024f, 2150,
           maneuver_index, 0.251f, 26));
@@ -794,7 +804,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[315] | segment index 29 | middle of maneuver index 4
-  TrySnapToRoute(nav, GetFixLocation(-76.293968f, 40.068066f, 388),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.293968f, 40.068066f, 388),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.293968f, 40.068073f, leg_index, 27.341f, 2042,
           maneuver_index, 1.3148f, 79));
@@ -804,7 +815,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[850] | segment index 60 | middle of maneuver index 5
-  TrySnapToRoute(nav, GetFixLocation(-76.471893f, 40.125996f, 948),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.471893f, 40.125996f, 948),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.471878f, 40.126011f, leg_index, 16.9535f, 1450,
           maneuver_index, 7.771f, 443));
@@ -814,7 +826,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1270] | segment index 74 | middle of maneuver index 6
-  TrySnapToRoute(nav, GetFixLocation(-76.598633f, 40.176716f, 1441),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.598633f, 40.176716f, 1441),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.598648f, 40.176708f, leg_index, 8.86744f, 985,
           maneuver_index, 0.1534f, 9));
@@ -824,7 +837,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1288] | segment index 75 | middle of maneuver index 7
-  TrySnapToRoute(nav, GetFixLocation(-76.600441f, 40.178944f, 1459),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.600441f, 40.178944f, 1459),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.600441f, 40.178944f, leg_index, 8.6843f, 974,
           maneuver_index, 0.03765f, 1));
@@ -834,7 +848,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1522] | segment index 86 | middle of maneuver index 8
-  TrySnapToRoute(nav, GetFixLocation(-76.618904f, 40.219437f, 1722),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.618904f, 40.219437f, 1722),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.618668f, 40.219433f, leg_index, 5.6829f, 654,
           maneuver_index, 1.9216f, 202));
@@ -844,7 +859,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1870] | segment index 105 | middle of maneuver index 9
-  TrySnapToRoute(nav, GetFixLocation(-76.652367f, 40.270046f, 2113),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.652367f, 40.270046f, 2113),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.652374f, 40.270039f, leg_index, 1.5266f, 224,
           maneuver_index, 0.2904f, 31));
@@ -854,7 +870,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1936] | segment index 111 | middle of maneuver index 10
-  TrySnapToRoute(nav, GetFixLocation(-76.660156f, 40.275745f, 2290),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.660156f, 40.275745f, 2290),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.660187f, 40.275719f, leg_index, 0.9464f, 147,
           maneuver_index, 0.2826f, 45));
@@ -864,7 +881,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[2003] | segment index 119 | middle of maneuver index 11
-  TrySnapToRoute(nav, GetFixLocation(-76.659927f, 40.281940f, 2386),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.659927f, 40.281940f, 2386),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.659943f, 40.281963f, leg_index, 0.3119f, 47,
           maneuver_index, 0.3119f, 47));
@@ -874,7 +892,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[2038] | segment index 125 | destination maneuver index 12
-  TrySnapToRoute(nav, GetFixLocation(-76.654625f, 40.283924f, 2438),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.654625f, 40.283924f, 2438),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.654633f, 40.283943f, leg_index, 0.0f, 0,
           maneuver_index, 0.0f, 0));
@@ -900,7 +919,8 @@ void TestLancasterToHershey() {
 
   // Start maneuver at beginning of route
   // trace_pt[0] | segment index 0 | begin of maneuver index 0
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.29931f, 40.04240f, 0),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.29931f, 40.04240f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
           maneuver_index, 0.073f, 14, maneuver_index),
@@ -921,7 +941,8 @@ void TestLancasterToHershey() {
 
   // Start maneuver near beginning of route
   // trace_pt[1] | segment index 0 | near begin of maneuver index 0
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.299057f, 40.042595f, 1),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.299057f, 40.042595f, 1),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299049f, 40.042530f, leg_index, 31.3163f, 2422,
           maneuver_index, 0.066578f, 13, maneuver_index),
@@ -947,7 +968,8 @@ void TestLancasterToHershey() {
   // No kPreTransition because not within time threshold for pre transition
   // trace_pt[2] | segment index 0 | near begin of maneuver index 0 | maneuver speed ~ 18.7714 MPH
   expected_on_route_location_close_to_origin = false;
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.298897f ,40.042610f, 3),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.298897f ,40.042610f, 3),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298889f ,40.042545f, leg_index, 31.3077f, 2420,
           maneuver_index, 0.058027f, 11, (maneuver_index + 1)));
@@ -959,7 +981,8 @@ void TestLancasterToHershey() {
       false);
 
   // trace_pt[5] | segment index 1 | near middle of maneuver index 0 | fix speed ~ 20 MPH
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.298477f, 40.042645f, 6, 8.94f),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.298477f, 40.042645f, 6, 8.94f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.298470f, 40.042595f, leg_index, 31.2852f, 2416,
           maneuver_index, 0.035543f, 7, (maneuver_index + 1)));
@@ -984,7 +1007,9 @@ void TestLancasterToHershey() {
       false);
 
   // trace_pt[13] | segment index 2 | near middle of maneuver index 1 | fix speed >~ 10 MPH
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.297745f, 40.042370f, 20, 5.0f),
+  TryRouteOnLocationChanged(nav,
+
+      GetFixLocation(-76.297745f, 40.042370f, 20, 5.0f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.297752f, 40.042370f, leg_index, 31.2287f, 2393,
           maneuver_index, 0.0247517f, 18, (maneuver_index + 1)));
@@ -1009,7 +1034,8 @@ void TestLancasterToHershey() {
       false);
 
   // trace_pt[186] | segment index 87 | near end of maneuver index 2 | fix speed ~ 45 MPH
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.268127f, 40.054886f, 262, 20.12f),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.268127f, 40.054886f, 262, 20.12f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.268112f, 40.054859f, leg_index, 29.2577f, 2176,
           maneuver_index, 0.109503f, 12, (maneuver_index + 1)));

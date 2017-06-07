@@ -21,14 +21,17 @@ constexpr uint32_t kOffRouteThreshold = 50;
 // Close to origin threshold in meters
 constexpr uint32_t kOnRouteCloseToOriginThreshold = 20;
 
-// Pre transition base threshold in seconds
+// Pre-transition base threshold in seconds
 constexpr uint32_t kPreTransitionBaseThreshold = 4;
 
-// Number of words per second - used to calculate pre transition threshold
+// Number of words per second - used to calculate pre-transition threshold
 constexpr float kWordsPerSecond = 2.5f;
 
 // Minimum speed threshold in meters per second (~1 KPH)
 constexpr float kMinSpeedThreshold = 0.277f;
+
+// Post-transition threshold in seconds
+constexpr uint32_t kPostTransitionThreshold = 2;
 
 // Closest point tuple indexes
 constexpr size_t kClosestPoint = 0;

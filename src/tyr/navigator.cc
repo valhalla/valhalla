@@ -167,8 +167,6 @@ void Navigator::SetShapeLengthTime() {
     int i = (remaining_leg_values_.size() - 1);
     remaining_leg_values_[i--] = {total_remaining_leg_length, total_remaining_leg_time};
 
-    //GDG
-    std::cout << std::endl << "remaining_leg_values ======================================" << std::endl;
     // Process shape to set remaining length and time
     if (remaining_leg_values_.size() > 1) {
       for (; i >= 0; --i) {
@@ -183,8 +181,6 @@ void Navigator::SetShapeLengthTime() {
         total_remaining_leg_length += length;
         total_remaining_leg_time += static_cast<uint32_t>(round(length/maneuver_speeds_.at(maneuver_speed_index)));
 
-        //GDG
-        std::cout << "i=" << i << " | maneuver_speed_index=" << maneuver_speed_index << " | total_remaining_leg_length=" << total_remaining_leg_length << " | total_remaining_leg_time=" << total_remaining_leg_time << std::endl;
         remaining_leg_values_[i] = {total_remaining_leg_length, total_remaining_leg_time};
       }
     }
@@ -278,10 +274,6 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
   PointLL fix_pt = PointLL(fix_location.lon(), fix_location.lat());
   auto closest = fix_pt.ClosestPoint(shape_, current_shape_index_);
 
-  // GDG - rm
-  std::cout << std::endl << "--------------------------------------------------------------------------------------------" << std::endl;
-  std::cout << "LL=" << std::get<kClosestPoint>(closest).lat() << "," << std::get<kClosestPoint>(closest).lng() << " | distance=" << std::get<kClosestPointDistance>(closest) << " | index=" << std::get<kClosestPointSegmentIndex>(closest) << std::endl;
-
   // If the fix point distance from route is greater than the off route threshold
   // then return invalid route state
   if (std::get<kClosestPointDistance>(closest) > kOffRouteThreshold) {
@@ -331,11 +323,6 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
       + static_cast<uint32_t>(round(
           partial_length / maneuver_speeds_.at(maneuver_index_))));
 
-  // GDG - rm
-  std::cout << "current_shape_index_=" << current_shape_index_ << " | remaining_index=" << remaining_index << " | maneuver_index_=" << maneuver_index_ << " | snapped_to_shape_point=" << (snapped_to_shape_point ? "true" : "false") << std::endl;
-  std::cout << "remaining_leg_length=" << remaining_leg_length << " | remaining_maneuver_length=" << (remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first) << std::endl;
-  std::cout << "remaining_leg_time=" << remaining_leg_time << " | remaining_maneuver_time=" << (remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second) << std::endl;
-
   // Populate navigation status
   route_state_ = NavigationStatus_RouteState_kTracking;
   nav_status.set_route_state(route_state_);
@@ -347,6 +334,16 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
   nav_status.set_maneuver_index(maneuver_index_);
   nav_status.set_remaining_maneuver_length(remaining_leg_length - remaining_leg_values_.at(maneuver_end_shape_index).first);
   nav_status.set_remaining_maneuver_time(remaining_leg_time - remaining_leg_values_.at(maneuver_end_shape_index).second);
+
+#ifdef LOGGING_LEVEL_TRACE
+  // Output to help build unit tests
+  std::cout << std::endl << "------------------------------------------------------------------------" << std::setprecision(9) << std::endl
+            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << (remaining_leg_values_.at(0).second - nav_status.remaining_leg_time()) << "),"  << std::endl
+            << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
+            << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
+            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << "));" << std::endl;
+#endif
+
 
   return nav_status;
 }
@@ -405,7 +402,7 @@ size_t Navigator::GetWordCount(const std::string& instruction) const {
 uint32_t Navigator::GetRemainingManeuverTime(const FixLocation& fix_location,
     const NavigationStatus& nav_status) const {
   // GDG
-  std::cout << "*********** GetRemainingManeuverTime | ";
+  std::cout << "GetRemainingManeuverTime | ";
   // speed in meters per second
   float speed = 0.0f;
   if (fix_location.has_speed()) {
@@ -439,7 +436,7 @@ uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
   }
 
   //GDG
-  std::cout << "&&&&&&&&&&& GetPreTransitionThreshold:"
+  std::cout << "GetPreTransitionThreshold:"
       << (kPreTransitionBaseThreshold
           + (static_cast<uint32_t>(round(
               GetWordCount(maneuver.verbal_pre_transition_instruction())
