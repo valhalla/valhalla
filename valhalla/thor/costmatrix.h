@@ -120,7 +120,7 @@ class CostMatrix {
           const std::vector<baldr::PathLocation>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, float max_matrix_distance);
+          const sif::TravelMode mode, const float max_matrix_distance);
 
   /**
    * Clear the temporary information generated during time+distance
