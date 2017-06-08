@@ -45,6 +45,15 @@ namespace {
         break;
       try {
         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+
+        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
+            [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
+              return i.score < j.score;
+            });
+
+        for(auto& e : correlated.back().edges) {
+          e.score -= minScoreEdge.score;
+        }
       }
       catch (...) {
         throw valhalla_exception_t{400, 420};
@@ -85,6 +94,14 @@ namespace valhalla {
       // select_optimal if not present)
       auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm",
                                                           "select_optimal");
+      for (const auto& kv : config.get_child("service_limits")) {
+        if(kv.first == "max_avoid_locations" || kv.first == "max_reachability" || kv.first == "max_radius")
+          continue;
+        if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+          max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+        }
+      }
+
       if (conf_algorithm == "timedistancematrix") {
         source_to_target_algorithm = TIME_DISTANCE_MATRIX;
       } else if (conf_algorithm == "costmatrix") {

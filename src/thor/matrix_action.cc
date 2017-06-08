@@ -115,7 +115,7 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
 
       parse_locations(request);
-      parse_costing(request);
+      auto costing = parse_costing(request);
 
       const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
       if (!healthcheck)
@@ -132,39 +132,33 @@ namespace valhalla {
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
         thor::CostMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+                                    mode, max_matrix_distance.find(costing)->second);
       };
       auto timedistancematrix = [&]() {
         thor::TimeDistanceMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+                                    mode, max_matrix_distance.find(costing)->second);
       };
       switch (source_to_target_algorithm) {
-      case SELECT_OPTIMAL:
-        if (correlated_s.size() + correlated_t.size() > 100) {
-          time_distances = timedistancematrix();
-        } else {
-          time_distances = costmatrix();
-        }
-        /** TODO - test performance of TimeDistanceMatrix vs. CostMatrix for various
-            modes and conditions (e.g. number of locations, distances between
-            locations)
+        case SELECT_OPTIMAL:
+          //TODO - Do further performance testing to pick the best algorithm for the job
           switch (mode) {
-          case TravelMode::kPedestrian:
-          case TravelMode::kBicycle:
-            time_distances = timedistancematrix();
-            break;
-          default:
-            time_distances = costmatrix();
+            case TravelMode::kPedestrian:
+            case TravelMode::kBicycle:
+            case TravelMode::kPublicTransit:
+              time_distances = timedistancematrix();
+              break;
+            default:
+              time_distances = costmatrix();
           }
-        } */
-        break;
-      case COST_MATRIX:
-        time_distances = costmatrix();
-        break;
-      case TIME_DISTANCE_MATRIX: {
-        time_distances = timedistancematrix();
-        break;
-      }
+          break;
+        case COST_MATRIX:
+          time_distances = costmatrix();
+          break;
+        case TIME_DISTANCE_MATRIX:
+          time_distances = timedistancematrix();
+          break;
       }
       json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
         time_distances, units, distance_scale);

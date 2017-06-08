@@ -45,6 +45,7 @@ namespace {
     config.add_child("costing_options.bicycle", {});
     config.add_child("costing_options.pedestrian", {});
     config.add_child("costing_options.transit", {});
+    config.add_child("service_limits", {});
     config.add("thor.logging.long_request", "110.0");
     config.add("meili.default.gps_accuracy", "4.07");
     config.add("meili.default.search_radius", "40");
@@ -59,7 +60,6 @@ namespace {
     customizable.push_back(std::make_pair("",mode));
     customizable.push_back(std::make_pair("",search_radius));
     config.add_child("meili.customizable", customizable);
-
     thor_worker_t worker(config);
     for (auto& req_resp : failure_request_responses) {
       std::list<zmq::message_t> messages;

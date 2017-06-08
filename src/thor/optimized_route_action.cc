@@ -45,7 +45,9 @@ namespace valhalla {
 
     // Use CostMatrix to find costs from each location to every other location
     CostMatrix costmatrix;
-    std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+    std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated_s, correlated_t, reader,
+                                                                  mode_costing, mode,
+                                                                  max_matrix_distance.find(costing)->second);
 
     // Return an error if any locations are totally unreachable
     std::vector<baldr::PathLocation> correlated =  (correlated_s.size() > correlated_t.size() ? correlated_s : correlated_t);
