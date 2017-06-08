@@ -121,6 +121,11 @@ class NavigatorTest : public Navigator {
     return Navigator::GetPreTransitionThreshold(instruction_index);
   }
 
+  bool IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
+      uint32_t upper_bound) const {
+    return Navigator::IsTimeWithinBounds(time, lower_bound, upper_bound);
+  }
+
   std::vector<std::tuple<bool, bool, bool, bool>>& used_instructions() {
     return Navigator::used_instructions_;
   }
@@ -1204,6 +1209,23 @@ void TestLancasterToHershey() {
 
 }
 
+void TryIsTimeWithinBounds(bool found, bool expected) {
+
+  if (found != expected)
+    throw std::runtime_error("Incorrect IsTimeWithinBounds value - found: " + std::string(found ? "true" : "false") + " | expected: " + std::string(expected ? "true" : "false"));
+}
+
+void TestIsTimeWithinBounds() {
+  NavigatorTest nav;
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(1, 2, 6), false);
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(2, 2, 6), false);
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(3, 2, 6), true);
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(4, 2, 6), true);
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(5, 2, 6), true);
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(6, 2, 6), false);
+  TryIsTimeWithinBounds(nav.IsTimeWithinBounds(20, 2, 6), false);
+}
+
 }
 
 int main() {
@@ -1214,6 +1236,9 @@ int main() {
 
   // TestLancasterToHershey
   suite.test(TEST_CASE(TestLancasterToHershey));
+
+  // TestIsTimeWithinBounds
+  suite.test(TEST_CASE(TestIsTimeWithinBounds));
 
   return suite.tear_down();
 }
