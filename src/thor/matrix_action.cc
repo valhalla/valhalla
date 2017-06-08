@@ -115,7 +115,7 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
 
       parse_locations(request);
-      parse_costing(request);
+      auto costing = parse_costing(request);
 
       const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
       if (!healthcheck)
@@ -131,12 +131,14 @@ namespace valhalla {
       //do the real work
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
-        thor::CostMatrix matrix (max_matrix_distance);
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+        thor::CostMatrix matrix;
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+                                    mode, max_matrix_distance.find(costing)->second);
       };
       auto timedistancematrix = [&]() {
-        thor::TimeDistanceMatrix matrix(max_matrix_distance);
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+        thor::TimeDistanceMatrix matrix;
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+                                    mode, max_matrix_distance.find(costing)->second);
       };
       switch (source_to_target_algorithm) {
         case SELECT_OPTIMAL:

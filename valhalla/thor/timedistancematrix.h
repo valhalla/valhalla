@@ -55,13 +55,10 @@ class TimeDistanceMatrix {
  public:
 
   /**
-   * Constructor with the list of max_matrix_distances form the config file. It uses these
-   * to automatically set the internal cost threshold for each mode of travel. If a mode
-   * is missing from the config file the variable will remain unset leading to possible
-   * undefined behaviour if queries are made using that missing mode of travel.
-   * @param max_matrix_distances  The list of max_matrix_distances from the config file
+   * Default constructor. Most internal values are set when a query is made so
+   * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceMatrix(const std::unordered_map<std::string, float>& max_matrix_distances);
+  TimeDistanceMatrix();
 
   /**
    * One to many time and distance cost matrix. Computes time and distance
@@ -71,13 +68,14 @@ class TimeDistanceMatrix {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> OneToMany(const baldr::PathLocation& origin,
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode, const float max_matrix_distance);
 
   /**
    * Many to one time and distance cost matrix. Computes time and distance
@@ -87,13 +85,14 @@ class TimeDistanceMatrix {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance to the destination index from all other locations
    */
   std::vector<TimeDistance> ManyToOne(const baldr::PathLocation& dest,
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode, const float max_matrix_distance);
 
   /**
    * Many to many time and distance cost matrix. Computes time and distance
@@ -102,13 +101,14 @@ class TimeDistanceMatrix {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance between all pairs of locations
    */
   std::vector<TimeDistance> ManyToMany(
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode, const float max_matrix_distance);
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -118,6 +118,7 @@ class TimeDistanceMatrix {
    * @param  graphreader           Graph reader for accessing routing graph.
    * @param  costing               Costing methods.
    * @param  mode                  Travel mode to use.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
@@ -125,7 +126,7 @@ class TimeDistanceMatrix {
           const std::vector<baldr::PathLocation>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode, const float max_matrix_distance);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -138,12 +139,8 @@ class TimeDistanceMatrix {
   // computed).
   uint32_t settled_count_;
 
+  // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
-
-  // Cost threshold for termination
-  float auto_cost_threshold_;
-  float bicycle_cost_threshold_;
-  float pedestrian_cost_threshold_;
 
   // List of destinations
   std::vector<Destination> destinations_;
@@ -166,11 +163,11 @@ class TimeDistanceMatrix {
   sif::TravelMode mode_;
 
   /**
-   * Get the cost threshold based on the current mode. We use a function instead
-   * of indexing into an array with the travel mode because in the future we may
-   * want the cost threshold to be affected by other things like vehicle type.
+   * Get the cost threshold based on the current mode and the max arc-length distance
+   * for that mode.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    */
-  float GetCostThreshold ();
+  float GetCostThreshold (const float max_matrix_distance);
 
   /**
    * Sets the origin for a many to one time+distance matrix computation.

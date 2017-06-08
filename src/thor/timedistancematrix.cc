@@ -27,40 +27,24 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceMatrix::TimeDistanceMatrix(const std::unordered_map<std::string, float>& max_matrix_distances)
+TimeDistanceMatrix::TimeDistanceMatrix()
     : mode_(TravelMode::kDrive),
       settled_count_(0),
-      current_cost_threshold_(0) {
+      current_cost_threshold_(0) {}
 
-  auto auto_dist = max_matrix_distances.find("auto");
-  if(auto_dist != max_matrix_distances.end()) {
-    auto_cost_threshold_ = auto_dist->second / kTimeDistCostThresholdAutoDivisor;
-  }
-
-  auto bicycle_dist = max_matrix_distances.find("bicycle");
-  if(bicycle_dist != max_matrix_distances.end()) {
-    bicycle_cost_threshold_ = bicycle_dist->second / kTimeDistCostThresholdBicycleDivisor;
-  }
-
-  auto pedestrian_dist = max_matrix_distances.find("pedestrian");
-  if(pedestrian_dist != max_matrix_distances.end()) {
-    pedestrian_cost_threshold_ = pedestrian_dist->second / kTimeDistCostThresholdPedestrianDivisor;
-  }
-}
-
-float TimeDistanceMatrix::GetCostThreshold() {
+float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) {
   float cost_threshold;
   switch (mode_) {
   case TravelMode::kBicycle:
-    cost_threshold = bicycle_cost_threshold_;
+    cost_threshold = max_matrix_distance / kTimeDistCostThresholdBicycleDivisor;
     break;
   case TravelMode::kPedestrian:
   case TravelMode::kPublicTransit:
-    cost_threshold = pedestrian_cost_threshold_;
+    cost_threshold = max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
     break;
   case TravelMode::kDrive:
   default:
-    cost_threshold = auto_cost_threshold_;
+    cost_threshold = max_matrix_distance / kTimeDistCostThresholdAutoDivisor;
   }
 
   return cost_threshold;
@@ -88,12 +72,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode) {
+            const TravelMode mode, const float max_matrix_distance) {
 
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
-  current_cost_threshold_ = GetCostThreshold();
+  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -239,11 +223,11 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode) {
+            const TravelMode mode, const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
-  current_cost_threshold_ = GetCostThreshold();
+  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -396,8 +380,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
            const std::vector<PathLocation>& locations,
            GraphReader& graphreader,
            const std::shared_ptr<DynamicCost>* mode_costing,
-           const sif::TravelMode mode) {
-  return SourceToTarget(locations, locations, graphreader, mode_costing, mode);
+           const sif::TravelMode mode, const float max_matrix_distance) {
+  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
@@ -405,20 +389,22 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
         const std::vector<baldr::PathLocation>& target_location_list,
         baldr::GraphReader& graphreader,
         const std::shared_ptr<sif::DynamicCost>* mode_costing,
-        const sif::TravelMode mode) {
+        const sif::TravelMode mode, const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
   if (source_location_list.size() <= target_location_list.size()) {
     for (const auto& origin: source_location_list) {
       std::vector<TimeDistance> td = OneToMany(origin, target_location_list,
-                                               graphreader, mode_costing, mode);
+                                               graphreader, mode_costing,
+                                               mode, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
   } else {
     for (const auto& destination: target_location_list) {
       std::vector<TimeDistance> td = ManyToOne(destination, source_location_list,
-                                               graphreader, mode_costing, mode);
+                                               graphreader, mode_costing,
+                                               mode, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }

@@ -102,9 +102,6 @@ namespace valhalla {
         }
       }
 
-      if (max_matrix_distance.empty())
-        throw std::runtime_error("Missing max_matrix_distance configuration");
-
       if (conf_algorithm == "timedistancematrix") {
         source_to_target_algorithm = TIME_DISTANCE_MATRIX;
       } else if (conf_algorithm == "costmatrix") {

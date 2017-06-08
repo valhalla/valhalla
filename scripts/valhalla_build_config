@@ -175,8 +175,8 @@ config = {
     'multimodal': {
       'max_distance': 500000.0,
       'max_locations': 50,
-      'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_distance': 0.0,
+      'max_matrix_locations': 0
     },
     'transit': {
       'max_distance': 500000.0,

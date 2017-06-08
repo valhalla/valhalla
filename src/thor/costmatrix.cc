@@ -25,44 +25,28 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-CostMatrix::CostMatrix(const std::unordered_map<std::string, float>& max_matrix_distances)
+CostMatrix::CostMatrix()
     : mode_(TravelMode::kDrive),
       access_mode_(kAutoAccess),
       source_count_(0),
       remaining_sources_(0),
       target_count_(0),
       remaining_targets_(0),
-      current_cost_threshold_(0) {
+      current_cost_threshold_(0) {}
 
-  auto auto_dist = max_matrix_distances.find("auto");
-  if(auto_dist != max_matrix_distances.end()) {
-    auto_cost_threshold_ = auto_dist->second / kCostThresholdAutoDivisor;
-  }
-
-  auto bicycle_dist = max_matrix_distances.find("bicycle");
-  if(bicycle_dist != max_matrix_distances.end()) {
-    bicycle_cost_threshold_ = bicycle_dist->second / kCostThresholdBicycleDivisor;
-  }
-
-  auto pedestrian_dist = max_matrix_distances.find("pedestrian");
-  if(pedestrian_dist != max_matrix_distances.end()) {
-    pedestrian_cost_threshold_ = pedestrian_dist->second / kCostThresholdPedestrianDivisor;
-  }
-}
-
-float CostMatrix::GetCostThreshold() {
+float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
   float cost_threshold;
   switch (mode_) {
   case TravelMode::kBicycle:
-    cost_threshold = bicycle_cost_threshold_;
+    cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
     break;
   case TravelMode::kPedestrian:
   case TravelMode::kPublicTransit:
-    cost_threshold = pedestrian_cost_threshold_;
+    cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
     break;
   case TravelMode::kDrive:
   default:
-    cost_threshold = auto_cost_threshold_;
+    cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
 
   return cost_threshold;
@@ -119,13 +103,13 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
         const std::vector<PathLocation>& target_location_list,
         GraphReader& graphreader,
         const std::shared_ptr<DynamicCost>* mode_costing,
-        const TravelMode mode) {
+        const TravelMode mode, const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
 
-  current_cost_threshold_ = GetCostThreshold();
+  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Set the source and target locations
   Clear();

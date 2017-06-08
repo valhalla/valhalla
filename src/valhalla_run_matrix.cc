@@ -183,7 +183,6 @@ int main(int argc, char *argv[]) {
   }
 
   // Parse out the type of route - this provides the costing method to use
-  std::string costing;
   try {
     routetype = json_ptree.get<std::string>("costing");
   } catch (...) {
@@ -295,16 +294,19 @@ int main(int argc, char *argv[]) {
   std::vector<TimeDistance> res;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    CostMatrix matrix (max_matrix_distance);
+    CostMatrix matrix;
     if (matrixtype == "one_to_many") {
      res = matrix.SourceToTarget({path_locations.front()}, path_locations,
-                                  reader, mode_costing, mode);
+                                  reader, mode_costing, mode,
+                                  max_matrix_distance.find(routetype)->second);
     } else if (matrixtype == "many_to_many") {
       res = matrix.SourceToTarget(path_locations, path_locations, reader,
-                                  mode_costing, mode);
+                                  mode_costing, mode,
+                                  max_matrix_distance.find(routetype)->second);
     } else {
       res = matrix.SourceToTarget(path_locations, {path_locations.back()},
-                                  reader, mode_costing, mode);
+                                  reader, mode_costing, mode,
+                                  max_matrix_distance.find(routetype)->second);
     }
   }
   t1 = std::chrono::high_resolution_clock::now();
@@ -316,14 +318,16 @@ int main(int argc, char *argv[]) {
   // Run with TimeDistanceMatrix
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    TimeDistanceMatrix tdm(max_matrix_distance);
+    TimeDistanceMatrix tdm;
     if (matrixtype == "one_to_many") {
-      res = tdm.OneToMany(path_locations[0], path_locations, reader, mode_costing, mode);
+      res = tdm.OneToMany(path_locations[0], path_locations, reader, mode_costing,
+                          mode, max_matrix_distance.find(routetype)->second);
     } else if (matrixtype == "many_to_many") {
-      res = tdm.ManyToOne(path_locations.back(), path_locations, reader,
-                                  mode_costing, mode);
+      res = tdm.ManyToOne(path_locations.back(), path_locations, reader, mode_costing,
+                          mode, max_matrix_distance.find(routetype)->second);
     } else {
-      res = tdm.ManyToMany(path_locations, reader, mode_costing, mode);
+      res = tdm.ManyToMany(path_locations, reader, mode_costing, mode,
+                          max_matrix_distance.find(routetype)->second);
     }
   }
   t1 = std::chrono::high_resolution_clock::now();

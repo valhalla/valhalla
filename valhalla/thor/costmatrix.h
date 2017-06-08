@@ -99,14 +99,10 @@ class CostMatrix {
  public:
 
   /**
-   * Constructor with the list of max_matrix_distances form the config file. It uses these
-   * to automatically set the internal cost threshold for each mode of travel. If a mode
-   * is missing from the config file the variable will remain unset leading to possible
-   * undefined behaviour if sources to target is then called using that missing mode of
-   * travel.
-   * @param max_matrix_distances  The list of max_matrix_distances from the config file
+   * Default constructor. Most internal values are set when a query is made so
+   * the constructor mainly just sets some internals to a default empty value.
    */
-  CostMatrix(const std::unordered_map<std::string, float>& max_matrix_distances);
+  CostMatrix();
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -116,6 +112,7 @@ class CostMatrix {
    * @param  graphreader           Graph reader for accessing routing graph.
    * @param  costing               Costing methods.
    * @param  mode                  Travel mode to use.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
@@ -123,7 +120,7 @@ class CostMatrix {
           const std::vector<baldr::PathLocation>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode, float max_matrix_distance);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -147,12 +144,8 @@ class CostMatrix {
   uint32_t target_count_;
   uint32_t remaining_targets_;
 
+  // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
-
-  // Cost threshold - stop searches when this is reached.
-  float auto_cost_threshold_;
-  float bicycle_cost_threshold_;
-  float pedestrian_cost_threshold_;
 
   // Status
   std::vector<LocationStatus> source_status_;
@@ -179,11 +172,11 @@ class CostMatrix {
   std::vector<BestCandidate> best_connection_;
 
   /**
-   * Get the cost threshold based on the current mode. We use a function instead
-   * of indexing into an array with the travel mode because in the future we may
-   * want the cost threshold to be affected by other things like vehicle type.
+   * Get the cost threshold based on the current mode and the max arc-length distance
+   * for that mode.
+   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    */
-  float GetCostThreshold ();
+  float GetCostThreshold (const float max_matrix_distance);
 
   /**
    * Form the initial time distance matrix given the sources
