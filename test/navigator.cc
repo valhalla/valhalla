@@ -909,12 +909,14 @@ void TestLancasterToHershey() {
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 0;
+  uint32_t instruction_index = maneuver_index;
+
   ////////////////////////////////////////////////////////////////////////////
   bool expected_on_route_location_close_to_origin = true;
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // Start maneuver at beginning of route
@@ -923,12 +925,12 @@ void TestLancasterToHershey() {
       GetFixLocation(-76.29931f, 40.04240f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
-          maneuver_index, 0.073f, 14, maneuver_index),
+          maneuver_index, 0.073f, 14, instruction_index),
           expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be used after OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   // reset the route
@@ -936,7 +938,7 @@ void TestLancasterToHershey() {
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // Start maneuver near beginning of route
@@ -945,24 +947,27 @@ void TestLancasterToHershey() {
       GetFixLocation(-76.299057f, 40.042595f, 1),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299049f, 40.042530f, leg_index, 31.3163f, 2422,
-          maneuver_index, 0.066578f, 13, maneuver_index),
+          maneuver_index, 0.066578f, 13, instruction_index),
           expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be used after OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   // reset the route
   nav.SetRoute(route_json_str);
 
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
+
   // Test GetPreTransitionThreshold
   // "Turn right onto North Plum Street. Then Turn left onto East Chestnut Street."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // No kPreTransition because not within time threshold for pre transition
@@ -972,12 +977,12 @@ void TestLancasterToHershey() {
       GetFixLocation(-76.298897f ,40.042610f, 3),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298889f ,40.042545f, leg_index, 31.3077f, 2420,
-          maneuver_index, 0.058027f, 11, (maneuver_index + 1)));
+          maneuver_index, 0.058027f, 11, instruction_index));
 
   // kPreTransition instruction should be not used after OnLocationChanged
   // because not within time threshold for pre transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // trace_pt[5] | segment index 1 | near middle of maneuver index 0 | fix speed ~ 20 MPH
@@ -985,52 +990,90 @@ void TestLancasterToHershey() {
       GetFixLocation(-76.298477f, 40.042645f, 6, 8.94f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.298470f, 40.042595f, leg_index, 31.2852f, 2416,
-          maneuver_index, 0.035543f, 7, (maneuver_index + 1)));
+          maneuver_index, 0.035543f, 7, instruction_index));
 
   // kPreTransition instruction should be used after OnLocationChanged
   // because it was within time threshold for pre transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 1;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Turn left onto East Chestnut Street, Pennsylvania 23 East."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // trace_pt[13] | segment index 2 | near middle of maneuver index 1 | fix speed >~ 10 MPH
   TryRouteOnLocationChanged(nav,
-
       GetFixLocation(-76.297745f, 40.042370f, 20, 5.0f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.297752f, 40.042370f, leg_index, 31.2287f, 2393,
-          maneuver_index, 0.0247517f, 18, (maneuver_index + 1)));
+          maneuver_index, 0.0247517f, 18, instruction_index));
 
   // kPreTransition instruction should be used after OnLocationChanged
   // because it was within time threshold for pre transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 2;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // kPostTransition instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+      false);
+
+  // trace_pt[17] | segment index 4 | near begin of maneuver index 2 |  maneuver speed ~ 34.7 MPH
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.297585f, 40.042072f, 49),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.2975769f, 40.0420265f, leg_index, 31.1978016f, 2374,
+          maneuver_index, 2.04964066f, 210, instruction_index));
+
+  // kPostTransition instruction should not be used after OnLocationChanged
+  // because it was less than the time threshold for post-transition
+  TryUsedInstructions(
+      std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+      false);
+
+  // trace_pt[19] | segment index 4 | near begin of maneuver index 2 | fix speed ~ 30 MPH
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.297173f, 40.042126f, 51, 13.41f),
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+          -76.2971649f, 40.0420685f, leg_index, 31.1757927f, 2372,
+          maneuver_index, 2.02763176f, 208, instruction_index));
+
+  // kPostTransition instruction should be used after OnLocationChanged
+  // because it was outside of the time threshold for post-transition
+  TryUsedInstructions(
+      std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+      true);
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Turn left to take the U.S. 30 West ramp toward New Holland, Harrisburg."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 10);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 10);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // trace_pt[186] | segment index 87 | near end of maneuver index 2 | fix speed ~ 45 MPH
@@ -1038,88 +1081,125 @@ void TestLancasterToHershey() {
       GetFixLocation(-76.268127f, 40.054886f, 262, 20.12f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.268112f, 40.054859f, leg_index, 29.2577f, 2176,
-          maneuver_index, 0.109503f, 12, (maneuver_index + 1)));
+          maneuver_index, 0.109503f, 12, instruction_index));
 
   // kPreTransition instruction should be used after OnLocationChanged
-  // because it was within time threshold for pre transition
+  // because it was within time threshold for pre-transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 3;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Merge onto U.S. 30 West."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 6);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 6);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 4;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Keep left to take Pennsylvania 2 83 West toward Harrisburg."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 5;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Take the Pennsylvania 7 43 exit on the right toward Hershey."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 6;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Keep right to take Pennsylvania 7 43 North toward Hershey. Then Continue on Pennsylvania 7 43 North."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 9);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 9);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 7;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Continue on Pennsylvania 7 43 North for 4.9 miles."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 8;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Continue on Fishburn Road for 2.5 miles."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 7);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 7);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 9;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Bear left onto Hockersville Road."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 6);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 6);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 10;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Turn right onto U.S. 4 22, West Chocolate Avenue."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 11;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "You have arrived at your destination."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 6);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 6);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 12;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
 
 }

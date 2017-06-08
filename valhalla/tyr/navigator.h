@@ -30,8 +30,9 @@ constexpr float kWordsPerSecond = 2.5f;
 // Minimum speed threshold in meters per second (~1 KPH)
 constexpr float kMinSpeedThreshold = 0.277f;
 
-// Post-transition threshold in seconds
-constexpr uint32_t kPostTransitionThreshold = 2;
+// Post-transition lower and upper bounds in seconds
+constexpr uint32_t kPostTransitionLowerBound = 2;
+constexpr uint32_t kPostTransitionUpperBound = 6;
 
 // Closest point tuple indexes
 constexpr size_t kClosestPoint = 0;
@@ -40,7 +41,7 @@ constexpr size_t kClosestPointSegmentIndex = 2;
 
 // Used instruction tuple indexes
 constexpr size_t kDistantTransitionAlert = 0; // 2 or 1 miles depending on speed
-constexpr size_t kCloseTransitionAlert =1;    // half or quarter mile depending on speed
+constexpr size_t kCloseTransitionAlert = 1;   // half or quarter mile depending on speed
 constexpr size_t kPreTransition = 2;
 constexpr size_t kPostTransition = 3;
 
@@ -90,10 +91,16 @@ class Navigator {
 
     size_t GetWordCount(const std::string& instruction) const;
 
+    uint32_t GetSpentManeuverTime(const FixLocation& fix_location,
+        const NavigationStatus& nav_status) const;
+
     uint32_t GetRemainingManeuverTime(const FixLocation& fix_location,
         const NavigationStatus& nav_status) const;
 
     uint32_t GetPreTransitionThreshold(size_t instruction_index) const;
+
+    bool IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
+        uint32_t upper_bound) const;
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +128,7 @@ class Navigator {
     // Maneuver speeds in units per second
     std::vector<float> maneuver_speeds_;
 
-    // Remaining leg length and time
+    // Remaining leg length and time indexed by shape
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 
     // List of tuples by maneuver index that keeps track of the used instructions
