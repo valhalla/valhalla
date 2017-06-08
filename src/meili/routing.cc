@@ -206,6 +206,13 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const baldr::GraphTile* tile)
 {
   if (costing && pred_edgelabel) {
+    // Do not allow 2 transition edges in succession...
+    // TODO - if we can update the expansion logic to be more like
+    // thor we can remove this check.
+    if (edge->IsTransition() && (pred_edgelabel->use() == baldr::Use::kTransitionUp ||
+        pred_edgelabel->use() == baldr::Use::kTransitionDown)) {
+      return false;
+    }
     // TODO let sif do this?
     // Still on the same edge and the predecessor's show-up here
     // means it was allowed so we give it a pass directly
