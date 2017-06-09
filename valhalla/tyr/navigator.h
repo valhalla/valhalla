@@ -21,14 +21,18 @@ constexpr uint32_t kOffRouteThreshold = 50;
 // Close to origin threshold in meters
 constexpr uint32_t kOnRouteCloseToOriginThreshold = 20;
 
-// Pre transition base threshold in seconds
+// Pre-transition base threshold in seconds
 constexpr uint32_t kPreTransitionBaseThreshold = 4;
 
-// Number of words per second - used to calculate pre transition threshold
+// Number of words per second - used to calculate pre-transition threshold
 constexpr float kWordsPerSecond = 2.5f;
 
 // Minimum speed threshold in meters per second (~1 KPH)
 constexpr float kMinSpeedThreshold = 0.277f;
+
+// Post-transition lower and upper bounds in seconds
+constexpr uint32_t kPostTransitionLowerBound = 2;
+constexpr uint32_t kPostTransitionUpperBound = 6;
 
 // Closest point tuple indexes
 constexpr size_t kClosestPoint = 0;
@@ -37,7 +41,7 @@ constexpr size_t kClosestPointSegmentIndex = 2;
 
 // Used instruction tuple indexes
 constexpr size_t kDistantTransitionAlert = 0; // 2 or 1 miles depending on speed
-constexpr size_t kCloseTransitionAlert =1;    // half or quarter mile depending on speed
+constexpr size_t kCloseTransitionAlert = 1;   // half or quarter mile depending on speed
 constexpr size_t kPreTransition = 2;
 constexpr size_t kPostTransition = 3;
 
@@ -54,10 +58,9 @@ class Navigator {
     Navigator(const Navigator&) = default;
     Navigator& operator=(const Navigator&) = default;
 
-    valhalla::NavigationStatus SetRoute(const std::string& route_json_str);
+    NavigationStatus SetRoute(const std::string& route_json_str);
 
-    valhalla::NavigationStatus OnLocationChanged(
-        const valhalla::FixLocation& fix_location);
+    NavigationStatus OnLocationChanged(const FixLocation& fix_location);
 
 
   protected:
@@ -77,8 +80,7 @@ class Navigator {
     size_t FindManeuverIndex(size_t begin_search_index, size_t shape_index) const;
     size_t RfindManeuverIndex(size_t rbegin_search_index, size_t shape_index) const;
 
-    void SnapToRoute(const FixLocation& fix_location,
-        NavigationStatus& nav_status);
+    NavigationStatus SnapToRoute(const FixLocation& fix_location);
 
     bool StartingNavigation(const NavigationStatus_RouteState& prev_route_state,
         const NavigationStatus_RouteState& curr_route_state) const;
@@ -89,26 +91,32 @@ class Navigator {
 
     size_t GetWordCount(const std::string& instruction) const;
 
+    uint32_t GetSpentManeuverTime(const FixLocation& fix_location,
+        const NavigationStatus& nav_status) const;
+
     uint32_t GetRemainingManeuverTime(const FixLocation& fix_location,
         const NavigationStatus& nav_status) const;
 
     uint32_t GetPreTransitionThreshold(size_t instruction_index) const;
 
+    bool IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
+        uint32_t upper_bound) const;
+
     /////////////////////////////////////////////////////////////////////////////
 
     // Specified route to navigate
-    valhalla::Route route_;
+    Route route_;
 
     // Current route state of navigator
     NavigationStatus_RouteState route_state_;
 
-    // Leg index
+    // Current leg index
     size_t leg_index_;
 
-    // Maneuver index
+    // Current maneuver index
     size_t maneuver_index_;
 
-    // Boolean units
+    // Boolean kilometer unit flag
     bool kilometer_units_;
 
     // Current leg shape
@@ -120,10 +128,14 @@ class Navigator {
     // Maneuver speeds in units per second
     std::vector<float> maneuver_speeds_;
 
-    // Remaining leg length and time
+    // Remaining leg length and time indexed by shape
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 
     // List of tuples by maneuver index that keeps track of the used instructions
+    //     kDistantTransitionAlert
+    //     kCloseTransitionAlert
+    //     kPreTransition
+    //     kPostTransition
     std::vector<std::tuple<bool, bool, bool, bool>> used_instructions_;
 
 };

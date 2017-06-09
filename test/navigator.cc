@@ -101,9 +101,8 @@ class NavigatorTest : public Navigator {
     return Navigator::IsDestinationManeuverIndex(idx);
   }
 
-  void SnapToRoute(const FixLocation& fix_location,
-       NavigationStatus& nav_status) {
-    return Navigator::SnapToRoute(fix_location, nav_status);
+  NavigationStatus SnapToRoute(const FixLocation& fix_location) {
+    return Navigator::SnapToRoute(fix_location);
   }
 
   bool OnRouteLocationCloseToOrigin(const NavigationStatus& nav_status) const {
@@ -533,8 +532,7 @@ void ValidateOnRouteLocationCloseToOrigin(bool found_value,
 
 void TrySnapToRoute(NavigatorTest& nav, const FixLocation& fix_location,
     NavigationStatus expected_nav_status) {
-  NavigationStatus nav_status;
-  nav.SnapToRoute(fix_location, nav_status);
+  NavigationStatus nav_status = nav.SnapToRoute(fix_location);
   ValidateNavigationStatus(nav_status, expected_nav_status);
 }
 
@@ -722,29 +720,34 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[0] | segment index 0 | begin of maneuver index 0
-  TrySnapToRoute(nav, GetFixLocation(-76.299179f, 40.042572f, 0),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.299179f, 40.042572f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
           maneuver_index, 0.073f, 14));
 
   // off route | segment index 1 | partial maneuver 0
-  TrySnapToRoute(nav, GetFixLocation(-76.29875f, 40.04316f, 0),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.29875f, 40.04316f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kInvalid));
 
   // trace_pt[6] | segment index 1 | partial maneuver 0
-  TrySnapToRoute(nav, GetFixLocation(-76.298363f, 40.042652f, 0),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.298363f, 40.042652f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298355f, 40.042606f, leg_index, 31.278385f, 2415,
           maneuver_index, 0.029385f, 6));
 
   // trace_pt[9] | segment index 1 | near end of maneuver index 0
-  TrySnapToRoute(nav, GetFixLocation(-76.297966f, 40.042698f, 12),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297966f, 40.042698f, 12),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297958f, 40.042652f, leg_index, 31.257146f, 2411,
           maneuver_index, 0.008146f, 2));
 
   // trace_pt[10] | segment index 1 | near end of maneuver index 0
-  TrySnapToRoute(nav, GetFixLocation(-76.297844f, 40.042709f, 13),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297844f, 40.042709f, 13),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297836f, 40.042667f, leg_index, 31.250611f, 2409,
           maneuver_index, 0.001611f, 0));
@@ -754,19 +757,22 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // snap to shape_index[2] | segment index 1/2 | begin maneuver index 1
-  TrySnapToRoute(nav, GetFixLocation(-76.297820f, 40.042671f, 14),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297820f, 40.042671f, 14),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297806f, 40.042671f, leg_index, 31.249f, 2409,
           maneuver_index, 0.046f, 34));
 
   // near shape_index[2] | segment index 1/2 | begin maneuver index 1
-  TrySnapToRoute(nav, GetFixLocation(-76.297810f, 40.042671f, 14),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297810f, 40.042671f, 14),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297806f, 40.042671f, leg_index, 31.249f, 2409,
           maneuver_index, 0.046f, 34));
 
   // shape_index[2] | segment index 1/2 | begin maneuver index 1
-  TrySnapToRoute(nav, GetFixLocation(-76.297806f, 40.042671f, 14),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.297806f, 40.042671f, 14),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.297806f, 40.042671f, leg_index, 31.249f, 2409,
           maneuver_index, 0.046f, 34));
@@ -776,7 +782,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[132] | segment index 15 | middle of maneuver index 2
-  TrySnapToRoute(nav, GetFixLocation(-76.279152f, 40.048409f, 154),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.279152f, 40.048409f, 154),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.279091f, 40.048393f, leg_index, 30.046f, 2255,
           maneuver_index, 0.8978f, 91));
@@ -786,7 +793,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[211] | segment index 23 | middle of maneuver index 3
-  TrySnapToRoute(nav, GetFixLocation(-76.267502f, 40.056950f, 283),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.267502f, 40.056950f, 283),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.267517f, 40.056873f, leg_index, 29.024f, 2150,
           maneuver_index, 0.251f, 26));
@@ -796,7 +804,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[315] | segment index 29 | middle of maneuver index 4
-  TrySnapToRoute(nav, GetFixLocation(-76.293968f, 40.068066f, 388),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.293968f, 40.068066f, 388),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.293968f, 40.068073f, leg_index, 27.341f, 2042,
           maneuver_index, 1.3148f, 79));
@@ -806,7 +815,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[850] | segment index 60 | middle of maneuver index 5
-  TrySnapToRoute(nav, GetFixLocation(-76.471893f, 40.125996f, 948),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.471893f, 40.125996f, 948),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.471878f, 40.126011f, leg_index, 16.9535f, 1450,
           maneuver_index, 7.771f, 443));
@@ -816,7 +826,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1270] | segment index 74 | middle of maneuver index 6
-  TrySnapToRoute(nav, GetFixLocation(-76.598633f, 40.176716f, 1441),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.598633f, 40.176716f, 1441),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.598648f, 40.176708f, leg_index, 8.86744f, 985,
           maneuver_index, 0.1534f, 9));
@@ -826,7 +837,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1288] | segment index 75 | middle of maneuver index 7
-  TrySnapToRoute(nav, GetFixLocation(-76.600441f, 40.178944f, 1459),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.600441f, 40.178944f, 1459),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.600441f, 40.178944f, leg_index, 8.6843f, 974,
           maneuver_index, 0.03765f, 1));
@@ -836,7 +848,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1522] | segment index 86 | middle of maneuver index 8
-  TrySnapToRoute(nav, GetFixLocation(-76.618904f, 40.219437f, 1722),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.618904f, 40.219437f, 1722),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.618668f, 40.219433f, leg_index, 5.6829f, 654,
           maneuver_index, 1.9216f, 202));
@@ -846,7 +859,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1870] | segment index 105 | middle of maneuver index 9
-  TrySnapToRoute(nav, GetFixLocation(-76.652367f, 40.270046f, 2113),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.652367f, 40.270046f, 2113),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.652374f, 40.270039f, leg_index, 1.5266f, 224,
           maneuver_index, 0.2904f, 31));
@@ -856,7 +870,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[1936] | segment index 111 | middle of maneuver index 10
-  TrySnapToRoute(nav, GetFixLocation(-76.660156f, 40.275745f, 2290),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.660156f, 40.275745f, 2290),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.660187f, 40.275719f, leg_index, 0.9464f, 147,
           maneuver_index, 0.2826f, 45));
@@ -866,7 +881,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[2003] | segment index 119 | middle of maneuver index 11
-  TrySnapToRoute(nav, GetFixLocation(-76.659927f, 40.281940f, 2386),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.659927f, 40.281940f, 2386),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.659943f, 40.281963f, leg_index, 0.3119f, 47,
           maneuver_index, 0.3119f, 47));
@@ -876,7 +892,8 @@ void TestLancasterToHershey() {
   ////////////////////////////////////////////////////////////////////////////
 
   // trace_pt[2038] | segment index 125 | destination maneuver index 12
-  TrySnapToRoute(nav, GetFixLocation(-76.654625f, 40.283924f, 2438),
+  TrySnapToRoute(nav,
+      GetFixLocation(-76.654625f, 40.283924f, 2438),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.654633f, 40.283943f, leg_index, 0.0f, 0,
           maneuver_index, 0.0f, 0));
@@ -892,25 +909,28 @@ void TestLancasterToHershey() {
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 0;
+  uint32_t instruction_index = maneuver_index;
+
   ////////////////////////////////////////////////////////////////////////////
   bool expected_on_route_location_close_to_origin = true;
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // Start maneuver at beginning of route
   // trace_pt[0] | segment index 0 | begin of maneuver index 0
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.29931f, 40.04240f, 0),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.29931f, 40.04240f, 0),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299171f, 40.042519f, leg_index, 31.322f, 2438,
-          maneuver_index, 0.073f, 14, maneuver_index),
+          maneuver_index, 0.073f, 14, instruction_index),
           expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be used after OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   // reset the route
@@ -918,184 +938,268 @@ void TestLancasterToHershey() {
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // Start maneuver near beginning of route
   // trace_pt[1] | segment index 0 | near begin of maneuver index 0
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.299057f, 40.042595f, 1),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.299057f, 40.042595f, 1),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.299049f, 40.042530f, leg_index, 31.3163f, 2422,
-          maneuver_index, 0.066578f, 13, maneuver_index),
+          maneuver_index, 0.066578f, 13, instruction_index),
           expected_on_route_location_close_to_origin);
 
   // kPreTransition instruction should be used after OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   // reset the route
   nav.SetRoute(route_json_str);
 
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
+
   // Test GetPreTransitionThreshold
   // "Turn right onto North Plum Street. Then Turn left onto East Chestnut Street."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // No kPreTransition because not within time threshold for pre transition
   // trace_pt[2] | segment index 0 | near begin of maneuver index 0 | maneuver speed ~ 18.7714 MPH
   expected_on_route_location_close_to_origin = false;
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.298897f ,40.042610f, 3),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.298897f ,40.042610f, 3),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.298889f ,40.042545f, leg_index, 31.3077f, 2420,
-          maneuver_index, 0.058027f, 11, (maneuver_index + 1)));
+          maneuver_index, 0.058027f, 11, instruction_index));
 
   // kPreTransition instruction should be not used after OnLocationChanged
   // because not within time threshold for pre transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // trace_pt[5] | segment index 1 | near middle of maneuver index 0 | fix speed ~ 20 MPH
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.298477f, 40.042645f, 6, 8.94f),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.298477f, 40.042645f, 6, 8.94f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.298470f, 40.042595f, leg_index, 31.2852f, 2416,
-          maneuver_index, 0.035543f, 7, (maneuver_index + 1)));
+          maneuver_index, 0.035543f, 7, instruction_index));
 
   // kPreTransition instruction should be used after OnLocationChanged
   // because it was within time threshold for pre transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 1;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Turn left onto East Chestnut Street, Pennsylvania 23 East."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // trace_pt[13] | segment index 2 | near middle of maneuver index 1 | fix speed >~ 10 MPH
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.297745f, 40.042370f, 20, 5.0f),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.297745f, 40.042370f, 20, 5.0f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.297752f, 40.042370f, leg_index, 31.2287f, 2393,
-          maneuver_index, 0.0247517f, 18, (maneuver_index + 1)));
+          maneuver_index, 0.0247517f, 18, instruction_index));
 
   // kPreTransition instruction should be used after OnLocationChanged
   // because it was within time threshold for pre transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 2;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // kPostTransition instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+      false);
+
+  // trace_pt[17] | segment index 4 | near begin of maneuver index 2 |  maneuver speed ~ 34.7 MPH
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.297585f, 40.042072f, 49),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+          -76.2975769f, 40.0420265f, leg_index, 31.1978016f, 2374,
+          maneuver_index, 2.04964066f, 210, instruction_index));
+
+  // kPostTransition instruction should not be used after OnLocationChanged
+  // because it was less than the time threshold for post-transition
+  TryUsedInstructions(
+      std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+      false);
+
+  // trace_pt[19] | segment index 4 | near begin of maneuver index 2 | fix speed ~ 30 MPH
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.297173f, 40.042126f, 51, 13.41f),
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+          -76.2971649f, 40.0420685f, leg_index, 31.1757927f, 2372,
+          maneuver_index, 2.02763176f, 208, instruction_index));
+
+  // kPostTransition instruction should be used after OnLocationChanged
+  // because it was outside of the time threshold for post-transition
+  TryUsedInstructions(
+      std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+      true);
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Turn left to take the U.S. 30 West ramp toward New Holland, Harrisburg."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 10);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 10);
 
   // kPreTransition instruction should not be used prior to OnLocationChanged
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       false);
 
   // trace_pt[186] | segment index 87 | near end of maneuver index 2 | fix speed ~ 45 MPH
-  TryRouteOnLocationChanged(nav, GetFixLocation(-76.268127f, 40.054886f, 262, 20.12f),
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.268127f, 40.054886f, 262, 20.12f),
       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.268112f, 40.054859f, leg_index, 29.2577f, 2176,
-          maneuver_index, 0.109503f, 12, (maneuver_index + 1)));
+          maneuver_index, 0.109503f, 12, instruction_index));
 
   // kPreTransition instruction should be used after OnLocationChanged
-  // because it was within time threshold for pre transition
+  // because it was within time threshold for pre-transition
   TryUsedInstructions(
-      std::get<kPreTransition>(nav.used_instructions().at(maneuver_index + 1)),
+      std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
       true);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 3;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Merge onto U.S. 30 West."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 6);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 6);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 4;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Keep left to take Pennsylvania 2 83 West toward Harrisburg."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 5;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Take the Pennsylvania 7 43 exit on the right toward Hershey."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 6;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Keep right to take Pennsylvania 7 43 North toward Hershey. Then Continue on Pennsylvania 7 43 North."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 9);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 9);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 7;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Continue on Pennsylvania 7 43 North for 4.9 miles."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 8;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Continue on Fishburn Road for 2.5 miles."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 7);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 7);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 9;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Bear left onto Hockersville Road."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 6);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 6);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 10;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "Turn right onto U.S. 4 22, West Chocolate Avenue."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 8);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 11;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
+
+  // Increment instruction_index for testing instructions prior to next maneuver
+  ++instruction_index;
 
   // Test GetPreTransitionThreshold
   // "You have arrived at your destination."
-  TryGetPreTransitionThreshold(nav, leg_index, (maneuver_index + 1), 6);
+  TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 6);
 
   ////////////////////////////////////////////////////////////////////////////
   maneuver_index = 12;
+  instruction_index = maneuver_index;
   ////////////////////////////////////////////////////////////////////////////
 
 }
