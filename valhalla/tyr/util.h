@@ -16,7 +16,7 @@ namespace tyr {
  * @param proto_route  The protobuf object that will hold the information
  *                     from the JSON string
  */
-void jsonRouteToProtoRoute (const std::string& json_route, Route& proto_route);
+void jsonToProtoRoute (const std::string& json_route, Route& proto_route);
 
 }
 }
