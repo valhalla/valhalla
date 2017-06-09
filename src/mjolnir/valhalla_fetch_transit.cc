@@ -139,10 +139,15 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
       pt.get<std::string>("import_level") : "";
 
+  auto active_feed_version_import_level  = pt.get_optional<std::string>("import_level") ? "&active_feed_version_import_level=" +
+      pt.get<std::string>("import_level") : "";
+
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().rbegin()->second;
   curler_t curler;
-  auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
+  auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
+  request += active_feed_version_import_level;
+  auto feeds = curler(request, "features");
   for(const auto& feature : feeds.get_child("features")) {
 
     auto onestop_feed = feature.second.get_optional<std::string>("properties.onestop_id");
@@ -241,21 +246,11 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     GraphId stop_id = tile_id;
     stop_id.fields.id = stops.size();
     stop->set_graphid(stop_id);
-    stop->set_timezone(0);
 
-    auto tz = stop_pt.second.get<std::string>("timezone", "");
-    uint32_t timezone = DateTime::get_tz_db().to_index(tz);
-    if (timezone == 0) {
+    auto tz = stop_pt.second.get<std::string>("timezone", "null");
+    if (tz != "null")
+      stop->set_timezone(tz);
 
-      //fallback to tz database.
-      timezone = (tile_within_one_tz) ?
-                  tz_polys.begin()->first :
-                  GetMultiPolyId(tz_polys, PointLL(lon, lat));
-      if (timezone == 0)
-        LOG_WARN("Timezone not found for stop " + stop->name());
-    }
-
-    stop->set_timezone(timezone);
     stops.emplace(stop->onestop_id(), stop_id);
     if(stops.size() == kMaxGraphId) {
       LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest")
@@ -417,7 +412,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
       pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
       pair->set_frequency_headway_seconds(std::stoi(frequency_headway_seconds));
       frequency_time = frequency_start_time + frequency_end_time;
-printf("Length of frequency time string = %d\n", frequency_time.size());
     }
 
     //uniq line id
@@ -426,7 +420,6 @@ printf("Length of frequency time string = %d\n", frequency_time.size());
                     pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
-    pair->set_line_id(inserted.first->second);
     uniques.lock.unlock();
 
     //timing information
