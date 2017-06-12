@@ -359,7 +359,7 @@ nobase_include_HEADERS += \
 	valhalla/mjolnir/validatetransit.h
 libvalhalla_la_SOURCES += \
 	src/proto/transit.pb.cc \
-        src/proto/transit_fetch.pb.cc \
+	src/proto/transit_fetch.pb.cc \
 	src/mjolnir/admin.cc \
 	src/mjolnir/complexrestrictionbuilder.cc \
 	src/mjolnir/countryaccess.cc \
