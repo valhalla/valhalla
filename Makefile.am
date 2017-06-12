@@ -51,7 +51,7 @@ genfiles/admin_lua_proc.h: lua/admin.lua
 genfiles/locales.h: locales/*.json
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@/locales && ./make_locales.sh *.json > @abs_builddir@/genfiles/locales.h
 
-PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto 
+PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto proto/transit_fetch.proto
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
@@ -359,6 +359,7 @@ nobase_include_HEADERS += \
 	valhalla/mjolnir/validatetransit.h
 libvalhalla_la_SOURCES += \
 	src/proto/transit.pb.cc \
+        src/proto/transit_fetch.pb.cc \
 	src/mjolnir/admin.cc \
 	src/mjolnir/complexrestrictionbuilder.cc \
 	src/mjolnir/countryaccess.cc \
