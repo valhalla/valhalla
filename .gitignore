@@ -145,6 +145,7 @@ test/utrecht
 test/countryaccess
 test/maneuversbuilder
 test/narrativebuilder
+test/util_tyr
 test/navigator
 test/enhancedtrippath
 test/sign

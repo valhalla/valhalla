@@ -191,6 +191,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
+	valhalla/tyr/util.h \
 	valhalla/tyr/navigator.h
 libvalhalla_la_SOURCES = \
 	src/midgard/linesegment2.cc \
@@ -297,6 +298,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/route_matcher.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
+	src/tyr/util.cc \
 	src/tyr/navigator.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
@@ -601,6 +603,7 @@ check_PROGRAMS = \
 	test/maneuversbuilder \
 	test/narrativebuilder \
 	test/navigator \
+	test/util_tyr \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
@@ -783,6 +786,9 @@ test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 test_narrativebuilder_SOURCES = test/narrativebuilder.cc test/test.cc
 test_narrativebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_narrativebuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_util_tyr_SOURCES = test/util_tyr.cc test/test.cc
+test_util_tyr_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_util_tyr_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_navigator_SOURCES = test/navigator.cc test/test.cc
 test_navigator_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_navigator_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

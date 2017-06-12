@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include <google/protobuf/util/json_util.h>
+//#include <google/protobuf/util/json_util.h>
 
 #include "proto/route.pb.h"
 #include "proto/navigator.pb.h"
@@ -18,6 +18,7 @@
 #include "baldr/json.h"
 #include "baldr/location.h"
 #include "baldr/errorcode_util.h"
+#include "tyr/util.h"
 #include "tyr/navigator.h"
 
 using namespace valhalla;
@@ -36,9 +37,7 @@ NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
 
   // TODO: place in try catch block and return
   //       NavigationStatus_RouteState_kInvalid if there is an issue
-  // TODO: replace this with Alex magic
-  google::protobuf::util::JsonStringToMessage(route_json_str, &route_);
-
+  jsonToProtoRoute (route_json_str, route_);
 
   leg_index_ = 0;
   maneuver_index_ = 0;
