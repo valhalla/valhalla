@@ -174,7 +174,7 @@ void testLocation() {
           "state":"PA",
           "type":"break",
           "side_of_street":"right",
-          "lat":120.24153,
+          "lat":12.24153,
           "lon":-12.733452,
           "city":"Lancaster",
           "street":"123 Random Street",
@@ -198,8 +198,8 @@ void testLocation() {
   }
 
   Route::Location location = trip.locations(0);
-  if (location.lat() != 120.24153f) {
-    throw std::runtime_error ("lat is: " + std::to_string(location.lat()) + " | Expected: 120.24153");
+  if (location.lat() != 12.24153f) {
+    throw std::runtime_error ("lat is: " + std::to_string(location.lat()) + " | Expected: 12.24153");
   }
 
   if (location.lon() != -12.733452f) {
@@ -255,10 +255,10 @@ void testSummary () {
   const std::string summaryTest =
       R"({"trip":{"summary":{
           "max_lon":-12.733452,
-          "max_lat":120.24153,
+          "max_lat":12.24153,
           "time":8435,
           "length":147.371,
-          "min_lat":119.24153,
+          "min_lat":11.24153,
           "min_lon":-13.733452
         }}})";
   Route route;
@@ -281,16 +281,16 @@ void testSummary () {
     throw std::runtime_error ("time is: " + std::to_string(summary.time()) + " | Expected: 8435");
   }
 
-  if (summary.min_lat() != 119.24153f) {
-    throw std::runtime_error ("min_lat is: " + std::to_string(summary.min_lat()) + " | Expected: 119.24153");
+  if (summary.min_lat() != 11.24153f) {
+    throw std::runtime_error ("min_lat is: " + std::to_string(summary.min_lat()) + " | Expected: 11.24153");
   }
 
   if (summary.min_lon() != -13.733452f) {
     throw std::runtime_error ("min_lon is: " + std::to_string(summary.min_lon()) + " | Expected: -13.733452");
   }
 
-  if (summary.max_lat() != 120.24153f) {
-    throw std::runtime_error ("max_lat is: " + std::to_string(summary.max_lat()) + " | Expected: 120.24153");
+  if (summary.max_lat() != 12.24153f) {
+    throw std::runtime_error ("max_lat is: " + std::to_string(summary.max_lat()) + " | Expected: 12.24153");
   }
 
   if (summary.max_lon() != -12.733452f) {
