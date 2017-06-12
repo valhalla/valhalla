@@ -25,14 +25,31 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-CostMatrix::CostMatrix(float cost_threshold)
+CostMatrix::CostMatrix()
     : mode_(TravelMode::kDrive),
       access_mode_(kAutoAccess),
       source_count_(0),
       remaining_sources_(0),
       target_count_(0),
       remaining_targets_(0),
-      cost_threshold_(cost_threshold) {
+      current_cost_threshold_(0) {}
+
+float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
+  float cost_threshold;
+  switch (mode_) {
+  case TravelMode::kBicycle:
+    cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
+    break;
+  case TravelMode::kPedestrian:
+  case TravelMode::kPublicTransit:
+    cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
+    break;
+  case TravelMode::kDrive:
+  default:
+    cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
+  }
+
+  return cost_threshold;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -86,11 +103,13 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
         const std::vector<PathLocation>& target_location_list,
         GraphReader& graphreader,
         const std::shared_ptr<DynamicCost>* mode_costing,
-        const TravelMode mode) {
+        const TravelMode mode, const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+
+  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Set the source and target locations
   Clear();
@@ -321,7 +340,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
 
   // Get edge label and check cost threshold
   EdgeLabel pred = edgelabels[pred_idx];
-  if (pred.cost().secs > cost_threshold_) {
+  if (pred.cost().secs > current_cost_threshold_) {
     source_status_[index].threshold = 0;
     return;
   }
@@ -602,7 +621,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
 
   // Copy predecessor, check cost threshold
   EdgeLabel pred = edgelabels[pred_idx];
-  if (pred.cost().secs > cost_threshold_) {
+  if (pred.cost().secs > current_cost_threshold_) {
     target_status_[index].threshold = 0;
     return;
   }
@@ -669,7 +688,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(new DoubleBucketQueue(0, cost_threshold_,
+    source_adjacency_[index].reset(new DoubleBucketQueue(0, current_cost_threshold_,
                                          costing_->UnitSize(), edgecost));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
@@ -694,7 +713,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score;
+      cost.cost += edge.score * 10.0f;
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and
@@ -740,7 +759,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(new DoubleBucketQueue(0, cost_threshold_,
+    target_adjacency_[index].reset(new DoubleBucketQueue(0, current_cost_threshold_,
                                              costing_->UnitSize(), edgecost));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 

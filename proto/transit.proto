@@ -11,7 +11,7 @@ message Transit {
     optional string name = 6;
     optional string onestop_id = 7;
     optional uint64 osm_way_id = 8;
-    optional uint32 timezone = 9;
+    optional string timezone = 9;
     optional bool wheelchair_boarding = 10;
     optional bool generated = 11;
     optional uint32 traversability = 12;
@@ -36,7 +36,6 @@ message Transit {
     optional string trip_headsign = 16;
     optional uint32 trip_id = 17;
     optional bool wheelchair_accessible = 18;
-    optional uint32 line_id = 19;
     optional uint32 shape_id = 20;
     optional float origin_dist_traveled = 21;
     optional float destination_dist_traveled = 22;

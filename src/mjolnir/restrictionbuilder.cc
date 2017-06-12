@@ -295,84 +295,87 @@ void build(const std::string& complex_restriction_file,
           while (res_it != complex_restrictions.end() && (restriction = *res_it).from() == e_offset.wayid() &&
                  restriction.vias().size()) {
 
-            GraphId currentNode = GraphId(tile->id().tileid(),tile->id().level(), i);
-            GraphId tileid = tile->id();
+            if (restriction.type() < RestrictionType::kOnlyRightTurn || restriction.type() > RestrictionType::kOnlyStraightOn) {
 
-            std::vector<uint64_t> res_way_ids;
-            res_way_ids.push_back(e_offset.wayid());
+              GraphId currentNode = GraphId(tile->id().tileid(),tile->id().level(), i);
+              GraphId tileid = tile->id();
 
-            for (const auto& v : restriction.vias())
-              res_way_ids.push_back(v);
+              std::vector<uint64_t> res_way_ids;
+              res_way_ids.push_back(e_offset.wayid());
 
-            res_way_ids.push_back(restriction.to());
-
-            //walk in the forward direction.
-            std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
-
-            //now that we have the tile and currentNode walk in the reverse direction as this is really what
-            //needs to be stored in this tile.
-            if (tmp_ids.size()) {
-
-              res_way_ids.clear();
-              res_way_ids.push_back(restriction.to());
-
-              std::vector<uint64_t> temp_vias = restriction.vias();
-              std::reverse(temp_vias.begin(),temp_vias.end());
-
-              for (const auto& v : temp_vias)
+              for (const auto& v : restriction.vias())
                 res_way_ids.push_back(v);
 
-              res_way_ids.push_back(e_offset.wayid());
-              tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+              res_way_ids.push_back(restriction.to());
 
+              //walk in the forward direction.
+              std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+
+              //now that we have the tile and currentNode walk in the reverse direction as this is really what
+              //needs to be stored in this tile.
               if (tmp_ids.size()) {
 
-                std::vector<GraphId> vias;
-                std::copy(tmp_ids.begin()+1, tmp_ids.end()-1, std::back_inserter(vias));
+                res_way_ids.clear();
+                res_way_ids.push_back(restriction.to());
 
-                if (vias.size() > kMaxViasPerRestriction) {
-                  LOG_WARN("Tried to exceed max vias per restriction(forward).  Way: " +
-                           std::to_string(tmp_ids.at(0)));
-                  res_it++;
-                  continue;
-                }
+                std::vector<uint64_t> temp_vias = restriction.vias();
+                std::reverse(temp_vias.begin(),temp_vias.end());
 
-                // flip the vias becuase we walk backwards from the search direction
-                // using the predecessor edges in thor.
-                std::reverse(vias.begin(),vias.end());
+                for (const auto& v : temp_vias)
+                  res_way_ids.push_back(v);
 
-                ComplexRestrictionBuilder complex_restriction;
-                complex_restriction.set_from_id(tmp_ids.at(tmp_ids.size()-1));
-                complex_restriction.set_via_list(vias);
-                complex_restriction.set_to_id(tmp_ids.at(0));
-                complex_restriction.set_type(restriction.type());
-                complex_restriction.set_modes(restriction.modes());
+                res_way_ids.push_back(e_offset.wayid());
+                tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
 
-                /** TODO - define common date/time format for use
-                complex_restriction.set_begin_day(restriction.day_on());
-                complex_restriction.set_end_day(restriction.day_off());
-                uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
-                                                                      std::to_string(restriction.minute_on()));
-                complex_restriction.set_begin_time(begin_time);
-                complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
-                                                                                     std::to_string(restriction.minute_off())) - begin_time);
-                */
+                if (tmp_ids.size()) {
 
-                // determine if we need to add this complex restriction or not.
-                // basically we do not want any dups.
-                bool bfound = false;
-                auto res = reverse_tmp_cr.equal_range(tmp_ids.at(0));
-                if (res.first != reverse_tmp_cr.end()) {
-                  for (auto r = res.first; r != res.second; ++r) {
-                    if (complex_restriction == r->second) {
-                      bfound = true;
-                      break;
+                  std::vector<GraphId> vias;
+                  std::copy(tmp_ids.begin()+1, tmp_ids.end()-1, std::back_inserter(vias));
+
+                  if (vias.size() > kMaxViasPerRestriction) {
+                    LOG_WARN("Tried to exceed max vias per restriction(forward).  Way: " +
+                             std::to_string(tmp_ids.at(0)));
+                    res_it++;
+                    continue;
+                  }
+
+                  // flip the vias becuase we walk backwards from the search direction
+                  // using the predecessor edges in thor.
+                  std::reverse(vias.begin(),vias.end());
+
+                  ComplexRestrictionBuilder complex_restriction;
+                  complex_restriction.set_from_id(tmp_ids.at(tmp_ids.size()-1));
+                  complex_restriction.set_via_list(vias);
+                  complex_restriction.set_to_id(tmp_ids.at(0));
+                  complex_restriction.set_type(restriction.type());
+                  complex_restriction.set_modes(restriction.modes());
+
+                  /** TODO - define common date/time format for use
+                  complex_restriction.set_begin_day(restriction.day_on());
+                  complex_restriction.set_end_day(restriction.day_off());
+                  uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
+                                                                        std::to_string(restriction.minute_on()));
+                  complex_restriction.set_begin_time(begin_time);
+                  complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
+                                                                                       std::to_string(restriction.minute_off())) - begin_time);
+                  */
+
+                  // determine if we need to add this complex restriction or not.
+                  // basically we do not want any dups.
+                  bool bfound = false;
+                  auto res = reverse_tmp_cr.equal_range(tmp_ids.at(0));
+                  if (res.first != reverse_tmp_cr.end()) {
+                    for (auto r = res.first; r != res.second; ++r) {
+                      if (complex_restriction == r->second) {
+                        bfound = true;
+                        break;
+                      }
                     }
                   }
-                }
-                if (!bfound) { // no dups.
-                  reverse_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
-                  updated_reverse_cr_list.emplace_back(complex_restriction);
+                  if (!bfound) { // no dups.
+                    reverse_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
+                    updated_reverse_cr_list.emplace_back(complex_restriction);
+                  }
                 }
               }
             }
@@ -395,80 +398,83 @@ void build(const std::string& complex_restriction_file,
               while (res_it != complex_restrictions.end() && (restriction = *res_it).from() == it->second &&
                      restriction.vias().size()) {
 
-                GraphId currentNode = GraphId(tile->id().tileid(),tile->id().level(), i);
-                GraphId tileid = tile->id();
+                if (restriction.type() < RestrictionType::kOnlyRightTurn || restriction.type() > RestrictionType::kOnlyStraightOn) {
 
-                std::vector<uint64_t> res_way_ids;
-                res_way_ids.push_back(restriction.to());
+                  GraphId currentNode = GraphId(tile->id().tileid(),tile->id().level(), i);
+                  GraphId tileid = tile->id();
 
-                std::vector<uint64_t> temp_vias = restriction.vias();
-                std::reverse(temp_vias.begin(),temp_vias.end());
+                  std::vector<uint64_t> res_way_ids;
+                  res_way_ids.push_back(restriction.to());
 
-                for (const auto& v : temp_vias)
-                  res_way_ids.push_back(v);
+                  std::vector<uint64_t> temp_vias = restriction.vias();
+                  std::reverse(temp_vias.begin(),temp_vias.end());
 
-                res_way_ids.push_back(it->second);
+                  for (const auto& v : temp_vias)
+                    res_way_ids.push_back(v);
 
-                //walk in the forward direction (reverse in relation to the restriction)
-                std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                  res_way_ids.push_back(it->second);
 
-                //now that we have the tile and currentNode walk in the reverse direction(forward in relation
-                //to the restriction) as this is really what needs to be stored in this tile.
-                if (tmp_ids.size()) {
+                  //walk in the forward direction (reverse in relation to the restriction)
+                  std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
 
-                   res_way_ids.clear();
-                   res_way_ids.push_back(it->second);
-
-                   for (const auto& v : restriction.vias())
-                     res_way_ids.push_back(v);
-
-                   res_way_ids.push_back(restriction.to());
-                   tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
-
+                  //now that we have the tile and currentNode walk in the reverse direction(forward in relation
+                  //to the restriction) as this is really what needs to be stored in this tile.
                   if (tmp_ids.size()) {
-                    std::vector<GraphId> vias;
-                    std::copy(tmp_ids.begin()+1, tmp_ids.end()-1, std::back_inserter(vias));
 
-                    if (vias.size() > kMaxViasPerRestriction) {
-                      LOG_WARN("Tried to exceed max vias per restriction(reverse).  Way: " +
-                               std::to_string(tmp_ids.at(0)));
-                      res_it++;
-                      continue;
-                    }
+                     res_way_ids.clear();
+                     res_way_ids.push_back(it->second);
 
-                    std::reverse(vias.begin(),vias.end());
-                    ComplexRestrictionBuilder complex_restriction;
-                    complex_restriction.set_from_id(tmp_ids.at(0));
-                    complex_restriction.set_via_list(vias);
-                    complex_restriction.set_to_id(tmp_ids.at(tmp_ids.size()-1));
-                    complex_restriction.set_type(restriction.type());
-                    complex_restriction.set_modes(restriction.modes());
+                     for (const auto& v : restriction.vias())
+                       res_way_ids.push_back(v);
 
-                    /** TODO - define common date/time format for use
-                    complex_restriction.set_begin_day(restriction.day_on());
-                    complex_restriction.set_end_day(restriction.day_off());
-                    uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
-                                                                          std::to_string(restriction.minute_on()));
-                    complex_restriction.set_begin_time(begin_time);
-                    complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
-                                                                                         std::to_string(restriction.minute_off())) - begin_time);
-                    */
+                     res_way_ids.push_back(restriction.to());
+                     tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
 
-                    // determine if we need to add this complex restriction or not.
-                    // basically we do not want any dups.
-                    bool bfound = false;
-                    auto res = forward_tmp_cr.equal_range(tmp_ids.at(0));
-                    if (res.first != forward_tmp_cr.end()) {
-                      for (auto r = res.first; r != res.second; ++r) {
-                        if (complex_restriction == r->second) {
-                          bfound = true;
-                          break;
+                    if (tmp_ids.size()) {
+                      std::vector<GraphId> vias;
+                      std::copy(tmp_ids.begin()+1, tmp_ids.end()-1, std::back_inserter(vias));
+
+                      if (vias.size() > kMaxViasPerRestriction) {
+                        LOG_WARN("Tried to exceed max vias per restriction(reverse).  Way: " +
+                                 std::to_string(tmp_ids.at(0)));
+                        res_it++;
+                        continue;
+                      }
+
+                      std::reverse(vias.begin(),vias.end());
+                      ComplexRestrictionBuilder complex_restriction;
+                      complex_restriction.set_from_id(tmp_ids.at(0));
+                      complex_restriction.set_via_list(vias);
+                      complex_restriction.set_to_id(tmp_ids.at(tmp_ids.size()-1));
+                      complex_restriction.set_type(restriction.type());
+                      complex_restriction.set_modes(restriction.modes());
+
+                      /** TODO - define common date/time format for use
+                      complex_restriction.set_begin_day(restriction.day_on());
+                      complex_restriction.set_end_day(restriction.day_off());
+                      uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
+                                                                            std::to_string(restriction.minute_on()));
+                      complex_restriction.set_begin_time(begin_time);
+                      complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
+                                                                                           std::to_string(restriction.minute_off())) - begin_time);
+                      */
+
+                      // determine if we need to add this complex restriction or not.
+                      // basically we do not want any dups.
+                      bool bfound = false;
+                      auto res = forward_tmp_cr.equal_range(tmp_ids.at(0));
+                      if (res.first != forward_tmp_cr.end()) {
+                        for (auto r = res.first; r != res.second; ++r) {
+                          if (complex_restriction == r->second) {
+                            bfound = true;
+                            break;
+                          }
                         }
                       }
-                    }
-                    if (!bfound) { // no dups.
-                      forward_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
-                      updated_forward_cr_list.emplace_back(complex_restriction);
+                      if (!bfound) { // no dups.
+                        forward_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
+                        updated_forward_cr_list.emplace_back(complex_restriction);
+                      }
                     }
                   }
                 }

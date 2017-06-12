@@ -124,8 +124,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
             ss << ":";
             ss << std::setfill('0') << std::setw(2) << seconds;
 
-            LOG_INFO("LineID: " + std::to_string(sp.line_id()) +
-                     " Route: " + std::to_string(sp.route_index()) +
+            LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
                      " Trip: " + std::to_string(sp.trip_id()) +
                      " Dep Time: " + ss.str());
           }

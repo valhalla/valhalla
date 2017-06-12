@@ -132,6 +132,7 @@ class thor_worker_t {
   MultiModalPathAlgorithm multi_modal_astar;
   Isochrone isochrone_gen;
   float long_request;
+  std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
