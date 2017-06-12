@@ -62,7 +62,8 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  bool reverse = false;
+  bool reverse, polygons = false;
+
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
   std::string origin, routetype, json, config, filename;
@@ -80,7 +81,8 @@ int main(int argc, char *argv[]) {
       ("ncontours,n", bpo::value<size_t>(&n_contours), "Number of contours.")
       ("minutes,m", bpo::value<unsigned int>(&max_minutes), "Maximum minutes.")
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file")
-      ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.");
+      ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.")
+      ("polygons,p", bpo::value<bool>(&polygons), "Return as polygons or lines");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -113,6 +115,10 @@ int main(int argc, char *argv[]) {
   std::vector<Location> locations;
   std::vector<Location> avoid_locations;
 
+  // Isochrone parameters
+  std::vector<std::string> colors {};
+  std::vector<float> contour_times;
+
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
@@ -127,6 +133,9 @@ int main(int argc, char *argv[]) {
       }
     }
     locations.push_back(Location::FromCsv(origin));
+    for (size_t i = 1; i <= n_contours; i++) {
+      contour_times.push_back((max_minutes * i) / n_contours);
+    }
   }
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
@@ -134,6 +143,14 @@ int main(int argc, char *argv[]) {
     std::stringstream stream;
     stream << json;
     boost::property_tree::read_json(stream, json_ptree);
+
+    if (vm.count("minutes")) {
+      LOG_WARN ("minutes parameter being overwritten by JSON contours");
+    }
+
+    if (vm.count("ncontours")) {
+      LOG_WARN ("ncontours parameter being overwritten by JSON contours");
+    }
 
     try {
       for (const auto& location : json_ptree.get_child("locations")) {
@@ -158,6 +175,24 @@ int main(int argc, char *argv[]) {
       routetype = json_ptree.get<std::string>("costing");
     } catch (...) {
       throw std::runtime_error("No edge/node costing provided");
+    }
+
+    // Get polygons
+    try {
+      polygons = json_ptree.get<bool>("polygons");
+      if (vm.count("polygons")) {
+        LOG_WARN ("polygons parameter being overwritten by JSON polygons parameter");
+      }
+    } catch (...) {}
+
+    // Get Contours
+    try {
+      for (const auto& contour : json_ptree.get_child("contours")) {
+        contour_times.push_back(contour.second.get<float>("time"));
+        colors.push_back(contour.second.get<std::string>("color", ""));
+      }
+    } catch (...) {
+      throw std::runtime_error("Contours failed to parse.");
     }
   }
 
@@ -247,10 +282,10 @@ int main(int argc, char *argv[]) {
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
   auto isotile = (routetype == "multimodal") ?
-      isochrone.ComputeMultiModal(path_location, max_minutes + 10, reader, mode_costing, mode) :
+      isochrone.ComputeMultiModal(path_location, contour_times.back() + 10, reader, mode_costing, mode) :
       (reverse) ?
-        isochrone.ComputeReverse(path_location, max_minutes + 10, reader, mode_costing, mode) :
-        isochrone.Compute(path_location, max_minutes + 10, reader, mode_costing, mode);
+        isochrone.ComputeReverse(path_location, contour_times.back() + 10, reader, mode_costing, mode) :
+        isochrone.Compute(path_location, contour_times.back() + 10, reader, mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
@@ -278,13 +313,10 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) + " max = " + std::to_string(max_row));
   LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) + " max = " + std::to_string(max_col));
 
-  std::vector<float> contour_times;
-  for (size_t i = 1; i <= n_contours; i++) {
-    contour_times.push_back((max_minutes * i) / n_contours);
-  }
+
   auto contours = isotile->GenerateContours(contour_times, false, 1.0f,
                             kOptimalGeneralization);
-  auto geojson = json::to_geojson<PointLL>(contours);
+  auto geojson = json::to_geojson<PointLL>(contours, polygons, colors);
 
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();

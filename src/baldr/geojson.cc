@@ -19,14 +19,13 @@ template <class coord_t>
 MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours, bool polygons, const std::vector<std::string>& colors) {
   //for each contour interval
   int i = 0;
-  auto color_itr = colors.cbegin();
+  auto color_itr = colors.crbegin();
   auto features = array({});
   for(const auto& interval : grid_contours) {
     //color was supplied
     std::stringstream hex;
-    if(color_itr != colors.cend() && !color_itr->empty()) {
-      hex << *color_itr;
-      color_itr++;
+    if(color_itr != colors.crend() && !color_itr->empty()) {
+      hex << "#" << *color_itr;
     }//or we computed it..
     else {
       auto h = i * (150.f / grid_contours.size());
@@ -37,6 +36,9 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
       hex << "#" << std::hex << static_cast<int>(std::get<0>(color)*255 + .5f) <<
                     std::hex << static_cast<int>(std::get<1>(color)*255 + .5f) <<
                     std::hex << static_cast<int>(std::get<2>(color)*255 + .5f);
+    }
+    if (color_itr != colors.crend()) {
+      color_itr++;
     }
     ++i;
 
