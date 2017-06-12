@@ -174,10 +174,10 @@ void testLocation() {
           "state":"PA",
           "type":"break",
           "side_of_street":"right",
-          "lat":40.242683,
-          "lon":-76.716652,
-          "city":"Hummelstown",
-          "street":"2131 Raleigh Road",
+          "lat":120.24153,
+          "lon":-12.733452,
+          "city":"Lancaster",
+          "street":"123 Random Street",
           "heading":25,
           "name":"start",
           "postal_code":"12345",
@@ -198,12 +198,12 @@ void testLocation() {
   }
 
   Route::Location location = trip.locations(0);
-  if (location.lat() != 40.242683f) {
-    throw std::runtime_error ("lat is: " + std::to_string(location.lat()) + " | Expected: 40.242683");
+  if (location.lat() != 120.24153f) {
+    throw std::runtime_error ("lat is: " + std::to_string(location.lat()) + " | Expected: 120.24153");
   }
 
-  if (location.lon() != -76.716652f) {
-    throw std::runtime_error ("lon is: " + std::to_string(location.lon()) + " | Expected: -76.716652");
+  if (location.lon() != -12.733452f) {
+    throw std::runtime_error ("lon is: " + std::to_string(location.lon()) + " | Expected: -12.733452");
   }
 
   if (location.type() != "break") {
@@ -218,12 +218,12 @@ void testLocation() {
     throw std::runtime_error ("name is: " + location.name() + " | Expected: start");
   }
 
-  if (location.street() != "2131 Raleigh Road") {
-    throw std::runtime_error ("street is: " + location.street() + " | Expected: 2131 Raleigh Road");
+  if (location.street() != "123 Random Street") {
+    throw std::runtime_error ("street is: " + location.street() + " | Expected: 123 Random Street");
   }
 
-  if (location.city() != "Hummelstown") {
-    throw std::runtime_error ("city is: " + location.street() + " | Expected: Hummelstown");
+  if (location.city() != "Lancaster") {
+    throw std::runtime_error ("city is: " + location.street() + " | Expected: Lancaster");
   }
 
   if (location.state() != "PA") {
@@ -254,12 +254,12 @@ void testLocation() {
 void testSummary () {
   const std::string summaryTest =
       R"({"trip":{"summary":{
-          "max_lon":-76.711983,
-          "max_lat":40.535240,
+          "max_lon":-12.733452,
+          "max_lat":120.24153,
           "time":8435,
           "length":147.371,
-          "min_lat":39.982777,
-          "min_lon":-78.529427
+          "min_lat":119.24153,
+          "min_lon":-13.733452
         }}})";
   Route route;
   jsonToProtoRoute (summaryTest, route);
@@ -281,20 +281,20 @@ void testSummary () {
     throw std::runtime_error ("time is: " + std::to_string(summary.time()) + " | Expected: 8435");
   }
 
-  if (summary.min_lat() != 39.982777f) {
-    throw std::runtime_error ("min_lat is: " + std::to_string(summary.min_lat()) + " | Expected: 39.982777");
+  if (summary.min_lat() != 119.24153f) {
+    throw std::runtime_error ("min_lat is: " + std::to_string(summary.min_lat()) + " | Expected: 119.24153");
   }
 
-  if (summary.min_lon() != -78.529427f) {
-    throw std::runtime_error ("min_lon is: " + std::to_string(summary.min_lon()) + " | Expected: -78.529427");
+  if (summary.min_lon() != -13.733452f) {
+    throw std::runtime_error ("min_lon is: " + std::to_string(summary.min_lon()) + " | Expected: -13.733452");
   }
 
-  if (summary.max_lat() != 40.535240f) {
-    throw std::runtime_error ("max_lat is: " + std::to_string(summary.max_lat()) + " | Expected: 40.535240");
+  if (summary.max_lat() != 120.24153f) {
+    throw std::runtime_error ("max_lat is: " + std::to_string(summary.max_lat()) + " | Expected: 120.24153");
   }
 
-  if (summary.max_lon() != -76.711983f) {
-    throw std::runtime_error ("max_lon is: " + std::to_string(summary.max_lon()) + " | Expected: -76.711983");
+  if (summary.max_lon() != -12.733452f) {
+    throw std::runtime_error ("max_lon is: " + std::to_string(summary.max_lon()) + " | Expected: -12.733452");
   }
 }
 
@@ -335,10 +335,10 @@ void testManeuver () {
       R"({"trip":{"legs":[{"maneuvers":[{
           "travel_type":"car",
           "travel_mode":"drive",
-          "verbal_pre_transition_instruction":"Take exit 1 46 on the right toward Altoona, Johnstown.",
-          "verbal_transition_alert_instruction":"Take exit 1 46 on the right.",
+          "verbal_pre_transition_instruction":"Take exit 1 on the right.",
+          "verbal_transition_alert_instruction":"Take exit 1 on the right.",
           "toll":true,
-          "instruction":"Take exit 146 on the right toward Altoona/Johnstown.",
+          "instruction":"Take exit 1 on the right.",
           "end_shape_index":2111,
           "type":20,
           "time":33,
@@ -380,9 +380,9 @@ void testManeuver () {
     throw std::runtime_error ("type is: " + std::to_string(maneuver.type()) + " | Expected: 20");
   }
 
-  if (maneuver.instruction() != "Take exit 146 on the right toward Altoona/Johnstown.") {
+  if (maneuver.instruction() != "Take exit 1 on the right.") {
     throw std::runtime_error ("instruction is: " + maneuver.instruction() +
-                              " | Expected: Take exit 146 on the right toward Altoona/Johnstown.");
+                              " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.street_names_size() != 2) {
@@ -427,14 +427,14 @@ void testManeuver () {
     throw std::runtime_error ("rough failed to parse");
   }
 
-  if (maneuver.verbal_transition_alert_instruction() != "Take exit 1 46 on the right.") {
+  if (maneuver.verbal_transition_alert_instruction() != "Take exit 1 on the right.") {
     throw std::runtime_error ("verbal_transition_alert_instruction is: " + maneuver.verbal_transition_alert_instruction() +
-                              " | Expected: Take exit 1 46 on the right.");
+                              " | Expected: Take exit 1 on the right.");
   }
 
-  if (maneuver.verbal_pre_transition_instruction() != "Take exit 1 46 on the right toward Altoona, Johnstown.") {
+  if (maneuver.verbal_pre_transition_instruction() != "Take exit 1 on the right.") {
     throw std::runtime_error ("verbal_pre_transition_instruction is: " + maneuver.verbal_pre_transition_instruction() +
-                              " | Expected: Take exit 1 46 on the right toward Altoona, Johnstown.");
+                              " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.verbal_post_transition_instruction() != "end") {
@@ -595,8 +595,8 @@ void testTransitStop() {
           "departure_date_time":"2017-06-12T07:49",
           "is_parent_stop":true,
           "assumed_schedule":true,
-          "lat":47.892,
-          "lon":89.12
+          "lat":13.892,
+          "lon":19.12
         }]}}]}]}})";
   Route route;
   jsonToProtoRoute (transitStopTest, route);
@@ -656,12 +656,12 @@ void testTransitStop() {
     throw std::runtime_error ("assumed_schedule failed to parse");
   }
 
-  if (transit_stop.lat() != 47.892f) {
-    throw std::runtime_error ("lat is: " + std::to_string(transit_stop.lat()) + " | Expected: 47.892");
+  if (transit_stop.lat() != 13.892f) {
+    throw std::runtime_error ("lat is: " + std::to_string(transit_stop.lat()) + " | Expected: 13.892");
   }
 
-  if (transit_stop.lon() != 89.12f) {
-    throw std::runtime_error ("lon is: " + std::to_string(transit_stop.lon()) + " | Expected: 89.12");
+  if (transit_stop.lon() != 19.12f) {
+    throw std::runtime_error ("lon is: " + std::to_string(transit_stop.lon()) + " | Expected: 19.12");
   }
 }
 
@@ -671,7 +671,7 @@ void testSignElements() {
           "exit_number_elements":[{},{}],
           "exit_toward_elements":[{},{}],
           "exit_branch_elements":[{},{}],
-          "exit_name_elements":[{"consecutive_count":2,"text":"Altoona"},{}]
+          "exit_name_elements":[{"consecutive_count":2,"text":"Town"},{}]
         }}]}]}})";
   Route route;
   jsonToProtoRoute (signTest, route);
@@ -716,8 +716,8 @@ void testSignElements() {
   }
 
   Route::Maneuver::Sign::Element element = sign.exit_name_elements(0);
-  if (element.text() != "Altoona") {
-    throw std::runtime_error ("text is: " + element.text() + " | Expected: Altoona");
+  if (element.text() != "Town") {
+    throw std::runtime_error ("text is: " + element.text() + " | Expected: Town");
   }
 
   if (element.consecutive_count() != 2) {
