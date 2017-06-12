@@ -215,6 +215,9 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt)
 
 // Method to test if tile exists
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+    return false;
+  }
   //if you are using an extract only check that
   if(!tile_extract_->tiles.empty())
     return tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend();
@@ -228,6 +231,9 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
 }
 
 bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+    return false;
+  }
   //if you are using an extract only check that
   auto extract = get_extract_instance(pt);
   if(!extract->tiles.empty())
