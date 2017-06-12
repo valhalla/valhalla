@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <queue>
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
   bool reverse = false;
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
-  std::string origin, routetype, json, config;
+  std::string origin, routetype, json, config, filename;
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
       "origin,o",boost::program_options::value<std::string>(&origin),
@@ -78,7 +79,8 @@ int main(int argc, char *argv[]) {
       ("reverse,r", bpo::value<bool>(&reverse), "Reverse direction.")
       ("ncontours,n", bpo::value<size_t>(&n_contours), "Number of contours.")
       ("minutes,m", bpo::value<unsigned int>(&max_minutes), "Maximum minutes.")
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file")
+      ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -290,7 +292,14 @@ int main(int argc, char *argv[]) {
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count();
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
-  std::cout << std::endl << *geojson;
+  std::cout << std::endl;
+  if (vm.count("file")) {
+    std::ofstream geojsonOut (filename, std::ofstream::out);
+    geojsonOut << *geojson;
+    geojsonOut.close();
+  } else {
+    std::cout << *geojson << std::endl;
+  }
 
   return EXIT_SUCCESS;
 }
