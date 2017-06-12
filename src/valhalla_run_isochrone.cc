@@ -62,11 +62,12 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  bool reverse, polygons = false;
-
+  bool reverse = false, polygons = false;
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
   std::string origin, routetype, json, config, filename;
+  float denoise = 1.f;
+  float generalize = kOptimalGeneralization;
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
       "origin,o",boost::program_options::value<std::string>(&origin),
@@ -80,9 +81,11 @@ int main(int argc, char *argv[]) {
       ("reverse,r", bpo::value<bool>(&reverse), "Reverse direction.")
       ("ncontours,n", bpo::value<size_t>(&n_contours), "Number of contours.")
       ("minutes,m", bpo::value<unsigned int>(&max_minutes), "Maximum minutes.")
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file")
+      ("config,c", bpo::value<std::string>(&config), "Valhalla configuration file")
       ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.")
-      ("polygons,p", bpo::value<bool>(&polygons), "Return as polygons or lines");
+      ("polygons,p", bpo::value<bool>(&polygons), "Return as polygons or lines.")
+      ("denoise,d", bpo::value<float>(&denoise), "Denoise value. Must be between 0 and 1.")
+      ("generalize,g", bpo::value<float>(&generalize), "Generalize value.");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -145,11 +148,11 @@ int main(int argc, char *argv[]) {
     boost::property_tree::read_json(stream, json_ptree);
 
     if (vm.count("minutes")) {
-      LOG_WARN ("minutes parameter being overwritten by JSON contours");
+      LOG_WARN ("minutes parameter is being overwritten by JSON contours");
     }
 
     if (vm.count("ncontours")) {
-      LOG_WARN ("ncontours parameter being overwritten by JSON contours");
+      LOG_WARN ("ncontours parameter is being overwritten by JSON contours");
     }
 
     try {
@@ -177,11 +180,27 @@ int main(int argc, char *argv[]) {
       throw std::runtime_error("No edge/node costing provided");
     }
 
+    // Get denoise parameter
+    try {
+      denoise = json_ptree.get<float>("denoise");
+      if (vm.count("denoise")) {
+        LOG_WARN ("denoise parameter is being overwritten by JSON denoise parameter")
+      }
+    } catch(...){}
+
+    // Get generalize parameter
+    try {
+      generalize = json_ptree.get<float>("generalize");
+      if (vm.count("generalize")) {
+        LOG_WARN ("generalize parameter is being overwritten by JSON generalize parameter")
+      }
+    } catch (...) {}
+
     // Get polygons
     try {
       polygons = json_ptree.get<bool>("polygons");
       if (vm.count("polygons")) {
-        LOG_WARN ("polygons parameter being overwritten by JSON polygons parameter");
+        LOG_WARN ("polygons parameter is being overwritten by JSON polygons parameter");
       }
     } catch (...) {}
 
@@ -313,9 +332,12 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) + " max = " + std::to_string(max_row));
   LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) + " max = " + std::to_string(max_col));
 
-
-  auto contours = isotile->GenerateContours(contour_times, false, 1.0f,
-                            kOptimalGeneralization);
+  if (denoise < 0.f || denoise > 1.f) {
+    denoise = std::max(std::min(denoise, 1.f), 0.f);
+    LOG_WARN ("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
+  }
+  auto contours = isotile->GenerateContours(contour_times, polygons, denoise,
+                           generalize);
   auto geojson = json::to_geojson<PointLL>(contours, polygons, colors);
 
   auto t3 = std::chrono::high_resolution_clock::now();
