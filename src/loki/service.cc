@@ -243,6 +243,10 @@ namespace valhalla {
           max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         if (kv.first != "skadi" && kv.first != "isochrone")
           max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
+        if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+          max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+          max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_locations"));
+        }
       }
       //this should never happen
       if (max_locations.empty())
@@ -250,6 +254,12 @@ namespace valhalla {
 
       if (max_distance.empty())
         throw std::runtime_error("Missing max_distance configuration");
+
+      if (max_matrix_distance.empty())
+        throw std::runtime_error("Missing max_matrix_distance configuration");
+
+      if (max_matrix_locations.empty())
+        throw std::runtime_error("Missing max_matrix_locations configuration");
 
       min_transit_walking_dis =
         config.get<size_t>("service_limits.pedestrian.min_transit_walking_distance");

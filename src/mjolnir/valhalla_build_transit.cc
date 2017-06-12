@@ -198,10 +198,16 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
       pt.get<std::string>("import_level") : "";
 
+  auto active_feed_version_import_level  = pt.get_optional<std::string>("import_level") ? "&active_feed_version_import_level=" +
+      pt.get<std::string>("import_level") : "";
+
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().rbegin()->second;
   curler_t curler;
-  auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
+
+  auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
+  request += active_feed_version_import_level;
+  auto feeds = curler(request, "features");
   for(const auto& feature : feeds.get_child("features")) {
 
     auto onestop_feed = feature.second.get_optional<std::string>("properties.onestop_id");
@@ -282,8 +288,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
 }
 
 void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
-    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter,
-    bool tile_within_one_tz, const std::unordered_map<uint32_t, multi_polygon_type>& tz_polys) {
+    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter) {
   for(const auto& stop_pt : response.get_child("stops")) {
     const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
@@ -300,21 +305,11 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     GraphId stop_id = tile_id;
     stop_id.fields.id = stops.size();
     stop->set_graphid(stop_id);
-    stop->set_timezone(0);
 
-    auto tz = stop_pt.second.get<std::string>("timezone", "");
-    uint32_t timezone = DateTime::get_tz_db().to_index(tz);
-    if (timezone == 0) {
+    auto tz = stop_pt.second.get<std::string>("timezone", "null");
+    if (tz != "null")
+      stop->set_timezone(tz);
 
-      //fallback to tz database.
-      timezone = (tile_within_one_tz) ?
-                  tz_polys.begin()->first :
-                  GetMultiPolyId(tz_polys, PointLL(lon, lat));
-      if (timezone == 0)
-        LOG_WARN("Timezone not found for stop " + stop->name());
-    }
-
-    stop->set_timezone(timezone);
     stops.emplace(stop->onestop_id(), stop_id);
     if(stops.size() == kMaxGraphId) {
       LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest")
@@ -484,7 +479,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
                     pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
-    pair->set_line_id(inserted.first->second);
     uniques.lock.unlock();
 
     //timing information
@@ -610,12 +604,6 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon; //TODO: use timezone code?
 
-  auto database = pt.get_optional<std::string>("mjolnir.timezone");
-  // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle)
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
-
   //for each tile
   while(true) {
     GraphId current;
@@ -647,15 +635,6 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::string prefix = transit_tile.string();
     LOG_INFO("Fetching " + transit_tile.string());
 
-    bool tile_within_one_tz = false;
-    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
-    if (tz_db_handle) {
-      tz_polys = GetTimeZones(tz_db_handle, filter);
-      if (tz_polys.size() == 1) {
-        tile_within_one_tz = true;
-      }
-    }
-
     //pull out all the STOPS (you see what we did there?)
     std::unordered_map<std::string, uint64_t> stops;
     boost::optional<std::string> request = url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
@@ -666,7 +645,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       //grab some stuff
       response = curler(*request, "stops");
       //copy stops in, keeping map of stopid to graphid
-      get_stops(tile, stops, current, response, filter, tile_within_one_tz, tz_polys);
+      get_stops(tile, stops, current, response, filter);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
 
@@ -1349,6 +1328,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::vector<float> distances,
                 const std::vector<uint32_t>& route_types,
                 std::vector<OneStopTest>& onestoptests,
+                bool tile_within_one_tz,
+                const std::unordered_map<uint32_t, multi_polygon_type>& tz_polys,
                 uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -1369,6 +1350,21 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     if (GraphId(stop.graphid()) != stopid) {
       LOG_ERROR("Stop key not equal!");
     }
+    PointLL stopll = { stop.lon(), stop.lat() };
+    const std::string& tz = stop.has_timezone() ? stop.timezone() : "";
+    uint32_t timezone = 0;
+    if (!tz.empty())
+      timezone = DateTime::get_tz_db().to_index(tz);
+
+    if (timezone == 0) {
+
+      //fallback to tz database.
+      timezone = (tile_within_one_tz) ?
+                  tz_polys.begin()->first :
+                  GetMultiPolyId(tz_polys, stopll);
+      if (timezone == 0)
+        LOG_WARN("Timezone not found for stop " + stop.name());
+    }
 
     LOG_DEBUG("Transit Stop: " + stop.name() + " stop index= " +
               std::to_string(stop_index));
@@ -1384,13 +1380,12 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       n_access &= ~s_access->second;
     }
     // TODO - parent/child stop types
-    PointLL stopll = { stop.lon(), stop.lat() };
     NodeInfo node(stopll, RoadClass::kServiceOther, n_access,
                         NodeType::kMultiUseTransitStop, false);
     node.set_mode_change(true);
     node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder_transit.directededges().size());
-    node.set_timezone(stop.timezone());
+    node.set_timezone(timezone);
     node.set_connecting_wayid(stop.osm_way_id());
 
  /** TODO - future when we get egress, station, platform hierarchy
@@ -1569,7 +1564,13 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   stats.midnight_dep_count = 0;
 
   GraphReader reader_transit_level(pt);
+  auto database = pt.get_optional<std::string>("timezone");
+  // Initialize the tz DB (if it exists)
+  sqlite3 *tz_db_handle = GetDBHandle(*database);
+  if (!tz_db_handle)
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
 
+  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   // Iterate through the tiles in the queue and find any that include stops
   for(; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
@@ -1741,10 +1742,21 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     // Add routes to the tile. Get vector of route types.
     std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder_transit);
 
+    auto filter = tiles.TileBounds(tile_id.tileid());
+    bool tile_within_one_tz = false;
+    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
+    if (tz_db_handle) {
+      tz_polys = GetTimeZones(tz_db_handle, filter);
+      if (tz_polys.size() == 1) {
+        tile_within_one_tz = true;
+      }
+    }
+
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, tile_id, file, transit_dir,
                lock, all_tiles, stop_edge_map, stop_access, shapes, distances,
-               route_types, onestoptests, stats.no_dir_edge_count);
+               route_types, onestoptests, tile_within_one_tz, tz_polys,
+               stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.stops_size()) + " stops, " +
@@ -1757,6 +1769,9 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     tilebuilder_transit.StoreTileData();
     lock.unlock();
   }
+
+  if (tz_db_handle)
+    sqlite3_close (tz_db_handle);
 
   // Send back the statistics
   results.set_value(stats);

@@ -497,6 +497,7 @@ bin_PROGRAMS += \
 	valhalla_build_tiles \
 	valhalla_build_admins \
 	valhalla_build_transit \
+	valhalla_fetch_transit \
 	valhalla_query_transit \
 	valhalla_validate_transit \
 	valhalla_ways_to_edges \
@@ -518,6 +519,9 @@ valhalla_build_admins_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc
 valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_build_transit_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_fetch_transit_SOURCES = src/mjolnir/valhalla_fetch_transit.cc
+valhalla_fetch_transit_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_fetch_transit_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc
 valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_query_transit_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
