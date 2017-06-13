@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  bool reverse = false, polygons = false;
+  bool reverse = false, polygons = false, show_locations = false;
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
   std::string origin, routetype, json, config, filename;
@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
       ("config,c", bpo::value<std::string>(&config), "Valhalla configuration file")
       ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.")
       ("polygons,p", bpo::value<bool>(&polygons), "Return as polygons or lines.")
+      ("show_locations,l", bpo::value<bool>(&show_locations), "Include locations in the final geojson.")
       ("denoise,d", bpo::value<float>(&denoise), "Denoise value. Must be between 0 and 1.")
       ("generalize,g", bpo::value<float>(&generalize), "Generalize value.");
 
@@ -201,6 +202,14 @@ int main(int argc, char *argv[]) {
       polygons = json_ptree.get<bool>("polygons");
       if (vm.count("polygons")) {
         LOG_WARN ("polygons parameter is being overwritten by JSON polygons parameter");
+      }
+    } catch (...) {}
+
+    // Get show_locations
+    try {
+      show_locations = json_ptree.get<bool>("show_locations");
+      if (vm.count("show_locations")) {
+        LOG_WARN ("show_locations parameter is being overwritten by JSON show_locations parameter");
       }
     } catch (...) {}
 
@@ -338,7 +347,8 @@ int main(int argc, char *argv[]) {
   }
   auto contours = isotile->GenerateContours(contour_times, polygons, denoise,
                            generalize);
-  auto geojson = json::to_geojson<PointLL>(contours, polygons, colors);
+  auto geojson = (show_locations) ? json::to_geojson<PointLL>(contours, polygons, colors, path_location)
+                                 : json::to_geojson<PointLL>(contours, polygons, colors);
 
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
