@@ -251,7 +251,7 @@ namespace valhalla {
           catch (...) { throw valhalla_exception_t{400, 421}; }
         }
         correlated = store_correlated_locations(request, locations);
-      }//if we have a sources and targets request here we will divvy up the correlated amongst them
+      }//if we have a sources and targets request here we will divy up the correlated amongst them
       else if(request_sources && request_targets) {
         for(const auto& s : *request_sources) {
           try{ locations.push_back(baldr::Location::FromPtree(s.second)); }

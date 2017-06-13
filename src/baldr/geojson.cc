@@ -16,16 +16,18 @@ namespace baldr {
 namespace json {
 
 template <class coord_t>
-MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours, bool polygons, const std::vector<std::string>& colors) {
+MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
+                  bool polygons, const std::unordered_map<float, std::string>& colors,
+                  const std::vector<PathLocation>& locations) {
   //for each contour interval
   int i = 0;
-  auto color_itr = colors.crbegin();
   auto features = array({});
   for(const auto& interval : grid_contours) {
+    auto color_itr = colors.find(interval.first);
     //color was supplied
     std::stringstream hex;
-    if(color_itr != colors.crend() && !color_itr->empty()) {
-      hex << "#" << *color_itr;
+    if(color_itr != colors.end() && !color_itr->second.empty()) {
+      hex << "#" << color_itr->second;
     }//or we computed it..
     else {
       auto h = i * (150.f / grid_contours.size());
@@ -36,9 +38,6 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
       hex << "#" << std::hex << static_cast<int>(std::get<0>(color)*255 + .5f) <<
                     std::hex << static_cast<int>(std::get<1>(color)*255 + .5f) <<
                     std::hex << static_cast<int>(std::get<2>(color)*255 + .5f);
-    }
-    if (color_itr != colors.crend()) {
-      color_itr++;
     }
     ++i;
 
@@ -79,6 +78,21 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
       );
     }
   }
+  for (const auto& location : locations) {
+    features->emplace_back(
+      map({
+        {"type", std::string("Feature")},
+        {"properties", map({})},
+        {"geometry", map({
+          {"type", std::string("Point")},
+          {"coordinates", array({
+            fp_t{location.latlng_.lng(), 6},
+            fp_t{location.latlng_.lat(), 6}
+          })}
+        })}
+      })
+    );
+  }
   //make the collection
   auto feature_collection = map({
     {"type", std::string("FeatureCollection")},
@@ -87,8 +101,12 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
   return feature_collection;
 }
 
-template MapPtr to_geojson<midgard::Point2>(const midgard::GriddedData<midgard::Point2>::contours_t&, bool, const std::vector<std::string>&);
-template MapPtr to_geojson<midgard::PointLL>(const midgard::GriddedData<midgard::PointLL>::contours_t&, bool, const std::vector<std::string>&);
+template MapPtr to_geojson<midgard::Point2>(const midgard::GriddedData<midgard::Point2>::contours_t&, bool,
+                                            const std::unordered_map<float, std::string>&,
+                                            const std::vector<PathLocation>& locations);
+template MapPtr to_geojson<midgard::PointLL>(const midgard::GriddedData<midgard::PointLL>::contours_t&, bool,
+                                             const std::unordered_map<float, std::string>&,
+                                             const std::vector<PathLocation>& locations);
 
 }
 }

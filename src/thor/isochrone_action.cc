@@ -26,10 +26,10 @@ namespace valhalla {
       auto costing = parse_costing(request);
 
       std::vector<float> contours;
-      std::vector<std::string> colors;
+      std::unordered_map<float, std::string> colors;
       for(const auto& contour : request.get_child("contours")) {
         contours.push_back(contour.second.get<float>("time"));
-        colors.push_back(contour.second.get<std::string>("color", ""));
+        colors[contours.back()] = contour.second.get<std::string>("color", "");
       }
       auto polygons = request.get<bool>("polygons", false);
       auto denoise = std::max(std::min(request.get<float>("denoise", 1.f), 1.f), 0.f);
@@ -49,8 +49,18 @@ namespace valhalla {
 
       //turn it into geojson
       auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
-      auto geojson = baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
+
+      auto showLocations = request.get<bool>("show_locations", false);
+      auto geojson = (showLocations) ? baldr::json::to_geojson<PointLL>(isolines, polygons, colors, correlated)
+                                     : baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
+
       auto id = request.get_optional<std::string>("id");
+      /*baldr::json::ArrayPtr features = geojson->at("features");
+      features->emplace_back(
+        baldr::json::map({
+          {"type", std::string}
+        })
+      );*/
       if(id)
         geojson->emplace("id", *id);
       std::stringstream stream; stream << *geojson;

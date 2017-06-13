@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
   std::vector<Location> avoid_locations;
 
   // Isochrone parameters
-  std::vector<std::string> colors {};
+  std::unordered_map<float, std::string> colors {};
   std::vector<float> contour_times;
 
   // argument checking and verification
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     try {
       for (const auto& contour : json_ptree.get_child("contours")) {
         contour_times.push_back(contour.second.get<float>("time"));
-        colors.push_back(contour.second.get<std::string>("color", ""));
+        colors[contour_times.back()] = contour.second.get<std::string>("color", "");
       }
     } catch (...) {
       throw std::runtime_error("Contours failed to parse.");
