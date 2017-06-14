@@ -197,7 +197,8 @@ config = {
     'isochrone': {
       'max_contours': 4,
       'max_time': 120,
-      'max_locations': 1
+      'max_distance': 50000.0
+      'max_locations': 25
     },
     'trace': {
       'max_distance': 200000.0,
