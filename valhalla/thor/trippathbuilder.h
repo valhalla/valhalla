@@ -74,7 +74,6 @@ class TripPathBuilder {
                                           odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile,
                                           const uint32_t current_time,
-                                          const uint32_t tc_length,
                                           const float length_percentage = 1.f);
 
   /**
