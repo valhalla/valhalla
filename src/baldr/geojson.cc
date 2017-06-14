@@ -78,6 +78,7 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
       );
     }
   }
+  // Add original locations to the geojson
   for (const auto& location : locations) {
     features->emplace_back(
       map({
