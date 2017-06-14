@@ -46,7 +46,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param  origin       Origin location
    * @param  dest         Destination location
    * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  costing      Costing methods.
+   * @param  mode_costing Costing methods for each mode.
    * @param  mode         Travel mode to use.
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
@@ -61,15 +61,20 @@ class AStarPathAlgorithm : public PathAlgorithm {
    */
   virtual void Clear();
 
+  /**
+   * Set a maximum label count. The path algorithm terminates if this
+   * is exceeded.
+   * @param  max_count  Maximum number of labels to allow.
+   */
+  void set_max_label_count(const uint32_t max_count) {
+    max_label_count_ = max_count;
+  }
+
  protected:
-  // Current travel mode
-  sif::TravelMode mode_;
-
-  // Current travel type
-  uint8_t travel_type_;
-
-  // Tile creation date
-  uint32_t tile_creation_date_;
+  uint32_t max_label_count_;    // Max label count to allow
+  sif::TravelMode mode_;        // Current travel mode
+  uint8_t travel_type_;         // Current travel type
+  uint32_t tile_creation_date_; // Tile creation date
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
@@ -146,7 +151,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * direction from the origin to the destination.
    * @param  edgeid   Edge where path completion occurs.
    * @param  orig     Location information of the origin.
-   * @param  origin   Location information of the destination
+   * @param  dest     Location information of the destination
    * @return Returns true if the path is trivial.
    */
   bool IsTrivial(const baldr::GraphId& edgeid,

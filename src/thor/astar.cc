@@ -18,11 +18,13 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 AStarPathAlgorithm::AStarPathAlgorithm()
-    : PathAlgorithm(), mode_(TravelMode::kDrive),
+    : PathAlgorithm(),
+      mode_(TravelMode::kDrive),
       travel_type_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      tile_creation_date_(0) {
+      tile_creation_date_(0),
+      max_label_count_(std::numeric_limits<uint32_t>::max()) {
 }
 
 // Destructor
@@ -141,6 +143,11 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
     if(interrupt && total_labels/kInterruptIterationsInterval < current_labels/kInterruptIterationsInterval)
       (*interrupt)();
     total_labels = current_labels;
+
+    // Abort if max label count is exceeded
+    if (total_labels > max_label_count_) {
+      return { };
+    }
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
