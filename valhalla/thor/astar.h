@@ -74,7 +74,6 @@ class AStarPathAlgorithm : public PathAlgorithm {
   uint32_t max_label_count_;    // Max label count to allow
   sif::TravelMode mode_;        // Current travel mode
   uint8_t travel_type_;         // Current travel type
-  uint32_t tile_creation_date_; // Tile creation date
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;

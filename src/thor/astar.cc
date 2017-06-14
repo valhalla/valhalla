@@ -23,7 +23,6 @@ AStarPathAlgorithm::AStarPathAlgorithm()
       travel_type_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      tile_creation_date_(0),
       max_label_count_(std::numeric_limits<uint32_t>::max()) {
 }
 
@@ -350,9 +349,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
-
-    // Set the tile creation date
-    tile_creation_date_ = tile->header()->date_created();
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
