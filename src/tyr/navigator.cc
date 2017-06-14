@@ -67,6 +67,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
 
   size_t curr_instruction_index = maneuver_index_;
   size_t next_instruction_index = (maneuver_index_ + 1);
+  float alert_length = 0.0f;
 
   // Only process a valid route state
   if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
@@ -126,12 +127,25 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       std::get<kPostTransition>(used_instructions_.at(curr_instruction_index)) = true;
     }
 
-    // else if route location is transition alert
-    // and maneuver has a transition alert
-    // and instruction has not been used
+    // if instruction has not been used
+    // and route location is an initial transition alert
     // then set route state to kTransitionAlert
     // ?? mark post transition already used
-    // TODO
+    else if (!(std::get<kInitialTransitionAlert>(used_instructions_.at(next_instruction_index)))
+        && IsInitialTransitionAlert(fix_location, nav_status, alert_length)) {
+      // Set route state
+      route_state_ = NavigationStatus_RouteState_kTransitionAlert;
+      nav_status.set_route_state(route_state_);
+
+      // Set the instruction maneuver index for the next maneuver
+      nav_status.set_instruction_maneuver_index(next_instruction_index);
+
+      // Set the transition alert length to the next maneuver
+      nav_status.set_transition_alert_length(alert_length);
+
+      // Mark that the initial transition was alert used
+      std::get<kInitialTransitionAlert>(used_instructions_.at(next_instruction_index)) = true;
+    }
   }
   return nav_status;
 }
@@ -493,6 +507,59 @@ uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
 bool Navigator::IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
     uint32_t upper_bound) const {
   return ((time > lower_bound) && (time < upper_bound));
+}
+
+bool Navigator::IsLengthWithinBounds(float length, float lower_bound,
+    float upper_bound) const {
+  return ((length > lower_bound) && (length < upper_bound));
+}
+
+// TODO metric
+bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
+    const NavigationStatus& nav_status, float& alert_length) const {
+
+  size_t curr_instruction_index = maneuver_index_;
+  size_t next_instruction_index = (maneuver_index_ + 1);
+
+  // Verify that the current maneuver is not a destination maneuver
+  // and the next maneuver has a transition alert instruction
+  if (!IsDestinationManeuverIndex(curr_instruction_index)
+      && route_.trip().legs(leg_index_).maneuvers(next_instruction_index).has_verbal_transition_alert_instruction()) {
+
+    // Validate initial long current maneuver length
+    // and fix speed OR maneuver speed
+    // and location prior next maneuver
+    if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
+        > kInitialLongTransitionAlertMinManeuverLength)
+        && ((fix_location.has_speed()
+            && (fix_location.speed() > kInitialLongTransitionAlertMinSpeed)) // ~62.6 MPH
+            || (UnitsToMeters(nav_status.remaining_maneuver_length())
+                / nav_status.remaining_maneuver_time()
+                > kInitialLongTransitionAlertMinSpeed))
+        && IsLengthWithinBounds(kInitialLongTransitionAlertLength,
+            kInitialLongTransitionAlertLowerLength,
+            kInitialLongTransitionAlertUpperLength)) {
+      alert_length = kInitialLongTransitionAlertLength;
+      return true;
+    }
+    // Validate initial short current maneuver length
+    // and fix speed OR maneuver speed
+    // and location prior next maneuver
+    else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
+        > kInitialShortTransitionAlertMinManeuverLength)
+        && ((fix_location.has_speed()
+            && (fix_location.speed() > kInitialShortTransitionAlertMinSpeed)) // ~40.3 MPH
+            || (UnitsToMeters(nav_status.remaining_maneuver_length())
+                / nav_status.remaining_maneuver_time()
+                > kInitialShortTransitionAlertMinSpeed))
+        && IsLengthWithinBounds(kInitialShortTransitionAlertLength,
+            kInitialShortTransitionAlertLowerLength,
+            kInitialShortTransitionAlertUpperLength)) {
+      alert_length = kInitialShortTransitionAlertLength;
+      return true;
+    }
+  }
+  return false;
 }
 
 }

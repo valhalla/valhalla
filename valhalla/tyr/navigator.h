@@ -30,6 +30,30 @@ constexpr float kWordsPerSecond = 2.5f;
 // Minimum speed threshold in meters per second (~1 KPH)
 constexpr float kMinSpeedThreshold = 0.277f;
 
+// Transition alert upper and lower deltas
+constexpr float kTransitionAlertUpperDelta = 0.03f;
+constexpr float kTransitionAlertLowerDelta = 0.03f;
+
+// Minimum speed for certain transition alert types
+constexpr uint32_t kInitialLongTransitionAlertMinSpeed = 28; // meters per second (~62.6 MPH)
+constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 18; // meters per second (~40.3 MPH)
+
+// TODO metric
+
+// Initial long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialLongTransitionAlertLength = 2.0f;
+constexpr float kInitialLongTransitionAlertLowerLength = kInitialLongTransitionAlertLength - kTransitionAlertLowerDelta;
+constexpr float kInitialLongTransitionAlertUpperLength = kInitialLongTransitionAlertLength + kTransitionAlertUpperDelta;
+constexpr float kInitialLongTransitionAlertMinManeuverLength = kInitialLongTransitionAlertLength * 2.0f;
+
+// Initial short transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialShortTransitionAlertLength = 1.0f;
+constexpr float kInitialShortTransitionAlertUpperLength = kInitialShortTransitionAlertLength + kTransitionAlertUpperDelta;
+constexpr float kInitialShortTransitionAlertLowerLength = kInitialShortTransitionAlertLength - kTransitionAlertLowerDelta;
+constexpr float kInitialShortTransitionAlertMinManeuverLength = kInitialShortTransitionAlertLength * 2.0f;
+
 // Post-transition lower and upper bounds in seconds
 constexpr uint32_t kPostTransitionLowerBound = 2;
 constexpr uint32_t kPostTransitionUpperBound = 6;
@@ -40,8 +64,8 @@ constexpr size_t kClosestPointDistance = 1;
 constexpr size_t kClosestPointSegmentIndex = 2;
 
 // Used instruction tuple indexes
-constexpr size_t kDistantTransitionAlert = 0; // 2 or 1 miles depending on speed
-constexpr size_t kCloseTransitionAlert = 1;   // half or quarter mile depending on speed
+constexpr size_t kInitialTransitionAlert = 0; // 2 or 1 miles depending on speed
+constexpr size_t kFinalTransitionAlert = 1;   // half or quarter mile depending on speed
 constexpr size_t kPreTransition = 2;
 constexpr size_t kPostTransition = 3;
 
@@ -102,6 +126,12 @@ class Navigator {
     bool IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
         uint32_t upper_bound) const;
 
+    bool IsLengthWithinBounds(float length, float lower_bound,
+        float upper_bound) const;
+
+    bool IsInitialTransitionAlert(const FixLocation& fix_location,
+        const NavigationStatus& nav_status, float& alert_length) const;
+
     /////////////////////////////////////////////////////////////////////////////
 
     // Specified route to navigate
@@ -132,7 +162,7 @@ class Navigator {
     std::vector<std::pair<float, uint32_t>> remaining_leg_values_;
 
     // List of tuples by maneuver index that keeps track of the used instructions
-    //     kDistantTransitionAlert
+    //     kInitialTransitionAlert
     //     kCloseTransitionAlert
     //     kPreTransition
     //     kPostTransition

@@ -32,5 +32,6 @@ message NavigationStatus {
   optional float remaining_maneuver_length = 8;    // remaining maneuver length based on units (mi or km)
   optional uint32 remaining_maneuver_time = 9;     // remaining maneuver time in seconds
   optional uint32 instruction_maneuver_index = 10; // maneuver index to reference for verbal and display instructions
+  optional float transition_alert_length = 11;     // transition alert length based on units (mi or km)
 }
 
