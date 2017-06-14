@@ -73,7 +73,7 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid)
       : header_(nullptr) {
 
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid())
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level())
     return;
 
   // Open to the end of the file so we can immediately get size;
@@ -276,7 +276,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
   //figure the largest id for this level
   auto found = TileHierarchy::levels().find(graphid.level());
   if(found == TileHierarchy::levels().cend() && graphid.level() != TileHierarchy::GetTransitLevel().level)
-    throw std::runtime_error("Could not compute FileSuffix for non-existent level");
+    throw std::runtime_error("Could not compute FileSuffix for non-existent level: " +
+                             std::to_string(graphid.level()));
 
   //get the level info
   const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level ?

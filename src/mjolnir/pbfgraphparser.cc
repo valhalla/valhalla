@@ -574,7 +574,9 @@ struct graph_callback : public OSMPBF::Callback {
             || value.find("brick") != std::string::npos)
           w.set_surface(Surface::kPavedRough);
 
-        else if (value.find("compacted") != std::string::npos)
+        else if (value.find("compacted") != std::string::npos
+            || value.find("wood") != std::string::npos
+            || value.find("boardwalk") != std::string::npos)
           w.set_surface(Surface::kCompacted);
 
         else if (value.find("dirt") != std::string::npos
@@ -587,8 +589,6 @@ struct graph_callback : public OSMPBF::Callback {
         else if (value.find("gravel") != std::string::npos
             || value.find("pebblestone") != std::string::npos
             || value.find("sand") != std::string::npos
-            || value.find("wood") != std::string::npos
-            || value.find("boardwalk") != std::string::npos
             || value.find("unpaved") != std::string::npos)
           w.set_surface(Surface::kGravel);
         else if (value.find("grass") != std::string::npos)

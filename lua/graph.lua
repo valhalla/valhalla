@@ -1425,18 +1425,20 @@ function rels_proc (kv, nokeys)
 
        if restrict ~= nil then
 
+         kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
+         kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
+         kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]
+         kv["restriction:motorcar"] = restriction[kv["restriction:motorcar"]]
+         kv["restriction:bus"] = restriction[kv["restriction:bus"]]
+         kv["restriction:bicycle"] = restriction[kv["restriction:bicycle"]]
+         kv["restriction:hazmat"] = restriction[kv["restriction:hazmat"]]
+
          if restrict_type == nil then
            kv["restriction"] = restrict
          else
            kv["restriction"] = nil
-           kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
-           kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
-           kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]
-           kv["restriction:motorcar"] = restriction[kv["restriction:motorcar"]]
-           kv["restriction:bus"] = restriction[kv["restriction:bus"]]
-           kv["restriction:bicycle"] = restriction[kv["restriction:bicycle"]]
-           kv["restriction:hazmat"] = restriction[kv["restriction:hazmat"]]
          end
+
          if kv["day_on"] or kv["day_off"] then
 
            local day_on = dow[kv["day_on"]]
