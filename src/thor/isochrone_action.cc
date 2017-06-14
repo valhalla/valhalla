@@ -55,12 +55,6 @@ namespace valhalla {
                                      : baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
 
       auto id = request.get_optional<std::string>("id");
-      /*baldr::json::ArrayPtr features = geojson->at("features");
-      features->emplace_back(
-        baldr::json::map({
-          {"type", std::string}
-        })
-      );*/
       if(id)
         geojson->emplace("id", *id);
       std::stringstream stream; stream << *geojson;
