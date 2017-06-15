@@ -127,7 +127,7 @@ float PointLL::Heading(const PointLL& ll2) const {
 std::tuple<PointLL, float, int> PointLL::ClosestPoint(
     const std::vector<PointLL>& pts, size_t begin_index) const {
   PointLL closest {};
-  size_t closest_segment;
+  int closest_segment = -1;
   float mindistsqr = std::numeric_limits<float>::max();
   size_t process_size = 0;
 
@@ -180,7 +180,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(
     // Check if this point is better
     const auto sq_distance = approx.DistanceSquared(point);
     if (sq_distance < mindistsqr) {
-      closest_segment = index;
+      closest_segment = static_cast<int>(index);
       mindistsqr = sq_distance;
       closest = std::move(point);
     }
