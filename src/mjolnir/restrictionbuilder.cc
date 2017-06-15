@@ -303,7 +303,12 @@ void build(const std::string& complex_restriction_file,
               for (const auto& v : restriction.vias())
                 res_way_ids.push_back(v);
 
-              res_way_ids.push_back(restriction.to());
+              // if via = restriction.to then don't add to the res_way_ids vector.  This happens
+              // when we have a restriction:<type> with a via as a node in the osm data.
+              if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())
+                res_way_ids.push_back(restriction.to());
+              else if (restriction.vias().size() > 1)
+                res_way_ids.push_back(restriction.to());
 
               //walk in the forward direction.
               std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
@@ -318,8 +323,14 @@ void build(const std::string& complex_restriction_file,
                 std::vector<uint64_t> temp_vias = restriction.vias();
                 std::reverse(temp_vias.begin(),temp_vias.end());
 
-                for (const auto& v : temp_vias)
-                  res_way_ids.push_back(v);
+                // if via = restriction.to then don't add to the res_way_ids vector.  This happens
+                // when we have a restriction:<type> with a via as a node in the osm data.
+                if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())
+                  for (const auto& v : temp_vias)
+                    res_way_ids.push_back(v);
+                else if (restriction.vias().size() > 1)
+                  for (const auto& v : temp_vias)
+                    res_way_ids.push_back(v);
 
                 res_way_ids.push_back(e_offset.wayid());
                 tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
@@ -336,7 +347,7 @@ void build(const std::string& complex_restriction_file,
                     continue;
                   }
 
-                  // flip the vias becuase we walk backwards from the search direction
+                  // flip the vias because we walk backwards from the search direction
                   // using the predecessor edges in thor.
                   std::reverse(vias.begin(),vias.end());
 
@@ -406,8 +417,14 @@ void build(const std::string& complex_restriction_file,
                   std::vector<uint64_t> temp_vias = restriction.vias();
                   std::reverse(temp_vias.begin(),temp_vias.end());
 
-                  for (const auto& v : temp_vias)
-                    res_way_ids.push_back(v);
+                  // if via = restriction.to then don't add to the res_way_ids vector.  This happens
+                  // when we have a restriction:<type> with a via as a node in the osm data.
+                  if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())
+                    for (const auto& v : temp_vias)
+                      res_way_ids.push_back(v);
+                  else if (restriction.vias().size() > 1)
+                    for (const auto& v : temp_vias)
+                      res_way_ids.push_back(v);
 
                   res_way_ids.push_back(it->second);
 
@@ -424,7 +441,13 @@ void build(const std::string& complex_restriction_file,
                      for (const auto& v : restriction.vias())
                        res_way_ids.push_back(v);
 
-                     res_way_ids.push_back(restriction.to());
+                     // if via = restriction.to then don't add to the res_way_ids vector.  This happens
+                     // when we have a restriction:<type> with a via as a node in the osm data.
+                     if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())
+                       res_way_ids.push_back(restriction.to());
+                     else if (restriction.vias().size() > 1)
+                       res_way_ids.push_back(restriction.to());
+
                      tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
 
                     if (tmp_ids.size()) {
