@@ -84,8 +84,29 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
     max_distance = max_seconds * 70.0f * kMPHtoMetersPerSec;
   }
 
+  // Form bounding box that's just big enough to surround all of the locations.
+  PointLL center_ll = origin_locations[0].latlng_;
+  AABB2<PointLL> loc_bounds(center_ll.lng(), center_ll.lat(), center_ll.lng(), center_ll.lat());
+
+  for (const auto& loc : origin_locations) {
+    loc_bounds.Expand(loc.latlng_);
+  }
+
+  // Find the location closest to the center.
+  PointLL bounds_center = loc_bounds.Center();
+  float shortest_dist = center_ll.Distance(bounds_center);
+  for (const auto& loc : origin_locations) {
+    float current_dist = loc.latlng_.Distance(bounds_center);
+    if (current_dist < shortest_dist) {
+      shortest_dist = current_dist;
+      center_ll = loc.latlng_;
+    }
+  }
+
   // Range of grids in latitude space
   float dlat = max_distance / kMetersPerDegreeLat;
+  // Range of grids in longitude space
+  float dlon = max_distance / DistanceApproximator::MetersPerLngDegree(center_ll.lat());
 
   // Optimize for 600 cells in latitude (slightly larger for multimodal).
   // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes
@@ -103,18 +124,9 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
   // Set the shape interval in meters
   shape_interval_ = grid_size * kMetersPerDegreeLat * 0.25f;
 
-  // Form grid for isotiles.
-  PointLL center_ll = origin_locations[0].latlng_;
-  float dlon = max_distance / DistanceApproximator::MetersPerLngDegree(center_ll.lat());
-
-  // Adjust bounds to surround all locations
-  AABB2<PointLL> bounds(10000.0f, 10000.0f, -10000.0f, -10000.0f);
-  for (const auto& loc : origin_locations) {
-    PointLL center = loc.latlng_;
-    AABB2<PointLL> bbox(PointLL(center.lng() - dlon, center.lat() - dlat),
-                        PointLL(center.lng() + dlon, center.lat() + dlat));
-    bounds.Expand(bbox);
-  }
+  // Create expanded bounds from the bounded box around the locations.
+  AABB2<PointLL> bounds(loc_bounds.minx() - dlon, loc_bounds.miny() - dlat,
+                        loc_bounds.maxx() + dlon, loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
   isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_minutes));

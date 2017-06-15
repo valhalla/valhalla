@@ -2,6 +2,7 @@
 #include "loki/search.h"
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"
+#include "midgard/logging.h"
 #include <boost/property_tree/json_parser.hpp>
 
 using namespace prime_server;
@@ -12,8 +13,8 @@ namespace {
 
   void check_distance(const std::vector<Location>& locations, float matrix_max_distance, float& max_location_distance) {
     //see if any locations pairs are unreachable or too far apart
-    for(const auto& source = locations.begin(); source != locations.end() - 1; ++source){
-      for(const auto& target = source + 1; target != locations.end(); ++target){
+    for(auto source = locations.begin(); source != locations.end() - 1; ++source){
+      for(auto target = source + 1; target != locations.end(); ++target){
         //check if distance between latlngs exceed max distance limit
         auto path_distance = source->latlng_.Distance(target->latlng_);
 
