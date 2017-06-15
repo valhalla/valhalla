@@ -274,7 +274,7 @@ TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
     case NodeType::kTransitEgress: // need to handle the new uses in odin
     case NodeType::kTransitStation: // need to handle the new uses in odin
     case NodeType::kMultiUseTransitPlatform: // need to handle the new uses in odin
-      return TripPath_Node_Type_kMultiUseTransitStop;
+      return TripPath_Node_Type_kMultiUseTransitPlatform;
     case NodeType::kBikeShare:
       return TripPath_Node_Type_kBikeShare;
     case NodeType::kParking:
