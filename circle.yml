@@ -35,9 +35,5 @@ dependencies:
 test:
   override:
     - sudo make install
-
-general:
-  artifacts:
-    - config.log
-    - test/*.log
-    - Makefile
+  post:
+    - cp -rp config.log Makefile test/*.log ${CIRCLE_ARTIFACTS}
