@@ -45,6 +45,11 @@ uint8_t TileHierarchy::get_level(const RoadClass roadclass) {
   }
 }
 
+// Get the max hierarchy level.
+uint8_t TileHierarchy::get_max_level() {
+  return transit_level_.level;
+}
+
 // Returns all the GraphIds of the tiles which intersect the given bounding
 // box at that level.
 std::vector<GraphId> TileHierarchy::GetGraphIds(

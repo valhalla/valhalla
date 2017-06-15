@@ -101,7 +101,8 @@ struct CandidateEdge {
 uint16_t bearing(const std::vector<vm::PointLL> &shape) {
   // OpenLR says to use 20m along the edge, but we could use the
   // GetOffsetForHeading function, which adapts it to the road class.
-  float heading = vm::PointLL::HeadingAlongPolyline(shape, 20);
+  float heading = shape.size() >= 2 ?
+      vm::PointLL::HeadingAlongPolyline(shape, 20) : 0.0f;
   assert(heading >= 0.0);
   assert(heading < 360.0);
   return uint16_t(std::round(heading));
@@ -184,7 +185,7 @@ private:
 
   vb::GraphReader m_reader;
   vs::TravelMode m_travel_mode;
-  std::shared_ptr<vt::PathAlgorithm> m_path_algo;
+  std::shared_ptr<vt::AStarPathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
   std::shared_ptr<vj::GraphTileBuilder> m_tile_builder;
 
@@ -641,13 +642,11 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     return edges;
   }
 
-  return { };
-
   // TODO - this should not happen if both are at nodes! Does not happen
   // with low node tolerance, but as node search tolerance is raised we get
   // fallback cases where we shouldn't
   if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
-    LOG_INFO("Fall back to A*: " + std::to_string(segment_id) + " value = " +
+    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
                   std::to_string(segment_id.value));
   }
 
@@ -671,6 +670,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
+    m_path_algo->set_max_label_count(100);
     auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
 
     if (path.empty()) {
@@ -787,10 +787,10 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   if (edges.empty()) {
     size_t n = segment.lrps_size();
     if (segment.lrps(0).at_node() && segment.lrps(n-1).at_node()) {
-      LOG_INFO("No match from nodes: " + std::to_string(segment_id) + " value = " +
+      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) + " value = " +
                     std::to_string(segment_id.value));
     } else {
-      LOG_INFO("No match along edge: " + std::to_string(segment_id) + " value = " +
+      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) + " value = " +
               std::to_string(segment_id.value));
     }
     return false;

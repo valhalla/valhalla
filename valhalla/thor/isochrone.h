@@ -93,7 +93,6 @@ class Isochrone {
   float shape_interval_;        // Interval along shape to mark time
   sif::TravelMode mode_;        // Current travel mode
   uint32_t access_mode_;        // Access mode used by the costing method
-  uint32_t tile_creation_date_; // Tile creation date
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
