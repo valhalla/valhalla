@@ -31,28 +31,51 @@ constexpr float kWordsPerSecond = 2.5f;
 constexpr float kMinSpeedThreshold = 0.277f;
 
 // Transition alert upper and lower deltas
-constexpr float kTransitionAlertUpperDelta = 0.03f;
-constexpr float kTransitionAlertLowerDelta = 0.03f;
+constexpr float kTransitionAlertLowerDelta = 0.03f; // ~48.3 meters
+constexpr float kTransitionAlertUpperDelta = 0.03f; // ~48.3 meters
 
 // Minimum speed for certain transition alert types
 constexpr uint32_t kInitialLongTransitionAlertMinSpeed = 28; // meters per second (~62.6 MPH)
 constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 18; // meters per second (~40.3 MPH)
+constexpr uint32_t kFinalLongTransitionAlertMinSpeed = 28; // meters per second (~62.6 MPH)
+constexpr uint32_t kFinalMediumTransitionAlertMinSpeed = 10; // meters per second (~22.4 MPH)
 
 // TODO metric
 
 // Initial long transition alert length, length bounds, and
 // minimum maneuver length threshold
-constexpr float kInitialLongTransitionAlertLength = 2.0f;
+constexpr float kInitialLongTransitionAlertLength = 2.0f; // two miles
 constexpr float kInitialLongTransitionAlertLowerLength = kInitialLongTransitionAlertLength - kTransitionAlertLowerDelta;
 constexpr float kInitialLongTransitionAlertUpperLength = kInitialLongTransitionAlertLength + kTransitionAlertUpperDelta;
 constexpr float kInitialLongTransitionAlertMinManeuverLength = kInitialLongTransitionAlertLength * 2.0f;
 
 // Initial short transition alert length, length bounds, and
 // minimum maneuver length threshold
-constexpr float kInitialShortTransitionAlertLength = 1.0f;
+constexpr float kInitialShortTransitionAlertLength = 1.0f; // one mile
 constexpr float kInitialShortTransitionAlertUpperLength = kInitialShortTransitionAlertLength + kTransitionAlertUpperDelta;
 constexpr float kInitialShortTransitionAlertLowerLength = kInitialShortTransitionAlertLength - kTransitionAlertLowerDelta;
 constexpr float kInitialShortTransitionAlertMinManeuverLength = kInitialShortTransitionAlertLength * 2.0f;
+
+// Final long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalLongTransitionAlertLength = 0.5f; // half mile
+constexpr float kFinalLongTransitionAlertLowerLength = kFinalLongTransitionAlertLength - kTransitionAlertLowerDelta;
+constexpr float kFinalLongTransitionAlertUpperLength = kFinalLongTransitionAlertLength + kTransitionAlertUpperDelta;
+constexpr float kFinalLongTransitionAlertMinManeuverLength = kFinalLongTransitionAlertLength * 2.0f;
+
+// Final medium transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalMediumTransitionAlertLength = 0.25f; // quarter mile
+constexpr float kFinalMediumTransitionAlertLowerLength = kFinalMediumTransitionAlertLength - kTransitionAlertLowerDelta;
+constexpr float kFinalMediumTransitionAlertUpperLength = kFinalMediumTransitionAlertLength + kTransitionAlertUpperDelta;
+constexpr float kFinalMediumTransitionAlertMinManeuverLength = kFinalMediumTransitionAlertLength * 2.0f;
+
+// Final short transition alert length, length bounds, and
+// minimum maneuver length threshold
+// TODO: maybe refactor for just short values less than medium length?
+constexpr float kFinalShortTransitionAlertLength = 0.095f; // miles (500 feet)
+constexpr float kFinalShortTransitionAlertLowerLength = kFinalShortTransitionAlertLength - (kTransitionAlertLowerDelta * 0.6667f);
+constexpr float kFinalShortTransitionAlertUpperLength = kFinalShortTransitionAlertLength + (kTransitionAlertUpperDelta * 0.6667f);
 
 // Post-transition lower and upper bounds in seconds
 constexpr uint32_t kPostTransitionLowerBound = 2;
@@ -130,6 +153,9 @@ class Navigator {
         float upper_bound) const;
 
     bool IsInitialTransitionAlert(const FixLocation& fix_location,
+        const NavigationStatus& nav_status, float& alert_length) const;
+
+    bool IsFinalTransitionAlert(const FixLocation& fix_location,
         const NavigationStatus& nav_status, float& alert_length) const;
 
     /////////////////////////////////////////////////////////////////////////////

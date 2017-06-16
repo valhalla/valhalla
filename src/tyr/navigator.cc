@@ -71,6 +71,8 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
 
   // Only process a valid route state
   if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
+
+    //////////////////////////////////////////////////////////////////////////
     // If start maneuver index and instruction has not been used
     // and starting navigation and close to origin
     // then set route state to kPreTransition
@@ -88,6 +90,8 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       // Mark that the pre-transition was used
       std::get<kPreTransition>(used_instructions_.at(curr_instruction_index)) = true;
     }
+
+    //////////////////////////////////////////////////////////////////////////
     // else if not destination maneuver
     // and instruction has not been used
     // and route location is pre transition
@@ -107,6 +111,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       std::get<kPreTransition>(used_instructions_.at(next_instruction_index)) = true;
     }
 
+    //////////////////////////////////////////////////////////////////////////
     // else if maneuver has a post transition
     // and instruction has not been used
     // and route location is post transition
@@ -127,10 +132,10 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       std::get<kPostTransition>(used_instructions_.at(curr_instruction_index)) = true;
     }
 
-    // if instruction has not been used
+    //////////////////////////////////////////////////////////////////////////
+    // else if instruction has not been used
     // and route location is an initial transition alert
     // then set route state to kTransitionAlert
-    // ?? mark post transition already used
     else if (!(std::get<kInitialTransitionAlert>(used_instructions_.at(next_instruction_index)))
         && IsInitialTransitionAlert(fix_location, nav_status, alert_length)) {
       // Set route state
@@ -140,11 +145,31 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       // Set the instruction maneuver index for the next maneuver
       nav_status.set_instruction_maneuver_index(next_instruction_index);
 
-      // Set the transition alert length to the next maneuver
+      // Set the transition alert length
       nav_status.set_transition_alert_length(alert_length);
 
-      // Mark that the initial transition was alert used
+      // Mark that the initial transition alert was used
       std::get<kInitialTransitionAlert>(used_instructions_.at(next_instruction_index)) = true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // else if instruction has not been used
+    // and route location is a final transition alert
+    // then set route state to kTransitionAlert
+    else if (!(std::get<kFinalTransitionAlert>(used_instructions_.at(next_instruction_index)))
+        && IsFinalTransitionAlert(fix_location, nav_status, alert_length)) {
+      // Set route state
+      route_state_ = NavigationStatus_RouteState_kTransitionAlert;
+      nav_status.set_route_state(route_state_);
+
+      // Set the instruction maneuver index for the next maneuver
+      nav_status.set_instruction_maneuver_index(next_instruction_index);
+
+      // Set the transition alert length
+      nav_status.set_transition_alert_length(alert_length);
+
+      // Mark that the final transition alert was used
+      std::get<kFinalTransitionAlert>(used_instructions_.at(next_instruction_index)) = true;
     }
   }
   return nav_status;
@@ -514,7 +539,7 @@ bool Navigator::IsLengthWithinBounds(float length, float lower_bound,
   return ((length > lower_bound) && (length < upper_bound));
 }
 
-// TODO metric
+// TODO separate values for metric
 bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
     const NavigationStatus& nav_status, float& alert_length) const {
 
@@ -526,9 +551,10 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
   if (!IsDestinationManeuverIndex(curr_instruction_index)
       && route_.trip().legs(leg_index_).maneuvers(next_instruction_index).has_verbal_transition_alert_instruction()) {
 
+    ///////////////////////////////////////////////////////////////////////////
     // Validate initial long current maneuver length
     // and fix speed OR maneuver speed
-    // and location prior next maneuver
+    // and location prior to next maneuver
     if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
         > kInitialLongTransitionAlertMinManeuverLength)
         && ((fix_location.has_speed()
@@ -536,15 +562,17 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kInitialLongTransitionAlertMinSpeed))
-        && IsLengthWithinBounds(kInitialLongTransitionAlertLength,
+        && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             kInitialLongTransitionAlertLowerLength,
             kInitialLongTransitionAlertUpperLength)) {
       alert_length = kInitialLongTransitionAlertLength;
       return true;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Validate initial short current maneuver length
     // and fix speed OR maneuver speed
-    // and location prior next maneuver
+    // and location prior to next maneuver
     else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
         > kInitialShortTransitionAlertMinManeuverLength)
         && ((fix_location.has_speed()
@@ -552,10 +580,70 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kInitialShortTransitionAlertMinSpeed))
-        && IsLengthWithinBounds(kInitialShortTransitionAlertLength,
+        && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             kInitialShortTransitionAlertLowerLength,
             kInitialShortTransitionAlertUpperLength)) {
       alert_length = kInitialShortTransitionAlertLength;
+      return true;
+    }
+  }
+  return false;
+}
+
+// TODO separate values for metric
+bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
+    const NavigationStatus& nav_status, float& alert_length) const {
+
+  size_t curr_instruction_index = maneuver_index_;
+  size_t next_instruction_index = (maneuver_index_ + 1);
+
+  // Verify that the current maneuver is not a destination maneuver
+  // and the next maneuver has a transition alert instruction
+  if (!IsDestinationManeuverIndex(curr_instruction_index)
+      && route_.trip().legs(leg_index_).maneuvers(next_instruction_index).has_verbal_transition_alert_instruction()) {
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Validate final long current maneuver length
+    // and fix speed OR maneuver speed
+    // and location prior to next maneuver
+    if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
+        > kFinalLongTransitionAlertMinManeuverLength)
+        && ((fix_location.has_speed()
+            && (fix_location.speed() > kFinalLongTransitionAlertMinSpeed)) // ~62.6 MPH
+            || (UnitsToMeters(nav_status.remaining_maneuver_length())
+                / nav_status.remaining_maneuver_time()
+                > kFinalLongTransitionAlertMinSpeed))
+        && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
+            kFinalLongTransitionAlertLowerLength,
+            kFinalLongTransitionAlertUpperLength)) {
+      alert_length = kFinalLongTransitionAlertLength;
+      return true;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Validate final medium current maneuver length
+    // and fix speed OR maneuver speed
+    // and location prior to next maneuver
+    else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
+        > kFinalMediumTransitionAlertMinManeuverLength)
+        && ((fix_location.has_speed()
+            && (fix_location.speed() > kFinalMediumTransitionAlertMinSpeed)) // ~22.4 MPH
+            || (UnitsToMeters(nav_status.remaining_maneuver_length())
+                / nav_status.remaining_maneuver_time()
+                > kFinalMediumTransitionAlertMinSpeed))
+        && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
+            kFinalMediumTransitionAlertLowerLength,
+            kFinalMediumTransitionAlertUpperLength)) {
+      alert_length = kFinalMediumTransitionAlertLength;
+      return true;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Validate location prior to next maneuver
+    else if (IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
+            kFinalShortTransitionAlertLowerLength,
+            kFinalShortTransitionAlertUpperLength)) {
+      alert_length = kFinalShortTransitionAlertLength;
       return true;
     }
   }

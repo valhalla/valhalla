@@ -5237,6 +5237,24 @@ void TestAutoLancasterToHershey() {
       std::get<kInitialTransitionAlert>(nav.used_instructions().at(instruction_index)),
       true);
 
+  // kFinalTransitionAlert instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+      false);
+
+  // trace_pt[373] | segment index 34 | 1/4 mile before end of maneuver index 4 | maneuver speed ~ 60.3 MPH
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.313850f, 40.069965f, 446),
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+      -76.3138428f, 40.0699997f, leg_index, 26.2774086f, 1977,
+      maneuver_index, 0.251014709f, 14, instruction_index));
+
+  // kFinalTransitionAlert instruction should be used after OnLocationChanged
+  // because it was within length bounds for final transition alert
+  TryUsedInstructions(
+      std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+      true);
+
   // Test GetPreTransitionThreshold
   // "Keep left to take Pennsylvania 2 83 West toward Harrisburg."
   TryGetPreTransitionThreshold(nav, leg_index, instruction_index, 8);
@@ -5254,7 +5272,7 @@ void TestAutoLancasterToHershey() {
       std::get<kInitialTransitionAlert>(nav.used_instructions().at(instruction_index)),
       false);
 
-  // trace_pt[1139] | segment index 73 | 1 mile before end of maneuver index 4 | fix speed ~ 72 MPH
+  // trace_pt[1139] | segment index 73 | 2 miles before end of maneuver index 5 | fix speed ~ 72 MPH
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.567604f, 40.152584f, 1301, 32.19f),
       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
@@ -5265,6 +5283,24 @@ void TestAutoLancasterToHershey() {
   // because it was within length bounds for initial transition alert
   TryUsedInstructions(
       std::get<kInitialTransitionAlert>(nav.used_instructions().at(instruction_index)),
+      true);
+
+  // kFinalTransitionAlert instruction should not be used prior to OnLocationChanged
+  TryUsedInstructions(
+      std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+      false);
+
+  // trace_pt[1220] | segment index 73 | 1/2 mile before end of maneuver index 5 | fix speed ~ 72 MPH
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.587799f, 40.168167f, 1387, 32.19f),
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+      -76.5878143f, 40.1681595f, leg_index, 9.69095802f, 1036,
+      maneuver_index, 0.508657455f, 29, instruction_index));
+
+  // kFinalTransitionAlert instruction should be used after OnLocationChanged
+  // because it was within length bounds for final transition alert
+  TryUsedInstructions(
+      std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
       true);
 
   // Test GetPreTransitionThreshold
