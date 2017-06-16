@@ -102,13 +102,13 @@ void TestClosestPoint() {
   };
 
   // Closest to the first point
-  TryClosestPoint(pts, Point2(-4.0f, 0.0f), Point2(0.0f, 0.0f), 0, 16.0f);
+  TryClosestPoint(pts, Point2(-4.0f, 0.0f), Point2(0.0f, 0.0f), 0, 4.0f);
 
   // Closest along the last segment
-  TryClosestPoint(pts, Point2(10.0f, -4.0f), Point2(10.0f, 0.0f), 3, 16.0f);
+  TryClosestPoint(pts, Point2(10.0f, -4.0f), Point2(10.0f, 0.0f), 3, 4.0f);
 
   // Closest to the last point
-  TryClosestPoint(pts, Point2(15.0f, 4.0f), Point2(12.0f, 0.0f), 3, 25.0f);
+  TryClosestPoint(pts, Point2(15.0f, 4.0f), Point2(12.0f, 0.0f), 3, 5.0f);
 }
 
 void TryWithinConvexPolygon(const std::vector<Point2>& pts, const Point2&p,

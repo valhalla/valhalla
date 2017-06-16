@@ -51,7 +51,7 @@ genfiles/admin_lua_proc.h: lua/admin.lua
 genfiles/locales.h: locales/*.json
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@/locales && ./make_locales.sh *.json > @abs_builddir@/genfiles/locales.h
 
-PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto 
+PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto proto/route.proto proto/navigator.proto
 src/proto/%.pb.cc: proto/%.proto
 	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
 
@@ -159,6 +159,8 @@ nobase_include_HEADERS = \
 	valhalla/proto/tripcommon.pb.h \
 	valhalla/proto/trippath.pb.h \
 	valhalla/proto/tripdirections.pb.h \
+	valhalla/proto/route.pb.h \
+	valhalla/proto/navigator.pb.h \
 	valhalla/proto/directions_options.pb.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
@@ -188,7 +190,9 @@ nobase_include_HEADERS = \
 	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
-	valhalla/thor/timedistancematrix.h
+	valhalla/thor/timedistancematrix.h \
+	valhalla/tyr/util.h \
+	valhalla/tyr/navigator.h
 libvalhalla_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
@@ -266,6 +270,8 @@ libvalhalla_la_SOURCES = \
 	src/proto/tripcommon.pb.cc \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
+	src/proto/route.pb.cc \
+	src/proto/navigator.pb.cc \
 	src/proto/directions_options.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
@@ -291,7 +297,9 @@ libvalhalla_la_SOURCES = \
 	src/thor/attributes_controller.cc \
 	src/thor/route_matcher.cc \
 	src/thor/trafficalgorithm.cc \
-	src/thor/timedistancematrix.cc
+	src/thor/timedistancematrix.cc \
+	src/tyr/util.cc \
+	src/tyr/navigator.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
 
@@ -598,6 +606,8 @@ check_PROGRAMS = \
 	test/loki_service \
 	test/maneuversbuilder \
 	test/narrativebuilder \
+	test/navigator \
+	test/util_tyr \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
@@ -780,6 +790,12 @@ test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 test_narrativebuilder_SOURCES = test/narrativebuilder.cc test/test.cc
 test_narrativebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_narrativebuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_util_tyr_SOURCES = test/util_tyr.cc test/test.cc
+test_util_tyr_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_util_tyr_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_navigator_SOURCES = test/navigator.cc test/test.cc
+test_navigator_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_navigator_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_enhancedtrippath_SOURCES = test/enhancedtrippath.cc test/test.cc
 test_enhancedtrippath_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_enhancedtrippath_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
