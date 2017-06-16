@@ -1017,27 +1017,27 @@ std::string EnhancedTripPath_Node::ToString() const {
   str += " | fork=";
   str += std::to_string(fork());
 
-  if (has_transit_stop_info()) {
-    str += " | transit_stop_info.type=";
-    str += std::to_string(transit_stop_info().type());
+  if (has_transit_platform_info()) {
+    str += " | transit_platform_info.type=";
+    str += std::to_string(transit_platform_info().type());
 
-    str += " | transit_stop_info.onestop_id=";
-    str += transit_stop_info().onestop_id();
+    str += " | transit_platform_info.onestop_id=";
+    str += transit_platform_info().onestop_id();
 
-    str += " | transit_stop_info.name=";
-    str += transit_stop_info().name();
+    str += " | transit_platform_info.name=";
+    str += transit_platform_info().name();
 
-    str += " | transit_stop_info.arrival_date_time=";
-    str += transit_stop_info().arrival_date_time();
+    str += " | transit_platform_info.arrival_date_time=";
+    str += transit_platform_info().arrival_date_time();
 
-    str += " | transit_stop_info.departure_date_time=";
-    str += transit_stop_info().departure_date_time();
+    str += " | transit_platform_info.departure_date_time=";
+    str += transit_platform_info().departure_date_time();
 
-    str += " | transit_stop_info.is_parent_stop=";
-    str += std::to_string(transit_stop_info().is_parent_stop());
+    str += " | transit_platform_info.is_parent_stop=";
+    str += std::to_string(transit_platform_info().is_parent_stop());
 
-    str += " | transit_stop_info.assumed_schedule()=";
-    str += std::to_string(transit_stop_info().assumed_schedule());
+    str += " | transit_platform_info.assumed_schedule()=";
+    str += std::to_string(transit_platform_info().assumed_schedule());
   }
 
   str += " | time_zone=";

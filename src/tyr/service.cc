@@ -673,62 +673,62 @@ namespace {
             }
 
             // Add transit stops
-            if (transit_info.transit_stops().size() > 0) {
-              auto json_transit_stops = json::array({});
-              for (const auto& transit_stop : transit_info.transit_stops()) {
-                auto json_transit_stop = json::map({});
+            if (transit_info.transit_platforms().size() > 0) {
+              auto json_transit_platforms = json::array({});
+              for (const auto& transit_platform : transit_info.transit_platforms()) {
+                auto json_transit_platform = json::map({});
 
                 // type
-                if (transit_stop.has_type()) {
-                  if (transit_stop.type() == TripDirections_TransitStop_Type_kStation) {
-                    json_transit_stop->emplace("type", std::string("station"));
+                if (transit_platform.has_type()) {
+                  if (transit_platform.type() == TripDirections_TransitPlatform_Type_kStation) {
+                    json_transit_platform->emplace("type", std::string("station"));
                   } else {
-                    json_transit_stop->emplace("type", std::string("stop"));
+                    json_transit_platform->emplace("type", std::string("stop"));
                   }
                 }
 
                 // onestop_id
-                if (transit_stop.has_onestop_id()) {
-                    json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
-                    valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.onestop_id(), " [ANALYTICS] ");
+                if (transit_platform.has_onestop_id()) {
+                    json_transit_platform->emplace("onestop_id", transit_platform.onestop_id());
+                    valhalla::midgard::logging::Log("transit_platformid::" + transit_platform.onestop_id(), " [ANALYTICS] ");
                 }
 
                 // name
-                if (transit_stop.has_name()) {
-                    json_transit_stop->emplace("name", transit_stop.name());
+                if (transit_platform.has_name()) {
+                    json_transit_platform->emplace("name", transit_platform.name());
                 }
 
                 // arrival_date_time
-                if (transit_stop.has_arrival_date_time()) {
-                    json_transit_stop->emplace("arrival_date_time", transit_stop.arrival_date_time());
+                if (transit_platform.has_arrival_date_time()) {
+                    json_transit_platform->emplace("arrival_date_time", transit_platform.arrival_date_time());
                 }
 
                 // departure_date_time
-                if (transit_stop.has_departure_date_time()) {
-                    json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
+                if (transit_platform.has_departure_date_time()) {
+                    json_transit_platform->emplace("departure_date_time", transit_platform.departure_date_time());
                 }
 
                 // is_parent_stop
-                if (transit_stop.has_is_parent_stop()) {
-                    json_transit_stop->emplace("is_parent_stop", transit_stop.is_parent_stop());
+                if (transit_platform.has_is_parent_stop()) {
+                    json_transit_platform->emplace("is_parent_stop", transit_platform.is_parent_stop());
                 }
 
                 // assumed_schedule
-                if (transit_stop.has_assumed_schedule()) {
-                    json_transit_stop->emplace("assumed_schedule", transit_stop.assumed_schedule());
+                if (transit_platform.has_assumed_schedule()) {
+                    json_transit_platform->emplace("assumed_schedule", transit_platform.assumed_schedule());
                 }
 
                 // latitude and longitude
-                if (transit_stop.has_ll()) {
-                    json_transit_stop->emplace("lat", json::fp_t{transit_stop.ll().lat(), 6});
-                    json_transit_stop->emplace("lon",json::fp_t{transit_stop.ll().lng(), 6});
+                if (transit_platform.has_ll()) {
+                    json_transit_platform->emplace("lat", json::fp_t{transit_platform.ll().lat(), 6});
+                    json_transit_platform->emplace("lon",json::fp_t{transit_platform.ll().lng(), 6});
                 }
 
-                json_transit_stops->emplace_back(json_transit_stop);
+                json_transit_platforms->emplace_back(json_transit_platform);
 
               }
-              json_transit_info->emplace("transit_stops",
-                                          std::move(json_transit_stops));
+              json_transit_info->emplace("transit_platforms",
+                                          std::move(json_transit_platforms));
             }
 
             man->emplace("transit_info", std::move(json_transit_info));

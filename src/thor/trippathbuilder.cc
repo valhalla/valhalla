@@ -653,8 +653,8 @@ TripPath TripPathBuilder::Build(
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
   // TODO: this is temp until we use transit stop type from transitland
-  TripPath_TransitStopInfo_Type prev_transit_node_type =
-      TripPath_TransitStopInfo_Type_kStop;
+  TripPath_TransitPlatformInfo_Type prev_transit_node_type =
+      TripPath_TransitPlatformInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
@@ -716,43 +716,43 @@ TripPath TripPathBuilder::Build(
     // this to another method?
     if (node->is_transit()) {
       // Get the transit stop information and add transit stop info
-      const TransitStop* transit_stop = start_tile->GetTransitStop(
+      const TransitStop* transit_platform = start_tile->GetTransitStop(
           start_tile->node(startnode)->stop_index());
-      TripPath_TransitStopInfo* transit_stop_info = trip_node
-          ->mutable_transit_stop_info();
+      TripPath_TransitPlatformInfo* transit_platform_info = trip_node
+          ->mutable_transit_platform_info();
 
       // TODO: for now we will set to station for rail and stop for others
       //       in future, we will set based on transitland value
       // Set type
       if (directededge->use() == Use::kRail) {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitStopInfoType))
-          transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
-        prev_transit_node_type = TripPath_TransitStopInfo_Type_kStation;
+        if (controller.attributes.at(kNodeTransitPlatformInfoType))
+          transit_platform_info->set_type(TripPath_TransitPlatformInfo_Type_kStation);
+        prev_transit_node_type = TripPath_TransitPlatformInfo_Type_kStation;
       } else if (directededge->use() == Use::kTransitConnection) {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitStopInfoType))
-          transit_stop_info->set_type(prev_transit_node_type);
+        if (controller.attributes.at(kNodeTransitPlatformInfoType))
+          transit_platform_info->set_type(prev_transit_node_type);
       } else {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitStopInfoType))
-          transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStop);
-        prev_transit_node_type = TripPath_TransitStopInfo_Type_kStop;
+        if (controller.attributes.at(kNodeTransitPlatformInfoType))
+          transit_platform_info->set_type(TripPath_TransitPlatformInfo_Type_kStop);
+        prev_transit_node_type = TripPath_TransitPlatformInfo_Type_kStop;
       }
 
-      if (transit_stop) {
+      if (transit_platform) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitStopInfoOnestopId) && transit_stop->one_stop_offset())
-          transit_stop_info->set_onestop_id(graphtile->GetName(transit_stop->one_stop_offset()));
+        if (controller.attributes.at(kNodeTransitPlatformInfoOnestopId) && transit_platform->one_stop_offset())
+          transit_platform_info->set_onestop_id(graphtile->GetName(transit_platform->one_stop_offset()));
 
         // Set name if requested
-        if (controller.attributes.at(kNodetransitStopInfoName) && transit_stop->name_offset())
-          transit_stop_info->set_name(graphtile->GetName(transit_stop->name_offset()));
+        if (controller.attributes.at(kNodeTransitPlatformInfoName) && transit_platform->name_offset())
+          transit_platform_info->set_name(graphtile->GetName(transit_platform->name_offset()));
 
         // Set latitude and longitude
-        odin::LatLng* stop_ll = transit_stop_info->mutable_ll();
+        odin::LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitStopInfoLatLon)) {
+        if (controller.attributes.at(kNodeTransitPlatformInfoLatLon)) {
           stop_ll->set_lat(node->latlng().lat());
           stop_ll->set_lng(node->latlng().lng());
         }
@@ -760,8 +760,8 @@ TripPath TripPathBuilder::Build(
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure) if requested
-      if (controller.attributes.at(kNodeTransitStopInfoArrivalDateTime) && !arrival_time.empty()) {
-        transit_stop_info->set_arrival_date_time(arrival_time);
+      if (controller.attributes.at(kNodeTransitPlatformInfoArrivalDateTime) && !arrival_time.empty()) {
+        transit_platform_info->set_arrival_date_time(arrival_time);
       }
 
       // If this edge has a trip id then there is a transit departure
@@ -778,15 +778,15 @@ TripPath TripPathBuilder::Build(
 
           if (graphtile->header()->date_created() > date) {
             // Set assumed schedule if requested
-            if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule))
-              transit_stop_info->set_assumed_schedule(true);
+            if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule))
+              transit_platform_info->set_assumed_schedule(true);
             assumed_schedule = true;
           } else {
             day = date - graphtile->header()->date_created();
             if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
               // Set assumed schedule if requested
-              if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule))
-                transit_stop_info->set_assumed_schedule(true);
+              if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule))
+                transit_platform_info->set_assumed_schedule(true);
               assumed_schedule = true;
             }
           }
@@ -803,10 +803,10 @@ TripPath TripPathBuilder::Build(
             dt = dt.substr(0,found);
 
           // Set departure time from this transit stop if requested
-          if (controller.attributes.at(kNodeTransitStopInfoDepartureDateTime))
-            transit_stop_info->set_departure_date_time(dt);
+          if (controller.attributes.at(kNodeTransitPlatformInfoDepartureDateTime))
+            transit_platform_info->set_departure_date_time(dt);
 
-          //TODO:  set removed tz abbrev on transit_stop_info for departure.
+          //TODO:  set removed tz abbrev on transit_platform_info for departure.
 
           // Copy the arrival time for use at the next transit stop
           arrival_time = DateTime::get_duration(*origin.date_time_,
@@ -819,7 +819,7 @@ TripPath TripPathBuilder::Build(
           if (found != std::string::npos)
             arrival_time = arrival_time.substr(0,found);
 
-          //TODO:  set removed tz abbrev on transit_stop_info for arrival.
+          //TODO:  set removed tz abbrev on transit_platform_info for arrival.
 
           // Get the block Id
           block_id = transit_departure->blockid();
@@ -831,14 +831,14 @@ TripPath TripPathBuilder::Build(
         block_id = 0;
 
         // Set assumed schedule if requested
-        if (controller.attributes.at(kNodeTransitStopInfoAssumedSchedule) && assumed_schedule)
-          transit_stop_info->set_assumed_schedule(true);
+        if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule) && assumed_schedule)
+          transit_platform_info->set_assumed_schedule(true);
         assumed_schedule = false;
       }
 
       // Set is_parent_stop if requested. TODO - update with station hierarchy
-      if (controller.attributes.at(kNodeTransitStopInfoIsParentStop))
-        transit_stop_info->set_is_parent_stop(false);
+      if (controller.attributes.at(kNodeTransitPlatformInfoIsParentStop))
+        transit_platform_info->set_is_parent_stop(false);
     }
 
     // Add edge to the trip node and set its attributes

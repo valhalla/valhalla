@@ -75,14 +75,14 @@ const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeaAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
 const std::string kNodeFork = "node.fork";
-const std::string kNodeTransitStopInfoType = "node.transit_stop_info.type";
-const std::string kNodeTransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
-const std::string kNodetransitStopInfoName = "node.transit_stop_info.name";
-const std::string kNodeTransitStopInfoArrivalDateTime = "node.transit_stop_info.arrival_date_time";
-const std::string kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
-const std::string kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
-const std::string kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
-const std::string kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
+const std::string kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
+const std::string kNodeTransitPlatformInfoOnestopId = "node.transit_platform_info.onestop_id";
+const std::string kNodeTransitPlatformInfoName = "node.transit_platform_info.name";
+const std::string kNodeTransitPlatformInfoArrivalDateTime = "node.transit_platform_info.arrival_date_time";
+const std::string kNodeTransitPlatformInfoDepartureDateTime = "node.transit_platform_info.departure_date_time";
+const std::string kNodeTransitPlatformInfoIsParentStop = "node.transit_platform_info.is_parent_stop";
+const std::string kNodeTransitPlatformInfoAssumedSchedule = "node.transit_platform_info.assumed_schedule";
+const std::string kNodeTransitPlatformInfoLatLon = "node.transit_platform_info.lat_lon";
 const std::string kNodeTimeZone = "node.time_zone";
 
 // Top level: osm chnageset, admin list, and full shape keys

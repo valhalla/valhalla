@@ -15,7 +15,7 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/odin/transitstop.h>
+#include "transitplatform.h"
 
 using namespace valhalla::baldr;
 
@@ -227,8 +227,8 @@ class Maneuver {
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
 
-  const TransitStop& transit_connection_stop() const;
-  void set_transit_connection_stop(const TransitStop& transit_connection_stop);
+  const TransitPlatform& transit_connection_stop() const;
+  void set_transit_connection_stop(const TransitPlatform& transit_connection_stop);
 
   bool IsTransit() const;
 
@@ -239,11 +239,11 @@ class Maneuver {
 
   std::string GetTransitDepartureTime() const;
 
-  const std::list<TransitStop>& GetTransitStops() const;
+  const std::list<TransitPlatform>& GetTransitPlatforms() const;
 
-  size_t GetTransitStopCount() const;
+  size_t GetTransitPlatformCount() const;
 
-  void InsertTransitStop(TransitStop&& transit_stop);
+  void InsertTransitPlatform(TransitPlatform&& transit_stop);
 
   const std::string& depart_instruction() const;
   void set_depart_instruction(const std::string& depart_instruction);
@@ -317,7 +317,7 @@ class Maneuver {
 
   // Transit connection flag and the associated stop
   bool transit_connection_;
-  TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
+  TransitPlatform transit_connection_stop_; // TODO determine how we want to handle in the future
 
   // The transit route info including list of stops
   TransitRouteInfo transit_info_;
