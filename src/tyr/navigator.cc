@@ -30,6 +30,10 @@ namespace tyr {
 
 Navigator::Navigator() {
   route_state_ = NavigationStatus_RouteState_kInvalid;
+  maneuver_index_ = 0;
+  leg_index_ = 0;
+  current_shape_index_ = 0;
+  kilometer_units_ = true;
 }
 
 NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
@@ -196,16 +200,17 @@ void Navigator::SetShapeLengthTime() {
 
     // Create maneuver speeds in units per second
     maneuver_speeds_.clear();
-    //GDG
+    // TODO: rm or make trace
     std::cout << std::endl << "SPEED ======================================" << std::endl;
     size_t zzz = 0;
     for (const auto& maneuver : route_.trip().legs(leg_index_).maneuvers()) {
       // Calculate speed in units per second - protect against divide by zero
       float time = (maneuver.time() == 0) ? 0.000028f : maneuver.time();
       float speed = (maneuver.length()/time);
-      //GDG
+      // TODO: rm or make trace
       std::cout << "index=" << zzz++ << " | maneuver.length()=" << maneuver.length() << " | maneuver.time()=" << maneuver.time() << " | time=" << time << " | speed(units/sec)=" << speed << " | speed(units/hour)=" << (speed*3600) << std::endl;
       maneuver_speeds_.emplace_back(speed);
+
     }
 
     // Initialize the remaining leg length and time
@@ -456,8 +461,6 @@ size_t Navigator::GetWordCount(const std::string& instruction) const {
 
 uint32_t Navigator::GetSpentManeuverTime(const FixLocation& fix_location,
     const NavigationStatus& nav_status) const {
-  // GDG
-  std::cout << "GetSpentManeuverTime | ";
   // speed in meters per second
   float speed = 0.0f;
   if (fix_location.has_speed()) {
@@ -468,22 +471,15 @@ uint32_t Navigator::GetSpentManeuverTime(const FixLocation& fix_location,
 
   // Use speed if user is moving to calculate spent maneuver time
   if (speed > kMinSpeedThreshold) {
-    //GDG
-    std::cout << "CALCULATED SPENT TIME:" << static_cast<uint32_t>(round(
-        UnitsToMeters(remaining_leg_values_.at(maneuver_begin_shape_index).first - nav_status.remaining_leg_length()) / speed)) << std::endl;
     return static_cast<uint32_t>(round(
         UnitsToMeters(remaining_leg_values_.at(maneuver_begin_shape_index).first - nav_status.remaining_leg_length()) / speed));
   }
 
-  //GDG
-  std::cout << "SPENT TIME:" << (remaining_leg_values_.at(maneuver_begin_shape_index).second - nav_status.remaining_leg_time()) << std::endl;
   return (remaining_leg_values_.at(maneuver_begin_shape_index).second - nav_status.remaining_leg_time());
 }
 
 uint32_t Navigator::GetRemainingManeuverTime(const FixLocation& fix_location,
     const NavigationStatus& nav_status) const {
-  // GDG
-  std::cout << "GetRemainingManeuverTime | ";
   // speed in meters per second
   float speed = 0.0f;
   if (fix_location.has_speed()) {
@@ -492,15 +488,10 @@ uint32_t Navigator::GetRemainingManeuverTime(const FixLocation& fix_location,
 
   // Use speed if user is moving to calculate remaining maneuver time
   if (speed > kMinSpeedThreshold) {
-    //GDG
-    std::cout << "CALCULATED REMAINING TIME:" << static_cast<uint32_t>(round(
-        UnitsToMeters(nav_status.remaining_maneuver_length()) / speed)) << std::endl;
     return static_cast<uint32_t>(round(
         UnitsToMeters(nav_status.remaining_maneuver_length()) / speed));
   }
 
-  //GDG
-  std::cout << "REMAINING TIME:" << nav_status.remaining_maneuver_time() << std::endl;
   return nav_status.remaining_maneuver_time();
 }
 
@@ -515,13 +506,6 @@ uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
   if (maneuver.verbal_multi_cue()){
     adjustment_factor = 0.75f;
   }
-
-  //GDG
-  std::cout << "GetPreTransitionThreshold:"
-      << (kPreTransitionBaseThreshold
-          + (static_cast<uint32_t>(round(
-              GetWordCount(maneuver.verbal_pre_transition_instruction())
-                  / kWordsPerSecond * adjustment_factor)))) << std::endl;
 
   return (kPreTransitionBaseThreshold
       + (static_cast<uint32_t>(round(
