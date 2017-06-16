@@ -215,7 +215,7 @@ class Navigator {
 
     // List of tuples by maneuver index that keeps track of the used instructions
     //     kInitialTransitionAlert
-    //     kCloseTransitionAlert
+    //     kFinalTransitionAlert
     //     kPreTransition
     //     kPostTransition
     std::vector<std::tuple<bool, bool, bool, bool>> used_instructions_;
