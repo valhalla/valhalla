@@ -378,7 +378,7 @@ MapMatcher::AppendMeasurement(const Measurement& measurement)
   }
   const auto& candidates = candidatequery_.Query(
       measurement.lnglat(),
-      measurement.sq_search_radius(),
+      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()),
       mapmatching_.costing()->GetEdgeFilter());
   return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
 }
