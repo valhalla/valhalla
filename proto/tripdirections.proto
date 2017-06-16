@@ -9,7 +9,7 @@ message TripDirections {
     optional BoundingBox bbox = 3;      // Bounding box of the shape
   }
 
-  message TransitStop {
+  message TransitPlatform {
     enum Type {
       kStop = 0;
       kStation = 1;
@@ -25,6 +25,18 @@ message TripDirections {
     optional LatLng ll = 8;                    // Latitude, longitude of the transit stop
   }
 
+  message TransitEgress {
+    optional string onestop_id = 1;            // Unique transitland ID
+    optional string name = 2;                  // The name of the egress
+    optional LatLng ll = 3;                    // Latitude, longitude of the egress
+  }
+
+  message TransitStation {
+    optional string onestop_id = 1;            // Unique transitland ID
+    optional string name = 2;                  // The name of the station
+    optional LatLng ll = 3;                    // Latitude, longitude of the station
+  }
+
   message TransitInfo {
     optional string onestop_id = 1;
     optional string short_name = 2;
@@ -36,7 +48,9 @@ message TripDirections {
     optional string operator_onestop_id = 8;
     optional string operator_name = 9;
     optional string operator_url = 10;
-    repeated TransitStop transit_stops = 11;
+    repeated TransitPlatform transit_platforms = 11;
+    repeated TransitStation transit_stations = 12;
+    repeated TransitEgress transit_egresses = 13;
   }
 
   enum TravelMode {
