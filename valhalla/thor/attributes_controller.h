@@ -83,6 +83,13 @@ const std::string kNodeTransitPlatformInfoDepartureDateTime = "node.transit_plat
 const std::string kNodeTransitPlatformInfoIsParentStop = "node.transit_platform_info.is_parent_stop";
 const std::string kNodeTransitPlatformInfoAssumedSchedule = "node.transit_platform_info.assumed_schedule";
 const std::string kNodeTransitPlatformInfoLatLon = "node.transit_platform_info.lat_lon";
+const std::string kNodeTransitStationInfoOnestopId = "node.transit_station_info.onestop_id";
+const std::string kNodeTransitStationInfoName = "node.transit_station_info.name";
+const std::string kNodeTransitStationInfoLatLon = "node.transit_station_info.lat_lon";
+const std::string kNodeTransitEgressInfoOnestopId = "node.transit_egress_info.onestop_id";
+const std::string kNodeTransitEgressInfoName = "node.transit_egress_info.name";
+const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
+
 const std::string kNodeTimeZone = "node.time_zone";
 
 // Top level: osm chnageset, admin list, and full shape keys

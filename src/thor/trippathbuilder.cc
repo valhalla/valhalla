@@ -711,6 +711,56 @@ TripPath TripPathBuilder::Build(
         trip_node->set_time_zone(tz->to_posix_string());
     }
 
+    if (node->type() == NodeType::kTransitStation) {
+      const TransitStop* transit_station = start_tile->GetTransitStop(
+          start_tile->node(startnode)->stop_index());
+      TripPath_TransitStationInfo* transit_station_info = trip_node
+          ->mutable_transit_station_info();
+
+      if (transit_station) {
+        // Set onstop_id if requested
+        if (controller.attributes.at(kNodeTransitStationInfoOnestopId) && transit_station->one_stop_offset())
+          transit_station_info->set_onestop_id(graphtile->GetName(transit_station->one_stop_offset()));
+
+        // Set name if requested
+        if (controller.attributes.at(kNodeTransitStationInfoName) && transit_station->name_offset())
+          transit_station_info->set_name(graphtile->GetName(transit_station->name_offset()));
+
+        // Set latitude and longitude
+        odin::LatLng* stop_ll = transit_station_info->mutable_ll();
+        // Set transit stop lat/lon if requested
+        if (controller.attributes.at(kNodeTransitStationInfoLatLon)) {
+          stop_ll->set_lat(node->latlng().lat());
+          stop_ll->set_lng(node->latlng().lng());
+        }
+      }
+    }
+
+    if (node->type() == NodeType::kTransitEgress) {
+      const TransitStop* transit_egress = start_tile->GetTransitStop(
+          start_tile->node(startnode)->stop_index());
+      TripPath_TransitEgressInfo* transit_egress_info = trip_node
+          ->mutable_transit_egress_info();
+
+      if (transit_egress) {
+        // Set onstop_id if requested
+        if (controller.attributes.at(kNodeTransitEgressInfoOnestopId) && transit_egress->one_stop_offset())
+          transit_egress_info->set_onestop_id(graphtile->GetName(transit_egress->one_stop_offset()));
+
+        // Set name if requested
+        if (controller.attributes.at(kNodeTransitEgressInfoName) && transit_egress->name_offset())
+          transit_egress_info->set_name(graphtile->GetName(transit_egress->name_offset()));
+
+        // Set latitude and longitude
+        odin::LatLng* stop_ll = transit_egress_info->mutable_ll();
+        // Set transit stop lat/lon if requested
+        if (controller.attributes.at(kNodeTransitEgressInfoLatLon)) {
+          stop_ll->set_lat(node->latlng().lat());
+          stop_ll->set_lng(node->latlng().lng());
+        }
+      }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Add transit information if this is a transit stop. TODO - can we move
     // this to another method?
