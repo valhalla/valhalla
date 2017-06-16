@@ -105,12 +105,38 @@ class Navigator {
     Navigator(const Navigator&) = default;
     Navigator& operator=(const Navigator&) = default;
 
+    /**
+     * Sets the route path for the navigator to process.
+     * Returns a NavigationStatus_RouteState_kInitialized route state
+     * if no errors occurred, otherwise it returns a
+     * NavigationStatus_RouteState_kInvalid route state.
+     *
+     * @param route_json_str A string containing a json route response.
+     *
+     * @return a NavigationStatus_RouteState_kInitialized route state
+     * if no errors occurred, otherwise it returns a
+     * NavigationStatus_RouteState_kInvalid route state.
+     */
     NavigationStatus SetRoute(const std::string& route_json_str);
 
+    /**
+     * Passes in the current fix location of the user. This method will snap
+     * the location to the route and verify that the user is still on the route.
+     * Also, this method will determine if an instruction needs to be called out
+     * for the user.
+     *
+     * @param fix_location The current fix location of user.
+     *
+     * @return the navigation status depending on the fix location in relation
+     * to the route path.
+     * TODO: explain route states
+     */
     NavigationStatus OnLocationChanged(const FixLocation& fix_location);
 
 
   protected:
+
+    // TODO add comments for methods
 
     void SetUnits();
     bool HasKilometerUnits() const;
