@@ -346,8 +346,10 @@ TripPath_Use GetTripPathUse(const Use use) {
       return TripPath_Use_kRailUse;
     case Use::kBus:
       return TripPath_Use_kBusUse;
-    case Use::kEgressConnection: // need to handle the new uses in odin
-    case Use::kPlatformConnection: // need to handle the new uses in odin
+    case Use::kEgressConnection:
+      return TripPath_Use_kEgressConnectionUse;
+    case Use::kPlatformConnection:
+      return TripPath_Use_kPlatformConnectionUse;
     case Use::kTransitConnection:
       return TripPath_Use_kTransitConnectionUse;
     // Should not see other values
