@@ -99,7 +99,7 @@ void TestNodeAttributeEnabled() {
   // Test some node enabled
   controller.attributes.at(kNodeType) = false;
   controller.attributes.at(kNodeIntersectingEdgeBeginHeading) = true;
-  controller.attributes.at(kNodeTransitStopInfoType) = true;
+  controller.attributes.at(kNodeTransitPlatformInfoType) = true;
   controller.attributes.at(kNodeElapsedTime) = true;
   controller.attributes.at(kNodeFork) = true;
   TryCategoryAttributeEnabled(controller, kNodeCategory, true);

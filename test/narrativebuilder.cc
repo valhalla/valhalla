@@ -27,7 +27,7 @@ class NarrativeBuilderTest : public NarrativeBuilder {
   NarrativeBuilderTest(const DirectionsOptions& directions_options,
                        const NarrativeDictionary& dictionary,
                        const EnhancedTripPath* trip_path = nullptr)
-      : NarrativeBuilder(directions_options, trip_path, dictionary) {
+ : NarrativeBuilder(directions_options, trip_path, dictionary) {
   }
 
   std::string FormRampStraightInstruction(Maneuver& maneuver) {
@@ -86,15 +86,15 @@ void PopulateManeuver(
     std::vector<std::vector<std::string>> exit_names,
     uint32_t internal_right_turn_count = 0, uint32_t internal_left_turn_count =
         0,
-    uint32_t roundabout_exit_count = 0, bool fork = false,
-    bool begin_intersecting_edge_name_consistency = false,
-    bool intersecting_forward_edge = false,
-    std::string verbal_transition_alert_instruction = "",
-    std::string verbal_pre_transition_instruction = "",
-    std::string verbal_post_transition_instruction = "", bool tee = false,
-    bool unnamed_walkway = false, bool unnamed_cycleway = false,
-    bool unnamed_mountain_bike_trail = false, float basic_time = 0.0f,
-    bool verbal_multi_cue = false) {
+        uint32_t roundabout_exit_count = 0, bool fork = false,
+        bool begin_intersecting_edge_name_consistency = false,
+        bool intersecting_forward_edge = false,
+        std::string verbal_transition_alert_instruction = "",
+        std::string verbal_pre_transition_instruction = "",
+        std::string verbal_post_transition_instruction = "", bool tee = false,
+        bool unnamed_walkway = false, bool unnamed_cycleway = false,
+        bool unnamed_mountain_bike_trail = false, float basic_time = 0.0f,
+        bool verbal_multi_cue = false) {
 
   maneuver.set_verbal_formatter(
       VerbalTextFormatterFactory::Create(country_code, state_code));
@@ -134,7 +134,7 @@ void PopulateManeuver(
 
   // exit_numbers
   std::vector<Sign>* exit_number_list = maneuver.mutable_signs()
-      ->mutable_exit_number_list();
+          ->mutable_exit_number_list();
   for (auto& sign_items : exit_numbers) {
     exit_number_list->emplace_back(sign_items[0]);
     Sign& sign = exit_number_list->back();
@@ -143,7 +143,7 @@ void PopulateManeuver(
 
   // exit_branches,
   std::vector<Sign>* exit_branch_list = maneuver.mutable_signs()
-      ->mutable_exit_branch_list();
+          ->mutable_exit_branch_list();
   for (auto& sign_items : exit_branches) {
     exit_branch_list->emplace_back(sign_items[0]);
     Sign& sign = exit_branch_list->back();
@@ -152,7 +152,7 @@ void PopulateManeuver(
 
   //  exit_towards,
   std::vector<Sign>* exit_toward_list = maneuver.mutable_signs()
-      ->mutable_exit_toward_list();
+          ->mutable_exit_toward_list();
   for (auto& sign_items : exit_towards) {
     exit_toward_list->emplace_back(sign_items[0]);
     Sign& sign = exit_toward_list->back();
@@ -161,7 +161,7 @@ void PopulateManeuver(
 
   //  exit_names
   std::vector<Sign>* exit_name_list = maneuver.mutable_signs()
-      ->mutable_exit_name_list();
+          ->mutable_exit_name_list();
   for (auto& sign_items : exit_names) {
     exit_name_list->emplace_back(sign_items[0]);
     Sign& sign = exit_name_list->back();
@@ -190,18 +190,18 @@ void PopulateManeuver(
 }
 
 void PopulateTransitInfo(TransitRouteInfo* transit_info,
-                    const std::string& onestop_id,
-                    uint32_t block_id,
-                    uint32_t trip_id,
-                    const std::string& short_name,
-                    const std::string& long_name,
-                    const std::string& headsign,
-                    uint32_t color,
-                    uint32_t text_color,
-                    const std::string& description,
-                    const std::string& operator_onestop_id,
-                    const std::string& operator_name,
-                    const std::string& operator_url) {
+                         const std::string& onestop_id,
+                         uint32_t block_id,
+                         uint32_t trip_id,
+                         const std::string& short_name,
+                         const std::string& long_name,
+                         const std::string& headsign,
+                         uint32_t color,
+                         uint32_t text_color,
+                         const std::string& description,
+                         const std::string& operator_onestop_id,
+                         const std::string& operator_name,
+                         const std::string& operator_url) {
   transit_info->onestop_id = onestop_id;
   transit_info->block_id = block_id;
   transit_info->trip_id = trip_id;
@@ -239,8 +239,8 @@ void TryBuild(const DirectionsOptions& directions_options,
     if (man->instruction() != expected_man->instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver instruction - expected: "
-              + expected_man->instruction() + "  |  produced: "
-              + man->instruction());
+          + expected_man->instruction() + "  |  produced: "
+          + man->instruction());
     }
 
     // Check maneuver verbal_transition_alert_instruction
@@ -248,8 +248,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_transition_alert_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_transition_alert_instruction - expected: "
-              + expected_man->verbal_transition_alert_instruction()
-              + "  |  produced: " + man->verbal_transition_alert_instruction());
+          + expected_man->verbal_transition_alert_instruction()
+          + "  |  produced: " + man->verbal_transition_alert_instruction());
     }
 
     // Check maneuver verbal_pre_transition_instruction
@@ -257,8 +257,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_pre_transition_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_pre_transition_instruction - expected: "
-              + expected_man->verbal_pre_transition_instruction()
-              + "  |  produced: " + man->verbal_pre_transition_instruction());
+          + expected_man->verbal_pre_transition_instruction()
+          + "  |  produced: " + man->verbal_pre_transition_instruction());
     }
 
     // Check maneuver verbal_post_transition_instruction
@@ -266,8 +266,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_post_transition_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_post_transition_instruction - expected: "
-              + expected_man->verbal_post_transition_instruction()
-              + "  |  produced: " + man->verbal_post_transition_instruction());
+          + expected_man->verbal_post_transition_instruction()
+          + "  |  produced: " + man->verbal_post_transition_instruction());
     }
 
     // Check maneuver depart_instruction
@@ -275,8 +275,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->depart_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver depart_instruction - expected: "
-              + expected_man->depart_instruction()
-              + "  |  produced: " + man->depart_instruction());
+          + expected_man->depart_instruction()
+          + "  |  produced: " + man->depart_instruction());
     }
 
     // Check maneuver verbal_depart_instruction
@@ -284,8 +284,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_depart_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_depart_instruction - expected: "
-              + expected_man->verbal_depart_instruction()
-              + "  |  produced: " + man->verbal_depart_instruction());
+          + expected_man->verbal_depart_instruction()
+          + "  |  produced: " + man->verbal_depart_instruction());
     }
 
     // Check maneuver arrive_instruction
@@ -293,8 +293,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->arrive_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver arrive_instruction - expected: "
-              + expected_man->arrive_instruction()
-              + "  |  produced: " + man->arrive_instruction());
+          + expected_man->arrive_instruction()
+          + "  |  produced: " + man->arrive_instruction());
     }
 
     // Check maneuver verbal_arrive_instruction
@@ -302,8 +302,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_arrive_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_arrive_instruction - expected: "
-              + expected_man->verbal_arrive_instruction()
-              + "  |  produced: " + man->verbal_arrive_instruction());
+          + expected_man->verbal_arrive_instruction()
+          + "  |  produced: " + man->verbal_arrive_instruction());
     }
 
   }
@@ -438,8 +438,8 @@ void PopulateStartManeuverList_9_unnamed_walkway(
 }
 
 void PopulateStartManeuverList_10(std::list<Maneuver>& maneuvers,
-                                 const std::string& country_code,
-                                 const std::string& state_code) {
+                                  const std::string& country_code,
+                                  const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -453,8 +453,8 @@ void PopulateStartManeuverList_10(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateStartManeuverList_16(std::list<Maneuver>& maneuvers,
-                                 const std::string& country_code,
-                                 const std::string& state_code) {
+                                  const std::string& country_code,
+                                  const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -467,8 +467,8 @@ void PopulateStartManeuverList_16(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateStartManeuverList_17(std::list<Maneuver>& maneuvers,
-                                 const std::string& country_code,
-                                 const std::string& state_code) {
+                                  const std::string& country_code,
+                                  const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -509,8 +509,8 @@ void PopulateStartManeuverList_17_unnamed_mountain_bike_trail(
 }
 
 void PopulateStartManeuverList_18(std::list<Maneuver>& maneuvers,
-                                 const std::string& country_code,
-                                 const std::string& state_code) {
+                                  const std::string& country_code,
+                                  const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -660,11 +660,11 @@ void PopulateTurnManeuverList_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kLeft, { "MD 924" }, {
                        "North Bond Street", "US 1 Business", "MD 924" },
-                   { }, "", 0.840369, 111, 282,
-                   Maneuver::RelativeDirection::kLeft,
-                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 141,
-                   144, 2, 16, 2, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+                       { }, "", 0.840369, 111, 282,
+                       Maneuver::RelativeDirection::kLeft,
+                       TripDirections_Maneuver_CardinalDirection_kSouthEast, 141,
+                       144, 2, 16, 2, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
 }
 
 void PopulateTurnManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -691,8 +691,8 @@ void PopulateTurnManeuverList_3(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateSharpManeuverList_0(std::list<Maneuver>& maneuvers,
-                                const std::string& country_code,
-                                const std::string& state_code) {
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -704,8 +704,8 @@ void PopulateSharpManeuverList_0(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateSharpManeuverList_1(std::list<Maneuver>& maneuvers,
-                                const std::string& country_code,
-                                const std::string& state_code) {
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -718,23 +718,23 @@ void PopulateSharpManeuverList_1(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateSharpManeuverList_2(std::list<Maneuver>& maneuvers,
-                                const std::string& country_code,
-                                const std::string& state_code) {
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kSharpLeft, { "MD 924" }, {
                        "North Bond Street", "US 1 Business", "MD 924" },
-                   { }, "", 0.840369, 111, 201,
-                   Maneuver::RelativeDirection::kLeft,
-                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 141,
-                   144, 2, 16, 2, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+                       { }, "", 0.840369, 111, 201,
+                       Maneuver::RelativeDirection::kLeft,
+                       TripDirections_Maneuver_CardinalDirection_kSouthEast, 141,
+                       144, 2, 16, 2, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
 }
 
 void PopulateSharpManeuverList_3(std::list<Maneuver>& maneuvers,
-                                const std::string& country_code,
-                                const std::string& state_code) {
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver1 = maneuvers.back();
   PopulateManeuver(maneuver1, country_code, state_code,
@@ -805,11 +805,11 @@ void PopulateBearManeuverList_3(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kRoundaboutExit, { "US 15" }, {
                        "Catoctin Mountain Highway", "US 15" },
-                   { }, "", 18.278002, 928, 34,
-                   Maneuver::RelativeDirection::kRight,
-                   TripDirections_Maneuver_CardinalDirection_kSouth, 201, 204,
-                   161, 187, 1461, 1805, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
-                   { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 900, 0);
+                       { }, "", 18.278002, 928, 34,
+                       Maneuver::RelativeDirection::kRight,
+                       TripDirections_Maneuver_CardinalDirection_kSouth, 201, 204,
+                       161, 187, 1461, 1805, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
+                       { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 900, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
@@ -842,11 +842,11 @@ void PopulateUturnManeuverList_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kUturnRight, {
                        "Bunker Hill Road" },
-                   { }, { }, "", 0.592000, 28, 180,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kEast, 76, 76, 3,
-                   4, 24, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
-                   0, 0, 0, 0, 0, "", "", "", 0);
+                       { }, { }, "", 0.592000, 28, 180,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kEast, 76, 76, 3,
+                       4, 24, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                       0, 0, 0, 0, 0, "", "", "", 0);
 }
 
 void PopulateUturnManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -880,10 +880,10 @@ void PopulateUturnManeuverList_3(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kUturnLeft, { }, { }, {
                        "Devonshire Road" },
-                   "", 0.072697, 47, 180, Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
-                   221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+                       "", 0.072697, 47, 180, Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
+                       221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
 }
 
 void PopulateUturnManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -894,11 +894,11 @@ void PopulateUturnManeuverList_4(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kUturnLeft, { "Jonestown Road",
                        "US 22" },
-                   { }, { "Devonshire Road" }, "", 0.072697, 47, 180,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
-                   221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+                       { }, { "Devonshire Road" }, "", 0.072697, 47, 180,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
+                       221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
 }
 
 void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -909,21 +909,21 @@ void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kStart, { "Jonestown Road",
                        "US 22" },
-                   { }, { }, "", 0.062923, 2, 0,
-                   Maneuver::RelativeDirection::kNone,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 36, 32,
-                   0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
-                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 2, 0);
+                       { }, { }, "", 0.062923, 2, 0,
+                       Maneuver::RelativeDirection::kNone,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 36, 32,
+                       0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                       0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 2, 0);
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
                    TripDirections_Maneuver_Type_kUturnLeft, { "Jonestown Road",
                        "US 22" },
-                   { }, { "Devonshire Road" }, "", 0.072697, 47, 180,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
-                   221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 40, 0);
+                       { }, { "Devonshire Road" }, "", 0.072697, 47, 180,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
+                       221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 40, 0);
 }
 
 void PopulateRampStraightManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -951,7 +951,7 @@ void PopulateRampStraightManeuverList_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 60, 57,
                    9, 10, 88, 92, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "US 322 East", "1" } },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
 }
 
 void PopulateRampStraightManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -966,7 +966,7 @@ void PopulateRampStraightManeuverList_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 60, 57,
                    9, 10, 88, 92, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
                        "Hershey", "0" } },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
 }
 
 void PopulateRampStraightManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -981,12 +981,12 @@ void PopulateRampStraightManeuverList_3(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 60, 57,
                    9, 10, 88, 92, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "US 322 East", "1" }, { "US 422 East", "1" }, {
-                       "US 522 East", "1" }, { "US 622 East", "1" }, {
-                       "US 722 East", "1" } },
-                   { { "Hershey", "1" }, { "Palmdale", "1" },
-                       { "Palmyra", "1" }, { "Campbelltown", "1" }, { "Eprata",
-                           "1" } },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
+                           "US 522 East", "1" }, { "US 622 East", "1" }, {
+                               "US 722 East", "1" } },
+                               { { "Hershey", "1" }, { "Palmdale", "1" },
+                                   { "Palmyra", "1" }, { "Campbelltown", "1" }, { "Eprata",
+                                       "1" } },
+                                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
 }
 
 void PopulateRampStraightManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1001,7 +1001,7 @@ void PopulateRampStraightManeuverList_4(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 60, 57,
                    9, 10, 88, 92, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { {
                        "Gettysburg Pike", "0" } },
-                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
+                       0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 30, 0);
 }
 
 void PopulateRampManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1039,12 +1039,12 @@ void PopulateRampManeuverList_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kRampLeft, { "NY 27 East",
                        "South Conduit Avenue" },
-                   { }, { }, "", 0.124000, 6, 353,
-                   Maneuver::RelativeDirection::kKeepLeft,
-                   TripDirections_Maneuver_CardinalDirection_kEast, 105, 102,
-                   24, 25, 204, 206, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
-                       "JFK", "0" } },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 6, 0);
+                       { }, { }, "", 0.124000, 6, 353,
+                       Maneuver::RelativeDirection::kKeepLeft,
+                       TripDirections_Maneuver_CardinalDirection_kEast, 105, 102,
+                       24, 25, 204, 206, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
+                           "JFK", "0" } },
+                           { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 6, 0);
 }
 
 void PopulateRampManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -1055,13 +1055,13 @@ void PopulateRampManeuverList_3(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kRampLeft, { "NY 27 East",
                        "South Conduit Avenue" },
-                   { }, { }, "", 0.124000, 6, 353,
-                   Maneuver::RelativeDirection::kKeepLeft,
-                   TripDirections_Maneuver_CardinalDirection_kEast, 105, 102,
-                   24, 25, 204, 206, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
-                       "South Conduit Avenue", "0" } },
-                   { { "JFK", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0,
-                   0, 0, 6, 0);
+                       { }, { }, "", 0.124000, 6, 353,
+                       Maneuver::RelativeDirection::kKeepLeft,
+                       TripDirections_Maneuver_CardinalDirection_kEast, 105, 102,
+                       24, 25, 204, 206, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                           "South Conduit Avenue", "0" } },
+                           { { "JFK", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0,
+                           0, 0, 6, 0);
 }
 
 void PopulateRampManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1075,7 +1075,7 @@ void PopulateRampManeuverList_4(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kEast, 99, 137, 14,
                    15, 61, 71, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { {
                        "Gettysburg Pike", "0" } },
-                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
+                       0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 9, 0);
 }
 
 void PopulateRampManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -1102,7 +1102,7 @@ void PopulateRampManeuverList_6(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kEast, 86, 277, 24,
                    26, 60, 79, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "PA 283 West", "1" } },
-                   { }, { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                       { }, { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateRampManeuverList_7(std::list<Maneuver>& maneuvers,
@@ -1116,8 +1116,8 @@ void PopulateRampManeuverList_7(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kEast, 86, 277, 24,
                    26, 60, 79, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
                        "Harrisburg", "0" }, {
-                       "Harrisburg International Airport", "0" } },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                           "Harrisburg International Airport", "0" } },
+                           { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateRampManeuverList_8(std::list<Maneuver>& maneuvers,
@@ -1131,9 +1131,9 @@ void PopulateRampManeuverList_8(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kEast, 86, 277, 24,
                    26, 60, 79, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "PA 283 West", "1" } },
-                   { { "Harrisburg", "0" }, {
-                       "Harrisburg International Airport", "0" } },
-                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                       { { "Harrisburg", "0" }, {
+                           "Harrisburg International Airport", "0" } },
+                           { }, 0, 1, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateRampManeuverList_9(std::list<Maneuver>& maneuvers,
@@ -1147,7 +1147,7 @@ void PopulateRampManeuverList_9(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kEast, 86, 129, 11,
                    13, 51, 62, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { }, { }, { {
                        "Gettysburg Pike", "0" } },
-                   1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                       1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1176,8 +1176,8 @@ void PopulateExitManeuverList_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
                        "0" } },
-                   { }, { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23,
-                   0);
+                       { }, { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23,
+                       0);
 }
 
 void PopulateExitManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1192,7 +1192,7 @@ void PopulateExitManeuverList_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "US 322 West", "2" } },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -1207,8 +1207,8 @@ void PopulateExitManeuverList_3(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
                        "0" } },
-                   { { "US 322 West", "2" } }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-                   "", "", 0, 0, 0, 0, 23, 0);
+                       { { "US 322 West", "2" } }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+                       "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1223,7 +1223,7 @@ void PopulateExitManeuverList_4(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { {
                        "Lewistown", "1" } },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -1238,8 +1238,8 @@ void PopulateExitManeuverList_5(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
                        "0" } },
-                   { }, { { "Lewistown", "1" } }, { }, 0, 0, 0, 0, 1, 0, "", "",
-                   "", 0, 0, 0, 0, 23, 0);
+                       { }, { { "Lewistown", "1" } }, { }, 0, 0, 0, 0, 1, 0, "", "",
+                       "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1254,8 +1254,8 @@ void PopulateExitManeuverList_6(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "US 322 West", "2" } },
-                   { { "Lewistown", "1" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
-                   0, 0, 0, 0, 23, 0);
+                       { { "Lewistown", "1" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                       0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
@@ -1270,12 +1270,12 @@ void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278,
                    42, 43, 260, 264, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67 B-A",
                        "0" } },
-                   { { "US 322 West", "2" }, { "US 22 West", "1" }, {
-                       "US 22 East", "0" }, { "PA 230 East", "0" }, {
-                       "Cameron Street", "0" } },
-                   { { "Lewistown", "1" }, { "State College", "1" }, {
-                       "Harrisburg", "0" } },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
+                       { { "US 322 West", "2" }, { "US 22 West", "1" }, {
+                           "US 22 East", "0" }, { "PA 230 East", "0" }, {
+                               "Cameron Street", "0" } },
+                               { { "Lewistown", "1" }, { "State College", "1" }, {
+                                   "Harrisburg", "0" } },
+                                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
 
 void PopulateExitManeuverList_8(std::list<Maneuver>& maneuvers,
@@ -1305,8 +1305,8 @@ void PopulateExitManeuverList_10(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 135,
                    83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "MD 43 East", "1" } },
-                   { }, { { "White Marsh Boulevard", "0" } }, 0, 0, 0, 0, 1, 0,
-                   "", "", "", 0, 0, 0, 0, 46, 0);
+                       { }, { { "White Marsh Boulevard", "0" } }, 0, 0, 0, 0, 1, 0,
+                       "", "", "", 0, 0, 0, 0, 46, 0);
 }
 
 void PopulateExitManeuverList_12(std::list<Maneuver>& maneuvers,
@@ -1322,7 +1322,7 @@ void PopulateExitManeuverList_12(std::list<Maneuver>& maneuvers,
                    83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { },
                    { }, { { "White Marsh", "0" } }, { { "White Marsh Boulevard",
                        "0" } },
-                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
+                       0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
 }
 
 void PopulateExitManeuverList_14(std::list<Maneuver>& maneuvers,
@@ -1337,9 +1337,9 @@ void PopulateExitManeuverList_14(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthEast, 135,
                    83, 158, 160, 1420, 1444, 1, 0, 0, 0, 0, 0, 0, 0, 0, { }, { {
                        "MD 43 East", "1" } },
-                   { { "White Marsh", "0" } }, {
-                       { "White Marsh Boulevard", "0" } },
-                   0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
+                       { { "White Marsh", "0" } }, {
+                           { "White Marsh Boulevard", "0" } },
+                           0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 46, 0);
 }
 
 void PopulateKeepManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1367,8 +1367,8 @@ void PopulateKeepManeuverList_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 221,
                    214, 21, 45, 148, 323, 0, 0, 0, 0, 0, 1, 0, 1, 0, { { "62",
                        "0" } },
-                   { }, { }, { }, 0, 0, 0, 1, 1, 0, "", "", "", 0, 0, 0, 0, 581,
-                   0);
+                       { }, { }, { }, 0, 0, 0, 1, 1, 0, "", "", "", 0, 0, 0, 0, 581,
+                       0);
 }
 
 void PopulateKeepManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1397,8 +1397,8 @@ void PopulateKeepManeuverList_3(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 221,
                    214, 21, 45, 148, 323, 0, 0, 0, 0, 0, 1, 0, 1, 0, { { "62",
                        "0" } },
-                   { }, { }, { }, 0, 0, 0, 1, 1, 0, "", "", "", 0, 0, 0, 0, 581,
-                   0);
+                       { }, { }, { }, 0, 0, 0, 1, 1, 0, "", "", "", 0, 0, 0, 0, 581,
+                       0);
 }
 
 void PopulateKeepManeuverList_4(std::list<Maneuver>& maneuvers,
@@ -1412,7 +1412,7 @@ void PopulateKeepManeuverList_4(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 221,
                    214, 21, 45, 148, 323, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { }, {
                        { "Annapolis", "0" } },
-                   { }, 0, 0, 0, 1, 1, 0, "", "", "", 0, 0, 0, 0, 581, 0);
+                       { }, 0, 0, 0, 1, 1, 0, "", "", "", 0, 0, 0, 0, 581, 0);
 }
 
 void PopulateKeepManeuverList_5(std::list<Maneuver>& maneuvers,
@@ -1426,8 +1426,8 @@ void PopulateKeepManeuverList_5(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 221,
                    214, 21, 45, 148, 323, 0, 0, 0, 0, 0, 1, 0, 1, 0, { { "62",
                        "0" } },
-                   { }, { { "Annapolis", "0" } }, { }, 0, 0, 0, 1, 1, 0, "", "",
-                   "", 0, 0, 0, 0, 581, 0);
+                       { }, { { "Annapolis", "0" } }, { }, 0, 0, 0, 1, 1, 0, "", "",
+                       "", 0, 0, 0, 0, 581, 0);
 }
 
 void PopulateKeepManeuverList_6(std::list<Maneuver>& maneuvers,
@@ -1441,9 +1441,9 @@ void PopulateKeepManeuverList_6(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 221,
                    214, 21, 45, 148, 323, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { {
                        "I 895 South", "1" }, {
-                       "Baltimore Harbor Tunnel Thruway", "0" } },
-                   { { "Annapolis", "0" } }, { }, 0, 0, 0, 1, 1, 0, "", "", "",
-                   0, 0, 0, 0, 581, 0);
+                           "Baltimore Harbor Tunnel Thruway", "0" } },
+                           { { "Annapolis", "0" } }, { }, 0, 0, 0, 1, 1, 0, "", "", "",
+                           0, 0, 0, 0, 581, 0);
 }
 
 void PopulateKeepManeuverList_7(std::list<Maneuver>& maneuvers,
@@ -1458,10 +1458,10 @@ void PopulateKeepManeuverList_7(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 221,
                    214, 21, 45, 148, 323, 0, 0, 0, 0, 0, 1, 0, 1, 0, { { "62",
                        "0" } },
-                   { { "I 895 South", "1" }, {
-                       "Baltimore Harbor Tunnel Thruway", "0" } },
-                   { { "Annapolis", "0" } }, { }, 0, 0, 0, 1, 1, 0, "", "", "",
-                   0, 0, 0, 0, 581, 0);
+                       { { "I 895 South", "1" }, {
+                           "Baltimore Harbor Tunnel Thruway", "0" } },
+                           { { "Annapolis", "0" } }, { }, 0, 0, 0, 1, 1, 0, "", "", "",
+                           0, 0, 0, 0, 581, 0);
 }
 
 void PopulateKeepToStayOnManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1472,11 +1472,11 @@ void PopulateKeepToStayOnManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kMerge, { "I 95 South",
                        "John F. Kennedy Memorial Highway" },
-                   { }, { }, "", 23.639002, 843, 2,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
-                   219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
+                       { }, { }, "", 23.639002, 843, 2,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
+                       219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1487,7 +1487,7 @@ void PopulateKeepToStayOnManeuverList_0(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 219,
                    232, 34, 45, 380, 491, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { {
                        "I 95 South", "0" } },
-                   { }, { }, 0, 0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
+                       { }, { }, 0, 0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
 }
 
 void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1498,11 +1498,11 @@ void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kMerge, { "I 95 South",
                        "John F. Kennedy Memorial Highway" },
-                   { }, { }, "", 23.639002, 843, 2,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
-                   219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
+                       { }, { }, "", 23.639002, 843, 2,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
+                       219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1513,8 +1513,8 @@ void PopulateKeepToStayOnManeuverList_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 219,
                    232, 34, 45, 380, 491, 0, 0, 0, 0, 0, 1, 0, 1, 0, { { "62",
                        "0" } },
-                   { { "I 95 South", "0" } }, { }, { }, 0, 0, 0, 1, 0, 0, "",
-                   "", "", 0, 0, 0, 0, 334, 0);
+                       { { "I 95 South", "0" } }, { }, { }, 0, 0, 0, 1, 0, 0, "",
+                       "", "", 0, 0, 0, 0, 334, 0);
 }
 
 void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1525,11 +1525,11 @@ void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kMerge, { "I 95 South",
                        "John F. Kennedy Memorial Highway" },
-                   { }, { }, "", 23.639002, 843, 2,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
-                   219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
+                       { }, { }, "", 23.639002, 843, 2,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
+                       219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1540,8 +1540,8 @@ void PopulateKeepToStayOnManeuverList_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 219,
                    232, 34, 45, 380, 491, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { {
                        "I 95 South", "0" } },
-                   { { "Baltimore", "0" } }, { }, 0, 0, 0, 1, 0, 0, "", "", "",
-                   0, 0, 0, 0, 334, 0);
+                       { { "Baltimore", "0" } }, { }, 0, 0, 0, 1, 0, 0, "", "", "",
+                       0, 0, 0, 0, 334, 0);
 }
 
 void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
@@ -1552,11 +1552,11 @@ void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver1, country_code, state_code,
                    TripDirections_Maneuver_Type_kMerge, { "I 95 South",
                        "John F. Kennedy Memorial Highway" },
-                   { }, { }, "", 23.639002, 843, 2,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
-                   219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
+                       { }, { }, "", 23.639002, 843, 2,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 234,
+                       219, 24, 34, 210, 380, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { },
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 832, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1567,8 +1567,8 @@ void PopulateKeepToStayOnManeuverList_3(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouthWest, 219,
                    232, 34, 45, 380, 491, 0, 0, 0, 0, 0, 1, 0, 1, 0, { { "62",
                        "0" } },
-                   { { "I 95 South", "0" } }, { { "Baltimore", "0" } }, { }, 0,
-                   0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
+                       { { "I 95 South", "0" } }, { { "Baltimore", "0" } }, { }, 0,
+                       0, 0, 1, 0, 0, "", "", "", 0, 0, 0, 0, 334, 0);
 }
 
 void PopulateMergeManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1582,8 +1582,8 @@ void PopulateMergeManeuverList_0(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 174, 241,
                    39, 41, 158, 180, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { {
                        "I 76 West", "1" } },
-                   { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
-                   0, 0, 0, 0, 34, 0);
+                       { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                       0, 0, 0, 0, 34, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
@@ -1606,19 +1606,19 @@ void PopulateMergeManeuverList_1_1(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 174, 241,
                    39, 41, 158, 180, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { {
                        "I 76 West", "1" } },
-                   { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
-                   0, 0, 0, 0, 34, 0);
+                       { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                       0, 0, 0, 0, 34, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
                    TripDirections_Maneuver_Type_kMerge, { "I 76 West",
                        "Pennsylvania Turnpike" },
-                   { }, { }, "", 7.624001, 245, 1,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
-                   293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
+                       { }, { }, "", 7.624001, 245, 1,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
+                       293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
 }
 
 void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
@@ -1632,19 +1632,19 @@ void PopulateMergeManeuverList_1_2(std::list<Maneuver>& maneuvers,
                    TripDirections_Maneuver_CardinalDirection_kSouth, 174, 241,
                    39, 41, 158, 180, 1, 0, 0, 0, 0, 1, 0, 0, 0, { }, { {
                        "I 76 West", "1" } },
-                   { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
-                   0, 0, 0, 0, 34, 0);
+                       { { "Pittsburgh", "0" } }, { }, 0, 0, 0, 0, 1, 0, "", "", "",
+                       0, 0, 0, 0, 34, 0);
 
   maneuvers.emplace_back();
   Maneuver& maneuver2 = maneuvers.back();
   PopulateManeuver(maneuver2, country_code, state_code,
                    TripDirections_Maneuver_Type_kMerge, { "I 76 West",
                        "Pennsylvania Turnpike" },
-                   { }, { }, "", 7.624001, 245, 1,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
-                   293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
-                   { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
+                       { }, { }, "", 7.624001, 245, 1,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 242,
+                       293, 41, 42, 180, 236, 0, 0, 0, 0, 0, 1, 0, 1, 0, { }, { },
+                       { }, { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 243, 0);
 }
 
 void PopulateEnterRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1655,11 +1655,11 @@ void PopulateEnterRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kRoundaboutEnter, { "US 15",
                        "MD 464" },
-                   { }, { }, "", 0.043000, 2, 41,
-                   Maneuver::RelativeDirection::kRight,
-                   TripDirections_Maneuver_CardinalDirection_kWest, 264, 167,
-                   135, 139, 1457, 1464, 0, 0, 0, 0, 1, 0, 0, 0, 0, { }, { },
-                   { }, { }, 1, 2, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 2, 0);
+                       { }, { }, "", 0.043000, 2, 41,
+                       Maneuver::RelativeDirection::kRight,
+                       TripDirections_Maneuver_CardinalDirection_kWest, 264, 167,
+                       135, 139, 1457, 1464, 0, 0, 0, 0, 1, 0, 0, 0, 0, { }, { },
+                       { }, { }, 1, 2, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 2, 0);
 }
 
 void PopulateEnterRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
@@ -1671,12 +1671,12 @@ void PopulateEnterRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kRoundaboutEnter, { "US 15",
                        "MD 464" },
-                   { }, { }, "", 0.043000, 2, 41,
-                   Maneuver::RelativeDirection::kRight,
-                   TripDirections_Maneuver_CardinalDirection_kWest, 264, 167,
-                   135, 139, 1457, 1464, 0, 0, 0, 0, 1, 0, 0, 0, 0, { }, { },
-                   { }, { }, 1, 2, roundabout_exit_count, 0, 1, 0, "", "", "",
-                   0, 0, 0, 0, 2, 0);
+                       { }, { }, "", 0.043000, 2, 41,
+                       Maneuver::RelativeDirection::kRight,
+                       TripDirections_Maneuver_CardinalDirection_kWest, 264, 167,
+                       135, 139, 1457, 1464, 0, 0, 0, 0, 1, 0, 0, 0, 0, { }, { },
+                       { }, { }, 1, 2, roundabout_exit_count, 0, 1, 0, "", "", "",
+                       0, 0, 0, 0, 2, 0);
 }
 
 void PopulateExitRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1701,11 +1701,11 @@ void PopulateExitRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kRoundaboutExit, {
                        "Philadelphia Road", "MD 7" },
-                   { }, { }, "", 1.041000, 69, 24,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 224,
-                   262, 8, 11, 32, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 64, 0);
+                       { }, { }, "", 1.041000, 69, 24,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 224,
+                       262, 8, 11, 32, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 64, 0);
 }
 
 void PopulateExitRoundaboutManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1716,11 +1716,11 @@ void PopulateExitRoundaboutManeuverList_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kRoundaboutExit, { "US 15" }, {
                        "Catoctin Mountain Highway", "US 15" },
-                   { }, "", 18.278002, 923, 34,
-                   Maneuver::RelativeDirection::kRight,
-                   TripDirections_Maneuver_CardinalDirection_kSouth, 201, 204,
-                   139, 154, 1464, 1808, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
-                   { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 914, 0);
+                       { }, "", 18.278002, 923, 34,
+                       Maneuver::RelativeDirection::kRight,
+                       TripDirections_Maneuver_CardinalDirection_kSouth, 201, 204,
+                       139, 154, 1464, 1808, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
+                       { }, { }, 1, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 914, 0);
 }
 
 void PopulateEnterFerryManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1744,11 +1744,11 @@ void PopulateEnterFerryManeuverList_1(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryEnter, {
                        "Millersburg FERRY" },
-                   { }, { }, "", 1.446000, 822, 4,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kWest, 280, 280, 5,
-                   6, 8, 9, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
-                   0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 521, 0);
+                       { }, { }, "", 1.446000, 822, 4,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kWest, 280, 280, 5,
+                       6, 8, 9, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                       0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 521, 0);
 }
 
 void PopulateEnterFerryManeuverList_2(std::list<Maneuver>& maneuvers,
@@ -1759,11 +1759,11 @@ void PopulateEnterFerryManeuverList_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryEnter, {
                        "Bridgeport - Port Jefferson" },
-                   { }, { }, "", 27.731001, 3628, 24,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 151,
-                   142, 3, 4, 15, 30, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 3328, 0);
+                       { }, { }, "", 27.731001, 3628, 24,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthEast, 151,
+                       142, 3, 4, 15, 30, 0, 0, 1, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 3328, 0);
 }
 
 void PopulateExitFerryManeuverList_0(std::list<Maneuver>& maneuvers,
@@ -1803,11 +1803,11 @@ void PopulateExitFerryManeuverList_2(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
                        "Cape May-Lewes Ferry Entrance", "US 9" },
-                   { }, "", 0.099000, 7, 356,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
-                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+                       { }, "", 0.099000, 7, 356,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                       23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -1848,11 +1848,11 @@ void PopulateExitFerryManeuverList_6(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
                        "Cape May-Lewes Ferry Entrance", "US 9" },
-                   { }, "", 0.099000, 7, 356,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
-                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+                       { }, "", 0.099000, 7, 356,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                       23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
 }
 
@@ -1886,24 +1886,24 @@ void PopulateExitFerryManeuverList_9(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateExitFerryManeuverList_10(std::list<Maneuver>& maneuvers,
-                                     const std::string& country_code,
-                                     const std::string& state_code) {
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
                        "Cape May-Lewes Ferry Entrance", "US 9" },
-                   { }, "", 0.099000, 7, 356,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
-                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+                       { }, "", 0.099000, 7, 356,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                       23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
 }
 
 void PopulateExitFerryManeuverList_16(std::list<Maneuver>& maneuvers,
-                                     const std::string& country_code,
-                                     const std::string& state_code) {
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -1916,8 +1916,8 @@ void PopulateExitFerryManeuverList_16(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateExitFerryManeuverList_17(std::list<Maneuver>& maneuvers,
-                                     const std::string& country_code,
-                                     const std::string& state_code) {
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -1931,18 +1931,18 @@ void PopulateExitFerryManeuverList_17(std::list<Maneuver>& maneuvers,
 }
 
 void PopulateExitFerryManeuverList_18(std::list<Maneuver>& maneuvers,
-                                     const std::string& country_code,
-                                     const std::string& state_code) {
+                                      const std::string& country_code,
+                                      const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kFerryExit, { "US 9" }, {
                        "Cape May-Lewes Ferry Entrance", "US 9" },
-                   { }, "", 0.099000, 7, 356,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
-                   23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
+                       { }, "", 0.099000, 7, 356,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 31, 62,
+                       23, 25, 71, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 1, 0, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 5, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
 }
 
@@ -1954,11 +1954,11 @@ void PopulateTransitConnectionStartManeuverList_0(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionStart, {
                        "Broadway" },
-                   { }, { }, "", 0.036000, 28, 0,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
-                   212, 2, 3, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+                       { }, { }, "", 0.036000, 28, 0,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
+                       212, 2, 3, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
 }
 
 void PopulateTransitConnectionStartManeuverList_1(
@@ -1969,16 +1969,16 @@ void PopulateTransitConnectionStartManeuverList_1(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionStart, {
                        "Townsend Street" },
-                   { }, { }, "", 0.084000, 60, 204,
-                   Maneuver::RelativeDirection::kLeft,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
-                   175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
-                   { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
+                       { }, { }, "", 0.084000, 60, 204,
+                       Maneuver::RelativeDirection::kLeft,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
+                       175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
+                       { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
   maneuver.set_transit_connection_stop(
-      TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-9q8yyv42k3-caltrain~sanfranciscostation",
-                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
-                  1, 0.0f, 0.0f));
+      TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                      "s-9q8yyv42k3-caltrain~sanfranciscostation",
+                      "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
+                      1, 0.0f, 0.0f));
 }
 
 void PopulateTransitConnectionStartManeuverList_2(
@@ -1989,15 +1989,15 @@ void PopulateTransitConnectionStartManeuverList_2(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionStart, {
                        "Broadway" },
-                   { }, { }, "", 0.036000, 28, 0,
-                   Maneuver::RelativeDirection::kKeepStraight,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
-                   212, 2, 3, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+                       { }, { }, "", 0.036000, 28, 0,
+                       Maneuver::RelativeDirection::kKeepStraight,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
+                       212, 2, 3, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
   maneuver.set_transit_connection_stop(
-      TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                  "2016-03-29T08:02-04:00", 0, 0, 0.0f, 0.0f));
+      TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                      "2016-03-29T08:02-04:00", 0, 0, 0.0f, 0.0f));
 }
 
 void PopulateTransitConnectionTransferManeuverList_0(
@@ -2008,11 +2008,11 @@ void PopulateTransitConnectionTransferManeuverList_0(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionTransfer, {
                        "Broadway" },
-                   { }, { }, "", 0.036000, 25, 196,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
-                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+                       { }, { }, "", 0.036000, 25, 196,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                       11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
 }
 
 void PopulateTransitConnectionTransferManeuverList_1(
@@ -2023,16 +2023,16 @@ void PopulateTransitConnectionTransferManeuverList_1(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionTransfer, {
                        "Townsend Street" },
-                   { }, { }, "", 0.084000, 60, 204,
-                   Maneuver::RelativeDirection::kLeft,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
-                   175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
-                   { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
+                       { }, { }, "", 0.084000, 60, 204,
+                       Maneuver::RelativeDirection::kLeft,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
+                       175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
+                       { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
   maneuver.set_transit_connection_stop(
-      TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-9q8yyv42k3-caltrain~sanfranciscostation",
-                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
-                  1, 0.0f, 0.0f));
+      TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                      "s-9q8yyv42k3-caltrain~sanfranciscostation",
+                      "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
+                      1, 0.0f, 0.0f));
 }
 
 void PopulateTransitConnectionTransferManeuverList_2(
@@ -2043,15 +2043,15 @@ void PopulateTransitConnectionTransferManeuverList_2(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionTransfer, {
                        "Broadway" },
-                   { }, { }, "", 0.036000, 25, 196,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
-                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+                       { }, { }, "", 0.036000, 25, 196,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                       11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
   maneuver.set_transit_connection_stop(
-      TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
-                  "", 0, 0, 0.0f, 0.0f));
+      TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
+                      "", 0, 0, 0.0f, 0.0f));
 }
 
 void PopulateTransitConnectionDestinationManeuverList_0(
@@ -2062,11 +2062,11 @@ void PopulateTransitConnectionDestinationManeuverList_0(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionDestination, {
                        "Broadway" },
-                   { }, { }, "", 0.036000, 25, 196,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
-                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+                       { }, { }, "", 0.036000, 25, 196,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                       11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
 }
 
 void PopulateTransitConnectionDestinationManeuverList_1(
@@ -2077,16 +2077,16 @@ void PopulateTransitConnectionDestinationManeuverList_1(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionDestination, {
                        "Townsend Street" },
-                   { }, { }, "", 0.084000, 60, 204,
-                   Maneuver::RelativeDirection::kLeft,
-                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
-                   175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
-                   { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
+                       { }, { }, "", 0.084000, 60, 204,
+                       Maneuver::RelativeDirection::kLeft,
+                       TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
+                       175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
+                       { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
   maneuver.set_transit_connection_stop(
-      TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-9q8yyv42k3-caltrain~sanfranciscostation",
-                  "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
-                  1, 0.0f, 0.0f));
+      TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                      "s-9q8yyv42k3-caltrain~sanfranciscostation",
+                      "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
+                      1, 0.0f, 0.0f));
 }
 
 void PopulateTransitConnectionDestinationManeuverList_2(
@@ -2097,20 +2097,20 @@ void PopulateTransitConnectionDestinationManeuverList_2(
   PopulateManeuver(maneuver, country_code, state_code,
                    TripDirections_Maneuver_Type_kTransitConnectionDestination, {
                        "Broadway" },
-                   { }, { }, "", 0.036000, 25, 196,
-                   Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
-                   11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
-                   { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
+                       { }, { }, "", 0.036000, 25, 196,
+                       Maneuver::RelativeDirection::KReverse,
+                       TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
+                       11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                       { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
   maneuver.set_transit_connection_stop(
-      TransitStop(TripDirections_TransitStop_Type_kStation,
-                  "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
-                  "", 0, 0, 0.0f, 0.0f));
+      TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                      "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
+                      "", 0, 0, 0.0f, 0.0f));
 }
 
 void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
-                                           const std::string& country_code,
-                                           const std::string& state_code) {
+                                         const std::string& country_code,
+                                         const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -2134,31 +2134,31 @@ void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 
   maneuver.set_transit_type(TripPath_TransitType_kRail);
 }
@@ -2189,31 +2189,31 @@ void PopulateTransitManeuverList_0(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
@@ -2235,47 +2235,47 @@ void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
                       "http://www.sfmta.com/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn2c3gg-hydest~vallejost", "Hyde St & Vallejo St",
-                      "2016-05-17T08:06-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn2c3gg-hydest~vallejost", "Hyde St & Vallejo St",
+                          "2016-05-17T08:06-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn2cpr9-hydest~greenst", "Hyde St & Green St",
-                      "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn2cpr9-hydest~greenst", "Hyde St & Green St",
+                          "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn31h5q-hydest~unionst", "Hyde St & Union St",
-                      "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn31h5q-hydest~unionst", "Hyde St & Union St",
+                          "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn32fnv-hydest~filbertst", "Hyde St & Filbert St",
-                      "2016-05-17T08:05-04:00", "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn32fnv-hydest~filbertst", "Hyde St & Filbert St",
+                          "2016-05-17T08:05-04:00", "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn32yg5-hydest~greenwichst",
-                      "Hyde St & Greenwich St", "2016-05-17T08:05-04:00",
-                      "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn32yg5-hydest~greenwichst",
+                          "Hyde St & Greenwich St", "2016-05-17T08:05-04:00",
+                          "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn38ez1-hydest~lombardst", "Hyde St & Lombard St",
-                      "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn38ez1-hydest~lombardst", "Hyde St & Lombard St",
+                          "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn3b9cv-hydest~chestnutst", "Hyde St & Chestnut St",
-                      "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn3b9cv-hydest~chestnutst", "Hyde St & Chestnut St",
+                          "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-9q8zn60kc1-hydest~bayst", "Hyde St & Bay St", "",
-                      "2016-05-17T08:03-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-9q8zn60kc1-hydest~bayst", "Hyde St & Bay St", "",
+                          "2016-05-17T08:03-04:00", 0, 1, 0.0f, 0.0f)));
 
   maneuver.set_transit_type(TripPath_TransitType_kCableCar);
 
@@ -2307,18 +2307,18 @@ void PopulateTransitManeuverList_1_stop_count_1(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rkw4r8c-atlanticav~barclaysctr<r31n",
-                      "Atlantic Av - Barclays Ctr", "2016-05-17T08:08-04:00", "", 0,
-                      0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rkw4r8c-atlanticav~barclaysctr<r31n",
+                          "Atlantic Av - Barclays Ctr", "2016-05-17T08:08-04:00", "", 0,
+                          0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rkmp4s9-unionst<r32n", "Union St", "",
-                      "2016-05-17T08:06-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rkmp4s9-unionst<r32n", "Union St", "",
+                          "2016-05-17T08:06-04:00", 0, 0, 0.0f, 0.0f)));
 
 }
 
@@ -2348,23 +2348,23 @@ void PopulateTransitManeuverList_1_stop_count_2(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20s", "14 St - Union Sq",
-                      "2016-05-17T08:08-04:00", "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20s", "14 St - Union Sq",
+                          "2016-05-17T08:08-04:00", "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19s", "23 St", "2016-05-17T08:07-04:00",
-                      "2016-05-17T08:07-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19s", "23 St", "2016-05-17T08:07-04:00",
+                          "2016-05-17T08:07-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18s", "28 St", "", "2016-05-17T08:05-04:00",
-                      0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18s", "28 St", "", "2016-05-17T08:05-04:00",
+                          0, 0, 0.0f, 0.0f)));
 
 }
 
@@ -2394,31 +2394,31 @@ void PopulateTransitManeuverList_1_stop_count_4(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitManeuverList_1_stop_count_8(std::list<Maneuver>& maneuvers,
@@ -2447,66 +2447,66 @@ void PopulateTransitManeuverList_1_stop_count_8(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru3006q-23st<d18n", "23 St", "2016-05-17T08:32-04:00", "",
-                      0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru3006q-23st<d18n", "23 St", "2016-05-17T08:32-04:00", "",
+                          0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru0jt7k-14st<d19n", "14 St", "2016-05-17T08:30-04:00",
-                      "2016-05-17T08:30-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru0jt7k-14st<d19n", "14 St", "2016-05-17T08:30-04:00",
+                          "2016-05-17T08:30-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsp47p6-w4st<d20n", "W 4 St", "2016-05-17T08:29-04:00",
-                      "2016-05-17T08:29-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsp47p6-w4st<d20n", "W 4 St", "2016-05-17T08:29-04:00",
+                          "2016-05-17T08:29-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsjvd53-broadway~lafayettest<d21n",
-                      "Broadway-Lafayette St", "2016-05-17T08:26-04:00",
-                      "2016-05-17T08:26-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsjvd53-broadway~lafayettest<d21n",
+                          "Broadway-Lafayette St", "2016-05-17T08:26-04:00",
+                          "2016-05-17T08:26-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rskecru-essexst<m18n", "Essex St",
-                      "2016-05-17T08:23-04:00", "2016-05-17T08:23-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rskecru-essexst<m18n", "Essex St",
+                          "2016-05-17T08:23-04:00", "2016-05-17T08:23-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rt49x7k-marcyav<m16n", "Marcy Av",
-                      "2016-05-17T08:16-04:00", "2016-05-17T08:16-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rt49x7k-marcyav<m16n", "Marcy Av",
+                          "2016-05-17T08:16-04:00", "2016-05-17T08:16-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rt4ky8n-hewesst<m14n", "Hewes St",
-                      "2016-05-17T08:15-04:00", "2016-05-17T08:15-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rt4ky8n-hewesst<m14n", "Hewes St",
+                          "2016-05-17T08:15-04:00", "2016-05-17T08:15-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rt3cjhx-lorimerst<m13n", "Lorimer St",
-                      "2016-05-17T08:13-04:00", "2016-05-17T08:13-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rt3cjhx-lorimerst<m13n", "Lorimer St",
+                          "2016-05-17T08:13-04:00", "2016-05-17T08:13-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rt3m8ny-flushingav<m12n", "Flushing Av", "",
-                      "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rt3m8ny-flushingav<m12n", "Flushing Av", "",
+                          "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
 
 }
 
 void PopulateTransitTransferManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
-                                           const std::string& country_code,
-                                           const std::string& state_code) {
+                                                   const std::string& country_code,
+                                                   const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -2530,36 +2530,36 @@ void PopulateTransitTransferManeuverList_0_no_name(std::list<Maneuver>& maneuver
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitTransferManeuverList_0(std::list<Maneuver>& maneuvers,
-                                   const std::string& country_code,
-                                   const std::string& state_code) {
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -2583,36 +2583,36 @@ void PopulateTransitTransferManeuverList_0(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitTransferManeuverList_1(std::list<Maneuver>& maneuvers,
-                                   const std::string& country_code,
-                                   const std::string& state_code) {
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -2636,34 +2636,87 @@ void PopulateTransitTransferManeuverList_1(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuvers,
+                                                   const std::string& country_code,
+                                                   const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kTransitRemainOn, { }, { }, { }, "",
+                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
+                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
+
+  PopulateTransitInfo(
+      maneuver.mutable_transit_info(),
+      "r-dr5r-r",
+      0,
+      84452,
+      "",
+      "",
+      "",
+      16567306,
+      0,
+      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
+      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
+
+  // Insert the transit stops in reverse order (end to begin of line)
+  maneuver.InsertTransitPlatform(
+      std::move(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
+      std::move(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
+      std::move(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
+      std::move(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
+      std::move(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+}
+
+void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
                                            const std::string& country_code,
                                            const std::string& state_code) {
   maneuvers.emplace_back();
@@ -2680,59 +2733,6 @@ void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuver
       "r-dr5r-r",
       0,
       84452,
-      "",
-      "",
-      "",
-      16567306,
-      0,
-      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, Brooklyn, at all times except late nights. During late nights, trains operate only in Brooklyn between 36 St and 95 St/4 Av.",
-      "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
-
-  // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
-      std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
-      std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
-      std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
-      std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
-      std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
-}
-
-void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
-                                   const std::string& country_code,
-                                   const std::string& state_code) {
-  maneuvers.emplace_back();
-  Maneuver& maneuver = maneuvers.back();
-  PopulateManeuver(maneuver, country_code, state_code,
-                   TripDirections_Maneuver_Type_kTransitRemainOn, { }, { }, { }, "",
-                   2.180000, 362, 164, Maneuver::RelativeDirection::KReverse,
-                   TripDirections_Maneuver_CardinalDirection_kNorth, 16, 7, 3,
-                   7, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
-                   0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
-
-  PopulateTransitInfo(
-      maneuver.mutable_transit_info(),
-      "r-dr5r-r",
-      0,
-      84452,
       "R",
       "Broadway Local",
       "",
@@ -2742,36 +2742,36 @@ void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulateTransitRemainOnManeuverList_1(std::list<Maneuver>& maneuvers,
-                                   const std::string& country_code,
-                                   const std::string& state_code) {
+                                           const std::string& country_code,
+                                           const std::string& state_code) {
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code,
@@ -2795,31 +2795,31 @@ void PopulateTransitRemainOnManeuverList_1(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitStop(
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
-                      "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
+                          "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
-                      "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
+                          "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
-                      "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
+                          "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
-                      "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitStop(
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
+                          "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
+  maneuver.InsertTransitPlatform(
       std::move(
-          TransitStop(TripDirections_TransitStop_Type_kStation,
-                      "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
-                      "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
+          TransitPlatform(TripDirections_TransitPlatform_Type_kStation,
+                          "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
+                          "2016-03-29T08:02-04:00", 0, 1, 0.0f, 0.0f)));
 }
 
 void PopulatePostTransitConnectionDestinationManeuverList_0(
@@ -2846,10 +2846,10 @@ void PopulatePostTransitConnectionDestinationManeuverList_1(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue", "Avenue of the Americas" },
-      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2862,11 +2862,11 @@ void PopulatePostTransitConnectionDestinationManeuverList_2(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue" },
-      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
-      Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+          Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kTransit); // So it will just say Head
 }
 
@@ -2894,10 +2894,10 @@ void PopulatePostTransitConnectionDestinationManeuverList_5(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue", "Avenue of the Americas" },
-      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
 }
 
@@ -2910,11 +2910,11 @@ void PopulatePostTransitConnectionDestinationManeuverList_6(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue" },
-      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
-      Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+          Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kDrive);
 }
 
@@ -2942,10 +2942,10 @@ void PopulatePostTransitConnectionDestinationManeuverList_9(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue", "Avenue of the Americas" },
-      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
 }
 
@@ -2958,11 +2958,11 @@ void PopulatePostTransitConnectionDestinationManeuverList_10(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue" },
-      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
-      Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+          Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kPedestrian);
 }
 
@@ -2990,10 +2990,10 @@ void PopulatePostTransitConnectionDestinationManeuverList_17(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue", "Avenue of the Americas" },
-      { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { }, { }, "", 0.088000, 66, 2, Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
 }
 
@@ -3006,11 +3006,11 @@ void PopulatePostTransitConnectionDestinationManeuverList_18(
       maneuver, country_code, state_code,
       TripDirections_Maneuver_Type_kPostTransitConnectionDestination, {
           "6th Avenue" },
-      { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
-      Maneuver::RelativeDirection::kKeepStraight,
-      TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
-      17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
-      "", "", 0, 0, 0, 0, 62, 0);
+          { "6th Avenue", "Avenue of the Americas" }, { }, "", 0.088000, 66, 2,
+          Maneuver::RelativeDirection::kKeepStraight,
+          TripDirections_Maneuver_CardinalDirection_kSouthWest, 210, 211, 8, 11, 13,
+          17, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0, 0, 1, 0, "",
+          "", "", 0, 0, 0, 0, 62, 0);
   maneuver.set_travel_mode(TripPath_TravelMode_kBicycle);
 }
 
@@ -3393,12 +3393,12 @@ void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_17_unnamed_cycleway(maneuvers, country_code,
-                                              state_code);
+                                                state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17_unnamed_cycleway(expected_maneuvers, country_code,
-                                              state_code);
+                                                state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Bike east on the cycleway.",
                                   "",
@@ -3420,12 +3420,12 @@ void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
   // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_17_unnamed_mountain_bike_trail(maneuvers, country_code,
-                                              state_code);
+                                                           state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
-                                              state_code);
+                                                           state_code);
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Bike west on the mountain bike trail.",
                                   "",
@@ -6642,7 +6642,7 @@ void TestBuildTransit_0_train_miles_en_US() {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_0_train(expected_maneuvers, country_code,
-                                        state_code);
+                                      state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the train. (4 stops)",
                                   "", "Take the train.", "Travel 4 stops.",
                                   "Depart: 8:02 AM from 8 St - NYU.",
@@ -7614,7 +7614,7 @@ void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
   if (instruction != expected) {
     throw std::runtime_error(
         "Incorrect FormVerbalPostTransitionInstruction - EXPECTED: " + expected
-            + "  |  FORMED: " + instruction);
+        + "  |  FORMED: " + instruction);
   }
 }
 
@@ -8023,7 +8023,7 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, { },
                          { }, { }),
-      "Stay straight to take the ramp.");
+                         "Stay straight to take the ramp.");
 
   // phrase_id = 1
   TryFormRampStraightInstruction(
@@ -8031,8 +8031,8 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, {
                              "I 95 South" },
-                         { }, { }),
-      "Stay straight to take the I 95 South ramp.");
+                             { }, { }),
+                             "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
   TryFormRampStraightInstruction(
@@ -8040,8 +8040,8 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, {
                              "I 95 South" },
-                         { }, { "Gettysburg Pike" }),
-      "Stay straight to take the I 95 South ramp.");
+                             { }, { "Gettysburg Pike" }),
+                             "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 2
   TryFormRampStraightInstruction(
@@ -8049,8 +8049,8 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Stay straight to take the ramp toward Baltimore.");
+                             { }),
+                             "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
   TryFormRampStraightInstruction(
@@ -8058,8 +8058,8 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, { }, {
                              "Baltimore" },
-                         { "Gettysburg Pike" }),
-      "Stay straight to take the ramp toward Baltimore.");
+                             { "Gettysburg Pike" }),
+                             "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 3
   TryFormRampStraightInstruction(
@@ -8067,8 +8067,8 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Stay straight to take the I 95 South ramp toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward exists
   TryFormRampStraightInstruction(
@@ -8076,8 +8076,8 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { "Gettysburg Pike" }),
-      "Stay straight to take the I 95 South ramp toward Baltimore.");
+                             { "Baltimore" }, { "Gettysburg Pike" }),
+                             "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 4
   TryFormRampStraightInstruction(
@@ -8085,7 +8085,7 @@ void TestFormRampStraightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
                          Maneuver::RelativeDirection::kKeepStraight, { }, { },
                          { }, { "Gettysburg Pike" }),
-      "Stay straight to take the Gettysburg Pike ramp.");
+                         "Stay straight to take the Gettysburg Pike ramp.");
 
 }
 
@@ -8112,7 +8112,7 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { }),
-      "Take the ramp on the right.");
+                         "Take the ramp on the right.");
 
   // phrase_id = 1
   TryFormRampRightInstruction(
@@ -8120,8 +8120,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
-                         { }, { }),
-      "Take the I 95 South ramp on the right.");
+                             { }, { }),
+                             "Take the I 95 South ramp on the right.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
   TryFormRampRightInstruction(
@@ -8129,8 +8129,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
-                         { }, { "Gettysburg Pike" }),
-      "Take the I 95 South ramp on the right.");
+                             { }, { "Gettysburg Pike" }),
+                             "Take the I 95 South ramp on the right.");
 
   // phrase_id = 2
   TryFormRampRightInstruction(
@@ -8138,8 +8138,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Take the ramp on the right toward Baltimore.");
+                             { }),
+                             "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
   TryFormRampRightInstruction(
@@ -8147,8 +8147,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Baltimore" },
-                         { "Gettysburg Pike" }),
-      "Take the ramp on the right toward Baltimore.");
+                             { "Gettysburg Pike" }),
+                             "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 3
   TryFormRampRightInstruction(
@@ -8156,8 +8156,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Take the I 95 South ramp on the right toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Take the I 95 South ramp on the right toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward
   // exists
@@ -8166,8 +8166,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { "Gettysburg Pike" }),
-      "Take the I 95 South ramp on the right toward Baltimore.");
+                             { "Baltimore" }, { "Gettysburg Pike" }),
+                             "Take the I 95 South ramp on the right toward Baltimore.");
 
   // phrase_id = 4
   TryFormRampRightInstruction(
@@ -8175,7 +8175,7 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike ramp on the right.");
+                         "Take the Gettysburg Pike ramp on the right.");
 
   // phrase_id = 5
   TryFormRampRightInstruction(
@@ -8183,7 +8183,7 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, { },
                          { }),
-      "Turn right to take the ramp.");
+                         "Turn right to take the ramp.");
 
   // phrase_id = 6
   TryFormRampRightInstruction(
@@ -8191,8 +8191,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, {
                              "I 95 South" },
-                         { }, { }),
-      "Turn right to take the I 95 South ramp.");
+                             { }, { }),
+                             "Turn right to take the I 95 South ramp.");
 
   // phrase_id = 7
   TryFormRampRightInstruction(
@@ -8200,8 +8200,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Turn right to take the ramp toward Baltimore.");
+                             { }),
+                             "Turn right to take the ramp toward Baltimore.");
 
   // phrase_id = 8
   TryFormRampRightInstruction(
@@ -8209,8 +8209,8 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Turn right to take the I 95 South ramp toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Turn right to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 9
   TryFormRampRightInstruction(
@@ -8218,7 +8218,7 @@ void TestFormRampRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, { }, {
                              "Gettysburg Pike" }),
-      "Turn right to take the Gettysburg Pike ramp.");
+                             "Turn right to take the Gettysburg Pike ramp.");
 
 }
 
@@ -8245,7 +8245,7 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { }),
-      "Take the ramp on the left.");
+                         "Take the ramp on the left.");
 
   // phrase_id = 1
   TryFormRampLeftInstruction(
@@ -8253,8 +8253,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
-                         { }, { }),
-      "Take the I 95 South ramp on the left.");
+                             { }, { }),
+                             "Take the I 95 South ramp on the left.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
   TryFormRampLeftInstruction(
@@ -8262,8 +8262,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
-                         { }, { "Gettysburg Pike" }),
-      "Take the I 95 South ramp on the left.");
+                             { }, { "Gettysburg Pike" }),
+                             "Take the I 95 South ramp on the left.");
 
   // phrase_id = 2
   TryFormRampLeftInstruction(
@@ -8271,8 +8271,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Take the ramp on the left toward Baltimore.");
+                             { }),
+                             "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
   TryFormRampLeftInstruction(
@@ -8280,8 +8280,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Baltimore" },
-                         { "Gettysburg Pike" }),
-      "Take the ramp on the left toward Baltimore.");
+                             { "Gettysburg Pike" }),
+                             "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 3
   TryFormRampLeftInstruction(
@@ -8289,8 +8289,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Take the I 95 South ramp on the left toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Take the I 95 South ramp on the left toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward
   // exists
@@ -8299,8 +8299,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { "Gettysburg Pike" }),
-      "Take the I 95 South ramp on the left toward Baltimore.");
+                             { "Baltimore" }, { "Gettysburg Pike" }),
+                             "Take the I 95 South ramp on the left toward Baltimore.");
 
   // phrase_id = 4
   TryFormRampLeftInstruction(
@@ -8308,7 +8308,7 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike ramp on the left.");
+                         "Take the Gettysburg Pike ramp on the left.");
 
   // phrase_id = 5
   TryFormRampLeftInstruction(
@@ -8316,7 +8316,7 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, { },
                          { }),
-      "Turn left to take the ramp.");
+                         "Turn left to take the ramp.");
 
   // phrase_id = 6
   TryFormRampLeftInstruction(
@@ -8324,7 +8324,7 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { "I 95 South" }, { }, { }),
-      "Turn left to take the I 95 South ramp.");
+                         "Turn left to take the I 95 South ramp.");
 
   // phrase_id = 7
   TryFormRampLeftInstruction(
@@ -8332,8 +8332,8 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Turn left to take the ramp toward Baltimore.");
+                             { }),
+                             "Turn left to take the ramp toward Baltimore.");
 
   // phrase_id = 8
   TryFormRampLeftInstruction(
@@ -8341,7 +8341,7 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { "I 95 South" }, { "Baltimore" }, { }),
-      "Turn left to take the I 95 South ramp toward Baltimore.");
+                         "Turn left to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 9
   TryFormRampLeftInstruction(
@@ -8349,7 +8349,7 @@ void TestFormRampLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, { }, {
                              "Gettysburg Pike" }),
-      "Turn left to take the Gettysburg Pike ramp.");
+                             "Turn left to take the Gettysburg Pike ramp.");
 
 }
 
@@ -8376,7 +8376,7 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { }),
-      "Take the exit on the right.");
+                         "Take the exit on the right.");
 
   // phrase_id = 1
   TryFormExitRightInstruction(
@@ -8384,7 +8384,7 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" },
                          { }, { }, { }),
-      "Take exit 67A on the right.");
+                         "Take exit 67A on the right.");
 
   // phrase_id = 1; Test that name is ignored when number is present
   TryFormExitRightInstruction(
@@ -8392,7 +8392,7 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" },
                          { }, { }, { "Gettysburg Pike" }),
-      "Take exit 67A on the right.");
+                         "Take exit 67A on the right.");
 
   // phrase_id = 2
   TryFormExitRightInstruction(
@@ -8400,8 +8400,8 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
-                         { }, { }),
-      "Take the I 95 South exit on the right.");
+                             { }, { }),
+                             "Take the I 95 South exit on the right.");
 
   // phrase_id = 3
   TryFormExitRightInstruction(
@@ -8409,8 +8409,8 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" }, {
                              "I 95 South" },
-                         { }, { }),
-      "Take exit 67A on the right onto I 95 South.");
+                             { }, { }),
+                             "Take exit 67A on the right onto I 95 South.");
 
   // phrase_id = 4
   TryFormExitRightInstruction(
@@ -8418,8 +8418,8 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Take the exit on the right toward Baltimore.");
+                             { }),
+                             "Take the exit on the right toward Baltimore.");
 
   // phrase_id = 5
   TryFormExitRightInstruction(
@@ -8427,7 +8427,7 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" },
                          { }, { "Baltimore" }, { }),
-      "Take exit 67A on the right toward Baltimore.");
+                         "Take exit 67A on the right toward Baltimore.");
 
   // phrase_id = 6
   TryFormExitRightInstruction(
@@ -8435,8 +8435,8 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Take the I 95 South exit on the right toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Take the I 95 South exit on the right toward Baltimore.");
 
   // phrase_id = 7
   TryFormExitRightInstruction(
@@ -8444,8 +8444,8 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { "67A" }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Take exit 67A on the right onto I 95 South toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Take exit 67A on the right onto I 95 South toward Baltimore.");
 
   // phrase_id = 8
   TryFormExitRightInstruction(
@@ -8453,7 +8453,7 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, { },
                          { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the right.");
+                         "Take the Gettysburg Pike exit on the right.");
 
   // phrase_id = 10
   TryFormExitRightInstruction(
@@ -8461,7 +8461,7 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { },
                          { "US 15" }, { }, { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the right onto US 15.");
+                         "Take the Gettysburg Pike exit on the right onto US 15.");
 
   // phrase_id = 12
   TryFormExitRightInstruction(
@@ -8469,8 +8469,8 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
                          Maneuver::RelativeDirection::kKeepRight, { }, { }, {
                              "Harrisburg", "Gettysburg" },
-                         { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg.");
+                             { "Gettysburg Pike" }),
+                             "Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg.");
 
   // phrase_id = 14
   TryFormExitRightInstruction(
@@ -8479,7 +8479,7 @@ void TestFormExitRightInstruction() {
                          Maneuver::RelativeDirection::kKeepRight, { },
                          { "US 15" }, { "Harrisburg", "Gettysburg" }, {
                              "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg.");
+                             "Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg.");
 
 }
 
@@ -8506,7 +8506,7 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { }),
-      "Take the exit on the left.");
+                         "Take the exit on the left.");
 
   // phrase_id = 1
   TryFormExitLeftInstruction(
@@ -8514,7 +8514,7 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, { },
                          { }, { }),
-      "Take exit 67A on the left.");
+                         "Take exit 67A on the left.");
 
   // phrase_id = 1; Test that name is ignored when number is present
   TryFormExitLeftInstruction(
@@ -8522,7 +8522,7 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, { },
                          { }, { "Gettysburg Pike" }),
-      "Take exit 67A on the left.");
+                         "Take exit 67A on the left.");
 
   // phrase_id = 2
   TryFormExitLeftInstruction(
@@ -8530,8 +8530,8 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
-                         { }, { }),
-      "Take the I 95 South exit on the left.");
+                             { }, { }),
+                             "Take the I 95 South exit on the left.");
 
   // phrase_id = 3
   TryFormExitLeftInstruction(
@@ -8539,8 +8539,8 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, {
                              "I 95 South" },
-                         { }, { }),
-      "Take exit 67A on the left onto I 95 South.");
+                             { }, { }),
+                             "Take exit 67A on the left onto I 95 South.");
 
   // phrase_id = 4
   TryFormExitLeftInstruction(
@@ -8548,8 +8548,8 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Baltimore" },
-                         { }),
-      "Take the exit on the left toward Baltimore.");
+                             { }),
+                             "Take the exit on the left toward Baltimore.");
 
   // phrase_id = 5
   TryFormExitLeftInstruction(
@@ -8557,7 +8557,7 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, { },
                          { "Baltimore" }, { }),
-      "Take exit 67A on the left toward Baltimore.");
+                         "Take exit 67A on the left toward Baltimore.");
 
   // phrase_id = 6
   TryFormExitLeftInstruction(
@@ -8565,8 +8565,8 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Take the I 95 South exit on the left toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Take the I 95 South exit on the left toward Baltimore.");
 
   // phrase_id = 7
   TryFormExitLeftInstruction(
@@ -8574,8 +8574,8 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { "67A" }, {
                              "I 95 South" },
-                         { "Baltimore" }, { }),
-      "Take exit 67A on the left onto I 95 South toward Baltimore.");
+                             { "Baltimore" }, { }),
+                             "Take exit 67A on the left onto I 95 South toward Baltimore.");
 
   // phrase_id = 8
   TryFormExitLeftInstruction(
@@ -8583,7 +8583,7 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
                          { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the left.");
+                         "Take the Gettysburg Pike exit on the left.");
 
   // phrase_id = 10
   TryFormExitLeftInstruction(
@@ -8591,7 +8591,7 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { },
                          { "US 15" }, { }, { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the left onto US 15.");
+                         "Take the Gettysburg Pike exit on the left onto US 15.");
 
   // phrase_id = 12
   TryFormExitLeftInstruction(
@@ -8599,8 +8599,8 @@ void TestFormExitLeftInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
                          Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
                              "Harrisburg", "Gettysburg" },
-                         { "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg.");
+                             { "Gettysburg Pike" }),
+                             "Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg.");
 
   // phrase_id = 14
   TryFormExitLeftInstruction(
@@ -8609,7 +8609,7 @@ void TestFormExitLeftInstruction() {
                          Maneuver::RelativeDirection::kKeepLeft, { },
                          { "US 15" }, { "Harrisburg", "Gettysburg" }, {
                              "Gettysburg Pike" }),
-      "Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg.");
+                             "Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg.");
 
 }
 
