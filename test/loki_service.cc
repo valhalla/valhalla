@@ -132,7 +132,7 @@ namespace {
         "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
                         "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
                         "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
-        "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1},
+        "isochrone": { "max_contours": 4, "max_time": 120, "max_distance": 25000, "max_locations": 1},
         "trace": { "max_distance": 65000.0, "max_gps_accuracy": 100.0, "max_shape": 16000, "max_search_radius": 100 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
