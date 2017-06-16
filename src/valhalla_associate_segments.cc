@@ -1012,7 +1012,10 @@ int main(int argc, char** argv) {
       }
     }
   }
-  //std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
+
+  // Shuffle the list to minimize the chance of adjacent tiles being access
+  // by different threads at the same time
+  std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
 
   //configure logging
   vm::logging::Configure({{"type","std_err"},{"color","true"}});
