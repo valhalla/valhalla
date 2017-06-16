@@ -185,7 +185,7 @@ private:
 
   vb::GraphReader m_reader;
   vs::TravelMode m_travel_mode;
-  std::shared_ptr<vt::PathAlgorithm> m_path_algo;
+  std::shared_ptr<vt::AStarPathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
   std::shared_ptr<vj::GraphTileBuilder> m_tile_builder;
 
@@ -670,6 +670,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
+    m_path_algo->set_max_label_count(100);
     auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
 
     if (path.empty()) {
@@ -1011,7 +1012,10 @@ int main(int argc, char** argv) {
       }
     }
   }
-  //std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
+
+  // Shuffle the list to minimize the chance of adjacent tiles being access
+  // by different threads at the same time
+  std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
 
   //configure logging
   vm::logging::Configure({{"type","std_err"},{"color","true"}});

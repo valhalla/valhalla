@@ -46,7 +46,6 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 // Default constructor
 Isochrone::Isochrone()
     : access_mode_(kAutoAccess),
-      tile_creation_date_(0),
       shape_interval_(50.0f),
       mode_(TravelMode::kDrive),
       adjacencylist_(nullptr),
@@ -894,9 +893,6 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       GraphId edgeid = edge.id;
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
-
-      // Set the tile creation date
-      tile_creation_date_ = tile->header()->date_created();
 
       // Get the tile at the end node. Skip if tile not found as we won't be
       // able to expand from this origin edge.
