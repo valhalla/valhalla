@@ -1,11 +1,12 @@
 #include <algorithm>
-#include <boost/property_tree/json_parser.hpp>
+#include <cstdio>
+#include <stdexcept>
 
+#include <boost/property_tree/json_parser.hpp>
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "meili/traffic_segment_matcher.h"
 
-#include <cstdio>
 
 namespace {
 
@@ -128,25 +129,41 @@ TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& 
 }
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
+  boost::property_tree::ptree request;
   // Create a matcher
   std::shared_ptr<MapMatcher> matcher;
   float default_accuracy, default_search_radius;
+  boost::property_tree::ptree trace_config;
   try {
-    matcher.reset(matcher_factory.Create("auto")); //TODO: get the mode from the request
+    std::stringstream stream(json);
+    boost::property_tree::read_json(stream, request);
+  }
+  catch (const std::exception& e) {
+    throw std::runtime_error(std::string(e.what()) + " Couldn't parse json input.");
+  }
+  try {
+    auto costing = request.get_optional<std::string>("costing");
+    if (!costing)
+      throw std::runtime_error("Missing required json parameter 'costing'.");
+    matcher.reset(matcher_factory.Create(*costing));
     default_accuracy = matcher->config().get<float>("gps_accuracy");
     default_search_radius = matcher->config().get<float>("search_radius");
+    trace_config.put("mode", matcher->config().get<std::string>("costing"));
+    parse_trace_config(request, trace_config);
   }
-  catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }
+  catch (const std::exception& e) {
+    throw std::runtime_error(std::string(e.what()) + " Couldn't create traffic matcher using configuration.");
+  }
 
   // Populate a measurement measurements to pass to the map matcher
-  auto measurements = parse_measurements(json, default_accuracy, default_search_radius);
+  auto measurements = parse_measurements(request, default_accuracy, default_search_radius);
   if(measurements.empty())
     return R"({"segments":[]})";
 
   // Create the vector of matched path results
   auto match_results = matcher->OfflineMatch(measurements);
   if (match_results.size() != measurements.size())
-    throw std::runtime_error("Sequence size not equal to match result size");
+    throw std::runtime_error("Sequence size not equal to match result size.");
 
   // Get the edges associated with the entire connected trace path
   auto interpolations = interpolate_matches(match_results, matcher);
@@ -278,7 +295,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
   //loop over each set of interpolations
   std::vector<traffic_segment_t> traffic_segments;
   for(const auto& markers : interpolations) {
-
     /*printf("\nInterpolations:\n");
     for(const auto& marker : markers)
       print(marker);*/
@@ -363,17 +379,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
   return traffic_segments;
 }
 
-std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const std::string& json,
+std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree request,
   float default_accuracy, float default_search_radius) {
-  //try to parse json
-  boost::property_tree::ptree request;
-  try { std::stringstream stream(json); boost::property_tree::read_json(stream, request); }
-  catch (...) { throw std::runtime_error("Couln't parse json input"); }
-
   //check for required parameters
   auto trace_pts = request.get_child_optional("trace");
   if (!trace_pts)
-    throw std::runtime_error("Missing required json array 'trace'");
+    throw std::runtime_error("Missing required json array 'trace'.");
 
   // Populate a measurement sequence to pass to the map matcher
   std::vector<Measurement> measurements;
@@ -386,14 +397,16 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }
-  catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time"); }
+  catch (std::runtime_error& ex) {
+    throw std::runtime_error("Missing parameters, trace points require lat, lon and time.");
+  }
   //not enough data
   if(measurements.size() < 2)
-    throw std::runtime_error("2 or more trace points are required");
+    throw std::runtime_error("2 or more trace points are required.");
   //out of order data, should we reorder?
   for(size_t i = 1; i < measurements.size(); ++i)
     if(measurements[i - 1].epoch_time() > measurements[i].epoch_time())
-      throw std::runtime_error("Trace points must be in chronological order");
+      throw std::runtime_error("Trace points must be in chronological order.");
   //same time different place?
   auto remove_itr = std::remove_if(measurements.begin(), measurements.end(),[&measurements](const Measurement& m){
     return &measurements.back() != &m && m.epoch_time() == (&m + 1)->epoch_time();
@@ -429,6 +442,37 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
   std::stringstream ss;
   ss << *baldr::json::map({{"segments",segments}});
   return ss.str();
+}
+
+void TrafficSegmentMatcher::parse_trace_config(const boost::property_tree::ptree request, boost::property_tree::ptree trace_config) {
+  std::unordered_set<std::string> trace_customizable;
+  auto trace_options = request.get_child_optional("trace_options");
+  if (!trace_options) {
+    return;
+  }
+  else {
+    for (const auto& item : *trace_options)
+      trace_customizable.insert(item.second.get_value<std::string>());
+  }
+
+  if (trace_customizable.empty()) {
+    return;
+  }
+  for (const auto& pair : *trace_options) {
+    const auto& name = pair.first;
+    const auto& values = pair.second.data();
+    if (trace_customizable.find(name) != trace_customizable.end()
+       && !values.empty() ){
+      try {
+        // Possibly throw std::invalid_argument or std::out_of_range
+        trace_config.put<float>(name, std::stof(values));
+      } catch (const std::invalid_argument& ex) {
+        throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float.");
+      } catch (const std::out_of_range& ex) {
+        throw std::out_of_range("Invalid argument: " + name + " is out of float range.");
+      }
+    }
+  }
 }
 
 }

@@ -71,7 +71,7 @@ class TrafficSegmentMatcher {
    * @param  json string of gps data {"trace":[{"lat":0,"lon":0,time:0},...]}
    * @return the list of measurements from the json trace
    */
-  static std::vector<Measurement> parse_measurements(const std::string& json,
+  static std::vector<Measurement> parse_measurements(const boost::property_tree::ptree request,
     float default_accuracy, float default_search_radius);
 
   /**
@@ -82,7 +82,6 @@ class TrafficSegmentMatcher {
   static std::string serialize(const std::vector<traffic_segment_t>& traffic_segments);
 
  protected:
-
   /**
    * Updates the matching results include the begin and end points of the edges on the path
    * in doing so it interpolates the times at those points and gives back a distance along
@@ -117,6 +116,8 @@ class TrafficSegmentMatcher {
    */
   virtual std::vector<traffic_segment_t> form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
     baldr::GraphReader& reader) const;
+
+  void parse_trace_config(const boost::property_tree::ptree request, boost::property_tree::ptree trace_config);
 
   valhalla::meili::MapMatcherFactory matcher_factory;
 };
