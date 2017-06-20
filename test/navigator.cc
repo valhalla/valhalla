@@ -5764,8 +5764,8 @@ void TestPedestrianCatalinasToOffice() {
        std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
        false);
 
-   // Had to insert this point. Post does not show up on this maneuver other wise.
-   // Maybe extend window for pedestrian?
+   // TODO: Had to insert this point. Post does not show up on this maneuver other wise.
+   // May need to increase threshold based on frequency of trace points along the path
    TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.30621f, 40.041148f, 230),
        GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
