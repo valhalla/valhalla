@@ -83,6 +83,12 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kNodeTransitPlatformInfoIsParentStop, true },
   { kNodeTransitPlatformInfoAssumedSchedule, true },
   { kNodeTransitPlatformInfoLatLon, true },
+  { kNodeTransitStationInfoOnestopId, true },
+  { kNodeTransitStationInfoName, true },
+  { kNodeTransitStationInfoLatLon, true },
+  { kNodeTransitEgressInfoOnestopId, true },
+  { kNodeTransitEgressInfoName, true },
+  { kNodeTransitEgressInfoLatLon, true },
   { kNodeTimeZone, true },
 
   // Top level: admin list, full shape, and shape bounding box keys
