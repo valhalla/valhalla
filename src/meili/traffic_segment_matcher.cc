@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstdio>
-#include <stdexcept>
 
 #include <boost/property_tree/json_parser.hpp>
 #include "midgard/logging.h"
@@ -9,6 +8,38 @@
 
 
 namespace {
+
+  boost::property_tree::ptree parse_json(const std::string& json, const std::unordered_set<std::string> customizable, boost::property_tree::ptree& match_config) {
+    boost::property_tree::ptree request;
+    try { std::stringstream stream(json); boost::property_tree::read_json(stream, request); }
+    catch (...) { throw std::runtime_error("Couln't parse json input"); }
+
+    if(customizable.empty())
+      return request;
+
+    auto match_options = request.get_child_optional("match_options");
+    if(!match_options || match_options->find("mode") == match_options->not_found())
+      throw std::runtime_error("Missing required match option 'mode'.");
+
+    for (const auto& kv : *match_options) {
+      if (customizable.find(kv.first) != customizable.end() && !kv.second.data().empty()){
+        //mode is a string
+        if(kv.first == "mode")
+          match_config.put<std::string>(kv.first, kv.second.data());
+        //anything else is float
+        else {
+          try {
+            match_config.put<float>(kv.first, std::stof(kv.second.data()));
+          }
+          catch (...) {
+            throw std::out_of_range("Invalid argument: " + kv.first + " is out of float range.");
+          }
+        }
+      }
+    }
+
+    return request;
+  }
 
   void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
     //merging the edges that are the same into the final edges record
@@ -126,34 +157,24 @@ namespace meili {
 constexpr float kQueueSpeedThreshold = 2.0f;  // approx 4.3 MPH
 
 TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
+  for (const auto& item : config.get_child("meili.customizable"))
+    customizable.insert(item.second.get_value<std::string>());
 }
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
-  boost::property_tree::ptree request;
+  // Try to parse json
+  boost::property_tree::ptree match_config;
+  auto request = parse_json(json, customizable, match_config);
+
   // Create a matcher
   std::shared_ptr<MapMatcher> matcher;
   float default_accuracy, default_search_radius;
-  boost::property_tree::ptree trace_config;
   try {
-    std::stringstream stream(json);
-    boost::property_tree::read_json(stream, request);
-  }
-  catch (const std::exception& e) {
-    throw std::runtime_error(std::string(e.what()) + " Couldn't parse json input.");
-  }
-  try {
-    auto costing = request.get_optional<std::string>("costing");
-    if (!costing)
-      throw std::runtime_error("Missing required json parameter 'costing'.");
-    matcher.reset(matcher_factory.Create(*costing));
+    matcher.reset(matcher_factory.Create(match_config));
     default_accuracy = matcher->config().get<float>("gps_accuracy");
     default_search_radius = matcher->config().get<float>("search_radius");
-    trace_config.put("mode", matcher->config().get<std::string>("costing"));
-    parse_trace_config(request, trace_config);
   }
-  catch (const std::exception& e) {
-    throw std::runtime_error(std::string(e.what()) + " Couldn't create traffic matcher using configuration.");
-  }
+  catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }
 
   // Populate a measurement measurements to pass to the map matcher
   auto measurements = parse_measurements(request, default_accuracy, default_search_radius);
@@ -397,9 +418,8 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }
-  catch (std::runtime_error& ex) {
-    throw std::runtime_error("Missing parameters, trace points require lat, lon and time.");
-  }
+  catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time."); }
+
   //not enough data
   if(measurements.size() < 2)
     throw std::runtime_error("2 or more trace points are required.");
@@ -442,37 +462,6 @@ std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t
   std::stringstream ss;
   ss << *baldr::json::map({{"segments",segments}});
   return ss.str();
-}
-
-void TrafficSegmentMatcher::parse_trace_config(const boost::property_tree::ptree request, boost::property_tree::ptree trace_config) {
-  std::unordered_set<std::string> trace_customizable;
-  auto trace_options = request.get_child_optional("trace_options");
-  if (!trace_options) {
-    return;
-  }
-  else {
-    for (const auto& item : *trace_options)
-      trace_customizable.insert(item.second.get_value<std::string>());
-  }
-
-  if (trace_customizable.empty()) {
-    return;
-  }
-  for (const auto& pair : *trace_options) {
-    const auto& name = pair.first;
-    const auto& values = pair.second.data();
-    if (trace_customizable.find(name) != trace_customizable.end()
-       && !values.empty() ){
-      try {
-        // Possibly throw std::invalid_argument or std::out_of_range
-        trace_config.put<float>(name, std::stof(values));
-      } catch (const std::invalid_argument& ex) {
-        throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float.");
-      } catch (const std::out_of_range& ex) {
-        throw std::out_of_range("Invalid argument: " + name + " is out of float range.");
-      }
-    }
-  }
 }
 
 }

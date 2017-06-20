@@ -19,10 +19,9 @@ namespace {
   class testable_matcher : public meili::TrafficSegmentMatcher {
    public:
     using meili::TrafficSegmentMatcher::TrafficSegmentMatcher;
-    std::shared_ptr<meili::MapMatcher> matcher = matcher.reset(matcher_factory.Create("auto"));
 
     std::list<std::vector<meili::interpolation_t> > interpolate_matches(const std::vector<meili::MatchResult>& r,
-      std::shared_ptr<meili::MapMatcher>& m) const override {
+      const std::shared_ptr<meili::MapMatcher>& m) const override {
       matches = r;
       matcher = m;
       interpolations = meili::TrafficSegmentMatcher::interpolate_matches(r, m);
@@ -36,6 +35,7 @@ namespace {
     }
 
     mutable std::vector<valhalla::meili::MatchResult> matches;
+    mutable std::shared_ptr<meili::MapMatcher> matcher;
     mutable std::list<std::vector<meili::interpolation_t> > interpolations;
     mutable std::vector<meili::traffic_segment_t> segments;
   };
@@ -48,16 +48,16 @@ namespace {
   using sid_t = baldr::GraphId;
   std::vector<std::pair<std::string, ots_matches_t> > test_cases {
     //partial, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":1}],"costing":"auto","trace_options":{"sigma_z": 5.3}})",
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":1}],"match_options":{"mode":"auto","breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,.5f,0,-1}, ots_t{sid_t(0),.5f,0,-1,1,-1}}),
     //partial, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":3}],"costing":"auto","trace_options":{"sigma_z": 5.3}})",
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":3}],"match_options":{"mode":"auto","breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,1.f,0,-1}, ots_t{sid_t(0),1.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,-1,1,-1}}),
     //partial, full, full, full
-    std::make_pair(R"({"trace":[{"lon":-76.38126,"lat":40.55602,"time":0},{"lon":-76.35784,"lat":40.56786,"time":6}],"costing":"auto","trace_options":{"sigma_z": 5.3}})",
+    std::make_pair(R"({"trace":[{"lon":-76.38126,"lat":40.55602,"time":0},{"lon":-76.35784,"lat":40.56786,"time":6}],"match_options":{"mode":"auto","breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,.5f,0,-1}, ots_t{sid_t(0),.5f,0,1.f,0,200}, ots_t{sid_t(0),1.f,0,3.5f,0,1000}, ots_t{sid_t(0),3.5f,0,6.f,1,1000}}),
     //full, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":6}],"costing":"auto","trace_options":{"sigma_z": 5.3}})",
+    std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":6}],"match_options":{"mode":"auto","breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),0.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,5.f,0,1000}, ots_t{sid_t(0),5.f,0,-1,0,-1}}),
 
     //TODO: add test where its all full segments
@@ -75,8 +75,9 @@ namespace {
     //fake config
     std::stringstream conf_json; conf_json << R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
-      "meili":{"mode":"auto","grid":{"cache_size":100240,"size":500},
-               "default":{"beta":3,"breakage_distance":10000,"geometry":false,"gps_accuracy":5.0,
+      "meili":{"customizable": ["breakage_distance"],
+               "mode":"auto","grid":{"cache_size":100240,"size":500},
+               "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,
                           "interpolation_distance":10,"max_route_distance_factor":3,"max_search_radius":100,
                           "route":true,"search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}}
     })";

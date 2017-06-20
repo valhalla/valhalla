@@ -121,7 +121,7 @@ float length(const container_t& pts) {
  * @return the converted map of another type
  */
 template <class T1, class T2>
-T2 ToMap(const T1& inmap) {
+inline T2 ToMap(const T1& inmap) {
   T2 outmap;
   for(const auto& key_value : inmap)
     outmap[key_value.first] = key_value.second.data();

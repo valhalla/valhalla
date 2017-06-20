@@ -117,9 +117,8 @@ class TrafficSegmentMatcher {
   virtual std::vector<traffic_segment_t> form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
     baldr::GraphReader& reader) const;
 
-  void parse_trace_config(const boost::property_tree::ptree request, boost::property_tree::ptree trace_config);
-
   valhalla::meili::MapMatcherFactory matcher_factory;
+  std::unordered_set<std::string> customizable;
 };
 
 }
