@@ -5082,7 +5082,6 @@ void TestAutoLancasterToHershey() {
 
   // No kPreTransition because not within time threshold for pre transition
   // trace_pt[2] | segment index 0 | near begin of maneuver index 0 | maneuver speed ~ 18.7714 MPH
-  expected_on_route_location_close_to_origin = false;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.298897f ,40.042610f, 3),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
@@ -5614,8 +5613,191 @@ void TestPedestrianCatalinasToOffice() {
    TryRouteLanguage(nav, "en-US");
    TryRouteUnits(nav, "miles", false);
 
-   // TODO: add pedestrian tests
+   ////////////////////////////////////////////////////////////////////////////
+   uint32_t maneuver_index = 0;
+   uint32_t instruction_index = maneuver_index;
+   ////////////////////////////////////////////////////////////////////////////
+   bool expected_on_route_location_close_to_origin = true;
 
+   // reset the route
+   nav.SetRoute(route_json_str);
+
+   // kPreTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // Start maneuver at beginning of route
+   // trace_pt[0] | begin of maneuver index 0
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.307518f, 40.039223f, 0),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.3075409f, 40.0393639f, leg_index, 0.610896409f, 693,
+           maneuver_index, 0.0833536983f, 95, instruction_index),
+           expected_on_route_location_close_to_origin);
+
+   // kPreTransition instruction should be used after OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   // reset the route
+   nav.SetRoute(route_json_str);
+
+   // kPreTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // Start maneuver near beginning of route
+   // trace_pt[1] | near begin of maneuver index 0
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.307411f, 40.039257f, 7),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.3074341f, 40.0393753f, leg_index, 0.605184913f, 686,
+           maneuver_index, 0.0776422024f, 88, instruction_index),
+           expected_on_route_location_close_to_origin);
+
+   // kPreTransition instruction should be used after OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   // reset the route
+   nav.SetRoute(route_json_str);
+
+   // Increment instruction_index for testing instructions prior to next maneuver
+   ++instruction_index;
+
+   // kPreTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // No kPreTransition because not within time threshold for pre transition
+   // trace_pt[3] | near begin of maneuver index 0 | maneuver speed ~ 3.1787231 MPH
+   expected_on_route_location_close_to_origin = false;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.307205f ,40.039345f, 20),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.3072128f, 40.0393982f, leg_index, 0.593361795f, 673,
+           maneuver_index, 0.0658190846f, 75));
+
+   // kPreTransition instruction should be not used after OnLocationChanged
+   // because not within time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[12] | near end of maneuver index 0 | fix speed ~ 5.5 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.30629f, 40.0396659f, 78, 2.5f),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.3062592f, 40.0395088f, leg_index, 0.542280436f, 615,
+           maneuver_index, 0.0147377253f, 17));
+
+   // kPreTransition instruction should not be used after OnLocationChanged
+   // because it is not within time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[13] | near end of maneuver index 0 | fix speed ~ 5.5 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.306168f, 40.039639f, 85, 2.5f),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.3061447f, 40.0395241f, leg_index, 0.536129236f, 608,
+           maneuver_index, 0.00858652592f, 10, instruction_index));
+
+   // kPreTransition instruction should be used after OnLocationChanged
+   // because it was within time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   ////////////////////////////////////////////////////////////////////////////
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   ////////////////////////////////////////////////////////////////////////////
+
+   // Increment instruction_index for testing instructions prior to next maneuver
+   ++instruction_index;
+
+   // kPreTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[31] | end of maneuver index 1 | fix speed ~ 2.2 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.306259f, 40.041019f, 212, 1.5f),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.3062668f, 40.0410194f, leg_index, 0.424339741f, 481,
+           maneuver_index, 0.00722661614f, 8, instruction_index));
+
+   // kPreTransition instruction should be used after OnLocationChanged
+   // because it was within time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   ////////////////////////////////////////////////////////////////////////////
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   ////////////////////////////////////////////////////////////////////////////
+
+   // kPostTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[33] | near begin of maneuver index 2 |  maneuver speed ~ 3.16503859 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.306122f, 40.041172f, 230),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.3061142f, 40.0411415f, leg_index, 0.407727778f, 463,
+           maneuver_index, 0.332249224f, 378));
+
+   // kPostTransition instruction should not be used after OnLocationChanged
+   // because it was less than the time threshold for post-transition
+   TryUsedInstructions(
+       std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // Had to insert this point. Post does not show up on this maneuver other wise.
+   // Maybe extend window for pedestrian?
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.30621f, 40.041148f, 230),
+       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+           -76.3062134f, 40.0411301f, leg_index, 0.413038582f, 469,
+           maneuver_index, 0.337560028f, 384, instruction_index));
+
+   // kPostTransition instruction should be used after OnLocationChanged
+   // because it was within the time threshold for post-transition
+   TryUsedInstructions(
+       std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   // Increment instruction_index for testing instructions prior to next maneuver
+   ++instruction_index;
+
+   // kFinalTransitionAlert instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[49]  | 500 feet before end of maneuver index 3 | maneuver speed ~ 3.16503859 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.301743f, 40.041588f, 496),
+       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+           -76.3017426f, 40.0415878f, leg_index, 0.174173057f, 197,
+           maneuver_index, 0.0986945033f, 112, instruction_index));
+
+   // kFinalTransitionAlert instruction should be used after OnLocationChanged
+   // because it was within length bounds for final transition alert
+   TryUsedInstructions(
+       std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       true);
 }
 
 /* RoadBikeLunchRideLoop geojson to visualize test route
@@ -8111,8 +8293,159 @@ void TestRoadBikeLunchRideLoop() {
    TryRouteLanguage(nav, "en-US");
    TryRouteUnits(nav, "miles", false);
 
-   // TODO: add bike tests
+   ////////////////////////////////////////////////////////////////////////////
+   uint32_t maneuver_index = 0;
+   uint32_t instruction_index = maneuver_index;
+   ////////////////////////////////////////////////////////////////////////////
+   bool expected_on_route_location_close_to_origin = true;
 
+   // reset the route
+   nav.SetRoute(route_json_str);
+
+   // kPreTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // Start maneuver at beginning of route
+   // trace_pt[0] | begin of maneuver index 0
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.122696f, 39.651386f, 0),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.1227264f, 39.6513939f, leg_index, 27.0611706f, 6390,
+           maneuver_index, 3.60108376f, 905, instruction_index),
+           expected_on_route_location_close_to_origin);
+
+   // kPreTransition instruction should be used after OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   // reset the route
+   nav.SetRoute(route_json_str);
+
+   // Increment instruction_index for testing instructions prior to next maneuver
+   ++instruction_index;
+
+   // kPreTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // No kPreTransition because not within time threshold for pre transition
+   // trace_pt[1] | near begin of maneuver index 0 | maneuver speed ~ 14.312582 MPH
+   expected_on_route_location_close_to_origin = false;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.122551f, 39.651695f, 6),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.1225739f, 39.6517029f, leg_index, 27.0382481f, 6384,
+           maneuver_index, 3.57816124f, 899));
+
+   // kPreTransition instruction should be not used after OnLocationChanged
+   // because not within time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // kInitialTransitionAlert instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kInitialTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[179]  | 1 mile before end of maneuver index 0 | maneuver speed ~ 14.312582 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.092705f, 39.672829f, 652),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.0927048f, 39.6728363f, leg_index, 24.474535f, 5738,
+           maneuver_index, 1.01444817f, 253));
+
+   // kInitialTransitionAlert instruction should not be used after OnLocationChanged
+   // because the speed was not high enough for an initial transition alert.
+   TryUsedInstructions(
+       std::get<kInitialTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // kFinalTransitionAlert instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // TODO: Reconsider speed bounds for transition alerts. Must be going over 62 MPH for long final transition
+   //       but only 40 MPH for initial short when a route manuever like this one qualifies for both.
+   // trace_pt[200]  | 1/2 mile before end of maneuver index 0 | maneuver speed ~ 14.312582 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.083069f, 39.673717f, 781),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.0830765f, 39.673748f, leg_index, 23.9578571f, 5609,
+           maneuver_index, 0.497770309f, 124));
+
+   // kFinalTransitionAlert instruction should not be used after OnLocationChanged
+   // because the speed was not high enough for a final transition alert.
+   TryUsedInstructions(
+       std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   ////////////////////////////////////////////////////////////////////////////
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   ////////////////////////////////////////////////////////////////////////////
+
+   // Increment instruction_index for testing instructions prior to next maneuver
+   ++instruction_index;
+
+   // kFinalTransitionAlert instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kFinalTransitionAlert>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[304] | near end of maneuver index 2 | fix speed >~ 15 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.045883f, 39.689846f, 1458, 6.75f),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.0459213f, 39.6898575f, leg_index, 21.1585541f, 4932,
+           maneuver_index, 0.0377235413f, 10));
+
+   // kPreTransition instruction should not be used after OnLocationChanged
+   // because it is not within the time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[305] | near end of maneuver index 2 | fix speed >~ 15 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.045692f, 39.690193f, 1465, 6.75f),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.0457382f, 39.6902046f, leg_index, 21.1326389f, 4925,
+           maneuver_index, 0.0118083954f, 3, instruction_index));
+
+   // kPreTransition instruction should be used after OnLocationChanged
+   // because it was within time threshold for pre transition
+   TryUsedInstructions(
+       std::get<kPreTransition>(nav.used_instructions().at(instruction_index)),
+       true);
+
+   ////////////////////////////////////////////////////////////////////////////
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   ////////////////////////////////////////////////////////////////////////////
+
+   // kPostTransition instruction should not be used prior to OnLocationChanged
+   TryUsedInstructions(
+       std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+       false);
+
+   // trace_pt[307] | near end of maneuver index 0 | manuever speed ~ 15.2808495 MPH
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.045387f, 39.690315f, 1472),
+       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+           -76.0453873f, 39.6903229f, leg_index, 21.1059246f, 4918,
+           maneuver_index, 0.384138107f, 89, instruction_index));
+
+   // kPostTransition instruction should be used after OnLocationChanged
+   // because it was within the time threshold for post-transition
+   TryUsedInstructions(
+       std::get<kPostTransition>(nav.used_instructions().at(instruction_index)),
+       true);
 }
 
 void TryIsTimeWithinBounds(bool found, bool expected) {

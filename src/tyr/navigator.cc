@@ -575,7 +575,6 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
 // TODO separate values for metric
 bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
     const NavigationStatus& nav_status, float& alert_length) const {
-
   size_t curr_instruction_index = maneuver_index_;
   size_t next_instruction_index = (maneuver_index_ + 1);
 
