@@ -48,16 +48,16 @@ namespace {
   using sid_t = baldr::GraphId;
   std::vector<std::pair<std::string, ots_matches_t> > test_cases {
     //partial, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":1}],"match_options":{"mode":"auto","breakage_distance":10000}})",
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":1}],"match_options":{"breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,.5f,0,-1}, ots_t{sid_t(0),.5f,0,-1,1,-1}}),
     //partial, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":3}],"match_options":{"mode":"auto","breakage_distance":10000}})",
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":3}],"match_options":{"breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,1.f,0,-1}, ots_t{sid_t(0),1.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,-1,1,-1}}),
     //partial, full, full, full
-    std::make_pair(R"({"trace":[{"lon":-76.38126,"lat":40.55602,"time":0},{"lon":-76.35784,"lat":40.56786,"time":6}],"match_options":{"mode":"auto","breakage_distance":10000}})",
+    std::make_pair(R"({"trace":[{"lon":-76.38126,"lat":40.55602,"time":0},{"lon":-76.35784,"lat":40.56786,"time":6}],"match_options":{"breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,.5f,0,-1}, ots_t{sid_t(0),.5f,0,1.f,0,200}, ots_t{sid_t(0),1.f,0,3.5f,0,1000}, ots_t{sid_t(0),3.5f,0,6.f,1,1000}}),
     //full, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":6}],"match_options":{"mode":"auto","breakage_distance":10000}})",
+    std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":6}],"match_options":{"breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),0.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,5.f,0,1000}, ots_t{sid_t(0),5.f,0,-1,0,-1}}),
 
     //TODO: add test where its all full segments
