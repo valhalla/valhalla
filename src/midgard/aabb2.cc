@@ -274,6 +274,19 @@ void AABB2<coord_t>::Expand(const AABB2<coord_t>& r2) {
     maxy_ = r2.maxy();
 }
 
+// Expands (if necessary) the bounding box to include the specified point.
+template <class coord_t>
+void AABB2<coord_t>::Expand(const coord_t& point) {
+  if (point.x() < minx_)
+    minx_ = point.x();
+  if (point.y() < miny_)
+    miny_ = point.y();
+  if (point.x() > maxx_)
+    maxx_ = point.x();
+  if (point.y() > maxy_)
+    maxy_ = point.y();
+}
+
 // Explicit instantiation
 template class AABB2<Point2>;
 template class AABB2<PointLL>;

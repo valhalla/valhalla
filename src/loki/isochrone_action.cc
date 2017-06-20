@@ -2,13 +2,31 @@
 #include "loki/search.h"
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"
+#include "midgard/logging.h"
 #include <boost/property_tree/json_parser.hpp>
 
 using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
-const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+
+  void check_distance(const std::vector<Location>& locations, float matrix_max_distance, float& max_location_distance) {
+    //see if any locations pairs are unreachable or too far apart
+    for(auto source = locations.begin(); source != locations.end() - 1; ++source){
+      for(auto target = source + 1; target != locations.end(); ++target){
+        //check if distance between latlngs exceed max distance limit
+        auto path_distance = source->latlng_.Distance(target->latlng_);
+
+        if (path_distance >= max_location_distance) {
+          max_location_distance = path_distance;
+        }
+
+        if (path_distance > matrix_max_distance)
+          throw valhalla_exception_t{400, 154};
+      }
+    }
+  }
 }
 
 namespace valhalla {
@@ -45,6 +63,12 @@ namespace valhalla {
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
         throw valhalla_exception_t{400, 150, std::to_string(max_locations.find("isochrone")->second)};
+
+      //check the distances
+      auto max_location_distance = std::numeric_limits<float>::min();
+      check_distance(locations, max_distance.find("isochrone")->second, max_location_distance);
+      if (!healthcheck)
+        valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
       auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing").get_value_or("");
       auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type");

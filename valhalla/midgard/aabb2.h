@@ -262,6 +262,12 @@ class AABB2 {
    */
   void Expand(const AABB2& r2);
 
+  /**
+   * Expands (if necessary) the bounding box to include the specified point.
+   * @param  point  Point to "add" to this bounding box.
+   */
+  void Expand(const coord_t& r2);
+
  protected:
   // Edge to clip against
   enum ClipEdge { kLeft, kRight, kBottom, kTop };
