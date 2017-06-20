@@ -4,6 +4,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "meili/traffic_segment_matcher.h"
 
 
@@ -156,9 +157,8 @@ namespace meili {
 // Threshold speed below which we assume a queue occurs (meters/sec)
 constexpr float kQueueSpeedThreshold = 2.0f;  // approx 4.3 MPH
 
-TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
-  for (const auto& item : config.get_child("meili.customizable"))
-    customizable.insert(item.second.get_value<std::string>());
+TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config),
+  customizable(midgard::ToSet<boost::property_tree::ptree, std::unordered_set<std::string> >(config.get_child("meili.customizable"))) {
 }
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {

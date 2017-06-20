@@ -128,6 +128,21 @@ inline T2 ToMap(const T1& inmap) {
   return outmap;
 }
 
+//useful in converting from one iterable set to another
+//for example ToSet<boost::property_tree::ptree, std::unordered_set<std::string> >(some_ptree)
+/*
+ * @param inset the set to be converted
+ * @return the converted set of another type
+ */
+template <class T1, class T2>
+inline T2 ToSet(const T1& inset) {
+  T2 outset;
+  for (const auto& item : inset) {
+    outset.emplace(item.second.template get_value<typename T2::value_type>());
+  }
+  return outset;
+}
+
 /**
  * equals with an epsilon for approximation
  * @param first operand
