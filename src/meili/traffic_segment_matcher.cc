@@ -19,8 +19,8 @@ namespace {
       return request;
 
     auto match_options = request.get_child_optional("match_options");
-    if(!match_options || match_options->find("mode") == match_options->not_found())
-      throw std::runtime_error("Missing required match option 'mode'.");
+    if (!match_options)
+      return request;
 
     for (const auto& kv : *match_options) {
       if (customizable.find(kv.first) != customizable.end() && !kv.second.data().empty()){
