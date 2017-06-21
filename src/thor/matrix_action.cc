@@ -161,7 +161,7 @@ namespace valhalla {
       auto timedistancematrix = [&]() {
         thor::TimeDistanceMatrix matrix;
         return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
-                                    mode, max_matrix_distance.find(costing)->second);
+                                    mode, max_matrix_distance.find(costing)->second, ignore_list);
       };
       switch (source_to_target_algorithm) {
         case SELECT_OPTIMAL:

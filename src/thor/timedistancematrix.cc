@@ -72,7 +72,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode, const float max_matrix_distance) {
+            const TravelMode mode, const float max_matrix_distance,
+            const ignore_list_t& ignore_list,
+            const uint32_t origin_ignore_id) {
 
   // Set the mode and costing
   mode_ = mode;
@@ -95,7 +97,10 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   // Initialize the origin and destination locations
   settled_count_ = 0;
   SetOriginOneToMany(graphreader, origin, costing);
-  SetDestinations(graphreader, locations, costing);
+  auto ignore_ids = ignore_list.find(origin_ignore_id);
+  (ignore_ids == ignore_list.end()) ?
+      SetDestinations(graphreader, locations, costing, {}) :
+      SetDestinations(graphreader, locations, costing, ignore_ids->second);
 
   // Find shortest path
   const GraphTile* tile;
@@ -223,7 +228,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode, const float max_matrix_distance) {
+            const TravelMode mode, const float max_matrix_distance,
+            const ignore_list_t& ignore_list,
+            const uint32_t dest_ignore_id) {
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
@@ -244,7 +251,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   // Initialize the origin and destination locations
   settled_count_ = 0;
   SetOriginManyToOne(graphreader, dest, costing);
-  SetDestinationsManyToOne(graphreader, locations, costing);
+  SetDestinationsManyToOne(graphreader, locations, costing, ignore_list, dest_ignore_id);
 
   // Find shortest path
   const GraphTile* tile;
@@ -380,8 +387,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
            const std::vector<PathLocation>& locations,
            GraphReader& graphreader,
            const std::shared_ptr<DynamicCost>* mode_costing,
-           const sif::TravelMode mode, const float max_matrix_distance) {
-  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
+           const sif::TravelMode mode, const float max_matrix_distance,
+           const ignore_list_t& ignore_list) {
+  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance, ignore_list);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
@@ -389,24 +397,30 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
         const std::vector<baldr::PathLocation>& target_location_list,
         baldr::GraphReader& graphreader,
         const std::shared_ptr<sif::DynamicCost>* mode_costing,
-        const sif::TravelMode mode, const float max_matrix_distance) {
+        const sif::TravelMode mode, const float max_matrix_distance,
+        const ignore_list_t& ignore_list) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
+  uint32_t idx = 0;
   if (source_location_list.size() <= target_location_list.size()) {
     for (const auto& origin: source_location_list) {
       std::vector<TimeDistance> td = OneToMany(origin, target_location_list,
                                                graphreader, mode_costing,
-                                               mode, max_matrix_distance);
+                                               mode, max_matrix_distance,
+                                               ignore_list, idx);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
+      idx++;
     }
   } else {
     for (const auto& destination: target_location_list) {
       std::vector<TimeDistance> td = ManyToOne(destination, source_location_list,
                                                graphreader, mode_costing,
-                                               mode, max_matrix_distance);
+                                               mode, max_matrix_distance,
+                                               ignore_list, idx);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
+      idx++;
     }
   }
   return many_to_many;
@@ -513,13 +527,21 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 // Set destinations
 void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
           const std::vector<PathLocation>& locations,
-          const std::shared_ptr<DynamicCost>& costing) {
+          const std::shared_ptr<DynamicCost>& costing,
+          const std::unordered_set<uint32_t>& ignore_ids) {
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
     // Add a destination and get a reference to it
     destinations_.emplace_back();
     Destination& d = destinations_.back();
+
+    if (ignore_ids.find(idx) != ignore_ids.end()) {
+      d.settled = true;
+      d.distance = kMaxCost;
+      idx++;
+      continue;
+    }
 
     // Set up the destination - consider each possible location edge.
     for (const auto& edge : loc.edges) {
@@ -550,13 +572,23 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
 // Set destinations for the many to one case.
 void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
           const std::vector<PathLocation>& locations,
-          const std::shared_ptr<DynamicCost>& costing) {
+          const std::shared_ptr<DynamicCost>& costing,
+          const ignore_list_t& ignore_list,
+          const uint32_t dest_ignore_id) {
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
     // Add a destination and get a reference to it
     destinations_.emplace_back();
     Destination& d = destinations_.back();
+    auto ignore_set = ignore_list.find(idx);
+    if (ignore_set != ignore_list.end() &&
+        ignore_set->second.find(dest_ignore_id) != ignore_set->second.end()) {
+      d.settled = true;
+      d.distance = kMaxCost;
+      idx++;
+      continue;
+    }
 
     // Set up the destination - consider each possible location edge.
     for (const auto& edge : loc.edges) {
