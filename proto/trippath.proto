@@ -64,9 +64,9 @@ message TripPath {
     // Transit specific uses. Must be last in the list
     kRailUse = 50;               // Rail line
     kBusUse = 51;                // Bus line
-    kEgressConnectionUse = 52;   // Connection to a rail stop
-    kPlatformConnectionUse = 53; // Connection to a bus stop
-    kTransitConnectionUse = 54;  // Connection to multi-use transit stop
+    kEgressConnectionUse = 52;   // Connection between transit station and transit egress
+    kPlatformConnectionUse = 53; // Connection between transit station and transit platform
+    kTransitConnectionUse = 54;  // Connection between road network and transit egress
   }
 
   enum Surface {
@@ -224,12 +224,14 @@ message TripPath {
 
     optional Type type = 1;                  // The type of stop (station or simple stop)
     optional string onestop_id = 2;          // Unique transitland ID
-    optional string name = 3;                // The name of the stop
+    optional string name = 3;                // The name of the platform
     optional string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
     optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
     optional bool is_parent_stop = 6;        // true if this is a parent stop
     optional bool assumed_schedule = 7;      // true if the times are based on an assumed schedule
     optional LatLng ll = 8;                  // Latitude, longitude of the transit stop
+    optional string station_onestop_id = 9;  // Unique transitland station ID
+    optional string station_name = 10;        // The station name of the platform
   }
 
   message TransitEgressInfo {
