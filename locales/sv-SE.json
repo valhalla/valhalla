@@ -836,7 +836,7 @@
         "1": "Ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["spårvagnen", "tunnelbanan", "tåget", "bussen", "färjan", "kabelvagnen", "gondolen", "linbanan"],
-      "transit_stop_count_labels": {"en": "hållplats", "annat": "hållplatser"},
+      "transit_stop_count_labels": {"one": "hållplats", "other": "hållplatser"},
       "example_phrases": {
         "0": ["Ta New Haven. (1 hållplats)", "Ta tunnelbanan. (2 hållplatser)", "Ta bussen. (12 hållplatser)"],
         "1": ["Ta F mot JAMAICA - 179 ST. (10 hållplatser)", "Ta färjan mot Staten Island. (1 hållplats)"]
@@ -859,7 +859,7 @@
         "1": "Stanna kvar på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["spårvagnen", "tunnelbanan", "tåget", "bussen", "färjan", "kabelvagnen", "gondolen", "linbanan"],
-      "transit_stop_count_labels": {"en": "hållplats", "annat": "hållplatser"},
+      "transit_stop_count_labels": {"one": "hållplats", "other": "hållplatser"},
       "example_phrases": {
         "0": ["Stanna kvar på New Haven. (1 hållplats)", "Stanna kvar på tåget. (3 hållplatser)"],
         "1": ["Stanna kvar på F mot JAMAICA - 179 ST. (10 hållplatser)"]
@@ -882,7 +882,7 @@
         "1": "Byt för att ta <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": ["spårvagnen", "tunnelbanan", "tåget", "bussen", "färjan", "kabelvagnen", "gondolen", "linbanan"],
-      "transit_stop_count_labels": {"en": "hållplats", "annat": "hållplatser"},
+      "transit_stop_count_labels": {"one": "hållplats", "other": "hållplatser"},
       "example_phrases": {
         "0": ["Byt för att ta New Haven. (1 hållplats)", "Byt för att ta spårvagnen. (4 hållplatser)"],
         "1": ["Byt för att ta F mot JAMAICA - 179 ST. (10 hållplatser)"]
@@ -980,7 +980,7 @@
       "phrases": {
         "0": "Res <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       },
-      "transit_stop_count_labels": {"en": "hållplats", "annat": "hållplatser"},
+      "transit_stop_count_labels": {"one": "hållplats", "other": "hållplatser"},
       "example_phrases": {
         "0": ["Res 1 hållplats.", "Res 3 hållplatser."]
       }
