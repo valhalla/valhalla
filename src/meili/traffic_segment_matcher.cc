@@ -337,7 +337,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
     printf("\nReported Segments:\n");*/
 
     //go over the segments and move the interpolation markers accordingly
-    int idx = 0;
     float prior_start_acc_length = 0.0f;
     float prior_end_acc_length = 0.0f;
     auto left = markers.cbegin(), right = markers.cbegin();
@@ -357,7 +356,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //skip any segments composed entirely of transition edges (should only be one edge really)
       //they should have no valid segment id, be marked internal and also have no way ids
       if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty()) {
-        idx++;
         continue;
       }
 
@@ -396,6 +394,7 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //   if this segment is a turn channel set the prior segment end time to
       //       the start of this turn channel segment and set the prior
       //       segment length
+      size_t idx = &segment - &merged_segments[0];
       if (segment->ends_segment_ && idx > 0 && merged_segments[idx-1].turn_channel &&
                 start_length == -1) {
         // Set the segment start time to the end time of the turn channel
@@ -434,7 +433,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         ++right;
         left = right;
       }
-      idx++;
     }
   }
 
