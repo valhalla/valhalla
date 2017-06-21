@@ -126,7 +126,9 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
-          merged.back().turn_channel = merged.back().internal && is_turn_channel(directed_edge);
+          // Turn off turn channel flag if any segment continuation is not a turn channel
+          if (merged.back().turn_channel && !is_turn_channel(directed_edge))
+            merged.back().turn_channel = false;
           if(!directed_edge->IsTransition() && (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id))
             merged.back().way_ids.push_back(way_id);
         }//new one
