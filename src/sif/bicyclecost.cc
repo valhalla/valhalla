@@ -345,8 +345,6 @@ public:
   // grade (relative value from 0-15)
   float grade_penalty[16];
 
- public:
-
   /**
    * Returns a function/functor to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
@@ -814,6 +812,273 @@ uint8_t BicycleCost::travel_type() const {
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BicycleCost>(config);
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+class LowStressBicycleCost : public BicycleCost {
+ public:
+  /**
+   * Construct low stress costing.
+   * Pass in configuration using property tree
+   * @param  config  property tree with configuration/options
+   */
+  LowStressBicycleCost(const boost::property_tree::ptree& config);
+
+  virtual ~LowStressBicycleCost();
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge.
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  edge  Directed edge (the to edge)
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  the opposing current edge in the reverse tree.
+   * @param  edge  the opposing predecessor in the reverse tree
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(const uint32_t idx,
+                                     const baldr::NodeInfo* node,
+                                     const baldr::DirectedEdge* pred,
+                                     const baldr::DirectedEdge* edge) const;
+};
+
+LowStressBicycleCost::LowStressBicycleCost(const boost::property_tree::ptree& config)
+    : BicycleCost(config) {
+}
+
+LowStressBicycleCost::~LowStressBicycleCost() {
+}
+
+// Returns the cost to traverse the edge and an estimate of the actual time
+// (in seconds) to traverse the edge.
+Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+  // Stairs/steps - use a high fixed cost so they are generally avoided.
+  if (edge->use() == Use::kSteps) {
+    return kBicycleStepsCost;
+  }
+
+  // Ferries are a special case - they use the ferry speed (stored on the edge)
+  if (edge->use() == Use::kFerry) {
+    // Compute elapsed time based on speed. Modulate cost with weighting factors.
+    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    return { sec * ferry_factor_, sec };
+  }
+
+  // Update speed based on surface factor. Lower speed for rougher surfaces
+  // depending on the bicycle type. Modulate speed based on weighted grade
+  // (relative measure of elevation change along the edge)
+  uint32_t bike_speed = static_cast<uint32_t>((speed_ *
+                surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+                                            kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
+
+  // Apply a weighting factor to the cost based on desirability of cycling
+  // on this edge. Based on several factors: rider propensity to ride on roads,
+  // road classification and use type of road, presence of bike lanes,
+  // does the road belong to a bike network, and the hilliness/elevation change
+  // (based on an avoid hills factor).
+  float factor = 1.0f;
+
+  // Special use cases: cycleway and footway
+  uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
+  if (edge->use() == Use::kCycleway) {
+    // Experienced cyclists might not favor cycleways, but most do...
+    factor = (0.5f + use_roads_ * 0.5f);
+  } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
+    // Cyclists who favor using roads may want to avoid paths with pedestrian
+    // traffic. Most cyclists would use them though.
+    factor = 0.75f + (use_roads_ * 0.5f);
+  } else if (edge->use() == Use::kMountainBike &&
+             type_ == BicycleType::kMountain) {
+    factor = 0.5f;
+  } else if (edge->use() == Use::kDriveway) {
+    // Heavily penalize driveways
+    factor = kDrivewayFactor;
+  } else {
+    // Favor roads where a cycle lane exists - if the lane is not separated
+    // apply the speed penalty
+    if (edge->cyclelane() == CycleLane::kShared) {
+      factor = 0.9f * speedpenalty_[road_speed];
+    } else if (edge->cyclelane() == CycleLane::kDedicated) {
+      factor = 0.8f * speedpenalty_[road_speed];
+    } else if (edge->cyclelane() == CycleLane::kSeparated) {
+      factor *= 0.7f;
+    } else {
+      // On a road without a bicycle lane. Set factor to include any speed
+      // penalty and road class factor
+      factor = speedpenalty_[road_speed] +
+              (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]);
+
+      // Slight penalty going though destination only areas if no bike lanes
+      if (edge->destonly()) {
+        factor += kDestinationOnlyFactor;
+      }
+    }
+
+    // Favor bicycle networks.
+    // TODO - do we need to differentiate between types of network?
+    if (edge->bike_network() > 0) {
+      factor *= kBicycleNetworkFactor;
+    }
+  }
+
+  // Update factor based on penalties applied for weighted_grade
+  factor *= grade_penalty[edge->weighted_grade()];
+
+  // Compute elapsed time based on speed. Modulate cost with weighting factors.
+  float sec = (edge->length() * speedfactor_[bike_speed]);
+  return { sec * factor, sec };
+}
+
+// Returns the time (in seconds) to make the transition from the predecessor
+Cost LowStressBicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
+                                 const baldr::NodeInfo* node,
+                                 const EdgeLabel& pred) const {
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (node->type() == NodeType::kBorderControl) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  } else if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+    penalty += gate_penalty_;
+  }
+
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (pred.use() != Use::kDriveway && edge->use() == Use::kDriveway) {
+    penalty += driveway_penalty_;
+  }
+  if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
+  }
+
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
+    penalty += maneuver_penalty_;
+  }
+
+  // Penalize transition to higher class road.
+  // TODO - modulate based on useroads factor?
+  if (edge->classification() < pred.classification()) {
+    penalty += 10.0f * (static_cast<uint32_t>(pred.classification()) -
+                        static_cast<uint32_t>(edge->classification()));
+  }
+
+  // Transition time = densityfactor * stopimpact * turncost
+  if (edge->stopimpact(idx) > 0) {
+    // Take the higher of the turn degree cost and the crossing cost
+    float turn_cost = (edge->drive_on_right()) ?
+        kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < kTCCrossing &&
+        edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    }
+    seconds += trans_density_factor_[node->density()] *
+               edge->stopimpact(idx) * turn_cost;
+  }
+
+  // Return cost (time and penalty)
+  return { seconds + penalty, seconds };
+}
+
+// Returns the cost to make the transition from the predecessor edge
+// when using a reverse search (from destination towards the origin).
+// pred is the opposing current edge in the reverse tree
+// edge is the opposing predecessor in the reverse tree
+Cost LowStressBicycleCost::TransitionCostReverse(const uint32_t idx,
+                                        const baldr::NodeInfo* node,
+                                        const baldr::DirectedEdge* pred,
+                                        const baldr::DirectedEdge* edge) const {
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (node->type() == NodeType::kBorderControl) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  } else if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+    penalty += gate_penalty_;
+  }
+
+  // Additional penalties without any time cost
+  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (pred->use() != Use::kDriveway && edge->use() == Use::kDriveway) {
+    penalty += driveway_penalty_;
+  }
+  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
+  }
+
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
+    penalty += maneuver_penalty_;
+  }
+
+  // Penalize transition to higher class road.
+  // TODO - modulate based on useroads factor?
+  if (edge->classification() < pred->classification()) {
+    penalty += 10.0f * (static_cast<uint32_t>(pred->classification()) -
+                        static_cast<uint32_t>(edge->classification()));
+  }
+
+  // Transition time = densityfactor * stopimpact * turncost
+  if (edge->stopimpact(idx) > 0) {
+    // Take the higher of the turn degree cost and the crossing cost
+    float turn_cost = (edge->drive_on_right()) ?
+        kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < kTCCrossing &&
+        edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    }
+    seconds += trans_density_factor_[node->density()] *
+              edge->stopimpact(idx) * turn_cost;
+  }
+
+  // Return cost (time and penalty)
+  return { seconds + penalty, seconds };
+}
+
+cost_ptr_t CreateLowStressBicycleCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<LowStressBicycleCost>(config);
 }
 
 }
