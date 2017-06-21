@@ -86,12 +86,16 @@ namespace {
     return edge->IsTransition() || edge->roundabout() ||
       edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
   }
+  bool is_turn_channel(const valhalla::baldr::DirectedEdge* edge) {
+    return edge->use() == valhalla::baldr::Use::kTurnChannel;
+  }
 
   struct merged_traffic_segment_t {
     valhalla::baldr::TrafficSegment segment;
     valhalla::baldr::GraphId begin_edge;
     valhalla::baldr::GraphId end_edge;
     bool internal;
+    bool turn_channel;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
     std::vector<uint64_t> way_ids;
@@ -122,11 +126,13 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
+          merged.back().turn_channel = merged.back().internal && is_turn_channel(directed_edge);
           if(!directed_edge->IsTransition() && (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id))
             merged.back().way_ids.push_back(way_id);
         }//new one
         else {
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), {way_id}});
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge),
+                    is_turn_channel(directed_edge), {way_id}});
           if(directed_edge->IsTransition())
             merged.back().way_ids.clear();
         }
@@ -329,6 +335,9 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
     printf("\nReported Segments:\n");*/
 
     //go over the segments and move the interpolation markers accordingly
+    int idx = 0;
+    float prior_start_acc_length = 0.0f;
+    float prior_end_acc_length = 0.0f;
     auto left = markers.cbegin(), right = markers.cbegin();
     for(const auto& segment : merged_segments){
       //move the left marker right until its adjacent to the segment begin
@@ -345,8 +354,10 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
 
       //skip any segments composed entirely of transition edges (should only be one edge really)
       //they should have no valid segment id, be marked internal and also have no way ids
-      if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty())
+      if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty()) {
+        idx++;
         continue;
+      }
 
       //interpolate the length and time at the start
       double start_time = -1;
@@ -377,6 +388,33 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //figure out the total length of the segment
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
+      // Special cases for turn channels:
+      //   if the prior segment is a turn channel set a valid length and start
+      //       time if this segment has a valid end
+      //   if this segment is a turn channel set the prior segment end time to
+      //       the start of this turn channel segment and set the prior
+      //       segment length
+      if (segment->ends_segment_ && idx > 0 && merged_segments[idx-1].turn_channel &&
+                start_length == -1) {
+        // Set the segment start time to the end time of the turn channel
+        if (traffic_segments.size() > 0 && end_length != -1) {
+          start_time = traffic_segments.back().end_time;
+          length = (end_length - prior_end_acc_length) +
+                      traffic_segments.back().length / 2;
+        }
+      } else  if (segment.turn_channel && traffic_segments.size() > 0 &&
+                  traffic_segments.back().end_time == -1) {
+        traffic_segments.back().end_time = start_time;
+        if (length > 0) {
+          traffic_segments.back().length = (start_length - prior_start_acc_length) +
+                        length / 2;
+        }
+      }
+
+      // Store prior start and end accumulated length
+      prior_start_acc_length = start_length; //left->total_distance;
+      prior_end_acc_length = end_length; // right->total_distance;
+
       //compute queue length (skip if this is a partial segment)
       int queue_length = (length == -1) ? 0 :
           compute_queue_length(left, right, kQueueSpeedThreshold);
@@ -394,6 +432,7 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         ++right;
         left = right;
       }
+      idx++;
     }
   }
 
