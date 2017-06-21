@@ -24,6 +24,7 @@ namespace std {
 }
 
 namespace {
+  const float kPercentInvalidAllowed = 0.5;
 
   // TODO: Separate matrix actions to be deprecated and replaced by sources_to_targets action
   const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
@@ -38,12 +39,25 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
+  void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance,
+                      float& max_location_distance, rapidjson::Document& request) {
+
+    // Add ignore_list to request for thor to use later
+    auto ignore_list_value (rapidjson::kArrayType);
+    request.AddMember("ignore_list", ignore_list_value, request.GetAllocator());
+
+    auto ignore_list = valhalla::GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/ignore_list");
+    // TODO: Do we need to check this?
+    if (!ignore_list)
+      throw valhalla_exception_t{500, 159};
+
+    size_t invalid_count = 0;
+    size_t total_count = sources.size() * targets.size();
     //see if any locations pairs are unreachable or too far apart
-    for(const auto& source : sources){
-      for(const auto& target : targets) {
+    for(uint32_t s = 0; s < sources.size(); ++s){
+      for(uint32_t t = 0; t < targets.size(); ++t) {
         //check if distance between latlngs exceed max distance limit
-        auto path_distance = source.latlng_.Distance(target.latlng_);
+        auto path_distance = sources[s].latlng_.Distance(targets[t].latlng_);
 
         //only want to log the maximum distance between 2 locations for matrix
         LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
@@ -52,8 +66,17 @@ namespace {
           LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
         }
 
-        if (path_distance > matrix_max_distance)
-          throw valhalla_exception_t{400, 154};
+        if (path_distance > matrix_max_distance) {
+          rapidjson::Value pair(rapidjson::kObjectType);
+          pair.AddMember("source", s, request.GetAllocator());
+          pair.AddMember("target", t, request.GetAllocator());
+
+          ignore_list->PushBack(pair,request.GetAllocator());
+          invalid_count++;
+
+          if ((static_cast<float>(invalid_count) / total_count) > kPercentInvalidAllowed)
+            throw valhalla_exception_t{400, 154};
+        }
       }
     }
   }
@@ -130,7 +153,7 @@ namespace valhalla {
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      check_distance(sources, targets, max_matrix_distance.find(costing)->second, max_location_distance);
+      check_distance(sources, targets, max_matrix_distance.find(costing)->second, max_location_distance, request);
 
       //correlate the various locations to the underlying graph
       std::vector<baldr::Location> sources_targets;

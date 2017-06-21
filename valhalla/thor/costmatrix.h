@@ -20,6 +20,9 @@
 namespace valhalla {
 namespace thor {
 
+// TODO: Maybe find a better spot to put this or reconsider if it is necessary.
+using ignore_list_t = std::unordered_map<uint32_t, std::unordered_set<uint32_t>>;
+
 // These cost thresholds are in addition to the distance
 // thresholds for quick rejection
 constexpr float kCostThresholdAutoDivisor = 56.0f; // 400 km distance threshold will result in a cost threshold of ~7200 (2 hours)
@@ -113,6 +116,7 @@ class CostMatrix {
    * @param  costing               Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  ignore_list            List of source + target pairs to ignore. (return empty)
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
@@ -120,7 +124,8 @@ class CostMatrix {
           const std::vector<baldr::PathLocation>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+          const sif::TravelMode mode, const float max_matrix_distance,
+          const ignore_list_t& ignore_list = {});
 
   /**
    * Clear the temporary information generated during time+distance
@@ -183,11 +188,13 @@ class CostMatrix {
    * and destinations.
    * @param  source_location_list   List of source/origin locations.
    * @param  target_location_list   List of target/destination locations.
+   * @param  ignore_list            List of source + target pairs to ignore. (return empty)
    * @return Returns the initial time distance matrix.
    */
   void Initialize(
       const std::vector<baldr::PathLocation>& source_location_list,
-      const std::vector<baldr::PathLocation>& target_location_list);
+      const std::vector<baldr::PathLocation>& target_location_list,
+      const ignore_list_t& ignore_list);
 
   /**
    * Iterate the forward search from the source/origin location.
