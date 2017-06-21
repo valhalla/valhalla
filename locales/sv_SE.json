@@ -528,7 +528,7 @@
         "3": ["Håll vänster för att ta avfart 62, för att stanna kvar på Interstate 95 South mot Baltimore."]
       }
     },
-    "Anslut": {
+    "merge": {
       "phrases": {
         "0": "Anslut.",
         "1": "Anslut till <STREET_NAMES>."
@@ -539,7 +539,7 @@
         "1": ["Anslut till I 76 West/Pennsylvania Turnpike."]
       }
     },
-    "Anslut_verbal": {
+    "merge_verbal": {
       "phrases": {
         "0": "Anslut.",
         "1": "Anslut till <STREET_NAMES>."
@@ -790,7 +790,7 @@
         "2": ["Lämna 8 St - NYU Station."]
       }
     },
-    "Avresa": {
+    "depart": {
       "phrases": {
         "0": "Avresa: <TIME>.",
         "1": "Avresa: <TIME> från <TRANSIT_STOP>."
@@ -800,7 +800,7 @@
         "1": ["Avresa: 8:02 AM från 8 St - NYU."]
       }
     },
-    "Avresa_verbal": {
+    "depart_verbal": {
       "phrases": {
         "0": "Avresa vid <TIME>.",
         "1": "Avresa vid <TIME> från <TRANSIT_STOP>."
@@ -810,7 +810,7 @@
         "1": ["Avresa vid 8:02 AM från 8 St - NYU."]
       }
     },
-    "Ankomst": {
+    "arrive": {
       "phrases": {
         "0": "Ankomst: <TIME>.",
         "1": "Ankomst: <TIME> till <TRANSIT_STOP>."
@@ -820,7 +820,7 @@
         "1": ["Ankomst: 8:02 AM till 8 St - NYU."]
       }
     },
-    "Ankomst_verbal": {
+    "arrive_verbal": {
       "phrases": {
         "0": "Ankomst vid <TIME>.",
         "1": "Ankomst vid <TIME> till <TRANSIT_STOP>."
