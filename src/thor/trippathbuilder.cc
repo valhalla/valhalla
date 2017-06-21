@@ -801,6 +801,30 @@ TripPath TripPathBuilder::Build(
         if (controller.attributes.at(kNodeTransitPlatformInfoName) && transit_platform->name_offset())
           transit_platform_info->set_name(graphtile->GetName(transit_platform->name_offset()));
 
+        // save station name and info for all platforms.
+        const NodeInfo* nodeinfo = start_tile->node(startnode);
+        const DirectedEdge* dir_edge = start_tile->directededge(nodeinfo->edge_index());
+        for (uint32_t index = 0; index < nodeinfo->edge_count(); ++index, dir_edge++) {
+          if (dir_edge->use() == Use::kPlatformConnection) {
+            GraphId endnode = dir_edge->endnode();
+            const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+            const NodeInfo* nodeinfo2 = endtile->node(endnode);
+            const TransitStop* transit_station = endtile->GetTransitStop(nodeinfo2->stop_index());
+
+            // Set station onstop_id if requested
+            if (controller.attributes.at(kNodeTransitPlatformInfoStationOnestopId) && transit_station->one_stop_offset())
+              transit_platform_info->set_station_onestop_id(endtile->GetName(transit_station->one_stop_offset()));
+
+            // Set station name if requested
+            if (controller.attributes.at(kNodeTransitPlatformInfoStationName) && transit_station->name_offset())
+              transit_platform_info->set_station_name(endtile->GetName(transit_station->name_offset()));
+
+            //only one de to station exists.  we are done.
+            break;
+          }
+
+        }
+
         // Set latitude and longitude
         odin::LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
@@ -1077,6 +1101,7 @@ TripPath TripPathBuilder::Build(
 
     // Update previous mode.
     prev_mode = mode;
+
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 

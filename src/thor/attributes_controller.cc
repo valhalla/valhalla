@@ -78,6 +78,8 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kNodeTransitPlatformInfoType, true },
   { kNodeTransitPlatformInfoOnestopId, true },
   { kNodeTransitPlatformInfoName, true },
+  { kNodeTransitPlatformInfoStationOnestopId, true },
+  { kNodeTransitPlatformInfoStationName, true },
   { kNodeTransitPlatformInfoArrivalDateTime, true },
   { kNodeTransitPlatformInfoDepartureDateTime, true },
   { kNodeTransitPlatformInfoIsParentStop, true },
