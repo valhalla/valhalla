@@ -79,8 +79,8 @@
       "example_phrases": {
         "0": ["Du är framme vid målet."],
         "1": ["Du är framme vid 3206 Powelton Avenue."],
-        "2": ["Din destination ligger på vänster sida sida.", "Din destination ligger på höger sida."],
-        "3": ["Lancaster Brewing Company ligger på vänster sida sida."]
+        "2": ["Din destination ligger på vänster sida.", "Din destination ligger på höger sida."],
+        "3": ["Lancaster Brewing Company ligger på vänster sida."]
       }
     },
     "destination_verbal_alert": {
@@ -94,8 +94,8 @@
       "example_phrases": {
         "0": ["Du anländer till din destination."],
         "1": ["Du anländer till 32 o6 Powelton Avenue."],
-        "2": ["Din destination ligger på vänster sida sida.", "Din destination ligger på höger sida."],
-        "3": ["Lancaster Brewing Company ligger på vänster sida sida."]
+        "2": ["Din destination ligger på vänster sida.", "Din destination ligger på höger sida."],
+        "3": ["Lancaster Brewing Company ligger på vänster sida."]
       }
     },
     "destination_verbal": {
@@ -109,8 +109,8 @@
       "example_phrases": {
         "0": ["Du är framme vid målet."],
         "1": ["Du är framme vid 32 o6 Powelton Avenue."],
-        "2": ["Din destination är på vänster sida sida.", "Din destination är på höger sida."],
-        "3": ["Lancaster Brewing Company ligger på vänster sida sida."]
+        "2": ["Din destination är på vänster sida.", "Din destination är på höger sida."],
+        "3": ["Lancaster Brewing Company ligger på vänster sida."]
       }
     },
     "becomes": {
@@ -300,7 +300,7 @@
         "5": ["Gör en U-sväng åt vänster på Devonshire Road för att stanna kvar på Jonestown Road, U.S. 22."]
       }
     },
-    "ramp_rakt": {
+    "ramp_straight": {
       "phrases": {
         "0": "Håll rakt för att komma till rampen.",
         "1": "Håll rakt för att komma till <BRANCH_SIGN>-rampen.",
@@ -316,7 +316,7 @@
         "4": ["Håll rakt för att komma till Gettysburg Pike-rampen."]
       }
     },
-    "ramp_rakt_verbal": {
+    "ramp_straight_verbal": {
       "phrases": {
         "0": "Håll rakt för att komma till rampen.",
         "1": "Håll rakt för att komma till <BRANCH_SIGN>-rampen.",
@@ -347,10 +347,10 @@
       },
       "relative_directions": ["vänster", "höger"],
       "example_phrases": {
-        "0": ["Ta rampen på vänster sida sida.", "Ta rampen på höger sida."],
+        "0": ["Ta rampen på vänster sida.", "Ta rampen på höger sida."],
         "1": ["Ta I 95-rampen på höger sida."],
-        "2": ["Ta rampen på vänster sida sida, mot JFK."],
-        "3": ["Ta South Conduit Avenue-rampen på vänster sida sida, mot JFK."],
+        "2": ["Ta rampen på vänster sida, mot JFK."],
+        "3": ["Ta South Conduit Avenue-rampen på vänster sida, mot JFK."],
         "4": ["Ta Gettysburg Pike-rampen på höger sida."],
         "5": ["Sväng vänster för att komma till rampen.", "Sväng höger för att komma till rampen."],
         "6": ["Sväng vänster för att komma till PA 283 West-rampen."],
@@ -374,10 +374,10 @@
       },
       "relative_directions": ["vänster", "höger"],
       "example_phrases": {
-        "0": ["Ta rampen på vänster sida sida.", "Ta rampen på höger sida."],
+        "0": ["Ta rampen på vänster sida.", "Ta rampen på höger sida."],
         "1": ["Ta Interstate 95-rampen på höger sida."],
-        "2": ["Ta rampen på vänster sida sida, mot JFK."],
-        "3": ["Ta South Conduit Avenue-rampen på vänster sida sida, mot JFK."],
+        "2": ["Ta rampen på vänster sida, mot JFK."],
+        "3": ["Ta South Conduit Avenue-rampen på vänster sida, mot JFK."],
         "4": ["Ta Gettysburg Pike-rampen på höger sida."],
         "5": ["Sväng vänster för att komma till rampen.", "Sväng höger för att komma till rampen."],
         "6": ["Sväng vänster för att komma till Pennsylvania 2 83 West-rampen."],
@@ -403,7 +403,7 @@
       },
       "relative_directions": ["vänster", "höger"],
       "example_phrases": {
-        "0": ["Ta avfarten på vänster sida sida.", "Ta avfarten på höger sida."],
+        "0": ["Ta avfarten på vänster sida.", "Ta avfarten på höger sida."],
         "1": ["Ta avfart 67 B-A på höger sida."],
         "2": ["Ta US 322 West-avfarten på höger sida."],
         "3": ["Ta avfart 67 B-A på höger sida till US 322 West."],
@@ -412,9 +412,9 @@
         "6": ["Ta US 322 West-avfarten på höger sida mot Lewistown."],
         "7": ["Ta avfart 67 B-A på höger sida till US 322 West mot Lewistown/State College."],
         "8": ["Ta White Marsh Boulevard-avfarten på vänster sida."],
-        "10": ["Ta White Marsh Boulevard-avfarten på vänster sida sida till MD 43 East."],
-        "12": ["Ta White Marsh Boulevard-avfarten på vänster sida sida mot White Marsh."],
-        "14": ["Ta White Marsh Boulevard-avfarten på vänster sida sida till MD 43 East mot White Marsh."]
+        "10": ["Ta White Marsh Boulevard-avfarten på vänster sida till MD 43 East."],
+        "12": ["Ta White Marsh Boulevard-avfarten på vänster sida mot White Marsh."],
+        "14": ["Ta White Marsh Boulevard-avfarten på vänster sida till MD 43 East mot White Marsh."]
       }
     },
     "exit_verbal": {
@@ -434,7 +434,7 @@
       },
       "relative_directions": ["vänster", "höger"],
       "example_phrases": {
-        "0": ["Ta avfarten på vänster sida sida.", "Ta avfarten på höger sida."],
+        "0": ["Ta avfarten på vänster sida.", "Ta avfarten på höger sida."],
         "1": ["Ta avfart 67 B-A på höger sida."],
         "2": ["Ta U.S. 3 22 West-avfarten på höger sida."],
         "3": ["Ta avfart 67 B-A på höger sida till U.S. 3 22 West."],
