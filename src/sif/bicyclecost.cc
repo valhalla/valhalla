@@ -902,12 +902,12 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // Special use cases: cycleway and footway
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
   if (edge->use() == Use::kCycleway) {
-    // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + use_roads_ * 0.5f);
+    // Low stress bicycling will prefer cycleways even if use roads is 1.
+    factor = (0.25f + use_roads_ * 0.5f);
   } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
-    factor = 0.75f + (use_roads_ * 0.5f);
+    factor = 0.1f;
   } else if (edge->use() == Use::kMountainBike &&
              type_ == BicycleType::kMountain) {
     factor = 0.5f;
@@ -920,9 +920,9 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     if (edge->cyclelane() == CycleLane::kShared) {
       factor = 0.9f * speedpenalty_[road_speed];
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
-      factor = 0.8f * speedpenalty_[road_speed];
+      factor = 0.5f * speedpenalty_[road_speed];
     } else if (edge->cyclelane() == CycleLane::kSeparated) {
-      factor *= 0.7f;
+      factor *= 0.25f;
     } else {
       // On a road without a bicycle lane. Set factor to include any speed
       // penalty and road class factor
@@ -938,7 +938,7 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     // Favor bicycle networks.
     // TODO - do we need to differentiate between types of network?
     if (edge->bike_network() > 0) {
-      factor *= kBicycleNetworkFactor;
+      factor *= kBicycleNetworkFactor * 2.0f;
     }
   }
 
