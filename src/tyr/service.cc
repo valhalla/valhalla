@@ -673,57 +673,57 @@ namespace {
             }
 
             // Add transit stops
-            if (transit_info.transit_platforms().size() > 0) {
-              auto json_transit_platforms = json::array({});
-              for (const auto& transit_platform : transit_info.transit_platforms()) {
-                auto json_transit_platform = json::map({});
+            if (transit_info.transit_stops().size() > 0) {
+              auto json_transit_stops = json::array({});
+              for (const auto& transit_stop : transit_info.transit_stops()) {
+                auto json_transit_stop = json::map({});
 
                 // type
-                if (transit_platform.has_type()) {
-                  if (transit_platform.type() == TransitPlatformInfo_Type_kStation) {
-                    json_transit_platform->emplace("type", std::string("station"));
+                if (transit_stop.has_type()) {
+                  if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
+                    json_transit_stop->emplace("type", std::string("station"));
                   } else {
-                    json_transit_platform->emplace("type", std::string("stop"));
+                    json_transit_stop->emplace("type", std::string("stop"));
                   }
                 }
 
                 // onestop_id - using the station onestop_id
-                if (transit_platform.has_station_onestop_id()) {
-                    json_transit_platform->emplace("onestop_id", transit_platform.station_onestop_id());
-                    valhalla::midgard::logging::Log("transit_platformid::" + transit_platform.station_onestop_id(), " [ANALYTICS] ");
+                if (transit_stop.has_station_onestop_id()) {
+                    json_transit_stop->emplace("onestop_id", transit_stop.station_onestop_id());
+                    valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.station_onestop_id(), " [ANALYTICS] ");
                 }
 
                 // name - using the station name
-                if (transit_platform.has_station_name()) {
-                    json_transit_platform->emplace("name", transit_platform.station_name());
+                if (transit_stop.has_station_name()) {
+                    json_transit_stop->emplace("name", transit_stop.station_name());
                 }
 
                 // arrival_date_time
-                if (transit_platform.has_arrival_date_time()) {
-                    json_transit_platform->emplace("arrival_date_time", transit_platform.arrival_date_time());
+                if (transit_stop.has_arrival_date_time()) {
+                    json_transit_stop->emplace("arrival_date_time", transit_stop.arrival_date_time());
                 }
 
                 // departure_date_time
-                if (transit_platform.has_departure_date_time()) {
-                    json_transit_platform->emplace("departure_date_time", transit_platform.departure_date_time());
+                if (transit_stop.has_departure_date_time()) {
+                    json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
                 }
 
                 // assumed_schedule
-                if (transit_platform.has_assumed_schedule()) {
-                    json_transit_platform->emplace("assumed_schedule", transit_platform.assumed_schedule());
+                if (transit_stop.has_assumed_schedule()) {
+                    json_transit_stop->emplace("assumed_schedule", transit_stop.assumed_schedule());
                 }
 
                 // latitude and longitude
-                if (transit_platform.has_ll()) {
-                    json_transit_platform->emplace("lat", json::fp_t{transit_platform.ll().lat(), 6});
-                    json_transit_platform->emplace("lon",json::fp_t{transit_platform.ll().lng(), 6});
+                if (transit_stop.has_ll()) {
+                    json_transit_stop->emplace("lat", json::fp_t{transit_stop.ll().lat(), 6});
+                    json_transit_stop->emplace("lon",json::fp_t{transit_stop.ll().lng(), 6});
                 }
 
-                json_transit_platforms->emplace_back(json_transit_platform);
+                json_transit_stops->emplace_back(json_transit_stop);
 
               }
-              json_transit_info->emplace("transit_platforms",
-                                          std::move(json_transit_platforms));
+              json_transit_info->emplace("transit_stops",
+                                          std::move(json_transit_stops));
             }
 
             man->emplace("transit_info", std::move(json_transit_info));

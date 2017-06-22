@@ -20,7 +20,7 @@ message TripDirections {
     optional string operator_onestop_id = 8;
     optional string operator_name = 9;
     optional string operator_url = 10;
-    repeated TransitPlatformInfo transit_platforms = 11;
+    repeated TransitPlatformInfo transit_stops = 11;
   }
 
   enum TravelMode {
