@@ -379,10 +379,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         end_time = prev->epoch_time + (right->epoch_time - prev->epoch_time) * ratio;
       }
 
-      //if we didnt have a start or end time then we are past where we had interpolations
-      if(start_time == -1 && end_time == -1)
-        break;
-
       //figure out the total length of the segment
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
@@ -393,20 +389,17 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       //       the start of this turn channel segment and set the prior
       //       segment length
       size_t idx = &segment - &merged_segments[0];
-      if (segment->ends_segment_ && idx > 0 && merged_segments[idx-1].turn_channel &&
-                start_length == -1) {
+      if (segment->ends_segment_ && idx > 0 && merged_segments[idx-1].turn_channel && start_length == -1) {
         // Set the segment start time to the end time of the turn channel
         if (traffic_segments.size() > 0 && end_length != -1) {
           start_time = traffic_segments.back().end_time;
-          length = (end_length - prior_end_acc_length) +
-                      traffic_segments.back().length / 2;
+          length = (end_length - prior_end_acc_length) + traffic_segments.back().length / 2;
         }
       } else  if (segment.turn_channel && traffic_segments.size() > 0 &&
                   traffic_segments.back().end_time == -1) {
         traffic_segments.back().end_time = start_time;
         if (length > 0) {
-          traffic_segments.back().length = (start_length - prior_start_acc_length) +
-                        length / 2;
+          traffic_segments.back().length = (start_length - prior_start_acc_length) + length / 2;
         }
       }
 
@@ -425,6 +418,11 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
                   length, queue_length, segment.internal, segment.way_ids});
 
       //print(traffic_segments.back());
+
+      // Break out of the loop once we are past where we have interpolations
+      // (e.g. for a long edge with many segments).
+      if (idx > 0 && right->epoch_time == -1)
+        break;
 
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
