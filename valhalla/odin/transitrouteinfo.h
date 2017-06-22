@@ -4,8 +4,8 @@
 #include <string>
 #include <list>
 
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/trippath.pb.h>
-#include "transitplatform.h"
 
 namespace valhalla {
 namespace odin {
@@ -27,7 +27,7 @@ struct TransitRouteInfo {
   std::string operator_onestop_id;
   std::string operator_name;
   std::string operator_url;
-  std::list<TransitPlatform> transit_platforms;
+  std::list<TransitPlatformInfo> transit_platforms;
 
 };
 

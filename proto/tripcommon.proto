@@ -35,3 +35,21 @@ message Location {
   optional SideOfStreet side_of_street = 11;
   optional uint32 original_index = 12;
 }
+
+message TransitPlatformInfo {
+  enum Type {
+    kStop = 0;
+    kStation = 1;
+  }
+
+  optional Type type = 1;                  // The type of stop (station or simple stop)
+  optional string onestop_id = 2;          // Unique transitland ID
+  optional string name = 3;                // The name of the platform
+  optional string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+  optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+  optional bool is_parent_stop = 6;        // true if this is a parent stop
+  optional bool assumed_schedule = 7;      // true if the times are based on an assumed schedule
+  optional LatLng ll = 8;                  // Latitude, longitude of the transit stop
+  optional string station_onestop_id = 9;  // Unique transitland station ID
+  optional string station_name = 10;       // The station name of the platform
+}

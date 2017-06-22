@@ -287,31 +287,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       }
 
       // Process transit stops
-      for (auto& transit_platform : transit_route.transit_platforms) {
-        auto* trip_transit_platform = trip_transit_info->add_transit_platforms();
-        trip_transit_platform->set_type(transit_platform.type);
-        if (!transit_platform.onestop_id.empty()) {
-          trip_transit_platform->set_onestop_id(transit_platform.onestop_id);
-        }
-        if (!transit_platform.name.empty()) {
-          trip_transit_platform->set_name(transit_platform.name);
-        }
-        if (!transit_platform.arrival_date_time.empty()) {
-          trip_transit_platform->set_arrival_date_time(
-              transit_platform.arrival_date_time);
-        }
-        if (!transit_platform.departure_date_time.empty()) {
-          trip_transit_platform->set_departure_date_time(
-              transit_platform.departure_date_time);
-        }
-        if (transit_platform.is_parent_stop) {
-          trip_transit_platform->set_is_parent_stop(true);
-        }
-        if (transit_platform.assumed_schedule) {
-          trip_transit_platform->set_assumed_schedule(true);
-        }
-        trip_transit_platform->mutable_ll()->set_lat(transit_platform.ll.lat());
-        trip_transit_platform->mutable_ll()->set_lng(transit_platform.ll.lng());
+      for (const auto& transit_platform : transit_route.transit_platforms) {
+        trip_transit_info->add_transit_platforms()->CopyFrom(transit_platform);
       }
     }
 

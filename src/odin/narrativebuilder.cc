@@ -2716,7 +2716,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_stop().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_start_subset.station_label;
@@ -2756,7 +2756,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_stop().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_start_verbal_subset.station_label;
@@ -2796,7 +2796,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_stop().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_transfer_subset.station_label;
@@ -2836,7 +2836,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_stop().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_transfer_verbal_subset.station_label;
@@ -2876,7 +2876,7 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_stop().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_destination_subset.station_label;
@@ -2916,7 +2916,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_stop().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_destination_verbal_subset.station_label;
@@ -2953,7 +2953,7 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitPlatforms().front().name;
+  std::string transit_stop_name = maneuver.GetTransitPlatforms().front().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -2982,7 +2982,7 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitPlatforms().front().name;
+  std::string transit_stop_name = maneuver.GetTransitPlatforms().front().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -3011,7 +3011,7 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitPlatforms().back().name;
+  std::string transit_stop_name = maneuver.GetTransitPlatforms().back().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -3040,7 +3040,7 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitPlatforms().back().name;
+  std::string transit_stop_name = maneuver.GetTransitPlatforms().back().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;

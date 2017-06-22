@@ -680,7 +680,7 @@ namespace {
 
                 // type
                 if (transit_platform.has_type()) {
-                  if (transit_platform.type() == TripDirections_TransitPlatform_Type_kStation) {
+                  if (transit_platform.type() == TransitPlatformInfo_Type_kStation) {
                     json_transit_platform->emplace("type", std::string("station"));
                   } else {
                     json_transit_platform->emplace("type", std::string("stop"));
@@ -706,11 +706,6 @@ namespace {
                 // departure_date_time
                 if (transit_platform.has_departure_date_time()) {
                     json_transit_platform->emplace("departure_date_time", transit_platform.departure_date_time());
-                }
-
-                // is_parent_stop
-                if (transit_platform.has_is_parent_stop()) {
-                    json_transit_platform->emplace("is_parent_stop", transit_platform.is_parent_stop());
                 }
 
                 // assumed_schedule

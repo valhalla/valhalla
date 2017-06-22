@@ -655,8 +655,8 @@ TripPath TripPathBuilder::Build(
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
   // TODO: this is temp until we use transit stop type from transitland
-  TripPath_TransitPlatformInfo_Type prev_transit_node_type =
-      TripPath_TransitPlatformInfo_Type_kStop;
+  TransitPlatformInfo_Type prev_transit_node_type =
+      TransitPlatformInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
@@ -770,7 +770,7 @@ TripPath TripPathBuilder::Build(
       // Get the transit stop information and add transit stop info
       const TransitStop* transit_platform = start_tile->GetTransitStop(
           start_tile->node(startnode)->stop_index());
-      TripPath_TransitPlatformInfo* transit_platform_info = trip_node
+      TransitPlatformInfo* transit_platform_info = trip_node
           ->mutable_transit_platform_info();
 
       // TODO: for now we will set to station for rail and stop for others
@@ -779,8 +779,8 @@ TripPath TripPathBuilder::Build(
       if (directededge->use() == Use::kRail) {
         // Set node transit info type if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoType))
-          transit_platform_info->set_type(TripPath_TransitPlatformInfo_Type_kStation);
-        prev_transit_node_type = TripPath_TransitPlatformInfo_Type_kStation;
+          transit_platform_info->set_type(TransitPlatformInfo_Type_kStation);
+        prev_transit_node_type = TransitPlatformInfo_Type_kStation;
       } else if (directededge->use() == Use::kTransitConnection) {
         // Set node transit info type if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoType))
@@ -788,8 +788,8 @@ TripPath TripPathBuilder::Build(
       } else {
         // Set node transit info type if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoType))
-          transit_platform_info->set_type(TripPath_TransitPlatformInfo_Type_kStop);
-        prev_transit_node_type = TripPath_TransitPlatformInfo_Type_kStop;
+          transit_platform_info->set_type(TransitPlatformInfo_Type_kStop);
+        prev_transit_node_type = TransitPlatformInfo_Type_kStop;
       }
 
       if (transit_platform) {

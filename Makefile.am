@@ -170,7 +170,6 @@ nobase_include_HEADERS = \
 	valhalla/odin/sign.h \
 	valhalla/odin/signs.h \
 	valhalla/odin/util.h \
-	valhalla/odin/transitplatform.h \
 	valhalla/odin/transitrouteinfo.h \
 	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
@@ -277,7 +276,6 @@ libvalhalla_la_SOURCES = \
 	src/odin/sign.cc \
 	src/odin/signs.cc \
 	src/odin/util.cc \
-	src/odin/transitplatform.cc \
 	src/odin/transitrouteinfo.cc \
 	src/odin/locales.h \
 	src/thor/astar.cc \
