@@ -26,7 +26,7 @@ namespace thor {
 // thresholds for quick rejection
 constexpr float kTimeDistCostThresholdAutoDivisor = 112.0f; // 400 km distance threshold will result in a cost threshold of ~2600 (1 hour)
 constexpr float kTimeDistCostThresholdBicycleDivisor = 19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
-constexpr float kTimeDistCostThresholdPedestrianDivisor = 7.0f; // 200 km distance threshold will result in a cost threshold of ~28800 (8 hours)
+constexpr float kTimeDistCostThresholdPedestrianDivisor = 9.0f; // 200 km distance threshold will result in a cost threshold of ~21600 (6 hours)
 
 // Structure to hold information about each destination.
 struct Destination {
