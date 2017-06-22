@@ -124,8 +124,8 @@ inline AABB2<PointLL> ExpandMeters(const PointLL& pt, const float meters) {
 
   float dlat = meters / kMetersPerDegreeLat;
   float dlng = meters / DistanceApproximator::MetersPerLngDegree(pt.lat());
-  midgard::PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
-  midgard::PointLL maxpt(pt.lng() - dlng, pt.lat() + dlat);
+  PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
+  PointLL maxpt(pt.lng() - dlng, pt.lat() + dlat);
   return { minpt, maxpt };
 }
 
