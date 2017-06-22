@@ -606,15 +606,15 @@ void Maneuver::set_transit_connection(bool transit_connection) {
   transit_connection_ = transit_connection;
 }
 
-const TransitPlatformInfo& Maneuver::transit_connection_stop() const {
-  return transit_connection_stop_;
+const TransitPlatformInfo& Maneuver::transit_connection_platform_info() const {
+  return transit_connection_platform_info_;
 }
 
-void Maneuver::set_transit_connection_stop(
-    const TransitPlatformInfo& transit_connection_stop) {
-  transit_connection_stop_ = transit_connection_stop;
+void Maneuver::set_transit_connection_platform_info(
+    const TransitPlatformInfo& transit_connection_platform_info) {
+  transit_connection_platform_info_ = transit_connection_platform_info;
   // TODO
-//  LOG_TRACE("set_transit_connection_stop=" + transit_connection_stop_.ToParameterString());
+//  LOG_TRACE("set_transit_connection_platform_info=" + transit_connection_platform_info_.ToParameterString());
 }
 
 bool Maneuver::rail() const {
@@ -648,25 +648,25 @@ TransitRouteInfo* Maneuver::mutable_transit_info() {
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  return transit_info_.transit_platforms.back().arrival_date_time();
+  return transit_info_.transit_stops.back().arrival_date_time();
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  return transit_info_.transit_platforms.front().departure_date_time();
+  return transit_info_.transit_stops.front().departure_date_time();
 }
 
-const std::list<TransitPlatformInfo>& Maneuver::GetTransitPlatforms() const {
-  return transit_info_.transit_platforms;
+const std::list<TransitPlatformInfo>& Maneuver::GetTransitStops() const {
+  return transit_info_.transit_stops;
 }
 
-size_t Maneuver::GetTransitPlatformCount() const {
+size_t Maneuver::GetTransitStopCount() const {
   return
-      (transit_info_.transit_platforms.size() > 0) ?
-          (transit_info_.transit_platforms.size() - 1) : 0;
+      (transit_info_.transit_stops.size() > 0) ?
+          (transit_info_.transit_stops.size() - 1) : 0;
 }
 
-void Maneuver::InsertTransitPlatform(const TransitPlatformInfo& transit_platform) {
-  transit_info_.transit_platforms.push_front(transit_platform);
+void Maneuver::InsertTransitStop(const TransitPlatformInfo& transit_platform) {
+  transit_info_.transit_stops.push_front(transit_platform);
   //TODO
 //  LOG_TRACE("InsertTransitPlatform=" + transit_info_.transit_platforms.front().ToParameterString());
 }

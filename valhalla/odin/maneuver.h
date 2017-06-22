@@ -227,8 +227,8 @@ class Maneuver {
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
 
-  const TransitPlatformInfo& transit_connection_stop() const;
-  void set_transit_connection_stop(const TransitPlatformInfo& transit_connection_stop);
+  const TransitPlatformInfo& transit_connection_platform_info() const;
+  void set_transit_connection_platform_info(const TransitPlatformInfo& transit_connection_platform_info);
 
   bool IsTransit() const;
 
@@ -239,11 +239,11 @@ class Maneuver {
 
   std::string GetTransitDepartureTime() const;
 
-  const std::list<TransitPlatformInfo>& GetTransitPlatforms() const;
+  const std::list<TransitPlatformInfo>& GetTransitStops() const;
 
-  size_t GetTransitPlatformCount() const;
+  size_t GetTransitStopCount() const;
 
-  void InsertTransitPlatform(const TransitPlatformInfo& transit_stop);
+  void InsertTransitStop(const TransitPlatformInfo& transit_stop);
 
   const std::string& depart_instruction() const;
   void set_depart_instruction(const std::string& depart_instruction);
@@ -317,7 +317,7 @@ class Maneuver {
 
   // Transit connection flag and the associated stop
   bool transit_connection_;
-  TransitPlatformInfo transit_connection_stop_; // TODO determine how we want to handle in the future
+  TransitPlatformInfo transit_connection_platform_info_; // TODO determine how we want to handle in the future
 
   // The transit route info including list of stops
   TransitRouteInfo transit_info_;

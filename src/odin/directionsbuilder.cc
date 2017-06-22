@@ -287,7 +287,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       }
 
       // Process transit stops
-      for (const auto& transit_platform : transit_route.transit_platforms) {
+      for (const auto& transit_platform : transit_route.transit_stops) {
         trip_transit_info->add_transit_stops()->CopyFrom(transit_platform);
       }
     }

@@ -2008,7 +2008,7 @@ void PopulateTransitConnectionStartManeuverList_1(
                        TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
                        175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
                        { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
-  maneuver.set_transit_connection_stop(
+  maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                       "s-9q8yyv42k3-caltrain~sanfranciscostation",
                       "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
@@ -2028,7 +2028,7 @@ void PopulateTransitConnectionStartManeuverList_2(
                        TripDirections_Maneuver_CardinalDirection_kSouthWest, 213,
                        212, 2, 3, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                        { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
-  maneuver.set_transit_connection_stop(
+  maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
                       "2016-03-29T08:02-04:00", 0, 0, 0.0f, 0.0f));
@@ -2062,7 +2062,7 @@ void PopulateTransitConnectionTransferManeuverList_1(
                        TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
                        175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
                        { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
-  maneuver.set_transit_connection_stop(
+  maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                       "s-9q8yyv42k3-caltrain~sanfranciscostation",
                       "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
@@ -2082,7 +2082,7 @@ void PopulateTransitConnectionTransferManeuverList_2(
                        TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
                        11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                        { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
-  maneuver.set_transit_connection_stop(
+  maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
                       "", 0, 0, 0.0f, 0.0f));
@@ -2116,7 +2116,7 @@ void PopulateTransitConnectionDestinationManeuverList_1(
                        TripDirections_Maneuver_CardinalDirection_kSouthWest, 226,
                        175, 27, 28, 733, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { },
                        { }, { }, 0, 1, 0, 0, 0, 0, "", "", "", 0, 0, 0, 0, 59, 0);
-  maneuver.set_transit_connection_stop(
+  maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                       "s-9q8yyv42k3-caltrain~sanfranciscostation",
                       "CALTRAIN - SAN FRANCISCO STATION", "", "2016-03-29T08:57-04:00", 0,
@@ -2136,7 +2136,7 @@ void PopulateTransitConnectionDestinationManeuverList_2(
                        TripDirections_Maneuver_CardinalDirection_kNorthEast, 32, 33,
                        11, 12, 16, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                        { }, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 25, 0);
-  maneuver.set_transit_connection_stop(
+  maneuver.set_transit_connection_platform_info(
       GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                       "s-dr5rsq8pqg-8st~nyu<r21s", "8 St - NYU", "2016-03-29T08:19-04:00",
                       "", 0, 0, 0.0f, 0.0f));
@@ -2168,27 +2168,27 @@ void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2223,27 +2223,27 @@ void PopulateTransitManeuverList_0(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2269,43 +2269,43 @@ void PopulateTransitManeuverList_1_cable_car(std::list<Maneuver>& maneuvers,
                       "http://www.sfmta.com/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn2c3gg-hydest~vallejost", "Hyde St & Vallejo St",
                           "2016-05-17T08:06-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn2cpr9-hydest~greenst", "Hyde St & Green St",
                           "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn31h5q-hydest~unionst", "Hyde St & Union St",
                           "2016-05-17T08:06-04:00", "2016-05-17T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn32fnv-hydest~filbertst", "Hyde St & Filbert St",
                           "2016-05-17T08:05-04:00", "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn32yg5-hydest~greenwichst",
                           "Hyde St & Greenwich St", "2016-05-17T08:05-04:00",
                           "2016-05-17T08:05-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn38ez1-hydest~lombardst", "Hyde St & Lombard St",
                           "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn3b9cv-hydest~chestnutst", "Hyde St & Chestnut St",
                           "2016-05-17T08:04-04:00", "2016-05-17T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-9q8zn60kc1-hydest~bayst", "Hyde St & Bay St", "",
@@ -2341,14 +2341,14 @@ void PopulateTransitManeuverList_1_stop_count_1(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rkw4r8c-atlanticav~barclaysctr<r31n",
                           "Atlantic Av - Barclays Ctr", "2016-05-17T08:08-04:00", "", 0,
                           0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rkmp4s9-unionst<r32n", "Union St", "",
@@ -2382,19 +2382,19 @@ void PopulateTransitManeuverList_1_stop_count_2(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20s", "14 St - Union Sq",
                           "2016-05-17T08:08-04:00", "2016-05-17T08:11-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19s", "23 St", "2016-05-17T08:07-04:00",
                           "2016-05-17T08:07-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18s", "28 St", "", "2016-05-17T08:05-04:00",
@@ -2428,27 +2428,27 @@ void PopulateTransitManeuverList_1_stop_count_4(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2481,56 +2481,56 @@ void PopulateTransitManeuverList_1_stop_count_8(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru3006q-23st<d18n", "23 St", "2016-05-17T08:32-04:00", "",
                           0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru0jt7k-14st<d19n", "14 St", "2016-05-17T08:30-04:00",
                           "2016-05-17T08:30-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsp47p6-w4st<d20n", "W 4 St", "2016-05-17T08:29-04:00",
                           "2016-05-17T08:29-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsjvd53-broadway~lafayettest<d21n",
                           "Broadway-Lafayette St", "2016-05-17T08:26-04:00",
                           "2016-05-17T08:26-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rskecru-essexst<m18n", "Essex St",
                           "2016-05-17T08:23-04:00", "2016-05-17T08:23-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rt49x7k-marcyav<m16n", "Marcy Av",
                           "2016-05-17T08:16-04:00", "2016-05-17T08:16-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rt4ky8n-hewesst<m14n", "Hewes St",
                           "2016-05-17T08:15-04:00", "2016-05-17T08:15-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rt3cjhx-lorimerst<m13n", "Lorimer St",
                           "2016-05-17T08:13-04:00", "2016-05-17T08:13-04:00", 0, 0, 0.0f, 0.0f)));
 
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rt3m8ny-flushingav<m12n", "Flushing Av", "",
@@ -2564,27 +2564,27 @@ void PopulateTransitTransferManeuverList_0_no_name(std::list<Maneuver>& maneuver
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2617,27 +2617,27 @@ void PopulateTransitTransferManeuverList_0(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2670,27 +2670,27 @@ void PopulateTransitTransferManeuverList_1(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2723,27 +2723,27 @@ void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuver
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2776,27 +2776,27 @@ void PopulateTransitRemainOnManeuverList_0(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",
@@ -2829,27 +2829,27 @@ void PopulateTransitRemainOnManeuverList_1(std::list<Maneuver>& maneuvers,
       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru65x7v-34st~heraldsq<r17n", "34 St - Herald Sq",
                           "2016-03-29T08:08-04:00", "", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru37pdw-28st<r18n", "28 St", "2016-03-29T08:07-04:00",
                           "2016-03-29T08:07-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5ru2dx73-23st<r19n", "23 St", "2016-03-29T08:06-04:00",
                           "2016-03-29T08:06-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsr9wyg-14st~unionsq<r20n", "14 St - Union Sq",
                           "2016-03-29T08:04-04:00", "2016-03-29T08:04-04:00", 0, 1, 0.0f, 0.0f)));
-  maneuver.InsertTransitPlatform(
+  maneuver.InsertTransitStop(
       std::move(
           GetTransitPlatformInfo(TransitPlatformInfo_Type_kStation,
                           "s-dr5rsq8pqg-8st~nyu<r21n", "8 St - NYU", "",

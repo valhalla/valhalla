@@ -27,7 +27,7 @@ struct TransitRouteInfo {
   std::string operator_onestop_id;
   std::string operator_name;
   std::string operator_url;
-  std::list<TransitPlatformInfo> transit_platforms;
+  std::list<TransitPlatformInfo> transit_stops;
 
 };
 
