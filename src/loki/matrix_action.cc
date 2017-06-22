@@ -53,6 +53,7 @@ namespace {
 
     size_t invalid_count = 0;
     size_t total_count = sources.size() * targets.size();
+    size_t max_invalids = total_count * kPercentInvalidAllowed;
     //see if any locations pairs are unreachable or too far apart
     for(uint32_t s = 0; s < sources.size(); ++s){
       for(uint32_t t = 0; t < targets.size(); ++t) {
@@ -74,7 +75,7 @@ namespace {
           ignore_list->PushBack(pair,request.GetAllocator());
           invalid_count++;
 
-          if ((static_cast<float>(invalid_count) / total_count) > kPercentInvalidAllowed)
+          if (invalid_count > max_invalids)
             throw valhalla_exception_t{400, 154};
         }
       }
