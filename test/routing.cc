@@ -46,8 +46,10 @@ void TestAddRemove()
 
   // Test add randomly and remove
   costs.clear();
+  std::random_device rd;
+  std::mt19937 gen(rd());
   for (size_t i = 0; i < 10000; i++) {
-    const auto cost = std::floor(rand01() * 100000);
+    const auto cost = std::floor(test::rand01(gen) * 100000);
     costs.push_back(cost);
   }
 
@@ -97,6 +99,8 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
   adjlist.add(idx, 10.f);
   track.insert(idx);
 
+  std::random_device rd;
+  std::mt19937 gen(rd());
   for (size_t i = 0; i < loop_count; i++) {
     const auto key = adjlist.pop();
     const auto min_cost = costs[key];
@@ -107,10 +111,10 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
     track.erase(key);
 
     for (size_t i = 0; i < expansion_size; i++) {
-      const auto newcost = std::floor(min_cost + 1 + rand01() * max_increment_cost);
+      const auto newcost = std::floor(min_cost + 1 + test::rand01(gen) * max_increment_cost);
       if (i % 2 == 0 && !track.empty()) {
         // Decrease cost
-        const auto idx = *std::next(track.begin(), rand01() * track.size());
+        const auto idx = *std::next(track.begin(), test::rand01(gen) * track.size());
         if (newcost < costs[idx]) {
           adjlist.decrease(idx, newcost);
           costs[idx] = newcost;
@@ -148,10 +152,12 @@ void TestSimulation()
 
 void Benchmark()
 {
+  std::random_device rd;
+  std::mt19937 gen(rd());
   std::vector<float> costs;
   size_t N = 1000000;
   for (size_t i = 0; i < N; ++i) {
-    costs.push_back(std::floor(rand01() * N));
+    costs.push_back(std::floor(test::rand01(gen) * N));
   }
 
   const auto labelcost = [&costs](const uint32_t label) {

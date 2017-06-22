@@ -1,5 +1,4 @@
 #include <cmath>
-#include <random>
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/point2.h"
@@ -24,14 +23,6 @@ constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 
 namespace valhalla {
 namespace midgard {
-
-// Return a random number between 0 and 1
-float rand01() {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(0, 1);
-  return static_cast<float>(dis(gen));
-}
 
 // Trim the front of a polyline (represented as a list or vector of Point2).
 // Returns the trimmed portion of the polyline. The supplied polyline is

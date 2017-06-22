@@ -85,12 +85,6 @@ inline uint8_t get_turn_degree180(const uint16_t inbound, const uint16_t outboun
 }
 
 /**
- * Get a random number between 0 and 1
- * @return  Returns a random floating point number between 0.0f and 1.0f.
- */
-float rand01();
-
-/**
  * Expand an input lat,lon bounding box by the specified distance in meters.
  * @param   box     Bounding box.
  * @param   meters  Meters to expand the bounds
