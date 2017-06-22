@@ -216,18 +216,6 @@ message TripPath {
     optional Traversability walkability = 6;
   }
 
-  message TransitEgressInfo {
-    optional string onestop_id = 1;          // Unique transitland ID
-    optional string name = 2;                // The name of the egress
-    optional LatLng ll = 3;                  // Latitude, longitude of the egress
-  }
-
-  message TransitStationInfo {
-    optional string onestop_id = 1;          // Unique transitland ID
-    optional string name = 2;                // The name of the station
-    optional LatLng ll = 3;                  // Latitude, longitude of the station
-  }
-
   message Node {
     enum Type {
       kStreetIntersection = 0;      // Regular intersection of 2 roads

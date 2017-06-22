@@ -1033,11 +1033,14 @@ std::string EnhancedTripPath_Node::ToString() const {
     str += " | transit_platform_info.departure_date_time=";
     str += transit_platform_info().departure_date_time();
 
-    str += " | transit_platform_info.is_parent_stop=";
-    str += std::to_string(transit_platform_info().is_parent_stop());
-
     str += " | transit_platform_info.assumed_schedule()=";
     str += std::to_string(transit_platform_info().assumed_schedule());
+
+    str += " | transit_platform_info.station_onestop_id=";
+    str += transit_platform_info().station_onestop_id();
+
+    str += " | transit_platform_info.station_name=";
+    str += transit_platform_info().station_name();
   }
 
   str += " | time_zone=";

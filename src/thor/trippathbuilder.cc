@@ -716,7 +716,7 @@ TripPath TripPathBuilder::Build(
     if (node->type() == NodeType::kTransitStation) {
       const TransitStop* transit_station = start_tile->GetTransitStop(
           start_tile->node(startnode)->stop_index());
-      TripPath_TransitStationInfo* transit_station_info = trip_node
+      TransitStationInfo* transit_station_info = trip_node
           ->mutable_transit_station_info();
 
       if (transit_station) {
@@ -741,7 +741,7 @@ TripPath TripPathBuilder::Build(
     if (node->type() == NodeType::kTransitEgress) {
       const TransitStop* transit_egress = start_tile->GetTransitStop(
           start_tile->node(startnode)->stop_index());
-      TripPath_TransitEgressInfo* transit_egress_info = trip_node
+      TransitEgressInfo* transit_egress_info = trip_node
           ->mutable_transit_egress_info();
 
       if (transit_egress) {
@@ -912,9 +912,6 @@ TripPath TripPathBuilder::Build(
         assumed_schedule = false;
       }
 
-      // Set is_parent_stop if requested. TODO - update with station hierarchy
-      if (controller.attributes.at(kNodeTransitPlatformInfoIsParentStop))
-        transit_platform_info->set_is_parent_stop(false);
     }
 
     // Add edge to the trip node and set its attributes
