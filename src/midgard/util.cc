@@ -1,4 +1,5 @@
 #include <cmath>
+#include <random>
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/point2.h"
@@ -24,27 +25,12 @@ constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 namespace valhalla {
 namespace midgard {
 
-int GetTime(const float length, const float speed) {
-  if (speed > 0.0f)
-    return (int)(length / (speed * kHourPerSec) + 0.5f);
-  return 0;
-}
-
-uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading) {
-  return (((to_heading - from_heading) + 360) % 360);
-}
-
+// Return a random number between 0 and 1
 float rand01() {
-  return (float)rand() / (float)RAND_MAX;
-}
-
-float FastInvSqrt(float x) {
-  float xhalf = 0.5f * x;
-  int i = *(int*)&x;                 // get bits for floating value
-  i = 0x5f3759df - (i >> 1);         // give initial guess y0
-  x = *(float*)&i;                   // convert bits back to float
-  return x * (1.5f - xhalf * x * x); // newton step
-  // x *= 1.5f - xhalf*x*x;          // repeating step increases accuracy
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0, 1);
+  return static_cast<float>(dis(gen));
 }
 
 // Trim the front of a polyline (represented as a list or vector of Point2).

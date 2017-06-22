@@ -12,7 +12,10 @@
 #include <memory>
 #include <limits>
 
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/distanceapproximator.h>
 
 
 namespace valhalla {
@@ -48,7 +51,10 @@ enum IntersectCase {
  * @param  speed  in km per hour.
  * @return the computed time in seconds.
  */
-int GetTime(const float length, const float speed);
+inline int GetTime(const float length, const float speed) {
+  return (speed > 0.0f) ?
+          static_cast<int>((length / (speed * kHourPerSec) + 0.5f)) : 0;
+}
 
 /**
  * Computes the turn degree based on the specified "from heading" and
@@ -58,31 +64,70 @@ int GetTime(const float length, const float speed);
  * @return the computed turn degree. For example, if one would make a perfect
  *         right turn - the returned value would be 90.
  */
-uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading);
+inline uint32_t GetTurnDegree(const uint32_t from_heading,
+                              const uint32_t to_heading) {
+  return (((to_heading - from_heading) + 360) % 360);
+}
 
 /**
- * Degrees to radians conversion
- * @param   d   Angle in degrees.
- * @return  Returns the angle in radians.
+ * Compute the turn degree (from 0 to 180) - used in meili (map-matching)
+ * @param inbound  Inbound heading
+ * @param outbound Outbound heading
+ * @return  Returns the turn degree (0-180 degrees).
  */
-//float degrees_to_radians(const float d);
-/**
- * Radians to degrees conversion
- * @param   r   Angle in radians.
- * @return   Returns the angle in degrees.
- */
-//float radians_to_degrees(const float r);
+inline uint8_t get_turn_degree180(const uint16_t inbound, const uint16_t outbound) {
+  // TODO - do we need bounds checking here?
+  if (!(inbound < 360 && outbound < 360)) {
+    throw std::invalid_argument("expect angles to be within [0, 360)");
+  }
+  const auto turn = std::abs(inbound - outbound);
+  return 180 < turn ? 360 - turn : turn;
+}
+
 /**
  * Get a random number between 0 and 1
+ * @return  Returns a random floating point number between 0.0f and 1.0f.
  */
 float rand01();
 
 /**
- * Fast inverse sqrt method. Originally used in Quake III
- * @param   x  Value to find inverse sqrt for
- * @return  Returns 1/sqrtf(x)
+ * Expand an input lat,lon bounding box by the specified distance in meters.
+ * @param   box     Bounding box.
+ * @param   meters  Meters to expand the bounds
+ * @return  Returns the bounding box.
  */
-float FastInvSqrt(float x);
+inline AABB2<PointLL> ExpandMeters(const AABB2<PointLL>& box, const float meters) {
+  if (meters < 0.f) {
+    throw std::invalid_argument("expect non-negative meters");
+  }
+
+  // Find the delta latitude and delta longitude (max of the delta at the
+  // minimum and maximum latitude)
+  float dlat  = meters / kMetersPerDegreeLat;
+  float dlng1 = (meters / DistanceApproximator::MetersPerLngDegree(box.miny()));
+  float dlng2 = (meters / DistanceApproximator::MetersPerLngDegree(box.maxy()));
+  float dlng = std::max(dlng1, dlng2);
+  return { box.minx() - dlng, box.miny() - dlat, box.maxx() + dlng, box.maxy() + dlat };
+}
+
+/**
+ * Create a lat,lon bounding box around the specified point - with a distance
+ * from the center specified in meters.
+ * @param  pt  Lat,lon point to use as the bounding box center.
+ * @param  meters  Distance in meters from center to edge.
+ * @return Returns the bounding box.
+ */
+inline AABB2<PointLL> ExpandMeters(const PointLL& pt, const float meters) {
+  if (meters < 0.f) {
+    throw std::invalid_argument("expect non-negative meters");
+  }
+
+  float dlat = meters / kMetersPerDegreeLat;
+  float dlng = meters / DistanceApproximator::MetersPerLngDegree(pt.lat());
+  midgard::PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
+  midgard::PointLL maxpt(pt.lng() - dlng, pt.lat() + dlat);
+  return { minpt, maxpt };
+}
 
 // Convenience method.
 template<class T>
