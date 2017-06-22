@@ -485,10 +485,9 @@ find_shortest_path(baldr::GraphReader& reader,
         continue;
       }
 
-      // Need the graphreader to get the tile of edgelabel
+      // Get the inbound edge heading (clamped to range [0,360])
       const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
                                    get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
-      // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
 
       // Expand current node
       baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
@@ -502,12 +501,12 @@ find_shortest_path(baldr::GraphReader& reader,
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, other_tile)) continue;
 
         // Turn cost only for non transition edges
+        // TODO - need to properly handle turn costs across transition edges.
         float turn_cost = label_turn_cost;
         if (pred_edgelabel && turn_cost_table && !other_edge->IsTransition()) {
-          const auto other_heading = get_outbound_edge_heading(other_tile, other_edge, *nodeinfo);
-          // TODO: test it assert(0 <= other_heading && other_heading < 360);
-          const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
-          // TODO: test it assert(0 <= turn_degree && turn_degree <= 180);
+          // Get outbound heading (clamped to range [0,360])
+          const auto outbound_heading = get_outbound_edge_heading(other_tile, other_edge, *nodeinfo);
+          const auto turn_degree = midgard::get_turn_degree180(inbound_heading, outbound_heading);
           turn_cost += turn_cost_table[turn_degree];
         }
 
