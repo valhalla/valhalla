@@ -606,6 +606,24 @@ void Maneuver::set_transit_connection(bool transit_connection) {
   transit_connection_ = transit_connection;
 }
 
+const TransitEgressInfo& Maneuver::transit_connection_egress_info() const {
+  return transit_connection_egress_info_;
+}
+
+void Maneuver::set_transit_connection_egress_info(
+    const TransitEgressInfo& transit_connection_egress_info) {
+  transit_connection_egress_info_ = transit_connection_egress_info;
+}
+
+const TransitStationInfo& Maneuver::transit_connection_station_info() const {
+  return transit_connection_station_info_;
+}
+
+void Maneuver::set_transit_connection_station_info(
+    const TransitStationInfo& transit_connection_station_info) {
+  transit_connection_station_info_ = transit_connection_station_info;
+}
+
 const TransitPlatformInfo& Maneuver::transit_connection_platform_info() const {
   return transit_connection_platform_info_;
 }
@@ -613,8 +631,6 @@ const TransitPlatformInfo& Maneuver::transit_connection_platform_info() const {
 void Maneuver::set_transit_connection_platform_info(
     const TransitPlatformInfo& transit_connection_platform_info) {
   transit_connection_platform_info_ = transit_connection_platform_info;
-  // TODO
-//  LOG_TRACE("set_transit_connection_platform_info=" + transit_connection_platform_info_.ToParameterString());
 }
 
 bool Maneuver::rail() const {

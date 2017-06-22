@@ -227,6 +227,12 @@ class Maneuver {
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
 
+  const TransitEgressInfo& transit_connection_egress_info() const;
+  void set_transit_connection_egress_info(const TransitEgressInfo& transit_connection_egress_info);
+
+  const TransitStationInfo& transit_connection_station_info() const;
+  void set_transit_connection_station_info(const TransitStationInfo& transit_connection_station_info);
+
   const TransitPlatformInfo& transit_connection_platform_info() const;
   void set_transit_connection_platform_info(const TransitPlatformInfo& transit_connection_platform_info);
 
@@ -317,7 +323,10 @@ class Maneuver {
 
   // Transit connection flag and the associated stop
   bool transit_connection_;
-  TransitPlatformInfo transit_connection_platform_info_; // TODO determine how we want to handle in the future
+
+  TransitEgressInfo transit_connection_egress_info_;
+  TransitStationInfo transit_connection_station_info_;
+  TransitPlatformInfo transit_connection_platform_info_;
 
   // The transit route info including list of stops
   TransitRouteInfo transit_info_;
