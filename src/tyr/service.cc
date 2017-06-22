@@ -687,15 +687,15 @@ namespace {
                   }
                 }
 
-                // onestop_id
-                if (transit_platform.has_onestop_id()) {
-                    json_transit_platform->emplace("onestop_id", transit_platform.onestop_id());
-                    valhalla::midgard::logging::Log("transit_platformid::" + transit_platform.onestop_id(), " [ANALYTICS] ");
+                // onestop_id - using the station onestop_id
+                if (transit_platform.has_station_onestop_id()) {
+                    json_transit_platform->emplace("onestop_id", transit_platform.station_onestop_id());
+                    valhalla::midgard::logging::Log("transit_platformid::" + transit_platform.station_onestop_id(), " [ANALYTICS] ");
                 }
 
-                // name
-                if (transit_platform.has_name()) {
-                    json_transit_platform->emplace("name", transit_platform.name());
+                // name - using the station name
+                if (transit_platform.has_station_name()) {
+                    json_transit_platform->emplace("name", transit_platform.station_name());
                 }
 
                 // arrival_date_time
