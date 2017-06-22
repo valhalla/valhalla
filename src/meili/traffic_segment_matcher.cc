@@ -379,9 +379,9 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         end_time = prev->epoch_time + (right->epoch_time - prev->epoch_time) * ratio;
       }
 
-      //if we didnt have a start or end time then we are past where we had interpolations
-      if(start_time == -1 && end_time == -1)
-        break;
+      // start_time and end_time can both be -1 (if the merged segment does not
+      // start a segment and does not end a segment - for example by taking
+      // local roads, so do not break if this occurs...
 
       //figure out the total length of the segment
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
@@ -425,6 +425,13 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
                   length, queue_length, segment.internal, segment.way_ids});
 
       //print(traffic_segments.back());
+
+      // Break out of the loop once we are past where we have interpolations
+      // (e.g. for a long edge with many segments). TODO - will this break
+      // too early if there are discontinuities in the trace?
+      if (idx > 0 && right->epoch_time == -1) {
+        break;
+      }
 
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
