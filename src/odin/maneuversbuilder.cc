@@ -876,10 +876,13 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Transit connection
-  if (prev_edge->IsTransitConnectionUse()) {
+  if (prev_edge->IsTransitConnection()) {
     maneuver.set_transit_connection(true);
-    // If current edge is transit then mark maneuver as transit connection start
-    if (curr_edge
+
+    // If previous edge is transit connection platform
+    // and current edge is transit then mark maneuver as transit connection start
+    if (prev_edge->IsPlatformConnectionUse()
+        && curr_edge
         && (curr_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
       maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionStart);
       LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
@@ -1055,6 +1058,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       && (prev_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
     maneuver.set_transit_connection_platform_info(node->transit_platform_info());
+    LOG_TRACE("TripDirections_Maneuver_Type_kTransitConnectionDestination set_transit_connection_platform_info");
   }
 
   // Insert first transit stop
@@ -1452,12 +1456,29 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit connection
-  if (maneuver.transit_connection() && prev_edge->IsTransitConnectionUse()
-      && !(maneuver.transit_connection_platform_info().name().empty())
-      && (maneuver.transit_connection_platform_info().name()
-          == prev_node->transit_platform_info().name())) {
-    return true;
-  } else if (maneuver.transit_connection() || prev_edge->IsTransitConnectionUse()) {
+  // If maneuver and prev edge are transit connections
+  if (maneuver.transit_connection() && prev_edge->IsTransitConnection()) {
+
+    // Logic for a transit entrance in reverse
+    if (prev_edge->IsEgressConnectionUse() && curr_edge->IsPlatformConnectionUse()) {
+      return true;
+    } else if (prev_edge->IsTransitConnectionUse() && curr_edge->IsEgressConnectionUse()) {
+      return true;
+    }
+
+    // Logic for a transit exit in reverse
+    if (prev_edge->IsEgressConnectionUse() && curr_edge->IsTransitConnectionUse()) {
+      return true;
+    } else if (prev_edge->IsPlatformConnectionUse() && curr_edge->IsEgressConnectionUse()) {
+      return true;
+    }
+
+    // TODO - Do we handle station transfer????
+
+    // If the expected order of transit connection types was not found
+    // then do not combine
+    return false;
+  } else if (maneuver.transit_connection() || prev_edge->IsTransitConnection()) {
     return false;
   }
 

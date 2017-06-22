@@ -222,6 +222,10 @@ bool EnhancedTripPath_Edge::IsTransitConnectionUse() const {
   return (use() == TripPath_Use_kTransitConnectionUse);
 }
 
+bool EnhancedTripPath_Edge::IsTransitConnection() const {
+  return (IsTransitConnectionUse() || IsEgressConnectionUse() || IsPlatformConnectionUse());
+}
+
 bool EnhancedTripPath_Edge::IsUnnamedWalkway() const {
   return (IsUnnamed() && IsFootwayUse());
 }

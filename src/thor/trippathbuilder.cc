@@ -781,11 +781,11 @@ TripPath TripPathBuilder::Build(
         if (controller.attributes.at(kNodeTransitPlatformInfoType))
           transit_platform_info->set_type(TransitPlatformInfo_Type_kStation);
         prev_transit_node_type = TransitPlatformInfo_Type_kStation;
-      } else if (directededge->use() == Use::kTransitConnection) {
+      } else if (directededge->use() == Use::kPlatformConnection) {
         // Set node transit info type if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoType))
           transit_platform_info->set_type(prev_transit_node_type);
-      } else {
+      } else { //bus logic
         // Set node transit info type if requested
         if (controller.attributes.at(kNodeTransitPlatformInfoType))
           transit_platform_info->set_type(TransitPlatformInfo_Type_kStop);

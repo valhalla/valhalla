@@ -84,6 +84,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
   bool IsPlatformConnectionUse() const;
   bool IsTransitConnectionUse() const;
 
+  bool IsTransitConnection() const;
+
   bool IsUnnamedWalkway() const;
 
   bool IsUnnamedCycleway() const;
