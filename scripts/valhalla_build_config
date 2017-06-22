@@ -73,7 +73,7 @@ config = {
     }
   },
   'meili': {
-    'mode': 'multimodal',
+    'mode': 'auto',
     'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy'],
     'verbose': False,
     'default': {
