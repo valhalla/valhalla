@@ -508,7 +508,7 @@ class DirectedEdge {
   void set_reverseaccess(const uint32_t modes);
 
   /**
-   * Gets the speed in KPH.
+   * Gets the average speed in KPH.
    * @return  Returns the speed in KPH.
    */
   uint32_t speed() const {
@@ -516,7 +516,7 @@ class DirectedEdge {
   }
 
   /**
-   * Sets the speed in KPH.
+   * Sets the average speed in KPH.
    * @param  speed  Speed in KPH.
    */
   void set_speed(const uint32_t speed);

@@ -304,22 +304,22 @@ class BicycleCost : public DynamicCost {
   // We expose it within the source file for testing purposes
 public:
   
-  float speedfactor_[100];          // Cost factors based on speed in kph
-  float density_factor_[16];        // Density factor
-  float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
-  float driveway_penalty_;          // Penalty (seconds) using a driveway
-  float gate_cost_;                 // Cost (seconds) to go through gate
-  float gate_penalty_;              // Penalty (seconds) to go through gate
-  float alley_penalty_;             // Penalty (seconds) to use a alley
-  float ferry_cost_;                // Cost (seconds) to exit a ferry
-  float ferry_penalty_;             // Penalty (seconds) to enter a ferry
-  float ferry_factor_;              // Weighting to apply to ferry edges
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
-  float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
-  float use_roads_;                 // Preference of using roads between 0 and 1
-  float road_factor_;               // Road factor based on use_roads_
-  float use_ferry_;                 // Preference of using ferries between 0 and 1
-  float use_hills_;                 // Preference of using hills between 0 and 1
+  float speedfactor_[kMaxSpeedKph + 1];  // Cost factors based on speed in kph
+  float density_factor_[16];             // Density factor
+  float maneuver_penalty_;               // Penalty (seconds) when inconsistent names
+  float driveway_penalty_;               // Penalty (seconds) using a driveway
+  float gate_cost_;                      // Cost (seconds) to go through gate
+  float gate_penalty_;                   // Penalty (seconds) to go through gate
+  float alley_penalty_;                  // Penalty (seconds) to use a alley
+  float ferry_cost_;                     // Cost (seconds) to exit a ferry
+  float ferry_penalty_;                  // Penalty (seconds) to enter a ferry
+  float ferry_factor_;                   // Weighting to apply to ferry edges
+  float country_crossing_cost_;          // Cost (seconds) to go through toll booth
+  float country_crossing_penalty_;       // Penalty (seconds) to go across a country border
+  float use_roads_;                      // Preference of using roads between 0 and 1
+  float road_factor_;                    // Road factor based on use_roads_
+  float use_ferry_;                      // Preference of using ferries between 0 and 1
+  float use_hills_;                      // Preference of using hills between 0 and 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -338,7 +338,7 @@ public:
 
   // Speed penalty factor. Penalties apply above a threshold
   // (based on the use_roads factor)
-  float speedpenalty_[100];
+  float speedpenalty_[kMaxSpeedKph + 1];
   uint32_t speed_penalty_threshold_;
   
   // Elevation/grade penalty (weighting applied based on the edge's weighted
@@ -505,7 +505,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
 
   // Create speed cost table and penalty table (to avoid division in costing)
   speedfactor_[0] = kSecPerHour;
-  for (uint32_t s = 1; s < 100; s++) {
+  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
     speedpenalty_[s] = (s <= speed_penalty_threshold_) ? 1.0f :
           powf(static_cast<float>(s) / static_cast<float>(speed_penalty_threshold_), 0.25);
@@ -865,6 +865,14 @@ class LowStressBicycleCost : public BicycleCost {
 
 LowStressBicycleCost::LowStressBicycleCost(const boost::property_tree::ptree& config)
     : BicycleCost(config) {
+
+  // Low speed roads should be more favored than standard bike.
+  // 1 kmh (~0.5 mph) starts at factor of 0.025 with upward slope of 40 until 40 kmh (~25 mph)
+  // which ends with factor of 1.0
+
+
+  // Mid speed roads should be slightly more penalized than standard bike.
+  // 41 kmh (~25.5 mph) starts at factor of
 }
 
 LowStressBicycleCost::~LowStressBicycleCost() {
@@ -922,7 +930,7 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
       factor = 0.5f * speedpenalty_[road_speed];
     } else if (edge->cyclelane() == CycleLane::kSeparated) {
-      factor *= 0.25f;
+      factor = 0.25f;
     } else {
       // On a road without a bicycle lane. Set factor to include any speed
       // penalty and road class factor
