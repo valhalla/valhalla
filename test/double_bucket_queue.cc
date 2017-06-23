@@ -110,7 +110,8 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
   const uint32_t idx = costs.size();
   costs.push_back(10.f);
   dbqueue.add(idx, 10.f);
-
+  std::random_device rd;
+  std::mt19937 gen(rd());
   for (size_t i = 0; i < loop_count; i++) {
     const auto key = dbqueue.pop();
     if (key == kInvalidLabel) {
@@ -125,10 +126,10 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
     addedLabels.erase(key);
 
     for (size_t i = 0; i < expansion_size; i++) {
-      const auto newcost = std::floor(min_cost + 1 + midgard::rand01() * max_increment_cost);
+      const auto newcost = std::floor(min_cost + 1 + test::rand01(gen) * max_increment_cost);
       if (i % 2 == 0 && !addedLabels.empty()) {
         // Decrease cost
-        const auto idx = *std::next(addedLabels.begin(), midgard::rand01() * addedLabels.size());
+        const auto idx = *std::next(addedLabels.begin(), test::rand01(gen) * addedLabels.size());
         if (newcost < costs[idx]) {
           dbqueue.decrease(idx, newcost);
           costs[idx] = newcost;

@@ -227,7 +227,7 @@ CandidateGridQuery::Query(const midgard::PointLL& location,
     throw std::invalid_argument("Expect a valid location");
   }
 
-  const auto range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
+  const auto range = midgard::ExpandMeters(location, std::sqrt(sq_search_radius));
   const auto edgeids = RangeQuery(range);
   return WithinSquaredDistance(location, sq_search_radius,
                                edgeids.begin(), edgeids.end(), filter);

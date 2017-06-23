@@ -118,69 +118,6 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
   return clip;
 }
 
-
-inline uint8_t
-get_turn_degree180(uint16_t left, uint16_t right)
-{
-  if (!(left < 360 && right < 360)) {
-    throw std::invalid_argument("expect angles to be within [0, 360)");
-  }
-  const auto turn = std::abs(left - right);
-  return 180 < turn? 360 - turn : turn;
-}
-
-
-inline float
-TranslateLatitudeInMeters(float lat, float meters)
-{
-  const float offset = meters / midgard::kMetersPerDegreeLat;
-  return lat + offset;
-}
-
-
-inline float
-TranslateLatitudeInMeters(const midgard::PointLL& lnglat, float meters)
-{ return TranslateLatitudeInMeters(lnglat.lat(), meters); }
-
-
-inline float
-TranslateLongitudeInMeters(const midgard::PointLL& lnglat, float meters)
-{
-  const float offset = meters / midgard::DistanceApproximator::MetersPerLngDegree(lnglat.lat());
-  return lnglat.lng() + offset;
-}
-
-
-inline midgard::AABB2<midgard::PointLL>
-ExpandMeters(const midgard::AABB2<midgard::PointLL>& bbox, float meters)
-{
-  if (meters < 0.f) {
-    throw std::invalid_argument("expect non-negative meters");
-  }
-
-  midgard::PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
-                         TranslateLatitudeInMeters(bbox.minpt(), -meters));
-  midgard::PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
-                         TranslateLatitudeInMeters(bbox.maxpt(), meters));
-  return {minpt, maxpt};
-}
-
-
-inline midgard::AABB2<midgard::PointLL>
-ExpandMeters(const midgard::PointLL& pt, float meters)
-{
-  if (meters < 0.f) {
-    throw std::invalid_argument("expect non-negative meters");
-  }
-
-  midgard::PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
-                         TranslateLatitudeInMeters(pt, -meters));
-  midgard::PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
-                         TranslateLatitudeInMeters(pt, meters));
-  return {minpt, maxpt};
-}
-
-
 // snapped point, sqaured distance, segment index, offset
 template <typename coord_t>
 std::tuple<coord_t, float, typename std::vector<coord_t>::size_type, float>
