@@ -591,7 +591,6 @@ check_PROGRAMS = \
 	test/verbal_text_formatter_us_co \
 	test/verbal_text_formatter_us_tx \
 	test/factory \
-	test/geometry_helpers \
 	test/grid_range_query \
 	test/grid_traversal \
 	test/map_matcher_factory \
@@ -745,9 +744,6 @@ test_verbal_text_formatter_us_tx_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOS
 test_factory_SOURCES = test/factory.cc test/test.cc
 test_factory_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_factory_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_geometry_helpers_SOURCES = test/geometry_helpers.cc test/test.cc
-test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_geometry_helpers_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_grid_range_query_SOURCES = test/grid_range_query.cc test/test.cc
 test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_grid_range_query_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
