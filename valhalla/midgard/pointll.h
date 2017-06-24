@@ -62,6 +62,17 @@ class PointLL : public Point2 {
   PointLL MidPoint(const PointLL& p1) const;
 
   /**
+   * Returns the point a specified percentage along a segment from this point
+   * to an end point.
+   * @param  end  End point.
+   * @param  pct  Percentage along the segment.
+   * @return Returns the point along the segment.
+   */
+  PointLL along_segment(const PointLL& end, const float pct) const {
+    return { x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
+  }
+
+  /**
    * Calculates the distance between two lng,lat's in meters. Uses spherical
    * geometry (law of cosines).
    * @param   ll2   Second lng,lat position to calculate distance to.
@@ -165,7 +176,10 @@ class PointLL : public Point2 {
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual float IsLeft(const PointLL& p1, const PointLL& p2) const;
+  virtual float IsLeft(const PointLL& p1, const PointLL& p2) const {
+    return (p2.x() - p1.x()) * (   y() - p1.y()) -
+              (x() - p1.x()) * (p2.y() - p1.y());
+  }
 
   /**
    * Tests whether this point is within a polygon.
