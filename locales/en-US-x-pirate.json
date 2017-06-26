@@ -39,14 +39,14 @@
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.", 
         "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "left", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.", 
         "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "left", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "Aye, continue fer <LENGTH>.", 
         "1": "Heave ho on <STREET_NAMES> fer <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> miles", 
-        "1 mile", 
-        "a half mile", 
-        "<TENTHS_OF_MILE> tenths of a mile", 
-        "1 tenth of a mile", 
-        "<FEET> feet", 
-        "less than 10 feet"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
@@ -158,6 +149,15 @@
         "a half kilometer", 
         "<METERS> meters", 
         "less than 10 meters"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> miles", 
+        "1 mile", 
+        "a half mile", 
+        "<TENTHS_OF_MILE> tenths of a mile", 
+        "1 tenth of a mile", 
+        "<FEET> feet", 
+        "less than 10 feet"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "Ahoy, me matey! Take the <STREET_NAMES>.", 
         "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Ahoy, me matey! Take the Black Pearl."
@@ -326,12 +326,12 @@
         "1": "Ahoy, me matey! Take the <STREET_NAMES>.", 
         "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Ahoy, me matey! Take the Black Pearl."
@@ -488,11 +488,6 @@
         "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.", 
         "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "solid ground", 
-        "th' bike pirate way", 
-        "th' treasure trail"
-      ], 
       "cardinal_directions": [
         "north", 
         "northeast", 
@@ -502,6 +497,11 @@
         "southwest", 
         "west", 
         "northwest"
+      ], 
+      "empty_street_name_labels": [
+        "solid ground", 
+        "th' bike pirate way", 
+        "th' treasure trail"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.", 
         "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "solid ground", 
-        "th' bike pirate way", 
-        "th' treasure trail"
-      ], 
       "cardinal_directions": [
         "north", 
         "northeast", 
@@ -571,6 +566,11 @@
         "southwest", 
         "west", 
         "northwest"
+      ], 
+      "empty_street_name_labels": [
+        "solid ground", 
+        "th' bike pirate way", 
+        "th' treasure trail"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.", 
         "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "left", 
-        "straight", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "straight", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.", 
         "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "left", 
-        "straight", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "straight", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "Keep <RELATIVE_DIRECTION> me bucko to stay on <STREET_NAMES> toward <TOWARD_SIGN>.", 
         "3": "Keep <RELATIVE_DIRECTION> ye scallywag to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "left", 
-        "straight", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "straight", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "Keep <RELATIVE_DIRECTION> me hearties to take <STREET_NAMES> toward <TOWARD_SIGN>.", 
         "7": "Keep <RELATIVE_DIRECTION> ye landlubber to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "left", 
-        "straight", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "straight", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.", 
         "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "solid ground", 
-        "th' bike pirate way", 
-        "th' treasure trail"
-      ], 
       "cardinal_directions": [
         "north", 
         "northeast", 
@@ -951,6 +946,11 @@
         "southwest", 
         "west", 
         "northwest"
+      ], 
+      "empty_street_name_labels": [
+        "solid ground", 
+        "th' bike pirate way", 
+        "th' treasure trail"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.", 
         "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "solid ground", 
-        "th' bike pirate way", 
-        "th' treasure trail"
-      ], 
       "cardinal_directions": [
         "north", 
         "northeast", 
@@ -1020,6 +1015,11 @@
         "southwest", 
         "west", 
         "northwest"
+      ], 
+      "empty_street_name_labels": [
+        "solid ground", 
+        "th' bike pirate way", 
+        "th' treasure trail"
       ], 
       "example_phrases": {
         "0": [
@@ -1065,8 +1065,8 @@
         "0": "Voyage <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       }, 
       "transit_stop_count_labels": {
-        "other": "ports", 
-        "one": "port"
+        "one": "port", 
+        "other": "ports"
       }, 
       "example_phrases": {
         "0": [
@@ -1080,15 +1080,6 @@
         "0": "Aye, continue fer <LENGTH>.", 
         "1": "Avast ye, continue on <STREET_NAMES> fer <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> miles", 
-        "1 mile", 
-        "a half mile", 
-        "<TENTHS_OF_MILE> tenths of a mile", 
-        "1 tenth of a mile", 
-        "<FEET> feet", 
-        "less than 10 feet"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
@@ -1100,6 +1091,15 @@
         "a half kilometer", 
         "<METERS> meters", 
         "less than 10 meters"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> miles", 
+        "1 mile", 
+        "a half mile", 
+        "<TENTHS_OF_MILE> tenths of a mile", 
+        "1 tenth of a mile", 
+        "<FEET> feet", 
+        "less than 10 feet"
       ], 
       "example_phrases": {
         "0": [
@@ -1275,14 +1275,14 @@
         "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.", 
         "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "left", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -1306,14 +1306,14 @@
         "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.", 
         "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "left", 
-        "right"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "left", 
+        "right"
       ], 
       "example_phrases": {
         "0": [
@@ -1345,11 +1345,6 @@
         "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.", 
         "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "solid ground", 
-        "th' bike pirate way", 
-        "th' treasure trail"
-      ], 
       "cardinal_directions": [
         "north", 
         "northeast", 
@@ -1359,6 +1354,11 @@
         "southwest", 
         "west", 
         "northwest"
+      ], 
+      "empty_street_name_labels": [
+        "solid ground", 
+        "th' bike pirate way", 
+        "th' treasure trail"
       ], 
       "example_phrases": {
         "0": [
@@ -1514,8 +1514,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "ports", 
-        "one": "port"
+        "one": "port", 
+        "other": "ports"
       }, 
       "example_phrases": {
         "0": [
@@ -1659,8 +1659,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "ports", 
-        "one": "port"
+        "one": "port", 
+        "other": "ports"
       }, 
       "example_phrases": {
         "0": [
@@ -1712,8 +1712,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "ports", 
-        "one": "port"
+        "one": "port", 
+        "other": "ports"
       }, 
       "example_phrases": {
         "0": [
@@ -1780,14 +1780,14 @@
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.", 
         "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "port", 
-        "starboard"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "port", 
+        "starboard"
       ], 
       "example_phrases": {
         "0": [
@@ -1811,14 +1811,14 @@
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.", 
         "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "port", 
-        "starboard"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "port", 
+        "starboard"
       ], 
       "example_phrases": {
         "0": [
@@ -1844,14 +1844,14 @@
         "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.", 
         "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "port", 
-        "starboard"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "port", 
+        "starboard"
       ], 
       "example_phrases": {
         "0": [
@@ -1883,14 +1883,14 @@
         "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.", 
         "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "port", 
-        "starboard"
-      ], 
       "empty_street_name_labels": [
         "solid ground", 
         "th' bike pirate way", 
         "th' treasure trail"
+      ], 
+      "relative_directions": [
+        "port", 
+        "starboard"
       ], 
       "example_phrases": {
         "0": [

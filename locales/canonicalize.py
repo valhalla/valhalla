@@ -22,7 +22,7 @@ def sort_order(parent, k):
 #and while doing so sort each subdict using the sorter above
 def sort_dict(parent, d):
   ordered = OrderedDict()
-  for k, v in sorted(d.iteritems(), key = lambda(k, v): sort_order(parent, k)):
+  for k, v in sorted(sorted(d.iteritems()), key = lambda(k, v): sort_order(parent, k)):
     if isinstance(v, dict):
       ordered[k] = sort_dict(k, v)
     else:

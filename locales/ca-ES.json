@@ -39,14 +39,14 @@
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.", 
         "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.", 
         "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "Continua durant <LENGTH>.", 
         "1": "Continua per <STREET_NAMES> durant <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> milles", 
-        "1 milla", 
-        "mitja milla", 
-        "<TENTHS_OF_MILE> dècima de milla", 
-        "1 dècima de milla", 
-        "<FEET> peus", 
-        "menys de 10 peus"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
@@ -158,6 +149,15 @@
         "mig quilòmetre", 
         "<METERS> metres", 
         "menys de 10 metres"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> milles", 
+        "1 milla", 
+        "mitja milla", 
+        "<TENTHS_OF_MILE> dècima de milla", 
+        "1 dècima de milla", 
+        "<FEET> peus", 
+        "menys de 10 peus"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "Agafa <STREET_NAMES>.", 
         "2": "Agafa <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Agafa el ferri."
@@ -326,12 +326,12 @@
         "1": "Agafa el <STREET_NAMES>.", 
         "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Agafa el ferri."
@@ -488,11 +488,6 @@
         "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.", 
         "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la vorera", 
-        "el carril bici", 
-        "la pista de bicicleta de muntanya"
-      ], 
       "cardinal_directions": [
         "el nord", 
         "el nordest", 
@@ -502,6 +497,11 @@
         "el sudoest", 
         "l'oest", 
         "el nordoest"
+      ], 
+      "empty_street_name_labels": [
+        "la vorera", 
+        "el carril bici", 
+        "la pista de bicicleta de muntanya"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.", 
         "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la vorera", 
-        "el carril bici", 
-        "la pista de bicicleta de muntanya"
-      ], 
       "cardinal_directions": [
         "el nord", 
         "el nordest", 
@@ -571,6 +566,11 @@
         "el sudoest", 
         "l'oest", 
         "el nordoest"
+      ], 
+      "empty_street_name_labels": [
+        "la vorera", 
+        "el carril bici", 
+        "la pista de bicicleta de muntanya"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES> cap a <TOWARD_SIGN>.", 
         "7": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES> cap a <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "el centre", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "el centre", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>.", 
         "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "el centre", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "el centre", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>.", 
         "3": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> per continuar per <STREET_NAMES> cap a <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "el centre", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "el centre", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "Queda't a <RELATIVE_DIRECTION> per prendre <STREET_NAMES> a <TOWARD_SIGN>.", 
         "7": "Queda't a <RELATIVE_DIRECTION> per prendre la sortida <NUMBER_SIGN> a <STREET_NAMES> cap a <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "el centre", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "el centre", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.", 
         "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la vorera", 
-        "el carril bici", 
-        "la pista de bicicleta de muntanya"
-      ], 
       "cardinal_directions": [
         "el nord", 
         "el nordest", 
@@ -951,6 +946,11 @@
         "el sudoest", 
         "l'oest", 
         "el nordoest"
+      ], 
+      "empty_street_name_labels": [
+        "la vorera", 
+        "el carril bici", 
+        "la pista de bicicleta de muntanya"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.", 
         "18": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la vorera", 
-        "el carril bici", 
-        "la pista de bicicleta de muntanya"
-      ], 
       "cardinal_directions": [
         "el nord", 
         "el nordest", 
@@ -1020,6 +1015,11 @@
         "el sudoest", 
         "l'oest", 
         "el nordoest"
+      ], 
+      "empty_street_name_labels": [
+        "la vorera", 
+        "el carril bici", 
+        "la pista de bicicleta de muntanya"
       ], 
       "example_phrases": {
         "0": [
@@ -1065,8 +1065,8 @@
         "0": "Viatja <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       }, 
       "transit_stop_count_labels": {
-        "other": "parades", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "parades"
       }, 
       "example_phrases": {
         "0": [
@@ -1080,15 +1080,6 @@
         "0": "Continua durant <LENGTH>.", 
         "1": "Continua per <STREET_NAMES> durant <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> milles", 
-        "1 milla", 
-        "mitja milla", 
-        "<TENTHS_OF_MILE> dècima de milla", 
-        "1 dècima de milla", 
-        "<FEET> peus", 
-        "menys de 10 peus"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
@@ -1100,6 +1091,15 @@
         "mig quilòmetre", 
         "<METERS> metres", 
         "menys de 10 metres"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> milles", 
+        "1 milla", 
+        "mitja milla", 
+        "<TENTHS_OF_MILE> dècima de milla", 
+        "1 dècima de milla", 
+        "<FEET> peus", 
+        "menys de 10 peus"
       ], 
       "example_phrases": {
         "0": [
@@ -1275,14 +1275,14 @@
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.", 
         "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -1306,14 +1306,14 @@
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.", 
         "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -1345,11 +1345,6 @@
         "17": "Pedala cap <CARDINAL_DIRECTION> per <STREET_NAMES>.", 
         "18": "Pedala cap <CARDINAL_DIRECTION> per <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la vorera", 
-        "el carril bici", 
-        "la pista de bicicleta de muntanya"
-      ], 
       "cardinal_directions": [
         "el nord", 
         "el nordest", 
@@ -1359,6 +1354,11 @@
         "el sudoest", 
         "l'oest", 
         "el nordoest"
+      ], 
+      "empty_street_name_labels": [
+        "la vorera", 
+        "el carril bici", 
+        "la pista de bicicleta de muntanya"
       ], 
       "example_phrases": {
         "0": [
@@ -1514,8 +1514,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "parades", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "parades"
       }, 
       "example_phrases": {
         "0": [
@@ -1659,8 +1659,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "parades", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "parades"
       }, 
       "example_phrases": {
         "0": [
@@ -1712,8 +1712,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "parades", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "parades"
       }, 
       "example_phrases": {
         "0": [
@@ -1780,14 +1780,14 @@
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.", 
         "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -1811,14 +1811,14 @@
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.", 
         "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -1844,14 +1844,14 @@
         "4": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> cap a <STREET_NAMES>.", 
         "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [
@@ -1883,14 +1883,14 @@
         "4": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> cap a <STREET_NAMES>.", 
         "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "l'esquerra", 
-        "la dreta"
-      ], 
       "empty_street_name_labels": [
         "la vorera", 
         "el carril bici", 
         "la pista de bicicleta de muntanya"
+      ], 
+      "relative_directions": [
+        "l'esquerra", 
+        "la dreta"
       ], 
       "example_phrases": {
         "0": [

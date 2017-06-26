@@ -39,14 +39,14 @@
         "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.", 
         "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.", 
         "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "Nadaljujte <LENGTH>.", 
         "1": "Po <STREET_NAMES> nadaljujte <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> milj", 
-        "1 miljo", 
-        "pol milje", 
-        "<TENTHS_OF_MILE> desetink milje", 
-        "1 desentinko milje", 
-        "<FEET> čevljev", 
-        "Manj kot 10 čevljev"
-      ], 
       "empty_street_name_labels": [
         "pešpoti", 
         "kolesarski stezi", 
@@ -158,6 +149,15 @@
         "pol kilometra", 
         "<METERS> metrov", 
         "manj kot 10 metrov"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> milj", 
+        "1 miljo", 
+        "pol milje", 
+        "<TENTHS_OF_MILE> desetink milje", 
+        "1 desentinko milje", 
+        "<FEET> čevljev", 
+        "Manj kot 10 čevljev"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "Pojdite na <STREET_NAMES>.", 
         "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
       }, 
-      "ferry_label": "Trajekt", 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
+      "ferry_label": "Trajekt", 
       "example_phrases": {
         "0": [
           "Pojdite na trajekt."
@@ -326,12 +326,12 @@
         "1": "Pojdite na <STREET_NAMES>.", 
         "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
       }, 
-      "ferry_label": "Trajekt", 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
+      "ferry_label": "Trajekt", 
       "example_phrases": {
         "0": [
           "Pojdite na trajekt."
@@ -488,11 +488,6 @@
         "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.", 
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "pešpoti", 
-        "kolesarski stezi", 
-        "stezi za gorsko kolo"
-      ], 
       "cardinal_directions": [
         "proti severu", 
         "proti severovzhodu", 
@@ -502,6 +497,11 @@
         "proti jugozahodu", 
         "proti zahodu", 
         "proti severozahodu"
+      ], 
+      "empty_street_name_labels": [
+        "pešpoti", 
+        "kolesarski stezi", 
+        "stezi za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.", 
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
       }, 
-      "empty_street_name_labels": [
-        "pešpoti", 
-        "kolesarski stezi", 
-        "stezi za gorsko kolo"
-      ], 
       "cardinal_directions": [
         "proti severu", 
         "proti severovzhodu", 
@@ -571,6 +566,11 @@
         "proti jugozahodu", 
         "proti zahodu", 
         "proti severozahodu"
+      ], 
+      "empty_street_name_labels": [
+        "pešpoti", 
+        "kolesarski stezi", 
+        "stezi za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
         "7": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "naravnost", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "naravnost", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
         "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "naravnost", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "naravnost", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
         "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "naravnost", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "naravnost", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
         "7": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "naravnost", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "naravnost", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.", 
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "pešpoti", 
-        "kolesarski stezi", 
-        "stezi za gorsko kolo"
-      ], 
       "cardinal_directions": [
         "proti severu", 
         "proti severovzhodu", 
@@ -951,6 +946,11 @@
         "proti jugozahodu", 
         "proti zahodu", 
         "proti severozahodu"
+      ], 
+      "empty_street_name_labels": [
+        "pešpoti", 
+        "kolesarski stezi", 
+        "stezi za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.", 
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
       }, 
-      "empty_street_name_labels": [
-        "pešpoti", 
-        "kolesarski stezi", 
-        "stezi za gorsko kolo"
-      ], 
       "cardinal_directions": [
         "proti severu", 
         "proti severovzhodu", 
@@ -1020,6 +1015,11 @@
         "proti jugozahodu", 
         "proti zahodu", 
         "proti severozahodu"
+      ], 
+      "empty_street_name_labels": [
+        "pešpoti", 
+        "kolesarski stezi", 
+        "stezi za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
@@ -1066,9 +1066,9 @@
       }, 
       "transit_stop_count_labels": {
         "few": "postanki", 
+        "one": "postanek", 
         "other": "postankov", 
-        "two": "postanka", 
-        "one": "postanek"
+        "two": "postanka"
       }, 
       "example_phrases": {
         "0": [
@@ -1082,15 +1082,6 @@
         "0": "Nadaljujte <LENGTH>.", 
         "1": "Po <STREET_NAMES> nadaljujte <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> milj", 
-        "1 miljo", 
-        "pol milje", 
-        "<TENTHS_OF_MILE> desetink milje", 
-        "1 desentinko milje", 
-        "<FEET> čevljev", 
-        "Manj kot 10 čevljev"
-      ], 
       "empty_street_name_labels": [
         "pešpoti", 
         "kolesarski stezi", 
@@ -1102,6 +1093,15 @@
         "pol kilometra", 
         "<METERS> metrov", 
         "manj kot 10 metrov"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> milj", 
+        "1 miljo", 
+        "pol milje", 
+        "<TENTHS_OF_MILE> desetink milje", 
+        "1 desentinko milje", 
+        "<FEET> čevljev", 
+        "Manj kot 10 čevljev"
       ], 
       "example_phrases": {
         "0": [
@@ -1277,14 +1277,14 @@
         "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.", 
         "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -1308,14 +1308,14 @@
         "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.", 
         "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -1347,11 +1347,6 @@
         "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.", 
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "pešpoti", 
-        "kolesarski stezi", 
-        "stezi za gorsko kolo"
-      ], 
       "cardinal_directions": [
         "proti severu", 
         "proti severovzhodu", 
@@ -1361,6 +1356,11 @@
         "proti jugozahodu", 
         "proti zahodu", 
         "proti severozahodu"
+      ], 
+      "empty_street_name_labels": [
+        "pešpoti", 
+        "kolesarski stezi", 
+        "stezi za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
@@ -1517,9 +1517,9 @@
       ], 
       "transit_stop_count_labels": {
         "few": "postanki", 
+        "one": "postanek", 
         "other": "postankov", 
-        "two": "postanka", 
-        "one": "postanek"
+        "two": "postanka"
       }, 
       "example_phrases": {
         "0": [
@@ -1664,9 +1664,9 @@
       ], 
       "transit_stop_count_labels": {
         "few": "postanki", 
+        "one": "postanek", 
         "other": "postankov", 
-        "two": "postanka", 
-        "one": "postanek"
+        "two": "postanka"
       }, 
       "example_phrases": {
         "0": [
@@ -1719,9 +1719,9 @@
       ], 
       "transit_stop_count_labels": {
         "few": "postanki", 
+        "one": "postanek", 
         "other": "postankov", 
-        "two": "postanka", 
-        "one": "postanek"
+        "two": "postanka"
       }, 
       "example_phrases": {
         "0": [
@@ -1788,14 +1788,14 @@
         "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.", 
         "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -1819,14 +1819,14 @@
         "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.", 
         "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -1852,14 +1852,14 @@
         "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
         "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
@@ -1891,14 +1891,14 @@
         "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
         "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "levo", 
-        "desno"
-      ], 
       "empty_street_name_labels": [
         "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
+      ], 
+      "relative_directions": [
+        "levo", 
+        "desno"
       ], 
       "example_phrases": {
         "0": [
