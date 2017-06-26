@@ -279,6 +279,17 @@ void TestTrimFront() {
   }
 }
 
+void TestExpandLocation() {
+  // Expand to create a box approx 200x200 meters
+  PointLL loc(-77.0f, 39.0f);
+  AABB2<PointLL> box = ExpandMeters(loc, 100);
+  float area = (box.Height() * kMetersPerDegreeLat) *
+                box.Width() * DistanceApproximator::MetersPerLngDegree(loc.lat());
+  if (area < 199.0f * 199.0f || area > 201.0f * 201.0f) {
+    throw std::logic_error("ExpandLocation: area of the bounding box is incorrect " + std::to_string(area));
+  }
+}
+
 }
 
 int main() {
@@ -301,6 +312,8 @@ int main() {
   suite.test(TEST_CASE(TestResample));
 
   suite.test(TEST_CASE(TestIterable));
+
+  suite.test(TEST_CASE(TestExpandLocation));
 
   // trim_front of a polyline
   suite.test(TEST_CASE(TestTrimFront));
