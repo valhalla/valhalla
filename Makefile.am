@@ -51,13 +51,68 @@ genfiles/admin_lua_proc.h: lua/admin.lua
 genfiles/locales.h: locales/*.json
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@/locales && ./make_locales.sh *.json > @abs_builddir@/genfiles/locales.h
 
-PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto proto/route.proto proto/navigator.proto
-src/proto/%.pb.cc: proto/%.proto
-	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
+#non optional protobuffs
+valhalla/proto/tripcommon.pb.h: src/proto/tripcommon.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/tripcommon.pb.h valhalla/proto
+src/proto/tripcommon.pb.cc:
+	@echo " PROTOC tripcommon.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tripcommon.proto
+valhalla/proto/trippath.pb.h: src/proto/trippath.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/trippath.pb.h valhalla/proto
+src/proto/trippath.pb.cc:
+	@echo " PROTOC trippath.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/trippath.proto
+valhalla/proto/directions_options.pb.h: src/proto/directions_options.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/directions_options.pb.h valhalla/proto
+src/proto/directions_options.pb.cc:
+	@echo " PROTOC directions_options.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/directions_options.proto
+valhalla/proto/tripdirections.pb.h: src/proto/tripdirections.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/tripdirections.pb.h valhalla/proto
+src/proto/tripdirections.pb.cc:
+	@echo " PROTOC tripdirections.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tripdirections.proto
 
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
-nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) $(EXTRA_PROGRAMS)
+BUILT_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc
+nodist_libvalhalla_la_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
+CLEANFILES = $(EXTRA_PROGRAMS) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc
+
+#data tools protobuffs
+if DATA_TOOLS
+valhalla/proto/osmformat.pb.h: src/proto/osmformat.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/osmformat.pb.h valhalla/proto
+src/proto/osmformat.pb.cc:
+	@echo " PROTOC osmformat.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/osmformat.proto
+valhalla/proto/fileformat.pb.h: src/proto/fileformat.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/fileformat.pb.h valhalla/proto
+src/proto/fileformat.pb.cc:
+	@echo " PROTOC fileformat.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/fileformat.proto
+valhalla/proto/transit.pb.h: src/proto/transit.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/transit.pb.h valhalla/proto
+src/proto/transit.pb.cc:
+	@echo " PROTOC transit.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/transit.proto
+valhalla/proto/tile.pb.h: src/proto/tile.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/tile.pb.h valhalla/proto
+src/proto/tile.pb.cc:
+	@echo " PROTOC tile.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tile.proto
+valhalla/proto/segment.pb.h: src/proto/segment.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/segment.pb.h valhalla/proto
+src/proto/segment.pb.cc:
+	@echo " PROTOC segment.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/segment.proto
+BUILT_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
+nodist_libvalhalla_la_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
+CLEANFILES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/osmformat.pb.cc src/proto/fileformat.pb.cc src/proto/transit.pb.cc src/proto/tile.pb.cc src/proto/segment.pb.cc
+endif
+
+#embedded device protobuffs
+#if EMBEDDED
+valhalla/proto/route.pb.h: src/proto/route.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/route.pb.h valhalla/proto
+src/proto/route.pb.cc:
+	@echo " PROTOC route.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/route.proto
+valhalla/proto/navigator.pb.h: src/proto/navigator.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/navigator.pb.h valhalla/proto
+src/proto/navigator.pb.cc:
+	@echo " PROTOC navigator.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/navigator.proto
+BUILT_SOURCES += valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h
+CLEANFILES += valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/route.pb.cc src/proto/navigator.pb.cc
+#endif
 
 lib_LTLIBRARIES = libvalhalla.la
 nobase_include_HEADERS = \
@@ -366,7 +421,6 @@ nobase_include_HEADERS += \
 	valhalla/mjolnir/util.h \
 	valhalla/mjolnir/validatetransit.h
 libvalhalla_la_SOURCES += \
-	src/proto/transit.pb.cc \
 	src/mjolnir/admin.cc \
 	src/mjolnir/complexrestrictionbuilder.cc \
 	src/mjolnir/countryaccess.cc \
@@ -516,13 +570,13 @@ valhalla_build_tiles_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @
 valhalla_build_admins_SOURCES = src/mjolnir/valhalla_build_admins.cc
 valhalla_build_admins_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_build_admins_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
-valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc
+valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc src/proto/transit.pb.cc
 valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_build_transit_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
-valhalla_fetch_transit_SOURCES = src/mjolnir/valhalla_fetch_transit.cc
+valhalla_fetch_transit_SOURCES = src/mjolnir/valhalla_fetch_transit.cc  src/proto/transit.pb.cc
 valhalla_fetch_transit_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_fetch_transit_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
-valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc
+valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc src/proto/transit.pb.cc
 valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_query_transit_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_validate_transit_SOURCES = src/mjolnir/valhalla_validate_transit.cc
@@ -778,12 +832,6 @@ test_util_skadi_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOS
 test_sample_SOURCES = test/sample.cc test/test.cc
 test_sample_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_sample_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_skadi_service_SOURCES = test/skadi_service.cc test/test.cc
-test_skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_skadi_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_loki_service_SOURCES = test/loki_service.cc test/test.cc
-test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_loki_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -817,9 +865,6 @@ test_edgestatus_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOS
 test_optimizer_SOURCES = test/optimizer.cc test/test.cc
 test_optimizer_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_optimizer_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_thor_service_SOURCES = test/thor_service.cc test/test.cc
-test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_thor_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_attributes_controller_SOURCES = test/attributes_controller.cc test/test.cc
 test_attributes_controller_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_attributes_controller_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -847,6 +892,22 @@ test_transitcost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOO
 test_truckcost_SOURCES = src/sif/truckcost.cc test/test.cc
 test_truckcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_truckcost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+
+if SERVICES
+check_PROGRAMS += \
+	test/skadi_service \
+	test/loki_service \
+	test/thor_service
+test_skadi_service_SOURCES = test/skadi_service.cc test/test.cc
+test_skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_skadi_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_loki_service_SOURCES = test/loki_service.cc test/test.cc
+test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_loki_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_thor_service_SOURCES = test/thor_service.cc test/test.cc
+test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_thor_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+endif
 
 if DATA_TOOLS
 check_PROGRAMS += \
