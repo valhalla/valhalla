@@ -101,6 +101,40 @@ namespace {
 
     return d;
   }
+
+  worker_t::result_t to_response(json::ArrayPtr array, rapidjson::Document& request, http_request_info_t& request_info, bool final) {
+    std::ostringstream stream;
+    //jsonp callback if need be
+    auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
+    if(jsonp)
+      stream << *jsonp << '(';
+    stream << *array;
+    if(jsonp)
+      stream << ')';
+
+    worker_t::result_t result{final};
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
+  }
+
+  worker_t::result_t to_response(json::MapPtr map, rapidjson::Document& request, http_request_info_t& request_info, bool final) {
+    std::ostringstream stream;
+    //jsonp callback if need be
+    auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
+    if(jsonp)
+      stream << *jsonp << '(';
+    stream << *map;
+    if(jsonp)
+      stream << ')';
+
+    worker_t::result_t result{final};
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
+  }
 }
 
 namespace valhalla {
@@ -317,29 +351,33 @@ namespace valhalla {
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
 
-        worker_t::result_t result{false};
+        worker_t::result_t result{true};
         //do request specific processing
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            result = route(request_rj, info);
+            route(request_rj);
+            result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case LOCATE:
-            result = locate(request_rj, info);
+            result = to_response(locate(request_rj), request_rj, info, false);
             break;
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
           case OPTIMIZED_ROUTE:
-            result = matrix(action->second, request_rj, info);
+            matrix(action->second, request_rj);
+            result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case ISOCHRONE:
-            result = isochrones(request_rj, info);
+            isochrones(request_rj);
+            result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case TRACE_ATTRIBUTES:
           case TRACE_ROUTE:
-            result = trace_route(action->second, request_rj, info);
+            trace_route(action->second, request_rj);
+            result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet

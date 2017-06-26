@@ -58,7 +58,7 @@ namespace valhalla {
       }
       parse_costing(request);
     }
-    worker_t::result_t loki_worker_t::isochrones(rapidjson::Document& request, http_request_info_t& request_info) {
+    void loki_worker_t::isochrones(rapidjson::Document& request) {
       init_isochrones(request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
@@ -85,7 +85,7 @@ namespace valhalla {
       if (date_type) {
         //not yet on this
         if(! date_type || *date_type == 2) {
-          jsonify_error({501, 142}, request_info);
+          throw valhalla_exception_t{501, 142};
         }
         //what kind
         switch(*date_type) {
@@ -115,12 +115,6 @@ namespace valhalla {
       catch(const std::exception&) {
         throw valhalla_exception_t{400, 171};
       }
-
-      //pass it on
-      worker_t::result_t result{true};
-      result.messages.emplace_back(rapidjson::to_string(request));
-
-      return result;
     }
 
   }

@@ -117,11 +117,11 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::matrix(ACTION_TYPE action, rapidjson::Document& request, http_request_info_t& request_info) {
+    void loki_worker_t::matrix(ACTION_TYPE action, rapidjson::Document& request) {
       init_matrix(action, request);
       std::string costing = request["costing"].GetString();
       if (costing == "multimodal")
-        return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
+        throw valhalla_exception_t{400, 140, ACTION_TO_STRING.find(action)->second};
 
       //check that location size does not exceed max.
       auto max = max_matrix_locations.find(costing)->second;
@@ -174,11 +174,6 @@ namespace valhalla {
         throw valhalla_exception_t{400, 170};
       if (!healthcheck)
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
-
-      worker_t::result_t result{true};
-      result.messages.emplace_back(rapidjson::to_string(request));
-
-      return result;
     }
   }
 }

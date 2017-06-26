@@ -28,7 +28,7 @@ namespace {
     for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
       //check if distance between latlngs exceed max distance limit for each mode of travel
       auto path_distance = std::prev(location)->latlng_.Distance(location->latlng_);
-      max_distance-=path_distance;
+      max_distance -= path_distance;
       if (max_distance < 0)
         throw valhalla_exception_t{400, 154};
       valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
@@ -48,7 +48,7 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    worker_t::result_t loki_worker_t::route(rapidjson::Document& request, http_request_info_t& request_info) {
+    void loki_worker_t::route(rapidjson::Document& request) {
       init_route(request);
       auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
       check_locations(locations.size(), max_locations.find(*costing)->second);
@@ -82,7 +82,7 @@ namespace valhalla {
       if (boost::optional<int> date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type")) {
         //not yet on this
         if(*date_type == 2 && (*costing == "multimodal" || *costing == "transit"))
-          return jsonify_error({501, 141}, request_info);
+          throw valhalla_exception_t{501, 141};
 
         //what kind
         switch(*date_type) {
@@ -132,7 +132,6 @@ namespace valhalla {
         throw valhalla_exception_t{400, 171};
       }
 
-
       //are all the locations in the same color regions
       bool connected = false;
       for(const auto& c : color_counts) {
@@ -143,16 +142,6 @@ namespace valhalla {
       }
       if(!connected)
         throw valhalla_exception_t{400, 170};
-
-      //ok send on the request with correlated origin and destination filled out
-      //using the boost ptree info format
-      //TODO: make a protobuf request object and pass that along, can become
-      //part of thors path proto object and then get copied into odins trip object
-      //in fact just do this for all request types
-      worker_t::result_t result{true};
-      result.messages.emplace_back(rapidjson::to_string(request));
-
-      return result;
     }
   }
 }

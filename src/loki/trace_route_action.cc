@@ -120,16 +120,11 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    worker_t::result_t loki_worker_t::trace_route(ACTION_TYPE action, rapidjson::Document& request, http_request_info_t& request_info) {
+    void loki_worker_t::trace_route(ACTION_TYPE action, rapidjson::Document& request) {
       init_trace(request);
       std::string costing = request["costing"].GetString();
       if (costing == "multimodal")
-        return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
-
-      //pass it on to thor
-      worker_t::result_t result{true};
-      result.messages.emplace_back(rapidjson::to_string(request));
-      return result;
+        throw valhalla_exception_t{400, 140, ACTION_TO_STRING.find(action)->second};
     }
 
     void loki_worker_t::parse_trace(rapidjson::Document& request) {
@@ -168,7 +163,6 @@ namespace valhalla {
         //TODO: pass on e.what() to generic exception
         throw valhalla_exception_t{400, 114};
       }
-
     }
 
     void loki_worker_t::locations_from_shape(rapidjson::Document& request) {

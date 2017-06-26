@@ -29,6 +29,12 @@ namespace valhalla {
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
       void cleanup();
 
+      baldr::json::ArrayPtr locate(rapidjson::Document& request);
+      void route(rapidjson::Document& request);
+      void matrix(ACTION_TYPE action, rapidjson::Document& request);
+      void isochrones(rapidjson::Document& request);
+      void trace_route(ACTION_TYPE action, rapidjson::Document& request);
+
      protected:
 
       prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_info_t& request_info) const;
@@ -43,12 +49,6 @@ namespace valhalla {
       void init_matrix(ACTION_TYPE action, rapidjson::Document& request);
       void init_isochrones(rapidjson::Document& request);
       void init_trace(rapidjson::Document& request);
-
-      prime_server::worker_t::result_t locate(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t route(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t matrix(ACTION_TYPE action,rapidjson::Document& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t isochrones(rapidjson::Document& request, prime_server::http_request_info_t& request_info);
-      prime_server::worker_t::result_t trace_route(ACTION_TYPE action,rapidjson::Document& request, prime_server::http_request_info_t& request_info);
 
       boost::property_tree::ptree config;
       boost::optional<std::string> jsonp;

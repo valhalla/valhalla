@@ -141,7 +141,7 @@ namespace valhalla {
       }
     }
 
-    worker_t::result_t loki_worker_t::locate(rapidjson::Document& request, http_request_info_t& request_info) {
+    json::ArrayPtr loki_worker_t::locate(rapidjson::Document& request) {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
@@ -156,21 +156,7 @@ namespace valhalla {
           json->emplace_back(serialize(id, location.latlng_, "No data found for location", verbose));
         }
       }
-
-      std::ostringstream stream;
-      //jsonp callback if need be
-      auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-      return result;
+      return json;
     }
 
   }
